@@ -1,0 +1,122 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EvenementController;
+use App\Http\Controllers\TarifController;
+use App\Http\Controllers\CodePromoController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\ScanController;
+use App\Http\Controllers\EvenementPublicController;
+use App\Http\Controllers\SitePublicController;
+use App\Http\Controllers\LogController;
+use App\Http\Controllers\InscriptionController;
+use App\Http\Controllers\VenteManuelleController;
+use App\Http\Controllers\RappelController;
+use App\Http\Controllers\Admin\MessageController;
+use App\Http\Controllers\StatistiqueController;
+use App\Http\Controllers\ParametresController;
+use App\Http\Controllers\RemboursementController;
+
+// ============================================================
+// Routes publiques (participant)
+// ============================================================
+Route::get('/', [SitePublicController::class, 'accueil'])->name('accueil');
+Route::get('/evenements', [EvenementPublicController::class, 'index'])->name('evenements.public');
+Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show'])->name('evenements.public.show');
+Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat');
+
+Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
+Route::post('/paiement/{ticket}/confirmer', [PaiementController::class, 'confirmer'])->name('paiement.confirmer');
+Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
+
+Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
+Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher');
+Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTicket'])->name('tickets.telecharger');
+
+Route::get('/aide', [SitePublicController::class, 'aide'])->name('aide');
+Route::get('/contact', [SitePublicController::class, 'contact'])->name('contact');
+Route::post('/contact', [SitePublicController::class, 'contactStore'])->name('contact.store');
+Route::get('/confidentialite', [SitePublicController::class, 'confidentialite'])->name('confidentialite');
+Route::get('/cgu', [SitePublicController::class, 'cgu'])->name('cgu');
+
+// Callback KKiaPay
+Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
+Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
+
+// ============================================================
+// Routes de connexion
+// ============================================================
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+
+// ============================================================
+// Routes protégées (admin)
+// ============================================================
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('evenements', EvenementController::class);
+
+        Route::get('/evenements/{evenement}/tarifs', [TarifController::class, 'index'])->name('tarifs.index');
+        Route::get('/evenements/{evenement}/tarifs/create', [TarifController::class, 'create'])->name('tarifs.create');
+        Route::post('/evenements/{evenement}/tarifs', [TarifController::class, 'store'])->name('tarifs.store');
+        Route::get('/evenements/{evenement}/tarifs/{tarif}/edit', [TarifController::class, 'edit'])->name('tarifs.edit');
+        Route::put('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
+        Route::delete('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'destroy'])->name('tarifs.destroy');
+    });
+
+    Route::resource('tickets', TicketController::class);
+    Route::post('/tickets/{ticket}/renvoyer', [TicketController::class, 'renvoyer'])->name('tickets.renvoyer');
+    Route::post('/tickets/{ticket}/annuler', [TicketController::class, 'annuler'])->name('tickets.annuler');
+    Route::get('/tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
+    Route::resource('inscriptions', InscriptionController::class)->except(['store', 'update', 'destroy']);
+
+    Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
+    Route::post('/scan/verifier', [ScanController::class, 'verifier'])->name('scan.verifier');
+
+    Route::get('/statistiques', [StatistiqueController::class, 'index'])->name('statistiques.index');
+    Route::get('/ventes-manuelles', [VenteManuelleController::class, 'create'])->name('ventes-manuelles.create');
+    Route::post('/ventes-manuelles', [VenteManuelleController::class, 'store'])->name('ventes-manuelles.store');
+    Route::post('/ventes-manuelles/tarifs', [VenteManuelleController::class, 'getTarifs'])->name('ventes-manuelles.tarifs');
+    Route::get('/rappels', [RappelController::class, 'index'])->name('rappels.index');
+    Route::post('/rappels/envoyer', [RappelController::class, 'envoyer'])->name('rappels.envoyer');
+
+    Route::prefix('admin/messages')->name('admin.messages.')->group(function () {
+        Route::get('/', [MessageController::class, 'index'])->name('index');
+        Route::get('/{message}', [MessageController::class, 'show'])->name('show');
+        Route::post('/{message}/repondre', [MessageController::class, 'repondre'])->name('repondre');
+        Route::delete('/{message}', [MessageController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+    Route::get('/admin/logs/{id}/detail', [LogController::class, 'detail'])->name('logs.detail');
+    Route::post('/admin/logs/recuperer', [LogController::class, 'recuperer'])->name('logs.recuperer');
+
+    Route::prefix('parametres')->name('parametres.')->group(function () {
+        Route::get('/', [ParametresController::class, 'index'])->name('index');
+        Route::put('/profil', [ParametresController::class, 'profil'])->name('profil.update');
+        Route::delete('/avatar', [ParametresController::class, 'supprimerAvatar'])->name('avatar.delete');
+        Route::put('/securite', [ParametresController::class, 'securite'])->name('securite.update');
+        Route::put('/notifications', [ParametresController::class, 'notifications'])->name('notifications.update');
+        Route::put('/paiement', [ParametresController::class, 'paiement'])->name('paiement.update');
+        Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
+        Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
+    });
+
+    Route::prefix('admin/remboursements')->name('admin.remboursements.')->group(function () {
+        Route::get('/', [RemboursementController::class, 'index'])->name('index');
+    });
+    Route::post('/tickets/{ticket}/rembourser', [RemboursementController::class, 'rembourser'])->name('tickets.rembourser');
+    Route::post('/tickets/{ticket}/annuler-remboursement', [RemboursementController::class, 'annulerRemboursement'])->name('tickets.annuler-remboursement');
+
+    // Routes globales pour les codes promo
+    Route::get('/admin/codes-promos', [CodePromoController::class, 'globalIndex'])->name('admin.codes-promos.index');
+    Route::post('/admin/codes-promos', [CodePromoController::class, 'store'])->name('admin.codes-promos.store');
+    Route::delete('/admin/codes-promos/{codePromo}', [CodePromoController::class, 'destroy'])->name('admin.codes-promos.destroy');
+    Route::get('/admin/codes-promos/export', [CodePromoController::class, 'export'])->name('admin.codes-promos.export');
+});

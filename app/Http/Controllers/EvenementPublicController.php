@@ -1,0 +1,163 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Evenement;
+use App\Models\Tarif;
+use App\Models\CodePromo;
+use App\Models\Ticket;
+use Illuminate\Http\Request;
+
+class EvenementPublicController extends Controller
+{
+    public function index(Request $request)
+    {
+        $categories = Evenement::where('statut', 'publié')
+            ->where('date_event', '>=', now())
+            ->whereNotNull('categorie')
+            ->distinct()
+            ->orderBy('categorie')
+            ->pluck('categorie');
+
+        $selectedCategorie = $request->input('categorie');
+        $selectedDate = $request->input('date');
+        $q = $request->input('q');
+
+        $query = Evenement::where('statut', 'publié')
+            ->where('date_event', '>=', now());
+
+        if ($selectedCategorie) {
+            $query->where('categorie', $selectedCategorie);
+        }
+
+        if ($selectedDate === 'weekend') {
+            $query->whereBetween('date_event', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]);
+        } elseif ($selectedDate === 'mois') {
+            $query->whereMonth('date_event', now()->month)
+                  ->whereYear('date_event', now()->year);
+        }
+
+        if ($q) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('titre', 'like', "%{$q}%")
+                    ->orWhere('categorie', 'like', "%{$q}%")
+                    ->orWhere('lieu', 'like', "%{$q}%");
+            });
+        }
+
+        $evenements = $query->with('tarifs')->orderBy('date_event', 'asc')->paginate(12);
+
+        return view('evenement-public.index', compact('evenements', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
+    }
+
+    public function show(Evenement $evenement)
+    {
+        if ($evenement->statut !== 'publié') {
+            abort(404);
+        }
+
+        $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
+        $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
+        $estComplet = $placesRestantes <= 0;
+
+        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet'));
+    }
+
+    public function achat(Evenement $evenement, Request $request)
+    {
+        if ($evenement->statut !== 'publié') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'nom_acheteur' => 'required|string|max:255',
+            'email_acheteur' => 'required|email|max:255',
+            'telephone_acheteur' => 'required|string|min:6|max:20',
+            'tarif_id' => 'required|exists:tarifs,id',
+            'code_promo' => 'nullable|string|max:50',
+            'quantite' => 'nullable|integer|min:1|max:10',
+        ], [
+            'nom_acheteur.required' => 'Le nom est obligatoire.',
+            'email_acheteur.required' => 'L\'email est obligatoire.',
+            'email_acheteur.email' => 'Le format de l\'email est invalide.',
+            'telephone_acheteur.required' => 'Le numéro de téléphone est obligatoire.',
+            'telephone_acheteur.min' => 'Le numéro doit contenir au moins 6 caractères.',
+            'tarif_id.required' => 'Le type de billet est obligatoire.',
+        ]);
+
+        $tarif = Tarif::where('id', $validated['tarif_id'])
+            ->where('evenement_id', $evenement->id)
+            ->where('statut', 'actif')
+            ->firstOrFail();
+
+        $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1)));
+
+        $codePromoUtilise = null;
+        $montantReduction = 0;
+        $montantUnitaire = $tarif->prix;
+
+        if (!empty($validated['code_promo'])) {
+            $codePromo = CodePromo::where('code', strtoupper($validated['code_promo']))
+                ->whereHas('tarif', fn($q) => $q->where('evenement_id', $evenement->id))
+                ->first();
+
+            if (!$codePromo) {
+                return back()->with('error', 'Ce code promo n\'est pas valide pour cet événement.')->withInput();
+            }
+
+            if (!$codePromo->actif) {
+                return back()->with('error', 'Ce code promo a été désactivé.')->withInput();
+            }
+
+            if ($codePromo->date_expiration && $codePromo->date_expiration < now()) {
+                return back()->with('error', 'Ce code promo a expiré.')->withInput();
+            }
+
+            if ($codePromo->max_utilisations && $codePromo->nb_utilisations >= $codePromo->max_utilisations) {
+                return back()->with('error', 'Ce code promo a atteint son nombre maximum d\'utilisations.')->withInput();
+            }
+
+            if ($codePromo->tarif_id !== $tarif->id) {
+                return back()->with('error', 'Ce code promo n\'est pas compatible avec le tarif sélectionné.')->withInput();
+            }
+
+            $codePromoUtilise = $codePromo->code;
+            $montantReduction = $codePromo->calculerReduction($tarif->prix);
+            $montantUnitaire = $tarif->prix - $montantReduction;
+            $codePromo->increment('nb_utilisations');
+        }
+
+        $dispo = $tarif->quantite_disponible - $tarif->quantite_vendue;
+        if ($dispo <= 0) {
+            return back()->with('error', 'Ce tarif n\'est plus disponible.');
+        }
+
+        $montantTotal = $montantUnitaire * $quantite;
+
+        $ticket = $evenement->tickets()->create([
+            'tarif_id' => $tarif->id,
+            'code_unique' => 'TMP',
+            'qr_signature' => hash_hmac('sha256', (string) \Illuminate\Support\Str::uuid(), config('app.key') ?? 'fallback'),
+            'email_acheteur' => strtolower($validated['email_acheteur']),
+            'telephone_acheteur' => $validated['telephone_acheteur'],
+            'nom_acheteur' => $validated['nom_acheteur'],
+            'categorie' => $tarif->categorie,
+            'type' => $tarif->type,
+            'montant' => $montantTotal,
+            'montant_reduction' => $montantReduction * $quantite,
+            'statut_paiement' => 'en_attente',
+            'date_achat' => now(),
+            'code_promo_utilise' => $codePromoUtilise,
+        ]);
+
+        $ticket->update([
+            'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
+        ]);
+
+        $evenement->increment('quota_vendu');
+        $tarif->increment('quantite_vendue');
+
+        return redirect()->route('paiement.show', $ticket->id)
+            ->with('success', 'Votre place est réservée. Finalisez le paiement.');
+    }
+}
