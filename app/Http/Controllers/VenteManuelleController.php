@@ -123,7 +123,11 @@ class VenteManuelleController extends Controller
             'categorie' => 'required|in:etudiant,externe',
         ]);
 
-        $tarifs = Tarif::where('evenement_id', $request->evenement_id)
+        $evenement = Evenement::where('id', $request->evenement_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $tarifs = Tarif::where('evenement_id', $evenement->id)
             ->where('categorie', $request->categorie)
             ->where('statut', 'actif')
             ->get();

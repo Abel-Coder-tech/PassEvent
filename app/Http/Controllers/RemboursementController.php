@@ -18,13 +18,15 @@ class RemboursementController extends Controller
             ->orderByDesc('date_event')
             ->get();
 
+        $evenementsIds = $evenements->pluck('id');
+
         $selectedEvent = $request->input('evenement_id');
         $q = $request->input('q');
         $statut = $request->input('statut', 'remboursable');
 
-        $query = Ticket::with('evenement', 'tarif');
+        $query = Ticket::with('evenement', 'tarif')->whereIn('evenement_id', $evenementsIds);
 
-        if ($selectedEvent) {
+        if ($selectedEvent && $evenementsIds->contains($selectedEvent)) {
             $query->where('evenement_id', $selectedEvent);
         }
 
@@ -125,13 +127,24 @@ class RemboursementController extends Controller
 
     public function annulerRemboursement(Request $request, $ticketId)
     {
-        $ticket = Ticket::findOrFail($ticketId);
+        $ticket = Ticket::with('evenement')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement !== 'remboursé') {
             return back()->withErrors(['error' => 'Ce ticket n\'est pas remboursé.']);
         }
 
+        if ($ticket->evenement->user_id !== Auth::id()) {
+            return back()->withErrors(['error' => 'Vous n\'avez pas l\'autorisation.']);
+        }
+
         $ticket->update(['statut_paiement' => 'payé']);
+
+        if ($ticket->tarif) {
+            $ticket->tarif->increment('quantite_vendue');
+        }
+        if ($ticket->evenement) {
+            $ticket->evenement->increment('quota_vendu');
+        }
 
         Log::create([
             'ticket_id' => $ticket->id,

@@ -4,6 +4,11 @@
 
 @section('page-title', 'Logs système')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Logs</li>
+@endsection
+
 @section('topbar-actions')
     <button type="button" class="btn btn-vert btn-sm" data-bs-toggle="modal" data-bs-target="#modalRecuperer">
         <i class="bi bi-search me-1"></i> <span class="btn-text">Récupérer un ticket</span>

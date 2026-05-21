@@ -25,6 +25,7 @@ class Evenement extends Model
         'date_fin_vente',
         'image',
         'statut',
+        'gratuit',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class Evenement extends Model
         return [
             'date_event' => 'datetime',
             'date_fin_vente' => 'datetime',
+            'gratuit' => 'boolean',
         ];
     }
 
@@ -53,5 +55,10 @@ class Evenement extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function scanAccessCodes(): HasMany
+    {
+        return $this->hasMany(ScanAccessCode::class, 'evenement_id');
     }
 }

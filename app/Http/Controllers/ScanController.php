@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\Evenement;
+use App\Models\ScanAccessCode;
 use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,51 +13,88 @@ class ScanController extends Controller
 {
     public function index(Request $request)
     {
-        $evenements = Evenement::where('user_id', Auth::id())
-            ->where('statut', 'publié')
-            ->orderByDesc('date_event')
-            ->get();
+        $accessEvenementId = session('scan_access_evenement_id');
+        $accessEvenement = null;
 
-        $selectedEvent = $request->input('evenement_id');
+        if ($accessEvenementId) {
+            $accessEvenement = Evenement::find($accessEvenementId);
+        }
+
+        if (!$accessEvenement) {
+            return view('admin.scan.access');
+        }
+
+        $selectedEvent = $accessEvenement->id;
 
         $scanQuery = Log::where('type_operation', 'scan')
-            ->with(['ticket.evenement']);
-
-        if ($selectedEvent) {
-            $scanQuery->whereHas('ticket', function ($q) use ($selectedEvent) {
+            ->with(['ticket.evenement'])
+            ->whereHas('ticket', function ($q) use ($selectedEvent) {
                 $q->where('evenement_id', $selectedEvent);
             });
-        }
 
         $scans = $scanQuery->orderByDesc('created_at')->limit(50)->get();
 
         $stats = [
             'total_scans' => Log::where('type_operation', 'scan')
-                ->when($selectedEvent, function ($q) use ($selectedEvent) {
-                    $q->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent));
-                })
+                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
                 ->count(),
             'scans_today' => Log::where('type_operation', 'scan')
                 ->whereDate('created_at', today())
-                ->when($selectedEvent, function ($q) use ($selectedEvent) {
-                    $q->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent));
-                })
+                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
                 ->count(),
             'scans_valides' => Log::where('type_operation', 'scan')
                 ->where('details->resultat', 'valide')
-                ->when($selectedEvent, function ($q) use ($selectedEvent) {
-                    $q->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent));
-                })
+                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
                 ->count(),
             'scans_invalides' => Log::where('type_operation', 'scan')
                 ->where('details->resultat', 'invalide')
-                ->when($selectedEvent, function ($q) use ($selectedEvent) {
-                    $q->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent));
-                })
+                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
                 ->count(),
         ];
 
-        return view('admin.scan.index', compact('evenements', 'scans', 'stats', 'selectedEvent'));
+        return view('admin.scan.index', compact('accessEvenement', 'scans', 'stats', 'selectedEvent'));
+    }
+
+    public function verifierAccessCode(Request $request)
+    {
+        $code = strtoupper(trim($request->input('code')));
+
+        if (!$code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Veuillez entrer un code d\'accès.',
+            ]);
+        }
+
+        $accessCode = ScanAccessCode::where('code', $code)
+            ->where('actif', true)
+            ->with('evenement')
+            ->first();
+
+        if (!$accessCode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code d\'accès invalide ou désactivé.',
+            ]);
+        }
+
+        session(['scan_access_evenement_id' => $accessCode->evenement_id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Accès autorisé pour l\'événement : ' . $accessCode->evenement->titre,
+            'evenement' => [
+                'id' => $accessCode->evenement_id,
+                'titre' => $accessCode->evenement->titre,
+            ],
+        ]);
+    }
+
+    public function clearAccess()
+    {
+        session()->forget('scan_access_evenement_id');
+
+        return redirect()->route('scan.index');
     }
 
     public function verifier(Request $request)
@@ -67,6 +105,16 @@ class ScanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Aucun code fourni.',
+            ]);
+        }
+
+        $accessEvenementId = session('scan_access_evenement_id');
+
+        if (!$accessEvenementId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé. Veuillez d\'abord entrer un code d\'accès.',
+                'type' => 'no_access',
             ]);
         }
 
@@ -82,6 +130,7 @@ class ScanController extends Controller
                     'resultat' => 'invalide',
                     'raison' => 'ticket_introuvable',
                     'agent' => Auth::id(),
+                    'evenement_id' => $accessEvenementId,
                 ]),
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
@@ -91,6 +140,27 @@ class ScanController extends Controller
                 'success' => false,
                 'message' => 'Ticket introuvable. Ce code n\'existe pas dans notre systeme.',
                 'type' => 'not_found',
+            ]);
+        }
+
+        if ($ticket->evenement_id !== $accessEvenementId) {
+            Log::create([
+                'ticket_id' => $ticket->id,
+                'type_operation' => 'scan',
+                'details' => json_encode([
+                    'code' => $code,
+                    'resultat' => 'invalide',
+                    'raison' => 'evenement_non_autorise',
+                    'agent' => Auth::id(),
+                ]),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce ticket ne correspond pas à l\'événement que vous scannéz.',
+                'type' => 'wrong_event',
             ]);
         }
 

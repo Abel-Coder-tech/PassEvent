@@ -4,167 +4,94 @@
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Comment ca marche</li>
+    <li class="breadcrumb-item active" aria-current="page">Comment ça marche</li>
 @endsection
 
 @section('content')
-<!-- Hero -->
-<section class="py-5" style="background: linear-gradient(135deg, var(--violet) 0%, var(--violet-dark) 100%); color: #fff;">
-    <div class="container text-center">
-        <h1 class="fw-bold mb-2">Comment ca marche ?</h1>
-        <p class="lead mb-0" style="opacity: 0.9;">4 etapes simples pour obtenir votre billet</p>
+<!-- ===== En-tête de la page ===== -->
+<section class="page-header">
+    <!-- Éléments décoratifs en arrière-plan -->
+    <div class="page-header-bg">
+        <div class="dot d1"></div>
+        <div class="dot d2"></div>
+        <div class="dot d3"></div>
+    </div>
+    <div class="container text-center position-relative" style="z-index:2;">
+        <span class="page-header-badge">Guide d'utilisation</span>
+        <h1 class="page-header-title">Comment ça marche ?</h1>
+        <p class="page-header-sub">4 étapes simples pour obtenir votre billet en un clin d'œil</p>
     </div>
 </section>
 
-<!-- Steps timeline -->
-<section class="py-5">
+<!-- Etapes : 4 cartes modernes -->
+<section class="py-5" style="background: #f8f9fc;">
     <div class="container">
-        <div class="position-relative">
-            <!-- Timeline line -->
-            <div class="position-absolute start-50 top-0 bottom-0 d-none d-md-block" style="width: 3px; background: linear-gradient(to bottom, var(--violet), var(--vert), var(--teal), var(--aubergine)); transform: translateX(-50%); border-radius: 2px; z-index: 0;"></div>
-
-            <!-- Step 1 -->
-            <div class="row g-4 align-items-center mb-5 position-relative">
-                <div class="col-md-5">
-                    <div class="step-card text-end">
-                        <span class="step-number">1</span>
-                        <h4 class="fw-bold mt-2 mb-2">Choisir l'evenement</h4>
-                        <p class="text-muted mb-0">
-                            Parcourez notre liste d'evenements et selectionnez celui qui vous interesse.
-                            Utilisez les filtres pour trouver par date, lieu ou prix.
-                        </p>
+        <div class="row g-4">
+            <!-- Carte 1 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card-modern text-center h-100">
+                    <div class="step-icon-wrap" style="background: linear-gradient(135deg, rgba(135,66,139,0.1), rgba(109,53,112,0.06));">
+                        <span class="step-badge">1</span>
+                        <i class="bi bi-calendar-check" style="font-size: 2.2rem; color: var(--violet);"></i>
                     </div>
-                </div>
-                <div class="col-md-2 text-center d-none d-md-block">
-                    <div class="step-icon-lg" style="background: rgba(135,66,139,0.08); color: var(--violet);">
-                        <i class="bi bi-calendar-check"></i>
-                    </div>
-                </div>
-                <div class="col-md-5">
-                    <div class="step-preview">
-                        <div class="p-3 rounded-3 bg-white shadow-sm">
-                            <div class="d-flex align-items-center gap-3">
-                                <div style="width: 50px; height: 50px; border-radius: 8px; background: linear-gradient(135deg, var(--violet), var(--violet-dark)); display: flex; align-items: center; justify-content: center;">
-                                    <i class="bi bi-calendar-event text-white"></i>
-                                </div>
-                                <div class="text-start">
-                                    <div class="fw-bold" style="font-size: 0.9rem;">Conference IA 2026</div>
-                                    <small class="text-muted">28 Avril 2026 - Cotonou</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Choisir l'evenement</h5>
+                    <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.6;">
+                        Parcourez notre selection d'evenements. Filtrez par date, categorie ou lieu pour trouver celui qui vous correspond.
+                    </p>
                 </div>
             </div>
-
-            <!-- Step 2 -->
-            <div class="row g-4 align-items-center mb-5 position-relative">
-                <div class="col-md-5 order-md-2">
-                    <div class="step-card text-start">
-                        <span class="step-number" style="background: rgba(18,151,110,0.08); color: var(--vert);">2</span>
-                        <h4 class="fw-bold mt-2 mb-2">Remplir vos informations</h4>
-                        <p class="text-muted mb-0">
-                            Choisissez votre tarif (Etudiant ou Externe),
-                            entrez votre nom, email et numero de telephone.
-                            Les etudiants peuvent utiliser un code promo.
-                        </p>
+            <!-- Carte 2 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card-modern text-center h-100">
+                    <div class="step-icon-wrap" style="background: linear-gradient(135deg, rgba(18,151,110,0.1), rgba(18,151,110,0.06));">
+                        <span class="step-badge" style="background: var(--vert);">2</span>
+                        <i class="bi bi-pencil-square" style="font-size: 2.2rem; color: var(--vert);"></i>
                     </div>
-                </div>
-                <div class="col-md-2 text-center d-none d-md-block order-md-1">
-                    <div class="step-icon-lg" style="background: rgba(18,151,110,0.08); color: var(--vert);">
-                        <i class="bi bi-pencil-square"></i>
-                    </div>
-                </div>
-                <div class="col-md-5 order-md-2">
-                    <div class="step-preview">
-                        <div class="p-3 rounded-3 bg-white shadow-sm">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet); font-size: 0.75rem;">Etudiant</span>
-                                <span class="badge" style="background: rgba(66,140,121,0.1); color: var(--teal); font-size: 0.75rem;">Normal</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">Tarif</small>
-                                <strong style="color: var(--vert);">3 000 FCFA</strong>
-                            </div>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Saisissez vos informations</h5>
+                    <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.6;">
+                        Choisissez votre tarif (Etudiant ou Externe), entrez votre nom, email et télephone. Un code promo etudiant ? Ajoutez-le.
+                    </p>
                 </div>
             </div>
-
-            <!-- Step 3 -->
-            <div class="row g-4 align-items-center mb-5 position-relative">
-                <div class="col-md-5">
-                    <div class="step-card text-end">
-                        <span class="step-number" style="background: rgba(66,140,121,0.08); color: var(--teal);">3</span>
-                        <h4 class="fw-bold mt-2 mb-2">Payer securise</h4>
-                        <p class="text-muted mb-0">
-                            Choisissez votre moyen de paiement : MTN Mobile Money, Moov Money ou Celtiis Cash.
-                            Le paiement est securise par KKiaPay.
-                        </p>
+            <!-- Carte 3 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card-modern text-center h-100">
+                    <div class="step-icon-wrap" style="background: linear-gradient(135deg, rgba(52,152,219,0.1), rgba(52,152,219,0.06));">
+                        <span class="step-badge" style="background: #3498db;">3</span>
+                        <i class="bi bi-shield-check" style="font-size: 2.2rem; color: #3498db;"></i>
                     </div>
-                </div>
-                <div class="col-md-2 text-center d-none d-md-block">
-                    <div class="step-icon-lg" style="background: rgba(66,140,121,0.08); color: var(--teal);">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                </div>
-                <div class="col-md-5">
-                    <div class="step-preview">
-                        <div class="p-3 rounded-3 bg-white shadow-sm">
-                            <div class="d-flex justify-content-center gap-3">
-                                <div style="width: 50px; height: 35px; border-radius: 6px; background: #ffcc00; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.6rem;">MTN</div>
-                                <div style="width: 50px; height: 35px; border-radius: 6px; background: #0066cc; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.6rem; color: #fff;">Moov</div>
-                                <div style="width: 50px; height: 35px; border-radius: 6px; background: #cc0000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.6rem; color: #fff;">Celtiis</div>
-                            </div>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Payer securise</h5>
+                    <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.6;">
+                        Payez via MTN Mobile Money, Moov Money ou Celtiis Cash. Le paiement est 100% securisé par KKiaPay.
+                    </p>
                 </div>
             </div>
-
-            <!-- Step 4 -->
-            <div class="row g-4 align-items-center mb-5 position-relative">
-                <div class="col-md-5 order-md-2">
-                    <div class="step-card text-start">
-                        <span class="step-number" style="background: rgba(109,78,114,0.08); color: var(--aubergine);">4</span>
-                        <h4 class="fw-bold mt-2 mb-2">Recevoir votre billet PDF</h4>
-                        <p class="text-muted mb-0">
-                            Une fois le paiement confirme, recevez votre billet PDF par email.
-                            Imprimez-le ou presentez-le sur votre telephone a l'entree.
-                        </p>
+            <!-- Carte 4 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card-modern text-center h-100">
+                    <div class="step-icon-wrap" style="background: linear-gradient(135deg, rgba(109,53,112,0.1), rgba(109,53,112,0.06));">
+                        <span class="step-badge" style="background: #6d3570;">4</span>
+                        <i class="bi bi-envelope-check" style="font-size: 2.2rem; color: #6d3570;"></i>
                     </div>
-                </div>
-                <div class="col-md-2 text-center d-none d-md-block order-md-1">
-                    <div class="step-icon-lg" style="background: rgba(109,78,114,0.08); color: var(--aubergine);">
-                        <i class="bi bi-qr-code"></i>
-                    </div>
-                </div>
-                <div class="col-md-5 order-md-2">
-                    <div class="step-preview">
-                        <div class="p-3 rounded-3 bg-white shadow-sm text-center">
-                            <div class="d-inline-block p-2 rounded" style="background: #f5f5f5;">
-                                <i class="bi bi-qr-code" style="font-size: 2.5rem; color: var(--sombre);"></i>
-                            </div>
-                            <small class="text-muted mt-1 d-block">Envoye par email en PDF</small>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Recevez votre billet</h5>
+                    <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.6;">
+                        Billet PDF recu par email. Imprimez-le ou montrez-le sur votre telephone a l'entree. Un QR code sera scanné.
+                    </p>
                 </div>
             </div>
+        </div>
+
+        <!-- Lien vers les evenements -->
+        <div class="text-center mt-5">
+            <a href="{{ route('evenements.public') }}" class="btn btn-violet btn-lg px-5" style="border-radius: 10px; font-weight: 600;">
+                <i class="bi bi-calendar-event me-2"></i>Découvrir les evenements
+            </a>
         </div>
     </div>
 </section>
 
-<!-- CTA -->
-<section class="py-5" style="background: linear-gradient(135deg, var(--vert) 0%, var(--teal) 100%); color: #fff;">
-    <div class="container text-center">
-        <h3 class="fw-bold mb-3">Pret a vivre une experience unique ?</h3>
-        <a href="{{ route('evenements.public') }}" class="btn btn-light btn-lg px-5" style="border-radius: 8px; font-weight: 600;">
-            <i class="bi bi-calendar-event me-1"></i> Voir les evenements
-        </a>
-    </div>
-</section>
-
-<!-- Questions frequentes -->
-<section class="py-5" style="background: var(--blanc-casse);">
+<!-- FAQ -->
+<section class="py-5">
     <div class="container">
         <div class="text-center mb-5">
             <h3 class="fw-bold mb-2">Questions frequentes</h3>
@@ -172,107 +99,117 @@
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
+            <div class="col-lg-8">
                 <div class="accordion" id="faqAccordion">
-                    <!-- FAQ 1 -->
-                    <div class="accordion-item border-0 mb-3 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" style="font-weight: 600; font-size: 0.95rem; border-radius: 12px;">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" style="font-weight: 600; font-size: 0.93rem;">
                                 <i class="bi bi-ticket-perforated me-2" style="color: var(--violet);"></i>
-                                Comment recuperer mon ticket ?
+                                Comment récuperer mon ticket ?
                             </button>
                         </h2>
                         <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted" style="font-size: 0.9rem; line-height: 1.7;">
-                                Allez sur la page <strong>"Recuperer mon ticket"</strong> et entrez le <strong>nom complet</strong>, l'<strong>email</strong> et le <strong>numero de telephone</strong> utilises lors de l'achat. Les trois informations sont necessaires pour retrouver votre billet. Vous pourrez ensuite le telecharger en PDF.
+                            <div class="accordion-body text-muted pt-0" style="font-size: 0.9rem; line-height: 1.7;">
+                                Allez sur la page <strong>"Récuperer mon ticket"</strong> et entrez le <strong>nom complet</strong>, l'<strong>email</strong> et le <strong>numero de telephone</strong> utilises lors de l'achat. Les trois informations sont necessaires pour retrouver votre billet. Vous pourrez ensuite le telecharger en PDF.
                             </div>
                         </div>
                     </div>
 
-                    <!-- FAQ 2 -->
-                    <div class="accordion-item border-0 mb-3 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" style="font-weight: 600; font-size: 0.95rem; border-radius: 12px;">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" style="font-weight: 600; font-size: 0.93rem;">
                                 <i class="bi bi-wallet2 me-2" style="color: var(--vert);"></i>
                                 Quels moyens de paiement sont acceptes ?
                             </button>
                         </h2>
                         <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted" style="font-size: 0.9rem; line-height: 1.7;">
+                            <div class="accordion-body text-muted pt-0" style="font-size: 0.9rem; line-height: 1.7;">
                                 Nous acceptons <strong>MTN Mobile Money</strong>, <strong>Moov Money</strong> et <strong>Celtiis Cash</strong> via la plateforme securisee KKiaPay. Tous les paiements sont chiffres et proteges.
                             </div>
                         </div>
                     </div>
 
-                    <!-- FAQ 3 -->
-                    <div class="accordion-item border-0 mb-3 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" style="font-weight: 600; font-size: 0.95rem; border-radius: 12px;">
-                                <i class="bi bi-arrow-counterclockwise me-2" style="color: var(--teal);"></i>
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" style="font-weight: 600; font-size: 0.93rem;">
+                                <i class="bi bi-arrow-counterclockwise me-2" style="color: #3498db;"></i>
                                 Puis-je obtenir un remboursement ?
                             </button>
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted" style="font-size: 0.9rem; line-height: 1.7;">
-                                Les billets ne sont pas remboursables sauf en cas d'annulation de l'evenement par l'organisateur. Si vous rencontrez un probleme, contactez-nous via <a href="https://wa.me/22943704513" class="text-decoration-none" style="color: var(--violet); font-weight: 600;">WhatsApp</a> avec votre reference de transaction.
+                            <div class="accordion-body text-muted pt-0" style="font-size: 0.9rem; line-height: 1.7;">
+                                Les billets ne sont pas remboursables sauf en cas d'annulation de l'événement par l'organisateur. Si vous rencontrez un probleme, contactez-nous via <a href="https://wa.me/22943704513" class="text-decoration-none" style="color: var(--violet); font-weight: 600;">WhatsApp</a> avec votre reference de transaction.
                             </div>
                         </div>
                     </div>
 
-                    <!-- FAQ 4 -->
-                    <div class="accordion-item border-0 mb-3 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" style="font-weight: 600; font-size: 0.95rem; border-radius: 12px;">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" style="font-weight: 600; font-size: 0.93rem;">
                                 <i class="bi bi-mortarboard me-2" style="color: var(--aubergine);"></i>
                                 Comment fonctionne le code promo etudiant ?
                             </button>
                         </h2>
                         <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted" style="font-size: 0.9rem; line-height: 1.7;">
-                                Si vous etes etudiant, utilisez le <strong>code promo fourni par votre institution</strong> lors de l'achat pour beneficier d'une reduction sur le tarif etudiant. Le code est unique et lie a un tarif specifique. Il ne peut etre utilise qu'une seule fois.
+                            <div class="accordion-body text-muted pt-0" style="font-size: 0.9rem; line-height: 1.7;">
+                                Si vous êtes étudiant, utilisez le <strong>code promo fourni par votre institution</strong> lors de l'achat pour beneficier d'une reduction sur le tarif étudiant. Le code est unique et lié a un tarif specifique. Il ne peut être utiliser qu'une seule fois.
                             </div>
                         </div>
                     </div>
 
-                    <!-- FAQ 5 -->
-                    <div class="accordion-item border-0 mb-3 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" style="font-weight: 600; font-size: 0.95rem; border-radius: 12px;">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" style="font-weight: 600; font-size: 0.93rem;">
                                 <i class="bi bi-envelope me-2" style="color: var(--violet);"></i>
                                 Je n'ai pas recu mon billet par email
                             </button>
                         </h2>
                         <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted" style="font-size: 0.9rem; line-height: 1.7;">
-                                Verifiez d'abord dans vos spams. Si votre paiement a ete confirme mais que vous n'avez pas recu le billet, rendez-vous sur la page <strong>"Recuperer mon ticket"</strong> pour le telecharger en PDF directement.
+                            <div class="accordion-body text-muted pt-0" style="font-size: 0.9rem; line-height: 1.7;">
+                                Verifiez d'abord dans vos spams. Si votre paiement a été confirmer mais que vous n'avez pas reçu le ticket, rendez-vous sur la page <strong>"Récuperer mon ticket"</strong> pour le télécharger en PDF directement.
                             </div>
                         </div>
                     </div>
 
-                    <!-- FAQ 6 -->
-                    <div class="accordion-item border-0 mb-3 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" style="font-weight: 600; font-size: 0.95rem; border-radius: 12px;">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" style="font-weight: 600; font-size: 0.93rem;">
                                 <i class="bi bi-shield-lock me-2" style="color: var(--violet);"></i>
-                                Mes donnees sont-elles protegees ?
+                                Mes donnees sont-elles protegées ?
                             </button>
                         </h2>
                         <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body text-muted" style="font-size: 0.9rem; line-height: 1.7;">
-                                Oui. Vos informations personnelles sont chiffrees et ne sont utilisees que pour la delivrance de vos billets. Nous ne stockons aucune information de paiement. Notre partenaire de paiement <strong>KKiaPay</strong> est certifie PCI DSS.
+                            <div class="accordion-body text-muted pt-0" style="font-size: 0.9rem; line-height: 1.7;">
+                                Oui. Vos informations personnelles sont chiffrées et ne sont utilisées que pour la delivrance de vos tickets. Nous ne stockons aucune information de paiement. Notre partenaire <strong>KKiaPay</strong> est certifié PCI DSS.
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted">Vous n'avez pas trouve la reponse a votre question ?</p>
+                    <a href="{{ route('contact') }}" class="btn btn-outline-violet px-4" style="border-radius: 8px;">
+                        <i class="bi bi-envelope me-1"></i> Contactez-nous
+                    </a>
+                </div>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- Contact CTA -->
-        <div class="text-center mt-5">
-            <p class="text-muted mb-3">Vous n'avez pas trouve la reponse a votre question ?</p>
-            <a href="{{ route('contact') }}" class="btn btn-violet px-4" style="border-radius: 8px;">
-                <i class="bi bi-envelope me-1"></i> Contactez-nous
-            </a>
+<!-- CTA avant footer -->
+<section style="background: linear-gradient(135deg, var(--vert) 0%, #0d7a54 100%); color: #fff; padding: 3.5rem 0;">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-md-7">
+                <h3 class="fw-bold mb-2" style="font-size: 1.6rem;">Prêt à vivre une expérience unique ?</h3>
+                <p class="mb-0" style="opacity: 0.9; font-size: 1rem;">Rejoignez des milliers de participants et ne manquez plus aucun evenement.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <a href="{{ route('evenements.public') }}" class="btn btn-light btn-lg px-5" style="border-radius: 10px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+                    <i class="bi bi-arrow-right me-1"></i> Voir les evenements
+                </a>
+            </div>
         </div>
     </div>
 </section>
@@ -280,53 +217,95 @@
 
 @section('styles')
 <style>
-    .step-card {
-        padding: 1.5rem;
-        background: var(--blanc);
-        border-radius: 12px;
+    /* Cartes etapes modernes */
+    .step-card-modern {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
         box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        cursor: default;
+    }
+    .step-card-modern:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
     }
 
-    .step-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    }
-
-    .step-number {
-        display: inline-flex;
+    .step-icon-wrap {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(135,66,139,0.08);
-        color: var(--violet);
-        font-weight: 800;
-        font-size: 1.1rem;
-    }
-
-    .step-icon-lg {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        border: 3px solid var(--blanc);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        z-index: 1;
+        margin: 0 auto;
         position: relative;
     }
 
-    .step-preview {
-        transition: transform 0.2s;
+    .step-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--violet);
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-    .step-preview:hover {
-        transform: translateY(-2px);
-    }
+/* ===== En-tête de page partagé ===== */
+.page-header {
+    padding: 3rem 0;
+    background: linear-gradient(135deg, #7B3FA0, #6a1b9a);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+.page-header-bg {
+    position: absolute; inset: 0;
+    pointer-events: none;
+}
+.dot {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.2;
+}
+.d1 { width: 200px; height: 200px; background: #fff; top: -60px; right: -60px; }
+.d2 { width: 140px; height: 140px; background: #fff; bottom: -40px; left: 20%; }
+.d3 { width: 100px; height: 100px; background: #fff; top: 30%; left: -30px; }
+.page-header-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.3rem;
+    animation: fadeUp 0.5s ease forwards;
+}
+.page-header-sub {
+    font-size: 1rem;
+    opacity: 0.85;
+    margin: 0;
+    animation: fadeUp 0.5s ease 0.15s both;
+}
+.page-header-badge {
+    display: inline-block;
+    padding: 0.25rem 0.9rem;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.12);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    animation: fadeUp 0.5s ease 0.08s both;
+}
+@keyframes fadeUp { 0%{opacity:0;transform:translateY(12px)} 100%{opacity:1;transform:translateY(0)} }
 
     /* Accordion custom */
     .accordion-button:not(.collapsed) {
@@ -342,17 +321,6 @@
 
     .accordion-button::after {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2387428b'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-    }
-
-    @media (max-width: 767.98px) {
-        .step-card {
-            text-align: center !important;
-            padding: 1.25rem;
-        }
-
-        .step-preview {
-            margin-top: 1rem;
-        }
     }
 </style>
 @endsection

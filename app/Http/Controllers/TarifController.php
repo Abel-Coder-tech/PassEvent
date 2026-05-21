@@ -84,7 +84,8 @@ class TarifController extends Controller
     public function destroy(Evenement $evenement, Tarif $tarif)
     {
         abort_if($evenement->user_id !== Auth::id(), 403);
-        $tarif->delete();
+        abort_if($tarif->evenement_id !== $evenement->id, 403);
+        Tarif::destroy($tarif->id);
 
         return redirect()->route('admin.tarifs.index', $evenement->id)
             ->with('success', 'Tarif supprimé avec succès.');

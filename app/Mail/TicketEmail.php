@@ -7,6 +7,7 @@ use App\Services\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
@@ -36,14 +37,14 @@ class TicketEmail extends Mailable
     {
         return new Envelope(
             subject: 'Votre billet PassEvent pour ' . $this->ticket->evenement->titre,
-            replyTo: ['passevent2026@gmail.com' => 'PassEvent'],
+            replyTo: [new Address('passevent2026@gmail.com', 'PassEvent')],
         );
     }
 
     public function headers(): Headers
     {
         return new Headers(
-            textHeaders: [
+            text: [
                 'Precedence' => 'bulk',
                 'List-Unsubscribe' => '<mailto:passevent2026@gmail.com?subject=Desinscription>',
                 'X-Mailer' => 'PassEvent Billetterie',

@@ -137,7 +137,7 @@ class TicketController extends Controller
 
     public function annuler($id)
     {
-        $ticket = Ticket::findOrFail($id);
+        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
         if ($ticket->statut_paiement !== 'payé' && $ticket->statut_paiement !== 'en_attente') {
             return back()->with('error', 'Ce ticket ne peut pas etre annule.');
@@ -149,6 +149,13 @@ class TicketController extends Controller
             'statut_paiement' => 'remboursé',
         ]);
 
+        if ($ticket->evenement) {
+            $ticket->evenement->decrement('quota_vendu');
+        }
+        if ($ticket->tarif) {
+            $ticket->tarif->decrement('quantite_vendue');
+        }
+
         Log::create([
             'ticket_id' => $ticket->id,
             'type_operation' => 'remboursement',
@@ -157,7 +164,7 @@ class TicketController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        return back()->with('success', 'Ticket annule avec succes.');
+        return back()->with('success', 'Ticket annule et quota restaure.');
     }
 
     public function create() { return view('tickets.create'); }

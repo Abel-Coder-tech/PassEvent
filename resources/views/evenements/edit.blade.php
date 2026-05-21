@@ -4,6 +4,12 @@
 
 @section('page-title', 'Modifier l\'événement')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+@endsection
+
 @section('topbar-actions')
 <a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom">
     <i class="bi bi-arrow-left me-1"></i> Retour
@@ -14,7 +20,7 @@
 <div class="page-content">
     <div class="panel-card" style="max-width: 700px;">
         <div class="panel-card-body p-3 p-md-4">
-            <form action="{{ route('admin.evenements.update', $evenement->id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.evenements.update', $evenement->id) }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
                 @method('PUT')
 
@@ -77,6 +83,14 @@
                     @endif
                     <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
                     @error('image') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="gratuit" name="gratuit" value="1" {{ old('gratuit', $evenement->gratuit ?? false) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="gratuit">
+                        <strong>Evenement gratuit</strong>
+                        <small class="text-muted d-block">Les billets sont gratuits pour tous les participants</small>
+                    </label>
                 </div>
 
                 <div class="mb-4">

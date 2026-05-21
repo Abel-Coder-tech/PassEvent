@@ -4,6 +4,11 @@
 
 @section('page-title', 'Messages de contact')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Messages</li>
+@endsection
+
 @section('topbar-actions')
     @if($nonLus > 0)
         <span class="badge bg-danger">{{ $nonLus }} non lu{{ $nonLus > 1 ? 's' : '' }}</span>

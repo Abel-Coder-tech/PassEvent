@@ -92,6 +92,12 @@ class EvenementPublicController extends Controller
 
         $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1)));
 
+        $dispo = $tarif->quantite_disponible - $tarif->quantite_vendue;
+        if ($dispo < $quantite) {
+            $dispo = max(0, $dispo);
+            return back()->with('error', "Il ne reste que {$dispo} place(s) disponible(s) pour ce tarif.")->withInput();
+        }
+
         $codePromoUtilise = null;
         $montantReduction = 0;
         $montantUnitaire = $tarif->prix;
@@ -124,12 +130,6 @@ class EvenementPublicController extends Controller
             $codePromoUtilise = $codePromo->code;
             $montantReduction = $codePromo->calculerReduction($tarif->prix);
             $montantUnitaire = $tarif->prix - $montantReduction;
-            $codePromo->increment('nb_utilisations');
-        }
-
-        $dispo = $tarif->quantite_disponible - $tarif->quantite_vendue;
-        if ($dispo <= 0) {
-            return back()->with('error', 'Ce tarif n\'est plus disponible.');
         }
 
         $montantTotal = $montantUnitaire * $quantite;
@@ -154,10 +154,19 @@ class EvenementPublicController extends Controller
             'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
         ]);
 
-        $evenement->increment('quota_vendu');
-        $tarif->increment('quantite_vendue');
+        $evenement->increment('quota_vendu', $quantite);
+        $tarif->increment('quantite_vendue', $quantite);
+
+        if ($codePromoUtilise) {
+            $codePromo->increment('nb_utilisations', 1);
+        }
+
+        if ($evenement->gratuit) {
+            return redirect()->route('paiement.show', $ticket->id)
+                ->with('success', $quantite > 1 ? "{$quantite} places reservees." : 'Votre place est reservee.');
+        }
 
         return redirect()->route('paiement.show', $ticket->id)
-            ->with('success', 'Votre place est réservée. Finalisez le paiement.');
+            ->with('success', $quantite > 1 ? "{$quantite} places reservees. Finalisez le paiement." : 'Votre place est reservee. Finalisez le paiement.');
     }
 }

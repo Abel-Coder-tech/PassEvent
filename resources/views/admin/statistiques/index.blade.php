@@ -4,6 +4,11 @@
 
 @section('page-title', 'Statistiques')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Statistiques</li>
+@endsection
+
 @section('topbar-actions')
     <div class="btn-group" role="group">
         <a href="{{ route('statistiques.index', ['periode' => '7']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '7' ? 'active' : '' }}" style="border-radius: 6px 0 0 6px; padding: 0.3rem 0.75rem; font-size: 0.78rem;">7 jours</a>

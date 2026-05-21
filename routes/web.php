@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\StatistiqueController;
 use App\Http\Controllers\ParametresController;
 use App\Http\Controllers\RemboursementController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\ForgotPasswordController;
 
 // ============================================================
 // Routes publiques (participant)
@@ -29,7 +31,6 @@ Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show']
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat');
 
 Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
-Route::post('/paiement/{ticket}/confirmer', [PaiementController::class, 'confirmer'])->name('paiement.confirmer');
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
 
 Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
@@ -42,15 +43,28 @@ Route::post('/contact', [SitePublicController::class, 'contactStore'])->name('co
 Route::get('/confidentialite', [SitePublicController::class, 'confidentialite'])->name('confidentialite');
 Route::get('/cgu', [SitePublicController::class, 'cgu'])->name('cgu');
 
+// Newsletter
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
 // Callback KKiaPay
 Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
 Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
 
 // ============================================================
-// Routes de connexion
+// Routes de connexion & inscription
 // ============================================================
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::get('/inscription', [InscriptionController::class, 'create'])->name('inscriptions.create');
+Route::post('/inscription', [InscriptionController::class, 'store'])->name('inscriptions.store');
+Route::get('/verifier-email/{id}/{token}', [InscriptionController::class, 'verify'])->name('inscriptions.verify');
+
+// Mot de passe oublié
+Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showForm'])->name('password.request');
+Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reinitialiser/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reinitialiser', [ForgotPasswordController::class, 'reset'])->name('password.update');
 
 // ============================================================
 // Routes protégées (admin)
@@ -68,16 +82,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/evenements/{evenement}/tarifs/{tarif}/edit', [TarifController::class, 'edit'])->name('tarifs.edit');
         Route::put('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
         Route::delete('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'destroy'])->name('tarifs.destroy');
+
+        Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
+        Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
     });
 
     Route::resource('tickets', TicketController::class);
     Route::post('/tickets/{ticket}/renvoyer', [TicketController::class, 'renvoyer'])->name('tickets.renvoyer');
     Route::post('/tickets/{ticket}/annuler', [TicketController::class, 'annuler'])->name('tickets.annuler');
     Route::get('/tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
-    Route::resource('inscriptions', InscriptionController::class)->except(['store', 'update', 'destroy']);
 
     Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
     Route::post('/scan/verifier', [ScanController::class, 'verifier'])->name('scan.verifier');
+    Route::post('/scan/access-code', [ScanController::class, 'verifierAccessCode'])->name('scan.access-code');
+    Route::get('/scan/clear', [ScanController::class, 'clearAccess'])->name('scan.clear');
 
     Route::get('/statistiques', [StatistiqueController::class, 'index'])->name('statistiques.index');
     Route::get('/ventes-manuelles', [VenteManuelleController::class, 'create'])->name('ventes-manuelles.create');

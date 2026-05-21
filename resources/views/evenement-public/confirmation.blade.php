@@ -19,9 +19,9 @@
                             <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; background: rgba(18,151,110,0.1);">
                                 <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: var(--vert);"></i>
                             </div>
-                            <h4 class="fw-bold mb-2">Paiement confirme !</h4>
+                            <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? 'Inscription confirmee !' : 'Paiement confirme !' }}</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                Votre billet a ete genere avec succes.<br>
+                                {{ $ticket->montant <= 0 ? 'Votre participation a ete enregistree avec succes.' : 'Votre billet a ete genere avec succes.' }}<br>
                                 Il a ete envoye par email a <strong>{{ $ticket->email_acheteur }}</strong>
                             </p>
                         </div>

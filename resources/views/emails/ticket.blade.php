@@ -11,113 +11,135 @@
             color: #1d1d1f;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f7;
+            background-color: #f0eeec;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 560px;
+            margin: 24px auto;
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
         .header {
-            background: linear-gradient(135deg, #6d4e72, #34495e);
+            background: linear-gradient(135deg, #5a3d5e, #3d2a40);
             color: white;
-            padding: 30px 40px;
+            padding: 32px 36px;
             text-align: center;
         }
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
+            letter-spacing: -0.3px;
         }
-        .header p {
-            margin: 8px 0 0;
-            font-size: 14px;
-            opacity: 0.9;
+        .header .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
         }
         .content {
-            padding: 30px 40px;
+            padding: 28px 36px 20px;
         }
-        .event-details {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
+        .greeting {
+            font-size: 15px;
+            margin: 0 0 6px;
         }
-        .event-details h2 {
-            margin: 0 0 15px;
-            font-size: 18px;
-            color: #6d4e72;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        .detail-label {
+        .greeting strong { color: #3d2a40; }
+        .intro {
+            font-size: 13px;
             color: #6c757d;
-            font-weight: 500;
+            margin: 0 0 20px;
         }
-        .detail-value {
+        .event-card {
+            background: #f8f7f5;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin: 0 0 20px;
+        }
+        .event-card h2 {
+            margin: 0 0 12px;
+            font-size: 17px;
+            color: #3d2a40;
+        }
+        .event-card table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .event-card td {
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #eeedeb;
+        }
+        .event-card tr:last-child td { border-bottom: none; }
+        .event-card td:first-child {
+            color: #6c757d;
+            width: 110px;
+        }
+        .event-card td:last-child {
             font-weight: 600;
             color: #1d1d1f;
         }
-        .download-info {
-            background: #e8f5e9;
-            border-left: 4px solid #2e7d32;
-            padding: 15px 20px;
-            margin: 25px 0;
-            border-radius: 0 8px 8px 0;
+        .event-card .price { color: #12976e; }
+        .info-box {
+            background: #f0f4f8;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 0 0 20px;
+            border-left: 4px solid #5a3d5e;
         }
-        .download-info h3 {
-            margin: 0 0 8px;
-            color: #2e7d32;
-            font-size: 16px;
-        }
-        .download-info p {
-            margin: 0;
-            color: #555;
+        .info-box h3 {
+            margin: 0 0 4px;
             font-size: 14px;
+            color: #3d2a40;
         }
-        .footer {
-            background: #f8f9fa;
-            padding: 20px 40px;
-            text-align: center;
-            font-size: 12px;
+        .info-box p {
+            margin: 0;
+            font-size: 13px;
             color: #6c757d;
-            border-top: 1px solid #e9ecef;
         }
-        .footer a {
-            color: #6d4e72;
-            text-decoration: none;
+        .btn-wrap {
+            text-align: center;
+            margin: 22px 0;
         }
         .btn {
             display: inline-block;
-            background: #6d4e72;
-            color: white !important;
-            padding: 12px 24px;
-            border-radius: 8px;
+            background: #5a3d5e;
+            color: #ffffff !important;
+            padding: 13px 32px;
+            border-radius: 10px;
             text-decoration: none;
             font-weight: 600;
-            margin: 15px 0;
+            font-size: 14px;
+        }
+        .help-text {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 20px 0 0;
             text-align: center;
         }
-        .qr-info {
-            text-align: center;
-            padding: 20px;
-            background: #fafafa;
-            border-radius: 8px;
-            margin: 20px 0;
+        .help-text a {
+            color: #5a3d5e;
         }
-        .qr-info i {
-            font-size: 48px;
-            color: #6d4e72;
+        .footer {
+            background: #f8f7f5;
+            padding: 18px 36px;
+            text-align: center;
+            border-top: 1px solid #eeedeb;
+        }
+        .footer p {
+            margin: 0;
+            font-size: 11px;
+            color: #8a7a8e;
+        }
+        .footer a {
+            color: #5a3d5e;
+            text-decoration: none;
         }
     </style>
 </head>
@@ -125,60 +147,57 @@
     <div class="container">
         <div class="header">
             <h1>PassEvent</h1>
-            <p>Votre billet est pret!</p>
+            <span class="badge">&bull; UPAO &bull;</span>
         </div>
 
         <div class="content">
-            <p>Bonjour <strong>{{ $ticket->nom_acheteur }}</strong>,</p>
+            <p class="greeting">Bonjour <strong>{{ $ticket->nom_acheteur }}</strong>,</p>
+            <p class="intro">Votre paiement a &eacute;t&eacute; confirm&eacute;. Votre billet est pr&ecirc;t !</p>
 
-            <p>Votre paiement a ete confirme avec succes. Voici les details de votre evenement :</p>
-
-            <div class="event-details">
+            <div class="event-card">
                 <h2>{{ $ticket->evenement->titre }}</h2>
-                <div class="detail-row">
-                    <span class="detail-label">Date et heure</span>
-                    <span class="detail-value">{{ $ticket->evenement->date_event->format('d/m/Y \a H:i') }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Lieu</span>
-                    <span class="detail-value">{{ $ticket->evenement->lieu }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Type de billet</span>
-                    <span class="detail-value">{{ ucfirst($ticket->type) }} - {{ $ticket->categorie }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Code unique</span>
-                    <span class="detail-value">{{ $ticket->code_unique }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Montant paye</span>
-                    <span class="detail-value" style="color: #2e7d32;">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
-                </div>
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Date et heure</td>
+                        <td>{{ $ticket->evenement->date_event->format('d/m/Y \a H:i') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Lieu</td>
+                        <td>{{ $ticket->evenement->lieu }}</td>
+                    </tr>
+                    <tr>
+                        <td>Billet</td>
+                        <td>{{ ucfirst($ticket->type) }} &middot; {{ $ticket->categorie }}</td>
+                    </tr>
+                    <tr>
+                        <td>Code</td>
+                        <td style="font-family: monospace;">{{ $ticket->code_unique }}</td>
+                    </tr>
+                    <tr>
+                        <td>Montant pay&eacute;</td>
+                        <td class="price">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</td>
+                    </tr>
+                </table>
             </div>
 
-            <div class="download-info">
-                <h3><i class="bi bi-envelope-paper"></i> Billet PDF attache</h3>
-                <p>Votre billet PDF est attache a cet email. Imprimez-le ou presentez-le sur votre telephone le jour de l'evenement. Le QR code sera scanne pour valider votre acces.</p>
+            <div class="info-box">
+                <h3>Billet PDF joint</h3>
+                <p>Imprimez-le ou pr&eacute;sentez-le sur votre t&eacute;l&eacute;phone le jour de l&rsquo;&eacute;v&eacute;nement. Le QR code sera scann&eacute; pour valider votre acc&egrave;s.</p>
             </div>
 
-            <div class="qr-info">
-                <p><strong>Presentez ce billet a l'entree</strong></p>
-                <p style="font-size: 14px; color: #6c757d;">Le QR code contenu dans le PDF est unique et personnel. Ne le partagez pas.</p>
+            <div class="btn-wrap">
+                <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn">T&eacute;l&eacute;charger mon billet</a>
             </div>
 
-            <div style="text-align: center;">
-                <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn">Telecharger mon billet</a>
-            </div>
-
-            <p style="font-size: 14px; color: #6c757d; margin-top: 25px;">
-                En cas de probleme, contactez-nous a <a href="mailto:passevent2026@gmail.com">passevent2026@gmail.com</a> avec votre reference <strong>{{ $ticket->transaction_id }}</strong>.
+            <p class="help-text">
+                En cas de probl&egrave;me, contactez <a href="mailto:passevent2026@gmail.com">passevent2026@gmail.com</a><br>
+                R&eacute;f&eacute;rence : <strong>{{ $ticket->transaction_id }}</strong>
             </p>
         </div>
 
         <div class="footer">
-            <p>PassEvent - Billetterie intelligente pour vos evenements au Benin</p>
-            <p><a href="{{ url('/aide') }}">Centre d'aide</a> | <a href="{{ url('/contact') }}">Contact</a></p>
+            <p>PassEvent &mdash; Billetterie intelligente pour vos &eacute;v&eacute;nements au B&eacute;nin</p>
+            <p style="margin-top: 4px;"><a href="{{ url('/aide') }}">Centre d'aide</a></p>
         </div>
     </div>
 </body>

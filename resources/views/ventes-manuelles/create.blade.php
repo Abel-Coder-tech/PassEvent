@@ -4,6 +4,11 @@
 
 @section('page-title', 'Vente manuelle')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Vente manuelle</li>
+@endsection
+
 @section('page-subtitle', 'Vendre un billet sur place sans paiement en ligne')
 
 @section('content')

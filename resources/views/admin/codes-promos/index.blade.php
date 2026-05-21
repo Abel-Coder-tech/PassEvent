@@ -4,6 +4,11 @@
 
 @section('page-title', 'Codes Promo')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Codes Promo</li>
+@endsection
+
 @section('topbar-actions')
     <div class="d-flex gap-2">
         <a href="{{ route('admin.codes-promos.export', ['evenement_id' => $selectedEvent]) }}" class="btn btn-secondary-custom btn-sm" style="border-radius: 6px;">

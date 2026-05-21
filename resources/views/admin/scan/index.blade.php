@@ -4,10 +4,18 @@
 
 @section('page-title', 'Scan QR Code')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Scan QR</li>
+@endsection
+
 @section('topbar-actions')
     <button type="button" class="btn btn-vert btn-sm" id="btnToggleCamera">
         <i class="bi bi-camera me-1"></i> <span class="btn-text">Camera</span>
     </button>
+    <a href="{{ route('scan.clear') }}" class="btn btn-secondary-custom btn-sm ms-2">
+        <i class="bi bi-arrow-left me-1"></i> Changer d'événement
+    </a>
 @endsection
 
 @section('content')
@@ -129,6 +137,22 @@
 
 <div class="page-content">
     <div class="scan-container">
+        {{-- Événement en cours --}}
+        <div class="d-flex align-items-center justify-content-between mb-3 p-3" style="background: linear-gradient(135deg, rgba(123,63,160,0.06), rgba(46,125,79,0.06)); border-radius: 14px;">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123,63,160,0.1); display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-calendar-event" style="color: #7B3FA0; font-size: 1.2rem;"></i>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">Événement en cours</div>
+                    <div class="fw-bold" style="font-size: 1rem;">{{ $accessEvenement->titre }}</div>
+                </div>
+            </div>
+            <a href="{{ route('scan.clear') }}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px; font-size: 0.78rem;">
+                <i class="bi bi-box-arrow-right me-1"></i> Quitter
+            </a>
+        </div>
+
         {{-- Stats --}}
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -202,6 +226,14 @@
                         <h5><i class="bi bi-keyboard me-2" style="color: var(--violet);"></i>Saisie manuelle</h5>
                     </div>
                     <div class="panel-card-body">
+                        <div class="d-flex align-items-center gap-2 mb-3 p-2" style="background: rgba(123,63,160,0.06); border-radius: 10px;">
+                            <i class="bi bi-calendar-event" style="color: #7B3FA0; font-size: 1.1rem;"></i>
+                            <div class="min-w-0">
+                                <div style="font-size: 0.72rem; color: #888;">Événement en cours</div>
+                                <div class="fw-semibold" style="font-size: 0.88rem;">{{ $accessEvenement->titre }}</div>
+                            </div>
+                        </div>
+
                         <p class="text-muted mb-3" style="font-size: 0.82rem;">Entrez le code unique du ticket manuellement.</p>
 
                         <form id="manualScanForm">
@@ -212,20 +244,6 @@
                                 <i class="bi bi-search me-1"></i> Vérifier le ticket
                             </button>
                         </form>
-
-                        <div class="mt-3 pt-3" style="border-top: 1px solid #f0f0f0;">
-                            <label class="form-label fw-semibold" style="font-size: 0.78rem;">Filtrer par événement</label>
-                            <form action="{{ route('scan.index') }}" method="GET">
-                                <select name="evenement_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="">Tous les événements</option>
-                                    @foreach($evenements as $event)
-                                        <option value="{{ $event->id }}" {{ $selectedEvent == $event->id ? 'selected' : '' }}>
-                                            {{ Str::limit($event->titre, 40) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </form>
-                        </div>
                     </div>
                 </div>
             </div>

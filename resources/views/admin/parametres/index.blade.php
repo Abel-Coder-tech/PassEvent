@@ -4,6 +4,11 @@
 
 @section('page-title', 'Paramètres')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Paramètres</li>
+@endsection
+
 @section('content')
 <style>
     .settings-sidebar {

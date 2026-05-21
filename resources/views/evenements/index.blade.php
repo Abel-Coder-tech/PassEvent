@@ -4,6 +4,10 @@
 
 @section('page-title', 'Mes événements')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Événements</li>
+@endsection
 
 @section('content')
 <div class="page-content">

@@ -4,6 +4,12 @@
 
 @section('page-title', 'Details du ticket')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('tickets.index') }}">Tickets</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Détail</li>
+@endsection
+
 @section('topbar-actions')
 <a href="{{ route('tickets.index') }}" class="btn btn-secondary-custom btn-sm">
     <i class="bi bi-arrow-left me-1"></i> Retour

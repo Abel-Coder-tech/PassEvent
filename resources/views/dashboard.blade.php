@@ -4,6 +4,10 @@
 
 @section('page-title', 'Tableau de bord')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item active" aria-current="page">Tableau de bord</li>
+@endsection
+
 @section('topbar-actions')
 <span class="badge-scans">{{ $ticketsScannes }} scans récents</span>
 <a href="{{ route('tickets.index') }}" class="btn btn-secondary-custom btn-sm">Voir les tickets</a>
@@ -74,7 +78,7 @@
         </div>
     </div>
 
-    <!-- Row 2: Chart + Recent Events -->
+    <!-- Ligne 2 : Graphique + Actualités -->
     <div class="row g-3 mb-4">
         <!-- Chart -->
         <div class="col-lg-7">
@@ -104,7 +108,7 @@
             </div>
         </div>
 
-        <!-- Recent Events -->
+        <!-- Événements récents -->
         <div class="col-lg-5">
             <div class="panel-card" style="height: 100%;">
                 <div class="panel-card-header">
@@ -163,7 +167,7 @@
         </div>
     </div>
 
-    <!-- Row 3: Scan + Promos + Activity -->
+    <!-- Ligne 3 : Scan + Promotions + Activité -->
     <div class="row g-3">
         <!-- Scan en temps réel -->
         <div class="col-lg-4">
@@ -222,13 +226,13 @@
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <div class="mini-stat">
-                                <div class="mini-stat-value">{{ $codesGénérés }}</div>
+                                <div class="mini-stat-value">{{ $codesGeneres }}</div>
                                 <div class="mini-stat-label">Générés</div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="mini-stat">
-                                <div class="mini-stat-value text-vert">{{ $codesUtilisés }}</div>
+                                <div class="mini-stat-value text-vert">{{ $codesUtilises }}</div>
                                 <div class="mini-stat-label">Utilisés</div>
                             </div>
                         </div>

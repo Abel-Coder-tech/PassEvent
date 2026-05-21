@@ -4,6 +4,13 @@
 
 @section('page-title', 'Tarifs — ' . $evenement->titre)
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.evenements.show', $evenement->id) }}">{{ $evenement->titre }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Tarifs</li>
+@endsection
+
 @section('topbar-actions')
 <a href="{{ route('admin.tarifs.create', $evenement->id) }}" class="btn btn-vert btn-sm me-2">
     <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Ajouter un tarif</span>

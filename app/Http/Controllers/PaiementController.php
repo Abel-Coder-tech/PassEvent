@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\Log;
 use App\Services\KkiaPayService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Mail;
 
 class PaiementController extends Controller
@@ -26,37 +27,24 @@ class PaiementController extends Controller
             return redirect()->route('confirmation.show', $ticket->id);
         }
 
-        return view('evenement-public.paiement', compact('ticket'));
-    }
+        if ($ticket->montant <= 0) {
+            $ticket->update([
+                'statut_paiement' => 'payé',
+                'transaction_id' => 'GRATUIT-' . strtoupper(\Illuminate\Support\Str::random(8)),
+            ]);
 
-    public function confirmer(Request $request, $ticketId)
-    {
-        $ticket = Ticket::with('evenement')->findOrFail($ticketId);
+            try {
+                $ticket->load('evenement', 'tarif');
+                Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
+            } catch (\Exception $e) {
+                FacadesLog::error('Email gratuit non envoye pour ticket ' . $ticket->id . ' : ' . $e->getMessage());
+            }
 
-        if ($ticket->statut_paiement === 'payé') {
-            return redirect()->route('confirmation.show', $ticket->id);
+            return redirect()->route('confirmation.show', $ticket->id)
+                ->with('success', 'Participation confirmee ! Votre billet a ete envoye par email.');
         }
 
-        $validated = $request->validate([
-            'methode_paiement' => 'required|in:mtn,moov,celtiis,movimoney',
-            'telephone_paiement' => 'required|string|min:6|max:20',
-        ], [
-            'methode_paiement.required' => 'Choisissez un moyen de paiement.',
-            'methode_paiement.in' => 'Moyen de paiement invalide.',
-            'telephone_paiement.required' => 'Le numero de telephone est obligatoire.',
-            'telephone_paiement.min' => 'Le numero doit contenir au moins 6 caracteres.',
-        ]);
-
-        $ticket->update([
-            'methode_paiement' => $validated['methode_paiement'],
-            'telephone_paiement' => $validated['telephone_paiement'],
-            'statut_paiement' => 'payé',
-            'transaction_id' => strtoupper('TXN-' . \Illuminate\Support\Str::random(10)),
-        ]);
-
-        Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
-
-        return redirect()->route('confirmation.show', $ticket->id);
+        return view('evenement-public.paiement', compact('ticket'));
     }
 
     public function callback(Request $request)
@@ -64,23 +52,42 @@ class PaiementController extends Controller
         $ticketId = $request->query('ticket');
         $transactionId = $request->query('transaction_id');
 
+        if (!$transactionId) {
+            return redirect()->route('paiement.show', $ticketId)
+                ->with('error', 'Aucune transaction retournee par KKiaPay.');
+        }
+
         $ticket = Ticket::with('evenement')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement === 'payé') {
             return redirect()->route('confirmation.show', $ticket->id);
         }
 
-        $verification = $this->kkiapay->verifyTransaction($transactionId);
+        try {
+            $verification = $this->kkiapay->verifyTransaction($transactionId);
+        } catch (\Exception $e) {
+            FacadesLog::error('KKiaPay verify failed for ticket ' . $ticket->id . ': ' . $e->getMessage());
+            return redirect()->route('paiement.show', $ticket->id)
+                ->with('error', 'Impossible de verifier le paiement. Veuillez reessayer.');
+        }
 
-        if (isset($verification['status']) && $verification['status'] === 'SUCCESS') {
+        $status = $verification['status'] ?? ($verification['state'] ?? null);
+        $isSuccess = in_array($status, ['SUCCESS', 'success', 'COMPLETED', 'completed', true], true);
+
+        if ($isSuccess) {
             $ticket->update([
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
-                'methode_paiement' => $verification['channel'] ?? 'mobile_money',
+                'methode_paiement' => $verification['channel'] ?? $verification['operator'] ?? 'mobile_money',
                 'telephone_paiement' => $verification['phone'] ?? $ticket->telephone_acheteur,
             ]);
 
-            Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
+            try {
+                $ticket->load('evenement', 'tarif');
+                Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
+            } catch (\Exception $e) {
+                FacadesLog::error('Email non envoye pour ticket ' . $ticket->id . ' : ' . $e->getMessage());
+            }
 
             Log::create([
                 'ticket_id' => $ticket->id,
@@ -93,6 +100,12 @@ class PaiementController extends Controller
             return redirect()->route('confirmation.show', $ticket->id)
                 ->with('success', 'Paiement confirme avec succes!');
         }
+
+        FacadesLog::warning('KKiaPay verification failed', [
+            'ticket' => $ticket->id,
+            'transaction_id' => $transactionId,
+            'response' => $verification,
+        ]);
 
         return redirect()->route('paiement.show', $ticket->id)
             ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');

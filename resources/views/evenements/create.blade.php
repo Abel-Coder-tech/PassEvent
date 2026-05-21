@@ -4,6 +4,12 @@
 
 @section('page-title', 'Créer un événement')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Créer</li>
+@endsection
+
 @section('topbar-actions')
 <a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom">
     <i class="bi bi-arrow-left me-1"></i> Retour
@@ -14,7 +20,7 @@
 <div class="page-content">
     <div class="panel-card" style="max-width: 700px;">
         <div class="panel-card-body p-3 p-md-4">
-            <form action="{{ route('admin.evenements.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.evenements.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
 
                 <div class="mb-3">
@@ -90,26 +96,36 @@
                             <i class="bi bi-cash-coin me-2"></i>Tarification
                         </h6>
 
-                        <div class="mb-3">
-                            <label for="prix_base" class="form-label fw-semibold">Prix de base (Externe Simple) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control @error('prix_base') is-invalid @enderror" id="prix_base" name="prix_base" value="{{ old('prix_base') }}" min="0" step="100" placeholder="Ex: 10000" required>
-                            <small class="text-muted">Prix du billet externe simple</small>
-                            @error('prix_base') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="gratuit" name="gratuit" value="1" {{ old('gratuit') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="gratuit">
+                                <strong>Evenement gratuit</strong>
+                                <small class="text-muted d-block">Les billets seront gratuits pour tous les participants (aucun paiement requis)</small>
+                            </label>
                         </div>
 
-                        <div class="row">
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="multiplicateur_vip" class="form-label fw-semibold">Multiplicateur VIP</label>
-                                <select class="form-select" id="multiplicateur_vip" name="multiplicateur_vip">
-                                    <option value="1.5" {{ old('multiplicateur_vip') == '1.5' ? 'selected' : '' }}>x1.5 (50% plus cher)</option>
-                                    <option value="2" {{ old('multiplicateur_vip') == '2' ? 'selected' : '' }}>x2 (2x plus cher)</option>
-                                </select>
-                                <small class="text-muted">Les billets VIP seront calculés automatiquement</small>
+                        <div id="pricing-fields">
+                            <div class="mb-3">
+                                <label for="prix_base" class="form-label fw-semibold">Prix de base (Externe Simple) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control @error('prix_base') is-invalid @enderror" id="prix_base" name="prix_base" value="{{ old('prix_base') }}" min="0" step="100" placeholder="Ex: 10000" required>
+                                <small class="text-muted">Prix du billet externe simple</small>
+                                @error('prix_base') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="reduction_etudiant" class="form-label fw-semibold">Réduction étudiant (%)</label>
-                                <input type="number" class="form-control" id="reduction_etudiant" name="reduction_etudiant" value="{{ old('reduction_etudiant', 30) }}" min="0" max="100">
-                                <small class="text-muted">Les étudiants bénéficient d'une réduction sur tous les tarifs</small>
+
+                            <div class="row">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="multiplicateur_vip" class="form-label fw-semibold">Multiplicateur VIP</label>
+                                    <select class="form-select" id="multiplicateur_vip" name="multiplicateur_vip">
+                                        <option value="1.5" {{ old('multiplicateur_vip') == '1.5' ? 'selected' : '' }}>x1.5 (50% plus cher)</option>
+                                        <option value="2" {{ old('multiplicateur_vip') == '2' ? 'selected' : '' }}>x2 (2x plus cher)</option>
+                                    </select>
+                                    <small class="text-muted">Les billets VIP seront calculés automatiquement</small>
+                                </div>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="reduction_etudiant" class="form-label fw-semibold">Réduction étudiant (%)</label>
+                                    <input type="number" class="form-control" id="reduction_etudiant" name="reduction_etudiant" value="{{ old('reduction_etudiant', 30) }}" min="0" max="100">
+                                    <small class="text-muted">Les étudiants bénéficient d'une réduction sur tous les tarifs</small>
+                                </div>
                             </div>
                         </div>
 
@@ -138,6 +154,16 @@
 @section('scripts')
 <script>
 function updatePreview() {
+    const gratuit = document.getElementById('gratuit')?.checked;
+    if (gratuit) {
+        document.getElementById('preview-tarifs').innerHTML =
+            '<strong>Étudiant Simple:</strong> Gratuit<br>' +
+            '<strong>Étudiant VIP:</strong> Gratuit<br>' +
+            '<strong>Externe Simple:</strong> Gratuit<br>' +
+            '<strong>Externe VIP:</strong> Gratuit';
+        return;
+    }
+
     const base = parseFloat(document.getElementById('prix_base')?.value || 0);
     const mult = parseFloat(document.getElementById('multiplicateur_vip')?.value || 1.5);
     const reduc = parseFloat(document.getElementById('reduction_etudiant')?.value || 0) / 100;
@@ -163,9 +189,17 @@ function formatPrice(price) {
     return Math.round(price).toLocaleString('fr-FR') + ' F';
 }
 
+function toggleGratuit() {
+    const checked = document.getElementById('gratuit')?.checked;
+    const fields = document.getElementById('pricing-fields');
+    fields.style.display = checked ? 'none' : 'block';
+    updatePreview();
+}
+
+document.getElementById('gratuit')?.addEventListener('change', toggleGratuit);
 document.getElementById('prix_base')?.addEventListener('input', updatePreview);
 document.getElementById('multiplicateur_vip')?.addEventListener('change', updatePreview);
 document.getElementById('reduction_etudiant')?.addEventListener('input', updatePreview);
-updatePreview();
+toggleGratuit();
 </script>
 @endsection

@@ -4,6 +4,13 @@
 
 @section('page-title', 'Codes promos étudiants')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.evenements.show', $evenement->id) }}">{{ $evenement->titre }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Codes promos</li>
+@endsection
+
 @section('page-subtitle', 'Liste des codes promos — ' . $evenement->titre . ' · ' . $totalGeneres . ' codes générés')
 
 @section('topbar-actions')

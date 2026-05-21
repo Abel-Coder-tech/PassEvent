@@ -47,8 +47,8 @@ class DashboardController extends Controller
             ->take(4)
             ->get();
 
-        $codesGénérés = CodePromo::whereIn('evenement_id', $evenementsIds)->count();
-        $codesUtilisés = CodePromo::whereIn('evenement_id', $evenementsIds)
+        $codesGeneres = CodePromo::whereIn('evenement_id', $evenementsIds)->count();
+        $codesUtilises = CodePromo::whereIn('evenement_id', $evenementsIds)
             ->where('nb_utilisations', '>', 0)
             ->count();
 
@@ -161,8 +161,8 @@ class DashboardController extends Controller
             'ticketsAbsents',
             'evenementsRecents',
             'codesPromos',
-            'codesGénérés',
-            'codesUtilisés',
+            'codesGeneres',
+            'codesUtilises',
             'ventes7Jours',
             'joursLabels',
             'ventesToday',

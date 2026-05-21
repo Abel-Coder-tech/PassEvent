@@ -120,12 +120,8 @@
         }
 
         /* Breadcrumb bar */
-        .breadcrumb-bar {
-            background: var(--blanc);
-            border-bottom: 1px solid #f0f0f0;
-            padding: 0.5rem 0;
-        }
 
+        
         .breadcrumb-bar .breadcrumb {
             margin: 0;
             padding: 0;
@@ -420,7 +416,7 @@
                 <li><a href="{{ route('evenements.public') }}" class="{{ request()->routeIs('evenements.public*') ? 'active' : '' }}">Evenements</a></li>
                 <li><a href="{{ route('aide') }}" class="{{ request()->routeIs('aide') ? 'active' : '' }}">Comment ça marche</a></li>
                 <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">Contact</a></li>
-                <li><a href="{{ route('tickets.recuperer') }}" class="nav-recuperer {{ request()->routeIs('tickets.recuperer', 'tickets.rechercher') ? 'active' : '' }}">Mon ticket</a></li>
+                <li><a href="{{ route('tickets.recuperer') }}" class="nav-recuperer {{ request()->routeIs('tickets.recuperer', 'tickets.rechercher') ? 'active' : '' }}">Récupérer un ticket</a></li>
             </ul>
         </div>
     </header>
@@ -437,19 +433,6 @@
             }
         });
     </script>
-
-    <!-- Breadcrumb -->
-    @hasSection('breadcrumb')
-        <div class="breadcrumb-bar">
-            <div class="container">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        @yield('breadcrumb')
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    @endif
 
     <!-- Alerts -->
     @if(session('success'))
@@ -490,56 +473,92 @@
     <!-- Footer -->
     <footer class="public-footer">
         <div class="container">
+            <!-- Premiere ligne : 4 colonnes -->
             <div class="row g-4">
-                <div class="col-12 col-md-4">
+                <!-- Colonne 1 : Logo + Slogan -->
+                <div class="col-12 col-md-3">
                     <a href="{{ route('accueil') }}" class="brand" style="font-size:1.3rem; font-weight:700; color:#fff; text-decoration:none; display:flex; align-items:center; gap:0.5rem;">
                         <span style="color: var(--menthe);">Pass</span><span>Event</span>
                     </a>
-                    <p class="mt-3" style="color: rgba(255,255,255,0.7); font-size: 0.88rem;">
-                        Billetterie intelligente pour vos evenements au Benin. Achetez vos billets en quelques clics et recevez votre billet PDF par email.
+                    <p class="mt-2" style="color: rgba(255, 255, 255, 0.7); font-size: 0.92rem;">
+                        Billetterie simple et rapide pour vos evenements
                     </p>
                 </div>
-                <div class="col-6 col-md-2">
-                    <h6>Liens rapides</h6>
+                <!-- Colonne 2 : Liens utiles -->
+                <div class="col-6 col-md-3">
+                    <h6>Liens utiles</h6>
                     <ul class="footer-links">
                         <li><a href="{{ route('evenements.public') }}">Evenements</a></li>
                         <li><a href="{{ route('aide') }}">Comment ca marche</a></li>
                         <li><a href="{{ route('tickets.recuperer') }}">Mon ticket</a></li>
                         <li><a href="{{ route('contact') }}">Contact</a></li>
+                        <li><a href="{{ route('login') }}">Devenir organisateur</a></li>
                     </ul>
                 </div>
+                <!-- Colonne 3 : Contact + Paiement -->
                 <div class="col-6 col-md-3">
                     <h6>Contact</h6>
                     <ul class="footer-links">
-                        <li><a href="https://wa.me/22943704513" target="_blank"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a></li>
                         <li><a href="mailto:passevent2026@gmail.com"><i class="bi bi-envelope me-1"></i>passevent2026@gmail.com</a></li>
-                        <li><a href="tel:+22943704513"><i class="bi bi-phone me-1"></i>+229 43 70 45 13</a></li>
+                        <li><a href="https://wa.me/22943704513" target="_blank"><i class="bi bi-whatsapp me-1"></i>WhatsApp: 0143704513</a></li>
                     </ul>
+                    <h6 class="mt-3">Paiement securise</h6>
+                    <p style="color:rgba(255,255,255,0.5); font-size:0.82rem;">Par KKiaPay</p>
                 </div>
-                <div class="col-12 col-md-3">
-                    <h6>Paiement securise</h6>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <div class="payment-logo" style="background:rgba(255,255,255,0.1); color:#fff; font-size:0.65rem;">KKiaPay</div>
-                        <div class="payment-logo" style="background:rgba(255,255,255,0.1); color:#fff; font-size:0.6rem;">MTN MoMo</div>
-                        <div class="payment-logo" style="background:rgba(255,255,255,0.1); color:#fff; font-size:0.6rem;">Moov Money</div>
-                        <div class="payment-logo" style="background:rgba(255,255,255,0.1); color:#fff; font-size:0.6rem;">Celtiis</div>
+                <!-- Colonne 4 : Newsletter -->
+                <div class="col-6 col-md-3">
+                    <h6>Newsletter</h6>
+                    <p style="color:rgba(255,255,255,0.6); font-size:0.82rem;">Recevez nos actualites</p>
+                    <form id="newsletter-form" class="d-flex gap-1">
+                        @csrf
+                        <input type="email" name="email" class="form-control form-control-sm" placeholder="Votre email" required style="border-radius:6px; font-size:0.82rem;">
+                        <button type="submit" class="btn btn-sm" style="background:var(--menthe); color:#fff; border-radius:6px; font-weight:600; white-space:nowrap;">OK</button>
+                    </form>
+                    <div id="newsletter-msg" style="font-size:0.78rem; margin-top:6px;"></div>
+                    <div class="d-flex gap-3 mt-2">
+                        <a href="https://facebook.com" target="_blank" style="color:rgba(255,255,255,0.6); font-size:1.3rem;"><i class="bi bi-facebook"></i></a>
+                        <a href="https://instagram.com" target="_blank" style="color:rgba(255,255,255,0.6); font-size:1.3rem;"><i class="bi bi-instagram"></i></a>
+                        <a href="https://wa.me/22943704513" target="_blank" style="color:rgba(255,255,255,0.6); font-size:1.3rem;"><i class="bi bi-whatsapp"></i></a>
                     </div>
                 </div>
             </div>
+            <!-- Deuxieme ligne : petits caracteres -->
             <div class="footer-bottom text-center">
-                <p class="mb-0" style="color: rgba(255,255,255,0.5); font-size: 0.82rem;">
-                    &copy; {{ date('Y') }} PassEvent · Billetterie intelligente · Benin
+                <p class="mb-0" style="color: rgba(255,255,255,0.45); font-size: 0.78rem;">
+                    &copy; 2026 PassEvent – Tous droits reserves
                 </p>
-                <div class="mt-2">
-                    <a href="{{ route('confidentialite') }}" class="text-decoration-none" style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">Politique de confidentialite</a>
-                    <span class="mx-1" style="color: rgba(255,255,255,0.3);">·</span>
-                    <a href="{{ route('cgu') }}" class="text-decoration-none" style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">CGU</a>
+                <div class="mt-1">
+                    <a href="{{ route('cgu') }}" class="text-decoration-none" style="color: rgba(255,255,255,0.45); font-size: 0.72rem;">CGU</a>
+                    <span class="mx-1" style="color: rgba(255,255,255,0.25); font-size: 0.72rem;">·</span>
+                    <a href="{{ route('confidentialite') }}" class="text-decoration-none" style="color: rgba(255,255,255,0.45); font-size: 0.72rem;">Politiques</a>
                 </div>
             </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.getElementById('newsletter-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        const msg = document.getElementById('newsletter-msg');
+        const formData = new FormData(this);
+        btn.disabled = true;
+        btn.textContent = '...';
+        fetch('{{ route("newsletter.subscribe") }}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(d => {
+            msg.innerHTML = '<span style="color:var(--menthe);">' + d.message + '</span>';
+            if (d.success) this.querySelector('input').value = '';
+        })
+        .catch(() => msg.innerHTML = '<span style="color:#e74c3c;">Erreur. Reessayez.</span>')
+        .finally(() => { btn.disabled = false; btn.textContent = 'OK'; });
+    });
+    </script>
     @yield('scripts')
 </body>
 </html>

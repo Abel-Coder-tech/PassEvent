@@ -43,7 +43,9 @@ class EvenementController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $gratuit = $request->boolean('gratuit');
+
+        $rules = [
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'date_event' => 'required|date',
@@ -53,10 +55,16 @@ class EvenementController extends Controller
             'date_fin_vente' => 'nullable|date|after:now',
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié,terminé,annulé',
-            'prix_base' => 'required|numeric|min:0',
-            'multiplicateur_vip' => 'required|in:1.5,2',
-            'reduction_etudiant' => 'nullable|numeric|min:0|max:100',
-        ], [
+            'gratuit' => 'nullable|boolean',
+        ];
+
+        if (!$gratuit) {
+            $rules['prix_base'] = 'required|numeric|min:0';
+            $rules['multiplicateur_vip'] = 'required|in:1.5,2';
+            $rules['reduction_etudiant'] = 'nullable|numeric|min:0|max:100';
+        }
+
+        $validated = $request->validate($rules, [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
             'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
             'description.max' => 'La description ne doit pas dépasser 5000 caractères.',
@@ -79,6 +87,7 @@ class EvenementController extends Controller
         ]);
 
         $validated['user_id'] = Auth::id();
+        $validated['gratuit'] = $gratuit;
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('evenements', 'public');
@@ -86,16 +95,25 @@ class EvenementController extends Controller
 
         $evenement = Evenement::create($validated);
 
-        $prixBase = floatval($validated['prix_base']);
-        $multVip = floatval($validated['multiplicateur_vip']);
-        $reductionEtu = floatval($validated['reduction_etudiant'] ?? 30) / 100;
+        if ($gratuit) {
+            $tarifs = [
+                ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => 0],
+                ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => 0],
+                ['categorie' => 'externe', 'type' => 'normal', 'prix' => 0],
+                ['categorie' => 'externe', 'type' => 'vip', 'prix' => 0],
+            ];
+        } else {
+            $prixBase = floatval($validated['prix_base']);
+            $multVip = floatval($validated['multiplicateur_vip']);
+            $reductionEtu = floatval($validated['reduction_etudiant'] ?? 30) / 100;
 
-        $tarifs = [
-            ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => round($prixBase * (1 - $reductionEtu))],
-            ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => round($prixBase * $multVip * (1 - $reductionEtu))],
-            ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
-            ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
-        ];
+            $tarifs = [
+                ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => round($prixBase * (1 - $reductionEtu))],
+                ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => round($prixBase * $multVip * (1 - $reductionEtu))],
+                ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
+                ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
+            ];
+        }
 
         $quotaParTarif = $evenement->capacite > 0 ? intdiv($evenement->capacite, 4) : 0;
 
@@ -111,7 +129,7 @@ class EvenementController extends Controller
         }
 
         return redirect()->route('admin.evenements.index')
-            ->with('success', 'Événement créé avec succès.');
+            ->with('success', $gratuit ? 'Événement gratuit créé avec succès.' : 'Événement créé avec succès.');
     }
 
     public function show(Evenement $evenement)
@@ -125,10 +143,37 @@ class EvenementController extends Controller
             ? ($evenement->quota_vendu / $evenement->capacite) * 100
             : 0;
         $tarifs = $evenement->tarifs;
+        $scanAccessCodes = $evenement->scanAccessCodes()->orderByDesc('created_at')->get();
 
         return view('evenements.show', compact(
-            'evenement', 'ventes', 'revenus', 'placesRestantes', 'tauxRemplissage', 'tarifs'
+            'evenement', 'ventes', 'revenus', 'placesRestantes', 'tauxRemplissage', 'tarifs', 'scanAccessCodes'
         ));
+    }
+
+    public function genererCodeAcces(Evenement $evenement)
+    {
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
+        do {
+            $code = 'SCAN-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+        } while (\App\Models\ScanAccessCode::where('code', $code)->exists());
+
+        $evenement->scanAccessCodes()->create(['code' => $code]);
+
+        return back()->with('success', 'Code d\'accès généré : ' . $code);
+    }
+
+    public function supprimerCodeAcces(Evenement $evenement, \App\Models\ScanAccessCode $scanAccessCode)
+    {
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
+        if ($scanAccessCode->evenement_id !== $evenement->id) {
+            abort(404);
+        }
+
+        $scanAccessCode->delete();
+
+        return back()->with('success', 'Code d\'accès supprimé.');
     }
 
     public function edit(Evenement $evenement)
@@ -154,6 +199,7 @@ class EvenementController extends Controller
             'date_fin_vente' => 'nullable|date|after:now',
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié,terminé,annulé',
+            'gratuit' => 'nullable|boolean',
         ], [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
             'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
@@ -174,11 +220,18 @@ class EvenementController extends Controller
             'statut.in' => 'Le statut doit être : brouillon, publié, terminé ou annulé.',
         ]);
 
+        $validated['gratuit'] = $request->boolean('gratuit');
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('evenements', 'public');
         }
 
         $evenement->update($validated);
+
+        if ($validated['gratuit']) {
+            $evenement->tarifs()->update(['prix' => 0]);
+        }
+        // Si on décoche gratuit, les tarifs gardent leur prix actuel;
 
         return redirect()->route('admin.evenements.index')
             ->with('success', 'Événement modifié avec succès.');

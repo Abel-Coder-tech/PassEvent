@@ -783,6 +783,18 @@
     <?php endif; ?>
     <?php endif; ?>
 
+    <?php if(auth()->guard()->check()): ?>
+        <?php if (! empty(trim($__env->yieldContent('breadcrumb')))): ?>
+            <div style="padding: 0.6rem 2rem; background: var(--blanc); border-bottom: 1px solid #e5e5e5; font-size: 0.82rem;">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0" style="background: transparent; padding: 0;">
+                        <?php echo $__env->yieldContent('breadcrumb'); ?>
+                    </ol>
+                </nav>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
     <?php echo $__env->yieldContent('content'); ?>
 </div>
 

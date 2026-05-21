@@ -4,6 +4,12 @@
 
 @section('page-title', 'Details du message')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.messages.index') }}">Messages</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Détail</li>
+@endsection
+
 @section('content')
 <div class="page-content">
     <div class="row justify-content-center">

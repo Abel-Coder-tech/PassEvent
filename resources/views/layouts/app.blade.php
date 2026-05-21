@@ -781,6 +781,18 @@
     @endif
     @endauth
 
+    @auth
+        @hasSection('breadcrumb')
+            <div style="padding: 0.6rem 2rem; background: var(--blanc); border-bottom: 1px solid #e5e5e5; font-size: 0.82rem;">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0" style="background: transparent; padding: 0;">
+                        @yield('breadcrumb')
+                    </ol>
+                </nav>
+            </div>
+        @endif
+    @endauth
+
     @yield('content')
 </div>
 

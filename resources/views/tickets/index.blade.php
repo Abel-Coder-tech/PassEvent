@@ -4,6 +4,11 @@
 
 @section('page-title', 'Gestion des tickets')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Tickets</li>
+@endsection
+
 @section('content')
 <div class="page-content">
     <!-- Header -->

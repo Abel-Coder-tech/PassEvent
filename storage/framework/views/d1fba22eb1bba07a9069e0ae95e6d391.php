@@ -1,180 +1,204 @@
-<?php $__env->startSection('title', 'Connexion — PassEvent'); ?>
-
-<?php $__env->startSection('content'); ?>
-<div class="d-flex flex-column flex-md-row min-vh-100">
-    <!-- Left Panel -->
-    <div class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center p-5 position-relative overflow-hidden" style="background: var(--blanc);">
-        <!-- Illustration Area -->
-        <div class="mb-4 position-relative" style="max-width: 420px;">
-            <svg viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg" class="w-100" style="max-height: 380px;">
-                <!-- Background circle -->
-                <circle cx="200" cy="175" r="140" fill="rgba(135,66,139,0.08)"/>
-
-                <!-- Desk -->
-                <rect x="80" y="220" width="240" height="8" rx="4" fill="var(--teal)"/>
-                <rect x="100" y="228" width="12" height="80" rx="3" fill="var(--teal)" opacity="0.7"/>
-                <rect x="288" y="228" width="12" height="80" rx="3" fill="var(--teal)" opacity="0.7"/>
-
-                <!-- Chair -->
-                <ellipse cx="200" cy="180" rx="45" ry="50" fill="var(--violet)" opacity="0.15"/>
-                <rect x="165" y="140" width="70" height="80" rx="12" fill="var(--violet)" opacity="0.2"/>
-
-                <!-- Person - Body -->
-                <ellipse cx="200" cy="170" rx="30" ry="40" fill="var(--teal)" opacity="0.8"/>
-
-                <!-- Person - Head -->
-                <circle cx="200" cy="115" r="25" fill="var(--aubergine)" opacity="0.6"/>
-
-                <!-- Tablet -->
-                <rect x="160" y="155" width="50" height="35" rx="4" fill="var(--violet)" opacity="0.7"/>
-                <rect x="163" y="158" width="44" height="28" rx="2" fill="var(--blanc)" opacity="0.9"/>
-
-                <!-- Coffee cup -->
-                <rect x="290" y="195" width="20" height="25" rx="3" fill="var(--menthe)"/>
-                <path d="M310 200 Q318 200 318 210 Q318 220 310 220" fill="none" stroke="var(--teal)" stroke-width="2" opacity="0.6"/>
-
-                <!-- Plant -->
-                <rect x="90" y="195" width="16" height="25" rx="3" fill="var(--teal)" opacity="0.5"/>
-                <circle cx="98" cy="185" r="12" fill="var(--vert)" opacity="0.6"/>
-                <circle cx="90" cy="175" r="10" fill="var(--menthe)" opacity="0.5"/>
-                <circle cx="106" cy="178" r="9" fill="var(--vert)" opacity="0.4"/>
-
-                <!-- Lamp -->
-                <rect x="125" y="180" width="6" height="40" rx="2" fill="var(--gris)" opacity="0.5"/>
-                <ellipse cx="128" cy="175" rx="15" ry="8" fill="var(--menthe)" opacity="0.7"/>
-
-                <!-- Decorative dots -->
-                <circle cx="310" cy="130" r="6" fill="var(--violet)" opacity="0.2"/>
-                <circle cx="330" cy="160" r="4" fill="var(--vert)" opacity="0.3"/>
-                <circle cx="100" cy="140" r="5" fill="var(--teal)" opacity="0.25"/>
-                <circle cx="340" cy="250" r="7" fill="var(--menthe)" opacity="0.2"/>
-            </svg>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — PassEvent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f7;
+            padding: 1rem;
+        }
+        .login-card {
+            display: flex;
+            width: 100%;
+            max-width: 800px;
+            min-height: 480px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            background: #fff;
+        }
+        .login-card-left {
+            width: 45%;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card-left::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(123,63,160,0.55), rgba(46,125,79,0.35));
+            z-index: 0;
+        }
+        .login-card-left img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .login-card-left .content {
+            position: relative; z-index: 1;
+            color: #fff; text-align: center;
+            padding: 2rem;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: inherit;
+            height: 100%;
+        }
+        .login-card-left .content h2 {
+            font-size: 1.6rem; font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+        .login-card-left .content p {
+            font-size: 0.9rem; opacity: 0.9;
+            line-height: 1.5;
+        }
+        .login-card-right {
+            width: 55%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+        }
+        .login-form { width: 100%; max-width: 340px; }
+        .login-form h2 {
+            font-size: 1.4rem; font-weight: 800;
+            color: #1a1a2e; margin-bottom: 0.2rem;
+        }
+        .login-form .subtitle {
+            color: #6c757d; font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-control {
+            border: 1px solid #e0e0e0; border-radius: 8px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 0.9rem;
+        }
+        .form-control:focus {
+            border-color: #87428b; box-shadow: 0 0 0 3px rgba(135,66,139,0.12);
+        }
+        .input-group-custom { position: relative; }
+        .input-group-custom .icon {
+            position: absolute; left: 0.8rem; top: 50%;
+            transform: translateY(-50%);
+            color: #9a9a9a; font-size: 1rem; z-index: 5;
+        }
+        .btn-connexion {
+            background: #6d3570; border: none; border-radius: 8px;
+            color: #fff; font-weight: 700; font-size: 0.95rem;
+            padding: 0.75rem; width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-connexion:hover { background: #5a2d5d; }
+        .forgot-link { color: #87428b; font-size: 0.85rem; text-decoration: underline; }
+        .forgot-link:hover { color: #6d3570; }
+        @media (max-width: 640px) {
+            .login-card-left { display: none; }
+            .login-card-right { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <!-- Left: Image -->
+        <div class="login-card-left">
+            <img src="<?php echo e(asset('images/image_connexion.jpg')); ?>" alt="">
+            <div class="content">
+                <h2>Bienvenue</h2>
+                <p>Connectez-vous a votre espace organisateur pour créer et gérer vos événements.</p>
+            </div>
         </div>
 
-        <!-- Description text -->
-        <p class="text-center text-muted" style="font-size: 0.95rem; max-width: 320px;">
-            Simplifiez la gestion de vos événements et offrez une expérience d'achat fluide à vos participants.
-        </p>
-    </div>
-
-    <!-- Right Panel -->
-    <div class="col-12 col-md-6 d-flex align-items-center justify-content-center py-5" style="background: var(--blanc);">
-        <div style="width: 100%; max-width: 400px;" class="px-3 px-md-4">
-            <!-- Mobile Logo -->
-            <div class="d-md-none text-center mb-4">
-                <div class="d-inline-flex align-items-center gap-2 mb-2">
-                    <div style="width: 32px; height: 32px; background: var(--vert); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 1rem; position: relative;">
-                        P
-                        <span style="position: absolute; width: 6px; height: 6px; background: var(--sombre); border-radius: 50%; left: -3px; top: 50%; transform: translateY(-50%);"></span>
-                        <span style="position: absolute; width: 6px; height: 6px; background: var(--sombre); border-radius: 50%; right: -3px; top: 50%; transform: translateY(-50%);"></span>
+        <!-- Right: Form -->
+        <div class="login-card-right">
+            <div class="login-form">
+                <h2>Connexion</h2>
+                <p class="subtitle">Accédez a votre tableau de bord</p>
+                <form method="POST" action="<?php echo e(route('login.post')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Email</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-envelope icon"></i>
+                            <input type="email" class="form-control <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="email" placeholder="Entrez votre email" value="<?php echo e(old('email')); ?>" required autofocus>
+                        </div>
+                        <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="text-danger mt-1" style="font-size: 0.8rem;"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
-                    <span style="color: var(--menthe); font-weight: 700; font-size: 1.1rem;">Pass</span><span style="color: var(--sombre); font-weight: 700; font-size: 1.1rem;">Event</span>
-                </div>
-            </div>
-
-            <!-- Header -->
-            <div class="mb-4 mb-md-5">
-                <h1 class="fw-bold mb-1 d-none d-md-block" style="font-size: 2rem; color: var(--violet-dark);">
-                    PassEvent
-                </h1>
-                <p class="text-muted mb-0" style="font-size: 1.1rem; color: var(--sombre);">
-                    Connexion Admin
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Mot de passe</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-lock icon"></i>
+                            <input type="password" class="form-control <?php $__errorArgs = ['mot_de_passe'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="mot_de_passe" name="mot_de_passe" placeholder="Entrez votre mot de passe" required>
+                            <button type="button" class="btn position-absolute border-0 bg-transparent" id="togglePassword" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                <i class="bi bi-eye" id="toggleIcon" style="color: #9a9a9a;"></i>
+                            </button>
+                        </div>
+                        <?php $__errorArgs = ['mot_de_passe'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="text-danger mt-1" style="font-size: 0.8rem;"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember" style="font-size: 0.85rem; color: #6c757d;">Se souvenir</label>
+                        </div>
+                        <a href="<?php echo e(route('password.request')); ?>" class="forgot-link">Mot de passe oublié ?</a>
+                    </div>
+                    <button type="submit" class="btn-connexion">Se connecter</button>
+                </form>
+                <p class="text-center mt-3" style="font-size:0.85rem; color:#6c757d;">
+                    Pas encore de compte ? <a href="<?php echo e(route('inscriptions.create')); ?>" style="color:#87428b; font-weight:600; text-decoration:underline;">Créer un compte</a>
                 </p>
             </div>
-
-            <!-- Form -->
-            <form method="POST" action="<?php echo e(route('login.post')); ?>">
-                <?php echo csrf_field(); ?>
-
-                <!-- Email -->
-                <div class="mb-3">
-                    <div class="position-relative">
-                        <i class="bi bi-envelope position-absolute" style="left: 14px; top: 50%; transform: translateY(-50%); color: var(--gris); font-size: 1.1rem;"></i>
-                        <input type="email" class="form-control ps-5 py-3 border rounded-3 <?php $__errorArgs = ['email'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" id="email" name="email" placeholder="Email" value="<?php echo e(old('email')); ?>" required autofocus style="border-color: #e2e0e4;">
-                    </div>
-                    <?php $__errorArgs = ['email'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                        <div class="text-danger mt-1" style="font-size: 0.85rem;"><?php echo e($message); ?></div>
-                    <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                </div>
-
-                <!-- Password -->
-                <div class="mb-4">
-                    <div class="position-relative">
-                        <i class="bi bi-lock position-absolute" style="left: 14px; top: 50%; transform: translateY(-50%); color: var(--gris); font-size: 1.1rem;"></i>
-                        <input type="password" class="form-control ps-5 pe-5 py-3 border rounded-3 <?php $__errorArgs = ['mot_de_passe'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" id="mot_de_passe" name="mot_de_passe" placeholder="Mot de passe" required style="border-color: #e2e0e4;">
-                        <button type="button" class="btn position-absolute border-0 bg-transparent" id="togglePassword" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 4px;">
-                            <i class="bi bi-eye" id="toggleIcon" style="color: var(--gris); font-size: 1.1rem;"></i>
-                        </button>
-                    </div>
-                    <?php $__errorArgs = ['mot_de_passe'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                        <div class="text-danger mt-1" style="font-size: 0.85rem;"><?php echo e($message); ?></div>
-                    <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                </div>
-
-                <!-- Options row -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="remember" name="remember" style="border-color: var(--gris);">
-                        <label class="form-check-label text-muted" for="remember" style="font-size: 0.9rem;">Se souvenir de moi</label>
-                    </div>
-                    <a href="#" class="text-decoration-underline" style="color: var(--violet); font-size: 0.9rem;">Mot de passe oublié ?</a>
-                </div>
-
-                <!-- Submit button -->
-                <button type="submit" class="btn w-100 py-3 fw-bold text-white" style="background: var(--violet-dark); border: none; border-radius: 8px; transition: background 0.2s ease;">
-                    Se connecter
-                </button>
-            </form>
         </div>
     </div>
-</div>
-<?php $__env->stopSection(); ?>
-
-<?php $__env->startSection('scripts'); ?>
-<script>
-document.getElementById('togglePassword').addEventListener('click', function() {
-    const passwordInput = document.getElementById('mot_de_passe');
-    const toggleIcon = document.getElementById('toggleIcon');
-
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.remove('bi-eye');
-        toggleIcon.classList.add('bi-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.remove('bi-eye-slash');
-        toggleIcon.classList.add('bi-eye');
-    }
-});
-</script>
-<?php $__env->stopSection(); ?>
-
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/auth/login.blade.php ENDPATH**/ ?>
+    <script>
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const input = document.getElementById('mot_de_passe');
+        const icon = document.getElementById('toggleIcon');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+    </script>
+</body>
+</html>
+<?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/auth/login.blade.php ENDPATH**/ ?>
