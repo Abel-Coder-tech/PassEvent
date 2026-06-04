@@ -130,4 +130,4 @@ unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 </body>
-</html><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/auth/reset.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views\auth\reset.blade.php ENDPATH**/ ?>

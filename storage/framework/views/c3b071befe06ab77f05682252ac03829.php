@@ -564,4 +564,4 @@
     <?php echo $__env->yieldContent('scripts'); ?>
 </body>
 </html>
-<?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/layouts/public.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views\layouts\public.blade.php ENDPATH**/ ?>

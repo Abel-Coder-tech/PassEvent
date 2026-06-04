@@ -42,7 +42,7 @@ Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTi
 
 Route::get('/aide', [SitePublicController::class, 'aide'])->name('aide');
 Route::get('/contact', [SitePublicController::class, 'contact'])->name('contact');
-Route::post('/contact', [SitePublicController::class, 'contactStore'])->name('contact.store');
+Route::post('/contact', [SitePublicController::class, 'contactStore'])->name('contact.store')->middleware('throttle:3,10');
 Route::get('/confidentialite', [SitePublicController::class, 'confidentialite'])->name('confidentialite');
 Route::get('/cgu', [SitePublicController::class, 'cgu'])->name('cgu');
 
@@ -58,15 +58,15 @@ Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('
 // Routes de connexion & inscription
 // ============================================================
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 Route::get('/inscription', [InscriptionController::class, 'create'])->name('inscriptions.create');
-Route::post('/inscription', [InscriptionController::class, 'store'])->name('inscriptions.store');
+Route::post('/inscription', [InscriptionController::class, 'store'])->name('inscriptions.store')->middleware('throttle:3,60');
 
 // Mot de passe oublié
 Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showForm'])->name('password.request');
-Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:3,1');
 Route::get('/reinitialiser/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-Route::post('/reinitialiser', [ForgotPasswordController::class, 'reset'])->name('password.update');
+Route::post('/reinitialiser', [ForgotPasswordController::class, 'reset'])->name('password.update')->middleware('throttle:5,1');
 
 // ============================================================
 // Routes super admin

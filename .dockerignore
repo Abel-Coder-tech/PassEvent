@@ -1,0 +1,44 @@
+# Fichiers sensibles
+.env
+.env.*
+!.env.example
+
+# Dépendances (seront réinstallées dans l'image)
+/vendor
+/node_modules
+
+# Fichiers de cache et logs
+/storage/*.log
+/storage/framework/*
+/storage/app/*
+!.gitkeep
+bootstrap/cache/*.php
+.phpunit.result.cache
+
+# Dossiers d'assets compilés (seront régénérés)
+/public/build
+/public/hot
+/public/storage
+
+# Fichiers de configuration IDE et OS
+/.idea
+/.vscode
+.DS_Store
+Thumbs.db
+
+# Fichiers de versionning
+.git
+.gitignore
+.dockerignore
+
+# Fichiers de documentation (optionnel)
+README.md
+*.md
+
+# Fichiers de tests
+/tests
+/phpunit.xml
+
+# Fichiers spécifiques à Laravel Sail
+docker-compose.yml
+Dockerfile
