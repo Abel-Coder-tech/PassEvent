@@ -10,13 +10,7 @@
 @section('content')
 <!-- ===== En-tête de la page ===== -->
 <section class="page-header">
-    <!-- Éléments décoratifs en arrière-plan -->
-    <div class="page-header-bg">
-        <div class="dot d1"></div>
-        <div class="dot d2"></div>
-        <div class="dot d3"></div>
-    </div>
-    <div class="container text-center position-relative" style="z-index:2;">
+    <div class="container text-center">
         <h1 class="page-header-title">Contactez-nous</h1>
         <p class="page-header-sub">Une question ou un problème ? Nous sommes là pour vous aider</p>
     </div>
@@ -146,7 +140,7 @@
                     <div class="p-3">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-geo-alt-fill" style="color: var(--violet);"></i>
-                            <strong style="font-size: 0.9rem;">Cotonou, Benin</strong>
+                            <strong style="font-size: 0.9rem;">Porto-Novo, Benin</strong>
                         </div>
                     </div>
                 </div>
@@ -159,37 +153,18 @@
 <style>
 /* ===== En-tête de page partagé ===== */
 .page-header {
-    padding: 3rem 0;
-    background: linear-gradient(135deg, #7B3FA0, #6a1b9a);
-    color: #fff;
-    position: relative;
-    overflow: hidden;
+    padding: 2rem 0 1rem;
     text-align: center;
 }
-.page-header-bg {
-    position: absolute; inset: 0;
-    pointer-events: none;
-}
-.dot {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(40px);
-    opacity: 0.2;
-}
-.d1 { width: 200px; height: 200px; background: #fff; top: -60px; right: -60px; }
-.d2 { width: 140px; height: 140px; background: #fff; bottom: -40px; left: 20%; }
-.d3 { width: 100px; height: 100px; background: #fff; top: 30%; left: -30px; }
 .page-header-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 800;
+    color: #333;
     margin: 0 0 0.3rem;
-    animation: fadeUp 0.5s ease forwards;
 }
 .page-header-sub {
     font-size: 1rem;
-    opacity: 0.85;
+    color: #666;
     margin: 0;
-    animation: fadeUp 0.5s ease 0.15s both;
 }
-@keyframes fadeUp { 0%{opacity:0;transform:translateY(12px)} 100%{opacity:1;transform:translateY(0)} }
 </style>

@@ -10,13 +10,7 @@
 @section('content')
 <!-- ===== En-tête de la page ===== -->
 <section class="ev-header">
-    <!-- Éléments décoratifs en arrière-plan -->
-    <div class="ev-header-bg">
-        <div class="dot d1"></div>
-        <div class="dot d2"></div>
-        <div class="dot d3"></div>
-    </div>
-    <div class="container position-relative" style="z-index:2;">
+    <div class="container text-center">
         <h2 class="ev-header-title">Tous les événements</h2>
         <p class="ev-header-sub">Trouvez l'événement parfait pour vous</p>
     </div>
@@ -77,6 +71,7 @@
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
                         $prixDernier = $evenement->tarifs->min('prix');
+                        $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast();
                     @endphp
                     <div class="ev-grid-col">
                         <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">
@@ -90,7 +85,9 @@
                                 @if($evenement->categorie)
                                     <span class="ev-card-badge">{{ ucfirst($evenement->categorie) }}</span>
                                 @endif
-                                @if($estComplet)
+                                @if($venteCloturee)
+                                    <span class="ev-card-badge" style="background: rgba(231,76,60,0.9); color: #fff;">Vente cloturee</span>
+                                @elseif($estComplet)
                                     <span class="ev-card-badge ev-card-badge-complet">Complet</span>
                                 @endif
                             </div>
@@ -114,7 +111,9 @@
                                     </div>
                                     <div class="gauge"><div class="gauge-fill" style="width:{{ min($remplissage,100) }}%"></div></div>
                                 </div>
-                                @if($estComplet)
+                                @if($venteCloturee)
+                                    <span class="ev-card-btn disabled"><i class="bi bi-lock me-1"></i> Vente cloturee</span>
+                                @elseif($estComplet)
                                     <span class="ev-card-btn disabled"><i class="bi bi-slash-circle me-1"></i> Complet</span>
                                 @else
                                     <span class="ev-card-btn">
@@ -158,39 +157,19 @@
 <style>
 /* ===== En-tête de la page ===== */
 .ev-header {
-    padding: 3rem 0;
-    background: linear-gradient(135deg, #7B3FA0, #6a1b9a);
-    color: #fff;
-    position: relative;
-    overflow: hidden;
-    text-align: center;
+    padding: 2rem 0 1rem;
 }
-.ev-header-bg {
-    position: absolute; inset: 0;
-    pointer-events: none;
-}
-.dot {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(40px);
-    opacity: 0.2;
-}
-.d1 { width: 200px; height: 200px; background: #fff; top: -60px; right: -60px; }
-.d2 { width: 140px; height: 140px; background: #fff; bottom: -40px; left: 20%; }
-.d3 { width: 100px; height: 100px; background: #fff; top: 30%; left: -30px; }
 .ev-header-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 800;
+    color: #333;
     margin: 0 0 0.3rem;
-    animation: fadeUp 0.5s ease forwards;
 }
 .ev-header-sub {
     font-size: 1rem;
-    opacity: 0.85;
+    color: #666;
     margin: 0;
-    animation: fadeUp 0.5s ease 0.15s both;
 }
-@keyframes fadeUp { 0%{opacity:0;transform:translateY(12px)} 100%{opacity:1;transform:translateY(0)} }
 
 /* ===== Barre de filtres ===== */
 .ev-filters {
@@ -358,8 +337,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #7B3FA0, #6a1b9a);
-    color: #fff;
+    background: #e8e8e8;
+    color: #999;
     font-size: 3rem;
 }
 .ev-card-badge {

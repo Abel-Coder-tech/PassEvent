@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — PassEvent</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -32,39 +32,12 @@
             position: relative;
             overflow: hidden;
         }
-        .login-card-left::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(123,63,160,0.55), rgba(46,125,79,0.35));
-            z-index: 0;
-        }
         .login-card-left img {
             position: absolute;
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
-        }
-        .login-card-left .content {
-            position: relative; z-index: 1;
-            color: #fff; text-align: center;
-            padding: 2rem;
-            text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: inherit;
-            height: 100%;
-        }
-        .login-card-left .content h2 {
-            font-size: 1.6rem; font-weight: 800;
-            margin-bottom: 0.75rem;
-        }
-        .login-card-left .content p {
-            font-size: 0.9rem; opacity: 0.9;
-            line-height: 1.5;
         }
         .login-card-right {
             width: 55%;
@@ -114,17 +87,13 @@
     <div class="login-card">
         <!-- Left: Image -->
         <div class="login-card-left">
-            <img src="{{ asset('images/image_connexion.jpg') }}" alt="">
-            <div class="content">
-                <h2>Bienvenue</h2>
-                <p>Connectez-vous a votre espace organisateur pour créer et gérer vos événements.</p>
-            </div>
+            <img src="{{ asset('images/image_connexion.jpeg') }}" alt="">
         </div>
 
         <!-- Right: Form -->
         <div class="login-card-right">
             <div class="login-form">
-                <h2>Connexion</h2>
+                <h2 >Connexion</h2>
                 <p class="subtitle">Accédez a votre tableau de bord</p>
                 <form method="POST" action="{{ route('login.post') }}">
                     @csrf

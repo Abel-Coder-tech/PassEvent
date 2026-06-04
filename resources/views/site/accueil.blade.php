@@ -16,30 +16,46 @@
         <div class="line l1"></div>
         <div class="line l2"></div>
     </div>
-    <div class="container text-center position-relative" style="z-index:2;">
-        <h1 class="hero-title">Achetez et vendez vos tickets en quelques clics</h1>
-        <p class="hero-subtitle">Billetterie simple et rapide pour vos événements.</p>
-        <div class="hero-actions">
-            <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
-                Acheter un ticket <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-            <a href="{{ route('login') }}" class="btn-hero-outline">
-                Devenir organisateur
-            </a>
+    <div class="container position-relative" style="z-index:2;">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 d-flex flex-column align-items-center justify-content-center text-center">
+                <h1 class="hero-title">Achetez et vendez vos tickets en quelques clics</h1>
+                <p class="hero-subtitle">Billetterie simple et rapide pour vos événements.</p>
+                <div class="hero-actions">
+                    <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
+                        Acheter un ticket <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    <a href="{{ route('login') }}" class="btn-hero-outline">
+                        Devenir organisateur
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-flex align-items-center justify-content-center">
+                <img src="{{ asset('images/image_heros.jpeg') }}" alt="Illustration PassEvent" class="hero-illustration">
+            </div>
         </div>
     </div>
 </section>
 
 <style>
     .hero-section {
-        min-height: 70vh;
+        min-height: 60vh;
         display: flex;
         align-items: center;
-        justify-content: center;
-        padding: 2rem;
+        padding: 0;
         position: relative;
         overflow: hidden;
         background: #f7f5f3;
+    }
+    .hero-section .container {
+        padding-top: 1.5rem;
+        padding-bottom: 0;
+    }
+    .hero-section .row {
+        min-height: 60vh;
+    }
+    .hero-section .col-lg-6:last-child {
+        padding-bottom: 0;
     }
     .hero-bg {
         position: absolute; inset: 0;
@@ -64,6 +80,12 @@
     .l1 { width: 60%; top: 25%; left: 20%; transform: rotate(-2deg); }
     .l2 { width: 40%; top: 65%; right: 10%; transform: rotate(3deg); }
 
+    .hero-illustration {
+        max-width: 90%;
+        height: auto;
+        animation: heroFadeUp 0.8s ease 0.3s both;
+    }
+
     .hero-title {
         font-size: 3rem;
         font-weight: 800;
@@ -81,7 +103,6 @@
     }
     .hero-actions {
         display: flex;
-        justify-content: center;
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
@@ -129,13 +150,20 @@
         transform: scale(1.02);
     }
 
+    @media (max-width: 991.98px) {
+        .hero-section { min-height: auto; padding: 3rem 1.5rem; }
+        .hero-section .row { min-height: auto; }
+        .hero-title { font-size: 2.2rem; }
+        .hero-illustration { margin-top: 2rem; max-height: 300px; width: auto; object-fit: contain; }
+    }
+
     @media (max-width: 767.98px) {
-        .hero-section { min-height: 55vh; padding: 1.5rem; }
         .hero-title { font-size: 1.8rem; }
         .hero-subtitle { font-size: 1rem; }
         .hero-actions { flex-direction: column; }
         .btn-hero-primary,
         .btn-hero-outline { width: 100%; justify-content: center; }
+        .hero-illustration { max-width: 85%; }
     }
 </style>
 

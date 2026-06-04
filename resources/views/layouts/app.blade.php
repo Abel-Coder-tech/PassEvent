@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PassEvent')</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
             --vert: #12976e;
@@ -511,6 +511,78 @@
             border-color: #ccc;
         }
 
+        /* Action icon buttons */
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--sombre);
+            text-decoration: none;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-icon:hover {
+            background: #f5f5f5;
+            border-color: var(--violet);
+            color: var(--violet);
+        }
+        .btn-icon-vert { color: var(--vert); border-color: var(--vert); }
+        .btn-icon-vert:hover { background: rgba(18,151,110,0.08); color: var(--vert); border-color: var(--vert); }
+        .btn-icon-danger { color: var(--danger); border-color: var(--danger); }
+        .btn-icon-danger:hover { background: rgba(231,76,60,0.08); color: var(--danger); border-color: var(--danger); }
+        .btn-icon-gris { color: var(--gris); border-color: #ddd; }
+        .btn-icon-gris:hover { background: #f5f5f5; color: var(--gris); border-color: var(--gris); }
+
+        /* Pagination */
+        .pagination {
+            margin-bottom: 0;
+            gap: 2px;
+        }
+        .page-link {
+            border: 1px solid #e0dde3;
+            color: var(--sombre);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.3rem 0.65rem;
+            border-radius: 6px !important;
+            margin: 0;
+            min-width: 32px;
+            text-align: center;
+        }
+        .page-link i {
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .page-item:not(:first-child) .page-link {
+            margin-left: 0;
+        }
+        .page-item.active .page-link {
+            background: var(--violet);
+            border-color: var(--violet);
+            color: #fff;
+        }
+        .page-item.disabled .page-link {
+            background: #f8f6f9;
+            border-color: #e0dde3;
+            color: var(--gris);
+        }
+        .page-link:hover {
+            background: #f8f6f9;
+            border-color: var(--violet);
+            color: var(--violet);
+        }
+
         /* Form controls */
         .form-control:focus, .form-select:focus {
             border-color: var(--vert);
@@ -687,6 +759,11 @@
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
             </a>
+            @if(auth()->user()->role === 'super_admin')
+            <a href="{{ route('superadmin.dashboard') }}" class="nav-link {{ request()->routeIs('superadmin.*') ? 'active' : '' }}">
+                <i class="bi bi-shield-fill-check" style="color: #6B3FA0;"></i> Super Admin
+            </a>
+            @endif
             <a href="{{ route('admin.evenements.index') }}" class="nav-link {{ request()->routeIs('admin.evenements.*') ? 'active' : '' }}">
                 <i class="bi bi-calendar-event"></i> Evenements
             </a>
@@ -735,7 +812,7 @@
             <div class="sidebar-user-avatar">{{ strtoupper(substr(Auth::user()->nom, 0, 2)) }}</div>
             <div class="sidebar-user-info">
                 <div class="sidebar-user-name">{{ Auth::user()->nom }}</div>
-                <div class="sidebar-user-role">Organisateur</div>
+                <div class="sidebar-user-role">{{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Organisateur' }}</div>
             </div>
         </div>
     </div>
@@ -800,8 +877,8 @@
     @yield('content')
 @endguest
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/assets/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const hamburger = document.getElementById('hamburgerBtn');

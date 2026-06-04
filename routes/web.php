@@ -21,6 +21,8 @@ use App\Http\Controllers\ParametresController;
 use App\Http\Controllers\RemboursementController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SuperAdminAuthController;
 
 // ============================================================
 // Routes publiques (participant)
@@ -65,6 +67,38 @@ Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showForm']
 Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
 Route::get('/reinitialiser/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reinitialiser', [ForgotPasswordController::class, 'reset'])->name('password.update');
+
+// ============================================================
+// Routes super admin
+// ============================================================
+Route::prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('/login', [SuperAdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [SuperAdminAuthController::class, 'login'])->name('login.post');
+
+    Route::middleware('superadmin')->group(function () {
+        Route::post('/logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
+        Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/utilisateurs', [SuperAdminController::class, 'utilisateurs'])->name('utilisateurs');
+        Route::get('/organisateurs', [SuperAdminController::class, 'organisateurs'])->name('organisateurs');
+        Route::post('/organisateurs/creer', [SuperAdminController::class, 'creerOrganisateur'])->name('organisateurs.creer');
+        Route::post('/organisateurs/{user}/suspendre', [SuperAdminController::class, 'suspendreOrganisateur'])->name('organisateurs.suspendre');
+        Route::post('/organisateurs/{user}/reset-password', [SuperAdminController::class, 'reinitialiserMotDePasse'])->name('organisateurs.reset-password');
+        Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');
+        Route::post('/evenements/{evenement}/suspendre', [SuperAdminController::class, 'suspendreEvenement'])->name('evenements.suspendre');
+        Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');
+        Route::delete('/evenements/{evenement}', [SuperAdminController::class, 'supprimerEvenement'])->name('evenements.supprimer');
+        Route::post('/evenements/{evenement}/mettre-en-avant', [SuperAdminController::class, 'mettreEnAvant'])->name('evenements.mettre-en-avant');
+        Route::get('/transactions', [SuperAdminController::class, 'transactions'])->name('transactions');
+        Route::get('/tickets', [SuperAdminController::class, 'tickets'])->name('tickets');
+        Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
+        Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
+        Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
+        Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
+        Route::get('/parametres', [SuperAdminController::class, 'parametres'])->name('parametres');
+        Route::get('/logs', [SuperAdminController::class, 'logsSysteme'])->name('logs');
+        Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
+    });
+});
 
 // ============================================================
 // Routes protégées (admin)

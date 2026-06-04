@@ -4,182 +4,180 @@
     <meta charset="UTF-8">
     <title>Billet - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
     <style>
-        @page { margin: 0; }
-        body {
-            font-family: 'Helvetica', 'DejaVu Sans', Arial, sans-serif;
+        @page {
             margin: 0;
-            padding: 20px;
-            background: #f5f3f0;
-            color: #1d1d1f;
-            font-size: 10px;
+            padding: 0;
         }
-        .ticket {
-            max-width: 600px;
-            margin: 0 auto;
+        body {
+            font-family: 'DejaVu Sans', 'Helvetica', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             background: #fff;
-            border-radius: 18px;
+            color: #1d1d1f;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        * { margin: 0; padding: 0; }
+        .ticket {
+            width: 350px;
+            margin: 20px auto;
+            background: #fff;
+            border: 1px solid #e0dde3;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
-        /* ===== Hero Image ===== */
-        .hero {
-            position: relative;
-            height: 200px;
-            overflow: hidden;
+        .inner { padding: 14px 16px 12px; }
+
+        /* Header */
+        .header-top { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .header-top .left { text-align: left; }
+        .header-top .right { text-align: right; }
+        .event-title { font-size: 18px; font-weight: 800; color: #1d1d1f; margin: 6px 0 3px; }
+        .event-meta { font-size: 10px; color: #888; margin-bottom: 2px; }
+
+        /* Participant */
+        .participant-block {
+            margin: 12px 0 10px;
+            padding: 10px 0 8px;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
         }
-        .hero img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+        .participant-label {
+            font-size: 8px;
+            font-weight: 700;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
         }
-        .hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(123,63,160,0.7) 0%, rgba(123,63,160,0.2) 60%, transparent 100%);
+        .participant-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1d1d1f;
         }
-        .hero-content {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            padding: 28px 28px 20px;
+        .participant-email {
+            font-size: 10px;
+            color: #888;
+            margin-top: 1px;
         }
-        .hero-content .category {
+        .status-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(4px);
+            background-color: #2E7D4F;
             color: #fff;
             font-size: 8px;
             font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            padding: 3px 12px;
-            border-radius: 20px;
-            margin-bottom: 8px;
-        }
-        .hero-content h1 {
-            color: #fff;
-            font-size: 22px;
-            font-weight: 800;
-            margin: 0;
-            line-height: 1.15;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .hero-content .hero-meta {
-            color: rgba(255,255,255,0.9);
-            font-size: 10px;
-            margin-top: 6px;
-        }
-        .hero-content .hero-meta span {
-            margin-right: 14px;
-        }
-        /* ===== Corps du billet ===== */
-        .body {
-            padding: 20px 28px 0;
-        }
-        /* Nom participant */
-        .participant {
-            text-align: center;
-            padding: 0 0 16px;
-        }
-        .participant .label {
-            font-size: 7.5px;
-            font-weight: 700;
-            color: #7B3FA0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin: 0 0 4px;
-        }
-        .participant .name {
-            font-size: 22px;
-            font-weight: 800;
-            color: #1d1d1f;
-            margin: 0;
-        }
-        .participant .email {
-            font-size: 10px;
-            color: #888;
-            margin: 2px 0 0;
-        }
-        /* Info cards */
-        .info-grid {
-            display: flex;
-            gap: 10px;
-            margin: 16px 0;
-        }
-        .info-card {
-            flex: 1;
-            background: #f8f6f9;
-            border-radius: 12px;
-            padding: 12px 10px;
-            text-align: center;
-        }
-        .info-card .ico {
-            font-size: 16px;
-            margin-bottom: 4px;
-            display: block;
-        }
-        .info-card .lbl {
-            font-size: 7px;
-            font-weight: 700;
-            color: #7B3FA0;
             letter-spacing: 1px;
             text-transform: uppercase;
-            margin: 0 0 3px;
+            padding: 2px 12px;
+            border-radius: 10px;
         }
-        .info-card .val {
-            font-size: 14px;
+
+        /* Details grid 2x2 */
+        .detail-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .detail-grid td {
+            width: 50%;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        .detail-grid .dl {
+            font-size: 8px;
+            font-weight: 700;
+            color: #888;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .detail-grid .dv {
+            font-size: 13px;
             font-weight: 700;
             color: #1d1d1f;
-            margin: 0;
         }
-        .info-card .val small {
+        .detail-grid .dv small {
             font-size: 9px;
             font-weight: 500;
             color: #888;
         }
-        .info-card .val.green { color: #2E7D4F; }
-        /* ===== Séparateur décoratif ===== */
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 6px 0 0;
-            padding: 0 28px;
-        }
-        .divider .line {
-            flex: 1;
-            height: 1px;
-            background: repeating-linear-gradient(to right, #ddd 0, #ddd 6px, transparent 6px, transparent 10px);
-        }
-        .divider .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #7B3FA0;
-            flex-shrink: 0;
-        }
-        /* ===== Bas du billet (QR + infos) ===== */
-        .bottom {
-            display: flex;
-            align-items: stretch;
-            gap: 20px;
-            padding: 16px 28px 20px;
-        }
-        .qr-section {
-            flex-shrink: 0;
+        .detail-grid .dv-violet { color: #7B3FA0; }
+        .detail-grid .dv-green { color: #2E7D4F; }
+
+        /* Transaction section */
+        .section-title {
+            font-size: 8px;
+            font-weight: 700;
+            color: #7B3FA0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             text-align: center;
-            width: 140px;
+            margin: 8px 0 6px;
+        }
+        .tx-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .tx-table td {
+            padding: 3px 0;
+            vertical-align: middle;
+        }
+        .tx-table .tl {
+            font-size: 9px;
+            color: #888;
+            font-weight: 600;
+            width: 90px;
+        }
+        .tx-table .tv {
+            font-size: 10px;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        .tx-table .tv-mono {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        .scan-badge {
+            display: inline-block;
+            background-color: #FFB300;
+            color: #fff;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 1px 10px;
+            border-radius: 8px;
+        }
+        .scan-badge.done { background-color: #2E7D4F; }
+        .scan-badge.pending { background-color: #FFB300; }
+
+        /* HR */
+        hr.dashed {
+            border: none;
+            border-top: 1px dashed #ddd;
+            margin: 8px 0;
+        }
+        hr.solid {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 6px 0;
+        }
+
+        /* QR code */
+        .qr-block {
+            text-align: center;
+            margin: 10px 0 4px;
         }
         .qr-box {
-            background: #fff;
-            padding: 10px;
-            border: 2.5px solid #7B3FA0;
-            border-radius: 14px;
             display: inline-block;
+            padding: 6px;
+            border: 2px solid #7B3FA0;
+            border-radius: 10px;
         }
         .qr-box img {
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             display: block;
         }
         .qr-label {
@@ -188,201 +186,153 @@
             color: #7B3FA0;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            margin-top: 6px;
-        }
-        .qr-code-text {
-            display: inline-block;
-            background: #7B3FA0;
-            padding: 4px 14px;
-            border-radius: 20px;
             margin-top: 4px;
         }
-        .qr-code-text span {
+        .qr-code-display {
             font-family: 'Courier New', monospace;
-            font-size: 9px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 1px;
-        }
-        .details-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 6px;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 10px;
-            background: #f8f6f9;
-            border-radius: 8px;
-        }
-        .detail-row .dl {
-            font-size: 8px;
-            color: #888;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        .detail-row .dv {
-            font-size: 10px;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 800;
             color: #1d1d1f;
+            letter-spacing: 1px;
+            margin-top: 2px;
         }
-        /* ===== Footer ===== */
+
+        /* Footer */
         .footer {
-            background: #7B3FA0;
-            padding: 12px 28px;
             text-align: center;
+            padding: 8px 16px 12px;
         }
         .footer p {
-            font-size: 7.5px;
-            color: rgba(255,255,255,0.85);
+            font-size: 7px;
+            color: #aaa;
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.6;
         }
-        .footer strong {
-            color: #fff;
-            font-weight: 700;
-        }
-        .footer-stripe {
-            height: 4px;
-            background: linear-gradient(90deg, #7B3FA0, #2E7D4F, #7B3FA0);
-        }
-        /* ===== Badge promo ===== */
-        .promo-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(46,125,79,0.1);
-            color: #2E7D4F;
-            font-size: 8px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-            margin-top: 6px;
-        }
-        @media print {
-            body { background: #fff; padding: 0; }
-            .ticket { box-shadow: none; border: 1px solid #eee; }
-        }
+        .footer strong { color: #888; font-weight: 700; }
     </style>
 </head>
 <body>
-    @php
-        $bgImg = $ticket->evenement?->image
-            ? Storage::url($ticket->evenement->image)
-            : asset('images/image_hero.jpg');
-    @endphp
 
-    <div class="ticket">
-        {{-- Hero --}}
-        <div class="hero">
-            <img src="{{ $bgImg }}" alt="">
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                @if($ticket->evenement?->categorie)
-                    <div class="category">{{ $ticket->evenement->categorie }}</div>
-                @endif
-                <h1>{{ $ticket->evenement?->titre ?? 'Evenement' }}</h1>
-                <div class="hero-meta">
-                    <span>&#128197; {{ $ticket->evenement?->date_event?->format('d M Y') ?? '—' }}</span>
-                    <span>&#128340; {{ $ticket->evenement?->date_event?->format('H:i') ?? '' }}</span>
-                    <span>&#128205; {{ $ticket->evenement?->lieu ?? '—' }}</span>
-                </div>
-            </div>
+<table class="ticket" cellpadding="0" cellspacing="0">
+    <tr><td class="inner">
+
+        {{-- 1. HEADER --}}
+        <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="header-top left">PASS EVENT</td>
+                <td class="header-top right">UPAO</td>
+            </tr>
+        </table>
+
+        <div class="event-title">{{ $ticket->evenement?->titre ?? 'Evenement' }}</div>
+        <div class="event-meta">
+            {{ $ticket->evenement?->date_event?->format('d M Y') ?? '---' }}
+            &ndash; {{ $ticket->evenement?->date_event?->format('H\hi') ?? '' }}
+            @if($ticket->evenement?->lieu)
+                &ndash; {{ $ticket->evenement->lieu }}
+            @endif
         </div>
 
-        {{-- Body --}}
-        <div class="body">
-            {{-- Participant --}}
-            <div class="participant">
-                <p class="label">Passager / Participant</p>
-                <p class="name">{{ $ticket->nom_acheteur ?? '—' }}</p>
-                <p class="email">{{ $ticket->email_acheteur ?? '' }}</p>
-                @if($ticket->code_promo_utilise)
-                    <div class="promo-badge">&#127991; Code promo: {{ $ticket->code_promo_utilise }}</div>
-                @endif
-            </div>
-
-            {{-- Infos --}}
-            <div class="info-grid">
-                <div class="info-card">
-                    <span class="ico">&#127942;</span>
-                    <p class="lbl">Catégorie</p>
-                    <p class="val">{{ ucfirst($ticket->categorie ?? '—') }}</p>
-                </div>
-                <div class="info-card">
-                    <span class="ico">&#127915;</span>
-                    <p class="lbl">Type</p>
-                    <p class="val">{{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }}</p>
-                </div>
-                <div class="info-card">
-                    <span class="ico">&#128178;</span>
-                    <p class="lbl">Montant</p>
-                    <p class="val">{{ number_format($ticket->montant, 0, ',', ' ') }} <small>FCFA</small></p>
-                </div>
-                <div class="info-card">
-                    <span class="ico">&#9989;</span>
-                    <p class="lbl">Statut</p>
-                    <p class="val green">Payé</p>
-                </div>
-            </div>
+        {{-- 2. PARTICIPANT --}}
+        <div class="participant-block">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="text-align:left;vertical-align:top">
+                        <div class="participant-label">Participant</div>
+                        <div class="participant-name">{{ $ticket->nom_acheteur ?? '---' }}</div>
+                        <div class="participant-email">{{ $ticket->email_acheteur ?? '' }}</div>
+                    </td>
+                    <td style="text-align:right;vertical-align:top;width:60px">
+                        <span class="status-badge">Paye</span>
+                    </td>
+                </tr>
+            </table>
         </div>
 
-        {{-- Separator --}}
-        <div class="divider">
-            <span class="line"></span>
-            <span class="dot"></span>
-            <span class="line"></span>
+        {{-- 3. DETAILS GRID 2 COLUMNS --}}
+        <table class="detail-grid" cellpadding="0" cellspacing="4">
+            <tr>
+                <td>
+                    <div class="dl">Categorie</div>
+                    <div class="dv">{{ ucfirst($ticket->categorie ?? '---') }}</div>
+                </td>
+                <td>
+                    <div class="dl">Type</div>
+                    <div class="dv">{{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="dl">Montant</div>
+                    <div class="dv">{{ number_format($ticket->montant, 0, ',', ' ') }} <small>FCFA</small></div>
+                </td>
+                <td>
+                    <div class="dl">Paiement</div>
+                    <div class="dv">{{ ucfirst($ticket->methode_paiement ?? '---') }}</div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- 4. TRANSACTION --}}
+        <hr class="dashed">
+        <div class="section-title">Details de la transaction</div>
+
+        <table class="tx-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="tl">Transaction</td>
+                <td class="tv-mono">{{ $ticket->transaction_id ?? '---' }}</td>
+            </tr>
+            <tr>
+                <td class="tl">Paiement</td>
+                <td class="tv">{{ $ticket->methode_paiement ?? '---' }}</td>
+            </tr>
+            <tr>
+                <td class="tl">Date d'achat</td>
+                <td class="tv">{{ $ticket->date_achat?->format('d/m/Y \\· H:i') ?? '---' }}</td>
+            </tr>
+            <tr>
+                <td class="tl">Statut scan</td>
+                <td>
+                    @if($ticket->scanne)
+                        <span class="scan-badge done">Scanne</span>
+                    @else
+                        <span class="scan-badge pending">En attente</span>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+        @if($ticket->montant_reduction > 0)
+            <table class="tx-table" cellpadding="0" cellspacing="0" style="margin-top:4px">
+                <tr>
+                    <td class="tl">Reduction</td>
+                    <td class="tv" style="color:#2E7D4F">&minus;{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA</td>
+                </tr>
+            </table>
+        @endif
+
+        <hr class="dashed">
+
+        {{-- 5. QR CODE --}}
+        <div class="qr-block">
+            <div class="qr-box">
+                <img src="{{ $qrCodeDataUri }}" alt="QR Code">
+            </div>
+            <div class="qr-label">Scannez ce code</div>
+            <div class="qr-code-display">{{ $ticket->code_unique }}</div>
         </div>
 
-        {{-- Bottom --}}
-        <div class="bottom">
-            <div class="qr-section">
-                <div class="qr-box">
-                    <img src="{{ $qrCodeDataUri }}" alt="QR Code">
-                </div>
-                <p class="qr-label">Scannez ce code</p>
-                <div class="qr-code-text">
-                    <span>{{ $ticket->code_unique }}</span>
-                </div>
-            </div>
-            <div class="details-section">
-                <div class="detail-row">
-                    <span class="dl">Transaction</span>
-                    <span class="dv">{{ $ticket->transaction_id ? Str::limit($ticket->transaction_id, 20) : '—' }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="dl">Paiement</span>
-                    <span class="dv">{{ ucfirst($ticket->methode_paiement ?? '—') }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="dl">Date d'achat</span>
-                    <span class="dv">{{ $ticket->date_achat?->format('d/m/Y H:i') ?? '—' }}</span>
-                </div>
-                @if($ticket->montant_reduction > 0)
-                    <div class="detail-row">
-                        <span class="dl">Réduction</span>
-                        <span class="dv" style="color: #2E7D4F;">-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} F</span>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        {{-- Footer stripe --}}
-        <div class="footer-stripe"></div>
-
-        {{-- Footer --}}
+        {{-- 6. FOOTER --}}
         <div class="footer">
+            <hr class="solid">
             <p>
-                Présentez ce QR code à l'entrée pour scanner votre billet. &bull;
-                <strong>Billet personnel et non transférable</strong> &bull;
-                PassEvent &copy; UPAO
+                Presentez ce QR code a l'entree pour scanner votre billet<br>
+                <strong>Billet personnel et non transferable</strong> &middot; PassEvent UPAO
             </p>
         </div>
-    </div>
+
+    </td></tr>
+</table>
+
 </body>
 </html>

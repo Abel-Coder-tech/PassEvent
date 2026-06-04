@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription — PassEvent</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -31,13 +31,6 @@
             width: 45%;
             position: relative;
             overflow: hidden;
-        }
-        .register-card-left::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(123,63,160,0.55), rgba(46,125,79,0.35));
-            z-index: 0;
         }
         .register-card-left img {
             position: absolute;
@@ -71,9 +64,6 @@
         }
         .register-card-right {
             width: 55%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 2.5rem;
         }
         .register-form { width: 100%; max-width: 360px; }
@@ -151,11 +141,7 @@
 <body>
     <div class="register-card">
         <div class="register-card-left">
-            <img src="{{ asset('images/image_connexion.jpg') }}" alt="">
-            <div class="content">
-                <h2>Dévénez organisateur</h2>
-                <p>Créez et gérez vos événements en toute simplicité avec PassEvent.</p>
-            </div>
+            <img src="{{ asset('images/image_connexion.jpeg') }}" alt="">
         </div>
         <div class="register-card-right">
             <div class="register-form">

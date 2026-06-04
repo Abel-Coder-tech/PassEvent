@@ -1,0 +1,1 @@
+<?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views\parametres\index.blade.php ENDPATH**/ ?>

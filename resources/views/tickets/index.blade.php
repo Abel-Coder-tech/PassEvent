@@ -174,17 +174,17 @@
                                         </span>
                                     </td>
                                     <td class="pe-3">
-                                        <div class="d-flex gap-1">
-                                            <a href="{{ route('tickets.pdf', $ticket->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px; padding: 0.25rem 0.5rem;" title="Telecharger PDF">
+                                        <div class="d-flex gap-1" style="white-space: nowrap;">
+                                            <a href="{{ route('tickets.pdf', $ticket->id) }}" class="btn-icon" title="Telecharger PDF">
                                                 <i class="bi bi-file-earmark-pdf"></i>
                                             </a>
-                                            <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px; padding: 0.25rem 0.5rem;" title="Details">
+                                            <a href="{{ route('tickets.show', $ticket->id) }}" class="btn-icon" title="Details">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             @if(!$isCancelled)
                                                 <form action="{{ route('tickets.renvoyer', $ticket->id) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-sm" style="border-radius: 6px; padding: 0.25rem 0.5rem; border: 1px solid var(--vert); color: var(--vert); background: transparent;" title="Renvoyer par email">
+                                                    <button type="submit" class="btn-icon btn-icon-vert" title="Renvoyer par email">
                                                         <i class="bi bi-envelope"></i>
                                                     </button>
                                                 </form>
@@ -192,13 +192,13 @@
                                             @if($isPaid || $isPending)
                                                 <form action="{{ route('tickets.annuler', $ticket->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler ce ticket ? Cette action est irreversible.');">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-sm" style="border-radius: 6px; padding: 0.25rem 0.5rem; border: 1px solid var(--danger); color: var(--danger); background: transparent;" title="Annuler">
+                                                    <button type="submit" class="btn-icon btn-icon-danger" title="Annuler">
                                                         <i class="bi bi-x-lg"></i>
                                                     </button>
                                                 </form>
                                             @endif
                                             @if($isCancelled)
-                                                <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-sm" style="border-radius: 6px; padding: 0.25rem 0.5rem; border: 1px solid var(--gris); color: var(--gris); background: transparent;" title="Voir les logs">
+                                                <a href="{{ route('tickets.show', $ticket->id) }}" class="btn-icon btn-icon-gris" title="Voir les logs">
                                                     <i class="bi bi-clock-history"></i>
                                                 </a>
                                             @endif

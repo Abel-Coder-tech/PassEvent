@@ -59,8 +59,10 @@ class EvenementPublicController extends Controller
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
         $estComplet = $placesRestantes <= 0;
+        $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast();
+        $evenementPasse = $evenement->date_event->isPast();
 
-        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet'));
+        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse'));
     }
 
     public function achat(Evenement $evenement, Request $request)
@@ -69,26 +71,56 @@ class EvenementPublicController extends Controller
             abort(404);
         }
 
-        $validated = $request->validate([
+        if (($evenement->date_fin_vente && $evenement->date_fin_vente->isPast()) || $evenement->date_event->isPast()) {
+            return back()->with('error', 'La vente est cloturee pour cet evenement.');
+        }
+
+        $estGratuit = $evenement->gratuit || $request->boolean('gratuit');
+
+        $rules = [
             'nom_acheteur' => 'required|string|max:255',
             'email_acheteur' => 'required|email|max:255',
-            'telephone_acheteur' => 'required|string|min:6|max:20',
-            'tarif_id' => 'required|exists:tarifs,id',
             'code_promo' => 'nullable|string|max:50',
             'quantite' => 'nullable|integer|min:1|max:10',
-        ], [
+        ];
+
+        $messages = [
             'nom_acheteur.required' => 'Le nom est obligatoire.',
             'email_acheteur.required' => 'L\'email est obligatoire.',
             'email_acheteur.email' => 'Le format de l\'email est invalide.',
-            'telephone_acheteur.required' => 'Le numéro de téléphone est obligatoire.',
-            'telephone_acheteur.min' => 'Le numéro doit contenir au moins 6 caractères.',
-            'tarif_id.required' => 'Le type de billet est obligatoire.',
-        ]);
+        ];
 
-        $tarif = Tarif::where('id', $validated['tarif_id'])
-            ->where('evenement_id', $evenement->id)
-            ->where('statut', 'actif')
-            ->firstOrFail();
+        if ($estGratuit) {
+            $rules['telephone_acheteur'] = 'nullable|string|max:20';
+        } else {
+            $rules['telephone_acheteur'] = 'required|string|min:6|max:20';
+            $rules['tarif_id'] = 'required|exists:tarifs,id';
+            $messages['telephone_acheteur.required'] = 'Le numéro de téléphone est obligatoire.';
+            $messages['telephone_acheteur.min'] = 'Le numéro doit contenir au moins 6 caractères.';
+            $messages['tarif_id.required'] = 'Le type de billet est obligatoire.';
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        if ($estGratuit) {
+            $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
+            if (!$tarif) {
+                $tarif = Tarif::create([
+                    'evenement_id' => $evenement->id,
+                    'categorie' => 'externe',
+                    'type' => 'normal',
+                    'prix' => 0,
+                    'statut' => 'actif',
+                    'quantite_disponible' => $evenement->capacite ?? 9999,
+                    'quantite_vendue' => 0,
+                ]);
+            }
+        } else {
+            $tarif = Tarif::where('id', $validated['tarif_id'])
+                ->where('evenement_id', $evenement->id)
+                ->where('statut', 'actif')
+                ->firstOrFail();
+        }
 
         $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1)));
 
@@ -139,7 +171,7 @@ class EvenementPublicController extends Controller
             'code_unique' => 'TMP',
             'qr_signature' => hash_hmac('sha256', (string) \Illuminate\Support\Str::uuid(), config('app.key') ?? 'fallback'),
             'email_acheteur' => strtolower($validated['email_acheteur']),
-            'telephone_acheteur' => $validated['telephone_acheteur'],
+            'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
             'nom_acheteur' => $validated['nom_acheteur'],
             'categorie' => $tarif->categorie,
             'type' => $tarif->type,

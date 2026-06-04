@@ -82,20 +82,14 @@
                             Paiement securise via KKiaPay
                         </h5>
 
-                        @if(config('services.kkiapay.sandbox'))
-                            <div class="alert alert-info py-2 mb-3" style="font-size: 0.8rem; border-radius: 8px; border: none;">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Mode <strong>TEST (sandbox)</strong> — Aucun argent ne sera debite.
-                            </div>
-                        @endif
-
                         {{-- Bouton paiement --}}
                         <button type="button" id="btnKkiaPay" class="btn w-100 py-3" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
                             <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
                         </button>
 
-                        <div class="text-center mt-3">
-                            <img src="https://kkiapay.me/assets/images/kkiapay.png" alt="KKiaPay" style="height: 22px; opacity: 0.5;">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
+                            <small class="text-muted" style="font-size: 0.75rem;">Paiement securise par</small>
+                            <img src="https://kkiapay.me/wp-content/uploads/2024/04/footer-logo.svg" alt="KKiaPay" style="height: 22px;">
                         </div>
 
                         <p class="text-center text-muted mt-3 mb-0" style="font-size: 0.78rem;">
@@ -114,50 +108,35 @@
 @endsection
 
 @section('scripts')
+{{-- SDK KKiaPay --}}
+<script src="https://cdn.kkiapay.me/k.js"></script>
+
 <script>
-document.getElementById('btnKkiaPay').addEventListener('click', function() {
-    const btn = this;
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('btnKkiaPay');
     const errorDiv = document.getElementById('paymentError');
-    errorDiv.style.display = 'none';
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Initialisation...';
-
     const callbackUrl = '{{ route('paiement.callback') }}?ticket={{ $ticket->id }}';
 
-    if (typeof KKiaPay !== 'undefined') {
-        KKiaPay.popup({
-            key: '{{ config('services.kkiapay.api_key') }}',
+    btn.addEventListener('click', function() {
+        errorDiv.style.display = 'none';
+
+        if (typeof openKkiapayWidget === 'undefined') {
+            errorDiv.textContent = 'Erreur de chargement du module de paiement. Actualisez la page.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        openKkiapayWidget({
+            key: '{{ config('services.kkiapay.app_id') }}',
             amount: {{ (int) $ticket->montant }},
             email: '{{ $ticket->email_acheteur }}',
             name: '{{ $ticket->nom_acheteur }}',
             phone: '{{ $ticket->telephone_acheteur }}',
             sandbox: {{ config('services.kkiapay.sandbox') ? 'true' : 'false' }},
             position: 'center',
-            onSuccess: function(response) {
-                var transactionId = response.transactionId || response.transaction_id || '';
-                window.location.href = callbackUrl + '&transaction_id=' + transactionId;
-            },
-            onError: function(error) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA';
-                errorDiv.textContent = 'Le paiement a echoue. Veuillez reessayer.';
-                errorDiv.style.display = 'block';
-            },
-            onClose: function() {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA';
-            }
+            callback: callbackUrl,
         });
-    } else {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA';
-        errorDiv.textContent = 'Erreur de chargement du module de paiement. Actualisez la page.';
-        errorDiv.style.display = 'block';
-    }
+    });
 });
 </script>
-
-{{-- Fallback: charger le SDK KKiaPay si pas deja charge --}}
-<script src="https://cdn.kkiapay.me/k.js"></script>
 @endsection

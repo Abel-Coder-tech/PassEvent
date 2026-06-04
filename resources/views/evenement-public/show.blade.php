@@ -32,7 +32,7 @@
     .hero-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(to top, rgba(123,63,160,0.6) 0%, rgba(123,63,160,0.15) 50%, transparent 100%);
+        background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
         pointer-events: none;
     }
     .hero-content {
@@ -137,7 +137,7 @@
         @if($evenement->image)
             <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}" loading="lazy">
         @else
-            <div style="height: 380px; background: linear-gradient(135deg, #7B3FA0, #2E7D4F);"></div>
+            <div style="height: 380px; background: linear-gradient(135deg, #2c3e50, #1a1a2e);"></div>
         @endif
         <div class="hero-overlay"></div>
         <div class="hero-content">
@@ -238,6 +238,23 @@
         {{-- Colonne droite : achat --}}
         <div class="col-lg-5">
             <div class="sticky-sidebar">
+                @if($venteCloturee || $evenementPasse)
+                    <div class="event-card mb-3">
+                        <div class="card-body text-center py-4">
+                            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(231,76,60,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                                <i class="bi bi-lock-fill" style="color: var(--danger); font-size: 1.4rem;"></i>
+                            </div>
+                            <h5 class="fw-bold mb-1" style="color: var(--danger);">Vente cloturee</h5>
+                            <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                                @if($evenementPasse)
+                                    Cet evenement a deja eu lieu.
+                                @else
+                                    Les inscriptions ne sont plus possibles pour cet evenement.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                @else
                 <div class="event-card">
                     {{-- En-tête du formulaire --}}
                     <div class="card-body" style="background: linear-gradient(135deg, rgba(123,63,160,0.04), rgba(46,125,79,0.04));">
@@ -255,9 +272,46 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card-body">
-                        {{-- Tarifs --}}
+
+                        @if($evenement->gratuit)
+                        {{-- Formulaire simplifié pour gratuit --}}
+                        <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="gratuit" value="1">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Nombre de places</label>
+                                <div class="qty-control">
+                                    <button type="button" id="qtyMinus">-</button>
+                                    <input type="number" id="quantiteInput" value="1" min="1" max="5" readonly>
+                                    <button type="button" id="qtyPlus">+</button>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Prenom et Nom <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
+                            </div>
+                            <div class="p-3 rounded-3 mb-3" style="background: #f8f6f9;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Billets</span>
+                                    <span class="fw-bold" style="font-size: 1.3rem; color: #7B3FA0;" id="totalDisplay">Gratuit</span>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn w-100 py-3" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $estComplet ? 'disabled' : '' }}>
+                                <i class="bi bi-check-circle me-2"></i> Participer
+                            </button>
+                            <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
+                                <i class="bi bi-check-circle me-1" style="color: #2E7D4F;"></i>
+                                Reservation gratuite — Ticket PDF recu par email
+                            </p>
+                        </form>
+                        @else
+                        {{-- Formulaire complet pour événements payants --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Choisissez votre tarif</label>
                             @if($tarifs->isEmpty())
@@ -275,7 +329,7 @@
                                                     <strong>{{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}</strong>
                                                 </div>
                                                 <strong style="color: #7B3FA0; font-size: 1.05rem;">
-                                                    {{ $evenement->gratuit ? 'Gratuit' : number_format($tarif->prix, 0, ',', ' ') . ' F' }}
+                                                    {{ number_format($tarif->prix, 0, ',', ' ') . ' F' }}
                                                 </strong>
                                             </div>
                                         </label>
@@ -283,8 +337,6 @@
                                 </div>
                             @endif
                         </div>
-
-                        {{-- Quantite --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Quantite</label>
                             <div class="qty-control">
@@ -293,60 +345,45 @@
                                 <button type="button" id="qtyPlus">+</button>
                             </div>
                         </div>
-
                         <hr>
-
-                        {{-- Formulaire --}}
                         <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
                             @csrf
                             <input type="hidden" name="tarif_id" id="hiddenTarifId">
                             <input type="hidden" name="quantite" id="hiddenQuantite" value="1">
-
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Prenom et Nom <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control form-control-custom" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Telephone <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control form-control-custom" name="telephone_acheteur" value="{{ old('telephone_acheteur') }}" placeholder="+229 XX XX XX XX" required>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Code promo <span class="text-muted fw-normal">(optionnel)</span></label>
                                 <input type="text" class="form-control form-control-custom" name="code_promo" value="{{ old('code_promo') }}" placeholder="PROMO-XXXXXX" style="text-transform: uppercase;">
                             </div>
-
-                            {{-- Recap --}}
                             <div class="p-3 rounded-3 mb-3" style="background: #f8f6f9;">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">{{ $evenement->gratuit ? 'Billets' : 'Total a payer' }}</span>
+                                    <span class="fw-bold">Total a payer</span>
                                     <span class="fw-bold" style="font-size: 1.3rem; color: #7B3FA0;" id="totalDisplay">--</span>
                                 </div>
                             </div>
-
-                            @if($evenement->gratuit)
-                                <button type="submit" class="btn w-100 py-3" id="btnPayer" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
-                                    <i class="bi bi-check-circle me-2"></i> Reserver gratuitement
-                                </button>
-                            @else
-                                <button type="submit" class="btn w-100 py-3" id="btnPayer" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
-                                    <i class="bi bi-shield-lock me-2"></i> Payer avec KKiaPay
-                                </button>
-                            @endif
-
+                            <button type="submit" class="btn w-100 py-3" id="btnPayer" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
+                                <i class="bi bi-shield-lock me-2"></i> Payer avec KKiaPay
+                            </button>
                             <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
                                 <i class="bi bi-shield-check me-1" style="color: #2E7D4F;"></i>
                                 Paiement 100% securise — Ticket PDF recu par email
                             </p>
                         </form>
+                        @endif
                     </div>
                 </div>
+                @endif
 
                 {{-- Autres evenements --}}
                 @php
@@ -371,8 +408,8 @@
                                             @if($autre->image)
                                                 <img src="{{ asset('storage/' . $autre->image) }}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                                             @else
-                                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #7B3FA0, #2E7D4F); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                                    <i class="bi bi-calendar-event text-white"></i>
+                                                <div style="width: 50px; height: 50px; background: #e8e8e8; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                    <i class="bi bi-calendar-event" style="color: #999;"></i>
                                                 </div>
                                             @endif
                                             <div class="flex-grow-1 min-w-0">
@@ -397,6 +434,24 @@
 
 @section('scripts')
 <script>
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href);
+    alert('Lien copie !');
+}
+
+@if($evenement->gratuit)
+document.addEventListener('DOMContentLoaded', function() {
+    const qtyInput = document.getElementById('quantiteInput');
+    document.getElementById('qtyMinus').addEventListener('click', function() {
+        const v = parseInt(qtyInput.value);
+        if (v > 1) qtyInput.value = v - 1;
+    });
+    document.getElementById('qtyPlus').addEventListener('click', function() {
+        const v = parseInt(qtyInput.value);
+        if (v < 5) qtyInput.value = v + 1;
+    });
+});
+@else
 document.addEventListener('DOMContentLoaded', function() {
     const quantiteInput = document.getElementById('quantiteInput');
     const hiddenQuantite = document.getElementById('hiddenQuantite');
@@ -414,9 +469,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTotal() {
         const tarif = getSelectedTarif();
         const qty = parseInt(quantiteInput.value) || 1;
-        const isFree = @json($evenement->gratuit ?? false);
         if (tarif) {
-            totalDisplay.textContent = isFree ? 'Gratuit' : new Intl.NumberFormat('fr-FR').format(tarif.prix * qty) + ' F';
+            totalDisplay.textContent = new Intl.NumberFormat('fr-FR').format(tarif.prix * qty) + ' F';
             hiddenTarifId.value = tarif.id;
         } else {
             totalDisplay.textContent = '--';
@@ -448,14 +502,10 @@ function selectTarif(el) {
     if (radio) radio.checked = true;
 }
 
-function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Lien copie !');
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const firstTarif = document.querySelector('.tarif-card');
     if (firstTarif) selectTarif(firstTarif);
 });
+@endif
 </script>
 @endsection
