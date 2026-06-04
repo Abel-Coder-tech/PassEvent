@@ -30,6 +30,7 @@ class User extends Authenticatable
         'kkiapay_active',
         'code_acces_scan',
         'pseudo',
+        'statut',
     ];
 
     protected $hidden = [

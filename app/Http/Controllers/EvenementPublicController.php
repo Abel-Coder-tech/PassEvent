@@ -7,6 +7,7 @@ use App\Models\Tarif;
 use App\Models\CodePromo;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class EvenementPublicController extends Controller
 {
@@ -56,6 +57,7 @@ class EvenementPublicController extends Controller
             abort(404);
         }
 
+        $evenement->load('user');
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
         $estComplet = $placesRestantes <= 0;
@@ -200,5 +202,33 @@ class EvenementPublicController extends Controller
 
         return redirect()->route('paiement.show', $ticket->id)
             ->with('success', $quantite > 1 ? "{$quantite} places reservees. Finalisez le paiement." : 'Votre place est reservee. Finalisez le paiement.');
+    }
+
+    public function contacterOrganisateur(Evenement $evenement, Request $request)
+    {
+        if ($evenement->statut !== 'publié') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'message' => 'required|string|min:10|max:2000',
+        ]);
+
+        $organisateur = $evenement->user;
+
+        Mail::raw(
+            "Message de {$validated['nom']} ({$validated['email']})\n\n" .
+            "Evenement : {$evenement->titre}\n\n" .
+            "Message :\n{$validated['message']}",
+            function ($m) use ($organisateur, $validated, $evenement) {
+                $m->to($organisateur->email, $organisateur->nom)
+                  ->replyTo($validated['email'], $validated['nom'])
+                  ->subject("[PassEvent] Question sur {$evenement->titre}");
+            }
+        );
+
+        return back()->with('success', 'Votre message a ete envoye a l\'organisateur. Vous recevrez une reponse sous peu.');
     }
 }

@@ -28,10 +28,10 @@
     <div class="col-md-6">
         <div class="sa-card">
             <div class="sa-card-header">
-                <span><i class="bi bi-shield-fill me-2" style="color: var(--sa-warning);"></i>Actions rapides</span>
+                <span><i class="bi bi-info-circle me-2" style="color: var(--sa-primary);"></i>Validation</span>
             </div>
             <div class="sa-card-body">
-                <p class="text-muted mb-2" style="font-size:0.8rem;">Cliquez sur les boutons dans le tableau pour suspendre ou reinitialiser le mot de passe d'un organisateur.</p>
+                <p class="text-muted mb-0" style="font-size:0.8rem;">Les organisateurs en attente apparaissent avec un badge jaune. Utilisez les boutons ✅ ou ❌ pour les approuver ou les rejeter.</p>
             </div>
         </div>
     </div>
@@ -45,7 +45,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Nom</th><th>Email</th><th>Organisation</th><th>Evenements</th><th>Telephone</th><th>Inscrit</th><th>Actions</th></tr>
+                <tr><th>Nom</th><th>Email</th><th>Organisation</th><th>Statut</th><th>Evenements</th><th>Telephone</th><th>Inscrit</th><th>Actions</th></tr>
             </thead>
             <tbody>
                 @foreach($organisateurs as $org)
@@ -53,18 +53,37 @@
                     <td><strong>{{ $org->nom }}</strong></td>
                     <td>{{ $org->email }}</td>
                     <td>{{ $org->organisation ?? '-' }}</td>
+                    <td>
+                        @if($org->statut === 'en_attente')
+                            <span class="sa-badge sa-badge-warning">En attente</span>
+                        @elseif($org->statut === 'actif')
+                            <span class="sa-badge sa-badge-success">Actif</span>
+                        @elseif($org->statut === 'bloque')
+                            <span class="sa-badge sa-badge-danger">Bloque</span>
+                        @else
+                            <span class="sa-badge sa-badge-secondary">{{ $org->statut }}</span>
+                        @endif
+                    </td>
                     <td>{{ $org->evenements_count }}</td>
                     <td>{{ $org->telephone ?? '-' }}</td>
                     <td style="font-size:0.75rem;">{{ $org->created_at->format('d M Y') }}</td>
                     <td>
-                        <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses evenements seront annules.')">
-                            @csrf
-                            <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger"><i class="bi bi-pause-fill"></i></button>
-                        </form>
-                        <form action="{{ route('superadmin.organisateurs.reset-password', $org) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="sa-btn sa-btn-sm sa-btn-outline" title="Reinitialiser mot de passe"><i class="bi bi-key"></i></button>
-                        </form>
+                        @if($org->statut === 'en_attente')
+                            <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
+                            </form>
+                            <form action="{{ route('superadmin.organisateurs.rejeter', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Rejeter {{ $org->nom }} ?')">
+                                @csrf
+                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"><i class="bi bi-x-lg"></i></button>
+                            </form>
+                        @endif
+                        @if($org->statut === 'actif')
+                            <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses evenements seront annules.')">
+                                @csrf
+                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-warning" title="Suspendre"><i class="bi bi-pause-fill"></i></button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
@@ -73,4 +92,30 @@
     </div>
 </div>
 <div class="mt-3 d-flex justify-content-center">{{ $organisateurs->links() }}</div>
+
+<style>
+.sa-badge {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.sa-badge-success { background: rgba(46,125,79,0.12); color: #2e7d4f; }
+.sa-badge-warning { background: rgba(237,173,8,0.12); color: #b8860b; }
+.sa-badge-danger { background: rgba(231,76,60,0.12); color: #e74c3c; }
+.sa-badge-secondary { background: rgba(152,145,155,0.15); color: #6c757d; }
+.sa-btn-success {
+    background: #2e7d4f; border: none; color: #fff; padding: 0.3rem 0.6rem;
+    border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s;
+}
+.sa-btn-success:hover { opacity: 0.85; }
+.sa-btn-warning {
+    background: #e0a800; border: none; color: #fff; padding: 0.3rem 0.6rem;
+    border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s;
+}
+.sa-btn-warning:hover { opacity: 0.85; }
+</style>
 @endsection

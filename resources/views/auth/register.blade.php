@@ -146,8 +146,8 @@
         <div class="register-card-right">
             <div class="register-form">
                 <div class="step-badge"><span class="num">1</span> Créer votre compte</div>
-                <h2>Inscription</h2>
-                <p class="subtitle">Rejoignez PassEvent en quelques clics</p>
+                <h2>Devenir organisateur</h2>
+                <p class="subtitle">Creez votre compte — validation manuelle par l'administrateur</p>
 
                 @if ($errors->any())
                     <div class="alert alert-danger py-2" style="font-size:0.82rem;">
@@ -194,10 +194,14 @@
                             <input type="password" class="form-control @error('mot_de_passe') is-invalid @enderror" name="mot_de_passe" placeholder="Minimum 8 caracteres" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn-inscription">Créer mon compte</button>
+                    <div class="alert alert-info py-2 mb-2" style="font-size:0.78rem; background: rgba(13,110,253,0.06); border: none; color: #0a58ca;">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Apres inscription, votre compte sera active manuellement par l'administrateur. Vous recevrez un email de confirmation.
+                    </div>
+                    <button type="submit" class="btn-inscription">Creer mon compte</button>
                 </form>
                 <p class="text-center mt-3" style="font-size:0.82rem; color:#6c757d;">
-                    Déja un compte ? <a href="{{ route('login') }}" class="login-link">Connectez-vous</a>
+                    Deja un compte ? <a href="{{ route('login') }}" class="login-link">Connectez-vous</a>
                 </p>
             </div>
         </div>

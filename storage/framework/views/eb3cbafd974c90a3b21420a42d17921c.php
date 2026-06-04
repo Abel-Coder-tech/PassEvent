@@ -66,4 +66,4 @@
         </div>
     </div>
 </body>
-</html><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views\emails\reset-password.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/emails/reset-password.blade.php ENDPATH**/ ?>

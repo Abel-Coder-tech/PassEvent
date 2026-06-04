@@ -32,7 +32,22 @@ class LoginController extends Controller
         ];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+
+            if ($user->statut !== 'actif') {
+                Auth::logout();
+                $request->session()->invalidate();
+                return back()->withErrors([
+                    'email' => 'Votre compte est en attente de validation par l\'administrateur.',
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
+
+            if ($user->role === 'super_admin') {
+                return redirect()->intended(route('superadmin.dashboard'));
+            }
+
             return redirect()->intended(route('dashboard'));
         }
 

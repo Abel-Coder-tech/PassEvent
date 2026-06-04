@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\Newsletter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class SuperAdminController extends Controller
 {
@@ -230,6 +231,7 @@ class SuperAdminController extends Controller
 
     public function suspendreOrganisateur(User $user)
     {
+        $user->update(['statut' => 'bloque']);
         $evenements = $user->evenements()->where('statut', 'publié')->update(['statut' => 'annulé']);
         Log::create([
             'type_operation' => 'organisateur_suspendu',
@@ -251,20 +253,56 @@ class SuperAdminController extends Controller
         ]);
         $data['mot_de_passe'] = bcrypt($data['mot_de_passe']);
         $data['role'] = 'admin';
+        $data['statut'] = 'actif';
         User::create($data);
         return back()->with('success', 'Organisateur cree.');
     }
 
-    public function reinitialiserMotDePasse(User $user)
+    public function approuverOrganisateur(User $user)
     {
-        $newPass = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 12);
-        $user->update(['mot_de_passe' => bcrypt($newPass)]);
+        if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
+            return back()->with('error', 'Action non autorisee.');
+        }
+
+        $user->update(['statut' => 'actif']);
+
+        Mail::raw(
+            "Bonjour {$user->nom},\n\n" .
+            "Votre compte organisateur PassEvent a ete approuve !\n" .
+            "Vous pouvez des maintenant vous connecter et creer vos evenements.\n\n" .
+            "Connectez-vous : " . route('login') . "\n\n" .
+            "Cordialement,\nL'equipe PassEvent",
+            function ($message) use ($user) {
+                $message->to($user->email)
+                    ->subject('[PassEvent] Compte approuve');
+            }
+        );
+
         Log::create([
-            'type_operation' => 'mdp_reinitialise',
+            'type_operation' => 'organisateur_approuve',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'nouveau_mdp' => $newPass]),
+            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email]),
             'ip' => request()->ip(),
         ]);
-        return back()->with('success', "Mot de passe reinitialise. Nouveau mot de passe : $newPass");
+
+        return back()->with('success', "Organisateur {$user->nom} approuve. Un email de confirmation a ete envoye.");
+    }
+
+    public function rejeterOrganisateur(User $user)
+    {
+        if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
+            return back()->with('error', 'Action non autorisee.');
+        }
+
+        $user->update(['statut' => 'bloque']);
+
+        Log::create([
+            'type_operation' => 'organisateur_rejete',
+            'ticket_id' => null,
+            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', "Organisateur {$user->nom} rejete.");
     }
 }

@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\VerificationEmail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class InscriptionController extends Controller
 {
@@ -33,37 +31,27 @@ class InscriptionController extends Controller
             'organisation' => $validated['organisation'],
             'mot_de_passe' => Hash::make($validated['mot_de_passe']),
             'role' => 'admin',
+            'statut' => 'en_attente',
         ]);
 
-        $token = Str::random(60);
-        $user->remember_token = $token;
-        $user->save();
-
-        $url = route('inscriptions.verify', ['id' => $user->id, 'token' => $token]);
-
-        Mail::to($user->email)->send(new VerificationEmail($user, $url));
-
-        return redirect()->route('login')
-            ->with('success', 'Compte cree ! Verifiez votre email pour confirmer votre inscription.');
-    }
-
-    public function verify($id, $token)
-    {
-        $user = User::findOrFail($id);
-
-        if ($user->remember_token !== $token) {
-            return redirect()->route('login')->with('error', 'Lien de verification invalide.');
+        // Notifier tous les super admins
+        $superAdmins = User::where('role', 'super_admin')->get();
+        foreach ($superAdmins as $sa) {
+            Mail::raw(
+                "Nouvel organisateur en attente :\n\n" .
+                "Nom : {$user->nom}\n" .
+                "Email : {$user->email}\n" .
+                "Organisation : {$user->organisation}\n" .
+                "Telephone : {$user->telephone}\n\n" .
+                "Connectez-vous sur le super dashboard pour valider ou rejeter.",
+                function ($message) use ($sa) {
+                    $message->to($sa->email)
+                        ->subject('[PassEvent] Nouvel organisateur en attente');
+                }
+            );
         }
 
-        if ($user->email_verified_at) {
-            return redirect()->route('login')->with('info', 'Email deja verifie.');
-        }
-
-        $user->email_verified_at = now();
-        $user->remember_token = null;
-        $user->save();
-
         return redirect()->route('login')
-            ->with('success', 'Email confirme ! Vous pouvez maintenant vous connecter.');
+            ->with('success', 'Compte cree avec succes ! Votre demande est en attente de validation par l\'administrateur. Vous recevrez un email une fois votre compte active.');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Evenement;
 use App\Models\Message;
 use App\Models\Tarif;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -84,7 +85,24 @@ class SitePublicController extends Controller
             'message.max' => 'Le message ne doit pas depasser 2000 caracteres.',
         ]);
 
-        Message::create($validated);
+        $message = Message::create($validated);
+
+        // Envoyer un email à tous les super admins
+        $superAdmins = User::where('role', 'super_admin')->get();
+        foreach ($superAdmins as $sa) {
+            Mail::raw(
+                "Nouveau message depuis le formulaire de contact :\n\n" .
+                "De : {$validated['nom_complet']} ({$validated['email']})\n" .
+                "Objet : {$validated['objet']}\n" .
+                "Message :\n{$validated['message']}\n\n" .
+                "Connectez-vous au super dashboard pour y repondre.",
+                function ($m) use ($sa, $validated) {
+                    $m->to($sa->email)
+                      ->replyTo($validated['email'], $validated['nom_complet'])
+                      ->subject("[PassEvent] Contact : {$validated['objet']}");
+                }
+            );
+        }
 
         return redirect()->route('contact')
             ->with('success', 'Votre message a ete envoye avec succes. Nous vous repondrons dans les plus brefs delais.');

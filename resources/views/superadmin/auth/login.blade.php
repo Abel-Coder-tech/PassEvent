@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin - PassEvent</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -140,8 +140,8 @@
         <div class="login-card">
             <div class="login-brand">
                 <div class="login-brand-icon"><i class="bi bi-shield-fill-check"></i></div>
-                <h1>Super Admin</h1>
-                <p>PassEvent — Centre de controle</p>
+                <h1>Bienvenue</h1>
+                <p>Dans votre espace administrateur</p>
             </div>
 
             @if($errors->any())
@@ -171,7 +171,7 @@
             </form>
 
             <div class="login-footer">
-                <a href="{{ route('login') }}"><i class="bi bi-arrow-left me-1"></i>Espace organisateur</a>
+                <span>PassEvent &mdash; Administration</span>
             </div>
         </div>
     </div>

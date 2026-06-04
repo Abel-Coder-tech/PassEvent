@@ -31,6 +31,7 @@ Route::get('/', [SitePublicController::class, 'accueil'])->name('accueil');
 Route::get('/evenements', [EvenementPublicController::class, 'index'])->name('evenements.public');
 Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show'])->name('evenements.public.show');
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat');
+Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur');
 
 Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
@@ -60,7 +61,6 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::get('/inscription', [InscriptionController::class, 'create'])->name('inscriptions.create');
 Route::post('/inscription', [InscriptionController::class, 'store'])->name('inscriptions.store');
-Route::get('/verifier-email/{id}/{token}', [InscriptionController::class, 'verify'])->name('inscriptions.verify');
 
 // Mot de passe oublié
 Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showForm'])->name('password.request');
@@ -82,7 +82,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/organisateurs', [SuperAdminController::class, 'organisateurs'])->name('organisateurs');
         Route::post('/organisateurs/creer', [SuperAdminController::class, 'creerOrganisateur'])->name('organisateurs.creer');
         Route::post('/organisateurs/{user}/suspendre', [SuperAdminController::class, 'suspendreOrganisateur'])->name('organisateurs.suspendre');
-        Route::post('/organisateurs/{user}/reset-password', [SuperAdminController::class, 'reinitialiserMotDePasse'])->name('organisateurs.reset-password');
+        Route::post('/organisateurs/{user}/approuver', [SuperAdminController::class, 'approuverOrganisateur'])->name('organisateurs.approuver');
+        Route::post('/organisateurs/{user}/rejeter', [SuperAdminController::class, 'rejeterOrganisateur'])->name('organisateurs.rejeter');
         Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');
         Route::post('/evenements/{evenement}/suspendre', [SuperAdminController::class, 'suspendreEvenement'])->name('evenements.suspendre');
         Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');

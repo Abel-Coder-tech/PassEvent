@@ -233,6 +233,59 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Contacter l'organisateur --}}
+            <div class="event-card mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3" style="color: #333;">
+                        <i class="bi bi-envelope me-2" style="color: #2E7D4F;"></i>Une question ?
+                    </h5>
+                    <p class="text-muted" style="font-size: 0.85rem;">
+                        Vous avez une question specifique sur cet evenement ? Contactez directement l'organisateur.
+                    </p>
+                    <button type="button" class="btn w-100 py-2" style="background: #2E7D4F; color: #fff; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none;" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
+                        <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
+                    </button>
+                </div>
+            </div>
+
+            {{-- Modal Contacter l'organisateur --}}
+            <div class="modal fade" id="contactOrganisateurModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content" style="border-radius: 14px; border: none;">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="fw-bold" style="color: #333;">
+                                <i class="bi bi-envelope me-2" style="color: #2E7D4F;"></i>
+                                Contacter l'organisateur
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                Votre message sera envoye a <strong>{{ $evenement->user->nom }}</strong> (organisateur de <strong>{{ $evenement->titre }}</strong>).
+                            </p>
+                            <form action="{{ route('evenements.contacter-organisateur', $evenement->id) }}" method="POST">
+                                @csrf
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" style="font-size: 0.85rem;">Votre nom <span class="text-danger">*</span></label>
+                                    <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" style="font-size: 0.85rem;">Votre email <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" class="form-control" placeholder="votre@email.com" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" style="font-size: 0.85rem;">Message <span class="text-danger">*</span></label>
+                                    <textarea name="message" class="form-control" rows="4" placeholder="Ecrivez votre message ici..." required minlength="10"></textarea>
+                                </div>
+                                <button type="submit" class="btn w-100 py-2" style="background: #2E7D4F; color: #fff; border-radius: 10px; font-weight: 700; border: none;">
+                                    <i class="bi bi-send me-2"></i> Envoyer le message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Colonne droite : achat --}}

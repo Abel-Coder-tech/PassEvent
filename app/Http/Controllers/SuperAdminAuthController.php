@@ -9,9 +9,6 @@ class SuperAdminAuthController extends Controller
 {
     public function showLoginForm()
     {
-        if (auth()->check() && auth()->user()->role === 'super_admin') {
-            return redirect()->route('superadmin.dashboard');
-        }
         return view('superadmin.auth.login');
     }
 
@@ -30,7 +27,7 @@ class SuperAdminAuthController extends Controller
             'pseudo' => $credentials['pseudo'],
             'password' => $credentials['mot_de_passe'],
             'role' => 'super_admin',
-        ], $request->boolean('remember'))) {
+        ])) {
             $request->session()->regenerate();
             return redirect()->intended(route('superadmin.dashboard'));
         }
