@@ -55,11 +55,11 @@
         </div>
         <div class="body">
             <p>Bonjour <strong>{{ $user->nom }}</strong>,</p>
-            <p>Merci de vous etre inscrit sur PassEvent. Veuillez confirmer votre adresse email en cliquant sur le lien ci-dessous :</p>
+            <p>Merci de vous être inscrit sur PassEvent. Veuillez confirmer votre adresse email en cliquant sur le lien ci-dessous :</p>
             <p style="text-align: center;">
                 <a href="{{ $url }}" class="btn">Confirmer mon email</a>
             </p>
-            <p style="font-size:13px; color:#6c757d;">Si vous n'avez pas cree de compte, ignorez cet email.</p>
+            <p style="font-size:13px; color:#6c757d;">Si vous n'avez pas créé de compte, ignorez cet email.</p>
         </div>
         <div class="footer">
             <p>PassEvent — Billetterie intelligente</p>

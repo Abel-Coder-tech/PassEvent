@@ -1,15 +1,13 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Scan QR - PassEvent'); ?>
 
-@section('title', 'Scan QR - PassEvent')
+<?php $__env->startSection('page-title', 'Accès scan'); ?>
 
-@section('page-title', 'Accès scan')
-
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+<?php $__env->startSection('breadcrumb'); ?>
+    <li class="breadcrumb-item"><a href="<?php echo e(route('dashboard')); ?>">Dashboard</a></li>
     <li class="breadcrumb-item active" aria-current="page">Scan QR</li>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <style>
     .access-container { max-width: 640px; margin: 0 auto; }
     .evt-card {
@@ -45,7 +43,7 @@
 <div class="page-content">
     <div class="access-container">
 
-        {{-- Étape 1: Sélection événement --}}
+        
         <div id="stepSelect">
             <div class="text-center mb-4">
                 <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(123,63,160,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
@@ -55,38 +53,40 @@
                 <p class="text-muted" style="font-size: 0.9rem;">Choisissez l'événement que vous voulez scanner</p>
             </div>
 
-            @forelse($evenements as $evt)
-                @php
+            <?php $__empty_1 = true; $__currentLoopData = $evenements; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $evt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
                     $colors = ['publié' => 'var(--vert)', 'brouillon' => '#f39c12', 'terminé' => 'var(--danger)', 'annulé' => '#888'];
                     $statutColor = $colors[$evt->statut] ?? '#888';
-                @endphp
-                <div class="evt-card mb-3" data-id="{{ $evt->id }}" data-titre="{{ $evt->titre }}" onclick="selectEvent(this)">
+                ?>
+                <div class="evt-card mb-3" data-id="<?php echo e($evt->id); ?>" data-titre="<?php echo e($evt->titre); ?>" onclick="selectEvent(this)">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-3 min-w-0">
                             <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123,63,160,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <i class="bi bi-calendar-event" style="color: #7B3FA0; font-size: 1.1rem;"></i>
                             </div>
                             <div class="min-w-0">
-                                <div class="fw-semibold" style="font-size: 0.95rem;">{{ $evt->titre }}</div>
+                                <div class="fw-semibold" style="font-size: 0.95rem;"><?php echo e($evt->titre); ?></div>
                                 <div style="font-size: 0.78rem; color: #888;">
-                                    {{ $evt->date_event->format('d M Y') }} · {{ $evt->lieu }}
+                                    <?php echo e($evt->date_event->format('d M Y')); ?> · <?php echo e($evt->lieu); ?>
+
                                 </div>
                             </div>
                         </div>
-                        <span class="badge-statut" style="background: {{ $statutColor }}20; color: {{ $statutColor }};">
-                            {{ ucfirst($evt->statut) }}
+                        <span class="badge-statut" style="background: <?php echo e($statutColor); ?>20; color: <?php echo e($statutColor); ?>;">
+                            <?php echo e(ucfirst($evt->statut)); ?>
+
                         </span>
                     </div>
                 </div>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="text-center py-5">
                     <i class="bi bi-calendar-x" style="font-size: 3rem; color: var(--gris); opacity: 0.3;"></i>
                     <p class="text-muted mt-2 mb-0">Aucun événement créé.</p>
                 </div>
-            @endforelse
+            <?php endif; ?>
         </div>
 
-        {{-- Étape 2: Code d'accès --}}
+        
         <div id="stepCode" style="display: none;">
             <div class="text-center mb-4">
                 <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(123,63,160,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
@@ -97,7 +97,7 @@
             </div>
 
             <form id="accessCodeForm">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="evenement_id" id="evenementId">
                 <div class="mb-4">
                     <input type="text" id="codeInput" name="code" class="form-control access-input"
@@ -117,9 +117,9 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
 let selectedEventId = null;
 
@@ -159,7 +159,7 @@ document.getElementById('accessCodeForm').addEventListener('submit', function(e)
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Vérification...';
     error.style.display = 'none';
 
-    fetch('{{ route('scan.access-code') }}', {
+    fetch('<?php echo e(route('scan.access-code')); ?>', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -193,4 +193,6 @@ document.getElementById('codeInput').addEventListener('keydown', function(e) {
     }
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/admin/scan/access.blade.php ENDPATH**/ ?>

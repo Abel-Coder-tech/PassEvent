@@ -26,34 +26,28 @@ class LoginController extends Controller
             'mot_de_passe' => ['required'],
         ]);
 
-        $credentials = [
-            'email' => $credentials['email'],
-            'password' => $credentials['mot_de_passe'],
-        ];
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $user = Auth::user();
-
-            if ($user->statut !== 'actif') {
-                Auth::logout();
-                $request->session()->invalidate();
-                return back()->withErrors([
-                    'email' => 'Votre compte est en attente de validation par l\'administrateur.',
-                ])->onlyInput('email');
-            }
-
-            $request->session()->regenerate();
-
-            if ($user->role === 'super_admin') {
-                return redirect()->intended(route('superadmin.dashboard'));
-            }
-
-            return redirect()->intended(route('dashboard'));
+        if (!$user) {
+            return back()->withErrors(['email' => 'Cet email n\'est pas enregistre.'])->onlyInput('email');
         }
 
-        return back()->withErrors([
-            'email' => 'Les identifiants ne correspondent pas.',
-        ])->onlyInput('email');
+        if ($user->statut !== 'actif') {
+            return back()->withErrors(['email' => 'Votre compte est en attente de validation par l\'administrateur.'])->onlyInput('email');
+        }
+
+        if (!\Illuminate\Support\Facades\Hash::check($credentials['mot_de_passe'], $user->mot_de_passe)) {
+            return back()->withErrors(['mot_de_passe' => 'Mot de passe incorrect.'])->onlyInput('email');
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        if ($user->role === 'super_admin') {
+            return redirect()->intended(route('superadmin.dashboard'));
+        }
+
+        return redirect()->intended(route('dashboard'));
     }
 
     public function logout(Request $request)

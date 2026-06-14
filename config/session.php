@@ -127,10 +127,9 @@ return [
     |
     */
 
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
-    ),
+    'cookie' => (
+        !empty($_SERVER['REQUEST_URI']) && str_contains($_SERVER['REQUEST_URI'], '/superadmin')
+    ) ? 'superadmin_session' : env('SESSION_COOKIE', Str::slug(env('APP_NAME', 'laravel')).'-session'),
 
     /*
     |--------------------------------------------------------------------------

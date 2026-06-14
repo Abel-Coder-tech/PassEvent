@@ -10,11 +10,11 @@ class CheckSuperAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (!auth('superadmin')->check()) {
             return redirect()->route('superadmin.login');
         }
 
-        if (auth()->user()->role !== 'super_admin') {
+        if (auth('superadmin')->user()->role !== 'super_admin') {
             abort(403, 'Acces reserve au super administrateur.');
         }
 

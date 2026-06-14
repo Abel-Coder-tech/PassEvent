@@ -53,12 +53,20 @@
                     <label for="categorie" class="form-label fw-semibold">Categorie <span class="text-danger">*</span></label>
                     <select class="form-select @error('categorie') is-invalid @enderror" id="categorie" name="categorie" required>
                         <option value="">Selectionner une categorie</option>
-                        <option value="Sport" {{ old('categorie', $evenement->categorie) == 'Sport' ? 'selected' : '' }}>Sport</option>
-                        <option value="Soiree gala" {{ old('categorie', $evenement->categorie) == 'Soiree gala' ? 'selected' : '' }}>Soiree gala</option>
-                        <option value="Ceremonie officielle" {{ old('categorie', $evenement->categorie) == 'Ceremonie officielle' ? 'selected' : '' }}>Ceremonie officielle</option>
-                        <option value="Webinaire" {{ old('categorie', $evenement->categorie) == 'Webinaire' ? 'selected' : '' }}>Webinaire</option>
+                        @php
+                            $catList = ['Sport', 'Soiree gala', 'Ceremonie officielle', 'Webinaire'];
+                            $currentCat = old('categorie', $evenement->categorie);
+                        @endphp
+                        @foreach($catList as $cat)
+                            <option value="{{ $cat }}" {{ $currentCat == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                        @endforeach
+                        <option value="Autre" {{ !in_array($currentCat, $catList) && $currentCat ? 'selected' : '' }}>Autre</option>
                     </select>
+                    <div id="autre-categorie-wrapper" style="display:none;margin-top:0.5rem;">
+                        <input type="text" class="form-control" id="autre_categorie" name="autre_categorie" placeholder="Precisez la categorie" value="{{ old('autre_categorie', !in_array($currentCat, $catList) ? $currentCat : '') }}">
+                    </div>
                     @error('categorie') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('autre_categorie') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="row">
@@ -94,14 +102,22 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="statut" class="form-label fw-semibold">Statut <span class="text-danger">*</span></label>
-                    <select class="form-select @error('statut') is-invalid @enderror" id="statut" name="statut" required>
-                        <option value="brouillon" {{ old('statut', $evenement->statut) == 'brouillon' ? 'selected' : '' }}>Brouillon</option>
-                        <option value="publié" {{ old('statut', $evenement->statut) == 'publié' ? 'selected' : '' }}>Publié</option>
-                        <option value="terminé" {{ old('statut', $evenement->statut) == 'terminé' ? 'selected' : '' }}>Terminé</option>
-                        <option value="annulé" {{ old('statut', $evenement->statut) == 'annulé' ? 'selected' : '' }}>Annulé</option>
-                    </select>
-                    @error('statut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <label class="form-label fw-semibold d-block">Statut <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input @error('statut') is-invalid @enderror" id="statut_brouillon" name="statut" value="brouillon" {{ old('statut', $evenement->statut) == 'brouillon' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="statut_brouillon">
+                                <i class="bi bi-pencil-square me-1"></i>Brouillon
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input @error('statut') is-invalid @enderror" id="statut_publie" name="statut" value="publié" {{ old('statut', $evenement->statut) == 'publié' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="statut_publie">
+                                <i class="bi bi-globe2 me-1"></i>Publié
+                            </label>
+                        </div>
+                    </div>
+                    @error('statut') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="panel-card mt-4 mb-4" style="border-left: 3px solid var(--violet);">
@@ -168,4 +184,20 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.getElementById('categorie')?.addEventListener('change', function() {
+    const wrapper = document.getElementById('autre-categorie-wrapper');
+    if (this.value === 'Autre') {
+        wrapper.style.display = 'block';
+    } else {
+        wrapper.style.display = 'none';
+    }
+});
+if (document.getElementById('categorie')?.value === 'Autre') {
+    document.getElementById('autre-categorie-wrapper').style.display = 'block';
+}
+</script>
 @endsection

@@ -22,6 +22,10 @@ class LogController extends Controller
         $query = Log::with('ticket.evenement')
             ->where('created_at', '>=', $startDate);
 
+        if (auth()->user()->role !== 'super_admin') {
+            $query->whereHas('ticket.evenement', fn($q) => $q->where('user_id', auth()->id()));
+        }
+
         if ($type) {
             $query->where('type_operation', $type);
         }
@@ -57,6 +61,12 @@ class LogController extends Controller
     public function detail($id)
     {
         $log = Log::with(['ticket.evenement', 'ticket.tarif'])->findOrFail($id);
+
+        if (auth()->user()->role !== 'super_admin') {
+            if (!$log->ticket || !$log->ticket->evenement || $log->ticket->evenement->user_id !== auth()->id()) {
+                abort(403);
+            }
+        }
 
         return response()->json([
             'id' => $log->id,
@@ -139,13 +149,18 @@ class LogController extends Controller
 
     private function computeStats(\Carbon\Carbon $startDate): array
     {
-        $total = Log::where('created_at', '>=', $startDate)->count();
-        $achats = Log::where('created_at', '>=', $startDate)->where('type_operation', 'achat')->count();
-        $envois = Log::where('created_at', '>=', $startDate)->where('type_operation', 'envoi')->count();
-        $scans = Log::where('created_at', '>=', $startDate)->where('type_operation', 'scan')->count();
-        $echecs = Log::where('created_at', '>=', $startDate)
-            ->where('type_operation', 'echec_paiement')
-            ->count();
+        $baseQuery = Log::where('created_at', '>=', $startDate);
+
+        if (auth()->user()->role !== 'super_admin') {
+            $baseQuery->whereHas('ticket.evenement', fn($q) => $q->where('user_id', auth()->id()));
+        }
+
+        $clone = fn() => clone $baseQuery;
+        $total = $clone()->count();
+        $achats = $clone()->where('type_operation', 'achat')->count();
+        $envois = $clone()->where('type_operation', 'envoi')->count();
+        $scans = $clone()->where('type_operation', 'scan')->count();
+        $echecs = $clone()->where('type_operation', 'echec_paiement')->count();
 
         return [
             'total' => $total,

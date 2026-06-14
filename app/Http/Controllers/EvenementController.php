@@ -50,11 +50,12 @@ class EvenementController extends Controller
             'description' => 'nullable|string|max:5000',
             'date_event' => 'required|date',
             'lieu' => 'required|string|max:255',
-            'categorie' => 'required|in:Sport,Soiree gala,Ceremonie officielle,Webinaire',
+            'categorie' => 'required',
+            'autre_categorie' => 'nullable|string|max:255',
             'capacite' => 'required|integer|min:1',
             'date_fin_vente' => 'nullable|date|after:now',
             'image' => 'nullable|image|max:2048',
-            'statut' => 'required|in:brouillon,publié,terminé,annulé',
+            'statut' => 'required|in:brouillon,publié',
             'gratuit' => 'nullable|boolean',
         ];
 
@@ -81,10 +82,14 @@ class EvenementController extends Controller
             'image.image' => 'Le fichier doit être une image.',
             'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
             'statut.required' => 'Le statut est obligatoire.',
-            'statut.in' => 'Le statut doit être : brouillon, publié, terminé ou annulé.',
             'prix_base.required' => 'Le prix de base est obligatoire.',
             'prix_base.numeric' => 'Le prix doit être un nombre.',
         ]);
+
+        if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
+            $validated['categorie'] = $validated['autre_categorie'];
+        }
+        unset($validated['autre_categorie']);
 
         $validated['user_id'] = Auth::id();
         $validated['gratuit'] = $gratuit;
@@ -194,11 +199,12 @@ class EvenementController extends Controller
             'description' => 'nullable|string|max:5000',
             'date_event' => 'required|date',
             'lieu' => 'required|string|max:255',
-            'categorie' => 'required|in:Sport,Soiree gala,Ceremonie officielle,Webinaire',
+            'categorie' => 'required',
+            'autre_categorie' => 'nullable|string|max:255',
             'capacite' => 'required|integer|min:1',
             'date_fin_vente' => 'nullable|date|after:now',
             'image' => 'nullable|image|max:2048',
-            'statut' => 'required|in:brouillon,publié,terminé,annulé',
+            'statut' => 'required|in:brouillon,publié',
             'gratuit' => 'nullable|boolean',
         ], [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
@@ -209,7 +215,7 @@ class EvenementController extends Controller
             'lieu.required' => 'Le lieu est obligatoire.',
             'lieu.max' => 'Le lieu ne doit pas dépasser 255 caractères.',
             'categorie.required' => 'La categorie est obligatoire.',
-            'categorie.in' => 'La categorie doit etre : Sport, Soiree gala, Ceremonie officielle ou Webinaire.',
+            'autre_categorie.max' => 'La categorie personnalisee ne doit pas depasser 255 caracteres.',
             'capacite.required' => 'La capacité est obligatoire.',
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
@@ -217,8 +223,12 @@ class EvenementController extends Controller
             'image.image' => 'Le fichier doit être une image.',
             'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
             'statut.required' => 'Le statut est obligatoire.',
-            'statut.in' => 'Le statut doit être : brouillon, publié, terminé ou annulé.',
         ]);
+
+        if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
+            $validated['categorie'] = $validated['autre_categorie'];
+        }
+        unset($validated['autre_categorie']);
 
         $validated['gratuit'] = $request->boolean('gratuit');
 

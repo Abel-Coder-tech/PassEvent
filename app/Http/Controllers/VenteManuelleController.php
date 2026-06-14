@@ -23,9 +23,11 @@ class VenteManuelleController extends Controller
             ->orderBy('date_event', 'asc')
             ->get();
 
+        $debutJour = now()->startOfDay()->utc();
+        $finJour = now()->endOfDay()->utc();
         $ventesJour = Ticket::whereHas('evenement', fn($q) => $q->where('user_id', $user->id))
-            ->where('methode_paiement', 'manuel')
-            ->whereDate('date_achat', now()->toDateString())
+            ->where('transaction_id', 'like', 'MANUEL-%')
+            ->whereBetween('date_achat', [$debutJour, $finJour])
             ->with('evenement')
             ->latest('date_achat')
             ->get();

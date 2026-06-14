@@ -413,9 +413,9 @@
         </nav>
 
         <div class="sa-sidebar-footer">
-            <div class="avatar">{{ substr(auth()->user()->nom, 0, 1) }}</div>
+            <div class="avatar">{{ substr(auth('superadmin')->user()->nom, 0, 1) }}</div>
             <div class="user-info">
-                <div class="user-name">{{ auth()->user()->nom }}</div>
+                <div class="user-name">{{ auth('superadmin')->user()->nom }}</div>
                 <div class="user-role">Super Admin</div>
             </div>
             <a href="{{ route('superadmin.logout') }}" onclick="event.preventDefault(); document.getElementById('sa-logout-form').submit();" title="Deconnexion">

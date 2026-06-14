@@ -21,7 +21,12 @@ class ScanController extends Controller
         }
 
         if (!$accessEvenement) {
-            return view('admin.scan.access');
+            $evenements = Evenement::where('user_id', Auth::id())
+                ->orderByRaw("FIELD(statut, 'publié', 'brouillon', 'terminé', 'annulé')")
+                ->orderBy('date_event', 'desc')
+                ->get();
+
+            return view('admin.scan.access', compact('evenements'));
         }
 
         $selectedEvent = $accessEvenement->id;
@@ -57,16 +62,29 @@ class ScanController extends Controller
 
     public function verifierAccessCode(Request $request)
     {
+        $evenementId = $request->input('evenement_id');
         $code = strtoupper(trim($request->input('code')));
 
-        if (!$code) {
+        if (!$evenementId || !$code) {
             return response()->json([
                 'success' => false,
-                'message' => 'Veuillez entrer un code d\'accès.',
+                'message' => 'Veuillez sélectionner un événement et entrer un code d\'accès.',
+            ]);
+        }
+
+        $evenement = Evenement::where('id', $evenementId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$evenement) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Événement introuvable ou non autorisé.',
             ]);
         }
 
         $accessCode = ScanAccessCode::where('code', $code)
+            ->where('evenement_id', $evenementId)
             ->where('actif', true)
             ->with('evenement')
             ->first();
@@ -74,7 +92,7 @@ class ScanController extends Controller
         if (!$accessCode) {
             return response()->json([
                 'success' => false,
-                'message' => 'Code d\'accès invalide ou désactivé.',
+                'message' => 'Code d\'accès invalide ou désactivé pour cet événement.',
             ]);
         }
 

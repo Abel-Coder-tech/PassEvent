@@ -42,7 +42,6 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'mot_de_passe' => 'hashed',
             'notif_email_evenement' => 'boolean',
             'notif_email_ticket' => 'boolean',
             'notif_email_paiement' => 'boolean',

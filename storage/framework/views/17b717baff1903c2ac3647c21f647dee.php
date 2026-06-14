@@ -1,18 +1,16 @@
-@extends('layouts.public')
+<?php $__env->startSection('title', $evenement->titre . ' - PassEvent'); ?>
 
-@section('title', $evenement->titre . ' - PassEvent')
+<?php $__env->startSection('breadcrumb'); ?>
+    <li class="breadcrumb-item"><a href="<?php echo e(route('evenements.public')); ?>">Evenements</a></li>
+    <li class="breadcrumb-item active" aria-current="page"><?php echo e(Str::limit($evenement->titre, 40)); ?></li>
+<?php $__env->stopSection(); ?>
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('evenements.public') }}">Evenements</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($evenement->titre, 40) }}</li>
-@endsection
-
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
     $estComplet = $placesRestantes <= 0;
     $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
-@endphp
+?>
 
 <style>
     .hero-event {
@@ -132,71 +130,71 @@
 </style>
 
 <div class="container">
-    {{-- Hero Image --}}
+    
     <div class="hero-event">
-        @if($evenement->image)
-            <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}" loading="lazy">
-        @else
+        <?php if($evenement->image): ?>
+            <img src="<?php echo e(asset('storage/' . $evenement->image)); ?>" alt="<?php echo e($evenement->titre); ?>" loading="lazy">
+        <?php else: ?>
             <div style="height: 380px; background: linear-gradient(135deg, #2c3e50, #1a1a2e);"></div>
-        @endif
+        <?php endif; ?>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            @if($evenement->categorie)
-                <span class="hero-badge">{{ ucfirst($evenement->categorie) }}</span>
-            @endif
-            <h1>{{ $evenement->titre }}</h1>
+            <?php if($evenement->categorie): ?>
+                <span class="hero-badge"><?php echo e(ucfirst($evenement->categorie)); ?></span>
+            <?php endif; ?>
+            <h1><?php echo e($evenement->titre); ?></h1>
             <div class="hero-meta">
-                <span><i class="bi bi-calendar3"></i>{{ $evenement->date_event->format('d M Y') }}</span>
-                <span><i class="bi bi-clock"></i>{{ $evenement->date_event->format('H:i') }}</span>
-                <span><i class="bi bi-geo-alt"></i>{{ $evenement->lieu }}</span>
-                @if(!$estComplet)
-                    <span><i class="bi bi-people"></i>{{ number_format($placesRestantes, 0, ',', ' ') }} places</span>
-                @endif
+                <span><i class="bi bi-calendar3"></i><?php echo e($evenement->date_event->format('d M Y')); ?></span>
+                <span><i class="bi bi-clock"></i><?php echo e($evenement->date_event->format('H:i')); ?></span>
+                <span><i class="bi bi-geo-alt"></i><?php echo e($evenement->lieu); ?></span>
+                <?php if(!$estComplet): ?>
+                    <span><i class="bi bi-people"></i><?php echo e(number_format($placesRestantes, 0, ',', ' ')); ?> places</span>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    {{-- Contenu principal --}}
+    
     <div class="row g-4 py-4">
-        {{-- Colonne gauche : infos --}}
+        
         <div class="col-lg-7">
-            {{-- Barre d'infos rapides --}}
+            
             <div class="d-flex flex-wrap gap-3 mb-4">
                 <div class="info-chip">
                     <i class="bi bi-calendar-check" style="color: #7B3FA0;"></i>
-                    <span><strong>Date :</strong> {{ $evenement->date_event->format('d M Y') }}</span>
+                    <span><strong>Date :</strong> <?php echo e($evenement->date_event->format('d M Y')); ?></span>
                 </div>
                 <div class="info-chip">
                     <i class="bi bi-clock" style="color: #2E7D4F;"></i>
-                    <span><strong>Heure :</strong> {{ $evenement->date_event->format('H:i') }}</span>
+                    <span><strong>Heure :</strong> <?php echo e($evenement->date_event->format('H:i')); ?></span>
                 </div>
                 <div class="info-chip">
                     <i class="bi bi-geo-alt" style="color: #e67e22;"></i>
-                    <span><strong>Lieu :</strong> {{ $evenement->lieu }}</span>
+                    <span><strong>Lieu :</strong> <?php echo e($evenement->lieu); ?></span>
                 </div>
-                @if(!$estComplet)
+                <?php if(!$estComplet): ?>
                     <div class="info-chip">
                         <i class="bi bi-people" style="color: #2E7D4F;"></i>
-                        <span><strong>{{ number_format($placesRestantes, 0, ',', ' ') }}</strong> places</span>
+                        <span><strong><?php echo e(number_format($placesRestantes, 0, ',', ' ')); ?></strong> places</span>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
 
-            {{-- Description --}}
+            
             <div class="event-card mb-4">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3" style="color: #333;">
                         <i class="bi bi-info-circle me-2" style="color: #7B3FA0;"></i>Description
                     </h5>
-                    @if($evenement->description)
-                        <p class="mb-0" style="line-height: 1.8; color: #555;">{{ $evenement->description }}</p>
-                    @else
+                    <?php if($evenement->description): ?>
+                        <p class="mb-0" style="line-height: 1.8; color: #555;"><?php echo e($evenement->description); ?></p>
+                    <?php else: ?>
                         <p class="text-muted mb-0">Aucune description disponible.</p>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
 
-            {{-- Google Maps --}}
+            
             <div class="event-card mb-4">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3" style="color: #333;">
@@ -208,33 +206,33 @@
                 </div>
             </div>
 
-            {{-- Partager --}}
+            
             <div class="event-card mb-4">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3" style="color: #333;">
                         <i class="bi bi-share me-2" style="color: #7B3FA0;"></i>Partager
                     </h5>
                     <div class="d-flex gap-2">
-                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
+                        <a href="https://wa.me/?text=<?php echo e(urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id))); ?>" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
                             <i class="bi bi-whatsapp" style="color: #25D366;"></i>
                         </a>
-                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($evenement->titre) }}&url={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
+                        <a href="https://twitter.com/intent/tweet?text=<?php echo e(urlencode($evenement->titre)); ?>&url=<?php echo e(urlencode(route('evenements.public.show', $evenement->id))); ?>" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
                             <i class="bi bi-twitter-x"></i>
                         </a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo e(urlencode(route('evenements.public.show', $evenement->id))); ?>" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
                             <i class="bi bi-facebook" style="color: #1877F2;"></i>
                         </a>
                         <button class="btn btn-outline-secondary btn-sm" onclick="copyLink()" style="border-radius: 8px; border-color: #ddd;">
                             <i class="bi bi-link-45deg"></i>
                         </button>
-                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ urlencode($evenement->titre) }}&dates={{ $evenement->date_event->format('Ymd\THis') }}/{{ $evenement->date_event->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($evenement->description ?? '') }}&location={{ urlencode($evenement->lieu) }}" target="_blank" class="btn btn-outline-secondary btn-sm ms-auto" style="border-radius: 8px; border-color: #ddd;">
+                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=<?php echo e(urlencode($evenement->titre)); ?>&dates=<?php echo e($evenement->date_event->format('Ymd\THis')); ?>/<?php echo e($evenement->date_event->copy()->addHours(2)->format('Ymd\THis')); ?>&details=<?php echo e(urlencode($evenement->description ?? '')); ?>&location=<?php echo e(urlencode($evenement->lieu)); ?>" target="_blank" class="btn btn-outline-secondary btn-sm ms-auto" style="border-radius: 8px; border-color: #ddd;">
                             <i class="bi bi-google" style="color: #4285F4;"></i> Calendar
                         </a>
                     </div>
                 </div>
             </div>
 
-            {{-- Contacter l'organisateur --}}
+            
             <div class="event-card mb-4">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3" style="color: #333;">
@@ -249,7 +247,7 @@
                 </div>
             </div>
 
-            {{-- Modal Contacter l'organisateur --}}
+            
             <div class="modal fade" id="contactOrganisateurModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content" style="border-radius: 14px; border: none;">
@@ -262,10 +260,10 @@
                         </div>
                         <div class="modal-body">
                             <p class="text-muted mb-3" style="font-size: 0.85rem;">
-                                Votre message sera envoyé a <strong>{{ $evenement->user->nom }}</strong> (organisateur de <strong>{{ $evenement->titre }}</strong>).
+                                Votre message sera envoyé a <strong><?php echo e($evenement->user->nom); ?></strong> (organisateur de <strong><?php echo e($evenement->titre); ?></strong>).
                             </p>
-                            <form action="{{ route('evenements.contacter-organisateur', $evenement->id) }}" method="POST">
-                                @csrf
+                            <form action="<?php echo e(route('evenements.contacter-organisateur', $evenement->id)); ?>" method="POST">
+                                <?php echo csrf_field(); ?>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold" style="font-size: 0.85rem;">Votre nom <span class="text-danger">*</span></label>
                                     <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required>
@@ -288,10 +286,10 @@
             </div>
         </div>
 
-        {{-- Colonne droite : achat --}}
+        
         <div class="col-lg-5">
             <div class="sticky-sidebar">
-                @if($venteCloturee || $evenementPasse)
+                <?php if($venteCloturee || $evenementPasse): ?>
                     <div class="event-card mb-3">
                         <div class="card-body text-center py-4">
                             <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(231,76,60,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
@@ -299,38 +297,38 @@
                             </div>
                             <h5 class="fw-bold mb-1" style="color: var(--danger);">Vente cloturee</h5>
                             <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                                @if($evenementPasse)
+                                <?php if($evenementPasse): ?>
                                     Cet événement a deja eu lieu.
-                                @else
+                                <?php else: ?>
                                     Les inscriptions ne sont plus possibles pour cet événement.
-                                @endif
+                                <?php endif; ?>
                             </p>
                         </div>
                     </div>
-                @else
+                <?php else: ?>
                 <div class="event-card">
-                    {{-- En-tête du formulaire --}}
+                    
                     <div class="card-body" style="background: linear-gradient(135deg, rgba(123,63,160,0.04), rgba(46,125,79,0.04));">
                         <div class="d-flex align-items-center gap-3">
                             <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(123,63,160,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <i class="bi bi-ticket-perforated" style="color: #7B3FA0; font-size: 1.3rem;"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold mb-0">{{ $evenement->gratuit ? 'Participer gratuitement' : 'Acheter un billet' }}</h5>
-                                @if($estComplet)
+                                <h5 class="fw-bold mb-0"><?php echo e($evenement->gratuit ? 'Participer gratuitement' : 'Acheter un billet'); ?></h5>
+                                <?php if($estComplet): ?>
                                     <span class="badge bg-danger mt-1">Complet</span>
-                                @else
-                                    <small class="text-muted">{{ number_format($placesRestantes, 0, ',', ' ') }} places disponibles</small>
-                                @endif
+                                <?php else: ?>
+                                    <small class="text-muted"><?php echo e(number_format($placesRestantes, 0, ',', ' ')); ?> places disponibles</small>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
 
-                        @if($evenement->gratuit)
-                        {{-- Formulaire simplifié pour gratuit --}}
-                        <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
-                            @csrf
+                        <?php if($evenement->gratuit): ?>
+                        
+                        <form action="<?php echo e(route('evenements.achat', $evenement->id)); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
                             <input type="hidden" name="gratuit" value="1">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Nombre de places</label>
@@ -343,11 +341,11 @@
                             <hr>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Prénom et Nom <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
+                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="<?php echo e(old('nom_acheteur')); ?>" placeholder="Ex: Kofi Mensah" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
+                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="<?php echo e(old('email_acheteur')); ?>" placeholder="votre@email.com" required>
                             </div>
                             <div class="p-3 rounded-3 mb-3" style="background: #f8f6f9;">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -355,7 +353,7 @@
                                     <span class="fw-bold" style="font-size: 1.3rem; color: #7B3FA0;" id="totalDisplay">Gratuit</span>
                                 </div>
                             </div>
-                            <button type="submit" class="btn w-100 py-3" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $estComplet ? 'disabled' : '' }}>
+                            <button type="submit" class="btn w-100 py-3" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" <?php echo e($estComplet ? 'disabled' : ''); ?>>
                                 <i class="bi bi-check-circle me-2"></i> Participer
                             </button>
                             <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
@@ -363,32 +361,34 @@
                                 Reservation gratuite — Ticket PDF recu par email
                             </p>
                         </form>
-                        @else
-                        {{-- Formulaire complet pour événements payants --}}
+                        <?php else: ?>
+                        
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Choisissez votre tarif</label>
-                            @if($tarifs->isEmpty())
+                            <?php if($tarifs->isEmpty()): ?>
                                 <div class="alert alert-danger py-2" style="font-size: 0.85rem;">Aucun tarif disponible</div>
-                            @else
+                            <?php else: ?>
                                 <div class="d-flex flex-column gap-2">
-                                    @foreach($tarifs as $tarif)
+                                    <?php $__currentLoopData = $tarifs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tarif): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <label class="tarif-card d-block" onclick="selectTarif(this)">
-                                            <input type="radio" name="tarif_id" value="{{ $tarif->id }}" {{ $loop->first ? 'checked' : '' }}>
+                                            <input type="radio" name="tarif_id" value="<?php echo e($tarif->id); ?>" <?php echo e($loop->first ? 'checked' : ''); ?>>
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <span class="badge me-2" style="background: {{ $tarif->categorie === 'etudiant' ? 'rgba(123,63,160,0.1)' : 'rgba(46,125,79,0.1)' }}; color: {{ $tarif->categorie === 'etudiant' ? '#7B3FA0' : '#2E7D4F' }}; font-weight: 600;">
-                                                        {{ $tarif->categorie === 'etudiant' ? 'Etudiant' : 'Externe' }}
+                                                    <span class="badge me-2" style="background: <?php echo e($tarif->categorie === 'etudiant' ? 'rgba(123,63,160,0.1)' : 'rgba(46,125,79,0.1)'); ?>; color: <?php echo e($tarif->categorie === 'etudiant' ? '#7B3FA0' : '#2E7D4F'); ?>; font-weight: 600;">
+                                                        <?php echo e($tarif->categorie === 'etudiant' ? 'Etudiant' : 'Externe'); ?>
+
                                                     </span>
-                                                    <strong>{{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}</strong>
+                                                    <strong><?php echo e($tarif->type === 'normal' ? 'Standard' : 'VIP'); ?></strong>
                                                 </div>
                                                 <strong style="color: #7B3FA0; font-size: 1.05rem;">
-                                                    {{ number_format($tarif->prix, 0, ',', ' ') . ' F' }}
+                                                    <?php echo e(number_format($tarif->prix, 0, ',', ' ') . ' F'); ?>
+
                                                 </strong>
                                             </div>
                                         </label>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Quantité</label>
@@ -399,25 +399,25 @@
                             </div>
                         </div>
                         <hr>
-                        <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
-                            @csrf
+                        <form action="<?php echo e(route('evenements.achat', $evenement->id)); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
                             <input type="hidden" name="tarif_id" id="hiddenTarifId">
                             <input type="hidden" name="quantite" id="hiddenQuantite" value="1">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Prénom et Nom <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
+                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="<?php echo e(old('nom_acheteur')); ?>" placeholder="Ex: Kofi Mensah" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
+                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="<?php echo e(old('email_acheteur')); ?>" placeholder="votre@email.com" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Téléphone <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control form-control-custom" name="telephone_acheteur" value="{{ old('telephone_acheteur') }}" placeholder="+229 XX XX XX XX" required>
+                                <input type="tel" class="form-control form-control-custom" name="telephone_acheteur" value="<?php echo e(old('telephone_acheteur')); ?>" placeholder="+229 XX XX XX XX" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Code promo <span class="text-muted fw-normal">(optionnel)</span></label>
-                                <input type="text" class="form-control form-control-custom" name="code_promo" value="{{ old('code_promo') }}" placeholder="PROMO-XXXXXX" style="text-transform: uppercase;">
+                                <input type="text" class="form-control form-control-custom" name="code_promo" value="<?php echo e(old('code_promo')); ?>" placeholder="PROMO-XXXXXX" style="text-transform: uppercase;">
                             </div>
                             <div class="p-3 rounded-3 mb-3" style="background: #f8f6f9;">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -425,7 +425,7 @@
                                     <span class="fw-bold" style="font-size: 1.3rem; color: #7B3FA0;" id="totalDisplay">--</span>
                                 </div>
                             </div>
-                            <button type="submit" class="btn w-100 py-3" id="btnPayer" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
+                            <button type="submit" class="btn w-100 py-3" id="btnPayer" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" <?php echo e($tarifs->isEmpty() || $estComplet ? 'disabled' : ''); ?>>
                                 <i class="bi bi-shield-lock me-2"></i> Payer avec KKiaPay
                             </button>
                             <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
@@ -433,13 +433,13 @@
                                 Paiement 100% securisé — Ticket PDF envoyé par email
                             </p>
                         </form>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
 
-                {{-- Autres evenements --}}
-                @php
+                
+                <?php
                     $autresEvenements = App\Models\Evenement::with('tarifs')
                         ->where('statut', 'publié')
                         ->where('date_event', '>=', now())
@@ -447,52 +447,53 @@
                         ->orderBy('date_event', 'asc')
                         ->limit(3)
                         ->get();
-                @endphp
-                @if($autresEvenements->isNotEmpty())
+                ?>
+                <?php if($autresEvenements->isNotEmpty()): ?>
                     <div class="event-card mt-4">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3" style="color: #333;">
                                 <i class="bi bi-calendar-event me-2" style="color: #7B3FA0;"></i>Autres evenements
                             </h6>
                             <div class="d-flex flex-column gap-3">
-                                @foreach($autresEvenements as $autre)
-                                    <a href="{{ route('evenements.public.show', $autre->id) }}" class="text-decoration-none">
+                                <?php $__currentLoopData = $autresEvenements; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $autre): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <a href="<?php echo e(route('evenements.public.show', $autre->id)); ?>" class="text-decoration-none">
                                         <div class="d-flex gap-3 align-items-center p-2 rounded-3" style="background: #f8f6f9;">
-                                            @if($autre->image)
-                                                <img src="{{ asset('storage/' . $autre->image) }}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
-                                            @else
+                                            <?php if($autre->image): ?>
+                                                <img src="<?php echo e(asset('storage/' . $autre->image)); ?>" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                                            <?php else: ?>
                                                 <div style="width: 50px; height: 50px; background: #e8e8e8; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                                     <i class="bi bi-calendar-event" style="color: #999;"></i>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                             <div class="flex-grow-1 min-w-0">
-                                                <div class="fw-bold" style="font-size: 0.82rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $autre->titre }}</div>
+                                                <div class="fw-bold" style="font-size: 0.82rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($autre->titre); ?></div>
                                                 <div class="text-muted" style="font-size: 0.72rem;">
-                                                    <i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->format('d M Y') }}
+                                                    <i class="bi bi-calendar3 me-1"></i><?php echo e($autre->date_event->format('d M Y')); ?>
+
                                                 </div>
                                             </div>
                                             <i class="bi bi-chevron-right" style="color: #aaa; font-size: 0.8rem;"></i>
                                         </div>
                                     </a>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
 function copyLink() {
     navigator.clipboard.writeText(window.location.href);
     alert('Lien copie !');
 }
 
-@if($evenement->gratuit)
+<?php if($evenement->gratuit): ?>
 document.addEventListener('DOMContentLoaded', function() {
     const qtyInput = document.getElementById('quantiteInput');
     document.getElementById('qtyMinus').addEventListener('click', function() {
@@ -504,14 +505,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (v < 5) qtyInput.value = v + 1;
     });
 });
-@else
+<?php else: ?>
 document.addEventListener('DOMContentLoaded', function() {
     const quantiteInput = document.getElementById('quantiteInput');
     const hiddenQuantite = document.getElementById('hiddenQuantite');
     const hiddenTarifId = document.getElementById('hiddenTarifId');
     const totalDisplay = document.getElementById('totalDisplay');
 
-    const tarifs = @json($tarifs->map(function($t) { return ['id' => $t->id, 'prix' => $t->prix]; }));
+    const tarifs = <?php echo json_encode($tarifs->map(function($t) { return ['id' => $t->id, 'prix' => $t->prix]; }), 512) ?>;
 
     function getSelectedTarif() {
         const selected = document.querySelector('input[name="tarif_id"]:checked');
@@ -559,6 +560,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const firstTarif = document.querySelector('.tarif-card');
     if (firstTarif) selectTarif(firstTarif);
 });
-@endif
+<?php endif; ?>
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.public', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\DELL\Documents\Laravel\passEvent\resources\views/evenement-public/show.blade.php ENDPATH**/ ?>

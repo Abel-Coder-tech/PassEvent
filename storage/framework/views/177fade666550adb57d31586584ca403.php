@@ -157,12 +157,42 @@
 
                 <div class="mb-3">
                     <label class="login-label"><i class="bi bi-person me-1"></i>Pseudo</label>
-                    <input type="text" name="pseudo" class="login-input" placeholder="Entrez votre pseudo" value="<?php echo e(old('pseudo')); ?>" required autofocus autocomplete="username">
+                    <input type="text" name="pseudo" class="login-input <?php $__errorArgs = ['pseudo'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" placeholder="Entrez votre pseudo" value="<?php echo e(old('pseudo')); ?>" required autofocus autocomplete="username">
+                    <?php $__errorArgs = ['pseudo'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="text-danger mt-1" style="font-size:0.78rem;"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <div class="mb-3">
                     <label class="login-label"><i class="bi bi-lock me-1"></i>Mot de passe</label>
-                    <input type="password" name="mot_de_passe" class="login-input" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                    <input type="password" name="mot_de_passe" class="login-input <?php $__errorArgs = ['mot_de_passe'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                    <?php $__errorArgs = ['mot_de_passe'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="text-danger mt-1" style="font-size:0.78rem;"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <div class="password-hint"><i class="bi bi-shield-check"></i> Minimum 8 caracteres — mot de passe fort requis</div>
                 </div>
 

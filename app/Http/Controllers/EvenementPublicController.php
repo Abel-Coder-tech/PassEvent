@@ -118,7 +118,8 @@ class EvenementPublicController extends Controller
                 ]);
             }
         } else {
-            $tarif = Tarif::where('id', $validated['tarif_id'])
+            $tarif = Tarif::query()
+                ->where('id', $validated['tarif_id'])
                 ->where('evenement_id', $evenement->id)
                 ->where('statut', 'actif')
                 ->firstOrFail();

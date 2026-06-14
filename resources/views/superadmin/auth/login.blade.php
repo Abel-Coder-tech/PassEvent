@@ -156,12 +156,14 @@
 
                 <div class="mb-3">
                     <label class="login-label"><i class="bi bi-person me-1"></i>Pseudo</label>
-                    <input type="text" name="pseudo" class="login-input" placeholder="Entrez votre pseudo" value="{{ old('pseudo') }}" required autofocus autocomplete="username">
+                    <input type="text" name="pseudo" class="login-input @error('pseudo') is-invalid @enderror" placeholder="Entrez votre pseudo" value="{{ old('pseudo') }}" required autofocus autocomplete="username">
+                    @error('pseudo')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="mb-3">
                     <label class="login-label"><i class="bi bi-lock me-1"></i>Mot de passe</label>
-                    <input type="password" name="mot_de_passe" class="login-input" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                    <input type="password" name="mot_de_passe" class="login-input @error('mot_de_passe') is-invalid @enderror" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                    @error('mot_de_passe')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                     <div class="password-hint"><i class="bi bi-shield-check"></i> Minimum 8 caracteres — mot de passe fort requis</div>
                 </div>
 

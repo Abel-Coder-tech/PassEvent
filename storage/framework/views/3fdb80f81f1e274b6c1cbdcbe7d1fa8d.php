@@ -413,9 +413,9 @@
         </nav>
 
         <div class="sa-sidebar-footer">
-            <div class="avatar"><?php echo e(substr(auth()->user()->nom, 0, 1)); ?></div>
+            <div class="avatar"><?php echo e(substr(auth('superadmin')->user()->nom, 0, 1)); ?></div>
             <div class="user-info">
-                <div class="user-name"><?php echo e(auth()->user()->nom); ?></div>
+                <div class="user-name"><?php echo e(auth('superadmin')->user()->nom); ?></div>
                 <div class="user-role">Super Admin</div>
             </div>
             <a href="<?php echo e(route('superadmin.logout')); ?>" onclick="event.preventDefault(); document.getElementById('sa-logout-form').submit();" title="Deconnexion">

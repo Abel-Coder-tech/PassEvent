@@ -158,7 +158,7 @@ class SuperAdminController extends Controller
     public function statistiques()
     {
         $evenements = Evenement::select('id', 'titre', 'capacite', 'quota_vendu', 'date_event', 'statut')
-            ->withCount(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')->select(DB::raw('coalesce(sum(montant),0)'))])
+            ->withSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('date_event')
             ->get();
         return view('superadmin.statistiques', compact('evenements'));
@@ -205,7 +205,7 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'evenement_annule',
             'ticket_id' => null,
-            'details' => json_encode(['evenement_id' => $evenement->id, 'titre' => $evenement->titre, 'par' => auth()->user()->email]),
+            'details' => json_encode(['evenement_id' => $evenement->id, 'titre' => $evenement->titre, 'par' => auth('superadmin')->user()->email]),
             'ip' => request()->ip(),
         ]);
         return back()->with('success', 'Evenement suspendu.');
@@ -255,26 +255,26 @@ class SuperAdminController extends Controller
         $data['role'] = 'admin';
         $data['statut'] = 'actif';
         User::create($data);
-        return back()->with('success', 'Organisateur cree.');
+        return back()->with('success', 'Organisateur créé.');
     }
 
     public function approuverOrganisateur(User $user)
     {
         if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
-            return back()->with('error', 'Action non autorisee.');
+            return back()->with('error', 'Action non autorisée.');
         }
 
         $user->update(['statut' => 'actif']);
 
         Mail::raw(
             "Bonjour {$user->nom},\n\n" .
-            "Votre compte organisateur PassEvent a ete approuve !\n" .
-            "Vous pouvez des maintenant vous connecter et creer vos evenements.\n\n" .
+            "Votre compte organisateur PassEvent a été approuvé !\n" .
+            "Vous pouvez dès maintenant vous connecter et créer vos événements en quelques clics.\n\n" .
             "Connectez-vous : " . route('login') . "\n\n" .
-            "Cordialement,\nL'equipe PassEvent",
+            "Cordialement,\nL'équipe PassEvent",
             function ($message) use ($user) {
                 $message->to($user->email)
-                    ->subject('[PassEvent] Compte approuve');
+                    ->subject('[PassEvent] Compte approuvé');
             }
         );
 
@@ -291,7 +291,7 @@ class SuperAdminController extends Controller
     public function rejeterOrganisateur(User $user)
     {
         if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
-            return back()->with('error', 'Action non autorisee.');
+            return back()->with('error', 'Action non autorisée.');
         }
 
         $user->update(['statut' => 'bloque']);

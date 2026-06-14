@@ -66,7 +66,7 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => 'Lien de réinitialisation invalide ou expiré.']);
         }
 
-        $user->mot_de_passe = $validated['mot_de_passe'];
+        $user->mot_de_passe = bcrypt($validated['mot_de_passe']);
         $user->remember_token = null;
         $user->save();
 

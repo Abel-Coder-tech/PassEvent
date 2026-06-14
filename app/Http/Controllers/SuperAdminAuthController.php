@@ -23,28 +23,28 @@ class SuperAdminAuthController extends Controller
             'mot_de_passe.min' => 'Le mot de passe doit contenir au moins 8 caracteres.',
         ]);
 
-        if (auth()->attempt([
-            'pseudo' => $credentials['pseudo'],
-            'password' => $credentials['mot_de_passe'],
-            'role' => 'super_admin',
-        ])) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('superadmin.dashboard'));
+        $user = \App\Models\User::where('pseudo', $credentials['pseudo'])->first();
+
+        if (!$user) {
+            return back()->withErrors(['pseudo' => 'Ce pseudo n\'existe pas.'])->onlyInput('pseudo');
         }
 
-        $user = \App\Models\User::where('pseudo', $credentials['pseudo'])->first();
-        if ($user && $user->role !== 'super_admin') {
+        if ($user->role !== 'super_admin') {
             return back()->withErrors(['pseudo' => 'Cet acces est reserve au super administrateur.'])->onlyInput('pseudo');
         }
 
-        return back()->withErrors([
-            'pseudo' => 'Identifiants incorrects.',
-        ])->onlyInput('pseudo');
+        if (!\Illuminate\Support\Facades\Hash::check($credentials['mot_de_passe'], $user->mot_de_passe)) {
+            return back()->withErrors(['mot_de_passe' => 'Mot de passe incorrect.'])->onlyInput('pseudo');
+        }
+
+        auth('superadmin')->login($user);
+        $request->session()->regenerate();
+        return redirect()->intended(route('superadmin.dashboard'));
     }
 
     public function logout(Request $request)
     {
-        auth()->logout();
+        auth('superadmin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('superadmin.login');
