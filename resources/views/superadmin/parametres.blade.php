@@ -15,8 +15,8 @@
                     <span class="sa-badge sa-badge-secondary">Desactive</span>
                 </div>
                 <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span>PassEvent Mail</span>
-                    <span class="text-muted" style="font-size:0.8rem;">passevent2026@gmail.com</span>
+                    <span>PaxEvent Mail</span>
+                    <span class="text-muted" style="font-size:0.8rem;">paxevent09@gmail.com</span>
                 </div>
                 <div class="d-flex justify-content-between py-2">
                     <span>KKiaPay</span>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin - PassEvent</title>
+    <title>Super Admin - PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -173,7 +173,7 @@
             </form>
 
             <div class="login-footer">
-                <span>PassEvent &mdash; Administration</span>
+                <span>PaxEvent &mdash; Administration</span>
             </div>
         </div>
     </div>

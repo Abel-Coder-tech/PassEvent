@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Remboursements - PassEvent')
+@section('title', 'Remboursements - PaxEvent')
 
 @section('page-title', 'Remboursements')
 

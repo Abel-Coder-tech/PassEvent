@@ -44,6 +44,7 @@ class EvenementController extends Controller
     public function store(Request $request)
     {
         $gratuit = $request->boolean('gratuit');
+        $estUniversitaire = Auth::user()->type === 'universitaire';
 
         $rules = [
             'titre' => 'required|string|max:255',
@@ -62,7 +63,9 @@ class EvenementController extends Controller
         if (!$gratuit) {
             $rules['prix_base'] = 'required|numeric|min:0';
             $rules['multiplicateur_vip'] = 'required|in:1.5,2';
-            $rules['reduction_etudiant'] = 'nullable|numeric|min:0|max:100';
+            if ($estUniversitaire) {
+                $rules['reduction_etudiant'] = 'nullable|numeric|min:0|max:100';
+            }
         }
 
         $validated = $request->validate($rules, [
@@ -101,33 +104,46 @@ class EvenementController extends Controller
         $evenement = Evenement::create($validated);
 
         if ($gratuit) {
-            $tarifs = [
-                ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => 0],
-                ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => 0],
-                ['categorie' => 'externe', 'type' => 'normal', 'prix' => 0],
-                ['categorie' => 'externe', 'type' => 'vip', 'prix' => 0],
-            ];
+            $prix = 0;
+            if ($estUniversitaire) {
+                $tarifs = [
+                    ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => $prix],
+                    ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => $prix],
+                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => $prix],
+                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => $prix],
+                ];
+            } else {
+                $tarifs = [
+                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => $prix],
+                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => $prix],
+                ];
+            }
         } else {
             $prixBase = floatval($validated['prix_base']);
             $multVip = floatval($validated['multiplicateur_vip']);
-            $reductionEtu = floatval($validated['reduction_etudiant'] ?? 30) / 100;
 
-            $tarifs = [
-                ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => round($prixBase * (1 - $reductionEtu))],
-                ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => round($prixBase * $multVip * (1 - $reductionEtu))],
-                ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
-                ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
-            ];
+            if ($estUniversitaire) {
+                $reductionEtu = floatval($validated['reduction_etudiant'] ?? 30) / 100;
+                $tarifs = [
+                    ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => round($prixBase * (1 - $reductionEtu))],
+                    ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => round($prixBase * $multVip * (1 - $reductionEtu))],
+                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
+                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
+                ];
+            } else {
+                $tarifs = [
+                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
+                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
+                ];
+            }
         }
-
-        $quotaParTarif = $evenement->capacite > 0 ? intdiv($evenement->capacite, 4) : 0;
 
         foreach ($tarifs as $t) {
             $evenement->tarifs()->create([
                 'categorie' => $t['categorie'],
                 'type' => $t['type'],
                 'prix' => $t['prix'],
-                'quantite_disponible' => $quotaParTarif,
+                'quantite_disponible' => $evenement->capacite,
                 'quantite_vendue' => 0,
                 'statut' => 'actif',
             ]);

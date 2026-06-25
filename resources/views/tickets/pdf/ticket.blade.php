@@ -219,8 +219,9 @@
         {{-- 1. HEADER --}}
         <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td class="header-top left">PASS EVENT</td>
-                <td class="header-top right">UPAO</td>
+                <td class="header-top left" colspan="2">
+                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent" style="height:36px; display:block;">
+                </td>
             </tr>
         </table>
 
@@ -327,7 +328,7 @@
             <hr class="solid">
             <p>
                 Presentez ce QR code a l'entree pour scanner votre billet<br>
-                <strong>Billet personnel et non transferable</strong> &middot; PassEvent UPAO
+                <strong>Billet personnel et non transferable</strong> &middot; PaxEvent UPAO
             </p>
         </div>
 

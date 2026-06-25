@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Scan QR - PassEvent')
+@section('title', 'Scan QR - PaxEvent')
 
 @section('page-title', 'Accès scan')
 

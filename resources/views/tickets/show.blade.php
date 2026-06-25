@@ -133,7 +133,7 @@
                 <div class="panel-card-body">
                     <div class="d-grid gap-2">
                         <a href="{{ route('tickets.pdf', $ticket->id) }}" class="btn btn-violet w-100" style="border-radius: 8px;">
-                            <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger le billet PDF
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger le ticket PDF
                         </a>
                         <form action="{{ route('tickets.renvoyer', $ticket->id) }}" method="POST">
                             @csrf

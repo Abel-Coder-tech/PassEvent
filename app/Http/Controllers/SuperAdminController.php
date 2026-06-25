@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\Log;
 use App\Models\Message;
 use App\Models\Newsletter;
+use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -85,7 +86,8 @@ class SuperAdminController extends Controller
         $transactionsReussies = Ticket::where('statut_paiement', 'payé')->where('transaction_id', 'not like', 'GRATUIT-%')->count();
         $transactionsEchouees = Ticket::where('statut_paiement', 'échoué')->count();
         $montantsJournaliers = Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $today)->sum('montant');
-        $commissionPlateforme = Ticket::where('statut_paiement', 'payé')->sum(DB::raw('montant * 0.05'));
+        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
+        $commissionPlateforme = Ticket::where('statut_paiement', 'payé')->sum(DB::raw("montant * $commissionPct / 100"));
 
         $messagesNonLus = Message::where('lu', false)->count();
         $newsletterCount = Newsletter::where('actif', true)->count();
@@ -98,6 +100,7 @@ class SuperAdminController extends Controller
             'scanInvalides', 'paiementsEchoues', 'ticketsDupliques',
             'transactionsReussies', 'transactionsEchouees',
             'montantsJournaliers', 'commissionPlateforme',
+            'commissionPct',
             'messagesNonLus', 'newsletterCount'
         ));
     }
@@ -250,6 +253,8 @@ class SuperAdminController extends Controller
             'mot_de_passe' => 'required|min:8',
             'telephone' => 'nullable|string|max:20',
             'organisation' => 'nullable|string|max:255',
+            'type' => 'nullable|string|in:universitaire,professionnel',
+            'description' => 'nullable|string|max:1000',
         ]);
         $data['mot_de_passe'] = bcrypt($data['mot_de_passe']);
         $data['role'] = 'admin';
@@ -268,13 +273,13 @@ class SuperAdminController extends Controller
 
         Mail::raw(
             "Bonjour {$user->nom},\n\n" .
-            "Votre compte organisateur PassEvent a été approuvé !\n" .
+            "Votre compte organisateur PaxEvent a été approuvé !\n" .
             "Vous pouvez dès maintenant vous connecter et créer vos événements en quelques clics.\n\n" .
             "Connectez-vous : " . route('login') . "\n\n" .
-            "Cordialement,\nL'équipe PassEvent",
+            "Cordialement,\nL'équipe PaxEvent",
             function ($message) use ($user) {
                 $message->to($user->email)
-                    ->subject('[PassEvent] Compte approuvé');
+                    ->subject('[PaxEvent] Compte approuvé');
             }
         );
 
@@ -304,5 +309,51 @@ class SuperAdminController extends Controller
         ]);
 
         return back()->with('success', "Organisateur {$user->nom} rejete.");
+    }
+
+    public function retraits()
+    {
+        $retraits = Withdrawal::with('user')
+            ->orderByRaw("FIELD(status, 'en_attente', 'approuvé', 'rejeté')")
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        $stats = [
+            'en_attente' => Withdrawal::where('status', 'en_attente')->count(),
+            'approuve' => Withdrawal::where('status', 'approuvé')->sum('montant'),
+            'total' => Withdrawal::where('status', 'approuvé')->count(),
+        ];
+
+        return view('superadmin.retraits', compact('retraits', 'stats'));
+    }
+
+    public function approuverRetrait(Withdrawal $withdrawal, Request $request)
+    {
+        if ($withdrawal->status !== 'en_attente') {
+            return back()->with('error', 'Ce retrait a déjà été traité.');
+        }
+
+        $withdrawal->update([
+            'status' => 'approuvé',
+            'admin_notes' => $request->input('admin_notes'),
+            'processed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Retrait approuvé.');
+    }
+
+    public function rejeterRetrait(Withdrawal $withdrawal, Request $request)
+    {
+        if ($withdrawal->status !== 'en_attente') {
+            return back()->with('error', 'Ce retrait a déjà été traité.');
+        }
+
+        $withdrawal->update([
+            'status' => 'rejeté',
+            'admin_notes' => $request->input('admin_notes'),
+            'processed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Retrait rejeté.');
     }
 }

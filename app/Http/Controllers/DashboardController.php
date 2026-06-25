@@ -29,6 +29,10 @@ class DashboardController extends Controller
             ->where('statut_paiement', 'payé')
             ->sum('montant');
 
+        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
+        $commission = round($recettesTotales * $commissionPct / 100, 2);
+        $recettesNettes = $recettesTotales - $commission;
+
         $ticketsScannes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('utilise', true)
             ->count();
@@ -156,6 +160,9 @@ class DashboardController extends Controller
             'evenementsActifs',
             'ticketsVendus',
             'recettesTotales',
+            'commission',
+            'recettesNettes',
+            'commissionPct',
             'tauxScan',
             'ticketsScannes',
             'ticketsAbsents',

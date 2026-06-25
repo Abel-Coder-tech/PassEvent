@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Conditions Generales d\'Utilisation - PassEvent')
+@section('title', 'Conditions Generales d\'Utilisation - PaxEvent')
 
 @section('content')
 <section class="py-5">
@@ -12,15 +12,15 @@
                         <h4 class="fw-bold mb-4" style="color: var(--violet);">
                             <i class="bi bi-file-earmark-text me-2"></i>Conditions Générales d'Utilisation
                         </h4>
-                        <p class="text-muted" style="font-size: 0.85rem;">Dernière mise à jour : Mai 2026</p>
+                        <p class="text-muted" style="font-size: 0.85rem;">Dernière mise à jour : {{ $derniereMiseAJour }}</p>
 
                         <div class="mb-4" style="font-size: 0.9rem; line-height: 1.7;">
                             <h6 class="fw-bold mt-4 mb-2">1. Objet</h6>
-                            <p>Les présentes conditions générales d'utilisation (CGU) régissent l'utilisation de la plateforme PassEvent, une billetterie en ligne basée au Bénin.</p>
+                            <p>Les présentes conditions générales d'utilisation (CGU) régissent l'utilisation de la plateforme PaxEvent, une billetterie en ligne basée au Bénin.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">2. Definitions</h6>
                             <ul>
-                                <li><strong>Plateforme</strong> : le site web PassEvent accessible a l'adresse indiquée</li>
+                                <li><strong>Plateforme</strong> : le site web PaxEvent accessible a l'adresse indiquée</li>
                                 <li><strong>Organisateur</strong> : la personne physique ou morale qui crée et gère un événement</li>
                                 <li><strong>Participant</strong> : la personne qui achète un ticket pour un événement</li>
                                 <li><strong>Ticket</strong> : le titre d'accès numérique généré après paiement</li>
@@ -49,7 +49,7 @@
                             <ul>
                                 <li>Un ticket peut être annulé par l'organisateur avant l'événement</li>
                                 <li>En cas d'annulation par l'organisateur, le remboursement est effectué selon les modalités définies par l'organisateur</li>
-                                <li>PassEvent n'est pas responsable des annulations décidées par les organisateurs</li>
+                                <li>PaxEvent n'est pas responsable des annulations décidées par les organisateurs</li>
                                 <li>Aucun remboursement n'est effectué en cas de non-présentation à l'événement</li>
                             </ul>
 
@@ -63,25 +63,25 @@
 
                             <h6 class="fw-bold mt-4 mb-2">8. Responsabilité</h6>
                             <ul>
-                                <li>PassEvent est un intermediaire technique entre organisateurs et participants</li>
-                                <li>PassEvent n'est pas responsable du contenu des événements</li>
-                                <li>PassEvent n'est pas responsable des retards, annulations ou modifications d'événements</li>
-                                <li>La responsabilité de PassEvent est limitée aux dysfonctionnements techniques de la plateforme</li>
+                                <li>PaxEvent est un intermediaire technique entre organisateurs et participants</li>
+                                <li>PaxEvent n'est pas responsable du contenu des événements</li>
+                                <li>PaxEvent n'est pas responsable des retards, annulations ou modifications d'événements</li>
+                                <li>La responsabilité de PaxEvent est limitée aux dysfonctionnements techniques de la plateforme</li>
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">9. Propriété intellectuelle</h6>
-                            <p>L'ensemble des éléments de la plateforme (logo, design, code, contenu) sont la propriété de PassEvent et sont protégés par le droit d'auteur.</p>
+                            <p>L'ensemble des éléments de la plateforme (logo, design, code, contenu) sont la propriété de PaxEvent et sont protégés par le droit d'auteur.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">10. Modification des CGU</h6>
-                            <p>PassEvent se reserve le droit de modifier les présentes CGU a tout moment. Les modifications entrent en vigueur des leur publication sur la plateforme.</p>
+                            <p>PaxEvent se reserve le droit de modifier les présentes CGU a tout moment. Les modifications entrent en vigueur des leur publication sur la plateforme.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">11. Loi applicable et juridiction</h6>
                             <p>Les présentes CGU sont soumises au droit beninois. En cas de litige, les tribunaux competents sont ceux du Benin.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">12. Contact</h6>
                             <ul>
-                                <li>Email : <a href="mailto:passevent2026@gmail.com">passevent2026@gmail.com</a></li>
-                                <li>WhatsApp : +229 43 70 45 13</li>
+                                <li>Email : <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a></li>
+                                <li>WhatsApp : +229 62 83 66 29</li>
                             </ul>
                         </div>
 

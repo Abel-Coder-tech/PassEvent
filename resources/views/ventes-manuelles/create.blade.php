@@ -9,7 +9,7 @@
     <li class="breadcrumb-item active" aria-current="page">Vente manuelle</li>
 @endsection
 
-@section('page-subtitle', 'Vendre un billet sur place sans paiement en ligne')
+@section('page-subtitle', 'Vendre un billet sur place — espèces ou paiement mobile via KKiaPay')
 
 @section('content')
 <div class="page-content">
@@ -31,7 +31,7 @@
                             <select class="form-select" id="evenement_id" name="evenement_id" required>
                                 <option value="">Choisir un événement —</option>
                                 @foreach($evenements as $evt)
-                                    <option value="{{ $evt->id }}" data-tarif-min="{{ $evt->tarifs->min('prix') }}">{{ $evt->titre }} — {{ $evt->date_event->format('d M Y') }}</option>
+                                    <option value="{{ $evt->id }}" data-tarif-min="{{ $evt->tarifs->min('prix') }}" data-gratuit="{{ $evt->gratuit ? '1' : '0' }}">{{ $evt->titre }} — {{ $evt->date_event->format('d M Y') }}</option>
                                 @endforeach
                             </select>
                             @error('evenement_id') <div class="text-danger mt-1" style="font-size:0.85rem;">{{ $message }}</div> @enderror
@@ -52,10 +52,10 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="telephone" class="form-label fw-semibold">Téléphone <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 43 70 45 13" required>
+                                <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 62 83 66 29" required>
                             </div>
                             <div class="col-12">
-                                <label for="email" class="form-label fw-semibold">Email <span class="text-muted fw-normal">(optionnel)</span></label>
+                                <label for="email" class="form-label fw-semibold">Email <span class="text-muted fw-normal email-optional">(optionnel)</span><span class="text-danger email-required d-none">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email" placeholder="adja@email.com">
                             </div>
                         </div>
@@ -63,13 +63,13 @@
                 </div>
 
                 <!-- Section 3: Status, Tariff, Payment -->
-                <div class="panel-card mb-3">
+                <div class="panel-card mb-3" id="sectionTarif">
                     <div class="panel-card-header">
                         <h5><span style="display:inline-flex;align-items-center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--menthe);color:var(--sombre);font-size:0.75rem;font-weight:700;margin-right:0.5rem;">3</span> Statut et tarif</h5>
                     </div>
                     <div class="panel-card-body">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-6" id="fieldStatut">
                                 <label class="form-label fw-semibold">Statut de l'acheteur <span class="text-danger">*</span></label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
@@ -82,7 +82,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6" id="fieldTarif">
                                 <label for="tarif_id" class="form-label fw-semibold">Tarif <span class="text-danger">*</span></label>
                                 <select class="form-select" id="tarif_id" name="tarif_id" required>
                                     <option value="">— Sélectionnez d'abord un événement —</option>
@@ -96,7 +96,7 @@
                                     <button type="button" class="btn btn-outline-secondary btn-qty" id="qtyPlus" style="border-radius: 0 6px 6px 0;">+</button>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6" id="fieldPaiement">
                                 <label for="methode_paiement" class="form-label fw-semibold">Moyen de paiement <span class="text-danger">*</span></label>
                                 <select class="form-select" id="methode_paiement" name="methode_paiement" required>
                                     <option value="especes">Espèces</option>
@@ -138,17 +138,20 @@
                                 <span class="fw-semibold" id="recapPaiement">Espèces</span>
                             </div>
                             <div class="d-flex justify-content-between py-3 mt-1" style="border-top:2px solid #f0f0f0;">
-                                <span class="fw-bold" style="font-size:1rem;">Total à encaisser</span>
+                                <span class="fw-bold" style="font-size:1rem;" id="recapTotalLabel">Total à encaisser</span>
                                 <span class="fw-bold" style="font-size:1.2rem; color: var(--vert);" id="recapTotal">0 FCFA</span>
                             </div>
                         </div>
 
                         <button type="submit" class="btn w-100 py-3 fw-bold text-white mt-3" id="btnSubmit" style="background: var(--vert); border: none; border-radius: 8px; transition: background 0.2s ease;" disabled>
-                            <i class="bi bi-check-circle me-2"></i>Enregistrer la vente
+                            <i class="bi bi-check-circle me-2"></i><span id="btnLabel">Enregistrer la vente</span>
                         </button>
-                        <p class="text-center text-muted mt-2 mb-0" style="font-size:0.82rem;">
-                            <i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail
+                        <p class="text-center mt-2 mb-0" style="font-size:0.82rem;">
+                            <span id="submitInfo" class="text-muted"><i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail</span>
                         </p>
+                        <div id="digitalInfo" class="alert alert-info py-2 px-3 mt-2 mb-0 d-none" style="font-size:0.82rem; border-radius:8px;">
+                            <i class="bi bi-phone me-1"></i> L'acheteur sera redirigé pour payer via son téléphone.
+                        </div>
                     </div>
                 </div>
             </form>
@@ -189,7 +192,7 @@
     </div>
 </div>
 
-<!-- Success Modal -->
+<!-- Success Modal (cash only) -->
 <div class="modal fade" id="successModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none;">
@@ -217,6 +220,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const qtyMinus = document.getElementById('qtyMinus');
     const qtyPlus = document.getElementById('qtyPlus');
     const btnSubmit = document.getElementById('btnSubmit');
+    const methodeSelect = document.getElementById('methode_paiement');
+    const emailInput = document.getElementById('email');
     const methodLabels = {
         'especes': 'Espèces',
         'mtn': 'MTN Mobile Money',
@@ -225,24 +230,84 @@ document.addEventListener('DOMContentLoaded', function() {
         'celtiis': 'Celtiis Cash',
     };
 
+    const isUniversitaire = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
     let tarifUnitaire = 0;
+    let isFreeEvent = false;
+
+    function toggleFieldsPayants(hide) {
+        document.getElementById('fieldStatut').style.display = (hide || !isUniversitaire) ? 'none' : '';
+        document.getElementById('fieldTarif').style.display = hide ? 'none' : '';
+        document.getElementById('fieldPaiement').style.display = hide ? 'none' : '';
+        document.getElementById('sectionTarif').style.display = hide ? 'none' : '';
+
+        if (hide) {
+            document.getElementById('recapTotalLabel').textContent = 'Inscription';
+            document.getElementById('recapTotal').textContent = 'Gratuite';
+            document.getElementById('recapStatut').closest('.d-flex').style.display = 'none';
+            document.getElementById('recapTarif').closest('.d-flex').style.display = 'none';
+            document.getElementById('recapPaiement').closest('.d-flex').style.display = 'none';
+            document.getElementById('submitInfo').innerHTML = '<i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail';
+            document.getElementById('digitalInfo').classList.add('d-none');
+            document.getElementById('btnLabel').textContent = 'Enregistrer';
+        } else {
+            document.getElementById('recapTotalLabel').textContent = 'Total à encaisser';
+            document.getElementById('recapTotal').textContent = '0 FCFA';
+            document.getElementById('recapStatut').closest('.d-flex').style.display = '';
+            document.getElementById('recapTarif').closest('.d-flex').style.display = '';
+            document.getElementById('recapPaiement').closest('.d-flex').style.display = '';
+        }
+    }
+
+    function isDigital() {
+        return methodeSelect.value !== 'especes';
+    }
+
+    function updateUI() {
+        const digital = isDigital();
+
+        // Toggle email required indicator
+        document.querySelector('.email-optional').classList.toggle('d-none', digital);
+        document.querySelector('.email-required').classList.toggle('d-none', !digital);
+
+        // Toggle button label
+        document.getElementById('btnLabel').textContent = digital ? 'Payer via ' + methodLabels[methodeSelect.value] : 'Enregistrer la vente';
+
+        // Toggle submit info text
+        document.getElementById('submitInfo').innerHTML = digital
+            ? '<i class="bi bi-phone me-1"></i> L\'acheteur paiera via son téléphone mobile'
+            : '<i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail';
+
+        // Toggle digital info banner
+        document.getElementById('digitalInfo').classList.toggle('d-none', !digital);
+    }
 
     function updateRecap() {
         const eventOption = eventSelect.options[eventSelect.selectedIndex];
-        const tarifOption = tarifSelect.options[tarifSelect.selectedIndex];
-        const catRadio = document.querySelector('input[name="categorie"]:checked');
-        const methodePaiement = document.getElementById('methode_paiement');
 
         document.getElementById('recapEvent').textContent = eventOption.text || '—';
+        document.getElementById('recapQuantite').textContent = quantiteInput.value;
+
+        if (isFreeEvent) {
+            const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
+            const telOk = document.getElementById('telephone').value.trim() !== '';
+            btnSubmit.disabled = !(eventSelect.value && nomOk && telOk);
+            return;
+        }
+
+        const tarifOption = tarifSelect.options[tarifSelect.selectedIndex];
+        const catRadio = document.querySelector('input[name="categorie"]:checked');
+
         document.getElementById('recapStatut').textContent = catRadio ? catRadio.nextElementSibling.textContent : '—';
         document.getElementById('recapTarif').textContent = tarifUnitaire > 0 ? numberFormat(tarifUnitaire) + ' FCFA' : '—';
-        document.getElementById('recapQuantite').textContent = quantiteInput.value;
-        document.getElementById('recapPaiement').textContent = methodLabels[methodePaiement.value] || '—';
+        document.getElementById('recapPaiement').textContent = methodLabels[methodeSelect.value] || '—';
 
         const total = tarifUnitaire * parseInt(quantiteInput.value || 0);
         document.getElementById('recapTotal').textContent = numberFormat(total) + ' FCFA';
 
-        btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && document.getElementById('nom_acheteur').value && document.getElementById('telephone').value);
+        const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
+        const telOk = document.getElementById('telephone').value.trim() !== '';
+        const emailOk = !isDigital() || emailInput.value.trim() !== '';
+        btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && nomOk && telOk && emailOk);
     }
 
     function numberFormat(n) {
@@ -259,8 +324,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!eventId) {
             tarifSelect.innerHTML = '<option value="">— Sélectionnez d\'abord un événement —</option>';
             tarifUnitaire = 0;
+            isFreeEvent = false;
+            toggleFieldsPayants(false);
             updateRecap();
             return;
+        }
+
+        const eventOption = eventSelect.options[eventSelect.selectedIndex];
+        isFreeEvent = eventOption.dataset.gratuit === '1';
+
+        if (isFreeEvent) {
+            toggleFieldsPayants(true);
+            tarifUnitaire = 0;
+            updateRecap();
+            return;
+        }
+
+        toggleFieldsPayants(false);
+
+        const body = { evenement_id: eventId };
+        if (isUniversitaire) {
+            body.categorie = cat;
         }
 
         fetch('{{ route('ventes-manuelles.tarifs') }}', {
@@ -269,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
-            body: JSON.stringify({ evenement_id: eventId, categorie: cat }),
+            body: JSON.stringify(body),
         })
         .then(r => r.json())
         .then(data => {
@@ -304,7 +388,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('nom_acheteur').addEventListener('input', updateRecap);
     document.getElementById('telephone').addEventListener('input', updateRecap);
-    document.getElementById('methode_paiement').addEventListener('change', updateRecap);
+    emailInput.addEventListener('input', updateRecap);
+
+    methodeSelect.addEventListener('change', function() {
+        updateUI();
+        updateRecap();
+    });
 
     qtyMinus.addEventListener('click', function() {
         const v = parseInt(quantiteInput.value);
@@ -323,9 +412,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = {};
         formData.forEach((val, key) => data[key] = val);
 
-        const submitBtn = document.getElementById('btnSubmit');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enregistrement…';
+        if (isFreeEvent) {
+            delete data.tarif_id;
+            delete data.categorie;
+            delete data.methode_paiement;
+        }
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Traitement…';
 
         fetch('{{ route('ventes-manuelles.store') }}', {
             method: 'POST',
@@ -337,13 +431,21 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(r => r.json())
         .then(resp => {
+            if (resp.redirect) {
+                window.location.href = resp.redirect;
+                return;
+            }
             if (resp.success) {
                 document.getElementById('successMessage').textContent = resp.message;
                 let ticketsHtml = '<ul class="list-unstyled mb-0">';
                 resp.tickets.forEach(t => {
                     ticketsHtml += '<li><strong>Code :</strong> ' + t.code_unique + '</li>';
                 });
-                ticketsHtml += '</li><li class="fw-bold mt-1">Total : ' + numberFormat(resp.total) + ' FCFA</li></ul>';
+                if (resp.total > 0) {
+                    ticketsHtml += '</li><li class="fw-bold mt-1">Total : ' + numberFormat(resp.total) + ' FCFA</li></ul>';
+                } else {
+                    ticketsHtml += '</li><li class="fw-bold mt-1">Gratuit</li></ul>';
+                }
                 document.getElementById('successTickets').innerHTML = ticketsHtml;
                 const modal = new bootstrap.Modal(document.getElementById('successModal'));
                 modal.show();
@@ -352,7 +454,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('quantite').value = 1;
                 document.getElementById('cat_externe').checked = true;
                 tarifUnitaire = 0;
+                isFreeEvent = false;
                 tarifSelect.innerHTML = '<option value="">— Sélectionnez d\'abord un événement —</option>';
+                toggleFieldsPayants(false);
                 updateRecap();
 
                 setTimeout(() => location.reload(), 2000);
@@ -360,11 +464,12 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => {
             alert('Erreur lors de l\'enregistrement de la vente.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Enregistrer la vente';
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Enregistrer la vente';
         });
     });
 
+    updateUI();
     updateRecap();
 });
 </script>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Messages - PassEvent')
+@section('title', 'Messages - PaxEvent')
 
 @section('page-title', 'Messages de contact')
 

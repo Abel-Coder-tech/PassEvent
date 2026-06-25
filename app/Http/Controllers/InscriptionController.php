@@ -21,7 +21,9 @@ class InscriptionController extends Controller
             'email' => 'required|email|max:255|unique:users,email',
             'telephone' => 'required|string|max:30',
             'organisation' => 'required|string|max:255',
-            'mot_de_passe' => 'required|string|min:8',
+            'mot_de_passe' => 'required|string|min:8|confirmed',
+            'type' => 'required|string|in:universitaire,professionnel',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         $user = User::create([
@@ -30,6 +32,8 @@ class InscriptionController extends Controller
             'telephone' => $validated['telephone'],
             'organisation' => $validated['organisation'],
             'mot_de_passe' => Hash::make($validated['mot_de_passe']),
+            'type' => $validated['type'],
+            'description' => $validated['description'],
             'role' => 'admin',
             'statut' => 'en_attente',
         ]);
@@ -46,7 +50,7 @@ class InscriptionController extends Controller
                 "Connectez-vous sur le super dashboard pour valider ou rejeter.",
                 function ($message) use ($sa) {
                     $message->to($sa->email)
-                        ->subject('[PassEvent] Nouvel organisateur en attente');
+                        ->subject('[PaxEvent] Nouvel organisateur en attente');
                 }
             );
         }

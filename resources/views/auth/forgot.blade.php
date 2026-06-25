@@ -2,8 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/paxevent_icone.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mot de passe oublié — PassEvent</title>
+    <title>Mot de passe oublié — PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
     <style>
@@ -41,8 +42,8 @@
             font-size: 0.9rem;
         }
         .form-control:focus {
-            border-color: #87428b;
-            box-shadow: 0 0 0 3px rgba(135,66,139,0.12);
+            border-color: #542680;
+            box-shadow: 0 0 0 3px rgba(84,38,128,0.12);
         }
         .input-group-custom { position: relative; }
         .input-group-custom .icon {
@@ -51,21 +52,21 @@
             color: #9a9a9a; font-size: 1rem; z-index: 5;
         }
         .btn-submit {
-            background: #6d3570; border: none; border-radius: 8px;
+            background: #542680; border: none; border-radius: 8px;
             color: #fff; font-weight: 700; font-size: 0.9rem;
             padding: 0.7rem; width: 100%;
             transition: background 0.2s;
         }
-        .btn-submit:hover { background: #5a2d5d; }
-        .back-link { color: #87428b; font-size: 0.85rem; text-decoration: underline; }
-        .back-link:hover { color: #6d3570; }
+        .btn-submit:hover { background: #3d1a5c; }
+        .back-link { color: #542680; font-size: 0.85rem; text-decoration: underline; }
+        .back-link:hover { color: #542680; }
         .alert { font-size: 0.82rem; padding: 0.6rem 0.8rem; border-radius: 8px; }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="header">
-            <h1>PassEvent</h1>
+            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="88" class="mb-2" style="filter:brightness(0) invert(1);">
             <p>Mot de passe oublié</p>
         </div>
         <div class="body">

@@ -2,8 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/paxevent_icone.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion — PassEvent</title>
+    <title>Connexion — PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
     <style>
@@ -49,7 +50,7 @@
         .login-form { width: 100%; max-width: 340px; }
         .login-form h2 {
             font-size: 1.4rem; font-weight: 800;
-            color: #1a1a2e; margin-bottom: 0.2rem;
+            color: #211C31; margin-bottom: 0.2rem;
         }
         .login-form .subtitle {
             color: #6c757d; font-size: 0.9rem;
@@ -60,7 +61,7 @@
             padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 0.9rem;
         }
         .form-control:focus {
-            border-color: #87428b; box-shadow: 0 0 0 3px rgba(135,66,139,0.12);
+            border-color: #542680; box-shadow: 0 0 0 3px rgba(84,38,128,0.12);
         }
         .input-group-custom { position: relative; }
         .input-group-custom .icon {
@@ -69,14 +70,14 @@
             color: #9a9a9a; font-size: 1rem; z-index: 5;
         }
         .btn-connexion {
-            background: #6d3570; border: none; border-radius: 8px;
+            background: #542680; border: none; border-radius: 8px;
             color: #fff; font-weight: 700; font-size: 0.95rem;
             padding: 0.75rem; width: 100%;
             transition: background 0.2s;
         }
-        .btn-connexion:hover { background: #5a2d5d; }
-        .forgot-link { color: #87428b; font-size: 0.85rem; text-decoration: underline; }
-        .forgot-link:hover { color: #6d3570; }
+        .btn-connexion:hover { background: #3d1a5c; }
+        .forgot-link { color: #542680; font-size: 0.85rem; text-decoration: underline; }
+        .forgot-link:hover { color: #542680; }
         @media (max-width: 640px) {
             .login-card-left { display: none; }
             .login-card-right { width: 100%; }
@@ -92,8 +93,9 @@
 
         <!-- Right: Form -->
         <div class="login-card-right">
-            <div class="login-form">
-                <h2 >Connexion</h2>
+            <div class="login-form" style="text-align:center;">
+                <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="100" class="mb-3">
+                <h2>Connexion</h2>
                 <p class="subtitle">Accédez a votre tableau de bord</p>
                 <form method="POST" action="{{ route('login.post') }}">
                     @csrf
@@ -126,7 +128,7 @@
                     <button type="submit" class="btn-connexion">Se connecter</button>
                 </form>
                 <p class="text-center mt-3" style="font-size:0.85rem; color:#6c757d;">
-                    Pas encore de compte ? <a href="{{ route('inscriptions.create') }}" style="color:#87428b; font-weight:600; text-decoration:underline;">Créer un compte</a>
+                    Pas encore de compte ? <a href="{{ route('inscriptions.create') }}" style="color:#542680; font-weight:600; text-decoration:underline;">Créer un compte</a>
                 </p>
             </div>
         </div>

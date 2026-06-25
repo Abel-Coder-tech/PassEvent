@@ -2,8 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Super Admin - PassEvent')</title>
+    <title>@yield('title', 'Super Admin - PaxEvent')</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
     <script src="/assets/js/chart.umd.min.js">
@@ -116,6 +117,46 @@
             border-left-color: var(--sa-primary);
         }
         .sa-nav-link i { font-size: 1rem; width: 20px; text-align: center; }
+
+        .sa-nav-badge {
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 20px;
+            margin-left: auto;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        .sa-nav-badge.amber {
+            background: #f59e0b;
+        }
+
+        .sa-notif-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--sa-text-muted);
+            cursor: pointer;
+            padding: 0.3rem;
+            line-height: 1;
+        }
+        .sa-notif-btn:hover { color: var(--sa-text); }
+        .sa-notif-dot {
+            position: absolute;
+            top: -2px;
+            right: -4px;
+            width: 18px; height: 18px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.55rem;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .sa-sidebar-footer {
             padding: 1rem 1.25rem;
@@ -346,6 +387,70 @@
             border-color: var(--sa-primary);
             color: #fff;
         }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast-item {
+            pointer-events: auto;
+            min-width: 320px;
+            max-width: 420px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastIn 0.3s ease;
+            font-size: 14px;
+            border-left: 4px solid #ddd;
+        }
+        .toast-item.toast-success { border-left-color: #27ae60; }
+        .toast-item.toast-error { border-left-color: #e74c3c; }
+        .toast-item .toast-msg { flex: 1; }
+        .toast-item .toast-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .toast-item .toast-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        .toast-item .toast-btn:hover { opacity: 0.85; }
+        .toast-item .toast-btn-retry { background: #e74c3c; color: #fff; }
+        .toast-item .toast-btn-cancel { background: #f0f0f0; color: #666; }
+        .toast-item .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .toast-item .toast-close:hover { color: #666; }
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     </style>
     @stack('styles')
 </head>
@@ -358,7 +463,7 @@
         <div class="sa-sidebar-brand">
             <div class="brand-icon"><i class="bi bi-shield-fill-check"></i></div>
             <div>
-                <div class="brand-text">PassEvent</div>
+                <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" class="mb-1">
                 <div class="brand-sub">Super Admin</div>
             </div>
         </div>
@@ -381,6 +486,8 @@
             </a>
             <a href="{{ route('superadmin.organisateurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.organisateurs') ? 'active' : '' }}">
                 <i class="bi bi-person-badge-fill"></i> Organisateurs
+                @php $pendingOrgs = \App\Models\User::where('role','admin')->where('statut','en_attente')->count(); @endphp
+                @if($pendingOrgs > 0)<span class="sa-nav-badge amber">{{ $pendingOrgs }}</span>@endif
             </a>
             <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements') ? 'active' : '' }}">
                 <i class="bi bi-calendar-event-fill"></i> Evenements
@@ -390,6 +497,11 @@
             </a>
 
             <div class="sa-nav-section">Finances</div>
+            <a href="{{ route('superadmin.retraits') }}" class="sa-nav-link {{ request()->routeIs('superadmin.retraits*') ? 'active' : '' }}">
+                <i class="bi bi-cash-coin"></i> Retraits
+                @php $pendingRetraits = \App\Models\Withdrawal::where('status','en_attente')->count(); @endphp
+                @if($pendingRetraits > 0)<span class="sa-nav-badge">{{ $pendingRetraits }}</span>@endif
+            </a>
             <a href="{{ route('superadmin.transactions') }}" class="sa-nav-link {{ request()->routeIs('superadmin.transactions') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Transactions
             </a>
@@ -403,6 +515,8 @@
             <div class="sa-nav-section">Systeme</div>
             <a href="{{ route('superadmin.notifications') }}" class="sa-nav-link {{ request()->routeIs('superadmin.notifications') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
+                @php $unreadMsgs = \App\Models\Message::where('lu',false)->count(); @endphp
+                @if($unreadMsgs > 0)<span class="sa-nav-badge">{{ $unreadMsgs }}</span>@endif
             </a>
             <a href="{{ route('superadmin.logs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.logs') ? 'active' : '' }}">
                 <i class="bi bi-journal-text"></i> Logs systeme
@@ -432,6 +546,11 @@
                 <span class="sa-topbar-title">@yield('page-title', 'Dashboard')</span>
             </div>
             <div class="sa-topbar-right">
+                <a href="{{ route('superadmin.notifications') }}" class="sa-notif-btn" title="Notifications">
+                    <i class="bi bi-bell-fill"></i>
+                    @php $headerUnread = \App\Models\Message::where('lu',false)->count(); @endphp
+                    @if($headerUnread > 0)<span class="sa-notif-dot">{{ $headerUnread > 99 ? '99+' : $headerUnread }}</span>@endif
+                </a>
                 <span class="sa-topbar-badge"><i class="bi bi-shield-fill-check"></i> Super Admin</span>
                 <span class="sa-topbar-date">{{ now()->format('d M Y') }}</span>
             </div>
@@ -439,16 +558,10 @@
 
         <div class="sa-content">
             @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show py-2" style="font-size:0.85rem; border-radius: 10px;">
-                    <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
-                    <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
-                </div>
+                <script>document.addEventListener('DOMContentLoaded',function(){showToast('success',{{ Js::from(session('success')) }});});</script>
             @endif
             @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show py-2" style="font-size:0.85rem; border-radius: 10px;">
-                    <i class="bi bi-exclamation-triangle me-1"></i> {{ session('error') }}
-                    <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
-                </div>
+                <script>document.addEventListener('DOMContentLoaded',function(){showToast('error',{{ Js::from(session('error')) }});});</script>
             @endif
             @yield('content')
         </div>
@@ -470,6 +583,11 @@
             // allow clicks on toggle button
         }
     });
+</script>
+<div id="toast-container" class="toast-container"></div>
+<script>
+function showToast(type,message){var c=document.getElementById('toast-container');if(!c||!message)return;var i=type==='success'?'bi-check-circle-fill':'bi-x-circle-fill';var cl=type==='success'?'#27ae60':'#e74c3c';var t=document.createElement('div');t.className='toast-item toast-'+type;t.innerHTML='<i class="bi '+i+'" style="color:'+cl+';font-size:1.3rem"></i><span class="toast-msg">'+message+'</span>'+(type==='error'?'<div class="toast-actions"><button class="toast-btn toast-btn-retry" onclick="location.reload()">Réessayer</button><button class="toast-btn toast-btn-cancel" onclick="this.closest(\'.toast-item\').remove()">Annuler</button></div>':'<button class="toast-close" onclick="this.closest(\'.toast-item\').remove()">&times;</button>');c.appendChild(t);if(type!=='error'){setTimeout(function(){t.style.animation='toastOut 0.3s ease forwards';setTimeout(function(){t.remove()},300)},4000)}
+}
 </script>
 @stack('scripts')
 </body>

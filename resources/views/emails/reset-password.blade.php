@@ -51,7 +51,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>PassEvent</h1>
+            <h1>PaxEvent</h1>
         </div>
         <div class="body">
             <p>Bonjour <strong>{{ $user->nom }}</strong>,</p>
@@ -62,7 +62,7 @@
             <p style="font-size:13px; color:#6c757d;">Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
         </div>
         <div class="footer">
-            <p>PassEvent — Billetterie intelligente</p>
+            <p>PaxEvent — Billetterie intelligente</p>
         </div>
     </div>
 </body>

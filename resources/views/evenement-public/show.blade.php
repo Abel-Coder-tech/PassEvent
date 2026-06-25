@@ -1,9 +1,23 @@
 @extends('layouts.public')
 
-@section('title', $evenement->titre . ' - PassEvent')
+@section('title', $evenement->titre . ' - PaxEvent')
+
+@push('meta')
+    <meta property="og:title" content="{{ $evenement->titre }}">
+    <meta property="og:description" content="{{ Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160) }}">
+    <meta property="og:url" content="{{ route('evenements.public.show', $evenement->id) }}">
+    <meta property="og:type" content="event">
+    <meta property="og:site_name" content="PaxEvent">
+    @if($evenement->image)
+    <meta property="og:image" content="{{ asset('storage/' . $evenement->image) }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    @endif
+    <meta name="description" content="{{ Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160) }}">
+@endpush
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('evenements.public') }}">Evenements</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('evenements.public') }}">Événements</a></li>
     <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($evenement->titre, 40) }}</li>
 @endsection
 
@@ -14,385 +28,194 @@
     $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
 @endphp
 
-<style>
-    .hero-event {
-        position: relative;
-        border-radius: 20px;
-        overflow: hidden;
-        margin-top: 1.5rem;
-        background: #f8f6f9;
-    }
-    .hero-event img {
-        width: 100%;
-        height: 380px;
-        object-fit: cover;
-        object-position: center 20%;
-        display: block;
-    }
-    .hero-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
-        pointer-events: none;
-    }
-    .hero-content {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        padding: 3rem 2rem 1.5rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.3), transparent);
-    }
-    .hero-content h1 {
-        color: #fff;
-        font-weight: 800;
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 2px 12px rgba(0,0,0,0.2);
-    }
-    .hero-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1.5rem;
-        color: rgba(255,255,255,0.92);
-        font-size: 0.88rem;
-    }
-    .hero-meta i { margin-right: 0.3rem; }
-    .hero-badge {
-        display: inline-block;
-        background: rgba(255,255,255,0.18);
-        backdrop-filter: blur(8px);
-        color: #fff;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 0.3rem 0.9rem;
-        border-radius: 20px;
-        margin-bottom: 0.6rem;
-    }
-    .event-card {
-        border-radius: 14px;
-        border: 1px solid #eee;
-        background: #fff;
-        overflow: hidden;
-        transition: box-shadow 0.2s;
-    }
-    .event-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-    .event-card .card-body { padding: 1.75rem; }
-    .event-card .card-body:not(:last-child) { border-bottom: 1px solid #f5f5f5; }
-    .tarif-card {
-        border: 2px solid #eee;
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: #fff;
-    }
-    .tarif-card:hover { border-color: #7B3FA0; background: rgba(123,63,160,0.03); }
-    .tarif-card.selected { border-color: #7B3FA0; background: rgba(123,63,160,0.06); }
-    .tarif-card input[type="radio"] { display: none; }
-    .qty-control {
-        display: inline-flex; align-items: center;
-        border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden;
-    }
-    .qty-control button {
-        width: 38px; height: 38px; border: none;
-        background: #f7f5f3; color: #333;
-        font-size: 1.1rem; cursor: pointer; transition: background 0.15s;
-    }
-    .qty-control button:hover { background: #e8e4e0; }
-    .qty-control input {
-        width: 52px; height: 38px; border: none;
-        text-align: center; font-weight: 700; font-size: 0.95rem;
-    }
-    .qty-control input:focus { outline: none; }
-    .form-control-custom {
-        border: 1.5px solid #e5e5e5;
-        border-radius: 10px;
-        padding: 0.7rem 1rem;
-        font-size: 0.88rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control-custom:focus {
-        border-color: #7B3FA0;
-        box-shadow: 0 0 0 3px rgba(123,63,160,0.1);
-    }
-    .sticky-sidebar { position: sticky; top: 90px; }
-    .info-chip {
-        display: inline-flex; align-items: center; gap: 0.4rem;
-        padding: 0.6rem 1rem; border-radius: 10px;
-        background: #f8f6f9; font-size: 0.85rem;
-    }
-    @media (max-width: 767.98px) {
-        .hero-event img { height: 240px; object-position: center; }
-        .hero-content { padding: 2rem 1.25rem 1rem; }
-        .hero-content h1 { font-size: 1.4rem; }
-        .event-card .card-body { padding: 1.25rem; }
-        .sticky-sidebar { position: static; }
-    }
-</style>
-
-<div class="container">
-    {{-- Hero Image --}}
-    <div class="hero-event">
-        @if($evenement->image)
-            <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}" loading="lazy">
-        @else
-            <div style="height: 380px; background: linear-gradient(135deg, #2c3e50, #1a1a2e);"></div>
-        @endif
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            @if($evenement->categorie)
-                <span class="hero-badge">{{ ucfirst($evenement->categorie) }}</span>
-            @endif
-            <h1>{{ $evenement->titre }}</h1>
-            <div class="hero-meta">
-                <span><i class="bi bi-calendar3"></i>{{ $evenement->date_event->format('d M Y') }}</span>
-                <span><i class="bi bi-clock"></i>{{ $evenement->date_event->format('H:i') }}</span>
-                <span><i class="bi bi-geo-alt"></i>{{ $evenement->lieu }}</span>
-                @if(!$estComplet)
-                    <span><i class="bi bi-people"></i>{{ number_format($placesRestantes, 0, ',', ' ') }} places</span>
-                @endif
+<div class="show-event">
+    <!-- Hero -->
+    <div class="show-hero">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    @if($evenement->categorie)
+                        <span class="show-badge">{{ ucfirst($evenement->categorie) }}</span>
+                    @endif
+                    <h1 class="show-title">{{ $evenement->titre }}</h1>
+                    <div class="show-meta">
+                        <span><i class="bi bi-calendar3"></i> {{ $evenement->date_event->format('d M Y') }}</span>
+                        <span><i class="bi bi-clock"></i> {{ $evenement->date_event->format('H:i') }}</span>
+                        <span><i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}</span>
+                        @if(!$estComplet)
+                            <span><i class="bi bi-people"></i> {{ number_format($placesRestantes, 0, ',', ' ') }} places</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="col-lg-5 text-lg-end">
+                    @if($evenement->image)
+                        <div class="show-hero-image">
+                            <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}">
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- Contenu principal --}}
-    <div class="row g-4 py-4">
-        {{-- Colonne gauche : infos --}}
-        <div class="col-lg-7">
-            {{-- Barre d'infos rapides --}}
-            <div class="d-flex flex-wrap gap-3 mb-4">
-                <div class="info-chip">
-                    <i class="bi bi-calendar-check" style="color: #7B3FA0;"></i>
-                    <span><strong>Date :</strong> {{ $evenement->date_event->format('d M Y') }}</span>
-                </div>
-                <div class="info-chip">
-                    <i class="bi bi-clock" style="color: #2E7D4F;"></i>
-                    <span><strong>Heure :</strong> {{ $evenement->date_event->format('H:i') }}</span>
-                </div>
-                <div class="info-chip">
-                    <i class="bi bi-geo-alt" style="color: #e67e22;"></i>
-                    <span><strong>Lieu :</strong> {{ $evenement->lieu }}</span>
-                </div>
-                @if(!$estComplet)
-                    <div class="info-chip">
-                        <i class="bi bi-people" style="color: #2E7D4F;"></i>
-                        <span><strong>{{ number_format($placesRestantes, 0, ',', ' ') }}</strong> places</span>
-                    </div>
+    <div class="container">
+        <div class="row g-5 py-4">
+            <!-- Colonne gauche -->
+            <div class="col-lg-7">
+                @if($evenementPasse ?? false)
+                    <span class="show-status-badge closed d-inline-block mb-3">Événement passé</span>
+                @elseif($venteCloturee ?? false)
+                    <span class="show-status-badge closed d-inline-block mb-3">Vente clôturée</span>
+                @elseif($estComplet)
+                    <span class="show-status-badge closed d-inline-block mb-3">Complet</span>
+                @else
+                    <span class="show-status-badge available d-inline-block mb-3">{{ number_format($placesRestantes, 0, ',', ' ') }} places disponibles</span>
                 @endif
-            </div>
 
-            {{-- Description --}}
-            <div class="event-card mb-4">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3" style="color: #333;">
-                        <i class="bi bi-info-circle me-2" style="color: #7B3FA0;"></i>Description
-                    </h5>
-                    @if($evenement->description)
-                        <p class="mb-0" style="line-height: 1.8; color: #555;">{{ $evenement->description }}</p>
-                    @else
-                        <p class="text-muted mb-0">Aucune description disponible.</p>
+                <!-- Barre infos rapides -->
+                <div class="show-infos">
+                    <div class="show-info-chip">
+                        <i class="bi bi-calendar-check"></i>
+                        <span><strong>Date :</strong> {{ $evenement->date_event->format('d M Y') }}</span>
+                    </div>
+                    <div class="show-info-chip">
+                        <i class="bi bi-clock"></i>
+                        <span><strong>Heure :</strong> {{ $evenement->date_event->format('H:i') }}</span>
+                    </div>
+                    <div class="show-info-chip">
+                        <i class="bi bi-geo-alt"></i>
+                        <span><strong>Lieu :</strong> {{ $evenement->lieu }}</span>
+                    </div>
+                    @if(!$estComplet)
+                        <div class="show-info-chip">
+                            <i class="bi bi-people"></i>
+                            <span><strong>{{ number_format($placesRestantes, 0, ',', ' ') }}</strong> places</span>
+                        </div>
                     @endif
                 </div>
-            </div>
 
-            {{-- Google Maps --}}
-            <div class="event-card mb-4">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3" style="color: #333;">
-                        <i class="bi bi-pin-map me-2" style="color: #2E7D4F;"></i>Lieu
-                    </h5>
-                    <div class="rounded-3 overflow-hidden" style="height: 220px; background: #f5f5f5;">
+                <!-- Description -->
+                <div class="show-card">
+                    <h5 class="show-card-title"><i class="bi bi-info-circle"></i> Description</h5>
+                    @if($evenement->description)
+                        <p class="show-card-text">{{ $evenement->description }}</p>
+                    @else
+                        <p class="show-card-text text-muted">Aucune description disponible.</p>
+                    @endif
+                </div>
+
+                <!-- Lieu -->
+                <div class="show-card">
+                    <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
+                    <div class="show-map">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12707.298550849!2d2.4244!3d6.3654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10235780f0b0c787%3A0x1b4a3c7c5a6e0f0!2sCotonou%2C+Benin!5e0!3m2!1sfr!2sbj!4v1" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                     </div>
                 </div>
-            </div>
 
-            {{-- Partager --}}
-            <div class="event-card mb-4">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3" style="color: #333;">
-                        <i class="bi bi-share me-2" style="color: #7B3FA0;"></i>Partager
-                    </h5>
-                    <div class="d-flex gap-2">
-                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
-                            <i class="bi bi-whatsapp" style="color: #25D366;"></i>
-                        </a>
-                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($evenement->titre) }}&url={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
-                            <i class="bi bi-twitter-x"></i>
-                        </a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; border-color: #ddd;">
-                            <i class="bi bi-facebook" style="color: #1877F2;"></i>
-                        </a>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="copyLink()" style="border-radius: 8px; border-color: #ddd;">
-                            <i class="bi bi-link-45deg"></i>
-                        </button>
-                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ urlencode($evenement->titre) }}&dates={{ $evenement->date_event->format('Ymd\THis') }}/{{ $evenement->date_event->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($evenement->description ?? '') }}&location={{ urlencode($evenement->lieu) }}" target="_blank" class="btn btn-outline-secondary btn-sm ms-auto" style="border-radius: 8px; border-color: #ddd;">
-                            <i class="bi bi-google" style="color: #4285F4;"></i> Calendar
-                        </a>
+                <!-- Partager -->
+                <div class="show-card">
+                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
+                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#25D366;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($evenement->titre) }}&url={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" title="Twitter"><i class="bi bi-twitter-x"></i></a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#1877F2;" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <button class="show-share-btn" onclick="copyLink()" title="Copier le lien"><i class="bi bi-link-45deg"></i></button>
+                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ urlencode($evenement->titre) }}&dates={{ $evenement->date_event->format('Ymd\THis') }}/{{ $evenement->date_event->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($evenement->description ?? '') }}&location={{ urlencode($evenement->lieu) }}" target="_blank" class="show-share-btn ms-auto" style="color:#4285F4; gap:0.3rem;" title="Google Calendar"><i class="bi bi-google"></i> Calendar</a>
                     </div>
                 </div>
-            </div>
 
-            {{-- Contacter l'organisateur --}}
-            <div class="event-card mb-4">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3" style="color: #333;">
-                        <i class="bi bi-envelope me-2" style="color: #2E7D4F;"></i>Une question ?
-                    </h5>
-                    <p class="text-muted" style="font-size: 0.85rem;">
-                        Vous avez une question specifique sur cet evenement ? Contactez directement l'organisateur.
-                    </p>
-                    <button type="button" class="btn w-100 py-2" style="background: #2E7D4F; color: #fff; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none;" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
+                <!-- Contacter -->
+                <div class="show-card">
+                    <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
+                    <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
+                    <button type="button" class="show-btn" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
                         <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
                     </button>
                 </div>
             </div>
 
-            {{-- Modal Contacter l'organisateur --}}
-            <div class="modal fade" id="contactOrganisateurModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content" style="border-radius: 14px; border: none;">
-                        <div class="modal-header border-0 pb-0">
-                            <h5 class="fw-bold" style="color: #333;">
-                                <i class="bi bi-envelope me-2" style="color: #2E7D4F;"></i>
-                                Contacter l'organisateur
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p class="text-muted mb-3" style="font-size: 0.85rem;">
-                                Votre message sera envoyé a <strong>{{ $evenement->user->nom }}</strong> (organisateur de <strong>{{ $evenement->titre }}</strong>).
-                            </p>
-                            <form action="{{ route('evenements.contacter-organisateur', $evenement->id) }}" method="POST">
-                                @csrf
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold" style="font-size: 0.85rem;">Votre nom <span class="text-danger">*</span></label>
-                                    <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold" style="font-size: 0.85rem;">Votre email <span class="text-danger">*</span></label>
-                                    <input type="email" name="email" class="form-control" placeholder="votre@email.com" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold" style="font-size: 0.85rem;">Message <span class="text-danger">*</span></label>
-                                    <textarea name="message" class="form-control" rows="4" placeholder="Ecrivez votre message ici..." required minlength="10"></textarea>
-                                </div>
-                                <button type="submit" class="btn w-100 py-2" style="background: #2E7D4F; color: #fff; border-radius: 10px; font-weight: 700; border: none;">
-                                    <i class="bi bi-send me-2"></i> Envoyer le message
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Colonne droite : achat --}}
-        <div class="col-lg-5">
-            <div class="sticky-sidebar">
-                @if($venteCloturee || $evenementPasse)
-                    <div class="event-card mb-3">
-                        <div class="card-body text-center py-4">
-                            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(231,76,60,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
-                                <i class="bi bi-lock-fill" style="color: var(--danger); font-size: 1.4rem;"></i>
-                            </div>
-                            <h5 class="fw-bold mb-1" style="color: var(--danger);">Vente cloturee</h5>
-                            <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                                @if($evenementPasse)
-                                    Cet événement a deja eu lieu.
+            <!-- Colonne droite -->
+            <div class="col-lg-5">
+                <div class="show-sidebar">
+                    @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
+                        <div class="show-card text-center py-4">
+                            <div class="show-lock-icon"><i class="bi bi-lock-fill"></i></div>
+                            <h5 style="color:var(--danger); font-weight:700; margin-bottom:0.25rem;">Vente clôturée</h5>
+                            <p class="show-card-text mb-0">
+                                @if($evenementPasse ?? false)
+                                    Cet événement a déjà eu lieu.
                                 @else
                                     Les inscriptions ne sont plus possibles pour cet événement.
                                 @endif
                             </p>
                         </div>
-                    </div>
-                @else
-                <div class="event-card">
-                    {{-- En-tête du formulaire --}}
-                    <div class="card-body" style="background: linear-gradient(135deg, rgba(123,63,160,0.04), rgba(46,125,79,0.04));">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(123,63,160,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="bi bi-ticket-perforated" style="color: #7B3FA0; font-size: 1.3rem;"></i>
-                            </div>
+                    @else
+                    <div class="show-card">
+                        <div class="show-ticket-header">
+                            <div class="show-ticket-icon"><i class="bi bi-ticket-perforated"></i></div>
                             <div>
                                 <h5 class="fw-bold mb-0">{{ $evenement->gratuit ? 'Participer gratuitement' : 'Acheter un billet' }}</h5>
-                                @if($estComplet)
-                                    <span class="badge bg-danger mt-1">Complet</span>
-                                @else
-                                    <small class="text-muted">{{ number_format($placesRestantes, 0, ',', ' ') }} places disponibles</small>
-                                @endif
+                                <small class="text-muted">{{ number_format($placesRestantes, 0, ',', ' ') }} places disponibles</small>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
+                        <hr class="my-3">
 
                         @if($evenement->gratuit)
-                        {{-- Formulaire simplifié pour gratuit --}}
                         <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
                             @csrf
                             <input type="hidden" name="gratuit" value="1">
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Nombre de places</label>
-                                <div class="qty-control">
-                                    <button type="button" id="qtyMinus">-</button>
-                                    <input type="number" id="quantiteInput" value="1" min="1" max="5" readonly>
-                                    <button type="button" id="qtyPlus">+</button>
+                                <label class="show-label">Nombre de places</label>
+                                <div class="show-qty">
+                                    <button type="button" id="qtyMinusG">-</button>
+                                    <input type="number" id="quantiteInputG" value="1" min="1" max="5" readonly>
+                                    <button type="button" id="qtyPlusG">+</button>
                                 </div>
                             </div>
                             <hr>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Prénom et Nom <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
+                                <label class="show-label">Prénom et Nom <span class="text-danger">*</span></label>
+                                <input type="text" class="show-input" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
+                                <label class="show-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="show-input" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
                             </div>
-                            <div class="p-3 rounded-3 mb-3" style="background: #f8f6f9;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Billets</span>
-                                    <span class="fw-bold" style="font-size: 1.3rem; color: #7B3FA0;" id="totalDisplay">Gratuit</span>
-                                </div>
+                            <div class="show-total">
+                                <span class="fw-bold">Billets</span>
+                                <span class="show-total-price">Gratuit</span>
                             </div>
-                            <button type="submit" class="btn w-100 py-3" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $estComplet ? 'disabled' : '' }}>
+                            <button type="submit" class="show-btn show-btn-primary" {{ $estComplet ? 'disabled' : '' }}>
                                 <i class="bi bi-check-circle me-2"></i> Participer
                             </button>
-                            <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
-                                <i class="bi bi-check-circle me-1" style="color: #2E7D4F;"></i>
-                                Reservation gratuite — Ticket PDF recu par email
-                            </p>
+                            <p class="show-secure"><i class="bi bi-check-circle me-1" style="color:var(--violet);"></i> Réservation gratuite — Ticket PDF reçu par email</p>
                         </form>
                         @else
-                        {{-- Formulaire complet pour événements payants --}}
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Choisissez votre tarif</label>
+                            <label class="show-label">Choisissez votre tarif</label>
                             @if($tarifs->isEmpty())
-                                <div class="alert alert-danger py-2" style="font-size: 0.85rem;">Aucun tarif disponible</div>
+                                <div class="alert alert-danger py-2" style="font-size:0.85rem;">Aucun tarif disponible</div>
                             @else
                                 <div class="d-flex flex-column gap-2">
                                     @foreach($tarifs as $tarif)
-                                        <label class="tarif-card d-block" onclick="selectTarif(this)">
+                                        <label class="show-tarif" onclick="selectTarif(this)">
                                             <input type="radio" name="tarif_id" value="{{ $tarif->id }}" {{ $loop->first ? 'checked' : '' }}>
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <span class="badge me-2" style="background: {{ $tarif->categorie === 'etudiant' ? 'rgba(123,63,160,0.1)' : 'rgba(46,125,79,0.1)' }}; color: {{ $tarif->categorie === 'etudiant' ? '#7B3FA0' : '#2E7D4F' }}; font-weight: 600;">
-                                                        {{ $tarif->categorie === 'etudiant' ? 'Etudiant' : 'Externe' }}
-                                                    </span>
-                                                    <strong>{{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}</strong>
-                                                </div>
-                                                <strong style="color: #7B3FA0; font-size: 1.05rem;">
-                                                    {{ number_format($tarif->prix, 0, ',', ' ') . ' F' }}
-                                                </strong>
-                                            </div>
+                                            @if($estUniversitaire)
+                                                <span class="show-tarif-badge" style="background:{{ $tarif->categorie === 'etudiant' ? 'rgba(84,38,128,0.1)' : 'rgba(84,38,128,0.06)' }}; color:{{ $tarif->categorie === 'etudiant' ? '#542680' : '#211C31' }};">
+                                                    {{ $tarif->categorie === 'etudiant' ? 'Étudiant' : 'Externe' }}
+                                                </span>
+                                            @endif
+                                            <strong>{{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}</strong>
+                                            <strong class="show-tarif-price">{{ number_format($tarif->prix, 0, ',', ' ') . ' F' }}</strong>
                                         </label>
                                     @endforeach
                                 </div>
                             @endif
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Quantité</label>
-                            <div class="qty-control">
+                            <label class="show-label">Quantité</label>
+                            <div class="show-qty">
                                 <button type="button" id="qtyMinus">-</button>
                                 <input type="number" id="quantiteInput" value="1" min="1" max="5" readonly>
                                 <button type="button" id="qtyPlus">+</button>
@@ -404,82 +227,475 @@
                             <input type="hidden" name="tarif_id" id="hiddenTarifId">
                             <input type="hidden" name="quantite" id="hiddenQuantite" value="1">
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Prénom et Nom <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-custom" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
+                                <label class="show-label">Prénom et Nom <span class="text-danger">*</span></label>
+                                <input type="text" class="show-input" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control form-control-custom" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
+                                <label class="show-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="show-input" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Téléphone <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control form-control-custom" name="telephone_acheteur" value="{{ old('telephone_acheteur') }}" placeholder="+229 XX XX XX XX" required>
+                                <label class="show-label">Téléphone <span class="text-danger">*</span></label>
+                                <input type="tel" class="show-input" name="telephone_acheteur" value="{{ old('telephone_acheteur') }}" placeholder="+229 XX XX XX XX" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Code promo <span class="text-muted fw-normal">(optionnel)</span></label>
-                                <input type="text" class="form-control form-control-custom" name="code_promo" value="{{ old('code_promo') }}" placeholder="PROMO-XXXXXX" style="text-transform: uppercase;">
+                                <label class="show-label">Code promo <span class="text-muted fw-normal">(optionnel)</span></label>
+                                <input type="text" class="show-input" name="code_promo" value="{{ old('code_promo') }}" placeholder="PROMO-XXXXXX" style="text-transform:uppercase;">
                             </div>
-                            <div class="p-3 rounded-3 mb-3" style="background: #f8f6f9;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold">Total a payer</span>
-                                    <span class="fw-bold" style="font-size: 1.3rem; color: #7B3FA0;" id="totalDisplay">--</span>
-                                </div>
+                            <div class="show-total">
+                                <span class="fw-bold">Total à payer</span>
+                                <span class="show-total-price" id="totalDisplay">--</span>
                             </div>
-                            <button type="submit" class="btn w-100 py-3" id="btnPayer" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-weight: 700; font-size: 1rem; border: none;" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
+                            <button type="submit" class="show-btn show-btn-primary" id="btnPayer" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
                                 <i class="bi bi-shield-lock me-2"></i> Payer avec KKiaPay
                             </button>
-                            <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
-                                <i class="bi bi-shield-check me-1" style="color: #2E7D4F;"></i>
-                                Paiement 100% securisé — Ticket PDF envoyé par email
-                            </p>
+                            <p class="show-secure"><i class="bi bi-shield-check me-1" style="color:var(--violet);"></i> Paiement 100% sécurisé — Ticket PDF envoyé par email</p>
                         </form>
                         @endif
                     </div>
-                </div>
-                @endif
+                    @endif
 
-                {{-- Autres evenements --}}
-                @php
-                    $autresEvenements = App\Models\Evenement::with('tarifs')
-                        ->where('statut', 'publié')
-                        ->where('date_event', '>=', now())
-                        ->where('id', '!=', $evenement->id)
-                        ->orderBy('date_event', 'asc')
-                        ->limit(3)
-                        ->get();
-                @endphp
-                @if($autresEvenements->isNotEmpty())
-                    <div class="event-card mt-4">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3" style="color: #333;">
-                                <i class="bi bi-calendar-event me-2" style="color: #7B3FA0;"></i>Autres evenements
-                            </h6>
+                    @php
+                        $autresEvenements = App\Models\Evenement::with('tarifs')
+                            ->where('statut', 'publié')
+                            ->where('date_event', '>=', now())
+                            ->where('id', '!=', $evenement->id)
+                            ->orderBy('date_event', 'asc')
+                            ->limit(3)
+                            ->get();
+                    @endphp
+                    @if($autresEvenements->isNotEmpty())
+                        <div class="show-card mt-4">
+                            <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
                             <div class="d-flex flex-column gap-3">
                                 @foreach($autresEvenements as $autre)
-                                    <a href="{{ route('evenements.public.show', $autre->id) }}" class="text-decoration-none">
-                                        <div class="d-flex gap-3 align-items-center p-2 rounded-3" style="background: #f8f6f9;">
-                                            @if($autre->image)
-                                                <img src="{{ asset('storage/' . $autre->image) }}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
-                                            @else
-                                                <div style="width: 50px; height: 50px; background: #e8e8e8; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                                    <i class="bi bi-calendar-event" style="color: #999;"></i>
-                                                </div>
-                                            @endif
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="fw-bold" style="font-size: 0.82rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $autre->titre }}</div>
-                                                <div class="text-muted" style="font-size: 0.72rem;">
-                                                    <i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->format('d M Y') }}
-                                                </div>
-                                            </div>
-                                            <i class="bi bi-chevron-right" style="color: #aaa; font-size: 0.8rem;"></i>
+                                    <a href="{{ route('evenements.public.show', $autre->id) }}" class="show-other-card">
+                                        @if($autre->image)
+                                            <img src="{{ asset('storage/' . $autre->image) }}" alt="">
+                                        @else
+                                            <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
+                                        @endif
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="show-other-title">{{ $autre->titre }}</div>
+                                            <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->format('d M Y') }}</div>
                                         </div>
+                                        <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
                                     </a>
                                 @endforeach
                             </div>
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Contacter -->
+<div class="modal fade" id="contactOrganisateurModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:14px; border:none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold" style="color:#211C31;"><i class="bi bi-envelope me-2" style="color:var(--violet);"></i> Contacter l'organisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color:#6c757d; font-size:0.85rem; margin-bottom:1rem;">
+                    Votre message sera envoyé à <strong>{{ $evenement->user->nom }}</strong> (organisateur de <strong>{{ $evenement->titre }}</strong>).
+                </p>
+                <form action="{{ route('evenements.contacter-organisateur', $evenement->id) }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="show-label">Votre nom <span class="text-danger">*</span></label>
+                        <input type="text" name="nom" class="show-input" placeholder="Ex: Kofi Mensah" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="show-label">Votre email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="show-input" placeholder="votre@email.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="show-label">Message <span class="text-danger">*</span></label>
+                        <textarea name="message" class="show-input" rows="4" placeholder="Écrivez votre message ici..." required minlength="10"></textarea>
+                    </div>
+                    <button type="submit" class="show-btn show-btn-primary" style="background:var(--violet);">
+                        <i class="bi bi-send me-2"></i> Envoyer le message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== LAYOUT ===== */
+.show-event {
+    background: #f7f5f3;
+    padding-bottom: 3rem;
+}
+
+/* ===== HERO ===== */
+.show-hero {
+    padding: 4rem 0 2.5rem;
+    background: #111;
+    position: relative;
+}
+.show-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(84,38,128,0.08) 0%, transparent 100%);
+    pointer-events: none;
+}
+.show-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.8rem;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 1rem;
+}
+.show-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 1rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+.show-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.82rem;
+}
+.show-meta i { margin-right: 0.35rem; color: rgba(255,255,255,0.25); }
+.show-status-badge {
+    display: inline-flex;
+    padding: 0.35rem 1rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+.show-status-badge.available {
+    background: rgba(18,151,110,0.1);
+    color: #3ab87a;
+    border: 1px solid rgba(18,151,110,0.15);
+}
+.show-status-badge.closed {
+    background: rgba(231,76,60,0.08);
+    color: #e74c3c;
+    border: 1px solid rgba(231,76,60,0.12);
+}
+
+/* ===== HERO IMAGE ===== */
+.show-hero-image {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+.show-hero-image img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+}
+
+/* ===== INFOS ===== */
+.show-infos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.show-info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1rem;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #ede5f0;
+    font-size: 0.82rem;
+}
+.show-info-chip i { color: var(--violet); font-size: 0.9rem; }
+
+/* ===== CARDS ===== */
+.show-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #ede5f0;
+    transition: box-shadow 0.2s;
+}
+.show-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+.show-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #211C31;
+    margin: 0 0 0.75rem;
+}
+.show-card-title i {
+    margin-right: 0.5rem;
+    color: var(--violet);
+}
+.show-card-text {
+    font-size: 0.88rem;
+    color: #6c757d;
+    line-height: 1.8;
+    margin: 0;
+}
+
+/* ===== MAP ===== */
+.show-map {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #ede5f0;
+}
+
+/* ===== SHARE ===== */
+.show-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid #ede5f0;
+    background: #fff;
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.show-share-btn:hover {
+    border-color: var(--violet);
+    background: rgba(135,66,139,0.04);
+    color: var(--violet);
+}
+
+/* ===== SIDEBAR ===== */
+.show-sidebar { position: sticky; top: 90px; }
+.show-lock-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(231,76,60,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    color: var(--danger);
+    font-size: 1.4rem;
+}
+.show-ticket-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.show-ticket-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(84,38,128,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #542680;
+    font-size: 1.3rem;
+}
+
+/* ===== TARIFS ===== */
+.show-tarif {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 2px solid #ede5f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+}
+.show-tarif:hover { border-color: #9972B0; }
+.show-tarif.selected { border-color: #542680; background: rgba(84,38,128,0.04); }
+.show-tarif input[type="radio"] { display: none; }
+.show-tarif-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+}
+.show-tarif-price {
+    margin-left: auto;
+    color: #542680;
+    font-size: 1rem;
+}
+
+/* ===== FORM ===== */
+.show-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #211C31;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+.show-input {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border: 1.5px solid #ede5f0;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s;
+    background: #fafafa;
+}
+.show-input:focus {
+    border-color: #542680;
+    box-shadow: 0 0 0 3px rgba(84,38,128,0.08);
+    background: #fff;
+}
+.show-qty {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid #ede5f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.show-qty button {
+    width: 38px; height: 38px; border: none;
+    background: #f7f5f3; color: #333;
+    font-size: 1.1rem; cursor: pointer; transition: background 0.15s;
+}
+.show-qty button:hover { background: #e8e4e0; }
+.show-qty input {
+    width: 52px; height: 38px; border: none;
+    text-align: center; font-weight: 700; font-size: 0.95rem;
+    outline: none;
+}
+.show-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: #f8f6f9;
+    margin-bottom: 1rem;
+}
+.show-total-price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #542680;
+}
+.show-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.show-btn-primary {
+    background: linear-gradient(135deg, #542680, #9972B0);
+    color: #fff;
+}
+.show-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(84,38,128,0.35);
+    color: #fff;
+}
+.show-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.show-secure {
+    text-align: center;
+    font-size: 0.72rem;
+    color: #6c757d;
+    margin: 0.5rem 0 0;
+}
+
+/* ===== AUTRES ÉVÉNEMENTS ===== */
+.show-other-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem;
+    border-radius: 10px;
+    background: #f8f6f9;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.show-other-card:hover { background: #f0edf2; }
+.show-other-card img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.show-other-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #e8e8e8;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #999;
+}
+.show-other-title {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #211C31;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.show-other-date {
+    font-size: 0.72rem;
+    color: #9a9a9a;
+}
+
+@media (max-width: 991px) {
+    .show-sidebar { position: static; }
+}
+.share-native {
+    background: linear-gradient(135deg, #542680, #7b3fa0) !important;
+    color: #fff !important;
+    border: none !important;
+}
+.share-native:hover {
+    opacity: 0.9;
+    transform: scale(1.1);
+}
+@media (max-width: 767px) {
+    .show-hero { padding: 2.5rem 0 2rem; }
+    .show-title { font-size: 1.5rem; }
+    .show-hero-image img { height: 200px; }
+    .show-infos { gap: 0.5rem; }
+}
+</style>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="shareToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
@@ -488,20 +704,43 @@
 @section('scripts')
 <script>
 function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Lien copie !');
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('Lien copié dans le presse-papier !', 'success');
+    }).catch(() => {
+        showToast('Impossible de copier le lien', 'danger');
+    });
+}
+
+function shareEvent() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ $evenement->titre }}',
+            text: '{{ $evenement->titre }} - {{ $evenement->date_event->format('d M Y') }} à {{ $evenement->lieu }}@if($evenement->description) - {{ strip_tags(Str::limit($evenement->description, 120)) }}@endif',
+            url: window.location.href,
+        }).catch(() => {});
+    } else {
+        copyLink();
+    }
+}
+
+function showToast(message, type) {
+    const el = document.getElementById('shareToast');
+    el.querySelector('.toast-body').textContent = message;
+    el.className = 'toast align-items-center text-bg-' + type + ' border-0';
+    const toast = bootstrap.Toast.getOrCreateInstance(el, { autohide: true, delay: 3000 });
+    toast.show();
 }
 
 @if($evenement->gratuit)
 document.addEventListener('DOMContentLoaded', function() {
-    const qtyInput = document.getElementById('quantiteInput');
-    document.getElementById('qtyMinus').addEventListener('click', function() {
-        const v = parseInt(qtyInput.value);
-        if (v > 1) qtyInput.value = v - 1;
+    const qty = document.getElementById('quantiteInputG');
+    document.getElementById('qtyMinusG').addEventListener('click', function() {
+        const v = parseInt(qty.value);
+        if (v > 1) qty.value = v - 1;
     });
-    document.getElementById('qtyPlus').addEventListener('click', function() {
-        const v = parseInt(qtyInput.value);
-        if (v < 5) qtyInput.value = v + 1;
+    document.getElementById('qtyPlusG').addEventListener('click', function() {
+        const v = parseInt(qty.value);
+        if (v < 5) qty.value = v + 1;
     });
 });
 @else
@@ -549,15 +788,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function selectTarif(el) {
-    document.querySelectorAll('.tarif-card').forEach(o => o.classList.remove('selected'));
+    document.querySelectorAll('.show-tarif').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     const radio = el.querySelector('input[type="radio"]');
     if (radio) radio.checked = true;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const firstTarif = document.querySelector('.tarif-card');
-    if (firstTarif) selectTarif(firstTarif);
+    const first = document.querySelector('.show-tarif');
+    if (first) selectTarif(first);
 });
 @endif
 </script>

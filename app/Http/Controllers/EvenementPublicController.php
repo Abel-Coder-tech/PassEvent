@@ -63,8 +63,9 @@ class EvenementPublicController extends Controller
         $estComplet = $placesRestantes <= 0;
         $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast();
         $evenementPasse = $evenement->date_event->isPast();
+        $estUniversitaire = $evenement->user->type === 'universitaire';
 
-        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse'));
+        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse', 'estUniversitaire'));
     }
 
     public function achat(Evenement $evenement, Request $request)
@@ -95,10 +96,10 @@ class EvenementPublicController extends Controller
         if ($estGratuit) {
             $rules['telephone_acheteur'] = 'nullable|string|max:20';
         } else {
-            $rules['telephone_acheteur'] = 'required|string|min:6|max:20';
+            $rules['telephone_acheteur'] = 'required|string|min:10|max:20';
             $rules['tarif_id'] = 'required|exists:tarifs,id';
             $messages['telephone_acheteur.required'] = 'Le numéro de téléphone est obligatoire.';
-            $messages['telephone_acheteur.min'] = 'Le numéro doit contenir au moins 6 caractères.';
+            $messages['telephone_acheteur.min'] = 'Le numéro doit contenir au moins 10 caractères.';
             $messages['tarif_id.required'] = 'Le type de billet est obligatoire.';
         }
 
@@ -127,10 +128,10 @@ class EvenementPublicController extends Controller
 
         $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1)));
 
-        $dispo = $tarif->quantite_disponible - $tarif->quantite_vendue;
-        if ($dispo < $quantite) {
-            $dispo = max(0, $dispo);
-            return back()->with('error', "Il ne reste que {$dispo} place(s) disponible(s) pour ce tarif.")->withInput();
+        $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
+        if ($placesRestantes < $quantite) {
+            $placesRestantes = max(0, $placesRestantes);
+            return back()->with('error', "Il ne reste que {$placesRestantes} place(s) disponible(s) pour cet événement.")->withInput();
         }
 
         $codePromoUtilise = null;
@@ -198,11 +199,11 @@ class EvenementPublicController extends Controller
 
         if ($evenement->gratuit) {
             return redirect()->route('paiement.show', $ticket->id)
-                ->with('success', $quantite > 1 ? "{$quantite} places reservees." : 'Votre place est reservee.');
+                ->with('success', $quantite > 1 ? "{$quantite} places reservées." : 'Votre place est reservée.');
         }
 
         return redirect()->route('paiement.show', $ticket->id)
-            ->with('success', $quantite > 1 ? "{$quantite} places reservees. Finalisez le paiement." : 'Votre place est reservee. Finalisez le paiement.');
+            ->with('success', $quantite > 1 ? "{$quantite} places reservées. Finalisez le paiement." : 'Votre place est reservée. Finalisez le paiement.');
     }
 
     public function contacterOrganisateur(Evenement $evenement, Request $request)
@@ -226,10 +227,10 @@ class EvenementPublicController extends Controller
             function ($m) use ($organisateur, $validated, $evenement) {
                 $m->to($organisateur->email, $organisateur->nom)
                   ->replyTo($validated['email'], $validated['nom'])
-                  ->subject("[PassEvent] Question sur {$evenement->titre}");
+                  ->subject("[PaxEvent] Question sur {$evenement->titre}");
             }
         );
 
-        return back()->with('success', 'Votre message a ete envoye a l\'organisateur. Vous recevrez une reponse sous peu.');
+        return back()->with('success', 'Votre message a été envoyé a l\'organisateur. Vous recevrez une reponse sous peu.');
     }
 }

@@ -31,6 +31,7 @@ class User extends Authenticatable
         'code_acces_scan',
         'pseudo',
         'statut',
+        'type',
     ];
 
     protected $hidden = [
@@ -58,5 +59,10 @@ class User extends Authenticatable
     public function evenements(): HasMany
     {
         return $this->hasMany(Evenement::class);
+    }
+
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class);
     }
 }

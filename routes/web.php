@@ -45,6 +45,9 @@ Route::get('/contact', [SitePublicController::class, 'contact'])->name('contact'
 Route::post('/contact', [SitePublicController::class, 'contactStore'])->name('contact.store')->middleware('throttle:3,10');
 Route::get('/confidentialite', [SitePublicController::class, 'confidentialite'])->name('confidentialite');
 Route::get('/cgu', [SitePublicController::class, 'cgu'])->name('cgu');
+Route::get('/mentions-legales', [SitePublicController::class, 'mentionsLegales'])->name('mentions-legales');
+Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueRemboursement'])->name('politique-remboursement');
+
 
 // Newsletter
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
@@ -96,6 +99,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
         Route::get('/parametres', [SuperAdminController::class, 'parametres'])->name('parametres');
+        Route::get('/retraits', [SuperAdminController::class, 'retraits'])->name('retraits');
+        Route::post('/retraits/{withdrawal}/approuver', [SuperAdminController::class, 'approuverRetrait'])->name('retraits.approuver');
+        Route::post('/retraits/{withdrawal}/rejeter', [SuperAdminController::class, 'rejeterRetrait'])->name('retraits.rejeter');
         Route::get('/logs', [SuperAdminController::class, 'logsSysteme'])->name('logs');
         Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
     });
@@ -160,6 +166,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
         Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
     });
+
+    Route::get('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'index'])->name('admin.retraits.index');
+    Route::post('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'store'])->name('admin.retraits.store');
 
     Route::prefix('admin/remboursements')->name('admin.remboursements.')->group(function () {
         Route::get('/', [RemboursementController::class, 'index'])->name('index');

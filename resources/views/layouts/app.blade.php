@@ -2,9 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'PassEvent')</title>
+    <title>@yield('title', 'PaxEvent')</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -736,6 +737,70 @@
                 padding: 0.2rem 0.5rem;
             }
         }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast-item {
+            pointer-events: auto;
+            min-width: 320px;
+            max-width: 420px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastIn 0.3s ease;
+            font-size: 14px;
+            border-left: 4px solid #ddd;
+        }
+        .toast-item.toast-success { border-left-color: #27ae60; }
+        .toast-item.toast-error { border-left-color: #e74c3c; }
+        .toast-item .toast-msg { flex: 1; }
+        .toast-item .toast-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .toast-item .toast-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        .toast-item .toast-btn:hover { opacity: 0.85; }
+        .toast-item .toast-btn-retry { background: #e74c3c; color: #fff; }
+        .toast-item .toast-btn-cancel { background: #f0f0f0; color: #666; }
+        .toast-item .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .toast-item .toast-close:hover { color: #666; }
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     </style>
     @yield('styles')
 </head>
@@ -748,10 +813,7 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-icon">P</div>
-            <div class="sidebar-logo-text">
-                <span>Pass</span><span>Event</span>
-            </div>
+            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="72" style="filter:brightness(0) invert(1);">
         </div>
 
         <nav class="sidebar-nav">
@@ -792,6 +854,11 @@
             </a>
             <a href="{{ route('admin.remboursements.index') }}" class="nav-link {{ request()->routeIs('admin.remboursements.*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-return-left"></i> Remboursements
+            </a>
+
+            <div class="sidebar-section-label">Finances</div>
+            <a href="{{ route('admin.retraits.index') }}" class="nav-link {{ request()->routeIs('admin.retraits.*') ? 'active' : '' }}">
+                <i class="bi bi-cash-stack"></i> Retraits
             </a>
 
             <div class="sidebar-section-label">Analyse</div>
@@ -840,21 +907,11 @@
     </div>
 
     @if(session('success'))
-        <div class="page-content pb-0">
-            <div class="alert alert-success alert-dismissible fade show" style="background: rgba(18,151,110,0.08); color: var(--vert); border-radius: 8px;">
-                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        </div>
+        <script>document.addEventListener('DOMContentLoaded',function(){showToast('success',{{ Js::from(session('success')) }});});</script>
     @endif
 
     @if(session('error'))
-        <div class="page-content pb-0">
-            <div class="alert alert-danger alert-dismissible fade show" style="background: rgba(231,76,60,0.08); color: #e74c3c; border-radius: 8px;">
-                <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        </div>
+        <script>document.addEventListener('DOMContentLoaded',function(){showToast('error',{{ Js::from(session('error')) }});});</script>
     @endif
     @endauth
 
@@ -911,6 +968,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+<div id="toast-container" class="toast-container"></div>
+<script>
+function showToast(type,message){var c=document.getElementById('toast-container');if(!c||!message)return;var i=type==='success'?'bi-check-circle-fill':'bi-x-circle-fill';var cl=type==='success'?'#27ae60':'#e74c3c';var t=document.createElement('div');t.className='toast-item toast-'+type;t.innerHTML='<i class="bi '+i+'" style="color:'+cl+';font-size:1.3rem"></i><span class="toast-msg">'+message+'</span>'+(type==='error'?'<div class="toast-actions"><button class="toast-btn toast-btn-retry" onclick="location.reload()">Réessayer</button><button class="toast-btn toast-btn-cancel" onclick="this.closest(\'.toast-item\').remove()">Annuler</button></div>':'<button class="toast-close" onclick="this.closest(\'.toast-item\').remove()">&times;</button>');c.appendChild(t);if(type!=='error'){setTimeout(function(){t.style.animation='toastOut 0.3s ease forwards';setTimeout(function(){t.remove()},300)},4000)}}
 </script>
 @yield('scripts')
 </body>

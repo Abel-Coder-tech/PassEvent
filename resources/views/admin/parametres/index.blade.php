@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Paramètres - PassEvent')
+@section('title', 'Paramètres - PaxEvent')
 
 @section('page-title', 'Paramètres')
 
@@ -132,13 +132,6 @@
 </style>
 
 <div class="page-content">
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" style="background: rgba(18,151,110,0.08); color: var(--vert); border-radius: 8px; border: none;">
-            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <p class="text-muted mb-4" style="font-size: 0.9rem;">Gerez votre compte et la configuration de la plateforme.</p>
 
     <div class="d-flex flex-column flex-md-row gap-4">
@@ -225,6 +218,13 @@
                                 <label class="form-label fw-semibold" style="font-size: 0.82rem;">Organisation</label>
                                 <input type="text" name="organisation" class="form-control" value="{{ old('organisation', Auth::user()->organisation) }}" placeholder="Ex: UPAO Evenements">
                                 @error('organisation')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Type de compte --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size: 0.82rem;">Type de compte</label>
+                                <input type="text" class="form-control" value="{{ Auth::user()->type === 'universitaire' ? 'Universitaire' : 'Professionnel' }}" readonly style="background: #f5f5f5;">
+                                <small class="text-muted">Le type de compte ne peut pas être modifié.</small>
                             </div>
 
                             {{-- Email --}}

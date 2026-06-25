@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votre billet PassEvent</title>
+    <title>Votre billet PaxEvent</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -22,9 +22,9 @@
             box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
         .header {
-            background: linear-gradient(135deg, #7B3FA0, #6a1b9a);
+            background: linear-gradient(135deg, #542680, #3d1a5c);
             color: white;
-            padding: 32px 36px;
+            padding: 28px 36px;
             text-align: center;
             position: relative;
         }
@@ -33,23 +33,11 @@
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #7B3FA0, #2E7D4F, #7B3FA0);
+            background: linear-gradient(90deg, #542680, #FED514, #542680);
         }
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-        .header .sub {
+        .header img {
             display: inline-block;
-            background: rgba(255,255,255,0.15);
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 10px;
-            letter-spacing: 0.5px;
+            filter: brightness(0) invert(1);
         }
         .content {
             padding: 28px 36px 20px;
@@ -58,7 +46,7 @@
             font-size: 15px;
             margin: 0 0 4px;
         }
-        .greeting strong { color: #7B3FA0; }
+        .greeting strong { color: #542680; }
         .intro {
             font-size: 13px;
             color: #6c757d;
@@ -207,9 +195,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>PassEvent</h1>
-            <span class="sub">&bull; UPAO &bull;</span>
+        <div class="header" style="text-align:center;">
+            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="display:inline-block;">
         </div>
 
         <div class="content">
@@ -257,13 +244,13 @@
             </div>
 
             <p class="help-text">
-                En cas de probl&egrave;me, contactez <a href="mailto:passevent2026@gmail.com">passevent2026@gmail.com</a><br>
+                En cas de probl&egrave;me, contactez <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a><br>
                 <span class="ref">R&eacute;f&eacute;rence : {{ $ticket->transaction_id }}</span>
             </p>
         </div>
 
         <div class="footer">
-            <p>PassEvent &mdash; Billetterie intelligente pour vos &eacute;v&eacute;nements au B&eacute;nin</p>
+            <p>PaxEvent &mdash; Billetterie intelligente pour vos &eacute;v&eacute;nements au B&eacute;nin</p>
             <p style="margin-top: 4px;"><a href="{{ url('/aide') }}">Centre d'aide</a></p>
         </div>
     </div>

@@ -25,19 +25,20 @@ class TicketEmail extends Mailable
         $ticket->load('evenement', 'tarif');
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
 
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri'));
+        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper('a4', 'portrait');
 
         $this->pdfContent = $pdf->output();
-        $this->filename = 'PassEvent-' . $ticket->code_unique . '.pdf';
+        $this->filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Votre billet PassEvent pour ' . $this->ticket->evenement->titre,
-            replyTo: [new Address('passevent2026@gmail.com', 'PassEvent')],
+            subject: 'Votre billet PaxEvent pour ' . $this->ticket->evenement->titre,
+            replyTo: [new Address('paxevent09@gmail.com', 'PaxEvent')],
         );
     }
 
@@ -46,8 +47,8 @@ class TicketEmail extends Mailable
         return new Headers(
             text: [
                 'Precedence' => 'bulk',
-                'List-Unsubscribe' => '<mailto:passevent2026@gmail.com?subject=Desinscription>',
-                'X-Mailer' => 'PassEvent Billetterie',
+                'List-Unsubscribe' => '<mailto:paxevent09@gmail.com?subject=Desinscription>',
+                'X-Mailer' => 'PaxEvent Billetterie',
             ],
         );
     }

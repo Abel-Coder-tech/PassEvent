@@ -17,7 +17,7 @@
 <div class="page-content">
     <!-- Metrics Row -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg">
             <div class="metric-card" style="border-top-color: var(--violet);">
                 <div class="metric-icon" style="background: rgba(135,66,139,0.1);">⛺</div>
                 <div class="metric-label">Événements créés</div>
@@ -33,7 +33,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg">
             <div class="metric-card" style="border-top-color: var(--vert);">
                 <div class="metric-icon" style="background: rgba(18,151,110,0.1);">🎫</div>
                 <div class="metric-label">Tickets vendus</div>
@@ -60,15 +60,26 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg">
             <div class="metric-card" style="border-top-color: var(--teal);">
                 <div class="metric-icon" style="background: rgba(66,140,121,0.1);">💰</div>
-                <div class="metric-label">Revenus encaissés</div>
-                <div class="metric-value" style="font-size: 1.5rem;">{{ number_format($recettesTotales, 0, ',', ' ') }}</div>
-                <div class="metric-subtitle">FCFA via <span style="color: var(--vert); font-weight: 700;">KKiaPay</span></div>
+                <div class="metric-label">Revenu brut</div>
+                <div class="metric-value" style="font-size: 1.3rem;">{{ number_format($recettesTotales, 0, ',', ' ') }}</div>
+                <div class="metric-subtitle">
+                    FCFA · Commission {{ $commissionPct }}%:
+                    <span style="color:var(--gris);">-{{ number_format($commission, 0, ',', ' ') }}</span>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-wallet2" style="color:var(--vert);"></i></div>
+                <div class="metric-label">Net encaissé</div>
+                <div class="metric-value" style="font-size: 1.3rem; color:var(--vert);">{{ number_format($recettesNettes, 0, ',', ' ') }}</div>
+                <div class="metric-subtitle">FCFA après commission</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
             <div class="metric-card" style="border-top-color: var(--aubergine);">
                 <div class="metric-icon" style="background: rgba(109,78,114,0.1);"><span style="color: var(--vert);">✓</span></div>
                 <div class="metric-label">Taux de scan</div>

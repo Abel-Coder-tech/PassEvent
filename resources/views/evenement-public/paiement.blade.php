@@ -25,7 +25,7 @@
                 <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-3" style="color: #333;">
-                            <i class="bi bi-receipt me-2" style="color: #7B3FA0;"></i>
+                            <i class="bi bi-receipt me-2" style="color: #542680;"></i>
                             Recapitulatif
                         </h5>
 
@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>
-                                    <strong style="color: #7B3FA0; font-size: 1.1rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</strong>
+                                    <strong style="color: #542680; font-size: 1.1rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</strong>
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted">Acheteur :</span><br>
@@ -52,7 +52,7 @@
                                 </div>
                                 @if($ticket->code_promo_utilise)
                                     <div class="col-12 mt-2">
-                                        <span class="badge" style="background: rgba(123,63,160,0.1); color: #7B3FA0; font-size: 0.75rem;">
+                                        <span class="badge" style="background: rgba(84,38,128,0.1); color: #542680; font-size: 0.75rem;">
                                             <i class="bi bi-tag me-1"></i>Code promo: {{ $ticket->code_promo_utilise }}
                                         </span>
                                     </div>
@@ -62,14 +62,14 @@
 
                         @if($ticket->montant_reduction > 0)
                             <div class="alert py-2 mb-3" style="background: rgba(46,125,79,0.06); border: 1px solid rgba(46,125,79,0.15); border-radius: 8px; font-size: 0.82rem;">
-                                <i class="bi bi-check-circle me-1" style="color: #2E7D4F;"></i>
+                                <i class="bi bi-check-circle me-1" style="color: #542680;"></i>
                                 Reduction appliquee: <strong>-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} F</strong>
                             </div>
                         @endif
 
                         <div class="text-center" style="font-size: 0.82rem; color: #999;">
                             <i class="bi bi-clock me-1"></i>
-                            Votre place est reservee pendant 15 minutes
+                            Votre place est reservée pendant 15 minutes
                         </div>
                     </div>
                 </div>
@@ -78,22 +78,22 @@
                 <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                     <div class="card-body p-4 text-center">
                         <h5 class="fw-bold mb-3" style="color: #333;">
-                            <i class="bi bi-wallet2 me-2" style="color: #2E7D4F;"></i>
-                            Paiement securise via KKiaPay
+                            <i class="bi bi-wallet2 me-2" style="color: #542680;"></i>
+                            Paiement securisé via KKiaPay
                         </h5>
 
                         {{-- Bouton paiement --}}
-                        <button type="button" id="btnKkiaPay" class="btn w-100 py-3" style="background: #7B3FA0; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
+                        <button type="button" id="btnKkiaPay" class="btn w-100 py-3" style="background: #542680; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
                             <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
                         </button>
 
                         <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
-                            <small class="text-muted" style="font-size: 0.75rem;">Paiement securise par</small>
+                            <small class="text-muted" style="font-size: 0.75rem;">Paiement securisé par</small>
                             <img src="https://kkiapay.me/wp-content/uploads/2024/04/footer-logo.svg" alt="KKiaPay" style="height: 22px;">
                         </div>
 
                         <p class="text-center text-muted mt-3 mb-0" style="font-size: 0.78rem;">
-                            <i class="bi bi-envelope me-1" style="color: #2E7D4F;"></i>
+                            <i class="bi bi-envelope me-1" style="color: #542680;"></i>
                             Votre billet PDF sera envoye a <strong>{{ $ticket->email_acheteur }}</strong>
                         </p>
 
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         openKkiapayWidget({
-            key: '{{ config('services.kkiapay.app_id') }}',
+            key: '{{ config('services.kkiapay.api_key') }}',
             amount: {{ (int) $ticket->montant }},
             email: '{{ $ticket->email_acheteur }}',
             name: '{{ $ticket->nom_acheteur }}',

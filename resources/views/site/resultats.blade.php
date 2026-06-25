@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Resultats - PassEvent')
+@section('title', 'Resultats - PaxEvent')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
@@ -27,7 +27,7 @@
                     $isPaid = $ticket->statut_paiement === 'payé';
                 @endphp
                 <div class="col-12 col-md-6">
-                    <div class="card border-0 shadow-sm" style="border-radius: 12px; border-left: 4px solid {{ $isPaid ? 'var(--vert)' : 'var(--gris)' }};">
+                    <div class="card border-0 shadow-sm" style="border-radius: 12px; border-left: 4px solid {{ $isPaid ? 'var(--violet)' : 'var(--gris)' }};">
                         <div class="card-body p-3 p-md-4">
                             <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
                                 <div>
@@ -60,7 +60,7 @@
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>
-                                    <strong style="color: var(--vert);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
+                                    <strong style="color: var(--violet);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted">Code :</span><br>

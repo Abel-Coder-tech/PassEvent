@@ -21,7 +21,7 @@ class VerificationEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Confirmez votre email — PassEvent',
+            subject: 'Confirmez votre email — PaxEvent',
         );
     }
 

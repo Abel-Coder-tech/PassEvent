@@ -1,6 +1,6 @@
 @extends('superadmin.layouts.master')
 
-@section('title', 'Dashboard - Super Admin PassEvent')
+@section('title', 'Dashboard - Super Admin PaxEvent')
 @section('page-title', 'Tableau de bord')
 
 @section('content')
@@ -127,7 +127,7 @@
                 <div class="d-flex justify-content-between py-2 border-bottom"><span>Transactions reussies</span><strong>{{ $transactionsReussies }}</strong></div>
                 <div class="d-flex justify-content-between py-2 border-bottom"><span>Transactions echouees</span><strong style="color: var(--sa-danger);">{{ $transactionsEchouees }}</strong></div>
                 <div class="d-flex justify-content-between py-2 border-bottom"><span>Montant journalier</span><strong>{{ number_format($montantsJournaliers, 0, ',', ' ') }} F</strong></div>
-                <div class="d-flex justify-content-between py-2"><span>Commission plateforme (5%)</span><strong>{{ number_format($commissionPlateforme, 0, ',', ' ') }} F</strong></div>
+                <div class="d-flex justify-content-between py-2"><span>Commission plateforme ({{ $commissionPct }}%)</span><strong>{{ number_format($commissionPlateforme, 0, ',', ' ') }} F</strong></div>
             </div>
         </div>
     </div>

@@ -226,8 +226,8 @@ class StatistiqueController extends Controller
 
         $revenusBruts = $tickets->sum('montant');
         $gratuits = $tickets->where('montant', '<', 100)->count();
-        $commission = $revenusBruts * 0.05;
-        $fraisKkiaPay = $revenusBruts * 0.035;
+        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
+        $commission = $revenusBruts * $commissionPct / 100;
         $remboursements = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'remboursé')
             ->where('created_at', '>=', $startDate)

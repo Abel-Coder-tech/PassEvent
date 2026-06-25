@@ -151,13 +151,17 @@
                     <!-- Action buttons -->
                     <div class="d-flex flex-wrap justify-content-end gap-2">
                         <a href="{{ route('admin.evenements.show', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;">
-                            <i class="bi bi-eye me-1"></i>Voir
+                            <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{{ route('admin.tarifs.index', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;">
-                            <i class="bi bi-tag me-1"></i>Tarifs
-                        </a>
+                        <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet événement ? Cette action est irréversible.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                         <a href="{{ route('admin.evenements.edit', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;">
-                            <i class="bi bi-pencil me-1"></i>Modifier
+                            <i class="bi bi-pencil"></i>
                         </a>
                         @if($evenement->statut === 'publié')
                             <a href="{{ route('scan.index') }}" class="btn btn-sm" style="border-radius: 6px; background: var(--vert); color: #fff; border: none;">

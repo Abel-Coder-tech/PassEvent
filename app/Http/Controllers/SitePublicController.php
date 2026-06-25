@@ -99,7 +99,7 @@ class SitePublicController extends Controller
                 function ($m) use ($sa, $validated) {
                     $m->to($sa->email)
                       ->replyTo($validated['email'], $validated['nom_complet'])
-                      ->subject("[PassEvent] Contact : {$validated['objet']}");
+                      ->subject("[PaxEvent] Contact : {$validated['objet']}");
                 }
             );
         }
@@ -110,11 +110,42 @@ class SitePublicController extends Controller
 
     public function confidentialite()
     {
-        return view('site.confidentialite');
+        $file = resource_path('views/site/confidentialite.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->format('F Y');
+
+        return view('site.confidentialite', compact('derniereMiseAJour'));
     }
 
     public function cgu()
     {
-        return view('site.cgu');
+        $file = resource_path('views/site/cgu.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->format('F Y');
+
+        return view('site.cgu', compact('derniereMiseAJour'));
     }
+
+    public function mentionsLegales()
+    {
+        $file = resource_path('views/site/mentions-legales.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->format('F Y');
+
+        return view('site.mentions-legales', compact('derniereMiseAJour'));
+    }
+
+    public function politiqueRemboursement()
+    {
+        $file = resource_path('views/site/politique-remboursement.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->format('F Y');
+
+        return view('site.politique-remboursement', compact('derniereMiseAJour'));
+    }
+
 }

@@ -60,11 +60,12 @@ class TicketController extends Controller
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
 
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri'));
+        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper('a4', 'portrait');
 
-        $filename = 'PassEvent-' . $ticket->code_unique . '.pdf';
+        $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
         return $pdf->download($filename);
     }
@@ -78,11 +79,12 @@ class TicketController extends Controller
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
 
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri'));
+        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper('a4', 'portrait');
 
-        $filename = 'PassEvent-' . $ticket->code_unique . '.pdf';
+        $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
         return $pdf->download($filename);
     }

@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Paiement confirme - PassEvent')
+@section('title', 'Paiement confirme - PaxEvent')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
@@ -17,7 +17,7 @@
                     <div class="card-body p-4 text-center">
                         <div class="mb-4">
                             <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; background: rgba(18,151,110,0.1);">
-                                <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: var(--vert);"></i>
+                                <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: var(--violet);"></i>
                             </div>
                             <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? 'Inscription confirmee !' : 'Paiement confirme !' }}</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
@@ -47,7 +47,7 @@
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>
-                                    <strong style="color: var(--vert);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
+                                    <strong style="color: var(--violet);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
                                 </div>
                             </div>
                         </div>
@@ -57,7 +57,7 @@
                             <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
                                 <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger mon billet PDF
                             </a>
-                            <a href="{{ route('accueil') }}" class="btn btn-vert py-2" style="border-radius: 8px;">
+                            <a href="{{ route('accueil') }}" class="btn btn-accent py-2" style="border-radius: 8px;">
                                 <i class="bi bi-house me-1"></i> Retour a l'accueil
                             </a>
                             <a href="{{ route('evenements.public') }}" class="btn btn-outline-secondary py-2" style="border-radius: 8px;">

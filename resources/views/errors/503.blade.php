@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>503 — Maintenance — PassEvent</title>
+    <title>503 — Maintenance — PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -44,7 +44,7 @@
             <div class="icon"><i class="bi bi-tools"></i></div>
             <h1>503</h1>
             <h2>Site en maintenance</h2>
-            <p>PassEvent est momentanément indisponible pour maintenance. Revenez dans quelques instants.</p>
+            <p>PaxEvent est momentanément indisponible pour maintenance. Revenez dans quelques instants.</p>
             <a href="{{ url('/') }}" class="btn btn-primary"><i class="bi bi-house me-1"></i> Réessayer</a>
         </div>
     </div>

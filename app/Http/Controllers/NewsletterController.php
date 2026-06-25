@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NewsletterConfirmation;
 use App\Models\Newsletter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class NewsletterController extends Controller
 {
@@ -18,6 +20,7 @@ class NewsletterController extends Controller
         if ($existing) {
             if (!$existing->actif) {
                 $existing->update(['actif' => true, 'desabonne_le' => null]);
+                Mail::to($validated['email'])->send(new NewsletterConfirmation($validated['email']));
                 return response()->json(['success' => true, 'message' => 'Vous êtes de nouveau abonné !']);
             }
             return response()->json(['success' => true, 'message' => 'Vous êtes déjà abonné.']);
@@ -28,7 +31,9 @@ class NewsletterController extends Controller
             'actif' => true,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Merci pour votre inscription !']);
+        Mail::to($validated['email'])->send(new NewsletterConfirmation($validated['email']));
+
+        return response()->json(['success' => true, 'message' => 'Merci pour votre inscription ! Un email de confirmation vous a été envoyé.']);
     }
 
     public function unsubscribe(Request $request)

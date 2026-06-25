@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Logs système - PassEvent')
+@section('title', 'Logs système - PaxEvent')
 
 @section('page-title', 'Logs système')
 
@@ -254,7 +254,7 @@
                 <form id="formRecuperer">
                     <div class="mb-3">
                         <label for="recTelephone" class="form-label fw-semibold" style="font-size: 0.82rem;">Numéro de téléphone <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" id="recTelephone" name="telephone" placeholder="+229 43 70 45 13" required>
+                        <input type="tel" class="form-control" id="recTelephone" name="telephone" placeholder="+229 62 83 66 29" required>
                     </div>
                     <div class="mb-3">
                         <label for="recEmail" class="form-label fw-semibold" style="font-size: 0.82rem;">Email <span class="text-danger">*</span></label>

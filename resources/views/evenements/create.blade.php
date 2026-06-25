@@ -135,11 +135,13 @@
                                     </select>
                                     <small class="text-muted">Les billets VIP seront calculés automatiquement</small>
                                 </div>
+                                @if(auth()->user()->type === 'universitaire')
                                 <div class="col-12 col-md-6 mb-3">
                                     <label for="reduction_etudiant" class="form-label fw-semibold">Réduction étudiant (%)</label>
                                     <input type="number" class="form-control" id="reduction_etudiant" name="reduction_etudiant" value="{{ old('reduction_etudiant', 30) }}" min="0" max="100">
                                     <small class="text-muted">Les étudiants bénéficient d'une réduction sur tous les tarifs</small>
                                 </div>
+                                @endif
                             </div>
                         </div>
 
@@ -190,9 +192,9 @@ function updatePreview() {
         return;
     }
 
+    const isUniv = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
     const base = parseFloat(document.getElementById('prix_base')?.value || 0);
     const mult = parseFloat(document.getElementById('multiplicateur_vip')?.value || 1.5);
-    const reduc = parseFloat(document.getElementById('reduction_etudiant')?.value || 0) / 100;
 
     if (base <= 0) {
         document.getElementById('preview-tarifs').textContent = 'Entrez un prix de base pour voir l\'aperçu';
@@ -201,14 +203,22 @@ function updatePreview() {
 
     const extSimple = base;
     const extVip = base * mult;
-    const etuSimple = base * (1 - reduc);
-    const etuVip = base * mult * (1 - reduc);
 
-    document.getElementById('preview-tarifs').innerHTML = 
-        '<strong>Étudiant Simple:</strong> ' + formatPrice(etuSimple) + '<br>' +
-        '<strong>Étudiant VIP:</strong> ' + formatPrice(etuVip) + '<br>' +
-        '<strong>Externe Simple:</strong> ' + formatPrice(extSimple) + '<br>' +
-        '<strong>Externe VIP:</strong> ' + formatPrice(extVip);
+    if (isUniv) {
+        const reducInput = document.getElementById('reduction_etudiant');
+        const reduc = parseFloat(reducInput?.value || 0) / 100;
+        const etuSimple = base * (1 - reduc);
+        const etuVip = base * mult * (1 - reduc);
+        document.getElementById('preview-tarifs').innerHTML =
+            '<strong>Étudiant Simple:</strong> ' + formatPrice(etuSimple) + '<br>' +
+            '<strong>Étudiant VIP:</strong> ' + formatPrice(etuVip) + '<br>' +
+            '<strong>Externe Simple:</strong> ' + formatPrice(extSimple) + '<br>' +
+            '<strong>Externe VIP:</strong> ' + formatPrice(extVip);
+    } else {
+        document.getElementById('preview-tarifs').innerHTML =
+            '<strong>Simple:</strong> ' + formatPrice(extSimple) + '<br>' +
+            '<strong>VIP:</strong> ' + formatPrice(extVip);
+    }
 }
 
 function formatPrice(price) {

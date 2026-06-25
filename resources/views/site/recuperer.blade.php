@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Recuperer mon ticket - PassEvent')
+@section('title', 'Recuperer mon ticket - PaxEvent')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
@@ -39,7 +39,7 @@
 
                             <div class="mb-4 text-start">
                                 <label for="telephone" class="form-label fw-semibold">Numéro de téléphone</label>
-                                <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 43 70 45 13" value="{{ old('telephone') }}" required>
+                                <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 62 83 66 29" value="{{ old('telephone') }}" required>
                             </div>
 
                             <button type="submit" class="btn btn-violet w-100 py-3" style="border-radius: 8px;">

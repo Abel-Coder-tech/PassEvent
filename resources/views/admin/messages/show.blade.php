@@ -76,12 +76,6 @@
                     <h5><i class="bi bi-reply me-2" style="color: var(--vert);"></i>Repondre</h5>
                 </div>
                 <div class="panel-card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success" style="background: rgba(18,151,110,0.08); color: var(--vert); border-radius: 8px;">
-                            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-                        </div>
-                    @endif
-
                     <form action="{{ route('admin.messages.repondre', $message->id) }}" method="POST">
                         @csrf
                         <div class="mb-3">
