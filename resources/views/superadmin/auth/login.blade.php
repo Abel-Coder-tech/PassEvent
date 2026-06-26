@@ -162,7 +162,12 @@
 
                 <div class="mb-3">
                     <label class="login-label"><i class="bi bi-lock me-1"></i>Mot de passe</label>
-                    <input type="password" name="mot_de_passe" class="login-input @error('mot_de_passe') is-invalid @enderror" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                    <div class="position-relative">
+                        <input type="password" name="mot_de_passe" id="sa_password" class="login-input @error('mot_de_passe') is-invalid @enderror" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                        </button>
+                    </div>
                     @error('mot_de_passe')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                     <div class="password-hint"><i class="bi bi-shield-check"></i> Minimum 8 caracteres — mot de passe fort requis</div>
                 </div>
@@ -177,5 +182,17 @@
             </div>
         </div>
     </div>
+<script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+});
+</script>
 </body>
 </html>

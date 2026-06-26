@@ -83,7 +83,10 @@
                     <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nouveau mot de passe</label>
                     <div class="input-group-custom">
                         <i class="bi bi-lock icon"></i>
-                        <input type="password" name="mot_de_passe" class="form-control @error('mot_de_passe') is-invalid @enderror" placeholder="Minimum 8 caractères" required>
+                        <input type="password" name="mot_de_passe" id="reset_password" class="form-control @error('mot_de_passe') is-invalid @enderror" placeholder="Minimum 8 caractères" required>
+                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                        </button>
                     </div>
                     @error('mot_de_passe')<div class="text-danger mt-1" style="font-size:0.8rem;">{{ $message }}</div>@enderror
                 </div>
@@ -91,7 +94,10 @@
                     <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmer le mot de passe</label>
                     <div class="input-group-custom">
                         <i class="bi bi-lock icon"></i>
-                        <input type="password" name="mot_de_passe_confirmation" class="form-control" placeholder="Répétez le mot de passe" required>
+                        <input type="password" name="mot_de_passe_confirmation" id="reset_password_confirmation" class="form-control" placeholder="Répétez le mot de passe" required>
+                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                        </button>
                     </div>
                 </div>
                 <button type="submit" class="btn-submit">Réinitialiser</button>
@@ -102,5 +108,17 @@
             </p>
         </div>
     </div>
+<script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+});
+</script>
 </body>
 </html>

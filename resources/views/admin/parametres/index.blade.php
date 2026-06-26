@@ -272,19 +272,34 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.82rem;">Mot de passe actuel <span class="text-danger">*</span></label>
-                                <input type="password" name="mot_de_passe_actuel" class="form-control" required>
+                                <div class="position-relative">
+                                    <input type="password" name="mot_de_passe_actuel" id="param_actuel" class="form-control" required>
+                                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                    </button>
+                                </div>
                                 @error('mot_de_passe_actuel')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
                             </div>
 
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" style="font-size: 0.82rem;">Nouveau mot de passe <span class="text-danger">*</span></label>
-                                    <input type="password" name="mot_de_passe" class="form-control" required>
+                                    <div class="position-relative">
+                                        <input type="password" name="mot_de_passe" id="param_new" class="form-control" required>
+                                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                        </button>
+                                    </div>
                                     @error('mot_de_passe')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" style="font-size: 0.82rem;">Confirmer <span class="text-danger">*</span></label>
-                                    <input type="password" name="mot_de_passe_confirmation" class="form-control" required>
+                                    <div class="position-relative">
+                                        <input type="password" name="mot_de_passe_confirmation" id="param_confirm" class="form-control" required>
+                                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -399,7 +414,12 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.82rem;">Secret Key (Cle secrete)</label>
-                                <input type="password" name="kkiapay_secret_key" class="form-control" value="{{ old('kkiapay_secret_key', Auth::user()->kkiapay_secret_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
+                                <div class="position-relative">
+                                    <input type="password" name="kkiapay_secret_key" id="param_secret" class="form-control" value="{{ old('kkiapay_secret_key', Auth::user()->kkiapay_secret_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
+                                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                    </button>
+                                </div>
                                 @if(Auth::user()->kkiapay_secret_key)
                                     <small class="text-muted">Cle configuree : <code class="masked-key">{{ substr(Auth::user()->kkiapay_secret_key, 0, 4) }}••••{{ substr(Auth::user()->kkiapay_secret_key, -4) }}</code></small>
                                 @endif
@@ -408,7 +428,12 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.82rem;">API Key (Cle API)</label>
-                                <input type="password" name="kkiapay_api_key" class="form-control" value="{{ old('kkiapay_api_key', Auth::user()->kkiapay_api_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
+                                <div class="position-relative">
+                                    <input type="password" name="kkiapay_api_key" id="param_api" class="form-control" value="{{ old('kkiapay_api_key', Auth::user()->kkiapay_api_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
+                                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                    </button>
+                                </div>
                                 @if(Auth::user()->kkiapay_api_key)
                                     <small class="text-muted">Cle configuree : <code class="masked-key">{{ substr(Auth::user()->kkiapay_api_key, 0, 4) }}••••{{ substr(Auth::user()->kkiapay_api_key, -4) }}</code></small>
                                 @endif
@@ -558,6 +583,17 @@
 
 @section('scripts')
 <script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+});
+
 function showSection(sectionId, el) {
     document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.settings-nav-link').forEach(l => l.classList.remove('active'));

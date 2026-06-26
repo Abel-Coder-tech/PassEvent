@@ -44,7 +44,16 @@ class PaiementController extends Controller
                 ->with('success', 'Participation confirmee ! Votre billet a ete envoye par email.');
         }
 
-        return view('evenement-public.paiement', compact('ticket'));
+        $kkiapayKey = config('services.kkiapay.api_key');
+        $kkiapaySandbox = config('services.kkiapay.sandbox', true);
+
+        if (!$kkiapayKey) {
+            $superAdmin = \App\Models\User::where('role', 'super_admin')->first();
+            $kkiapayKey = $superAdmin->kkiapay_public_key ?? null;
+            $kkiapaySandbox = $superAdmin->kkiapay_active ?? true;
+        }
+
+        return view('evenement-public.paiement', compact('ticket', 'kkiapayKey', 'kkiapaySandbox'));
     }
 
     public function callback(Request $request)

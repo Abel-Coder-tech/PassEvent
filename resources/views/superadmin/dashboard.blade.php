@@ -195,10 +195,11 @@ document.addEventListener('DOMContentLoaded', function () {
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
+            layout: { padding: { left: 10, right: 10 } },
             plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } },
             scales: {
-                y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y1: { beginAtZero: true, position: 'right', grid: { display: false }, ticks: { font: { size: 10 } } }
+                y: { beginAtZero: true, ticks: { font: { size: 10 }, maxTicksLimit: 6 }, grid: { color: 'rgba(0,0,0,0.04)' }, afterFit: function(scale) { scale.width += 10; } },
+                y1: { beginAtZero: true, position: 'right', grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 6 } }
             }
         }
     });

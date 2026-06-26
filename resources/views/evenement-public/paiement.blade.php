@@ -83,9 +83,16 @@
                         </h5>
 
                         {{-- Bouton paiement --}}
-                        <button type="button" id="btnKkiaPay" class="btn w-100 py-3" style="background: #542680; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
-                            <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
-                        </button>
+                        @if($kkiapayKey)
+                            <button type="button" id="btnKkiaPay" class="btn w-100 py-3" style="background: #542680; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
+                                <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                            </button>
+                        @else
+                            <div class="alert alert-warning py-2 mb-0" style="border-radius: 10px; font-size: 0.85rem;">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                L'organisateur n'a pas encore configuré sa méthode de paiement.
+                            </div>
+                        @endif
 
                         <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
                             <small class="text-muted" style="font-size: 0.75rem;">Paiement securisé par</small>
@@ -117,6 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorDiv = document.getElementById('paymentError');
     const callbackUrl = '{{ route('paiement.callback') }}?ticket={{ $ticket->id }}';
 
+    if (!btn) return;
+
     btn.addEventListener('click', function() {
         errorDiv.style.display = 'none';
 
@@ -127,12 +136,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         openKkiapayWidget({
-            key: '{{ config('services.kkiapay.api_key') }}',
+            key: '{{ $kkiapayKey }}',
             amount: {{ (int) $ticket->montant }},
             email: '{{ $ticket->email_acheteur }}',
             name: '{{ $ticket->nom_acheteur }}',
             phone: '{{ $ticket->telephone_acheteur }}',
-            sandbox: {{ config('services.kkiapay.sandbox') ? 'true' : 'false' }},
+            sandbox: {{ $kkiapaySandbox ? 'true' : 'false' }},
             position: 'center',
             callback: callbackUrl,
         });

@@ -337,14 +337,20 @@
                                     <label class="form-label">Mot de passe</label>
                                     <div class="input-group-custom">
                                         <i class="bi bi-lock icon"></i>
-                                        <input type="password" class="form-control" name="mot_de_passe" placeholder="Minimum 8 caractères" required>
+                                        <input type="password" class="form-control" name="mot_de_passe" id="reg_password" placeholder="Minimum 8 caractères" required>
+                                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Confirmer le mot de passe</label>
                                     <div class="input-group-custom">
                                         <i class="bi bi-lock-fill icon"></i>
-                                        <input type="password" class="form-control" name="mot_de_passe_confirmation" placeholder="Répétez le mot de passe" required>
+                                        <input type="password" class="form-control" name="mot_de_passe_confirmation" id="reg_password_confirmation" placeholder="Répétez le mot de passe" required>
+                                        <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -589,7 +595,6 @@
             });
         });
 
-        // Enter key advances step
         document.querySelectorAll('.step-content').forEach(step => {
             step.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
@@ -599,6 +604,17 @@
                         nextStep();
                     }
                 }
+            });
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                if (!input) return;
+                const icon = this.querySelector('i');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                icon.classList.toggle('bi-eye');
+                icon.classList.toggle('bi-eye-slash');
             });
         });
     </script>

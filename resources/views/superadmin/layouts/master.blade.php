@@ -333,7 +333,8 @@
         }
         .sa-form-control:focus { border-color: var(--sa-primary); outline: none; box-shadow: 0 0 0 3px rgba(107,63,160,0.1); }
 
-        .chart-container { position: relative; height: 250px; }
+        .chart-container { position: relative; height: 280px; min-height: 0; width: 100%; }
+        .chart-container canvas { display: block; max-width: 100%; }
 
         .toggle-sidebar {
             display: none;

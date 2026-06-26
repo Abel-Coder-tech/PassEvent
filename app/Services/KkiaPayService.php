@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Http;
 class KkiaPayService
 {
     protected string $baseUrl;
-    protected string $apiKey;
-    protected string $signature;
-    protected string $appId;
+    protected ?string $apiKey;
+    protected ?string $signature;
+    protected ?string $appId;
 
     public function __construct()
     {

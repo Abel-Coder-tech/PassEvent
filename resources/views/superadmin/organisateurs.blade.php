@@ -16,7 +16,12 @@
                     <div class="row g-2">
                         <div class="col-6"><input type="text" name="nom" class="sa-form-control" placeholder="Nom complet" required></div>
                         <div class="col-6"><input type="email" name="email" class="sa-form-control" placeholder="Email" required></div>
-                        <div class="col-6"><input type="password" name="mot_de_passe" class="sa-form-control" placeholder="Mot de passe" required></div>
+                        <div class="col-6 position-relative">
+    <input type="password" name="mot_de_passe" id="org_password" class="sa-form-control" placeholder="Mot de passe" required>
+    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 24px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+    </button>
+</div>
                         <div class="col-3"><input type="text" name="telephone" class="sa-form-control" placeholder="Telephone"></div>
                         <div class="col-3"><input type="text" name="organisation" class="sa-form-control" placeholder="Organisation"></div>
                         <div class="col-4">
@@ -256,4 +261,18 @@
 }
 .org-detail-value { color: #1a1a1a; }
 </style>
+@push('scripts')
+<script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+});
+</script>
+@endpush
 @endsection
