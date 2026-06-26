@@ -2,7 +2,7 @@ deploy:
 	ssh o2switch 'cd ~/sites/paxevent.com && git pull origin main && make install'
 
 
-install: .env vendor/autoload.php public/storage public/build/manifest.json
+install: vendor/autoload.php .env  public/storage public/build/manifest.json
 	php artisan config:cache
 	php artisan route:cache
 	php artisan view:cache
