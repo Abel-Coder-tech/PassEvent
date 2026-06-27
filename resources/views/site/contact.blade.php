@@ -97,13 +97,13 @@
                         </div>
                     </a>
 
-                    <a href="mailto:paxevent09@gmail.com" class="contact-info-item">
+                    <a href="mailto:contact@paxevent.com" class="contact-info-item">
                         <div class="contact-info-icon" style="background: rgba(135,66,139,0.1); color: var(--violet);">
                             <i class="bi bi-envelope"></i>
                         </div>
                         <div>
                             <h6>Email</h6>
-                            <span>paxevent09@gmail.com</span>
+                            <span>contact@paxevent.com</span>
                             <small>Réponse sous 24h</small>
                         </div>
                     </a>

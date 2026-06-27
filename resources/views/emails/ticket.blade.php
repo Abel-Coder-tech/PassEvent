@@ -244,7 +244,7 @@
             </div>
 
             <p class="help-text">
-                En cas de probl&egrave;me, contactez <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a><br>
+                En cas de probl&egrave;me, contactez <a href="mailto:contact@paxevent.com">contact@paxevent.com</a><br>
                 <span class="ref">R&eacute;f&eacute;rence : {{ $ticket->transaction_id }}</span>
             </p>
         </div>

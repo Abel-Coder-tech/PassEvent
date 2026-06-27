@@ -16,7 +16,7 @@
                 </div>
                 <div class="d-flex justify-content-between py-2 border-bottom">
                     <span>PaxEvent Mail</span>
-                    <span class="text-muted" style="font-size:0.8rem;">paxevent09@gmail.com</span>
+                    <span class="text-muted" style="font-size:0.8rem;">contact@paxevent.com</span>
                 </div>
                 <div class="d-flex justify-content-between py-2">
                     <span>KKiaPay</span>

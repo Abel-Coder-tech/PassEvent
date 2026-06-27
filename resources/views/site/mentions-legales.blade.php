@@ -18,7 +18,7 @@
                             <h6 class="fw-bold mt-4 mb-2">Éditeur de la plateforme</h6>
                             <ul class="list-unstyled">
                                 <li><strong>Nom :</strong> PaxEvent</li>
-                                <li><strong>Email :</strong> <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a></li>
+                                <li><strong>Email :</strong> <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
                                 <li><strong>WhatsApp :</strong> +229 62 83 66 29</li>
                                 <li><strong>Pays :</strong> Bénin</li>
                             </ul>
@@ -38,7 +38,7 @@
                             <h6 class="fw-bold mt-4 mb-2">Contact</h6>
                             <p>Pour toute question relative aux présentes mentions légales :</p>
                             <ul>
-                                <li>Email : <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a></li>
+                                <li>Email : <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
                                 <li>WhatsApp : +229 62 83 66 29</li>
                             </ul>
                         </div>

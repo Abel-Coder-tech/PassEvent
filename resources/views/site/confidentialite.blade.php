@@ -71,7 +71,7 @@
                                 <li><strong>Droit à la portabilité</strong> : recevoir vos données dans un format structuré</li>
                                 <li><strong>Droit d'opposition</strong> : vous opposer à l'utilisation de vos données pour le marketing</li>
                             </ul>
-                            <p>Pour exercer ces droits, contactez-nous à <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a>.</p>
+                            <p>Pour exercer ces droits, contactez-nous à <a href="mailto:contact@paxevent.com">contact@paxevent.com</a>.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">7. Cookies</h6>
                             <p>PaxEvent utilise uniquement des cookies essentiels pour le fonctionnement du site :</p>
@@ -89,7 +89,7 @@
                             <h6 class="fw-bold mt-4 mb-2">9. Contact</h6>
                             <p>Pour toute question relative à cette politique de confidentialité :</p>
                             <ul>
-                                <li>Email : <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a></li>
+                                <li>Email : <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
                                 <li>WhatsApp : +229 62 83 66 29</li>
                                 <li>Adresse : Bénin</li>
                             </ul>

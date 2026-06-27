@@ -69,7 +69,7 @@
                             <h6 class="fw-bold mt-4 mb-2">10. Contact</h6>
                             <p>Pour toute question ou demande liée aux remboursements :</p>
                             <ul>
-                                <li>Email : <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a></li>
+                                <li>Email : <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
                                 <li>WhatsApp : +229 62 83 66 29</li>
                             </ul>
                             <p>Vous pouvez également contacter directement l'organisateur de l'événement (ses coordonnées sont disponibles sur la page de l'événement).</p>

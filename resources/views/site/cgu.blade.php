@@ -80,7 +80,7 @@
 
                             <h6 class="fw-bold mt-4 mb-2">12. Contact</h6>
                             <ul>
-                                <li>Email : <a href="mailto:paxevent09@gmail.com">paxevent09@gmail.com</a></li>
+                                <li>Email : <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
                                 <li>WhatsApp : +229 62 83 66 29</li>
                             </ul>
                         </div>
