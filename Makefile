@@ -22,5 +22,5 @@ public/storage:
 	php artisan storage:link
 
 public/build/manifest.json: package.json
-npm install
+	npm install
 	npm run build
