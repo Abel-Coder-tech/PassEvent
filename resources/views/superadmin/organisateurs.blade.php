@@ -81,27 +81,29 @@
                     <td>{{ $org->evenements_count }}</td>
                     <td>{{ $org->telephone ?? '-' }}</td>
                     <td style="font-size:0.75rem;">{{ $org->created_at->format('d M Y') }}</td>
-                    <td>
-                        <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les details"
-                            onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        @if($org->statut === 'en_attente')
-                            <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
-                            </form>
-                            <form action="{{ route('superadmin.organisateurs.rejeter', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Rejeter {{ $org->nom }} ?')">
-                                @csrf
-                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"><i class="bi bi-x-lg"></i></button>
-                            </form>
-                        @endif
-                        @if($org->statut === 'actif')
-                            <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses evenements seront annules.')">
-                                @csrf
-                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-warning" title="Suspendre"><i class="bi bi-pause-fill"></i></button>
-                            </form>
-                        @endif
+                    <td style="white-space:nowrap;">
+                        <div class="d-flex flex-nowrap gap-1">
+                            <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les details"
+                                onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            @if($org->statut === 'en_attente')
+                                <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
+                                </form>
+                                <form action="{{ route('superadmin.organisateurs.rejeter', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Rejeter {{ $org->nom }} ?')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            @endif
+                            @if($org->statut === 'actif')
+                                <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses evenements seront annules.')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-warning" title="Suspendre"><i class="bi bi-pause-fill"></i></button>
+                                </form>
+                            @endif
+                        </div>
                     </td>
                 </tr>
 
@@ -152,7 +154,17 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
+                            @if($org->statut === 'en_attente')
+                                <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" style="display:inline;margin-right:auto;">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-primary">
+                                        <i class="bi bi-check-lg"></i> Valider
+                                    </button>
+                                </form>
+                                <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
+                            @else
+                                <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
+                            @endif
                         </div>
                     </div>
                 </div>
