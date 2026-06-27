@@ -95,6 +95,14 @@
             color: #999;
             text-align: center;
         }
+        @media (max-width: 480px) {
+            .register-card { padding: 1.25rem; }
+            .step-card-body { padding: 1rem 0.75rem; }
+            .stepper-circle { width: 32px; height: 32px; font-size: 0.8rem; }
+            .stepper-label { font-size: 0.6rem; }
+            .stepper::before { top: 16px; left: 10%; right: 10%; }
+            .register-form h2 { font-size: 1.1rem; }
+        }
         .stepper-step.active .stepper-label {
             color: #542680;
         }
@@ -248,6 +256,14 @@
             font-weight: 600;
             color: #211C31;
             margin-top: 0.15rem;
+        }
+        @media (max-width: 480px) {
+            .recap-grid { grid-template-columns: 1fr; }
+            .type-selector { flex-direction: column; }
+            .d-flex.justify-content-between.mt-4 { flex-direction: column; gap: 0.5rem; }
+            .d-flex.justify-content-between.mt-4 .btn-step { width: 100%; }
+            .d-flex.justify-content-between.mt-3 { flex-direction: column; gap: 0.5rem; }
+            .d-flex.justify-content-between.mt-3 .btn-step { width: 100%; }
         }
 
         .cgu-check {
