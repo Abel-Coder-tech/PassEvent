@@ -38,7 +38,7 @@ class TicketEmail extends Mailable
     {
         return new Envelope(
             subject: 'Votre billet PaxEvent pour ' . $this->ticket->evenement->titre,
-            replyTo: [new Address('paxevent09@gmail.com', 'PaxEvent')],
+            replyTo: [new Address('contact@paxevent.com', 'PaxEvent')],
         );
     }
 
@@ -47,7 +47,7 @@ class TicketEmail extends Mailable
         return new Headers(
             text: [
                 'Precedence' => 'bulk',
-                'List-Unsubscribe' => '<mailto:paxevent09@gmail.com?subject=Desinscription>',
+                'List-Unsubscribe' => '<mailto:contact@paxevent.com?subject=Desinscription>',
                 'X-Mailer' => 'PaxEvent Billetterie',
             ],
         );
