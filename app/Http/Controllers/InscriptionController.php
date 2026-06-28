@@ -49,7 +49,7 @@ class InscriptionController extends Controller
 
         $exists = User::where('email', $request->email)->exists();
         if ($exists) {
-            return back()->withErrors(['email' => 'Un compte existe d&eacute;j&agrave; avec cet email. Connectez-vous.'])->withInput();
+            return back()->withErrors(['email' => 'Un compte existe déjà avec cet email. Connectez-vous.'])->withInput();
         }
 
         $this->otp->generateAndSend($request->email);
@@ -80,10 +80,10 @@ class InscriptionController extends Controller
         $result = $this->otp->verify($reg['email'], $request->code);
 
         if ($result === 'invalide') {
-            return back()->withErrors(['code' => 'Code invalide. V&eacute;rifiez votre email ou demandez un nouveau code.']);
+            return back()->withErrors(['code' => 'Code invalide. Vérifiez votre email ou demandez un nouveau code.']);
         }
         if ($result === 'expire') {
-            return back()->withErrors(['code' => 'Ce code a expir&eacute;. Cliquez sur Renvoyer le code pour en recevoir un nouveau.']);
+            return back()->withErrors(['code' => 'Ce code a expiré. Cliquez sur Renvoyer le code pour en recevoir un nouveau.']);
         }
 
         $this->putReg(['email_verified' => true]);
@@ -104,7 +104,7 @@ class InscriptionController extends Controller
 
         return $request->expectsJson()
             ? response()->json(['success' => true])
-            : back()->with('success', 'Un nouveau code vous a &eacute;t&eacute; envoy&eacute;.');
+            : back()->with('success', 'Un nouveau code vous a été envoyé.');
     }
 
     public function step1()
