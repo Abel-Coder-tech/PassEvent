@@ -27,7 +27,7 @@
             width: 100%;
             box-shadow: 0 8px 40px rgba(0,0,0,0.06);
         }
-        .card .logo { height: 48px; display: block; margin: 0 auto 1.5rem; }
+        .card .logo { width: auto; height: 48px; max-width: 100%; margin-bottom: 1.5rem; }
         .card h1 { font-size: 1.5rem; font-weight: 700; color: #1d1d1f; margin-bottom: 1.5rem; text-align: center; }
         .recap-row { display: flex; justify-content: space-between; padding: .6rem 0; border-bottom: 1px solid #f0eeec; font-size: .9rem; }
         .recap-row:last-child { border-bottom: none; }
