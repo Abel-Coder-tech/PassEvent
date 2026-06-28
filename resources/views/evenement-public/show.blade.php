@@ -108,7 +108,7 @@
                 <div class="show-card">
                     <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
                     <div class="show-map">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12707.298550849!2d2.4244!3d6.3654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10235780f0b0c787%3A0x1b4a3c7c5a6e0f0!2sCotonou%2C+Benin!5e0!3m2!1sfr!2sbj!4v1" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        <iframe src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                     </div>
                 </div>
 
