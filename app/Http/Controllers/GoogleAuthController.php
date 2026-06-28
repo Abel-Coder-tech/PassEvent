@@ -30,7 +30,10 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = $this->socialite->driver('google')->user();
         } catch (\Exception $e) {
-            return redirect()->route('login')->withErrors(['email' => 'Authentification Google annulée ou échouée.']);
+            logger()->error('Google auth callback error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->route('login')->withErrors([
+                'email' => 'Authentification Google annulée ou échouée. ' . (config('app.debug') ? $e->getMessage() : '')
+            ]);
         }
 
         if (!$googleUser->getEmail()) {
