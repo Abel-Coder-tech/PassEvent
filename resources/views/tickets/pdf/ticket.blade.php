@@ -60,18 +60,6 @@
             color: #888;
             margin-top: 1px;
         }
-        .status-badge {
-            display: inline-block;
-            background-color: #2E7D4F;
-            color: #fff;
-            font-size: 8px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 2px 12px;
-            border-radius: 10px;
-        }
-
         /* Details grid 2x2 */
         .detail-grid {
             width: 100%;
@@ -139,19 +127,6 @@
             font-weight: 700;
             color: #1d1d1f;
         }
-        .scan-badge {
-            display: inline-block;
-            background-color: #FFB300;
-            color: #fff;
-            font-size: 8px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            padding: 1px 10px;
-            border-radius: 8px;
-        }
-        .scan-badge.done { background-color: #2E7D4F; }
-        .scan-badge.pending { background-color: #FFB300; }
-
         /* HR */
         hr.dashed {
             border: none;
@@ -176,8 +151,8 @@
             border-radius: 10px;
         }
         .qr-box img {
-            width: 100px;
-            height: 100px;
+            width: 140px;
+            height: 140px;
             display: block;
         }
         .qr-label {
@@ -219,42 +194,34 @@
         {{-- 1. HEADER --}}
         <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td class="header-top left" colspan="2">
-                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent" style="height:36px; display:block;">
+                <td style="text-align:left;vertical-align:middle;">
+                    <div class="event-title">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
+                    <div class="event-meta">
+                        {{ $ticket->evenement?->date_event?->format('d M Y') ?? '---' }}
+                        &ndash; {{ $ticket->evenement?->date_event?->format('H\hi') ?? '' }}
+                        @if($ticket->evenement?->lieu)
+                            &ndash; {{ $ticket->evenement->lieu }}
+                        @endif
+                    </div>
+                </td>
+                <td style="text-align:right;vertical-align:middle;width:80px;">
+                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent" style="height:40px; display:inline-block;">
                 </td>
             </tr>
         </table>
 
-        <div class="event-title">{{ $ticket->evenement?->titre ?? 'Evenement' }}</div>
-        <div class="event-meta">
-            {{ $ticket->evenement?->date_event?->format('d M Y') ?? '---' }}
-            &ndash; {{ $ticket->evenement?->date_event?->format('H\hi') ?? '' }}
-            @if($ticket->evenement?->lieu)
-                &ndash; {{ $ticket->evenement->lieu }}
-            @endif
-        </div>
-
         {{-- 2. PARTICIPANT --}}
         <div class="participant-block">
-            <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                    <td style="text-align:left;vertical-align:top">
-                        <div class="participant-label">Participant</div>
-                        <div class="participant-name">{{ $ticket->nom_acheteur ?? '---' }}</div>
-                        <div class="participant-email">{{ $ticket->email_acheteur ?? '' }}</div>
-                    </td>
-                    <td style="text-align:right;vertical-align:top;width:60px">
-                        <span class="status-badge">Paye</span>
-                    </td>
-                </tr>
-            </table>
+            <div class="participant-label">Participant</div>
+            <div class="participant-name">{{ $ticket->nom_acheteur ?? '---' }}</div>
+            <div class="participant-email">{{ $ticket->email_acheteur ?? '' }}</div>
         </div>
 
         {{-- 3. DETAILS GRID 2 COLUMNS --}}
         <table class="detail-grid" cellpadding="0" cellspacing="4">
             <tr>
                 <td>
-                    <div class="dl">Categorie</div>
+                    <div class="dl">Catégorie</div>
                     <div class="dv">{{ ucfirst($ticket->categorie ?? '---') }}</div>
                 </td>
                 <td>
@@ -276,7 +243,7 @@
 
         {{-- 4. TRANSACTION --}}
         <hr class="dashed">
-        <div class="section-title">Details de la transaction</div>
+        <div class="section-title">Détails de la transaction</div>
 
         <table class="tx-table" cellpadding="0" cellspacing="0">
             <tr>
@@ -291,22 +258,12 @@
                 <td class="tl">Date d'achat</td>
                 <td class="tv">{{ $ticket->date_achat?->format('d/m/Y \\· H:i') ?? '---' }}</td>
             </tr>
-            <tr>
-                <td class="tl">Statut scan</td>
-                <td>
-                    @if($ticket->scanne)
-                        <span class="scan-badge done">Scanne</span>
-                    @else
-                        <span class="scan-badge pending">En attente</span>
-                    @endif
-                </td>
-            </tr>
         </table>
 
         @if($ticket->montant_reduction > 0)
             <table class="tx-table" cellpadding="0" cellspacing="0" style="margin-top:4px">
                 <tr>
-                    <td class="tl">Reduction</td>
+                    <td class="tl">Réduction</td>
                     <td class="tv" style="color:#2E7D4F">&minus;{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA</td>
                 </tr>
             </table>
@@ -327,8 +284,8 @@
         <div class="footer">
             <hr class="solid">
             <p>
-                Presentez ce QR code a l'entree pour scanner votre billet<br>
-                <strong>Billet personnel et non transferable</strong> &middot; PaxEvent UPAO
+                Présentez ce QR code à l'entrée pour scanner votre billet<br>
+                <strong>Billet personnel et non transférable</strong> &middot; PaxEvent UPAO
             </p>
         </div>
 
