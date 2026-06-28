@@ -60,42 +60,9 @@
 
     <div class="container">
         <div class="row g-5 py-4">
-            <!-- Colonne gauche (rendue après le formulaire sur mobile via order) -->
-            <div class="col-lg-7 order-lg-last">
-                <!-- Barre infos rapides -->
-                <div class="show-infos">
-                    <div class="show-info-chip">
-                        <i class="bi bi-calendar-check"></i>
-                        <span><strong>Date :</strong> {{ $evenement->date_event->format('d M Y') }}</span>
-                    </div>
-                    <div class="show-info-chip">
-                        <i class="bi bi-clock"></i>
-                        <span><strong>Heure :</strong> {{ $evenement->date_event->format('H:i') }}</span>
-                    </div>
-                    <div class="show-info-chip">
-                        <i class="bi bi-geo-alt"></i>
-                        <span><strong>Lieu :</strong> {{ $evenement->lieu }}</span>
-                    </div>
-                    @if(!$estComplet)
-                        <div class="show-info-chip">
-                            <i class="bi bi-people"></i>
-                            <span><strong>{{ number_format($placesRestantes, 0, ',', ' ') }}</strong> places</span>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Description -->
-                <div class="show-card">
-                    <h5 class="show-card-title"><i class="bi bi-info-circle"></i> Description</h5>
-                    @if($evenement->description)
-                        <p class="show-card-text">{{ $evenement->description }}</p>
-                    @else
-                        <p class="show-card-text text-muted">Aucune description disponible.</p>
-                    @endif
-                </div>
-
-                <!-- Partager -->
-                <div class="show-card">
+            <div class="col-lg-7 order-2 order-lg-2 d-flex flex-column">
+                <!-- Partager (1er sur mobile, 2e sur desktop) -->
+                <div class="show-card order-1 order-lg-2">
                     <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
                     <div class="d-flex gap-2 flex-nowrap">
                         <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
@@ -105,26 +72,36 @@
                     </div>
                 </div>
 
-                <!-- Lieu -->
-                <div class="show-card">
+                <!-- Lieu / Maps (2e sur mobile, 3e sur desktop) -->
+                <div class="show-card order-2 order-lg-3">
                     <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
                     <div class="show-map">
                         <iframe src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                     </div>
                 </div>
 
-                <!-- Contacter -->
-                <div class="show-card">
+                <!-- Contacter (3e sur mobile, 4e sur desktop) -->
+                <div class="show-card order-3 order-lg-4">
                     <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
                     <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
                     <button type="button" class="show-btn" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
                         <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
                     </button>
                 </div>
+
+                <!-- Description (4e sur mobile, 1re sur desktop) -->
+                <div class="show-card order-4 order-lg-1">
+                    <h5 class="show-card-title"><i class="bi bi-info-circle"></i> Description</h5>
+                    @if($evenement->description)
+                        <p class="show-card-text">{{ $evenement->description }}</p>
+                    @else
+                        <p class="show-card-text text-muted">Aucune description disponible.</p>
+                    @endif
+                </div>
             </div>
 
-            <!-- Colonne droite (rendue avant la gauche sur mobile) -->
-            <div class="col-lg-5 order-lg-first">
+            <!-- Formulaire d'achat (en premier sur mobile) -->
+            <div class="col-lg-5 order-1 order-lg-1">
                 <div class="show-sidebar">
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
                         <div class="show-card text-center py-4">
@@ -395,25 +372,6 @@
     display: block;
 }
 
-/* ===== INFOS ===== */
-.show-infos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-.show-info-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1rem;
-    border-radius: 10px;
-    background: #fff;
-    border: 1px solid #ede5f0;
-    font-size: 0.82rem;
-}
-.show-info-chip i { color: var(--violet); font-size: 0.9rem; }
-
 /* ===== CARDS ===== */
 .show-card {
     background: #fff;
@@ -675,7 +633,6 @@
     .show-hero { padding: 2.5rem 0 2rem; }
     .show-title { font-size: 1.5rem; }
     .show-hero-image img { height: 200px; }
-    .show-infos { gap: 0.5rem; }
 }
 </style>
 
