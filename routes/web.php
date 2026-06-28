@@ -62,8 +62,21 @@ Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('
 // ============================================================
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
-Route::get('/inscription', [InscriptionController::class, 'create'])->name('inscriptions.create');
-Route::post('/inscription', [InscriptionController::class, 'store'])->name('inscriptions.store')->middleware('throttle:3,60');
+Route::prefix('inscription')->name('inscriptions.')->group(function () {
+    Route::get('/', [InscriptionController::class, 'step0'])->name('create');
+    Route::post('/email', [InscriptionController::class, 'sendOtp'])->name('send-otp')->middleware('throttle:3,1');
+    Route::get('/verifier', [InscriptionController::class, 'showVerify'])->name('verify');
+    Route::post('/verifier', [InscriptionController::class, 'verifyOtp'])->name('verify-otp')->middleware('throttle:5,1');
+    Route::post('/renvoyer', [InscriptionController::class, 'resendOtp'])->name('resend-otp')->middleware('throttle:2,30');
+    Route::get('/type', [InscriptionController::class, 'step1'])->name('type');
+    Route::post('/type', [InscriptionController::class, 'postType'])->name('post-type');
+    Route::get('/informations', [InscriptionController::class, 'step2'])->name('infos');
+    Route::post('/informations', [InscriptionController::class, 'postInfos'])->name('post-infos');
+    Route::get('/recapitulatif', [InscriptionController::class, 'step3'])->name('recap');
+    Route::post('/confirmer', [InscriptionController::class, 'confirm'])->name('confirm');
+    Route::get('/confirmation', [InscriptionController::class, 'confirmation'])->name('confirmation');
+    Route::get('/precedent/{step}', [InscriptionController::class, 'previous'])->name('previous');
+});
 
 // Mot de passe oublié
 Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showForm'])->name('password.request');

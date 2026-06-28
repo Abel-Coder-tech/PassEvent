@@ -32,6 +32,7 @@ class User extends Authenticatable
         'pseudo',
         'statut',
         'type',
+        'type_detail',
     ];
 
     protected $hidden = [

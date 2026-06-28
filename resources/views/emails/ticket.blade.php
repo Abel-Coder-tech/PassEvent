@@ -196,7 +196,7 @@
 <body>
     <div class="container">
         <div class="header" style="text-align:center;">
-            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="display:inline-block;">
+            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="display:inline-block;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
         </div>
 
         <div class="content">
