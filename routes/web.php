@@ -100,6 +100,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/suspendre', [SuperAdminController::class, 'suspendreOrganisateur'])->name('organisateurs.suspendre');
         Route::post('/organisateurs/{user}/approuver', [SuperAdminController::class, 'approuverOrganisateur'])->name('organisateurs.approuver');
         Route::post('/organisateurs/{user}/rejeter', [SuperAdminController::class, 'rejeterOrganisateur'])->name('organisateurs.rejeter');
+        Route::post('/organisateurs/{user}/supprimer', [SuperAdminController::class, 'supprimerOrganisateur'])->name('organisateurs.supprimer');
+        Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
         Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');
         Route::post('/evenements/{evenement}/suspendre', [SuperAdminController::class, 'suspendreEvenement'])->name('evenements.suspendre');
         Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');

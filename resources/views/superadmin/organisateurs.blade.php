@@ -152,19 +152,43 @@
                                 <span class="org-detail-label">Inscrit le</span>
                                 <span class="org-detail-value">{{ $org->created_at->format('d M Y à H:i') }}</span>
                             </div>
+
+                            {{-- Envoyer un email --}}
+                            <hr style="margin:1rem 0;border-color:#eee;">
+                            <h6 style="font-size:0.85rem;font-weight:700;margin-bottom:0.5rem;color:var(--sa-primary);">
+                                <i class="bi bi-envelope me-1"></i> Envoyer un email
+                            </h6>
+                            <form action="{{ route('superadmin.organisateurs.email', $org) }}" method="POST">
+                                @csrf
+                                <div class="mb-2">
+                                    <input type="text" name="sujet" class="sa-form-control" placeholder="Sujet" required>
+                                </div>
+                                <div class="mb-2">
+                                    <textarea name="message" class="sa-form-control" rows="3" placeholder="Votre message..." required style="resize:vertical;"></textarea>
+                                </div>
+                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-primary">
+                                    <i class="bi bi-send"></i> Envoyer
+                                </button>
+                            </form>
                         </div>
-                        <div class="modal-footer">
-                            @if($org->statut === 'en_attente')
-                                <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" style="display:inline;margin-right:auto;">
+                        <div class="modal-footer" style="display:flex;justify-content:space-between;">
+                            <div>
+                                @if($org->statut === 'en_attente')
+                                    <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <button type="submit" class="sa-btn sa-btn-primary">
+                                            <i class="bi bi-check-lg"></i> Valider
+                                        </button>
+                                    </form>
+                                @endif
+                                <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
                                     @csrf
-                                    <button type="submit" class="sa-btn sa-btn-primary">
-                                        <i class="bi bi-check-lg"></i> Valider
+                                    <button type="submit" class="sa-btn sa-btn-danger">
+                                        <i class="bi bi-trash"></i> Supprimer
                                     </button>
                                 </form>
-                                <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
-                            @else
-                                <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
-                            @endif
+                            </div>
+                            <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
                         </div>
                     </div>
                 </div>

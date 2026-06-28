@@ -311,6 +311,52 @@ class SuperAdminController extends Controller
         return back()->with('success', "Organisateur {$user->nom} rejete.");
     }
 
+    public function supprimerOrganisateur(User $user)
+    {
+        if ($user->role !== 'admin') {
+            return back()->with('error', 'Action non autorisée.');
+        }
+
+        $user->delete();
+
+        Log::create([
+            'type_operation' => 'organisateur_supprime',
+            'ticket_id' => null,
+            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', "Organisateur {$user->nom} supprimé définitivement.");
+    }
+
+    public function envoyerEmailOrganisateur(Request $request, User $user)
+    {
+        $request->validate([
+            'sujet' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        Mail::raw($request->message, function ($mail) use ($request, $user) {
+            $mail->to($user->email)
+                ->subject($request->sujet)
+                ->replyTo(auth('superadmin')->user()->email);
+        });
+
+        Log::create([
+            'type_operation' => 'email_organisateur',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'sujet' => $request->sujet,
+                'envoye_par' => auth('superadmin')->user()->email,
+            ]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', "Email envoyé à {$user->nom}.");
+    }
+
     public function retraits()
     {
         $retraits = Withdrawal::with('user')
