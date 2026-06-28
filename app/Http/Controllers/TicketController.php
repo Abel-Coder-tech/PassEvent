@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TicketEmail;
+use App\Models\Evenement;
 use App\Models\Ticket;
 use App\Models\Log;
 use App\Services\QrCodeService;
