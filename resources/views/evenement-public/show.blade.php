@@ -60,18 +60,8 @@
 
     <div class="container">
         <div class="row g-5 py-4">
-            <!-- Colonne gauche -->
-            <div class="col-lg-7">
-                @if($evenementPasse ?? false)
-                    <span class="show-status-badge closed d-inline-block mb-3">Événement passé</span>
-                @elseif($venteCloturee ?? false)
-                    <span class="show-status-badge closed d-inline-block mb-3">Vente clôturée</span>
-                @elseif($estComplet)
-                    <span class="show-status-badge closed d-inline-block mb-3">Complet</span>
-                @else
-                    <span class="show-status-badge available d-inline-block mb-3">{{ number_format($placesRestantes, 0, ',', ' ') }} places disponibles</span>
-                @endif
-
+            <!-- Colonne gauche (rendue après le formulaire sur mobile via order) -->
+            <div class="col-lg-7 order-lg-last">
                 <!-- Barre infos rapides -->
                 <div class="show-infos">
                     <div class="show-info-chip">
@@ -104,24 +94,22 @@
                     @endif
                 </div>
 
+                <!-- Partager -->
+                <div class="show-card">
+                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
+                    <div class="d-flex gap-2 flex-nowrap">
+                        <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
+                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#25D366;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#1877F2;" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <button class="show-share-btn" onclick="copyLink()" title="Copier le lien"><i class="bi bi-link-45deg"></i></button>
+                    </div>
+                </div>
+
                 <!-- Lieu -->
                 <div class="show-card">
                     <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
                     <div class="show-map">
                         <iframe src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                    </div>
-                </div>
-
-                <!-- Partager -->
-                <div class="show-card">
-                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
-                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#25D366;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($evenement->titre) }}&url={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" title="Twitter"><i class="bi bi-twitter-x"></i></a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#1877F2;" title="Facebook"><i class="bi bi-facebook"></i></a>
-                        <button class="show-share-btn" onclick="copyLink()" title="Copier le lien"><i class="bi bi-link-45deg"></i></button>
-                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ urlencode($evenement->titre) }}&dates={{ $evenement->date_event->format('Ymd\THis') }}/{{ $evenement->date_event->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($evenement->description ?? '') }}&location={{ urlencode($evenement->lieu) }}" target="_blank" class="show-share-btn ms-auto" style="color:#4285F4; gap:0.3rem;" title="Google Calendar"><i class="bi bi-google"></i> Calendar</a>
                     </div>
                 </div>
 
@@ -135,8 +123,8 @@
                 </div>
             </div>
 
-            <!-- Colonne droite -->
-            <div class="col-lg-5">
+            <!-- Colonne droite (rendue avant la gauche sur mobile) -->
+            <div class="col-lg-5 order-lg-first">
                 <div class="show-sidebar">
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
                         <div class="show-card text-center py-4">
