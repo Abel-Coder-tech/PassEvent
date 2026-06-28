@@ -6,19 +6,29 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Contracts\Factory as Socialite;
 
 class GoogleAuthController extends Controller
 {
+    protected Socialite $socialite;
+
+    public function __construct(Socialite $socialite)
+    {
+        $this->socialite = $socialite;
+    }
+
     public function redirect()
     {
-        return Socialite::driver('google')->redirect();
+        if (!config('services.google.client_id')) {
+            return redirect()->route('inscriptions.create')->withErrors(['email' => 'Authentification Google non configurée.']);
+        }
+        return $this->socialite->driver('google')->redirect();
     }
 
     public function callback()
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = $this->socialite->driver('google')->user();
         } catch (\Exception $e) {
             return redirect()->route('login')->withErrors(['email' => 'Authentification Google annulée ou échouée.']);
         }
