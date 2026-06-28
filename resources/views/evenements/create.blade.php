@@ -38,7 +38,7 @@
                 <div class="row">
                     <div class="col-12 col-md-6 mb-3">
                         <label for="date_event" class="form-label fw-semibold">Date et heure <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control @error('date_event') is-invalid @enderror" id="date_event" name="date_event" value="{{ old('date_event') }}" required>
+                        <input type="datetime-local" class="form-control @error('date_event') is-invalid @enderror" id="date_event" name="date_event" value="{{ old('date_event') }}" min="{{ now()->format('Y-m-d\TH:i') }}" required>
                         @error('date_event') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-12 col-md-6 mb-3">
@@ -73,7 +73,7 @@
                     </div>
                     <div class="col-12 col-md-6 mb-3">
                         <label for="date_fin_vente" class="form-label fw-semibold">Date fin de vente</label>
-                        <input type="datetime-local" class="form-control @error('date_fin_vente') is-invalid @enderror" id="date_fin_vente" name="date_fin_vente" value="{{ old('date_fin_vente') }}">
+                        <input type="datetime-local" class="form-control @error('date_fin_vente') is-invalid @enderror" id="date_fin_vente" name="date_fin_vente" value="{{ old('date_fin_vente') }}" min="{{ now()->format('Y-m-d\TH:i') }}">
                         @error('date_fin_vente') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>

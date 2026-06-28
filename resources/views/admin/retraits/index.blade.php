@@ -23,7 +23,7 @@
             <div class="metric-card" style="border-top-color: var(--gris);">
                 <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
                 <div class="metric-label">Commission ({{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%)</div>
-                <div class="metric-value" style="font-size:1.3rem;">- {{ number_format($commission, 0, ',', ' ') }}</div>
+                <div class="metric-value" style="font-size:1.3rem;"> {{ number_format($commission, 0, ',', ' ') }}</div>
                 <div class="metric-subtitle">Part de la plateforme</div>
             </div>
         </div>

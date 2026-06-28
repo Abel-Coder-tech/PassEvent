@@ -14,9 +14,12 @@ class TicketController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
+        $evenementsIds = Evenement::where('user_id', $user->id)->pluck('id');
+
         $search = $request->input('q');
 
-        $query = Ticket::with('evenement', 'tarif');
+        $query = Ticket::with('evenement', 'tarif')->whereIn('evenement_id', $evenementsIds);
 
         if ($search) {
             $query->where(function ($sub) use ($search) {
@@ -28,7 +31,7 @@ class TicketController extends Controller
 
         $tickets = $query->orderBy('date_achat', 'desc')->paginate(15);
 
-        $statsQuery = Ticket::query();
+        $statsQuery = Ticket::whereIn('evenement_id', $evenementsIds);
 
         if ($search) {
             $statsQuery->where(function ($sub) use ($search) {
