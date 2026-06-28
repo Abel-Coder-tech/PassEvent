@@ -57,6 +57,10 @@ Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscrib
 Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
 Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
 
+// Google OAuth
+Route::get('/auth/google', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController::class, 'callback'])->name('google.callback');
+
 // ============================================================
 // Routes de connexion & inscription
 // ============================================================

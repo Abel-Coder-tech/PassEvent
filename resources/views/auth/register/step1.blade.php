@@ -64,12 +64,20 @@
         <form method="POST" action="{{ route('inscriptions.post-identity') }}" enctype="multipart/form-data">
             @csrf
 
+            @if($from_google && !empty(session('registration.google_name')))
+            <div class="mb-3">
+                <label class="form-label">Nom complet</label>
+                <input type="text" name="nom" class="form-control" value="{{ session('registration.google_name') }}" readonly style="background:#f8f6f9;cursor:not-allowed;">
+                <div class="form-text">Récupéré de votre compte Google</div>
+            </div>
+            @else
             <div class="mb-3">
                 <label class="form-label">Nom complet</label>
                 <input type="text" name="nom" class="form-control @error('nom') is-invalid @enderror"
                        value="{{ old('nom', $data['nom'] ?? '') }}" required placeholder="Votre nom et prénoms">
                 @error('nom') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
+            @endif
 
             <div class="mb-3">
                 <label class="form-label">Téléphone</label>

@@ -45,6 +45,15 @@
         .invalid-feedback { text-align: left; font-size: .8rem; }
         .is-invalid { border-color: #dc3545 !important; }
         .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 10px; padding: .6rem 1rem; font-size: .85rem; margin-bottom: 1rem; }
+        .btn-google {
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            background: #fff; border: 1.5px solid #e0dde3; border-radius: 10px; padding: .7rem 1rem;
+            font-weight: 600; font-size: .9rem; color: #1d1d1f; text-decoration: none; transition: .2s;
+        }
+        .btn-google:hover { background: #f8f6f9; border-color: #9972B0; color: #1d1d1f; }
+        .btn-google i { color: #4285F4; font-size: 1.1rem; }
+        .divider { display: flex; align-items: center; color: #ccc; font-size: .85rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e0dde3; }
     </style>
 </head>
 <body>
@@ -57,6 +66,15 @@
             <div class="alert-danger">
                 @foreach($errors->all() as $e) {{ $e }} @break @endforeach
             </div>
+        @endif
+
+        @if(config('services.google.client_id'))
+        <a href="{{ route('google.redirect') }}" class="btn btn-google w-100 mb-3">
+            <i class="bi bi-google me-2"></i> S'inscrire avec Google
+        </a>
+        <div class="divider mb-3">
+            <span style="background:#fff;padding:0 12px;color:#6c757d;font-size:.85rem;">ou</span>
+        </div>
         @endif
 
         <form method="POST" action="{{ route('inscriptions.send-otp') }}">

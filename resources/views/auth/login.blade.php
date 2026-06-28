@@ -115,6 +115,16 @@
                 <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="100" class="mb-3">
                 <h2>Connexion</h2>
                 <p class="subtitle">Accédez a votre tableau de bord</p>
+                @if(config('services.google.client_id'))
+                    <a href="{{ route('google.redirect') }}" class="btn btn-google w-100 mb-3" style="display:flex;align-items:center;justify-content:center;gap:.5rem;border:1.5px solid #e0dde3;border-radius:8px;padding:.7rem 1rem;font-weight:600;font-size:.9rem;color:#1d1d1f;text-decoration:none;transition:.2s;background:#fff;">
+                        <i class="bi bi-google" style="color:#4285F4;font-size:1.1rem;"></i> Se connecter avec Google
+                    </a>
+                    <div style="display:flex;align-items:center;color:#ccc;font-size:.85rem;margin-bottom:1rem;">
+                        <span style="flex:1;border-bottom:1px solid #e0dde3;"></span>
+                        <span style="padding:0 12px;background:#fff;color:#6c757d;">ou</span>
+                        <span style="flex:1;border-bottom:1px solid #e0dde3;"></span>
+                    </div>
+                @endif
                 <form method="POST" action="{{ route('login.post') }}">
                     @csrf
                     <div class="mb-3">
