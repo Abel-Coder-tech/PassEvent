@@ -28,7 +28,7 @@
             box-shadow: 0 8px 40px rgba(0,0,0,0.06);
             text-align: center;
         }
-        .card .logo { max-width: 150px; height: auto; margin-bottom: 1rem; }
+        .card .logo { max-width: 150px; height: auto; display: block; margin: 0 auto 1rem; }
         .card h1 { font-size: 1.5rem; font-weight: 700; color: #1d1d1f; margin-bottom: .35rem; }
         .card .subtitle { font-size: .9rem; color: #6c757d; margin-bottom: 1.5rem; }
         .form-control { border-radius: 10px; padding: .7rem 1rem; border: 1.5px solid #e0dde3; text-align: center; font-size: 1.5rem; letter-spacing: 6px; font-weight: 700; }
