@@ -72,8 +72,10 @@
                             <span class="sa-badge sa-badge-warning">En attente</span>
                         @elseif($org->statut === 'actif')
                             <span class="sa-badge sa-badge-success">Actif</span>
+                        @elseif($org->statut === 'corrections_demandees')
+                            <span class="sa-badge sa-badge-warning" style="background:rgba(237,173,8,0.12);color:#8b6914;">Corrections demandées</span>
                         @elseif($org->statut === 'bloque')
-                            <span class="sa-badge sa-badge-danger">Bloque</span>
+                            <span class="sa-badge sa-badge-danger">Bloqué</span>
                         @else
                             <span class="sa-badge sa-badge-secondary">{{ $org->statut }}</span>
                         @endif
@@ -83,7 +85,7 @@
                     <td style="font-size:0.75rem;">{{ $org->created_at->format('d M Y') }}</td>
                     <td style="white-space:nowrap;">
                         <div class="d-flex flex-nowrap gap-1">
-                            <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les details"
+                            <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les détails"
                                 onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -92,13 +94,17 @@
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
                                 </form>
-                                <form action="{{ route('superadmin.organisateurs.rejeter', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Rejeter {{ $org->nom }} ?')">
-                                    @csrf
-                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"><i class="bi bi-x-lg"></i></button>
-                                </form>
+                                <button class="sa-btn sa-btn-sm sa-btn-warning" title="Demander des corrections"
+                                    onclick="document.getElementById('correctionsModal{{ $org->id }}').style.display='flex'">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"
+                                    onclick="document.getElementById('rejetModal{{ $org->id }}').style.display='flex'">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
                             @endif
                             @if($org->statut === 'actif')
-                                <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses evenements seront annules.')">
+                                <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses événements seront annulés.')">
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-warning" title="Suspendre"><i class="bi bi-pause-fill"></i></button>
                                 </form>
@@ -136,7 +142,8 @@
                                 <span class="org-detail-value">
                                     @if($org->statut === 'en_attente')<span class="sa-badge sa-badge-warning">En attente</span>
                                     @elseif($org->statut === 'actif')<span class="sa-badge sa-badge-success">Actif</span>
-                                    @elseif($org->statut === 'bloque')<span class="sa-badge sa-badge-danger">Bloque</span>
+                                    @elseif($org->statut === 'corrections_demandees')<span class="sa-badge sa-badge-warning" style="background:rgba(237,173,8,0.12);color:#8b6914;">Corrections demandées</span>
+                                    @elseif($org->statut === 'bloque')<span class="sa-badge sa-badge-danger">Bloqué</span>
                                     @else<span class="sa-badge sa-badge-secondary">{{ $org->statut }}</span>@endif
                                 </span>
                             </div>
@@ -171,8 +178,8 @@
                                 </button>
                             </form>
                         </div>
-                        <div class="modal-footer" style="display:flex;justify-content:space-between;">
-                            <div>
+                        <div class="modal-footer" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                                 @if($org->statut === 'en_attente')
                                     <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" style="display:inline;">
                                         @csrf
@@ -180,6 +187,9 @@
                                             <i class="bi bi-check-lg"></i> Valider
                                         </button>
                                     </form>
+                                    <button class="sa-btn sa-btn-warning" onclick="this.closest('.modal-overlay').style.display='none';document.getElementById('correctionsModal{{ $org->id }}').style.display='flex'">
+                                        <i class="bi bi-pencil-square"></i> Corrections
+                                    </button>
                                 @endif
                                 <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
                                     @csrf
@@ -191,6 +201,48 @@
                             <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
                         </div>
                     </div>
+{{-- Modal Rejet --}}
+                <div id="rejetModal{{ $org->id }}" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+                    <div class="modal-box">
+                        <div class="modal-header">
+                            <h5><i class="bi bi-x-circle me-2" style="color:var(--sa-danger);"></i>Rejeter {{ $org->nom }}</h5>
+                            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+                        </div>
+                        <form action="{{ route('superadmin.organisateurs.rejeter', $org) }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">Expliquez le motif du rejet. L'organisateur recevra un email avec cette explication.</p>
+                                <textarea name="motif" class="sa-form-control" rows="4" placeholder="Motif du rejet..." required style="resize:vertical;"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Annuler</button>
+                                <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-x-lg"></i> Rejeter</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- Modal Corrections --}}
+                <div id="correctionsModal{{ $org->id }}" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+                    <div class="modal-box">
+                        <div class="modal-header">
+                            <h5><i class="bi bi-pencil-square me-2" style="color:var(--sa-warning);"></i>Demander des corrections</h5>
+                            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+                        </div>
+                        <form action="{{ route('superadmin.organisateurs.corrections', $org) }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">Indiquez les modifications nécessaires. L'organisateur recevra un email et pourra corriger son profil.</p>
+                                <textarea name="motif" class="sa-form-control" rows="4" placeholder="Détail des corrections à apporter..." required style="resize:vertical;"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Annuler</button>
+                                <button type="submit" class="sa-btn sa-btn-warning"><i class="bi bi-send"></i> Envoyer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 </div>
                 </tr>
                 @endforeach

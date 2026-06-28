@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RegistrationApproved;
+use App\Mail\RegistrationRejected;
+use App\Mail\RegistrationCorrections;
 use App\Models\User;
 use App\Models\Evenement;
 use App\Models\Ticket;
@@ -271,17 +274,7 @@ class SuperAdminController extends Controller
 
         $user->update(['statut' => 'actif']);
 
-        Mail::raw(
-            "Bonjour {$user->nom},\n\n" .
-            "Votre compte organisateur PaxEvent a été approuvé !\n" .
-            "Vous pouvez dès maintenant vous connecter et créer vos événements en quelques clics.\n\n" .
-            "Connectez-vous : " . route('login') . "\n\n" .
-            "Cordialement,\nL'équipe PaxEvent",
-            function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject('[PaxEvent] Compte approuvé');
-            }
-        );
+        Mail::to($user->email)->send(new RegistrationApproved($user));
 
         Log::create([
             'type_operation' => 'organisateur_approuve',
@@ -290,25 +283,51 @@ class SuperAdminController extends Controller
             'ip' => request()->ip(),
         ]);
 
-        return back()->with('success', "Organisateur {$user->nom} approuve. Un email de confirmation a ete envoye.");
+        return back()->with('success', "Organisateur {$user->nom} approuvé. Un email de confirmation a été envoyé.");
     }
 
-    public function rejeterOrganisateur(User $user)
+    public function rejeterOrganisateur(Request $request, User $user)
+    {
+        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'corrections_demandees'])) {
+            return back()->with('error', 'Action non autorisée.');
+        }
+
+        $request->validate(['motif' => 'required|string|max:2000']);
+
+        $user->update(['statut' => 'bloque']);
+
+        Mail::to($user->email)->send(new RegistrationRejected($user, $request->motif));
+
+        Log::create([
+            'type_operation' => 'organisateur_rejete',
+            'ticket_id' => null,
+            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'motif' => $request->motif]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', "Organisateur {$user->nom} rejeté avec notification.");
+    }
+
+    public function demanderCorrectionsOrganisateur(Request $request, User $user)
     {
         if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
             return back()->with('error', 'Action non autorisée.');
         }
 
-        $user->update(['statut' => 'bloque']);
+        $request->validate(['motif' => 'required|string|max:2000']);
+
+        $user->update(['statut' => 'corrections_demandees']);
+
+        Mail::to($user->email)->send(new RegistrationCorrections($user, $request->motif));
 
         Log::create([
-            'type_operation' => 'organisateur_rejete',
+            'type_operation' => 'organisateur_corrections',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email]),
+            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'motif' => $request->motif]),
             'ip' => request()->ip(),
         ]);
 
-        return back()->with('success', "Organisateur {$user->nom} rejete.");
+        return back()->with('success', "Corrections demandées à {$user->nom} par email.");
     }
 
     public function supprimerOrganisateur(User $user)

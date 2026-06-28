@@ -9,6 +9,7 @@ use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class InscriptionController extends Controller
 {
@@ -86,9 +87,9 @@ class InscriptionController extends Controller
             return back()->withErrors(['code' => 'Ce code a expiré. Cliquez sur Renvoyer le code pour en recevoir un nouveau.']);
         }
 
-        $this->putReg(['email_verified' => true]);
+        $this->putReg(['email_verified' => true, 'from_google' => $request->has('from_google')]);
 
-        return redirect()->route('inscriptions.type');
+        return redirect()->route('inscriptions.identity');
     }
 
     public function resendOtp(Request $request)
@@ -113,58 +114,27 @@ class InscriptionController extends Controller
         if (empty($reg['email']) || empty($reg['email_verified'])) {
             return redirect()->route('inscriptions.create');
         }
-        return view('auth.register.step1');
+        return view('auth.register.step1', [
+            'from_google' => $reg['from_google'] ?? false,
+            'data' => $reg['identity'] ?? [],
+        ]);
     }
 
-    public function postType(Request $request)
+    public function postStep1(Request $request)
     {
         $reg = $this->getReg();
         if (empty($reg['email']) || empty($reg['email_verified'])) {
             return redirect()->route('inscriptions.create');
         }
 
-        $request->validate(['type' => 'required|in:universitaire,particulier,organisation']);
-
-        $this->putReg(['type' => $request->type, 'step' => 2, 'data' => []]);
-
-        return redirect()->route('inscriptions.infos');
-    }
-
-    public function step2()
-    {
-        $reg = $this->getReg();
-        if (empty($reg['type'])) {
-            return redirect()->route('inscriptions.type');
-        }
-        return view('auth.register.step2', ['type' => $reg['type'], 'data' => $reg['data'] ?? []]);
-    }
-
-    public function postInfos(Request $request)
-    {
-        $reg = $this->getReg();
-        if (empty($reg['type'])) {
-            return redirect()->route('inscriptions.type');
-        }
-
-        $type = $reg['type'];
-
         $rules = [
+            'nom' => 'required|string|max:255',
             'telephone' => 'required|string|max:30',
-            'mot_de_passe' => 'required|string|min:8|confirmed',
+            'avatar' => 'nullable|image|max:2048',
         ];
 
-        if ($type === 'universitaire') {
-            $rules['organisation'] = 'required|string|max:255';
-            $rules['nom'] = 'required|string|max:255';
-            $rules['avatar'] = 'nullable|image|max:2048';
-        } elseif ($type === 'particulier') {
-            $rules['nom'] = 'required|string|max:255';
-            $rules['avatar'] = 'nullable|image|max:2048';
-        } elseif ($type === 'organisation') {
-            $rules['nom'] = 'required|string|max:255';
-            $rules['organisation'] = 'required|string|max:255';
-            $rules['type_detail'] = 'required|in:entreprise,association,club';
-            $rules['avatar'] = 'nullable|image|max:2048';
+        if (!($reg['from_google'] ?? false)) {
+            $rules['mot_de_passe'] = 'required|string|min:8|confirmed';
         }
 
         $validated = $request->validate($rules);
@@ -173,7 +143,54 @@ class InscriptionController extends Controller
             $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        $this->putReg(['data' => $validated, 'step' => 3]);
+        $this->putReg(['identity' => $validated, 'step' => 2]);
+
+        return redirect()->route('inscriptions.org');
+    }
+
+    public function step2()
+    {
+        $reg = $this->getReg();
+        if (empty($reg['identity'])) {
+            return redirect()->route('inscriptions.identity');
+        }
+        return view('auth.register.step2', [
+            'type' => $reg['org_data']['type'] ?? null,
+            'data' => $reg['org_data'] ?? [],
+        ]);
+    }
+
+    public function postStep2(Request $request)
+    {
+        $reg = $this->getReg();
+        if (empty($reg['identity'])) {
+            return redirect()->route('inscriptions.identity');
+        }
+
+        $rules = [
+            'type' => 'required|in:universitaire,particulier,organisation',
+            'description' => 'nullable|string|max:2000',
+            'document_justificatif' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ];
+
+        $type = $request->type;
+
+        if ($type === 'universitaire' || $type === 'organisation') {
+            $rules['organisation'] = 'required|string|max:255';
+        }
+
+        if ($type === 'organisation') {
+            $rules['type_detail'] = 'required|in:entreprise,association,club';
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($request->hasFile('document_justificatif')) {
+            $validated['document_justificatif'] = $request->file('document_justificatif')
+                ->store('justificatifs', 'public');
+        }
+
+        $this->putReg(['type' => $type, 'org_data' => $validated, 'step' => 3]);
 
         return redirect()->route('inscriptions.recap');
     }
@@ -181,8 +198,8 @@ class InscriptionController extends Controller
     public function step3()
     {
         $reg = $this->getReg();
-        if (empty($reg['data'])) {
-            return redirect()->route('inscriptions.infos');
+        if (empty($reg['org_data'])) {
+            return redirect()->route('inscriptions.org');
         }
         return view('auth.register.step3', ['reg' => $reg]);
     }
@@ -190,31 +207,39 @@ class InscriptionController extends Controller
     public function confirm(Request $request)
     {
         $reg = $this->getReg();
-        if (empty($reg['data']) || empty($reg['type']) || empty($reg['email'])) {
+        if (empty($reg['org_data']) || empty($reg['type']) || empty($reg['email']) || empty($reg['identity'])) {
             return redirect()->route('inscriptions.create');
         }
 
         $request->validate(['cgu' => 'accepted']);
 
-        $data = $reg['data'];
+        $identity = $reg['identity'];
+        $orgData = $reg['org_data'];
 
         $userData = [
-            'nom' => $data['nom'],
+            'nom' => $identity['nom'],
             'email' => $reg['email'],
-            'telephone' => $data['telephone'],
-            'mot_de_passe' => Hash::make($data['mot_de_passe']),
+            'telephone' => $identity['telephone'],
             'type' => $reg['type'],
-            'avatar' => $data['avatar'] ?? null,
+            'avatar' => $identity['avatar'] ?? null,
+            'description' => $orgData['description'] ?? null,
+            'document_justificatif' => $orgData['document_justificatif'] ?? null,
             'role' => 'admin',
             'statut' => 'en_attente',
         ];
 
+        if ($reg['from_google'] ?? false) {
+            $userData['mot_de_passe'] = Hash::make(\Illuminate\Support\Str::random(32));
+        } else {
+            $userData['mot_de_passe'] = Hash::make($identity['mot_de_passe']);
+        }
+
         if ($reg['type'] === 'universitaire' || $reg['type'] === 'organisation') {
-            $userData['organisation'] = $data['organisation'];
+            $userData['organisation'] = $orgData['organisation'];
         }
 
         if ($reg['type'] === 'organisation') {
-            $userData['type_detail'] = $data['type_detail'];
+            $userData['type_detail'] = $orgData['type_detail'];
         }
 
         $user = User::create($userData);
@@ -244,6 +269,23 @@ class InscriptionController extends Controller
         return view('auth.register.confirmation', ['email' => $email]);
     }
 
+    public function resubmit(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || $user->statut !== 'corrections_demandees') {
+            return redirect()->route('dashboard')->with('error', 'Action non autorisée.');
+        }
+
+        $user->update(['statut' => 'en_attente']);
+
+        $superAdmins = User::where('role', 'super_admin')->get();
+        foreach ($superAdmins as $sa) {
+            Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Votre profil a été soumis à nouveau pour validation.');
+    }
+
     public function previous($step)
     {
         $reg = $this->getReg();
@@ -254,10 +296,10 @@ class InscriptionController extends Controller
             return redirect()->route('inscriptions.create');
         }
         if ($step == 1 && $currentStep >= 1) {
-            return redirect()->route('inscriptions.type');
+            return redirect()->route('inscriptions.identity');
         }
         if ($step == 2 && $currentStep >= 2) {
-            return redirect()->route('inscriptions.infos');
+            return redirect()->route('inscriptions.org');
         }
         if ($step == 3 && $currentStep >= 3) {
             return redirect()->route('inscriptions.recap');

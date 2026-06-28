@@ -15,6 +15,18 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        if ($user->statut !== 'actif') {
+            $message = '';
+            if ($user->statut === 'en_attente') {
+                $message = 'Votre profil est en cours de validation par notre équipe. Ce processus prend généralement 12 à 24 heures.';
+            } elseif ($user->statut === 'corrections_demandees') {
+                $message = 'Votre profil nécessite des corrections. Veuillez le modifier et le soumettre à nouveau.';
+            } elseif ($user->statut === 'bloque') {
+                $message = 'Votre compte a été bloqué. Contactez le support pour plus d\'informations.';
+            }
+            return view('dashboard-pending', ['message' => $message, 'statut' => $user->statut]);
+        }
+
         $evenements = Evenement::where('user_id', $user->id)->get();
         $totalEvenements = $evenements->count();
         $evenementsActifs = $evenements->where('statut', 'publié')->count();
@@ -56,7 +68,6 @@ class DashboardController extends Controller
             ->where('nb_utilisations', '>', 0)
             ->count();
 
-        // Ventes des 7 derniers jours
         $joursLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
         $ventes7Jours = [];
         $today = now();
@@ -72,7 +83,6 @@ class DashboardController extends Controller
 
         $ventesToday = $ventes7Jours[6];
 
-        // Event en cours avec le plus de scans
         $eventEnCours = Evenement::where('user_id', $user->id)
             ->where('statut', 'publié')
             ->withCount(['tickets as tickets_payes' => fn($q) => $q->where('statut_paiement', 'payé')])
@@ -84,7 +94,6 @@ class DashboardController extends Controller
         $scanValides = $eventEnCours?->tickets_utilises ?? 0;
         $scanPct = $scanTotal > 0 ? round(($scanValides / $scanTotal) * 100) : 0;
 
-        // Activité récente (simulée à partir des données réelles)
         $activiteRecents = [];
 
         $dernierTicketScanne = Ticket::whereIn('evenement_id', $evenementsIds)
@@ -150,7 +159,6 @@ class DashboardController extends Controller
 
         $activiteRecents = array_slice($activiteRecents, 0, 5);
 
-        // Remplissage moyen
         $remplissageMoyen = $evenements->avg(function ($e) {
             return $e->capacite > 0 ? ($e->quota_vendu / $e->capacite) * 100 : 0;
         });

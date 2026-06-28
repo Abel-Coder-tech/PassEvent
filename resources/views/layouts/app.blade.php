@@ -817,6 +817,7 @@
             <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="72" style="filter:brightness(0) invert(1);">
         </div>
 
+        @php $isActive = auth()->user()->statut === 'actif'; @endphp
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Principal</div>
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -827,52 +828,110 @@
                 <i class="bi bi-shield-fill-check" style="color: #6B3FA0;"></i> Super Admin
             </a>
             @endif
+            @if($isActive)
             <a href="{{ route('admin.evenements.index') }}" class="nav-link {{ request()->routeIs('admin.evenements.*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-event"></i> Evenements
+                <i class="bi bi-calendar-event"></i> Événements
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-calendar-event"></i> Événements <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('admin.messages.index') }}" class="nav-link {{ request()->routeIs('admin.messages.*') ? 'active' : '' }}">
                 <i class="bi bi-envelope"></i> Messages
-                @php
-                    $unreadMessages = \App\Models\Message::where('lu', false)->count();
-                @endphp
+                @php $unreadMessages = \App\Models\Message::where('lu', false)->count(); @endphp
                 @if($unreadMessages > 0)
                     <span class="badge bg-danger ms-auto" style="font-size: 0.65rem;">{{ $unreadMessages }}</span>
                 @endif
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-envelope"></i> Messages <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('ventes-manuelles.create') }}" class="nav-link {{ request()->routeIs('ventes-manuelles.*') ? 'active' : '' }}">
                 <i class="bi bi-bag"></i> Vente manuelle
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-bag"></i> Vente manuelle <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
 
             <div class="sidebar-section-label">Billetterie</div>
+            @if($isActive)
             <a href="{{ route('scan.index') }}" class="nav-link {{ request()->routeIs('scan.*') ? 'active' : '' }}">
                 <i class="bi bi-qr-code-scan"></i> Scan QR
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-qr-code-scan"></i> Scan QR <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('admin.codes-promos.index') }}" class="nav-link {{ request()->routeIs('admin.codes-promos.*') ? 'active' : '' }}">
                 <i class="bi bi-tag"></i> Codes promos
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-tag"></i> Codes promos <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('tickets.index') }}" class="nav-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
                 <i class="bi bi-ticket-perforated"></i> Tickets
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-ticket-perforated"></i> Tickets <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('admin.remboursements.index') }}" class="nav-link {{ request()->routeIs('admin.remboursements.*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-return-left"></i> Remboursements
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-arrow-return-left"></i> Remboursements <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
 
             <div class="sidebar-section-label">Finances</div>
+            @if($isActive)
             <a href="{{ route('admin.retraits.index') }}" class="nav-link {{ request()->routeIs('admin.retraits.*') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Retraits
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-cash-stack"></i> Retraits <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
 
             <div class="sidebar-section-label">Analyse</div>
+            @if($isActive)
             <a href="{{ route('statistiques.index') }}" class="nav-link {{ request()->routeIs('statistiques.*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line"></i> Statistiques
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-bar-chart-line"></i> Statistiques <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('logs.index') }}" class="nav-link {{ request()->routeIs('logs.*') ? 'active' : '' }}">
-                <i class="bi bi-file-earmark-text"></i> Logs systeme
+                <i class="bi bi-file-earmark-text"></i> Logs système
             </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-file-earmark-text"></i> Logs système <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
 
             <div class="sidebar-section-label">Compte</div>
             <a href="{{ route('parametres.index') }}" class="nav-link {{ request()->routeIs('parametres.*') ? 'active' : '' }}">
-                <i class="bi bi-gear"></i> Parametres
+                <i class="bi bi-gear"></i> Paramètres
             </a>
         </nav>
 
@@ -901,9 +960,11 @@
         </div>
         <div class="top-bar-right">
             @yield('topbar-actions')
+            @if(auth()->user()->statut === 'actif')
             <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm">
-                <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Creer un evenement</span>
+                <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Créer un événement</span>
             </a>
+            @endif
         </div>
     </div>
 

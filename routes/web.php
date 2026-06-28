@@ -68,14 +68,15 @@ Route::prefix('inscription')->name('inscriptions.')->group(function () {
     Route::get('/verifier', [InscriptionController::class, 'showVerify'])->name('verify');
     Route::post('/verifier', [InscriptionController::class, 'verifyOtp'])->name('verify-otp')->middleware('throttle:5,1');
     Route::post('/renvoyer', [InscriptionController::class, 'resendOtp'])->name('resend-otp')->middleware('throttle:2,30');
-    Route::get('/type', [InscriptionController::class, 'step1'])->name('type');
-    Route::post('/type', [InscriptionController::class, 'postType'])->name('post-type');
-    Route::get('/informations', [InscriptionController::class, 'step2'])->name('infos');
-    Route::post('/informations', [InscriptionController::class, 'postInfos'])->name('post-infos');
+    Route::get('/identite', [InscriptionController::class, 'step1'])->name('identity');
+    Route::post('/identite', [InscriptionController::class, 'postStep1'])->name('post-identity');
+    Route::get('/organisation', [InscriptionController::class, 'step2'])->name('org');
+    Route::post('/organisation', [InscriptionController::class, 'postStep2'])->name('post-org');
     Route::get('/recapitulatif', [InscriptionController::class, 'step3'])->name('recap');
     Route::post('/confirmer', [InscriptionController::class, 'confirm'])->name('confirm');
     Route::get('/confirmation', [InscriptionController::class, 'confirmation'])->name('confirmation');
     Route::get('/precedent/{step}', [InscriptionController::class, 'previous'])->name('previous');
+    Route::post('/resoumettre', [InscriptionController::class, 'resubmit'])->name('resubmit')->middleware('auth');
 });
 
 // Mot de passe oublié
@@ -100,6 +101,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/suspendre', [SuperAdminController::class, 'suspendreOrganisateur'])->name('organisateurs.suspendre');
         Route::post('/organisateurs/{user}/approuver', [SuperAdminController::class, 'approuverOrganisateur'])->name('organisateurs.approuver');
         Route::post('/organisateurs/{user}/rejeter', [SuperAdminController::class, 'rejeterOrganisateur'])->name('organisateurs.rejeter');
+        Route::post('/organisateurs/{user}/corrections', [SuperAdminController::class, 'demanderCorrectionsOrganisateur'])->name('organisateurs.corrections');
         Route::post('/organisateurs/{user}/supprimer', [SuperAdminController::class, 'supprimerOrganisateur'])->name('organisateurs.supprimer');
         Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
         Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');

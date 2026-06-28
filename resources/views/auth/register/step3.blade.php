@@ -5,7 +5,7 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R&eacute;capitulatif — PaxEvent</title>
+    <title>Récapitulatif — PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
     <style>
@@ -51,13 +51,12 @@
         }
         .btn-secondary:hover { background: #f8f6f9; }
         .avatar-preview { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #e0dde3; }
-        .invalid-feedback { font-size: .8rem; }
     </style>
 </head>
 <body>
     <div class="card">
         <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo">
-        <h1>R&eacute;capitulatif</h1>
+        <h1>Récapitulatif</h1>
 
         @if($errors->any())
             <div class="alert alert-danger py-2" style="font-size:.85rem;border-radius:10px;">
@@ -66,7 +65,29 @@
         @endif
 
         <div class="recap-section">
-            <div class="recap-section-title">Type de compte</div>
+            <div class="recap-section-title">Identité</div>
+            <div class="recap-row">
+                <span class="recap-label">Nom</span>
+                <span class="recap-value">{{ $reg['identity']['nom'] }}</span>
+            </div>
+            <div class="recap-row">
+                <span class="recap-label">Email</span>
+                <span class="recap-value">{{ $reg['email'] }}</span>
+            </div>
+            <div class="recap-row">
+                <span class="recap-label">Téléphone</span>
+                <span class="recap-value">{{ $reg['identity']['telephone'] }}</span>
+            </div>
+            @if(!empty($reg['identity']['avatar']))
+            <div class="recap-row">
+                <span class="recap-label">Photo</span>
+                <span class="recap-value"><img src="{{ asset('storage/' . $reg['identity']['avatar']) }}" class="avatar-preview" alt="Avatar"></span>
+            </div>
+            @endif
+        </div>
+
+        <div class="recap-section">
+            <div class="recap-section-title">Organisation</div>
             <div class="recap-row">
                 <span class="recap-label">Type</span>
                 <span class="recap-value">
@@ -77,46 +98,29 @@
                     {{ ucfirst($reg['type']) }}
                 </span>
             </div>
-        </div>
-
-        <div class="recap-section">
-            <div class="recap-section-title">Coordonn&eacute;es</div>
-            <div class="recap-row">
-                <span class="recap-label">Email</span>
-                <span class="recap-value">{{ $reg['email'] }}</span>
-            </div>
             @if($reg['type'] === 'universitaire' || $reg['type'] === 'organisation')
                 <div class="recap-row">
-                    <span class="recap-label">{{ $reg['type'] === 'universitaire' ? 'Universit&eacute;' : 'Organisation' }}</span>
-                    <span class="recap-value">{{ $reg['data']['organisation'] }}</span>
+                    <span class="recap-label">{{ $reg['type'] === 'universitaire' ? 'Université' : 'Organisation' }}</span>
+                    <span class="recap-value">{{ $reg['org_data']['organisation'] }}</span>
                 </div>
                 @if($reg['type'] === 'organisation')
                 <div class="recap-row">
-                    <span class="recap-label">Type d&eacute;tail</span>
-                    <span class="recap-value">{{ ucfirst($reg['data']['type_detail']) }}</span>
+                    <span class="recap-label">Type détail</span>
+                    <span class="recap-value">{{ ucfirst($reg['org_data']['type_detail']) }}</span>
                 </div>
                 @endif
             @endif
+            @if(!empty($reg['org_data']['description']))
             <div class="recap-row">
-                <span class="recap-label">Nom</span>
-                <span class="recap-value">{{ $reg['data']['nom'] }}</span>
+                <span class="recap-label">Description</span>
+                <span class="recap-value" style="max-width:70%;">{{ Str::limit($reg['org_data']['description'], 60) }}</span>
             </div>
+            @endif
             <div class="recap-row">
-                <span class="recap-label">T&eacute;l&eacute;phone</span>
-                <span class="recap-value">{{ $reg['data']['telephone'] }}</span>
+                <span class="recap-label">Justificatif</span>
+                <span class="recap-value">Fourni</span>
             </div>
         </div>
-
-        @if(!empty($reg['data']['avatar']))
-        <div class="recap-section" style="text-align:center;">
-            <div class="recap-section-title">
-                @if($reg['type'] === 'particulier') Photo de profil
-                @else Logo
-                @endif
-            </div>
-            <img src="{{ asset('storage/' . $reg['data']['avatar']) }}" class="avatar-preview" alt="Avatar">
-        </div>
-        @endif
 
         <form method="POST" action="{{ route('inscriptions.confirm') }}">
             @csrf
@@ -124,14 +128,14 @@
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="cgu" id="cgu" value="1" required>
                     <label class="form-check-label" for="cgu">
-                        J'accepte les <a href="{{ route('cgu') }}" target="_blank">conditions g&eacute;n&eacute;rales d'utilisation</a>
-                        et la <a href="{{ route('confidentialite') }}" target="_blank">politique de confidentialit&eacute;</a>
+                        J'accepte les <a href="{{ route('cgu') }}" target="_blank">conditions générales d'utilisation</a>
+                        et la <a href="{{ route('confidentialite') }}" target="_blank">politique de confidentialité</a>
                     </label>
                     @error('cgu') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Cr&eacute;er mon compte</button>
-            <a href="{{ route('inscriptions.infos') }}" class="btn-secondary">Pr&eacute;c&eacute;dent</a>
+            <button type="submit" class="btn-primary">Créer mon compte</button>
+            <a href="{{ route('inscriptions.org') }}" class="btn-secondary">Précédent</a>
         </form>
     </div>
 </body>
