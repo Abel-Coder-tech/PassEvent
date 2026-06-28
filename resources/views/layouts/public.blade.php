@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PaxEvent')</title>
@@ -386,12 +387,12 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: rgba(255,255,255,0.08);
             color: rgba(255,255,255,0.6);
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
         .footer-social a:hover {
@@ -459,6 +460,14 @@
         @media (max-width: 767.98px) {
             .hero-section { padding: 2.5rem 0; }
             .hero-section h1 { font-size: 1.75rem !important; }
+        }
+
+        @media (max-width: 575.98px) {
+            .public-footer .container { padding-left: 24px; padding-right: 24px; }
+            .public-footer .row.g-4 { --bs-gutter-y: 1.5rem; }
+            .public-footer .brand { justify-content: center; }
+            .public-footer .brand img { height: 70px; }
+            .footer-social { justify-content: center; }
         }
     </style>
     @yield('styles')
@@ -568,15 +577,15 @@
                     <a href="{{ route('accueil') }}" class="brand" style="display:flex; align-items:center; gap:0.5rem;">
                         <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="90" style="filter:brightness(0) invert(1);">
                     </a>
-                    <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.75rem 0 1rem;">
+                    <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.4rem 0 0.75rem;">
                         Billetterie simple et rapide pour vos événements
                     </p>
                     <div class="footer-social d-flex gap-2">
-                        <a href="https://facebook.com" target="_blank" title="Facebook"><i class="bi bi-facebook"></i></a>
-                        <a href="https://instagram.com" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
-                        <a href="https://twitter.com" target="_blank" title="Twitter"><i class="bi bi-twitter-x"></i></a>
+                        <a href="https://facebook.com/paxevent" target="_blank" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="https://instagram.com/paxevent" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
                         <a href="https://wa.me/22943704513" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-                        <a href="https://t.me/paxevent" target="_blank" title="Telegram"><i class="bi bi-telegram"></i></a>
+                        <a href="https://youtube.com/@paxevent" target="_blank" title="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="https://linkedin.com/company/paxevent" target="_blank" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
                     </div>
                 </div>
 

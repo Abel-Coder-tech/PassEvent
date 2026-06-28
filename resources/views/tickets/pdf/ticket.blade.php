@@ -122,7 +122,6 @@
             color: #1d1d1f;
         }
         .tx-table .tv-mono {
-            font-family: 'Courier New', monospace;
             font-size: 9px;
             font-weight: 700;
             color: #1d1d1f;
@@ -164,7 +163,6 @@
             margin-top: 4px;
         }
         .qr-code-display {
-            font-family: 'Courier New', monospace;
             font-size: 13px;
             font-weight: 800;
             color: #1d1d1f;
@@ -196,6 +194,9 @@
             <tr>
                 <td style="text-align:left;vertical-align:middle;">
                     <div class="event-title">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
+                    @if($ticket->categorie)
+                        <div style="font-size:8px;font-weight:700;color:#7B3FA0;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">{{ ucfirst($ticket->categorie) }}</div>
+                    @endif
                     <div class="event-meta">
                         {{ $ticket->evenement?->date_event?->format('d M Y') ?? '---' }}
                         &ndash; {{ $ticket->evenement?->date_event?->format('H\hi') ?? '' }}
@@ -285,7 +286,10 @@
             <hr class="solid">
             <p>
                 Présentez ce QR code à l'entrée pour scanner votre billet<br>
-                <strong>Billet personnel et non transférable</strong> &middot; PaxEvent UPAO
+                <strong>Billet personnel et non transférable</strong>
+            </p>
+            <p style="margin-top:6px;font-size:8px;color:#7B3FA0;font-weight:700;">
+                PaxEvent &mdash; Billetterie simple et rapide pour vos événements
             </p>
         </div>
 
