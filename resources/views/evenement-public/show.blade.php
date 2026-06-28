@@ -61,7 +61,7 @@
     <div class="container">
         <div class="row g-5 py-4">
             <!-- Colonne gauche (rendue après le formulaire sur mobile via order) -->
-            <div class="col-lg-7 order-lg-last">
+            <div class="col-lg-7 order-lg-first">
                 <!-- Barre infos rapides -->
                 <div class="show-infos">
                     <div class="show-info-chip">
@@ -124,7 +124,7 @@
             </div>
 
             <!-- Colonne droite (rendue avant la gauche sur mobile) -->
-            <div class="col-lg-5 order-lg-first">
+            <div class="col-lg-5 order-lg-last">
                 <div class="show-sidebar">
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
                         <div class="show-card text-center py-4">
