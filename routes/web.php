@@ -136,6 +136,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         ->add(Url::create(url('/evenements')))
         ->add(Url::create(url('/inscription')))
         ->add(Url::create(url('/contact')))
+        ->add(Url::create(url('/aide')))
         ->writeToFile(public_path('sitemap.xml'));
     
     return 'Sitemap généré avec succès';

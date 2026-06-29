@@ -12,4 +12,6 @@
     <url>
     <loc>https://localhost:8000/contact</loc>
             </url>
+    <loc>https://localhost:8000/aide</loc>
+            </url>
 </urlset>
