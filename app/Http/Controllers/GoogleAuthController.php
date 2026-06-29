@@ -66,6 +66,6 @@ class GoogleAuthController extends Controller
         $reg['step'] = 1;
         session(['registration' => $reg]);
 
-        return redirect()->route('inscriptions.flow');
+        return redirect()->route('inscriptions.identity');
     }
 }

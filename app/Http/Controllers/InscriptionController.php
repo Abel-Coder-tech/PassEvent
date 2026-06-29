@@ -89,7 +89,7 @@ class InscriptionController extends Controller
 
         $this->putReg(['email_verified' => true, 'from_google' => $request->has('from_google')]);
 
-        return redirect()->route('inscriptions.flow');
+        return redirect()->route('inscriptions.identity');
     }
 
     public function resendOtp(Request $request)
@@ -108,37 +108,23 @@ class InscriptionController extends Controller
             : back()->with('success', 'Un nouveau code vous a été envoyé.');
     }
 
-    public function flow()
+    public function step1()
     {
         $reg = $this->getReg();
         if (empty($reg['email']) || empty($reg['email_verified'])) {
             return redirect()->route('inscriptions.create');
         }
-
-        $docLabels = [
-            'universitaire' => 'Carte étudiante ou lettre de l\'université',
-            'particulier' => 'CIP (Carte d\'identité personnelle)',
-            'organisation' => 'IFU ou RCCM',
-        ];
-
-        return view('auth.register.flow', [
-            'reg' => $reg,
-            'docLabels' => $docLabels,
+        return view('auth.register.step1', [
+            'from_google' => $reg['from_google'] ?? false,
+            'data' => $reg['identity'] ?? [],
         ]);
-    }
-
-    public function step1()
-    {
-        return redirect()->route('inscriptions.flow');
     }
 
     public function postStep1(Request $request)
     {
         $reg = $this->getReg();
         if (empty($reg['email']) || empty($reg['email_verified'])) {
-            return $request->expectsJson()
-                ? response()->json(['success' => false, 'message' => 'Session expirée.'], 403)
-                : redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.create');
         }
 
         $rules = [
@@ -159,29 +145,26 @@ class InscriptionController extends Controller
 
         $this->putReg(['identity' => $validated, 'step' => 2]);
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'nom' => $validated['nom'],
-                'telephone' => $validated['telephone'],
-            ]);
-        }
-
-        return redirect()->route('inscriptions.flow');
+        return redirect()->route('inscriptions.org');
     }
 
     public function step2()
     {
-        return redirect()->route('inscriptions.flow');
+        $reg = $this->getReg();
+        if (empty($reg['identity'])) {
+            return redirect()->route('inscriptions.identity');
+        }
+        return view('auth.register.step2', [
+            'type' => $reg['org_data']['type'] ?? null,
+            'data' => $reg['org_data'] ?? [],
+        ]);
     }
 
     public function postStep2(Request $request)
     {
         $reg = $this->getReg();
         if (empty($reg['identity'])) {
-            return $request->expectsJson()
-                ? response()->json(['success' => false, 'message' => 'Complétez d\'abord votre identité.'], 403)
-                : redirect()->route('inscriptions.flow');
+            return redirect()->route('inscriptions.identity');
         }
 
         $rules = [
@@ -209,23 +192,16 @@ class InscriptionController extends Controller
 
         $this->putReg(['type' => $type, 'org_data' => $validated, 'step' => 3]);
 
-        if ($request->expectsJson()) {
-            $org = $validated['organisation'] ?? null;
-            $td  = $validated['type_detail'] ?? null;
-            return response()->json([
-                'success' => true,
-                'type' => ucfirst($type),
-                'organisation' => $org,
-                'type_detail' => $td ? ucfirst($td) : null,
-            ]);
-        }
-
-        return redirect()->route('inscriptions.flow');
+        return redirect()->route('inscriptions.recap');
     }
 
     public function step3()
     {
-        return redirect()->route('inscriptions.flow');
+        $reg = $this->getReg();
+        if (empty($reg['org_data'])) {
+            return redirect()->route('inscriptions.org');
+        }
+        return view('auth.register.step3', ['reg' => $reg]);
     }
 
     public function confirm(Request $request)
@@ -319,7 +295,16 @@ class InscriptionController extends Controller
             $this->regen();
             return redirect()->route('inscriptions.create');
         }
+        if ($step == 1 && $currentStep >= 1) {
+            return redirect()->route('inscriptions.identity');
+        }
+        if ($step == 2 && $currentStep >= 2) {
+            return redirect()->route('inscriptions.org');
+        }
+        if ($step == 3 && $currentStep >= 3) {
+            return redirect()->route('inscriptions.recap');
+        }
 
-        return redirect()->route('inscriptions.flow');
+        return redirect()->route('inscriptions.create');
     }
 }

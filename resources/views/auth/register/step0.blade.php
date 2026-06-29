@@ -1,45 +1,79 @@
-@extends('layouts.register')
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription — PaxEvent</title>
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f5f7 0%, #e8e0ec 100%);
+            padding: 1rem;
+        }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .card .logo { max-width: 150px; height: auto; display: block; margin: 0 auto 1rem; }
+        .card h1 { font-size: 1.5rem; font-weight: 700; color: #1d1d1f; margin-bottom: .35rem; }
+        .card .subtitle { font-size: .9rem; color: #6c757d; margin-bottom: 1.5rem; }
+        .form-control { border-radius: 10px; padding: .7rem 1rem; border: 1.5px solid #e0dde3; }
+        .form-control:focus { border-color: #542680; box-shadow: 0 0 0 3px rgba(84,38,128,.12); }
+        .btn-primary {
+            background: #542680; border: none; border-radius: 10px; padding: .7rem 1rem;
+            font-weight: 600; width: 100%; transition: .2s;
+        }
+        .btn-primary:hover { background: #451e68; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: .6; }
+        .login-link { margin-top: 1.5rem; font-size: .85rem; color: #6c757d; }
+        .login-link a { color: #542680; font-weight: 600; text-decoration: none; }
+        .login-link a:hover { text-decoration: underline; }
+        .invalid-feedback { text-align: left; font-size: .8rem; }
+        .is-invalid { border-color: #dc3545 !important; }
+        .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 10px; padding: .6rem 1rem; font-size: .85rem; margin-bottom: 1rem; }
+        .btn-google {
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            background: #fff; border: 1.5px solid #e0dde3; border-radius: 10px; padding: .7rem 1rem;
+            font-weight: 600; font-size: .9rem; color: #1d1d1f; text-decoration: none; transition: .2s;
+        }
+        .btn-google:hover { background: #f8f6f9; border-color: #9972B0; color: #1d1d1f; }
+        .btn-google i { color: #4285F4; font-size: 1.1rem; }
+        .divider { display: flex; align-items: center; color: #ccc; font-size: .85rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e0dde3; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo">
+        <h1>Cr&eacute;er un compte organisateur</h1>
+        <p class="subtitle">Entrez votre adresse email pour commencer</p>
 
-@section('title', 'Inscription — PaxEvent')
-
-@section('progress-bar')
-<div class="d-flex justify-content-center align-items-center" style="max-width:480px;margin:0 auto;padding:0 1rem;">
-    <div class="progress-step" data-step="1">
-        <div class="step-dot active">1</div>
-        <div class="step-line" data-line="1"></div>
-    </div>
-    <div class="progress-step" data-step="2">
-        <div class="step-dot" id="dot2">2</div>
-        <div class="step-line" data-line="2"></div>
-    </div>
-    <div class="progress-step" data-step="3">
-        <div class="step-dot" id="dot3">3</div>
-        <div class="step-line" data-line="3"></div>
-    </div>
-    <div class="progress-step" data-step="4">
-        <div class="step-dot" id="dot4">4</div>
-    </div>
-</div>
-<p class="step-label active text-center mt-2 mb-0" style="font-size:0.78rem;color:var(--gris);">
-    <strong>Étape 1 – Email :</strong> Veuillez entrer votre adresse email
-</p>
-@endsection
-
-@section('content')
-<div class="container py-4">
-    <div class="register-card mx-auto text-center">
-        <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="70" class="mb-3">
-        <h1 class="h4 fw-bold">Créer un compte organisateur</h1>
-        <p class="text-muted small mb-3">Entrez votre adresse email pour commencer</p>
+        @if($errors->any())
+            <div class="alert-danger">
+                @foreach($errors->all() as $e) {{ $e }} @break @endforeach
+            </div>
+        @endif
 
         @if(config('services.google.client_id'))
         <a href="{{ route('google.redirect') }}" class="btn btn-google w-100 mb-3">
             <i class="bi bi-google me-2"></i> S'inscrire avec Google
         </a>
-        <div class="d-flex align-items-center mb-3" style="color:#ccc;font-size:.85rem;">
-            <span style="flex:1;border-bottom:1px solid #e0dde3;"></span>
-            <span style="padding:0 12px;">ou</span>
-            <span style="flex:1;border-bottom:1px solid #e0dde3;"></span>
+        <div class="divider mb-3">
+            <span style="background:#fff;padding:0 12px;color:#6c757d;font-size:.85rem;">ou</span>
         </div>
         @endif
 
@@ -51,22 +85,12 @@
                        value="{{ old('email') }}" required autofocus placeholder="exemple@email.com">
                 @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
-            <button type="submit" class="btn btn-primary w-100" style="border-radius:10px;">Recevoir mon code</button>
+            <button type="submit" class="btn btn-primary">Recevoir mon code</button>
         </form>
 
-        <p class="mt-3 mb-0" style="font-size:.85rem;color:#6c757d;">
-            Déjà un compte ? <a href="{{ route('login') }}" style="color:#542680;font-weight:600;text-decoration:none;">Connectez-vous</a>
+        <p class="login-link">
+            D&eacute;j&agrave; un compte ? <a href="{{ route('login') }}">Connectez-vous</a>
         </p>
     </div>
-</div>
-
-<style>
-.btn-google {
-    display: flex; align-items: center; justify-content: center; gap: .5rem;
-    background: #fff; border: 1.5px solid #e0dde3; border-radius: 10px; padding: .65rem 1rem;
-    font-weight: 600; font-size: .9rem; color: #1d1d1f; text-decoration: none; transition: .2s;
-}
-.btn-google:hover { background: #f8f6f9; border-color: #9972B0; color: #1d1d1f; }
-.btn-google i { color: #4285F4; font-size: 1.1rem; }
-</style>
-@endsection
+</body>
+</html>
