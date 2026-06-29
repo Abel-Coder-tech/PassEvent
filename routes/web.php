@@ -23,6 +23,8 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminAuthController;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
 
 // ============================================================
 // Routes publiques (participant)
@@ -127,6 +129,17 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
     });
 });
+//Routes globales Spatie Sitemap
+    Route::get('/generate-sitemap', function () {
+    Sitemap::create()
+        ->add(Url::create('/'))
+        ->add(Url::create('/evenements'))
+        ->add(Url::create('/inscription'))
+        ->add(Url::create('/contact'))
+        ->writeToFile(public_path('sitemap.xml'));
+    
+    return 'Sitemap généré avec succès';
+});
 
 // ============================================================
 // Routes protégées (admin)
@@ -202,4 +215,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/codes-promos', [CodePromoController::class, 'store'])->name('admin.codes-promos.store');
     Route::delete('/admin/codes-promos/{codePromo}', [CodePromoController::class, 'destroy'])->name('admin.codes-promos.destroy');
     Route::get('/admin/codes-promos/export', [CodePromoController::class, 'export'])->name('admin.codes-promos.export');
+
+    
 });
