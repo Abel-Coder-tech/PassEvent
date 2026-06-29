@@ -132,10 +132,10 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 //Routes globales Spatie Sitemap
     Route::get('/generate-sitemap', function () {
     Sitemap::create()
-        ->add(Url::create('/'))
-        ->add(Url::create('/evenements'))
-        ->add(Url::create('/inscription'))
-        ->add(Url::create('/contact'))
+        ->add(Url::create(url('/')))
+        ->add(Url::create(url('/evenements')))
+        ->add(Url::create(url('/inscription')))
+        ->add(Url::create(url('/contact')))
         ->writeToFile(public_path('sitemap.xml'));
     
     return 'Sitemap généré avec succès';
