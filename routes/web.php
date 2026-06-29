@@ -72,6 +72,7 @@ Route::prefix('inscription')->name('inscriptions.')->group(function () {
     Route::get('/verifier', [InscriptionController::class, 'showVerify'])->name('verify');
     Route::post('/verifier', [InscriptionController::class, 'verifyOtp'])->name('verify-otp')->middleware('throttle:5,1');
     Route::post('/renvoyer', [InscriptionController::class, 'resendOtp'])->name('resend-otp')->middleware('throttle:2,30');
+    Route::get('/flux', [InscriptionController::class, 'flow'])->name('flow');
     Route::get('/identite', [InscriptionController::class, 'step1'])->name('identity');
     Route::post('/identite', [InscriptionController::class, 'postStep1'])->name('post-identity');
     Route::get('/organisation', [InscriptionController::class, 'step2'])->name('org');
