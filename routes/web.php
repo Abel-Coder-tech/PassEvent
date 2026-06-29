@@ -129,16 +129,25 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
     });
 });
-//Routes globales Spatie Sitemap
-    Route::get('/generate-sitemap', function () {
-    Sitemap::create()
+// Routes globales Spatie Sitemap
+Route::get('/generate-sitemap', function () {
+    $sitemap = Sitemap::create()
         ->add(Url::create(url('/')))
         ->add(Url::create(url('/evenements')))
         ->add(Url::create(url('/inscription')))
         ->add(Url::create(url('/contact')))
         ->add(Url::create(url('/aide')))
-        ->writeToFile(public_path('sitemap.xml'));
-    
+        ->add(Url::create(url('/cgu')))
+        ->add(Url::create(url('/confidentialite')))
+        ->add(Url::create(url('/mentions-legales')))
+        ->add(Url::create(url('/politique-remboursement')));
+
+    \App\Models\Evenement::where('statut', 'publié')->get()->each(function ($evenement) use ($sitemap) {
+        $sitemap->add(Url::create(url('/evenements/' . $evenement->id)));
+    });
+
+    $sitemap->writeToFile(public_path('sitemap.xml'));
+
     return 'Sitemap généré avec succès';
 });
 
