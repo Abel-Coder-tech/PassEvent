@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvenementController;
@@ -23,6 +24,31 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminAuthController;
+
+// ============================================================
+// SEO
+// ============================================================
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\n"
+        . "Disallow: /admin/\n"
+        . "Disallow: /superadmin/\n"
+        . "Disallow: /dashboard\n"
+        . "Disallow: /parametres/\n"
+        . "Disallow: /scan/\n"
+        . "Disallow: /login\n"
+        . "Disallow: /mot-de-passe-oublie\n"
+        . "Disallow: /reinitialiser/\n\n"
+        . "Sitemap: " . url('/sitemap.xml') . "\n";
+    return response($content, 200, ['Content-Type' => 'text/plain']);
+})->name('robots');
+
+Route::get('/sitemap.xml', function () {
+    $path = public_path('sitemap.xml');
+    if (!file_exists($path)) {
+        Artisan::call('sitemap:generate');
+    }
+    return response()->file($path, ['Content-Type' => 'application/xml']);
+})->name('sitemap');
 
 // ============================================================
 // Routes publiques (participant)
