@@ -69,7 +69,7 @@ Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController:
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 Route::prefix('inscription')->name('inscriptions.')->group(function () {
-    Route::get('/', [InscriptionController::class, 'step0'])->name('create');
+    Route::get('/', [InscriptionController::class, 'step0'])->name('organisateur');
     Route::post('/email', [InscriptionController::class, 'sendOtp'])->name('send-otp')->middleware('throttle:3,1');
     Route::get('/verifier', [InscriptionController::class, 'showVerify'])->name('verify');
     Route::post('/verifier', [InscriptionController::class, 'verifyOtp'])->name('verify-otp')->middleware('throttle:5,1');

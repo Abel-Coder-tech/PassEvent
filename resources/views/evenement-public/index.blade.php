@@ -143,7 +143,7 @@
                 <h2 class="ev-cta-title">Envie de devenir organisateur ?</h2>
                 <p class="ev-cta-text">Créez vos événements, vendez vos billets en ligne et gérez votre billetterie en toute simplicité.</p>
                 <div class="ev-cta-actions">
-                    <a href="{{ route('inscriptions.create') }}" class="ev-cta-btn-primary">
+                    <a href="{{ route('inscriptions.organisateur') }}" class="ev-cta-btn-primary">
                         Créer un compte gratuit <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                     <a href="{{ route('login') }}" class="ev-cta-btn-outline">

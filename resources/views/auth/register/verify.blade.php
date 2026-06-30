@@ -78,7 +78,7 @@
                 </p>
 
                 <p class="back-link">
-                    <a href="{{ route('inscriptions.create') }}"><i class="bi bi-arrow-left"></i> Modifier l'email</a>
+                    <a href="{{ route('inscriptions.organisateur') }}"><i class="bi bi-arrow-left"></i> Modifier l'email</a>
                 </p>
             </div>
         </div>

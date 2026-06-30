@@ -203,7 +203,7 @@
                         </div>
                     </div>
                     <div class="aide-organiser-actions">
-                        <a href="{{ route('inscriptions.create') }}" class="aide-btn-primary" style="font-size:0.85rem; padding:0.65rem 1.5rem;">
+                        <a href="{{ route('inscriptions.organisateur') }}" class="aide-btn-primary" style="font-size:0.85rem; padding:0.65rem 1.5rem;">
                             Créer un compte <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                         <a href="{{ route('login') }}" class="aide-btn-outline" style="font-size:0.82rem; padding:0.6rem 1.2rem;">

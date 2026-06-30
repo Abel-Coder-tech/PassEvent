@@ -97,7 +97,7 @@
                     </div>
 
                     <button type="submit" class="btn-primary">Continuer</button>
-                    <a href="{{ route('inscriptions.create') }}" class="btn-secondary">Recommencer</a>
+                    <a href="{{ route('inscriptions.organisateur') }}" class="btn-secondary">Recommencer</a>
                 </form>
             </div>
         </div>

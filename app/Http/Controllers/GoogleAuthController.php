@@ -20,7 +20,7 @@ class GoogleAuthController extends Controller
     public function redirect()
     {
         if (!config('services.google.client_id')) {
-            return redirect()->route('inscriptions.create')->withErrors(['email' => 'Authentification Google non configurée.']);
+            return redirect()->route('inscriptions.organisateur')->withErrors(['email' => 'Authentification Google non configurée.']);
         }
         return $this->socialite->driver('google')->redirect();
     }

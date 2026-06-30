@@ -64,7 +64,7 @@ class InscriptionController extends Controller
     {
         $reg = $this->getReg();
         if (empty($reg['email'])) {
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
         return view('auth.register.verify', ['email' => $reg['email']]);
     }
@@ -73,7 +73,7 @@ class InscriptionController extends Controller
     {
         $reg = $this->getReg();
         if (empty($reg['email'])) {
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
 
         $request->validate(['code' => 'required|string|size:4']);
@@ -98,7 +98,7 @@ class InscriptionController extends Controller
         if (empty($reg['email'])) {
             return $request->expectsJson()
                 ? response()->json(['success' => false])
-                : redirect()->route('inscriptions.create');
+                : redirect()->route('inscriptions.organisateur');
         }
 
         $this->otp->generateAndSend($reg['email']);
@@ -112,7 +112,7 @@ class InscriptionController extends Controller
     {
         $reg = $this->getReg();
         if (empty($reg['email']) || empty($reg['email_verified'])) {
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
         return view('auth.register.step1', [
             'from_google' => $reg['from_google'] ?? false,
@@ -124,7 +124,7 @@ class InscriptionController extends Controller
     {
         $reg = $this->getReg();
         if (empty($reg['email']) || empty($reg['email_verified'])) {
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
 
         $rules = [
@@ -208,7 +208,7 @@ class InscriptionController extends Controller
     {
         $reg = $this->getReg();
         if (empty($reg['org_data']) || empty($reg['type']) || empty($reg['email']) || empty($reg['identity'])) {
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
 
         $request->validate(['cgu' => 'accepted']);
@@ -260,7 +260,7 @@ class InscriptionController extends Controller
     {
         $reg = $this->getReg();
         if (($reg['step'] ?? null) !== 'done') {
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
 
         $email = $reg['email'] ?? '';
@@ -293,7 +293,7 @@ class InscriptionController extends Controller
 
         if ($step == 0) {
             $this->regen();
-            return redirect()->route('inscriptions.create');
+            return redirect()->route('inscriptions.organisateur');
         }
         if ($step == 1 && $currentStep >= 1) {
             return redirect()->route('inscriptions.identity');
@@ -305,6 +305,6 @@ class InscriptionController extends Controller
             return redirect()->route('inscriptions.recap');
         }
 
-        return redirect()->route('inscriptions.create');
+        return redirect()->route('inscriptions.organisateur');
     }
 }

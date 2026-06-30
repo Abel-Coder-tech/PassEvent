@@ -156,7 +156,7 @@
                     <button type="submit" class="btn-connexion">Se connecter</button>
                 </form>
                 <p class="text-center mt-3" style="font-size:0.85rem; color:#6c757d;">
-                    Pas encore de compte ? <a href="{{ route('inscriptions.create') }}" style="color:#542680; font-weight:600; text-decoration:underline;">Créer un compte</a>
+                    Pas encore de compte ? <a href="{{ route('inscriptions.organisateur') }}" style="color:#542680; font-weight:600; text-decoration:underline;">Créer un compte</a>
                 </p>
             </div>
         @endif

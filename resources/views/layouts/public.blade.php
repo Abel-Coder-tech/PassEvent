@@ -596,7 +596,7 @@
                         <li><a href="{{ route('evenements.public') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Événements</a></li>
                         <li><a href="{{ route('aide') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Comment ça marche</a></li>
                         <li><a href="{{ route('tickets.recuperer') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Mon ticket</a></li>
-                        <li><a href="{{ route('inscriptions.create') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Devenir organisateur</a></li>
+                        <li><a href="{{ route('inscriptions.organisateur') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Devenir organisateur</a></li>
                     </ul>
                 </div>
 

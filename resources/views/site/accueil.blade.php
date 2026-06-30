@@ -26,7 +26,7 @@
                     <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
                         Acheter un ticket <i class="bi bi-arrow-right ms-1"></i>
                     </a>
-                    <a href="{{ route('inscriptions.create') }}" class="btn-hero-outline">
+                    <a href="{{ route('inscriptions.organisateur') }}" class="btn-hero-outline">
                         Devenir organisateur
                     </a>
                 </div>
