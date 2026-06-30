@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
-@section('title', 'Conditions Generales d\'Utilisation - PaxEvent')
+@section('title', 'Conditions Générales d\'Utilisation — PaxEvent')
+@section('description', 'Consultez les conditions générales d\'utilisation de PaxEvent, la plateforme de billetterie en ligne au Bénin.')
 
 @section('content')
 <section class="py-5">

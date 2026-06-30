@@ -1,20 +1,12 @@
 @extends('layouts.public')
 
-@section('title', $evenement->titre . ' - PaxEvent')
-
-@push('meta')
-    <meta property="og:title" content="{{ $evenement->titre }}">
-    <meta property="og:description" content="{{ Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160) }}">
-    <meta property="og:url" content="{{ route('evenements.public.show', $evenement->id) }}">
-    <meta property="og:type" content="event">
-    <meta property="og:site_name" content="PaxEvent">
-    @if($evenement->image)
-    <meta property="og:image" content="{{ asset('storage/' . $evenement->image) }}">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    @endif
-    <meta name="description" content="{{ Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160) }}">
-@endpush
+@section('title', $evenement->titre . ' — PaxEvent')
+@section('description', Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160))
+@section('og_title', $evenement->titre)
+@section('og_description', Str::limit($evenement->description ?? 'Réservez vos billets pour ' . $evenement->titre . ' sur PaxEvent.', 160))
+@if($evenement->image)
+    @section('og_image', asset('storage/' . $evenement->image))
+@endif
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('evenements.public') }}">Événements</a></li>

@@ -1,6 +1,9 @@
 @extends('layouts.public')
 
-@section('title', 'Contact - PaxEvent')
+@section('title', 'Contact — PaxEvent')
+@section('description', 'Contactez l\'équipe PaxEvent pour toute question, suggestion ou assistance. Nous sommes à votre écoute.')
+@section('og_title', 'Contact — PaxEvent')
+@section('og_description', 'Besoin d\'aide ? Contactez l\'équipe PaxEvent. Nous vous répondrons dans les plus brefs délais.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

@@ -1,6 +1,9 @@
 @extends('layouts.public')
 
-@section('title', 'Comment ca marche - PaxEvent')
+@section('title', 'Comment ça marche — PaxEvent')
+@section('description', 'Découvrez comment fonctionne PaxEvent : acheter un billet, créer un événement, et bien plus. Guide pas à pas.')
+@section('og_title', 'Comment ça marche — PaxEvent')
+@section('og_description', 'Apprenez à utiliser PaxEvent pour acheter et vendre vos billets d\'événements en ligne.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

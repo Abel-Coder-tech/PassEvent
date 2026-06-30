@@ -1,6 +1,9 @@
 @extends('layouts.public')
 
-@section('title', 'Recuperer mon ticket - PaxEvent')
+@section('title', 'Récupérer mon ticket — PaxEvent')
+@section('description', 'Vous avez perdu votre billet ? Récupérez votre ticket PaxEvent en quelques clics.')
+@section('og_title', 'Récupérer mon ticket — PaxEvent')
+@section('og_description', 'Retrouvez votre billet d\'événement PaxEvent facilement.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

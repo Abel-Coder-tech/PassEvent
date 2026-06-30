@@ -1,6 +1,9 @@
 ﻿@extends('layouts.public')
 
-@section('title', 'PaxEvent - Billetterie intelligente au Benin')
+@section('title', 'PaxEvent — Billetterie en ligne au Bénin')
+@section('description', 'PaxEvent, la plateforme de billetterie en ligne au Bénin. Achetez et vendez vos billets d\'événements en toute simplicité et sécurité.')
+@section('og_title', 'PaxEvent — Billetterie en ligne au Bénin')
+@section('og_description', 'La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne au Bénin.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

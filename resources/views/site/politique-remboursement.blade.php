@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
-@section('title', 'Politique de remboursement - PaxEvent')
+@section('title', 'Politique de remboursement — PaxEvent')
+@section('description', 'Consultez la politique de remboursement de PaxEvent pour les billets d\'événements.')
 
 @section('content')
 <section class="py-5">

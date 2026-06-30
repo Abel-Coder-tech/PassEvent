@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
-@section('title', 'Politique de confidentialité - PaxEvent')
+@section('title', 'Politique de confidentialité — PaxEvent')
+@section('description', 'Découvrez comment PaxEvent protège vos données personnelles et respecte votre vie privée.')
 
 @section('content')
 <section class="py-5">

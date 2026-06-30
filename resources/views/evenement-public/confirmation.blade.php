@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
-@section('title', 'Paiement confirme - PaxEvent')
+@section('title', 'Paiement confirmé — PaxEvent')
+@section('description', 'Votre paiement a été confirmé. Votre billet vous sera envoyé par email.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

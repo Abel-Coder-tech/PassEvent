@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
-@section('title', 'Paiement - ' . $ticket->evenement->titre)
+@section('title', 'Paiement — ' . $ticket->evenement->titre . ' — PaxEvent')
+@section('description', 'Finalisez votre achat de billets pour ' . $ticket->evenement->titre . ' sur PaxEvent. Paiement sécurisé.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

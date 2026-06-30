@@ -1,6 +1,9 @@
 @extends('layouts.public')
 
-@section('title', 'Tous les événements - PaxEvent')
+@section('title', 'Tous les événements — PaxEvent')
+@section('description', 'Découvrez tous les événements disponibles sur PaxEvent : concerts, conférences, spectacles et plus au Bénin.')
+@section('og_title', 'Événements — PaxEvent')
+@section('og_description', 'Trouvez et réservez vos billets pour les meilleurs événements au Bénin sur PaxEvent.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
