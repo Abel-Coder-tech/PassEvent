@@ -81,6 +81,19 @@
         .public-header .brand span:first-child { color: var(--violet); }
         .public-header .brand span:last-child { color: var(--sombre); }
 
+        .beta-badge {
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent), #e6b800);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            align-self: flex-start;
+            line-height: 1.2;
+        }
+
         .public-nav {
             list-style: none;
             margin: 0;
@@ -493,6 +506,7 @@
         <div class="container header-inner position-relative">
             <a href="{{ route('accueil') }}" class="brand">
                 <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="80">
+                <span class="beta-badge">Bêta</span>
             </a>
 
             <button class="mobile-toggle" id="navToggle" aria-label="Menu">
