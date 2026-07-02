@@ -3,96 +3,136 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SebpayService
 {
-    protected ?string $apiKey;
     protected ?string $publicKey;
     protected ?string $secretKey;
-    protected bool $sandbox;
+    protected string $baseUrl;
 
     public function __construct()
     {
-        $this->apiKey = config('paiement.methodes.sebpay.api_key');
         $this->publicKey = config('paiement.methodes.sebpay.public_key');
         $this->secretKey = config('paiement.methodes.sebpay.secret_key');
-        $this->sandbox = config('paiement.methodes.sebpay.sandbox', true);
+        $sandbox = config('paiement.methodes.sebpay.sandbox', true);
+
+        $this->baseUrl = $sandbox
+            ? config('paiement.methodes.sebpay.sandbox_url', 'https://sandbox-api.sebpay.bj/api/v1')
+            : config('paiement.methodes.sebpay.api_url', 'https://newapi.sebpay.bj/api/v1');
     }
 
     public function isConfigured(): bool
     {
-        return !empty($this->apiKey);
+        return !empty($this->publicKey) && !empty($this->secretKey);
     }
 
     /**
-     * Crée une transaction Sebpay et retourne l'URL de paiement.
+     * Initie une collecte Sebpay.
      */
-    public function createTransaction(float $montant, string $ticketId, string $email, string $nom, ?string $telephone = null): array
-    {
-        $baseUrl = $this->sandbox ? 'https://sandbox.sebpay.com/api/v1' : 'https://api.sebpay.com/v1';
+    public function createTransaction(
+        float $montant,
+        string $externalReference,
+        string $phone,
+        string $operator,
+        string $country = 'BJ',
+        ?string $callbackUrl = null,
+        ?string $otpCode = null
+    ): array {
+        $payload = [
+            'amount' => (int) round($montant),
+            'currency' => 'XOF',
+            'phone' => ltrim($phone, '+'),
+            'operator' => $operator,
+            'country' => strtoupper($country),
+            'external_reference' => $externalReference,
+        ];
+
+        if ($callbackUrl) {
+            $payload['callback_url'] = $callbackUrl;
+        }
+
+        if ($otpCode) {
+            $payload['otp_code'] = $otpCode;
+        }
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
+            'X-Public-Key' => $this->publicKey,
+            'X-Secret-Key' => $this->secretKey,
             'Content-Type' => 'application/json',
-        ])->post($baseUrl . '/transactions', [
-            'amount' => (int) $montant,
-            'currency' => 'XOF',
-            'description' => 'Ticket #' . $ticketId . ' - PaxEvent',
-            'callback_url' => route('paiement.sebpay.callback') . '?ticket=' . $ticketId,
-            'customer_email' => $email,
-            'customer_name' => $nom,
-            'customer_phone' => $telephone,
-            'external_id' => (string) $ticketId,
-        ]);
+        ])->post($this->baseUrl . '/collections', $payload);
 
-        $data = $response->json();
+        $body = $response->json();
 
-        if ($response->failed()) {
-            \Illuminate\Support\Facades\Log::error('Sebpay createTransaction failed', [
-                'ticket' => $ticketId,
-                'response' => $data,
+        if ($response->failed() || !($body['success'] ?? false)) {
+            Log::error('Sebpay collection failed', [
+                'payload' => $payload,
+                'status' => $response->status(),
+                'response' => $body,
             ]);
-            return ['success' => false, 'error' => $data['message'] ?? 'Erreur Sebpay'];
+            return [
+                'success' => false,
+                'error' => $body['message'] ?? $body['error'] ?? 'Erreur Sebpay',
+            ];
         }
+
+        $data = $body['data'] ?? $body;
 
         return [
             'success' => true,
-            'transaction' => $data['transaction'] ?? $data,
-            'redirect_url' => $data['redirect_url'] ?? $data['payment_url'] ?? $data['url'] ?? null,
-            'transaction_id' => $data['transaction_id'] ?? $data['id'] ?? null,
+            'transaction_id' => $data['transaction_id'] ?? null,
+            'status' => $data['status'] ?? 'pending',
+            'provider_link' => $data['provider_link'] ?? null,
+            'message' => $body['message'] ?? $data['message'] ?? '',
+            'data' => $data,
         ];
     }
 
     /**
-     * Vérifie le statut d'une transaction Sebpay.
+     * Récupère les détails d'une transaction.
      */
-    public function verifyTransaction(string $transactionId): array
+    public function getTransaction(string $idOrReference): array
     {
-        $baseUrl = $this->sandbox ? 'https://sandbox.sebpay.com/api/v1' : 'https://api.sebpay.com/v1';
-
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-        ])->get($baseUrl . '/transactions/' . $transactionId);
+            'X-Public-Key' => $this->publicKey,
+            'X-Secret-Key' => $this->secretKey,
+        ])->get($this->baseUrl . '/collections/' . $idOrReference);
 
-        $data = $response->json();
+        $body = $response->json();
 
-        if ($response->failed()) {
-            \Illuminate\Support\Facades\Log::error('Sebpay verify failed', [
-                'transaction_id' => $transactionId,
-                'response' => $data,
+        if ($response->failed() || !($body['success'] ?? false)) {
+            Log::error('Sebpay getTransaction failed', [
+                'reference' => $idOrReference,
+                'status' => $response->status(),
+                'response' => $body,
             ]);
-            return ['success' => false, 'status' => 'failed'];
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'error' => $body['message'] ?? 'Erreur Sebpay',
+            ];
         }
 
-        $transaction = $data['transaction'] ?? $data;
-        $status = $transaction['status'] ?? 'unknown';
+        $data = $body['data'] ?? $body;
 
         return [
-            'success' => in_array(strtolower($status), ['success', 'completed', 'approved', 'confirmed', 'paye']),
-            'status' => $status,
-            'transaction' => $transaction,
-            'channel' => $transaction['channel'] ?? $transaction['payment_method'] ?? 'sebpay',
+            'success' => $data['status'] === 'approved',
+            'status' => $data['status'] ?? 'unknown',
+            'transaction_id' => $data['transaction_id'] ?? $idOrReference,
+            'external_reference' => $data['external_reference'] ?? null,
+            'amount' => $data['amount'] ?? null,
+            'currency' => $data['currency'] ?? null,
+            'customer_phone' => $data['customer_phone'] ?? $data['phone'] ?? null,
+            'data' => $data,
         ];
+    }
+
+    /**
+     * Vérifie la signature HMAC-SHA256 d'un webhook Sebpay.
+     */
+    public function verifyWebhookSignature(string $payloadJson, string $signature): bool
+    {
+        $expected = hash_hmac('sha256', $payloadJson, $this->secretKey);
+        return hash_equals($expected, $signature);
     }
 }

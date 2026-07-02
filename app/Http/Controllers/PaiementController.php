@@ -202,12 +202,18 @@ class PaiementController extends Controller
                 ->with('error', 'Sebpay n\'est pas configuré.');
         }
 
+        $validated = $request->validate([
+            'phone' => 'required|string|max:20',
+            'operator' => 'required|string|in:mtn,moov,orange,wav',
+        ]);
+
         $result = $this->sebpay->createTransaction(
-            $ticket->montant,
-            $ticket->id,
-            $ticket->email_acheteur,
-            $ticket->nom_acheteur,
-            $ticket->telephone_acheteur
+            montant: $ticket->montant,
+            externalReference: (string) $ticket->id,
+            phone: $validated['phone'],
+            operator: $validated['operator'],
+            country: 'BJ',
+            callbackUrl: route('paiement.sebpay.webhook'),
         );
 
         if (!$result['success']) {
@@ -216,26 +222,32 @@ class PaiementController extends Controller
         }
 
         $transactionId = $result['transaction_id'];
-        $redirectUrl = $result['redirect_url'];
+        $providerLink = $result['provider_link'];
 
         if ($transactionId) {
-            $ticket->update(['transaction_id' => $transactionId]);
+            $ticket->update([
+                'transaction_id' => $transactionId,
+                'telephone_acheteur' => $validated['phone'],
+            ]);
         }
 
-        if ($redirectUrl) {
-            return redirect()->away($redirectUrl);
+        if ($providerLink) {
+            return view('evenement-public.paiement-redirect', [
+                'url' => $providerLink,
+                'ticket' => $ticket,
+                'transaction_id' => $transactionId,
+            ]);
         }
 
-        return redirect()->route('paiement.sebpay.callback', [
-            'ticket' => $ticket->id,
-            'id' => $transactionId,
-        ]);
+        session()->flash('info', 'Un message USSD vous a été envoyé. Validez le paiement sur votre téléphone.');
+
+        return redirect()->route('paiement.show', $ticket->id);
     }
 
     public function callbackSebpay(Request $request)
     {
         $ticketId = $request->query('ticket');
-        $transactionId = $request->query('id') ?? $request->query('transaction_id');
+        $transactionId = $request->query('transaction_id') ?? $request->query('id');
 
         if (!$transactionId) {
             return redirect()->route('paiement.show', $ticketId)
@@ -249,7 +261,7 @@ class PaiementController extends Controller
         }
 
         try {
-            $verification = $this->sebpay->verifyTransaction($transactionId);
+            $verification = $this->sebpay->getTransaction($transactionId);
         } catch (\Exception $e) {
             FacadesLog::error('Sebpay verify failed for ticket ' . $ticket->id . ': ' . $e->getMessage());
             return redirect()->route('paiement.show', $ticket->id)
@@ -261,7 +273,6 @@ class PaiementController extends Controller
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
                 'methode_paiement' => 'sebpay',
-                'telephone_paiement' => $ticket->telephone_acheteur,
             ]);
 
             try {
@@ -283,32 +294,45 @@ class PaiementController extends Controller
                 ->with('success', 'Paiement confirme avec succes!');
         }
 
+        if ($verification['status'] === 'rejected') {
+            $ticket->update(['transaction_id' => null]);
+            return redirect()->route('paiement.show', $ticket->id)
+                ->with('error', 'Le paiement a ete annule ou rejete.');
+        }
+
         return redirect()->route('paiement.show', $ticket->id)
-            ->with('error', 'Le paiement Sebpay n\'a pas pu etre verifie. Veuillez reessayer.');
+            ->with('info', 'Paiement en attente de validation. Verifiez votre telephone.');
     }
 
     public function webhookSebpay(Request $request)
     {
+        $signature = $request->header('X-SebPay-Signature');
+        $rawBody = $request->getContent();
+
+        if ($signature && !$this->sebpay->verifyWebhookSignature($rawBody, $signature)) {
+            FacadesLog::warning('Sebpay webhook signature mismatch', ['body' => $rawBody]);
+            return response()->json(['error' => 'Invalid signature'], 401);
+        }
+
         $data = $request->all();
 
-        $transactionId = $data['transaction_id'] ?? $data['id'] ?? null;
-        $status = $data['status'] ?? $data['state'] ?? null;
+        $transactionId = $data['transaction_id'] ?? null;
+        $externalRef = $data['external_reference'] ?? null;
+        $status = $data['status'] ?? null;
 
         if (!$transactionId || !$status) {
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
-        if (in_array(strtolower($status), ['success', 'completed', 'approved', 'confirmed', 'paye'])) {
-            $ticket = Ticket::where('transaction_id', $transactionId)
-                ->orWhere('id', $data['external_id'] ?? null)
-                ->with('evenement')
-                ->first();
+        if ($status === 'approved' && $externalRef) {
+            $ticket = Ticket::find($externalRef);
 
             if ($ticket && $ticket->statut_paiement !== 'payé') {
                 $ticket->update([
                     'statut_paiement' => 'payé',
                     'transaction_id' => $transactionId,
                     'methode_paiement' => 'sebpay',
+                    'telephone_paiement' => $data['customer_phone'] ?? $ticket->telephone_acheteur,
                 ]);
 
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));

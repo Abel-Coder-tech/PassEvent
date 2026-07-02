@@ -130,9 +130,37 @@
                             @if(isset($methodes['sebpay']))
                             <div id="section-sebpay" class="methode-section" style="display:none;">
                                 @if($sebpayConfigured)
-                                    <button type="button" id="btnSebpay" class="btn w-100 py-3 btn-methode" style="background: {{ $methodes['sebpay']['couleur'] ?? '#198754' }};">
-                                        <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
-                                    </button>
+                                    <form id="sebpayForm" method="POST" action="{{ route('paiement.sebpay.init') }}">
+                                        @csrf
+                                        <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold" style="font-size:0.85rem;">
+                                                <i class="bi bi-phone me-1"></i> Numero telephone
+                                            </label>
+                                            <input type="tel" name="phone" class="form-control"
+                                                   value="{{ old('phone', $ticket->telephone_acheteur) }}"
+                                                   placeholder="229XXXXXXXXX" required
+                                                   style="border-radius:10px; font-size:0.9rem;">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold" style="font-size:0.85rem;">
+                                                <i class="bi bi-building me-1"></i> Operateur
+                                            </label>
+                                            <select name="operator" class="form-select" required
+                                                    style="border-radius:10px; font-size:0.9rem;">
+                                                <option value="">-- Choisir --</option>
+                                                @foreach($methodes['sebpay']['operateurs'] ?? [] as $slug => $nom)
+                                                    <option value="{{ $slug }}" {{ old('operator') === $slug ? 'selected' : '' }}>{{ $nom }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <button type="submit" class="btn w-100 py-3 btn-methode" style="background: {{ $methodes['sebpay']['couleur'] ?? '#198754' }};">
+                                            <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                                        </button>
+                                    </form>
                                     <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
                                         <small class="text-muted" style="font-size: 0.75rem;">Paiement securisé par</small>
                                         <strong style="font-size: 0.82rem; color: {{ $methodes['sebpay']['couleur'] ?? '#198754' }};">Sebpay</strong>
@@ -261,29 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     @endif
 
-    @if(isset($methodes['sebpay']) && $sebpayConfigured)
-    const btnSebpay = document.getElementById('btnSebpay');
-    if (btnSebpay) {
-        btnSebpay.addEventListener('click', function() {
-            errorDiv.style.display = 'none';
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route('paiement.sebpay.init') }}';
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '_token';
-            csrf.value = '{{ csrf_token() }}';
-            form.appendChild(csrf);
-            const ticket = document.createElement('input');
-            ticket.type = 'hidden';
-            ticket.name = 'ticket_id';
-            ticket.value = '{{ $ticket->id }}';
-            form.appendChild(ticket);
-            document.body.appendChild(form);
-            form.submit();
-        });
-    }
-    @endif
+    // Sebpay uses native form submission — no extra JS needed
 });
 </script>
 @endsection
