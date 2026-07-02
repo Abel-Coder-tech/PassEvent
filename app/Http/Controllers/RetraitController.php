@@ -6,6 +6,7 @@ use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class RetraitController extends Controller
 {
@@ -61,7 +62,12 @@ class RetraitController extends Controller
             'montant' => 'required|numeric|min:100|max:' . $soldeDisponible,
             'nom' => 'required|string|max:255',
             'mobile' => 'required|string|max:50',
+            'password' => 'required|string',
         ]);
+
+        if (!Hash::check($data['password'], $user->password)) {
+            return back()->withErrors(['password' => 'Mot de passe incorrect.'])->withInput();
+        }
 
         Withdrawal::create([
             'user_id' => $user->id,

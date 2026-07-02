@@ -652,7 +652,7 @@
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
                     <span style="color: rgba(255,255,255,0.3); font-size: 0.75rem;">
-                        Propulsé par Noctam Communication ·  (<a href="https://noctamcommunication.com" target="_blank" style="color: rgba(255,255,255,0.5); text-decoration:underline; hover:text-decoration:underline; hover:color: rgba(255,255,255,0.7);">paxevent.com</a>)
+                        Propulsé par (<a href="https://noctamcommunication.com" target="_blank" style="color: rgba(255,255,255,0.5); text-decoration:underline; hover:text-decoration:underline; hover:color: rgba(255,255,255,0.7);">Noctam Communication</a>)
                     </span>
                 </div>
             </div>

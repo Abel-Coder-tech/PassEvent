@@ -79,6 +79,11 @@
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro Mobile Money <span class="text-danger">*</span></label>
                             <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 XX XX XX XX" required>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmez votre mot de passe <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Votre mot de passe actuel" required>
+                            @error('password')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                        </div>
                         <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
                             <i class="bi bi-send me-1"></i> Envoyer la demande
                         </button>

@@ -148,7 +148,7 @@
                     <i class="bi bi-bell"></i> Notifications
                 </button>
                 <button class="settings-nav-link" onclick="showSection('paiement', this)">
-                    <i class="bi bi-credit-card"></i> Paiement KKiaPay
+                    <i class="bi bi-credit-card"></i> Paiement
                 </button>
                 <button class="settings-nav-link" onclick="showSection('scan', this)">
                     <i class="bi bi-qr-code-scan"></i> Acces scan
@@ -384,77 +384,19 @@
             <div id="section-paiement" class="settings-section">
                 <div class="panel-card">
                     <div class="panel-card-header">
-                        <h5><i class="bi bi-credit-card me-2" style="color: var(--vert);"></i>Configuration KKiaPay</h5>
+                        <h5><i class="bi bi-credit-card me-2" style="color: var(--vert);"></i>Paiement</h5>
                     </div>
                     <div class="panel-card-body">
-                        <p class="text-muted mb-4" style="font-size: 0.82rem;">Configurez vos cles API KKiaPay pour recevoir les paiements. Vous pouvez les obtenir sur <a href="https://kkiapay.me" target="_blank" style="color: var(--vert);">kkiapay.me</a>.</p>
-
-                        <form action="{{ route('parametres.paiement.update') }}" method="POST">
-                            @csrf
-                            @method('PUT')
-
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label fw-semibold" style="font-size: 0.82rem;">Activer KKiaPay</label>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" name="kkiapay_active" value="1" {{ Auth::user()->kkiapay_active ? 'checked' : '' }}>
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
+                        <div class="alert alert-info d-flex align-items-center gap-3 py-3 px-3 mb-0" style="background: rgba(66,140,121,0.06); border-radius: 10px; border: 1px solid rgba(66,140,121,0.15);">
+                            <i class="bi bi-shield-check" style="font-size: 1.5rem; color: var(--vert);"></i>
+                            <div style="font-size: 0.85rem;">
+                                <strong class="d-block mb-1">Paiement centralisé</strong>
+                                <p class="mb-0 text-muted">Les paiements sont gérés par la plateforme. Les fonds sont reversés sur votre compte via le système de retrait disponible dans la section <a href="{{ route('admin.retraits.index') }}" style="color: var(--vert); font-weight: 600;">Retraits</a>.</p>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.82rem;">Public Key (Cle publique)</label>
-                                <input type="text" name="kkiapay_public_key" class="form-control" value="{{ old('kkiapay_public_key', Auth::user()->kkiapay_public_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
-                                @if(Auth::user()->kkiapay_public_key)
-                                    <small class="text-muted">Cle configuree : <code class="masked-key">{{ substr(Auth::user()->kkiapay_public_key, 0, 4) }}••••{{ substr(Auth::user()->kkiapay_public_key, -4) }}</code></small>
-                                @endif
-                                @error('kkiapay_public_key')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.82rem;">Secret Key (Cle secrete)</label>
-                                <div class="position-relative">
-                                    <input type="password" name="kkiapay_secret_key" id="param_secret" class="form-control" value="{{ old('kkiapay_secret_key', Auth::user()->kkiapay_secret_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
-                                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
-                                    </button>
-                                </div>
-                                @if(Auth::user()->kkiapay_secret_key)
-                                    <small class="text-muted">Cle configuree : <code class="masked-key">{{ substr(Auth::user()->kkiapay_secret_key, 0, 4) }}••••{{ substr(Auth::user()->kkiapay_secret_key, -4) }}</code></small>
-                                @endif
-                                @error('kkiapay_secret_key')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold" style="font-size: 0.82rem;">API Key (Cle API)</label>
-                                <div class="position-relative">
-                                    <input type="password" name="kkiapay_api_key" id="param_api" class="form-control" value="{{ old('kkiapay_api_key', Auth::user()->kkiapay_api_key) }}" placeholder="Ex: xxxxxxxxxxxxxxxxxxxx">
-                                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
-                                    </button>
-                                </div>
-                                @if(Auth::user()->kkiapay_api_key)
-                                    <small class="text-muted">Cle configuree : <code class="masked-key">{{ substr(Auth::user()->kkiapay_api_key, 0, 4) }}••••{{ substr(Auth::user()->kkiapay_api_key, -4) }}</code></small>
-                                @endif
-                                @error('kkiapay_api_key')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="alert alert-info" style="background: rgba(66,140,121,0.08); border-radius: 8px; border: none; font-size: 0.82rem;">
-                                <i class="bi bi-info-circle me-1"></i>
-                                <strong>Conseil de securite :</strong> Ne partagez jamais vos cles API. La cle secrete et la cle API ne doivent etre utilisees que cote serveur.
-                            </div>
-
-                            <div class="pt-3" style="border-top: 1px solid #f0f0f0;">
-                                <button type="submit" class="btn btn-vert" style="border-radius: 8px;">
-                                    <i class="bi bi-check-lg me-1"></i> Enregistrer la configuration
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
-
             {{-- Acces scan --}}
             <div id="section-scan" class="settings-section">
                 <div class="panel-card">
