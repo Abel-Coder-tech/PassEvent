@@ -55,9 +55,14 @@ Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueR
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
-// Callback KKiaPay
+// Paiement — KKiaPay
 Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
-Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
+Route::post('/paiement/webhook/kkiapay', [PaiementController::class, 'webhookKKiaPay'])->name('paiement.webhook.kkiapay');
+
+// Paiement — Sebpay
+Route::post('/paiement/sebpay/init', [PaiementController::class, 'initSebpay'])->name('paiement.sebpay.init');
+Route::get('/paiement/sebpay/callback', [PaiementController::class, 'callbackSebpay'])->name('paiement.sebpay.callback');
+Route::post('/paiement/sebpay/webhook', [PaiementController::class, 'webhookSebpay'])->name('paiement.sebpay.webhook');
 
 // Google OAuth
 Route::get('/auth/google', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google.redirect');
