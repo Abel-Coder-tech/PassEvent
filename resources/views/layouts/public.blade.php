@@ -598,7 +598,7 @@
                     <div class="footer-social d-flex gap-2">
                         <a href="https://facebook.com/paxevent" target="_blank" title="Facebook"><i class="bi bi-facebook"></i></a>
                         <a href="https://instagram.com/paxevent" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
-                        <a href="https://wa.me/22943704513" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://wa.me/22962836629" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
                         <a href="https://youtube.com/@paxevent" target="_blank" title="YouTube"><i class="bi bi-youtube"></i></a>
                         <a href="https://linkedin.com/company/paxevent" target="_blank" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
                     </div>
@@ -646,12 +646,12 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="mb-0" style="color: rgba(255,255,255,0.4); font-size: 0.78rem;">
-                        &copy; {{ date('Y') }} PaxEvent – Tous droits réservés.
+                        &copy; {{ date('Y') }} PaxEvent . Billeterie en ligne – Tous droits réservés.
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
                     <span style="color: rgba(255,255,255,0.3); font-size: 0.75rem;">
-                        Propulsé par PaxEvent · Billetterie en ligne
+                        Propulsé par Noctam Communication ·  (<a href="https://noctamcommunication.com" target="_blank" style="color: rgba(255,255,255,0.5); text-decoration:underline; hover:text-decoration:underline; hover:color: rgba(255,255,255,0.7);">paxevent.com</a>)
                     </span>
                 </div>
             </div>

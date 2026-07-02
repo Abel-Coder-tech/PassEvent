@@ -23,6 +23,9 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminAuthController;
+use App\Http\Controllers\Admin\AgentController as AdminAgentController;
+use App\Http\Controllers\Agent\AuthController as AgentAuthController;
+use App\Http\Controllers\Agent\ScanController as AgentScanController;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 
@@ -152,6 +155,25 @@ Route::get('/generate-sitemap', function () {
 });
 
 // ============================================================
+// Routes agent de scan
+// ============================================================
+Route::prefix('agent')->name('agent.')->group(function () {
+    Route::get('/connexion', [AgentAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/connexion', [AgentAuthController::class, 'login'])->name('login.post');
+
+    Route::middleware('agent')->group(function () {
+        Route::post('/deconnexion', [AgentAuthController::class, 'logout'])->name('logout');
+        Route::get('/dashboard', [AgentAuthController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/scan/pin', [AgentScanController::class, 'verifyPin'])->name('scan.pin');
+        Route::post('/scan/pin', [AgentScanController::class, 'checkPin'])->name('scan.check-pin');
+        Route::get('/scan', [AgentScanController::class, 'index'])->name('scan.index');
+        Route::post('/scan/verifier', [AgentScanController::class, 'verifier'])->name('scan.verifier');
+        Route::get('/scan/quitter', [AgentScanController::class, 'exitScan'])->name('scan.exit');
+    });
+});
+
+// ============================================================
 // Routes protégées (admin)
 // ============================================================
 Route::middleware('auth')->group(function () {
@@ -170,6 +192,16 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
+
+        // Gestion des agents
+        Route::prefix('agents')->name('agents.')->group(function () {
+            Route::get('/', [AdminAgentController::class, 'index'])->name('index');
+            Route::get('/creer', [AdminAgentController::class, 'create'])->name('create');
+            Route::post('/', [AdminAgentController::class, 'store'])->name('store');
+            Route::get('/{agent}', [AdminAgentController::class, 'show'])->name('show');
+            Route::post('/{agent}/toggle-actif', [AdminAgentController::class, 'toggleActif'])->name('toggle-actif');
+            Route::delete('/{agent}', [AdminAgentController::class, 'destroy'])->name('destroy');
+        });
     });
 
     Route::resource('tickets', TicketController::class);

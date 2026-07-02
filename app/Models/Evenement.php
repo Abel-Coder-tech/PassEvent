@@ -59,6 +59,11 @@ class Evenement extends Model
 
     public function scanAccessCodes(): HasMany
     {
-        return $this->hasMany(ScanAccessCode::class, 'evenement_id');
+        return $this->hasMany(ScanAccessCode::class);
+    }
+
+    public function agents(): HasMany
+    {
+        return $this->hasMany(Agent::class);
     }
 }

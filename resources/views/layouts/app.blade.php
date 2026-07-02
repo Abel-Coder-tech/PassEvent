@@ -871,6 +871,15 @@
             </span>
             @endif
             @if($isActive)
+            <a href="{{ route('admin.agents.index') }}" class="nav-link {{ request()->routeIs('admin.agents.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Agents de scan
+            </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-people"></i> Agents de scan <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
+            @if($isActive)
             <a href="{{ route('admin.codes-promos.index') }}" class="nav-link {{ request()->routeIs('admin.codes-promos.*') ? 'active' : '' }}">
                 <i class="bi bi-tag"></i> Codes promos
             </a>
