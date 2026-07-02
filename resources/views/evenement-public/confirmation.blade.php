@@ -38,18 +38,22 @@
                                     <span class="text-muted">Date :</span><br>
                                     <strong>{{ $ticket->evenement->date_event->format('d/m/Y') }}</strong>
                                 </div>
+                                @if($ticket->montant > 0)
                                 <div class="col-6">
                                     <span class="text-muted">Type :</span><br>
                                     <strong>{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</strong>
                                 </div>
+                                @endif
                                 <div class="col-6">
                                     <span class="text-muted">Code :</span><br>
                                     <code class="fw-bold">{{ $ticket->code_unique }}</code>
                                 </div>
+                                @if($ticket->montant > 0)
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>
                                     <strong style="color: var(--violet);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
                                 </div>
+                                @endif
                             </div>
                         </div>
 

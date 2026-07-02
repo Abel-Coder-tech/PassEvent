@@ -6,21 +6,16 @@
 <div class="container py-4">
     {{-- En-tête --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-1">
-                <i class="bi bi-shop"></i> {{ $agent->evenement->titre }}
-            </h4>
-            <small class="text-muted">
-                <i class="bi bi-calendar-event"></i> {{ $agent->evenement->date_event->format('d/m/Y H:i') }}
-                &bull; <i class="bi bi-geo-alt"></i> {{ $agent->evenement->lieu }}
-            </small>
+        <div></div>
+        <div class="d-flex align-items-center gap-2">
+            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="40">
+            <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </form>
         </div>
-        <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
-            @csrf
-            <button type="submit" class="btn btn-outline-danger btn-sm">
-                <i class="bi bi-box-arrow-right"></i> Déconnexion
-            </button>
-        </form>
     </div>
 
     @if (session('success'))
@@ -157,8 +152,13 @@
                                     <td class="ps-3 small">{{ $ticket->date_achat->format('H:i') }}</td>
                                     <td class="small">{{ $ticket->nom_acheteur }}</td>
                                     <td class="small">{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
+                                    @if($ticket->montant > 0)
                                     <td class="small fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
                                     <td class="small">{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile Money' }}</td>
+                                    @else
+                                    <td class="small text-muted">Gratuit</td>
+                                    <td class="small">—</td>
+                                    @endif
                                     <td class="pe-3">
                                         <a href="{{ route('agent-vente.ticket.pdf', $ticket) }}"
                                             class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
@@ -216,8 +216,13 @@ function chargerHistorique() {
                         <td class="ps-3 small">${t.date}</td>
                         <td class="small">${t.nom}</td>
                         <td class="small">${t.tarif}</td>
+                        ${t.montant_val > 0 ? `
                         <td class="small fw-medium">${t.montant}</td>
                         <td class="small">${t.methode === 'cash' ? 'Espèces' : 'Mobile Money'}</td>
+                        ` : `
+                        <td class="small text-muted">Gratuit</td>
+                        <td class="small">—</td>
+                        `}
                         <td class="pe-3">
                             <a href="/vente/tickets/${t.id}/pdf" class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
                                 <i class="bi bi-filetype-pdf"></i>

@@ -81,7 +81,8 @@ class AuthController extends Controller
                 'id' => $t->id,
                 'nom' => $t->nom_acheteur,
                 'tarif' => $t->tarif?->getLabel() ?? 'N/A',
-                'montant' => number_format($t->montant, 0, ',', ' ') . ' F',
+                'montant' => $t->montant > 0 ? number_format($t->montant, 0, ',', ' ') . ' F' : 'Gratuit',
+                'montant_val' => $t->montant,
                 'methode' => $t->methode_paiement,
                 'date' => $t->date_achat->format('H:i'),
             ]);

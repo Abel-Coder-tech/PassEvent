@@ -159,6 +159,7 @@
                                     <td>
                                         <code class="fw-bold" style="font-size: 0.82rem; color: var(--violet);">{{ $ticket->code_unique }}</code>
                                     </td>
+                                    @if($ticket->montant > 0)
                                     <td>
                                         <span class="badge me-1" style="background: {{ $ticket->categorie === 'etudiant' ? 'rgba(135,66,139,0.1)' : 'rgba(66,140,121,0.1)' }}; color: {{ $ticket->categorie === 'etudiant' ? 'var(--violet)' : 'var(--teal)' }};">
                                             {{ ucfirst($ticket->categorie) }}
@@ -168,6 +169,9 @@
                                     <td>
                                         <span class="fw-bold" style="color: var(--vert);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</span>
                                     </td>
+                                    @else
+                                    <td colspan="2" class="text-muted small">Entrée gratuite</td>
+                                    @endif
                                     <td>
                                         <span class="{{ $badgeClass }}" style="{{ is_string($badgeClass) && str_contains($badgeClass, 'status-badge') ? '' : '' }}">
                                             {{ $statusLabel }}

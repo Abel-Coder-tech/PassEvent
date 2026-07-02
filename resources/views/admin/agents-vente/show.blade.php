@@ -129,9 +129,14 @@
                         <td>{{ $ticket->nom_acheteur }}</td>
                         <td>{{ $ticket->email_acheteur }}</td>
                         <td>{{ $ticket->telephone_acheteur }}</td>
-                        <td>{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
+                        <td>{{ optional($ticket->tarif)->getLabel() ?? 'N/A' }}</td>
+                        @if($ticket->montant > 0)
                         <td class="text-end fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
                         <td>{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile Money' }}</td>
+                        @else
+                        <td class="text-end text-muted">Gratuit</td>
+                        <td>—</td>
+                        @endif
                         <td class="pe-3">
                             <a href="{{ route('agent-vente.ticket.pdf', $ticket) }}"
                                 class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">

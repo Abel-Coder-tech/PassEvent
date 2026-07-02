@@ -60,7 +60,7 @@
                     <hr>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-{{ $ticket->montant > 0 ? '6' : '12' }}">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Evenement</label>
                             <div class="fw-bold">{{ $ticket->evenement?->titre ?? '—' }}</div>
                             <small class="text-muted">
@@ -69,11 +69,13 @@
                                 <i class="bi bi-geo-alt me-1"></i>{{ $ticket->evenement?->lieu ?? '—' }}
                             </small>
                         </div>
+                        @if($ticket->montant > 0)
                         <div class="col-md-6">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Tarif</label>
                             <div class="fw-bold">{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</div>
                             <small class="text-muted">{{ $ticket->tarif?->libelle ?? '—' }}</small>
                         </div>
+                        @endif
                     </div>
 
                     <hr>
@@ -99,6 +101,7 @@
 
                     <hr>
 
+                    @if($ticket->montant > 0)
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Montant</label>
@@ -119,6 +122,7 @@
                             </div>
                         @endif
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

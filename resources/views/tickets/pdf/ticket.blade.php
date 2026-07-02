@@ -194,7 +194,7 @@
             <tr>
                 <td style="text-align:left;vertical-align:middle;">
                     <div class="event-title">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
-                    @if($ticket->categorie)
+                    @if($ticket->categorie && $ticket->montant > 0)
                         <div style="font-size:8px;font-weight:700;color:#7B3FA0;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">{{ ucfirst($ticket->categorie) }}</div>
                     @endif
                     <div class="event-meta">
@@ -218,6 +218,7 @@
             <div class="participant-email">{{ $ticket->email_acheteur ?? '' }}</div>
         </div>
 
+        @if($ticket->montant > 0)
         {{-- 3. DETAILS GRID 2 COLUMNS --}}
         <table class="detail-grid" cellpadding="0" cellspacing="4">
             <tr>
@@ -271,6 +272,12 @@
         @endif
 
         <hr class="dashed">
+        @else
+        <div style="text-align:center;padding:8px 0;color:#7B3FA0;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+            Entrée gratuite
+        </div>
+        <hr class="dashed">
+        @endif
 
         {{-- 5. QR CODE --}}
         <div class="qr-block">
