@@ -4,7 +4,6 @@
 @section('step', 2)
 @section('page-title', "Type d'organisation")
 @section('page-subtitle', 'Choisissez votre type et fournissez les justificatifs')
-@section('card-class', 'wide')
 
 @section('card-content')
 <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">

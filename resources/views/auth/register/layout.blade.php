@@ -9,9 +9,13 @@
         background: #fff;
         border-radius: 20px;
         padding: 1.5rem;
+        max-width: 420px;
+        margin: 0 auto;
         box-shadow: 0 8px 40px rgba(0,0,0,0.06);
     }
     .card-register .logo { max-width: 150px; height: auto; display: block; margin: 0 auto 1rem; }
+    .card-register h1 { font-size: 1.5rem; font-weight: 700; color: #1d1d1f; margin-bottom: .35rem; text-align: center; }
+    .card-register .subtitle { font-size: .9rem; color: #6c757d; margin-bottom: 1.5rem; text-align: center; }
     .card-register .form-control, .card-register .form-select {
         border-radius: 10px; padding: 0.65rem 1rem; border: 1.5px solid #e0dde3;
     }
@@ -48,19 +52,19 @@
     .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.85rem; margin-bottom: 1rem; }
 
     .type-card {
-        border: 2px solid #e0dde3; border-radius: 14px; padding: 1.25rem;
+        border: 2px solid #e0dde3; border-radius: 14px; padding: 1.25rem 0.75rem;
         cursor: pointer; transition: all 0.2s; text-align: center; height: 100%;
     }
     .type-card:hover { border-color: #9972B0; background: #faf8fb; }
     .type-card.selected { border-color: #542680; background: #f5f0f9; }
-    .type-card .icon { font-size: 2rem; color: #542680; margin-bottom: 0.5rem; }
-    .type-card .name { font-weight: 700; font-size: 1rem; color: #1d1d1f; margin-bottom: 0.25rem; }
-    .type-card .desc { font-size: 0.8rem; color: #6c757d; line-height: 1.4; }
+    .type-card .icon { font-size: 1.5rem; color: #542680; margin-bottom: 0.4rem; }
+    .type-card .name { font-weight: 700; font-size: 0.85rem; color: #1d1d1f; margin-bottom: 0.2rem; }
+    .type-card .desc { font-size: 0.72rem; color: #6c757d; line-height: 1.3; }
     input[type="radio"] { display: none; }
     .toggle-group { display: flex; gap: 0.5rem; }
     .toggle-btn {
-        flex: 1; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;
-        border: 1.5px solid #e0dde3; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+        flex: 1; text-align: center; padding: 0.5rem 0.3rem; border-radius: 10px;
+        border: 1.5px solid #e0dde3; cursor: pointer; font-weight: 600; font-size: 0.78rem;
         background: #fff; transition: 0.2s; color: #495057;
     }
     .toggle-btn:hover { border-color: #9972B0; }
@@ -111,12 +115,6 @@
         background: #e0dde3; margin: 0 0.5rem; flex-shrink: 0;
     }
     .step-connector.done { background: #2e7d4f; }
-
-    .page-desc {
-        text-align: center; padding: 0.5rem 1rem 0.25rem; background: #fff;
-    }
-    .page-desc h1 { font-size: 1.2rem; font-weight: 700; color: #1d1d1f; margin-bottom: 0.1rem; }
-    .page-desc p { font-size: 0.82rem; color: #6c757d; margin: 0; }
 </style>
 @endsection
 
@@ -150,17 +148,16 @@
     </div>
     @endif
 
-    <div class="page-desc">
-        <h1>@yield('page-title')</h1>
-        @hasSection('page-subtitle')
-        <p>@yield('page-subtitle')</p>
-        @endif
-    </div>
-
     <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="card-register @yield('card-class')">
+            <div class="col-md-8 col-lg-6 col-xl-5">
+                <div class="card-register">
+                    @hasSection('page-title')
+                    <h1>@yield('page-title')</h1>
+                    @endif
+                    @hasSection('page-subtitle')
+                    <p class="subtitle">@yield('page-subtitle')</p>
+                    @endif
                     @yield('card-content')
                 </div>
             </div>

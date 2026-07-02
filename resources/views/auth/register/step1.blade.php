@@ -4,7 +4,6 @@
 @section('step', 1)
 @section('page-title', 'Votre identité')
 @section('page-subtitle', 'Qui êtes-vous ?')
-@section('card-class', 'wide')
 
 @section('card-content')
 <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">
