@@ -152,6 +152,7 @@
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6 col-xl-5">
                 <div class="card-register">
+                    <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">
                     @hasSection('page-title')
                     <h1>@yield('page-title')</h1>
                     @endif

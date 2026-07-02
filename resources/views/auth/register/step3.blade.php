@@ -5,8 +5,6 @@
 @section('page-title', 'Récapitulatif')
 
 @section('card-content')
-<img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">
-
 @if($errors->any())
     <div class="alert alert-danger py-2" style="font-size:.85rem;border-radius:10px;">
         @foreach($errors->all() as $e) {{ $e }} @break @endforeach

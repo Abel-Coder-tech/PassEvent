@@ -6,8 +6,6 @@
 @section('page-subtitle', 'Entrez votre adresse email pour commencer')
 
 @section('card-content')
-<img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">
-
 @if($errors->any())
     <div class="alert-danger">
         @foreach($errors->all() as $e) {{ $e }} @break @endforeach
@@ -34,7 +32,7 @@
     <button type="submit" class="btn btn-primary">Recevoir mon code</button>
 </form>
 
-<p class="login-link">
+<p class="login-link" style="text-align:center;">
     Déjà un compte ? <a href="{{ route('login') }}">Connectez-vous</a>
 </p>
 @endsection

@@ -1,10 +1,10 @@
 @extends('auth.register.layout')
 
 @section('title', 'Connexion — PaxEvent')
+@section('page-title', 'Connexion')
+@section('page-subtitle', 'Accédez à votre tableau de bord')
 
 @section('card-content')
-<img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="100" class="mb-3" style="display:block;margin:0 auto 1rem;">
-
 @if (session('success'))
     <div class="success-icon text-center"><i class="bi bi-check-circle-fill"></i></div>
     <h2 style="font-size:1.3rem;font-weight:800;color:#211C31;text-align:center;margin-bottom:0.5rem;">Inscription réussie !</h2>
@@ -18,9 +18,6 @@
         </a>
     </div>
 @else
-    <h1 style="margin-bottom:0.2rem;">Connexion</h1>
-    <p class="subtitle" style="margin-bottom:1.5rem;">Accédez à votre tableau de bord</p>
-
     @if(config('services.google.client_id'))
         <a href="{{ route('google.redirect') }}" class="btn-google w-100 mb-3">
             <i class="bi bi-google" style="color:#4285F4;font-size:1.1rem;"></i> Se connecter avec Google
@@ -38,7 +35,7 @@
                    placeholder="Entrez votre email" value="{{ old('email') }}" required autofocus>
             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
-        <div class="mb-3 text-start">
+        <div class="mb-2 text-start">
             <label class="form-label">Mot de passe</label>
             <div style="position:relative;">
                 <input type="password" class="form-control @error('mot_de_passe') is-invalid @enderror"
@@ -50,14 +47,14 @@
             </div>
             @error('mot_de_passe')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                <label class="form-check-label" for="remember" style="font-size:0.85rem;color:#6c757d;">Se souvenir</label>
-            </div>
-            <a href="{{ route('password.request') }}" style="color:#542680;font-size:0.85rem;font-weight:600;">Mot de passe oublié ?</a>
+        <div class="text-start mb-3">
+            <a href="{{ route('password.request') }}" style="color:#542680;font-size:0.8rem;font-weight:600;text-decoration:none;">Mot de passe oublié ?</a>
         </div>
         <button type="submit" class="btn-primary" style="margin-top:0;">Se connecter</button>
+        <div class="form-check mt-2">
+            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+            <label class="form-check-label" for="remember" style="font-size:0.85rem;color:#6c757d;">Se souvenir de moi</label>
+        </div>
     </form>
     <p class="text-center mt-3" style="font-size:0.85rem;color:#6c757d;">
         Pas encore de compte ? <a href="{{ route('inscriptions.organisateur') }}" style="color:#542680;font-weight:600;text-decoration:underline;">Créer un compte</a>

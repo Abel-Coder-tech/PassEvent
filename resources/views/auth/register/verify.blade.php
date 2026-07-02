@@ -8,8 +8,6 @@ Un code de vérification a été envoyé à&nbsp;:
 @endsection
 
 @section('card-content')
-<img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">
-
 <div class="info-email">{{ $email }}</div>
 <p style="font-size:.8rem;margin-top:-.75rem;margin-bottom:1.5rem;color:#6c757d;text-align:center;">Ce code est valable 10 minutes.</p>
 
