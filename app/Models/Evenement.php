@@ -66,4 +66,9 @@ class Evenement extends Model
     {
         return $this->hasMany(Agent::class);
     }
+
+    public function agentsVentes(): HasMany
+    {
+        return $this->hasMany(AgentVente::class, 'evenement_id');
+    }
 }

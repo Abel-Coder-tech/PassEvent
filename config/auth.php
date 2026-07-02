@@ -50,6 +50,10 @@ return [
             'driver' => 'session',
             'provider' => 'agents',
         ],
+        'agent_vente' => [
+            'driver' => 'session',
+            'provider' => 'agents_vente',
+        ],
     ],
 
     /*
@@ -77,6 +81,10 @@ return [
         'agents' => [
             'driver' => 'eloquent',
             'model' => App\Models\Agent::class,
+        ],
+        'agents_vente' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AgentVente::class,
         ],
     ],
 

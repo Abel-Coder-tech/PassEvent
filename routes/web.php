@@ -24,8 +24,10 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminAuthController;
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
+use App\Http\Controllers\Admin\AgentVenteController as AdminAgentVenteController;
 use App\Http\Controllers\Agent\AuthController as AgentAuthController;
 use App\Http\Controllers\Agent\ScanController as AgentScanController;
+use App\Http\Controllers\AgentVente\AuthController as AgentVenteAuthController;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 
@@ -174,6 +176,22 @@ Route::prefix('agent')->name('agent.')->group(function () {
 });
 
 // ============================================================
+// Routes agent de vente
+// ============================================================
+Route::prefix('vente')->name('agent-vente.')->group(function () {
+    Route::get('/connexion', [AgentVenteAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/connexion', [AgentVenteAuthController::class, 'login'])->name('login.post');
+
+    Route::middleware('agent_vente')->group(function () {
+        Route::post('/deconnexion', [AgentVenteAuthController::class, 'logout'])->name('logout');
+        Route::get('/dashboard', [AgentVenteAuthController::class, 'dashboard'])->name('dashboard');
+        Route::post('/vendre', [AgentVenteAuthController::class, 'vendre'])->name('vendre');
+        Route::get('/historique', [AgentVenteAuthController::class, 'historiqueJson'])->name('historique.json');
+        Route::get('/tickets/{ticket}/pdf', [AgentVenteAuthController::class, 'downloadPdf'])->name('ticket.pdf');
+    });
+});
+
+// ============================================================
 // Routes protégées (admin)
 // ============================================================
 Route::middleware('auth')->group(function () {
@@ -193,7 +211,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
 
-        // Gestion des agents
+        // Gestion des agents de scan
         Route::prefix('agents')->name('agents.')->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');
             Route::get('/creer', [AdminAgentController::class, 'create'])->name('create');
@@ -201,6 +219,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/{agent}', [AdminAgentController::class, 'show'])->name('show');
             Route::post('/{agent}/toggle-actif', [AdminAgentController::class, 'toggleActif'])->name('toggle-actif');
             Route::delete('/{agent}', [AdminAgentController::class, 'destroy'])->name('destroy');
+        });
+
+        // Gestion des agents de vente
+        Route::prefix('agents-vente')->name('agents-vente.')->group(function () {
+            Route::get('/', [AdminAgentVenteController::class, 'index'])->name('index');
+            Route::get('/creer', [AdminAgentVenteController::class, 'create'])->name('create');
+            Route::post('/', [AdminAgentVenteController::class, 'store'])->name('store');
+            Route::get('/{agentVente}', [AdminAgentVenteController::class, 'show'])->name('show');
+            Route::post('/{agentVente}/toggle-actif', [AdminAgentVenteController::class, 'toggleActif'])->name('toggle-actif');
+            Route::delete('/{agentVente}', [AdminAgentVenteController::class, 'destroy'])->name('destroy');
+            Route::get('/stats/{evenement}', [AdminAgentVenteController::class, 'statsEvenement'])->name('stats-evenement');
         });
     });
 

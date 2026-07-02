@@ -79,7 +79,8 @@
     <header class="agent-header">
         <div class="container d-flex align-items-center justify-content-between">
             <a href="{{ route('agent.dashboard') }}" class="brand">
-                <i class="bi bi-shield-check"></i>PaxEvent Agent
+                <a href="{{ route('agent.dashboard') }}" class="brand">
+                    
             </a>
             <div>
                 @if(Auth::guard('agent')->check())

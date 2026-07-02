@@ -16,6 +16,7 @@ class Ticket extends Model
     protected $fillable = [
         'evenement_id',
         'tarif_id',
+        'agent_vente_id',
         'code_unique',
         'qr_signature',
         'email_acheteur',
@@ -58,6 +59,11 @@ class Ticket extends Model
     public function tarif(): BelongsTo
     {
         return $this->belongsTo(Tarif::class);
+    }
+
+    public function agentVente(): BelongsTo
+    {
+        return $this->belongsTo(AgentVente::class, 'agent_vente_id');
     }
 
     public function notifications(): HasMany
