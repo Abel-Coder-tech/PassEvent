@@ -6,16 +6,13 @@
 <div class="container py-4">
     {{-- En-tête --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div></div>
-        <div class="d-flex align-items-center gap-2">
-            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="40">
-            <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i>
-                </button>
-            </form>
-        </div>
+        <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
+        <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
+            @csrf
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </form>
     </div>
 
     @if (session('success'))

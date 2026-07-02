@@ -78,9 +78,8 @@
 <body>
     <header class="agent-header">
         <div class="container d-flex align-items-center justify-content-between">
-            <div></div>
-            <div class="d-flex align-items-center gap-3">
-                <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="32" style="filter: brightness(0) invert(1);">
+            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="50" style="filter: brightness(0) invert(1);">
+            <div>
                 @if(Auth::guard('agent')->check())
                     <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                         <i class="bi bi-box-arrow-right"></i>
