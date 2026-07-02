@@ -505,7 +505,7 @@
                 <li><a href="{{ route('aide') }}" class="{{ request()->routeIs('aide') ? 'active' : '' }}">Comment ça marche</a></li>
                 <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">Contact</a></li>
                 <li><a href="{{ route('tickets.recuperer') }}" class="nav-recuperer {{ request()->routeIs('tickets.recuperer', 'tickets.rechercher') ? 'active' : '' }}">Récupérer un ticket</a></li>
-                <li><a href="{{ route('login') }}" style="display:inline;font-size:0.85rem;font-weight:600;margin-left:0.25rem;border:2px solid var(--violet);color:var(--violet);background:#fff;border-radius:6px;padding:6px 16px;text-decoration:none;">Se connecter</a></li>
+                <li><a href="{{ route('login') }}" style="display:inline-block;font-size:0.85rem;font-weight:600;margin-left:0.25rem;border:2px solid var(--violet);color:var(--violet);background-color:white;border-radius:6px;padding:6px 16px;text-decoration:none;">Se connecter</a></li>
             </ul>
         </div>
     </header>
