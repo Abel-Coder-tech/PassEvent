@@ -227,7 +227,7 @@
                                 <span class="show-total-price" id="totalDisplay">--</span>
                             </div>
                             <button type="submit" class="show-btn show-btn-primary" id="btnPayer" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
-                                <i class="bi bi-shield-lock me-2"></i> Reserver et payer
+                                <i class="bi bi-shield-lock me-2"></i> Payer avec KKiaPay
                             </button>
                             <p class="show-secure"><i class="bi bi-shield-check me-1" style="color:var(--violet);"></i> Paiement 100% sécurisé — Ticket PDF envoyé par email</p>
                         </form>
