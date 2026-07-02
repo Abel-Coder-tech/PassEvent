@@ -81,14 +81,13 @@
             <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="50" style="filter: brightness(0) invert(1);">
             <div class="d-flex align-items-center gap-3">
                 @if(Auth::guard('agent')->check())
-                <div class="text-end">
-                    <div class="fw-semibold" style="font-size:0.85rem;">{{ Auth::guard('agent')->user()->nom }}</div>
-                    <small style="opacity:0.7;font-size:0.7rem;">{{ Auth::guard('agent')->user()->evenement->titre }}</small>
-                </div>
-                <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                    <i class="bi bi-box-arrow-right"></i> Déconnecter
-                </a>
-                <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" class="d-none">@csrf</form>
+                    <span style="opacity:0.8;font-size:0.85rem;">
+                        <i class="bi bi-person-circle me-1"></i>{{ Auth::guard('agent')->user()->nom }}
+                    </span>
+                    <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                        <i class="bi bi-box-arrow-right"></i> Déconnecter
+                    </a>
+                    <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" class="d-none">@csrf</form>
                 @endif
             </div>
         </div>
