@@ -79,12 +79,16 @@
     <header class="agent-header">
         <div class="container d-flex align-items-center justify-content-between">
             <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="50" style="filter: brightness(0) invert(1);">
-            <div>
+            <div class="d-flex align-items-center gap-3">
                 @if(Auth::guard('agent')->check())
-                    <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </a>
-                    <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" value="Quitter" class="d-none">@csrf</form>
+                <div class="text-end">
+                    <div class="fw-semibold" style="font-size:0.85rem;">{{ Auth::guard('agent')->user()->nom }}</div>
+                    <small style="opacity:0.7;font-size:0.7rem;">{{ Auth::guard('agent')->user()->evenement->titre }}</small>
+                </div>
+                <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                    <i class="bi bi-box-arrow-right"></i> Déconnecter
+                </a>
+                <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" class="d-none">@csrf</form>
                 @endif
             </div>
         </div>

@@ -7,12 +7,18 @@
     {{-- En-tête --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
-        <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
-            @csrf
-            <button type="submit" class="btn btn-outline-danger btn-sm">
-                <i class="bi bi-box-arrow-right"></i>
-            </button>
-        </form>
+        <div class="d-flex align-items-center gap-3">
+            <div class="text-end">
+                <div class="fw-semibold small">{{ $agent->nom }}</div>
+                <small class="text-muted" style="font-size:0.75rem;">{{ $agent->evenement->titre }}</small>
+            </div>
+            <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Déconnecter
+                </button>
+            </form>
+        </div>
     </div>
 
     @if (session('success'))
