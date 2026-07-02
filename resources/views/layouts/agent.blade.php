@@ -84,7 +84,7 @@
                     <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
-                    <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" class="d-none">@csrf</form>
+                    <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" value="Quitter" class="d-none">@csrf</form>
                 @endif
             </div>
         </div>
