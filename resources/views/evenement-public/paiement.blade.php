@@ -130,37 +130,9 @@
                             @if(isset($methodes['sebpay']))
                             <div id="section-sebpay" class="methode-section" style="display:none;">
                                 @if($sebpayConfigured)
-                                    <form id="sebpayForm" method="POST" action="{{ route('paiement.sebpay.init') }}">
-                                        @csrf
-                                        <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
-
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold" style="font-size:0.85rem;">
-                                                <i class="bi bi-phone me-1"></i> Numero telephone
-                                            </label>
-                                            <input type="tel" name="phone" class="form-control"
-                                                   value="{{ old('phone', $ticket->telephone_acheteur) }}"
-                                                   placeholder="229XXXXXXXXX" required
-                                                   style="border-radius:10px; font-size:0.9rem;">
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold" style="font-size:0.85rem;">
-                                                <i class="bi bi-building me-1"></i> Operateur
-                                            </label>
-                                            <select name="operator" class="form-select" required
-                                                    style="border-radius:10px; font-size:0.9rem;">
-                                                <option value="">-- Choisir --</option>
-                                                @foreach($methodes['sebpay']['operateurs'] ?? [] as $slug => $nom)
-                                                    <option value="{{ $slug }}" {{ old('operator') === $slug ? 'selected' : '' }}>{{ $nom }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <button type="submit" class="btn w-100 py-3 btn-methode" style="background: {{ $methodes['sebpay']['couleur'] ?? '#198754' }};">
-                                            <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
-                                        </button>
-                                    </form>
+                                    <button type="button" id="btnSebpay" class="btn w-100 py-3 btn-methode" style="background: {{ $methodes['sebpay']['couleur'] ?? '#198754' }};">
+                                        <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                                    </button>
                                     <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
                                         <small class="text-muted" style="font-size: 0.75rem;">Paiement securisé par</small>
                                         <strong style="font-size: 0.82rem; color: {{ $methodes['sebpay']['couleur'] ?? '#198754' }};">Sebpay</strong>
@@ -187,6 +159,61 @@
         </div>
     </div>
 </section>
+
+{{-- Modal Sebpay --}}
+@if(isset($methodes['sebpay']) && $sebpayConfigured)
+<div id="sebpayModal" class="sebpay-overlay" style="display:none;">
+    <div class="sebpay-modal">
+        <div class="sebpay-header">
+            <h5 class="fw-bold mb-0" style="color:#198754;">
+                <i class="bi bi-shield-check me-2"></i>Paiement Sebpay
+            </h5>
+            <button type="button" class="sebpay-close" onclick="closeSebpayModal()">&times;</button>
+        </div>
+        <div class="sebpay-body">
+            <form id="sebpayForm" method="POST" action="{{ route('paiement.sebpay.init') }}">
+                @csrf
+                <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">
+                        <i class="bi bi-phone me-1"></i> Numero telephone
+                    </label>
+                    <input type="tel" name="phone" class="form-control form-control-lg"
+                           value="{{ old('phone', $ticket->telephone_acheteur) }}"
+                           placeholder="229XXXXXXXXX" required
+                           style="border-radius:12px; font-size:1rem;">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">
+                        <i class="bi bi-building me-1"></i> Operateur
+                    </label>
+                    <div class="row g-2">
+                        @foreach($methodes['sebpay']['operateurs'] ?? [] as $slug => $nom)
+                        <div class="col-6">
+                            <label class="sebpay-op-card {{ old('operator') === $slug ? 'selected' : '' }}"
+                                   onclick="selectOperator(this, '{{ $slug }}')">
+                                <input type="radio" name="operator" value="{{ $slug }}"
+                                       class="d-none" {{ old('operator') === $slug ? 'checked' : '' }}>
+                                <span class="fw-bold" style="font-size:0.9rem;">{{ $nom }}</span>
+                            </label>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn py-3 btn-methode" style="background:#198754;">
+                        <i class="bi bi-shield-lock me-2"></i>
+                        Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 
 <style>
     .methode-card {
@@ -245,6 +272,48 @@
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    .sebpay-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        animation: fadeIn 0.2s ease;
+    }
+    .sebpay-modal {
+        background: #fff; border-radius: 20px;
+        width: 100%; max-width: 420px; margin: 1rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: slideUp 0.25s ease;
+    }
+    .sebpay-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1.25rem 1.5rem 0;
+    }
+    .sebpay-close {
+        background: none; border: none; font-size: 1.6rem;
+        color: #999; cursor: pointer; line-height: 1;
+        padding: 0; transition: color 0.2s;
+    }
+    .sebpay-close:hover { color: #333; }
+    .sebpay-body { padding: 1rem 1.5rem 1.5rem; }
+    .sebpay-op-card {
+        display: block; text-align: center;
+        padding: 0.7rem 0.5rem; border-radius: 12px;
+        border: 2px solid #e0dde3; cursor: pointer;
+        transition: all 0.2s; background: #fff;
+    }
+    .sebpay-op-card:hover {
+        border-color: #4ade80;
+        background: #f0fdf4;
+    }
+    .sebpay-op-card.selected {
+        border-color: #198754;
+        background: #f0fdf4;
+        box-shadow: 0 0 0 3px rgba(25,135,84,0.12);
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 @endsection
 
@@ -289,7 +358,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     @endif
 
-    // Sebpay uses native form submission — no extra JS needed
+    @if(isset($methodes['sebpay']) && $sebpayConfigured)
+    const btnSebpay = document.getElementById('btnSebpay');
+    if (btnSebpay) {
+        btnSebpay.addEventListener('click', function() {
+            openSebpayModal();
+        });
+    }
+    @endif
+
+    window.openSebpayModal = function() {
+        const modal = document.getElementById('sebpayModal');
+        if (modal) modal.style.display = 'flex';
+    };
+
+    window.closeSebpayModal = function() {
+        const modal = document.getElementById('sebpayModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('sebpayModal');
+        if (e.target === modal) modal.style.display = 'none';
+    });
 });
 </script>
 @endsection
