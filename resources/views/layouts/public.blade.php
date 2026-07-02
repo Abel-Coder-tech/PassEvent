@@ -493,6 +493,7 @@
         <div class="container header-inner position-relative">
             <a href="{{ route('accueil') }}" class="brand">
                 <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="80">
+                <span style="font-size:0.6rem;font-weight:700;color:var(--violet);border:1.5px solid var(--violet);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:super;text-transform:uppercase;">BETA</span>
             </a>
 
             <button class="mobile-toggle" id="navToggle" aria-label="Menu">

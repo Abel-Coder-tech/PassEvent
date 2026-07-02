@@ -87,9 +87,9 @@
 <section class="aide-faq">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="aide-faq-chip">FAQ</span>
-            <h2 class="aide-faq-title">Questions fréquentes</h2>
-            <p class="aide-faq-sub">Tout ce que vous devez savoir avant d'acheter</p>
+            <span class="aide-faq-chip">Acheteur</span>
+            <h2 class="aide-faq-title">Pour les participants</h2>
+            <p class="aide-faq-sub">Tout ce que vous devez savoir pour acheter un billet</p>
         </div>
 
         <div class="row g-5 justify-content-center">
@@ -184,6 +184,48 @@
 
             <div class="col-lg-5">
                 <div class="aide-organiser">
+                    <i class="bi bi-cart-check aide-organiser-icon"></i>
+                    <h3 class="aide-organiser-title">Achetez en toute simplicité</h3>
+                    <p class="aide-organiser-text" style="color:var(--accent);">Obtenez votre billet en quelques clics, sans création de compte.</p>
+                    <div class="aide-organiser-grid">
+                        <div class="aide-org-item">
+                            <i class="bi bi-search"></i>
+                            <span>Parcourez les événements</span>
+                        </div>
+                        <div class="aide-org-item">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Payez par Mobile Money</span>
+                        </div>
+                        <div class="aide-org-item">
+                            <i class="bi bi-filetype-pdf"></i>
+                            <span>Ticket PDF reçu par email</span>
+                        </div>
+                        <div class="aide-org-item">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Récupérez-le à tout moment</span>
+                        </div>
+                    </div>
+                    <div class="aide-organiser-actions">
+                        <a href="{{ route('evenements.public') }}" class="aide-btn-primary" style="font-size:0.85rem; padding:0.65rem 1.5rem;">
+                            Voir les événements <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Separator -->
+        <div style="height:3rem;"></div>
+
+        <div class="text-center mb-5">
+            <span class="aide-faq-chip">Organisateur</span>
+            <h2 class="aide-faq-title">Pour les organisateurs</h2>
+            <p class="aide-faq-sub">Créez et gérez vos événements en toute liberté</p>
+        </div>
+
+        <div class="row g-5 justify-content-center">
+            <div class="col-lg-5">
+                <div class="aide-organiser">
                     <i class="bi bi-megaphone aide-organiser-icon"></i>
                     <h3 class="aide-organiser-title">Devenir organisateur</h3>
                     <p class="aide-organiser-text" style="color:var(--accent);">Créez, vendez et gérez vos événements en toute simplicité.</p>
@@ -212,6 +254,79 @@
                         <a href="{{ route('login') }}" class="aide-btn-outline" style="font-size:0.82rem; padding:0.6rem 1.2rem;">
                             Se connecter
                         </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="accordion" id="orgFaqAccordion">
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq1">
+                                <i class="bi bi-pencil-square me-2" style="color: var(--violet);"></i>
+                                Comment créer un événement ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq1" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                Après avoir créé votre compte organisateur, connectez-vous et cliquez sur <strong>"Créer un événement"</strong>. Renseignez le titre, la description, la date, le lieu, la catégorie et la capacité. Vous pourrez ensuite ajouter vos tarifs et codes promo.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq2">
+                                <i class="bi bi-people me-2" style="color: var(--violet);"></i>
+                                Puis-je avoir plusieurs tarifs ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq2" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                Oui, vous pouvez créer plusieurs tarifs pour un même événement : tarif étudiant, tarif normal, VIP, etc. Chaque tarif a son propre prix, sa propre quantité disponible et peut être activé ou désactivé indépendamment.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq3">
+                                <i class="bi bi-wallet2 me-2" style="color: #3498db;"></i>
+                                Comment sont reversés les paiements ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq3" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                Les paiements sont centralisés sur la plateforme. Vous pouvez suivre vos ventes et votre solde en temps réel depuis votre tableau de bord. Pour recevoir vos fonds, faites une <strong>demande de retrait</strong> depuis la section Retraits. Le super admin procédera au transfert sur votre compte Mobile Money.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq4">
+                                <i class="bi bi-qr-code me-2" style="color: #9972B0;"></i>
+                                Comment se passe le contrôle d'accès ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq4" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                Chaque billet est généré avec un <strong>QR code unique</strong>. Le jour de l'événement, vos agents scannent les QR codes à l'entrée via l'application de scan PaxEvent. Vous pouvez aussi désigner des agents de vente pour vendre des tickets sur place.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq5">
+                                <i class="bi bi-graph-up me-2" style="color: var(--violet);"></i>
+                                Quelles statistiques puis-je voir ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq5" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                Depuis votre tableau de bord, vous avez accès au <strong>nombre de tickets vendus</strong>, au <strong>montant total des ventes</strong>, à l'<strong>historique des transactions</strong>, aux <strong>statistiques par tarif</strong>, et aux <strong>logs de scan</strong> de vos agents.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
