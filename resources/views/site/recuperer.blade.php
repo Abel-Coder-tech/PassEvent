@@ -31,18 +31,13 @@
                             @csrf
 
                             <div class="mb-3 text-start">
-                                <label for="nom" class="form-label fw-semibold">Nom et prénoms</label>
-                                <input type="text" class="form-control" id="nom" name="nom" placeholder="Kofi Adebayo" value="{{ old('nom') }}" required>
-                            </div>
-
-                            <div class="mb-3 text-start">
-                                <label for="email" class="form-label fw-semibold">Email de l'acheteur</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="votre@email.com" value="{{ old('email') }}" required>
+                                <label for="transaction_id" class="form-label fw-semibold">ID de transaction</label>
+                                <input type="text" class="form-control" id="transaction_id" name="transaction_id" placeholder="Ex: PENDING-FEDAPAY-XXXXXX" value="{{ old('transaction_id') }}" required>
                             </div>
 
                             <div class="mb-4 text-start">
-                                <label for="telephone" class="form-label fw-semibold">Numéro de téléphone</label>
-                                <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 62 83 66 29" value="{{ old('telephone') }}" required>
+                                <label for="email" class="form-label fw-semibold">Email de l'acheteur</label>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="votre@email.com" value="{{ old('email') }}" required>
                             </div>
 
                             <button type="submit" class="btn btn-violet w-100 py-3" style="border-radius: 8px;">

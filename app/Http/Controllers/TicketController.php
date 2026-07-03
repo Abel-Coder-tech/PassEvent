@@ -101,20 +101,18 @@ class TicketController extends Controller
     public function rechercher(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|min:2|max:100',
+            'transaction_id' => 'required|string|max:255',
             'email' => 'required|email',
-            'telephone' => 'required|string|min:6|max:20',
         ]);
 
         $tickets = Ticket::with('evenement', 'tarif')
-            ->where('nom_acheteur', $request->nom)
+            ->where('transaction_id', $request->transaction_id)
             ->where('email_acheteur', strtolower($request->email))
-            ->where('telephone_acheteur', $request->telephone)
             ->orderBy('date_achat', 'desc')
             ->get();
 
         if ($tickets->isEmpty()) {
-            return back()->with('error', 'Aucun billet trouve avec ces informations. Verifiez le nom, l\'email et le numero saisis lors de l\'achat.');
+            return back()->with('error', 'Aucun billet trouvé avec ces informations. Vérifiez l\'ID de transaction et l\'email saisis lors de l\'achat.');
         }
 
         return view('site.resultats', compact('tickets'));
