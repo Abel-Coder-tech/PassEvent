@@ -133,6 +133,7 @@ class AuthController extends Controller
             'categorie' => $tarif->categorie ?? 'externe',
             'type' => $tarif->type ?? 'normal',
             'montant' => $tarif->prix,
+            'quantite' => 1,
             'statut_paiement' => 'en_attente',
             'methode_paiement' => $validated['methode_paiement'],
             'utilise' => false,
@@ -141,6 +142,8 @@ class AuthController extends Controller
 
         if ($validated['methode_paiement'] === 'cash') {
             $ticket->update(['statut_paiement' => 'payé']);
+            $agent->evenement->increment('quota_vendu', 1);
+            $tarif->increment('quantite_vendue', 1);
             $agent->increment('tickets_count');
             $agent->increment('montant_total', $tarif->prix);
             session()->flash('ticket_created', $ticket->id);

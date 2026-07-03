@@ -181,6 +181,7 @@ class EvenementPublicController extends Controller
             'type' => $tarif->type,
             'montant' => $montantTotal,
             'montant_reduction' => $montantReduction * $quantite,
+            'quantite' => $quantite,
             'statut_paiement' => 'en_attente',
             'date_achat' => now(),
             'code_promo_utilise' => $codePromoUtilise,
@@ -189,9 +190,6 @@ class EvenementPublicController extends Controller
         $ticket->update([
             'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
         ]);
-
-        $evenement->increment('quota_vendu', $quantite);
-        $tarif->increment('quantite_vendue', $quantite);
 
         if ($codePromoUtilise) {
             $codePromo->increment('nb_utilisations', 1);

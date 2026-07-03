@@ -162,6 +162,7 @@ class VenteManuelleController extends Controller
                     'categorie' => $validated['categorie'] ?? $tarif->categorie,
                     'type' => $tarif->type,
                     'montant' => $tarif->prix,
+                    'quantite' => 1,
                     'statut_paiement' => 'payé',
                     'methode_paiement' => 'especes',
                     'transaction_id' => 'MANUEL-' . strtoupper(Str::random(6)),
@@ -214,6 +215,7 @@ class VenteManuelleController extends Controller
             'categorie' => $validated['categorie'] ?? $tarif->categorie,
             'type' => $tarif->type,
             'montant' => $montantTotal,
+            'quantite' => $validated['quantite'],
             'statut_paiement' => 'en_attente',
             'methode_paiement' => 'mobile_money',
             'transaction_id' => 'PENDING-FEDAPAY-' . strtoupper(Str::random(8)),
@@ -223,9 +225,6 @@ class VenteManuelleController extends Controller
         $ticket->update([
             'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
         ]);
-
-        $evenement->increment('quota_vendu', $validated['quantite']);
-        $tarif->increment('quantite_vendue', $validated['quantite']);
 
         return response()->json([
             'success' => true,

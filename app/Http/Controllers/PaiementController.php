@@ -33,6 +33,11 @@ class PaiementController extends Controller
                 'transaction_id' => 'GRATUIT-' . strtoupper(\Illuminate\Support\Str::random(8)),
             ]);
 
+            $ticket->evenement->increment('quota_vendu', $ticket->quantite);
+            if ($ticket->tarif) {
+                $ticket->tarif->increment('quantite_vendue', $ticket->quantite);
+            }
+
             try {
                 $ticket->load('evenement', 'tarif');
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
@@ -62,7 +67,7 @@ class PaiementController extends Controller
                 ->with('error', 'Aucune transaction retournee par FedaPay.');
         }
 
-        $ticket = Ticket::with('evenement')->findOrFail($ticketId);
+        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement === 'payé') {
             $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('confirmation.show', $ticket->id);
@@ -78,6 +83,11 @@ class PaiementController extends Controller
                 'methode_paiement' => $request->query('payment_method', 'mobile_money'),
                 'telephone_paiement' => $request->query('phone', $ticket->telephone_acheteur),
             ]);
+
+            $ticket->evenement->increment('quota_vendu', $ticket->quantite);
+            if ($ticket->tarif) {
+                $ticket->tarif->increment('quantite_vendue', $ticket->quantite);
+            }
 
             if ($source === 'agent_vente' && $ticket->agent_vente_id) {
                 $agent = \App\Models\AgentVente::find($ticket->agent_vente_id);
@@ -145,6 +155,12 @@ class PaiementController extends Controller
                     'methode_paiement' => $data['payment_method'] ?? 'mobile_money',
                     'telephone_paiement' => $data['phone'] ?? $ticket->telephone_acheteur,
                 ]);
+
+                $ticket->load('evenement', 'tarif');
+                $ticket->evenement->increment('quota_vendu', $ticket->quantite);
+                if ($ticket->tarif) {
+                    $ticket->tarif->increment('quantite_vendue', $ticket->quantite);
+                }
 
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
             }

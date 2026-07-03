@@ -27,6 +27,7 @@ class Ticket extends Model
         'type',
         'montant',
         'montant_reduction',
+        'quantite',
         'statut_paiement',
         'transaction_id',
         'methode_paiement',
@@ -49,6 +50,7 @@ class Ticket extends Model
             'utilise' => 'boolean',
             'date_achat' => 'datetime',
             'montant' => 'decimal:2',
+            'quantite' => 'integer',
         ];
     }
 
