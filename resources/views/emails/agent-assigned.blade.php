@@ -20,7 +20,7 @@
                 <div style="background:#f8f6f9;border-radius:12px;padding:1.25rem;margin:1.25rem 0;">
                     <h3 style="margin:0 0 0.5rem;color:#211C31;">{{ $agent->evenement->titre }}</h3>
                     <p style="margin:0.25rem 0;font-size:0.85rem;color:#6c757d;">
-                        <strong>Date :</strong> {{ $agent->evenement->date_event ? $agent->evenement->date_event->format('d F Y') : 'Non définie' }}<br>
+                        <strong>Date :</strong> {{ $agent->evenement->date_event ? $agent->evenement->date_event->isoFormat('D MMMM YYYY') : 'Non définie' }}<br>
                         <strong>Lieu :</strong> {{ $agent->evenement->lieu ?? 'Non défini' }}
                     </p>
                 </div>

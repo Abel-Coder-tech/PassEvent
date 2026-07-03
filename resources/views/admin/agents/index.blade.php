@@ -5,7 +5,7 @@
 @section('page-title', 'Agents de scan')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Agents</li>
 @endsection
 

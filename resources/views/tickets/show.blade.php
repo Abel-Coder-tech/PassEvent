@@ -5,7 +5,7 @@
 @section('page-title', 'Details du ticket')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item"><a href="{{ route('tickets.index') }}">Tickets</a></li>
     <li class="breadcrumb-item active" aria-current="page">Détail</li>
 @endsection
@@ -53,7 +53,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Date d'achat</label>
-                            <div class="fw-semibold">{{ $ticket->date_achat?->format('d M Y H:i') ?? '—' }}</div>
+                            <div class="fw-semibold">{{ $ticket->date_achat?->isoFormat('D MMM YYYY HH:mm') ?? '—' }}</div>
                         </div>
                     </div>
 
@@ -64,7 +64,7 @@
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Evenement</label>
                             <div class="fw-bold">{{ $ticket->evenement?->titre ?? '—' }}</div>
                             <small class="text-muted">
-                                <i class="bi bi-calendar3 me-1"></i>{{ $ticket->evenement?->date_event?->format('d M Y H:i') ?? '—' }}
+                                <i class="bi bi-calendar3 me-1"></i>{{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY HH:mm') ?? '—' }}
                                 <br>
                                 <i class="bi bi-geo-alt me-1"></i>{{ $ticket->evenement?->lieu ?? '—' }}
                             </small>
@@ -173,7 +173,7 @@
                                     <span class="fw-semibold">{{ ucfirst($notif->canal) }}</span>
                                     <span class="text-muted ms-1">— {{ $notif->statut }}</span>
                                 </div>
-                                <small class="text-muted">{{ $notif->date_envoi?->format('d/m H:i') ?? '—' }}</small>
+                                <small class="text-muted">{{ $notif->date_envoi?->isoFormat('DD/MM HH:mm') ?? '—' }}</small>
                             </div>
                         @endforeach
                     </div>
@@ -223,7 +223,7 @@
                                     @endif
                                 </div>
                                 <div class="text-end" style="min-width: 100px;">
-                                    <small class="text-muted">{{ $log->created_at?->format('d M Y H:i') ?? '—' }}</small>
+                                    <small class="text-muted">{{ $log->created_at?->isoFormat('D MMM YYYY HH:mm') ?? '—' }}</small>
                                 </div>
                             </div>
                         @endforeach

@@ -14,7 +14,7 @@
     <div class="row g-2 mb-4 align-items-center">
         <div class="col-md-6">
             <span style="font-size:0.82rem;color:var(--gris);font-weight:500;">
-                <i class="bi bi-calendar3 me-1"></i> {{ now()->format('d M Y') }}
+                <i class="bi bi-calendar3 me-1"></i> {{ now()->isoFormat('D MMM YYYY') }}
             </span>
         </div>
         <div class="col-md-6 d-flex justify-content-md-end gap-2 flex-wrap">
@@ -129,7 +129,7 @@
                             <div style="flex:1;min-width:0;">
                                 <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);">{{ $evenement->titre }}</div>
                                 <div style="font-size:0.7rem;color:var(--gris);">
-                                    {{ $evenement->date_event->format('d M Y') }} — {{ $evenement->quota_vendu }} tickets
+                                    {{ $evenement->date_event->isoFormat('D MMM YYYY') }} — {{ $evenement->quota_vendu }} tickets
                                 </div>
                             </div>
                             <span style="font-size:0.65rem;font-weight:600;color:{{ $dotColor }};white-space:nowrap;">{{ $statusLabel }}</span>

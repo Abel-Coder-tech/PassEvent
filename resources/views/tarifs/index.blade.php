@@ -5,7 +5,7 @@
 @section('page-title', 'Tarifs — ' . $evenement->titre)
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
     <li class="breadcrumb-item"><a href="{{ route('admin.evenements.show', $evenement->id) }}">{{ $evenement->titre }}</a></li>
     <li class="breadcrumb-item active" aria-current="page">Tarifs</li>

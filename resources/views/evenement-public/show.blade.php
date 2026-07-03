@@ -31,7 +31,7 @@
                     @endif
                     <h1 class="show-title">{{ $evenement->titre }}</h1>
                     <div class="show-meta">
-                        <span><i class="bi bi-calendar3"></i> {{ $evenement->date_event->format('d M Y') }}</span>
+                        <span><i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}</span>
                         <span><i class="bi bi-clock"></i> {{ $evenement->date_event->format('H:i') }}</span>
                         <span><i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}</span>
                         @if(!$estComplet)
@@ -58,7 +58,7 @@
                 <div class="show-infos">
                     <div class="show-info-chip">
                         <i class="bi bi-calendar-check"></i>
-                        <span><strong>Date :</strong> {{ $evenement->date_event->format('d M Y') }}</span>
+                        <span><strong>Date :</strong> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}</span>
                     </div>
                     <div class="show-info-chip">
                         <i class="bi bi-clock"></i>
@@ -227,7 +227,7 @@
                                 <span class="show-total-price" id="totalDisplay">--</span>
                             </div>
                             <button type="submit" class="show-btn show-btn-primary" id="btnPayer" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
-                                <i class="bi bi-shield-lock me-2"></i> Payer avec KKiaPay
+                                <i class="bi bi-shield-lock me-2"></i> Payer avec FedaPay
                             </button>
                             <p class="show-secure"><i class="bi bi-shield-check me-1" style="color:var(--violet);"></i> Paiement 100% sécurisé — Ticket PDF envoyé par email</p>
                         </form>
@@ -257,7 +257,7 @@
                                         @endif
                                         <div class="flex-grow-1 min-w-0">
                                             <div class="show-other-title">{{ $autre->titre }}</div>
-                                            <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->format('d M Y') }}</div>
+                                            <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
                                         </div>
                                         <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
                                     </a>
@@ -695,7 +695,7 @@ function shareEvent() {
     if (navigator.share) {
         navigator.share({
             title: '{{ $evenement->titre }}',
-            text: '{{ $evenement->titre }} - {{ $evenement->date_event->format('d M Y') }} à {{ $evenement->lieu }}@if($evenement->description) - {{ strip_tags(Str::limit($evenement->description, 120)) }}@endif',
+            text: '{{ $evenement->titre }} - {{ $evenement->date_event->isoFormat('D MMM YYYY') }} à {{ $evenement->lieu }}@if($evenement->description) - {{ strip_tags(Str::limit($evenement->description, 120)) }}@endif',
             url: window.location.href,
         }).catch(() => {});
     } else {

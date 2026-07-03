@@ -5,7 +5,7 @@
 @section('page-title', 'Mes événements')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Événements</li>
 @endsection
 
@@ -118,7 +118,7 @@
 
                     <!-- Date + Location -->
                     <div class="text-muted mb-3" style="font-size: 0.88rem;">
-                        <i class="bi bi-calendar3 me-1"></i>{{ $evenement->date_event->format('d M Y') }}
+                        <i class="bi bi-calendar3 me-1"></i>{{ $evenement->date_event->isoFormat('D MMM YYYY') }}
                         <span class="mx-2">·</span>
                         <i class="bi bi-geo-alt me-1"></i>{{ $evenement->lieu }}
                         @if($evenement->categorie)

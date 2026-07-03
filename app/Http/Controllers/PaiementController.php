@@ -5,18 +5,18 @@ namespace App\Http\Controllers;
 use App\Mail\TicketEmail;
 use App\Models\Ticket;
 use App\Models\Log;
-use App\Services\KkiaPayService;
+use App\Services\FedapayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Mail;
 
 class PaiementController extends Controller
 {
-    protected KkiaPayService $kkiapay;
+    protected FedapayService $fedapay;
 
-    public function __construct(KkiaPayService $kkiapay)
+    public function __construct(FedapayService $fedapay)
     {
-        $this->kkiapay = $kkiapay;
+        $this->fedapay = $fedapay;
     }
 
     public function show($ticketId)
@@ -44,26 +44,20 @@ class PaiementController extends Controller
                 ->with('success', 'Participation confirmee ! Votre billet a ete envoye par email.');
         }
 
-        $kkiapayKey = config('services.kkiapay.api_key');
-        $kkiapaySandbox = config('services.kkiapay.sandbox', true);
+        $publicKey = $this->fedapay->getPublicKey();
+        $sandbox = $this->fedapay->isSandbox();
 
-        if (!$kkiapayKey) {
-            $superAdmin = \App\Models\User::where('role', 'super_admin')->first();
-            $kkiapayKey = $superAdmin->kkiapay_public_key ?? null;
-            $kkiapaySandbox = $superAdmin->kkiapay_active ?? true;
-        }
-
-        return view('evenement-public.paiement', compact('ticket', 'kkiapayKey', 'kkiapaySandbox'));
+        return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox'));
     }
 
     public function callback(Request $request)
     {
         $ticketId = $request->query('ticket');
-        $transactionId = $request->query('transaction_id');
+        $transactionId = $request->query('id');
 
         if (!$transactionId) {
             return redirect()->route('paiement.show', $ticketId)
-                ->with('error', 'Aucune transaction retournee par KKiaPay.');
+                ->with('error', 'Aucune transaction retournee par FedaPay.');
         }
 
         $ticket = Ticket::with('evenement')->findOrFail($ticketId);
@@ -72,23 +66,14 @@ class PaiementController extends Controller
             return redirect()->route('confirmation.show', $ticket->id);
         }
 
-        try {
-            $verification = $this->kkiapay->verifyTransaction($transactionId);
-        } catch (\Exception $e) {
-            FacadesLog::error('KKiaPay verify failed for ticket ' . $ticket->id . ': ' . $e->getMessage());
-            return redirect()->route('paiement.show', $ticket->id)
-                ->with('error', 'Impossible de verifier le paiement. Veuillez reessayer.');
-        }
+        $status = $request->query('status');
 
-        $status = $verification['status'] ?? ($verification['state'] ?? null);
-        $isSuccess = in_array($status, ['SUCCESS', 'success', 'COMPLETED', 'completed', true], true);
-
-        if ($isSuccess) {
+        if (in_array($status, ['approved', 'completed', 'accepted'], true)) {
             $ticket->update([
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
-                'methode_paiement' => $verification['channel'] ?? $verification['operator'] ?? 'mobile_money',
-                'telephone_paiement' => $verification['phone'] ?? $ticket->telephone_acheteur,
+                'methode_paiement' => $request->query('payment_method', 'mobile_money'),
+                'telephone_paiement' => $request->query('phone', $ticket->telephone_acheteur),
             ]);
 
             try {
@@ -101,7 +86,7 @@ class PaiementController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'achat',
-                'details' => ['transaction_id' => $transactionId, 'methode' => $verification['channel'] ?? 'mobile_money'],
+                'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay'],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -110,10 +95,10 @@ class PaiementController extends Controller
                 ->with('success', 'Paiement confirme avec succes!');
         }
 
-        FacadesLog::warning('KKiaPay verification failed', [
+        FacadesLog::warning('FedaPay verification failed', [
             'ticket' => $ticket->id,
             'transaction_id' => $transactionId,
-            'response' => $verification,
+            'status' => $status,
         ]);
 
         return redirect()->route('paiement.show', $ticket->id)
@@ -124,12 +109,12 @@ class PaiementController extends Controller
     {
         $data = $request->all();
 
-        if (!isset($data['transaction_id']) || !isset($data['status'])) {
+        if (!isset($data['id']) || !isset($data['status'])) {
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
-        if ($data['status'] === 'SUCCESS') {
-            $ticket = Ticket::where('transaction_id', $data['transaction_id'])
+        if (in_array($data['status'], ['approved', 'completed', 'accepted'], true)) {
+            $ticket = Ticket::where('transaction_id', $data['id'])
                 ->orWhere('id', $data['external_id'] ?? null)
                 ->with('evenement')
                 ->first();
@@ -137,8 +122,8 @@ class PaiementController extends Controller
             if ($ticket && $ticket->statut_paiement !== 'payé') {
                 $ticket->update([
                     'statut_paiement' => 'payé',
-                    'transaction_id' => $data['transaction_id'],
-                    'methode_paiement' => $data['channel'] ?? 'mobile_money',
+                    'transaction_id' => $data['id'],
+                    'methode_paiement' => $data['payment_method'] ?? 'mobile_money',
                     'telephone_paiement' => $data['phone'] ?? $ticket->telephone_acheteur,
                 ]);
 

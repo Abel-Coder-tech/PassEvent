@@ -36,7 +36,7 @@ class SuperAdminController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $day = $now->copy()->subDays($i);
             $ventes7Jours->push([
-                'date' => $day->format('d M'),
+                'date' => $day->isoFormat('D MMM'),
                 'tickets' => Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $day)->count(),
                 'revenus' => Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $day)->sum('montant'),
             ]);

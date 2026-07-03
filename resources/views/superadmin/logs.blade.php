@@ -30,7 +30,7 @@
                         {{ $log->details ? (is_string($log->details) ? \Illuminate\Support\Str::limit($log->details, 60) : \Illuminate\Support\Str::limit(json_encode($log->details), 60)) : '-' }}
                     </td>
                     <td style="font-family:monospace;font-size:0.75rem;">{{ $log->ip ?? '-' }}</td>
-                    <td style="font-size:0.72rem; white-space:nowrap;">{{ $log->created_at->format('d M Y H:i:s') }}</td>
+                    <td style="font-size:0.72rem; white-space:nowrap;">{{ $log->created_at->isoFormat('D MMM YYYY HH:mm:ss') }}</td>
                 </tr>
                 @endforeach
             </tbody>

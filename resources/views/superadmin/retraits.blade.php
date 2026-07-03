@@ -58,7 +58,7 @@
                     <tbody>
                         @foreach($retraits as $retrait)
                             <tr>
-                                <td style="white-space:nowrap;">{{ $retrait->created_at->format('d/m/Y H:i') }}</td>
+                                <td style="white-space:nowrap;">{{ $retrait->created_at->isoFormat('DD/MM/YYYY HH:mm') }}</td>
                                 <td>
                                     <strong>{{ $retrait->user->nom }}</strong>
                                     <br><small style="color:var(--sa-text-muted);">{{ $retrait->user->email }}</small>

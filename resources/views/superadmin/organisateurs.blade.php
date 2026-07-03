@@ -82,7 +82,7 @@
                     </td>
                     <td>{{ $org->evenements_count }}</td>
                     <td>{{ $org->telephone ?? '-' }}</td>
-                    <td style="font-size:0.75rem;">{{ $org->created_at->format('d M Y') }}</td>
+                    <td style="font-size:0.75rem;">{{ $org->created_at->isoFormat('D MMM YYYY') }}</td>
                     <td style="white-space:nowrap;">
                         <div class="d-flex flex-nowrap gap-1">
                             <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les détails"

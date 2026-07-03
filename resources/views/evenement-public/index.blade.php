@@ -81,7 +81,7 @@
                             <div class="ev-card-body">
                                 <h5 class="ev-card-title">{{ $evenement->titre }}</h5>
                                 <p class="ev-card-meta">
-                                    <i class="bi bi-calendar3"></i> {{ $evenement->date_event->format('d M Y') }}<br>
+                                    <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}<br>
                                     <i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}
                                 </p>
                                 @if($evenement->gratuit)

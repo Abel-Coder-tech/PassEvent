@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -193,12 +193,12 @@
         <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
                 <td style="text-align:left;vertical-align:middle;">
-                    <div class="event-title">{{ $ticket->evenement?->titre ?? 'Ã‰vÃ©nement' }}</div>
+                    <div class="event-title">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
                     @if($ticket->categorie && $ticket->montant > 0)
                         <div style="font-size:8px;font-weight:700;color:#7B3FA0;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">{{ ucfirst($ticket->categorie) }}</div>
                     @endif
                     <div class="event-meta">
-                        {{ $ticket->evenement?->date_event?->format('d M Y') ?? '---' }}
+                        {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
                         &ndash; {{ $ticket->evenement?->date_event?->format('H\hi') ?? '' }}
                         @if($ticket->evenement?->lieu)
                             &ndash; {{ $ticket->evenement->lieu }}
@@ -223,7 +223,7 @@
         <table class="detail-grid" cellpadding="0" cellspacing="4">
             <tr>
                 <td>
-                    <div class="dl">CatÃ©gorie</div>
+                    <div class="dl">Catégorie</div>
                     <div class="dv">{{ ucfirst($ticket->categorie ?? '---') }}</div>
                 </td>
                 <td>
@@ -245,7 +245,7 @@
 
         {{-- 4. TRANSACTION --}}
         <hr class="dashed">
-        <div class="section-title">DÃ©tails de la transaction</div>
+        <div class="section-title">Détails de la transaction</div>
 
         <table class="tx-table" cellpadding="0" cellspacing="0">
             <tr>
@@ -258,14 +258,14 @@
             </tr>
             <tr>
                 <td class="tl">Date d'achat</td>
-                <td class="tv">{{ $ticket->date_achat?->format('d/m/Y \\Â· H:i') ?? '---' }}</td>
+                <td class="tv">{{ $ticket->date_achat?->format('d/m/Y \\· H:i') ?? '---' }}</td>
             </tr>
         </table>
 
         @if($ticket->montant_reduction > 0)
             <table class="tx-table" cellpadding="0" cellspacing="0" style="margin-top:4px">
                 <tr>
-                    <td class="tl">RÃ©duction</td>
+                    <td class="tl">Réduction</td>
                     <td class="tv" style="color:#2E7D4F">&minus;{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA</td>
                 </tr>
             </table>
@@ -274,7 +274,7 @@
         <hr class="dashed">
         @else
         <div style="text-align:center;padding:8px 0;color:#7B3FA0;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
-            EntrÃ©e gratuite
+            Entrée gratuite
         </div>
         <hr class="dashed">
         @endif
@@ -292,11 +292,11 @@
         <div class="footer">
             <hr class="solid">
             <p>
-                PrÃ©sentez ce QR code Ã  l'entrÃ©e pour scanner votre billet<br>
-                <strong>Billet personnel et non transfÃ©rable</strong>
+                Présentez ce QR code à l'entrée pour scanner votre billet<br>
+                <strong>Billet personnel et non transférable</strong>
             </p>
             <p style="margin-top:6px;font-size:8px;color:#7B3FA0;font-weight:700;">
-                PaxEvent &mdash; Billetterie simple et rapide pour vos Ã©vÃ©nements
+                PaxEvent &mdash; Billetterie simple et rapide pour vos événements
             </p>
         </div>
 

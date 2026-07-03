@@ -1,6 +1,7 @@
 @extends('auth.register.layout')
 
 @section('title', 'Compte créé — PaxEvent')
+@section('step', 4)
 @section('page-title', 'Compte créé avec succès')
 
 @section('card-content')

@@ -5,11 +5,11 @@
 @section('page-title', 'Vente manuelle')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Vente manuelle</li>
 @endsection
 
-@section('page-subtitle', 'Vendre un billet sur place — espèces ou paiement mobile via KKiaPay')
+@section('page-subtitle', 'Vendre un billet sur place — espèces ou paiement mobile via FedaPay')
 
 @section('content')
 <div class="page-content">
@@ -31,7 +31,7 @@
                             <select class="form-select" id="evenement_id" name="evenement_id" required>
                                 <option value="">Choisir un événement —</option>
                                 @foreach($evenements as $evt)
-                                    <option value="{{ $evt->id }}" data-tarif-min="{{ $evt->tarifs->min('prix') }}" data-gratuit="{{ $evt->gratuit ? '1' : '0' }}">{{ $evt->titre }} — {{ $evt->date_event->format('d M Y') }}</option>
+                                    <option value="{{ $evt->id }}" data-tarif-min="{{ $evt->tarifs->min('prix') }}" data-gratuit="{{ $evt->gratuit ? '1' : '0' }}">{{ $evt->titre }} — {{ $evt->date_event->isoFormat('D MMM YYYY') }}</option>
                                 @endforeach
                             </select>
                             @error('evenement_id') <div class="text-danger mt-1" style="font-size:0.85rem;">{{ $message }}</div> @enderror

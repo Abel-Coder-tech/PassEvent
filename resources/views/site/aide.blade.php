@@ -149,7 +149,6 @@
                                 Dès que votre paiement est validé, vous pouvez récupérer vos billets de trois façons :<br>
                                 - Par <strong>e-mail</strong> (envoyé instantanément).<br>
                                 - En <strong>téléchargement direct</strong> sur la page de confirmation d'achat.<br>
-                                - Par <strong>SMS ou WhatsApp</strong> (le code du ticket vous est envoyé).
                             </div>
                         </div>
                     </div>

@@ -19,7 +19,7 @@
                     <td><strong>{{ $ev->titre }}</strong></td>
                     <td>{{ $ev->user->nom ?? '-' }}</td>
                     <td><span class="sa-badge sa-badge-danger">{{ $ev->statut }}</span></td>
-                    <td style="font-size:0.75rem;">{{ $ev->date_event->format('d M Y') }}</td>
+                    <td style="font-size:0.75rem;">{{ $ev->date_event->isoFormat('D MMM YYYY') }}</td>
                     <td>
                         <form action="{{ route('superadmin.evenements.mettre-en-avant', $ev) }}" method="POST" class="d-inline">
                             @csrf

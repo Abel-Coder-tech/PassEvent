@@ -5,7 +5,7 @@
 @section('page-title', 'Statistiques')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Statistiques</li>
 @endsection
 
@@ -54,7 +54,7 @@
                         {{ $stats['revenus_evolution'] >= 0 ? '+' : '' }}{{ $stats['revenus_evolution'] }}%
                     </span>
                 </div>
-                <div class="metric-label">Revenus KKiaPay</div>
+                <div class="metric-label">Revenus FedaPay</div>
                 <div class="metric-value" style="font-size: 1.5rem;">{{ number_format($stats['revenus'], 0, ',', ' ') }} F</div>
                 <div class="metric-subtitle">vs {{ $stats['periode_label'] }} precedent</div>
             </div>
@@ -229,8 +229,8 @@
                         <span class="fw-bold" style="color: var(--vert);">{{ number_format($resumeFinancier['commission'], 0, ',', ' ') }} FCFA</span>
                     </div>
                     <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
-                        <span class="text-muted">Frais KKiaPay : 3.5%</span>
-                        <span class="fw-bold">{{ number_format($resumeFinancier['frais_kkiapay'], 0, ',', ' ') }} FCFA</span>
+                        <span class="text-muted">Frais FedaPay : 3.5%</span>
+                        <span class="fw-bold">{{ number_format($resumeFinancier['frais_fedapay'], 0, ',', ' ') }} FCFA</span>
                     </div>
                     <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span class="text-muted">Remboursements</span>
@@ -253,7 +253,7 @@
                     <div class="p-3 rounded" style="background: var(--blanc-casse);">
                         <p class="mb-2 fw-semibold" style="font-size: 0.9rem;">Prochain recrutement</p>
                         <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                            J+2 apres cloture : via KKiaPay. Les fonds sont transfers automatiquement apres verification des transactions.
+                            J+2 apres cloture : via FedaPay. Les fonds sont transfers automatiquement apres verification des transactions.
                         </p>
                     </div>
 

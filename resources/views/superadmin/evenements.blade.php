@@ -36,7 +36,7 @@
                     </td>
                     <td>{{ $ev->tickets_vendus ?? 0 }} / {{ $ev->capacite }}</td>
                     <td>{{ number_format($ev->recettes ?? 0, 0, ',', ' ') }} F</td>
-                    <td style="font-size:0.75rem;">{{ $ev->date_event->format('d M Y') }}</td>
+                    <td style="font-size:0.75rem;">{{ $ev->date_event->isoFormat('D MMM YYYY') }}</td>
                     <td>
                         <div class="d-flex gap-1">
                             <form action="{{ route('superadmin.evenements.masquer', $ev) }}" method="POST" class="d-inline">

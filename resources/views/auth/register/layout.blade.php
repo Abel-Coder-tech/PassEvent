@@ -101,7 +101,8 @@
         font-size: 0.78rem; color: #ccc; font-weight: 500;
     }
     .step-item.active { color: #542680; font-weight: 700; }
-    .step-item.done { color: #2e7d4f; font-weight: 600; }
+    .step-item.done { color: #2e7d4f; font-weight: 600; cursor: pointer; }
+    a.step-item.done:hover { opacity: 0.8; }
     .step-num {
         width: 26px; height: 26px; border-radius: 50%;
         display: inline-flex; align-items: center; justify-content: center;
@@ -134,16 +135,22 @@
             @if($i > 0)
                 <div class="step-connector {{ $i <= $current ? 'done' : '' }}"></div>
             @endif
-            <div class="step-item {{ $i < $current ? 'done' : '' }} {{ $i === $current ? 'active' : '' }}">
-                <span class="step-num">
-                    @if($i < $current)
-                        <i class="bi bi-check" style="font-size:0.7rem;"></i>
-                    @else
-                        {{ $i + 1 }}
-                    @endif
-                </span>
-                {{ $label }}
-            </div>
+            @if($i < $current)
+                <a href="{{ route('inscriptions.previous', $i) }}" class="step-item done" style="text-decoration:none;">
+                    <span class="step-num"><i class="bi bi-check" style="font-size:0.7rem;"></i></span>
+                    {{ $label }}
+                </a>
+            @elseif($i === $current)
+                <div class="step-item active">
+                    <span class="step-num">{{ $i + 1 }}</span>
+                    {{ $label }}
+                </div>
+            @else
+                <div class="step-item">
+                    <span class="step-num">{{ $i + 1 }}</span>
+                    {{ $label }}
+                </div>
+            @endif
         @endforeach
     </div>
     @endif

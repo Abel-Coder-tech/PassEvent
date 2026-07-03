@@ -232,13 +232,14 @@ class StatistiqueController extends Controller
             ->where('statut_paiement', 'remboursé')
             ->where('created_at', '>=', $startDate)
             ->sum('montant');
-        $net = $revenusBruts - $commission - $fraisKkiaPay - $remboursements;
+        $fraisFedaPay = $revenusBruts * 3.5 / 100;
+        $net = $revenusBruts - $commission - $fraisFedaPay - $remboursements;
 
         return [
             'revenus_bruts' => $revenusBruts,
             'gratuits' => $gratuits,
             'commission' => $commission,
-            'frais_kkiapay' => $fraisKkiaPay,
+            'frais_fedapay' => $fraisFedaPay,
             'remboursements' => $remboursements,
             'net_reverser' => $net,
         ];

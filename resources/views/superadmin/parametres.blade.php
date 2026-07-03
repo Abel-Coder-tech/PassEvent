@@ -19,7 +19,7 @@
                     <span class="text-muted" style="font-size:0.8rem;">contact@paxevent.com</span>
                 </div>
                 <div class="d-flex justify-content-between py-2">
-                    <span>KKiaPay</span>
+                    <span>FedaPay</span>
                     <span class="sa-badge sa-badge-success">Configure</span>
                 </div>
             </div>

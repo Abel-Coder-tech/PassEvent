@@ -41,11 +41,10 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
-    'kkiapay' => [
-        'api_key' => env('KKIAPAY_API_KEY'),
-        'signature' => env('KKIAPAY_SIGNATURE'),
-        'app_id' => env('KKIAPAY_APP_ID'),
-        'sandbox' => env('KKIAPAY_SANDBOX', true),
+    'fedapay' => [
+        'public_key' => env('FEDAPAY_PUBLIC_KEY'),
+        'secret_key' => env('FEDAPAY_SECRET_KEY'),
+        'sandbox' => env('FEDAPAY_SANDBOX', true),
     ],
 
 ];

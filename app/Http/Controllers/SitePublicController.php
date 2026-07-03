@@ -113,7 +113,7 @@ class SitePublicController extends Controller
         $file = resource_path('views/site/confidentialite.blade.php');
         $derniereMiseAJour = file_exists($file)
             ? date('F Y', filemtime($file))
-            : now()->format('F Y');
+            : now()->isoFormat('MMMM YYYY');
 
         return view('site.confidentialite', compact('derniereMiseAJour'));
     }
@@ -123,7 +123,7 @@ class SitePublicController extends Controller
         $file = resource_path('views/site/cgu.blade.php');
         $derniereMiseAJour = file_exists($file)
             ? date('F Y', filemtime($file))
-            : now()->format('F Y');
+            : now()->isoFormat('MMMM YYYY');
 
         return view('site.cgu', compact('derniereMiseAJour'));
     }
@@ -133,7 +133,7 @@ class SitePublicController extends Controller
         $file = resource_path('views/site/mentions-legales.blade.php');
         $derniereMiseAJour = file_exists($file)
             ? date('F Y', filemtime($file))
-            : now()->format('F Y');
+            : now()->isoFormat('MMMM YYYY');
 
         return view('site.mentions-legales', compact('derniereMiseAJour'));
     }
@@ -143,7 +143,7 @@ class SitePublicController extends Controller
         $file = resource_path('views/site/politique-remboursement.blade.php');
         $derniereMiseAJour = file_exists($file)
             ? date('F Y', filemtime($file))
-            : now()->format('F Y');
+            : now()->isoFormat('MMMM YYYY');
 
         return view('site.politique-remboursement', compact('derniereMiseAJour'));
     }

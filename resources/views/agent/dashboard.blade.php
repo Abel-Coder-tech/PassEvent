@@ -1,12 +1,12 @@
 @extends('layouts.agent')
 
-@section('title', 'Dashboard — Agent PaxEvent')
+@section('title', 'Tableau de bord — Agent PaxEvent')
 
 @section('content')
 <div class="container">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h4 class="fw-bold mb-0">
-            <i class="bi bi-house-door me-2" style="color:var(--violet);"></i>Dashboard
+            <i class="bi bi-house-door me-2" style="color:var(--violet);"></i>Tableau de bord
         </h4>
         <small class="text-muted">{{ now()->format('d/m/Y H:i') }}</small>
     </div>
@@ -53,7 +53,7 @@
             <div class="col-md-8">
                 <h5 class="fw-bold mb-1">{{ $evenement->titre }}</h5>
                 <p class="text-muted mb-0 small">
-                    <i class="bi bi-calendar3 me-1"></i>{{ $evenement->date_event->format('d F Y') }}
+                    <i class="bi bi-calendar3 me-1"></i>{{ $evenement->date_event->isoFormat('D MMMM YYYY') }}
                     <i class="bi bi-geo-alt ms-3 me-1"></i>{{ $evenement->lieu }}
                 </p>
             </div>

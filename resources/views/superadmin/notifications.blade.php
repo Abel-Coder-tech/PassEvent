@@ -25,7 +25,7 @@
                         @else <span class="sa-badge sa-badge-danger">Non lu</span>
                         @endif
                     </td>
-                    <td style="font-size:0.75rem;">{{ $msg->created_at->format('d M Y H:i') }}</td>
+                    <td style="font-size:0.75rem;">{{ $msg->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
                 </tr>
                 @endforeach
             </tbody>

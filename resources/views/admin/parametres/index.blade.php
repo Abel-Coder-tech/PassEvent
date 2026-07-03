@@ -5,7 +5,7 @@
 @section('page-title', 'Paramètres')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Paramètres</li>
 @endsection
 
@@ -380,7 +380,7 @@
                 </div>
             </div>
 
-            {{-- Paiement KKiaPay --}}
+            {{-- Paiement FedaPay --}}
             <div id="section-paiement" class="settings-section">
                 <div class="panel-card">
                     <div class="panel-card-header">

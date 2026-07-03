@@ -28,7 +28,7 @@
                     </td>
                     <td>{{ $user->telephone ?? '-' }}</td>
                     <td>{{ $user->evenements_count }}</td>
-                    <td style="font-size:0.75rem; color:var(--sa-text-muted);">{{ $user->created_at->format('d M Y') }}</td>
+                    <td style="font-size:0.75rem; color:var(--sa-text-muted);">{{ $user->created_at->isoFormat('D MMM YYYY') }}</td>
                 </tr>
                 @endforeach
             </tbody>

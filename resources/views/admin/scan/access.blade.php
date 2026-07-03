@@ -5,7 +5,7 @@
 @section('page-title', 'Accès scan')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Scan QR</li>
 @endsection
 
@@ -69,7 +69,7 @@
                             <div class="min-w-0">
                                 <div class="fw-semibold" style="font-size: 0.95rem;">{{ $evt->titre }}</div>
                                 <div style="font-size: 0.78rem; color: #888;">
-                                    {{ $evt->date_event->format('d M Y') }} · {{ $evt->lieu }}
+                                    {{ $evt->date_event->isoFormat('D MMM YYYY') }} · {{ $evt->lieu }}
                                 </div>
                             </div>
                         </div>

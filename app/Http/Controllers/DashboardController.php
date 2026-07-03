@@ -119,7 +119,7 @@ class DashboardController extends Controller
             $diff = $dernierPaiement->date_achat->diffForHumans();
             $activiteRecents[] = [
                 'color' => '#b2e0d6',
-                'text' => '<strong>Paiement KKiaPay</strong> confirmé',
+                'text' => '<strong>Paiement FedaPay</strong> confirmé',
                 'time' => $diff,
             ];
         }

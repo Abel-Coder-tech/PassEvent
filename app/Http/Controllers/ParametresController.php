@@ -98,20 +98,18 @@ class ParametresController extends Controller
     public function paiement(Request $request)
     {
         $validated = $request->validate([
-            'kkiapay_public_key' => 'nullable|string|max:255',
-            'kkiapay_secret_key' => 'nullable|string|max:255',
-            'kkiapay_api_key' => 'nullable|string|max:255',
-            'kkiapay_active' => 'boolean',
+            'fedapay_public_key' => 'nullable|string|max:255',
+            'fedapay_secret_key' => 'nullable|string|max:255',
+            'fedapay_active' => 'boolean',
         ]);
 
         Auth::user()->update([
-            'kkiapay_public_key' => $validated['kkiapay_public_key'] ?: null,
-            'kkiapay_secret_key' => $validated['kkiapay_secret_key'] ?: null,
-            'kkiapay_api_key' => $validated['kkiapay_api_key'] ?: null,
-            'kkiapay_active' => $request->boolean('kkiapay_active'),
+            'fedapay_public_key' => $validated['fedapay_public_key'] ?: null,
+            'fedapay_secret_key' => $validated['fedapay_secret_key'] ?: null,
+            'fedapay_active' => $request->boolean('fedapay_active'),
         ]);
 
-        return back()->with('success', 'Configuration KKiaPay mise a jour.');
+        return back()->with('success', 'Configuration FedaPay mise a jour.');
     }
 
     public function scan(Request $request)

@@ -115,7 +115,7 @@
                         <tbody>
                             @foreach($retraits as $retrait)
                                 <tr>
-                                    <td style="white-space:nowrap;">{{ $retrait->created_at->format('d M Y H:i') }}</td>
+                                    <td style="white-space:nowrap;">{{ $retrait->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
                                     <td><strong>{{ number_format($retrait->montant, 0, ',', ' ') }} F</strong></td>
                                     <td>{{ $retrait->nom }}</td>
                                     <td>{{ $retrait->mobile }}</td>

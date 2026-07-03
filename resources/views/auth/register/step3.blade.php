@@ -82,6 +82,6 @@
         </div>
     </div>
     <button type="submit" class="btn-primary">Créer mon compte</button>
-    <a href="{{ route('inscriptions.org') }}" class="btn-secondary">Précédent</a>
+    <a href="{{ route('inscriptions.previous', 2) }}" class="btn-secondary">Précédent</a>
 </form>
 @endsection

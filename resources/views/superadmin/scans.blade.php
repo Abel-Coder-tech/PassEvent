@@ -22,7 +22,7 @@
                         {{ $log->details ? (is_string($log->details) ? $log->details : json_encode($log->details)) : '-' }}
                     </td>
                     <td style="font-family:monospace;font-size:0.75rem;">{{ $log->ip ?? '-' }}</td>
-                    <td style="font-size:0.75rem;">{{ $log->created_at->format('d M Y H:i:s') }}</td>
+                    <td style="font-size:0.75rem;">{{ $log->created_at->isoFormat('D MMM YYYY HH:mm:ss') }}</td>
                 </tr>
                 @endforeach
             </tbody>

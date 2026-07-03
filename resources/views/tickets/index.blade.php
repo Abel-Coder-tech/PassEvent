@@ -5,7 +5,7 @@
 @section('page-title', 'Gestion des tickets')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Tickets</li>
 @endsection
 
@@ -154,7 +154,7 @@
                                     </td>
                                     <td>
                                         <div class="fw-semibold" style="font-size: 0.85rem;">{{ $ticket->evenement?->titre ?? '—' }}</div>
-                                        <small class="text-muted">{{ $ticket->evenement?->date_event?->format('d M Y') ?? '—' }}</small>
+                                        <small class="text-muted">{{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '—' }}</small>
                                     </td>
                                     <td>
                                         <code class="fw-bold" style="font-size: 0.82rem; color: var(--violet);">{{ $ticket->code_unique }}</code>

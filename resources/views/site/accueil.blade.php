@@ -1,9 +1,9 @@
-ï»¿@extends('layouts.public')
+@extends('layouts.public')
 
-@section('title', 'PaxEvent â€” Billetterie en ligne au BÃ©nin')
-@section('description', 'PaxEvent, la plateforme de billetterie en ligne au BÃ©nin. Achetez et vendez vos billets d\'Ã©vÃ©nements en toute simplicitÃ© et sÃ©curitÃ©.')
-@section('og_title', 'PaxEvent â€” Billetterie en ligne au BÃ©nin')
-@section('og_description', 'La solution simple et rapide pour gÃ©rer vos Ã©vÃ©nements et vendre vos billets en ligne au BÃ©nin.')
+@section('title', 'PaxEvent — Billetterie en ligne au Bénin')
+@section('description', 'PaxEvent, la plateforme de billetterie en ligne au Bénin. Achetez et vendez vos billets d\'événements en toute simplicité et sécurité.')
+@section('og_title', 'PaxEvent — Billetterie en ligne au Bénin')
+@section('og_description', 'La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne au Bénin.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
@@ -22,9 +22,9 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row g-5 align-items-center">
             <div class="col-lg-6 d-flex flex-column align-items-center justify-content-center text-center text-lg-start">
-                <span class="hero-chip">Billetterie en ligne 100% BÃ©nin</span>
+                <span class="hero-chip">Billetterie en ligne 100% Bénin</span>
                 <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez vos tickets en quelques clics</h1>
-                <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gÃ©rer vos Ã©vÃ©nements et vendre vos billets en ligne.</p>
+                <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.</p>
                 <div class="hero-actions">
                     <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
                         Acheter un ticket <i class="bi bi-arrow-right ms-1"></i>
@@ -36,7 +36,7 @@
                 <div class="hero-stats">
                     <div class="hero-stat text-center">
                         <span class="hero-stat-value">500+</span>
-                        <span class="hero-stat-label">Ã‰vÃ©nements</span>
+                        <span class="hero-stat-label">Événements</span>
                     </div>
                     <div class="hero-stat text-center">
                         <span class="hero-stat-value">10k+</span>
@@ -53,11 +53,11 @@
                     <img src="{{ asset('images/image_heros.jpeg') }}" alt="Illustration PaxEvent" class="hero-illustration">
                     <div class="hero-float-card float-card-1">
                         <i class="bi bi-ticket-perforated"></i>
-                        <span>Billet Ã©lectronique</span>
+                        <span>Billet électronique</span>
                     </div>
                     <div class="hero-float-card float-card-2">
                         <i class="bi bi-shield-check"></i>
-                        <span>Paiement sÃ©curisÃ©</span>
+                        <span>Paiement sécurisé</span>
                     </div>
                 </div>
             </div>
@@ -300,7 +300,7 @@
         <form action="{{ route('accueil') }}" method="GET" class="filter-search mb-4">
             <div class="search-wrap">
                 <i class="bi bi-search search-icon"></i>
-                <input type="text" name="q" class="search-input" placeholder="Rechercher par nom, catÃ©gorie, lieu..." value="{{ $q ?? '' }}">
+                <input type="text" name="q" class="search-input" placeholder="Rechercher par nom, catégorie, lieu..." value="{{ $q ?? '' }}">
             </div>
             @if($selectedCategorie)
                 <input type="hidden" name="categorie" value="{{ $selectedCategorie }}">
@@ -342,21 +342,21 @@
                                     <span class="ev-badge ev-badge-complet">Complet</span>
                                 @endif
                                 <div class="ev-img-overlay">
-                                    <span class="ev-img-btn">Voir les dÃ©tails <i class="bi bi-arrow-right"></i></span>
+                                    <span class="ev-img-btn">Voir les détails <i class="bi bi-arrow-right"></i></span>
                                 </div>
                             </div>
                             <div class="ev-body">
                                 <h6 class="ev-title">{{ $evenement->titre }}</h6>
                                 <p class="ev-meta">
-                                    <i class="bi bi-calendar3"></i> {{ $evenement->date_event->format('d M Y') }}<br>
+                                    <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}<br>
                                     <i class="bi bi-geo-alt"></i> {{ Str::limit($evenement->lieu, 25) }}
                                 </p>
                                 @if($evenement->gratuit)
-                                    <div class="ev-price">EntrÃ©e <strong>Gratuit</strong></div>
+                                    <div class="ev-price">Entrée <strong>Gratuit</strong></div>
                                 @elseif($prixDernier)
-                                    <div class="ev-price">Ã€ partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
+                                    <div class="ev-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
                                 @else
-                                    <div class="ev-price"><span class="text-muted">Tarifs non configurÃ©s</span></div>
+                                    <div class="ev-price"><span class="text-muted">Tarifs non configurés</span></div>
                                 @endif
                                 <div class="ev-gauge">
                                     <div class="d-flex justify-content-between" style="font-size:0.68rem;">
@@ -384,17 +384,17 @@
         @else
             <div class="empty-state">
                 <i class="bi bi-calendar-x"></i>
-                <h5>Aucun Ã©vÃ©nement disponible</h5>
-                <p>Revenez plus tard pour dÃ©couvrir nos prochains Ã©vÃ©nements.</p>
+                <h5>Aucun événement disponible</h5>
+                <p>Revenez plus tard pour découvrir nos prochains événements.</p>
                 @if($q || $selectedCategorie || $selectedDate)
-                    <a href="{{ route('accueil') }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous les Ã©vÃ©nements</a>
+                    <a href="{{ route('accueil') }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous les événements</a>
                 @endif
             </div>
         @endif
 
         @if($evenementsVedettes->isNotEmpty())
             <div class="text-center mt-5">
-                <a href="{{ route('evenements.public') }}" class="btn-outline btn-outline-lg">Voir tous les Ã©vÃ©nements <i class="bi bi-arrow-right ms-1"></i></a>
+                <a href="{{ route('evenements.public') }}" class="btn-outline btn-outline-lg">Voir tous les événements <i class="bi bi-arrow-right ms-1"></i></a>
             </div>
         @endif
     </div>
@@ -749,8 +749,8 @@
     <div class="container">
         <div class="section-header">
             <span class="section-tag section-tag-light">Fonctionnement</span>
-            <h2 style="color: #211C31;">Comment Ã§a marche ?</h2>
-            <p style="color: rgba(33,28,49,0.6);">4 Ã©tapes simples pour obtenir votre billet</p>
+            <h2 style="color: #211C31;">Comment ça marche ?</h2>
+            <p style="color: rgba(33,28,49,0.6);">4 étapes simples pour obtenir votre billet</p>
         </div>
         <div class="steps-grid" id="steps-grid">
             <div class="step-item" data-step="1">
@@ -759,7 +759,7 @@
                     <i class="bi bi-search"></i>
                 </div>
                 <h6>Choisir</h6>
-                <p>Trouvez l'Ã©vÃ©nement qui vous intÃ©resse</p>
+                <p>Trouvez l'événement qui vous intéresse</p>
             </div>
             <div class="step-item" data-step="2">
                 <div class="step-icon-wrap">
@@ -775,7 +775,7 @@
                     <i class="bi bi-credit-card"></i>
                 </div>
                 <h6>Payer</h6>
-                <p>Paiement sÃ©curisÃ© via KKiaPay (MTN, Moov, Celtiis)</p>
+                <p>Paiement sécurisé via KKiaPay (MTN, Moov, Celtiis)</p>
             </div>
             <div class="step-item" data-step="4">
                 <div class="step-icon-wrap">
@@ -899,9 +899,9 @@
             <div class="cta-content">
                 <span class="cta-tag">Vous avez perdu votre ticket ?</span>
                 <h3>Pas de panique !</h3>
-                <p>Rendez-vous sur la page de rÃ©cupÃ©ration avec vos informations pour retrouver votre billet en un clin d'Å“il.</p>
+                <p>Rendez-vous sur la page de récupération avec vos informations pour retrouver votre billet en un clin d'œil.</p>
                 <a href="{{ route('tickets.recuperer') }}" class="btn-cta">
-                    <i class="bi bi-ticket-perforated me-1"></i> RÃ©cupÃ©rer mon ticket
+                    <i class="bi bi-ticket-perforated me-1"></i> Récupérer mon ticket
                 </a>
             </div>
             <div class="cta-graphic">

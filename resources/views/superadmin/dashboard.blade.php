@@ -1,6 +1,6 @@
 @extends('superadmin.layouts.master')
 
-@section('title', 'Dashboard - Super Admin PaxEvent')
+@section('title', 'Tableau de bord - Super Admin PaxEvent')
 @section('page-title', 'Tableau de bord')
 
 @section('content')

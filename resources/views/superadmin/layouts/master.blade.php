@@ -473,7 +473,7 @@
         <nav class="sa-sidebar-nav">
             <div class="sa-nav-section">Supervision</div>
             <a href="{{ route('superadmin.dashboard') }}" class="sa-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
             </a>
             <a href="{{ route('superadmin.statistiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.statistiques') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-fill"></i> Statistiques
@@ -545,7 +545,7 @@
         <div class="sa-topbar">
             <div class="sa-topbar-left">
                 <button class="toggle-sidebar" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-                <span class="sa-topbar-title">@yield('page-title', 'Dashboard')</span>
+                <span class="sa-topbar-title">@yield('page-title', 'Tableau de bord')</span>
             </div>
             <div class="sa-topbar-right">
                 <a href="{{ route('superadmin.notifications') }}" class="sa-notif-btn" title="Notifications">

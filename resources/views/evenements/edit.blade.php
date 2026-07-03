@@ -5,7 +5,7 @@
 @section('page-title', 'Modifier l\'événement')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
     <li class="breadcrumb-item active" aria-current="page">Modifier</li>
 @endsection

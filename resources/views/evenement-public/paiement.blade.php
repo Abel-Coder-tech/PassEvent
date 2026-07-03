@@ -15,14 +15,12 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12 col-md-7 col-lg-6">
-                {{-- Alerts --}}
                 @if(session('error'))
                     <div class="alert alert-danger py-2" style="font-size: 0.85rem; border-radius: 10px;">
                         <i class="bi bi-exclamation-circle me-1"></i> {{ session('error') }}
                     </div>
                 @endif
 
-                {{-- Recapitulatif --}}
                 <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-3" style="color: #333;">
@@ -75,17 +73,15 @@
                     </div>
                 </div>
 
-                {{-- Paiement KKiaPay --}}
                 <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                     <div class="card-body p-4 text-center">
                         <h5 class="fw-bold mb-3" style="color: #333;">
                             <i class="bi bi-wallet2 me-2" style="color: #542680;"></i>
-                            Paiement securisé via KKiaPay
+                            Paiement sécurisé
                         </h5>
 
-                        {{-- Bouton paiement --}}
-                        @if($kkiapayKey)
-                            <button type="button" id="btnKkiaPay" class="btn w-100 py-3" style="background: #542680; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
+                        @if($publicKey)
+                            <button type="button" id="btnFedaPay" class="btn w-100 py-3" style="background: #542680; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
                                 <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
                             </button>
                         @else
@@ -96,8 +92,8 @@
                         @endif
 
                         <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
-                            <small class="text-muted" style="font-size: 0.75rem;">Paiement securisé par</small>
-                            <img src="https://kkiapay.me/wp-content/uploads/2024/04/footer-logo.svg" alt="KKiaPay" style="height: 22px;">
+                            <small class="text-muted" style="font-size: 0.75rem;">Paiement sécurisé par</small>
+                            <strong style="color: #542680; font-size: 0.9rem;">FedaPay</strong>
                         </div>
 
                         <p class="text-center text-muted mt-3 mb-0" style="font-size: 0.78rem;">
@@ -105,7 +101,6 @@
                             Votre billet PDF sera envoye a <strong>{{ $ticket->email_acheteur }}</strong>
                         </p>
 
-                        {{-- Message d'erreur --}}
                         <div id="paymentError" class="mt-3" style="display: none; color: var(--danger); font-size: 0.85rem;"></div>
                     </div>
                 </div>
@@ -116,12 +111,11 @@
 @endsection
 
 @section('scripts')
-{{-- SDK KKiaPay --}}
-<script src="https://cdn.kkiapay.me/k.js"></script>
+<script src="https://cdn.fedapay.com/checkout.js?v=1.1.3"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.getElementById('btnKkiaPay');
+    const btn = document.getElementById('btnFedaPay');
     const errorDiv = document.getElementById('paymentError');
     const callbackUrl = '{{ route('paiement.callback') }}?ticket={{ $ticket->id }}';
 
@@ -130,21 +124,40 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', function() {
         errorDiv.style.display = 'none';
 
-        if (typeof openKkiapayWidget === 'undefined') {
+        if (typeof FedaPay === 'undefined') {
             errorDiv.textContent = 'Erreur de chargement du module de paiement. Actualisez la page.';
             errorDiv.style.display = 'block';
             return;
         }
 
-        openKkiapayWidget({
-            key: '{{ $kkiapayKey }}',
-            amount: {{ (int) $ticket->montant }},
-            email: '{{ $ticket->email_acheteur }}',
-            name: '{{ $ticket->nom_acheteur }}',
-            phone: '{{ $ticket->telephone_acheteur }}',
-            sandbox: {{ $kkiapaySandbox ? 'true' : 'false' }},
-            position: 'center',
-            callback: callbackUrl,
+        const nameParts = '{{ $ticket->nom_acheteur }}'.trim().split(' ');
+        const firstname = nameParts.slice(0, -1).join(' ') || nameParts[0] || 'Client';
+        const lastname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+
+        FedaPay.checkout({
+            public_key: '{{ $publicKey }}',
+            transaction: {
+                amount: {{ (int) $ticket->montant }},
+                description: 'Ticket - {{ $ticket->evenement->titre }}'
+            },
+            customer: {
+                email: '{{ $ticket->email_acheteur }}',
+                firstname: firstname,
+                lastname: lastname
+            },
+            currency: {
+                iso: 'XOF'
+            },
+            callback_url: callbackUrl,
+            success: function(response) {
+                if (response && response.transaction && response.transaction.id) {
+                    window.location.href = callbackUrl + '&id=' + response.transaction.id + '&status=approved';
+                }
+            },
+            cancel: function() {
+                errorDiv.textContent = 'Paiement annulé. Vous pouvez réessayer.';
+                errorDiv.style.display = 'block';
+            }
         });
     });
 });

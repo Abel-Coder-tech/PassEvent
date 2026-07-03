@@ -27,7 +27,7 @@
                             <td><span class="sa-badge sa-badge-danger">{{ $log->type_operation }}</span></td>
                             <td>{{ $log->ticket?->evenement?->titre ?? 'N/A' }}</td>
                             <td style="font-family:monospace;font-size:0.75rem;">{{ $log->ip ?? '-' }}</td>
-                            <td style="font-size:0.75rem;">{{ $log->created_at->format('d M Y H:i') }}</td>
+                            <td style="font-size:0.75rem;">{{ $log->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
                         </tr>
                         @empty
                         <tr><td colspan="4" class="text-center text-muted py-4">Aucune activite suspecte</td></tr>

@@ -5,7 +5,7 @@
 @section('page-title', 'Remboursements')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Remboursements</li>
 @endsection
 
@@ -17,7 +17,7 @@
         <div>
             <strong style="color: #f39c12; font-size: 0.85rem;">Politique de remboursement</strong>
             <p class="mb-0 text-muted" style="font-size: 0.82rem;">
-                Les tickets sont remboursables dans les 30 jours suivant l'achat ou si l'événement est annulé. Le remboursement est traité via KKiaPay et un email est envoyé automatiquement à l'acheteur.
+                Les tickets sont remboursables dans les 30 jours suivant l'achat ou si l'événement est annulé. Le remboursement est traité via FedaPay et un email est envoyé automatiquement à l'acheteur.
             </p>
         </div>
     </div>
@@ -220,7 +220,7 @@
 
                     <div class="alert alert-warning" style="border-radius: 8px; font-size: 0.82rem; background: rgba(243,156,18,0.06); border: none;">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong>Attention :</strong> Cette action est irréversible. Le montant sera restitué via KKiaPay et un email sera envoyé à l'acheteur.
+                        <strong>Attention :</strong> Cette action est irréversible. Le montant sera restitué via FedaPay et un email sera envoyé à l'acheteur.
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-3">

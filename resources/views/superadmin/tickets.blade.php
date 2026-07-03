@@ -33,7 +33,7 @@
                         @else <span class="sa-badge sa-badge-secondary">Non</span>
                         @endif
                     </td>
-                    <td style="font-size:0.75rem;">{{ $t->date_achat ? \Carbon\Carbon::parse($t->date_achat)->format('d M Y H:i') : '-' }}</td>
+                    <td style="font-size:0.75rem;">{{ $t->date_achat ? \Carbon\Carbon::parse($t->date_achat)->isoFormat('D MMM YYYY HH:mm') : '-' }}</td>
                 </tr>
                 @endforeach
             </tbody>

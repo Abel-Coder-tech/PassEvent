@@ -200,7 +200,7 @@ class VenteManuelleController extends Controller
             ]);
         }
 
-        // Digital payment: create ticket as 'en_attente' and redirect to KKiaPay
+        // Digital payment: create ticket as 'en_attente' and redirect to FedaPay
         $montantTotal = $tarif->prix * $validated['quantite'];
 
         $ticket = Ticket::create([
@@ -216,7 +216,7 @@ class VenteManuelleController extends Controller
             'montant' => $montantTotal,
             'statut_paiement' => 'en_attente',
             'methode_paiement' => $validated['methode_paiement'],
-            'transaction_id' => 'PENDING-KKIAPAY-' . strtoupper(Str::random(8)),
+            'transaction_id' => 'PENDING-FEDAPAY-' . strtoupper(Str::random(8)),
             'utilise' => false,
             'date_achat' => now(),
         ]);

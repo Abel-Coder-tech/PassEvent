@@ -31,7 +31,7 @@
                         </div>
                     </td>
                     <td>{{ number_format($ev->recettes ?? 0, 0, ',', ' ') }} F</td>
-                    <td style="font-size:0.75rem;">{{ $ev->date_event->format('d M Y') }}</td>
+                    <td style="font-size:0.75rem;">{{ $ev->date_event->isoFormat('D MMM YYYY') }}</td>
                     <td>
                         @if($ev->statut === 'publié') <span class="sa-badge sa-badge-success">Publie</span>
                         @elseif($ev->statut === 'brouillon') <span class="sa-badge sa-badge-secondary">Brouillon</span>

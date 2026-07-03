@@ -32,7 +32,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
                                 <div>
                                     <h6 class="fw-bold mb-1">{{ $ticket->evenement->titre }}</h6>
-                                    <small class="text-muted">{{ $ticket->evenement->date_event->format('d M Y') }} - {{ $ticket->evenement->lieu }}</small>
+                                    <small class="text-muted">{{ $ticket->evenement->date_event->isoFormat('D MMM YYYY') }} - {{ $ticket->evenement->lieu }}</small>
                                 </div>
                                 @php
                                     $statusBadge = match($ticket->statut_paiement) {

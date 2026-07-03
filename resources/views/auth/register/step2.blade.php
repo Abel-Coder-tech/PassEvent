@@ -95,8 +95,8 @@
         @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <button type="submit" class="btn-primary">Continuer</button>
-    <a href="{{ route('inscriptions.identity') }}" class="btn-secondary">Précédent</a>
+    <button type="submit" class="btn-primary">Suivant</button>
+    <a href="{{ route('inscriptions.previous', 1) }}" class="btn-secondary">Précédent</a>
 </form>
 @endsection
 

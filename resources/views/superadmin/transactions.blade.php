@@ -6,7 +6,7 @@
 @section('content')
 <div class="sa-card">
     <div class="sa-card-header">
-        <span><i class="bi bi-cash-stack me-2" style="color: var(--sa-primary);"></i>Transactions KKiaPay</span>
+        <span><i class="bi bi-cash-stack me-2" style="color: var(--sa-primary);"></i>Transactions FedaPay</span>
         <span class="text-muted" style="font-size:0.8rem;">{{ $transactions->total() }} total</span>
     </div>
     <div class="sa-card-body p-0">
@@ -29,7 +29,7 @@
                     </td>
                     <td>{{ $t->methode_paiement ?? '-' }}</td>
                     <td>{{ $t->email_acheteur }}</td>
-                    <td style="font-size:0.75rem;">{{ $t->created_at->format('d M Y H:i') }}</td>
+                    <td style="font-size:0.75rem;">{{ $t->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
                 </tr>
                 @endforeach
             </tbody>
