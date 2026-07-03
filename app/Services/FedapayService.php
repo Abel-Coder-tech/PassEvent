@@ -9,7 +9,7 @@ class FedapayService
         $key = config('services.fedapay.public_key');
 
         if (!$key) {
-            $superAdmin = \App\Models\User::where('role', 'super_admin')->first();
+            $superAdmin = \App\Models\User::where('role', '=', 'super_admin', '=')->first();
             $key = $superAdmin->fedapay_public_key ?? null;
         }
 

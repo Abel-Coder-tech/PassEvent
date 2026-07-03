@@ -74,7 +74,7 @@ class VenteManuelleController extends Controller
             }
 
             if ($request->methode_paiement !== 'especes') {
-                $rules['email'][] = 'required';
+                $rules['email'] = 'required|email|max:255';
                 $messages['email.required'] = 'L\'email est obligatoire pour le paiement mobile.';
             }
         }

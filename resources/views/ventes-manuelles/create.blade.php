@@ -415,24 +415,25 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
             body: JSON.stringify(data),
         })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.redirect) {
-                window.location.href = resp.redirect;
+        .then(r => r.json().catch(() => null).then(body => ({ ok: r.ok, status: r.status, body })))
+        .then(({ ok, status, body }) => {
+            if (body && body.redirect) {
+                window.location.href = body.redirect;
                 return;
             }
-            if (resp.success) {
-                document.getElementById('successMessage').textContent = resp.message;
+            if (body && body.success) {
+                document.getElementById('successMessage').textContent = body.message;
                 let ticketsHtml = '<ul class="list-unstyled mb-0">';
-                resp.tickets.forEach(t => {
+                body.tickets.forEach(t => {
                     ticketsHtml += '<li><strong>Code :</strong> ' + t.code_unique + '</li>';
                 });
-                if (resp.total > 0) {
-                    ticketsHtml += '</li><li class="fw-bold mt-1">Total : ' + numberFormat(resp.total) + ' FCFA</li></ul>';
+                if (body.total > 0) {
+                    ticketsHtml += '</li><li class="fw-bold mt-1">Total : ' + numberFormat(body.total) + ' FCFA</li></ul>';
                 } else {
                     ticketsHtml += '</li><li class="fw-bold mt-1">Gratuit</li></ul>';
                 }
@@ -450,12 +451,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateRecap();
 
                 setTimeout(() => location.reload(), 2000);
+                return;
             }
-        })
-        .catch(err => {
-            alert('Erreur lors de l\'enregistrement de la vente.');
+            if (body && body.errors) {
+                const msgs = Object.values(body.errors).flat().join('\n');
+                alert(msgs);
+            } else {
+                alert('Une erreur est survenue (code ' + status + '). Vérifiez votre saisie et réessayez.');
+            }
             btnSubmit.disabled = false;
-            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Enregistrer la vente';
+            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + (isMobile() ? 'Payer via FedaPay' : 'Enregistrer la vente');
         });
     });
 
