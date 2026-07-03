@@ -23,7 +23,7 @@
             <div class="col-lg-8">
                 <span class="contact-hero-chip">Contact</span>
                 <h1 class="contact-hero-title">Contactez-nous</h1>
-                <p class="contact-hero-sub" style="color:var(--accent);">Une question ou un problème ? Nous sommes là pour vous aider</p>
+                <p class="contact-hero-sub" style="color:var(--accent);">Une question ou un problème ? Nous sommes là pour vous aider.</p>
             </div>
         </div>
     </div>
