@@ -41,13 +41,9 @@
                                     <span class="text-muted">Montant :</span><br>
                                     <strong style="color: #542680; font-size: 1.1rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</strong>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-12">
                                     <span class="text-muted">Acheteur :</span><br>
                                     <strong>{{ $ticket->nom_acheteur }}</strong>
-                                </div>
-                                <div class="col-6 text-end">
-                                    <span class="text-muted">Code :</span><br>
-                                    <code class="fw-bold" style="background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid #eee;">{{ $ticket->code_unique }}</code>
                                 </div>
                                 @if($ticket->code_promo_utilise)
                                     <div class="col-12 mt-2">
