@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     FedaPay.init(btn, {
         public_key: '{{ $publicKey }}',
+        environment: '{{ $sandbox ? 'sandbox' : 'live' }}',
         transaction: {
             amount: {{ (int) $ticket->montant }},
             description: 'Ticket - {{ $ticket->evenement->titre }}'

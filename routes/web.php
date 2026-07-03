@@ -40,6 +40,9 @@ Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show']
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat');
 Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur');
 
+Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
+Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
+
 Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
 
@@ -60,9 +63,6 @@ Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueR
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
-// Callback KKiaPay
-Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
-Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
 
 // Google OAuth
 Route::get('/auth/google', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google.redirect');
