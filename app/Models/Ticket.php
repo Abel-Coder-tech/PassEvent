@@ -33,6 +33,7 @@ class Ticket extends Model
         'utilise',
         'date_achat',
         'code_promo_utilise',
+        'agent_vente_id',
     ];
 
     public function getLabel(): string

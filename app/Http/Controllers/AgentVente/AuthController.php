@@ -133,19 +133,41 @@ class AuthController extends Controller
             'categorie' => $tarif->categorie ?? 'externe',
             'type' => $tarif->type ?? 'normal',
             'montant' => $tarif->prix,
-            'statut_paiement' => 'payé',
+            'statut_paiement' => 'en_attente',
             'methode_paiement' => $validated['methode_paiement'],
             'utilise' => false,
             'date_achat' => now(),
         ]);
 
-        $agent->increment('tickets_count');
-        $agent->increment('montant_total', $tarif->prix);
+        if ($validated['methode_paiement'] === 'cash') {
+            $ticket->update(['statut_paiement' => 'payé']);
+            $agent->increment('tickets_count');
+            $agent->increment('montant_total', $tarif->prix);
+            session()->flash('ticket_created', $ticket->id);
+            return redirect()->route('agent-vente.dashboard')
+                ->with('success', 'Ticket vendu avec succès !');
+        }
 
-        session()->flash('ticket_created', $ticket->id);
+        return redirect()->route('agent-vente.paiement', $ticket->id);
+    }
 
-        return redirect()->route('agent-vente.dashboard')
-            ->with('success', 'Ticket vendu avec succès !');
+    public function payer(Ticket $ticket): View|RedirectResponse
+    {
+        $agent = Auth::guard('agent_vente')->user();
+
+        if ($ticket->agent_vente_id !== $agent->id) {
+            abort(403);
+        }
+
+        if ($ticket->statut_paiement === 'payé') {
+            return redirect()->route('agent-vente.dashboard');
+        }
+
+        $fedapay = app(\App\Services\FedapayService::class);
+        $publicKey = $fedapay->getPublicKey();
+        $sandbox = $fedapay->isSandbox();
+
+        return view('agent-vente.paiement', compact('agent', 'ticket', 'publicKey', 'sandbox'));
     }
 
     public function downloadPdf(Ticket $ticket): \Illuminate\Http\Response

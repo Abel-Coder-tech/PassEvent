@@ -186,6 +186,7 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
         Route::post('/deconnexion', [AgentVenteAuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', [AgentVenteAuthController::class, 'dashboard'])->name('dashboard');
         Route::post('/vendre', [AgentVenteAuthController::class, 'vendre'])->name('vendre');
+        Route::get('/paiement/{ticket}', [AgentVenteAuthController::class, 'payer'])->name('paiement');
         Route::get('/historique', [AgentVenteAuthController::class, 'historiqueJson'])->name('historique.json');
         Route::get('/tickets/{ticket}/pdf', [AgentVenteAuthController::class, 'downloadPdf'])->name('ticket.pdf');
     });

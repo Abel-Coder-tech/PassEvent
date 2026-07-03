@@ -54,16 +54,19 @@ class PaiementController extends Controller
     {
         $ticketId = $request->query('ticket');
         $transactionId = $request->query('id');
+        $source = $request->query('source');
 
         if (!$transactionId) {
-            return redirect()->route('paiement.show', $ticketId)
+            $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('paiement.show', $ticketId);
+            return redirect()->to($fallback)
                 ->with('error', 'Aucune transaction retournee par FedaPay.');
         }
 
         $ticket = Ticket::with('evenement')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement === 'payé') {
-            return redirect()->route('confirmation.show', $ticket->id);
+            $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('confirmation.show', $ticket->id);
+            return redirect()->to($fallback);
         }
 
         $status = $request->query('status');
@@ -76,6 +79,14 @@ class PaiementController extends Controller
                 'telephone_paiement' => $request->query('phone', $ticket->telephone_acheteur),
             ]);
 
+            if ($source === 'agent_vente' && $ticket->agent_vente_id) {
+                $agent = \App\Models\AgentVente::find($ticket->agent_vente_id);
+                if ($agent) {
+                    $agent->increment('tickets_count');
+                    $agent->increment('montant_total', $ticket->montant);
+                }
+            }
+
             try {
                 $ticket->load('evenement', 'tarif');
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
@@ -86,10 +97,16 @@ class PaiementController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'achat',
-                'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay'],
+                'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay', 'agent_vente' => $source === 'agent_vente'],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
+
+            if ($source === 'agent_vente') {
+                session()->flash('ticket_created', $ticket->id);
+                return redirect()->route('agent-vente.dashboard')
+                    ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
+            }
 
             return redirect()->route('confirmation.show', $ticket->id)
                 ->with('success', 'Paiement confirme avec succes!');
@@ -97,11 +114,13 @@ class PaiementController extends Controller
 
         FacadesLog::warning('FedaPay verification failed', [
             'ticket' => $ticket->id,
+            'source' => $source,
             'transaction_id' => $transactionId,
             'status' => $status,
         ]);
 
-        return redirect()->route('paiement.show', $ticket->id)
+        $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('paiement.show', $ticket->id);
+        return redirect()->to($fallback)
             ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');
     }
 
