@@ -973,7 +973,7 @@
             </button>
             <div class="top-bar-left">
                 <h2>@yield('page-title', 'Tableau de bord')</h2>
-                <p>{{ now()->isoFormat('D MMMM YYYY') }} &mdash; Prestataire de paiement <span>KKiaPay</span></p>
+                <p>{{ now()->isoFormat('D MMMM YYYY') }} &mdash; Prestataire de paiement <span>FedaPay</span></p>
             </div>
         </div>
         <div class="top-bar-right">

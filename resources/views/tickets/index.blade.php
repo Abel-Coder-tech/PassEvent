@@ -13,7 +13,7 @@
 <div class="page-content">
     <!-- Header -->
     <p class="text-muted mb-4" style="font-size: 0.9rem; margin-top: -0.5rem;">
-        {{ $totalTickets }} ticket{{ $totalTickets > 1 ? 's' : '' }} genere{{ $totalTickets > 1 ? 's' : '' }} &middot; Tous evenements confondus &middot; Prestataire <strong>KKiaPay</strong>
+        {{ $totalTickets }} ticket{{ $totalTickets > 1 ? 's' : '' }} genere{{ $totalTickets > 1 ? 's' : '' }} &middot; Tous evenements confondus &middot; Prestataire <strong>FedaPay</strong>
     </p>
 
     <!-- Stat Cards -->

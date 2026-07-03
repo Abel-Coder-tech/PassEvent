@@ -24,15 +24,15 @@
                             <ul>
                                 <li><strong>Nom et prénom</strong> (pour l'identification et l'envoi des billets)</li>
                                 <li><strong>Adresse email</strong> (pour l'envoi des billets et les notifications)</li>
-                                <li><strong>Numéro de téléphone</strong> (optionnel, utilisé pour le paiement via KKiaPay et les rappels)</li>
-                                <li><strong>Informations de paiement</strong> (traitées exclusivement par KKiaPay – PaxEvent ne stocke aucune donnée bancaire ou Mobile Money)</li>
+                                <li><strong>Numéro de téléphone</strong> (optionnel, utilisé pour le paiement via FedaPay et les rappels)</li>
+                                <li><strong>Informations de paiement</strong> (traitées exclusivement par FedaPay – PaxEvent ne stocke aucune donnée bancaire ou Mobile Money)</li>
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">2. Utilisation des données</h6>
                             <p>Vos données sont utilisées pour :</p>
                             <ul>
                                 <li>Générer et envoyer vos billets par email (PDF + QR code)</li>
-                                <li>Traiter les paiements via KKiaPay (sans stockage des données bancaires)</li>
+                                <li>Traiter les paiements via FedaPay (sans stockage des données bancaires)</li>
                                 <li>Gérer les accès aux événements (scan QR code)</li>
                                 <li>Vous contacter en cas d'annulation ou de modification d'un événement</li>
                                 <li>Envoyer des rappels (email) avant un événement</li>
@@ -42,7 +42,7 @@
                             <h6 class="fw-bold mt-4 mb-2">3. Partage des données</h6>
                             <p>Nous ne vendons jamais vos données personnelles. Elles peuvent être partagées avec :</p>
                             <ul>
-                                <li><strong>KKiaPay</strong> : pour le traitement des paiements (uniquement les informations nécessaires à la transaction)</li>
+                                <li><strong>FedaPay</strong> : pour le traitement des paiements (uniquement les informations nécessaires à la transaction)</li>
                                 <li><strong>Les organisateurs d'événements</strong> : pour les besoins de la billetterie (nom, email, téléphone des participants à leurs événements uniquement)</li>
                                 <li><strong>Prestataires techniques</strong> : hébergeur, service d'envoi d'emails – dans le cadre strict de l'exécution du service</li>
                                 <li><strong>Autorités légales</strong> : si la loi l'exige (sur demande officielle)</li>
@@ -61,7 +61,7 @@
                             <h6 class="fw-bold mt-4 mb-2">5. Durée de conservation</h6>
                             <p>Vos données sont conservées pendant 2 ans après votre dernière interaction avec la plateforme (achat, connexion, etc.).</p>
                             <p>Passé ce délai, elles sont anonymisées ou supprimées, sauf obligation légale de conservation (ex: facturation).</p>
-                            <p>Les données de paiement (via KKiaPay) sont conservées par KKiaPay selon leur propre politique.</p>
+                            <p>Les données de paiement (via FedaPay) sont conservées par FedaPay selon leur propre politique.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">6. Vos droits</h6>
                             <p>Conformément à la législation en vigueur (loi béninoise sur la protection des données), vous disposez des droits suivants :</p>

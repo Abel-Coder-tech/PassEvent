@@ -25,7 +25,7 @@
                                 <li>Tous les acheteurs sont automatiquement notifiés par email (adresse utilisée lors de l'achat).</li>
                                 <li>Les billets sont immédiatement marqués comme annulés dans le système.</li>
                                 <li>Le remboursement est effectué sur le moyen de paiement d'origine (Mobile Money) dans un délai de 3 à 5 jours ouvrés.</li>
-                                <li>PaxEvent n'est pas responsable du traitement des remboursements ; ceux-ci sont gérés directement par l'organisateur via sa passerelle KKiaPay.</li>
+                                <li>PaxEvent n'est pas responsable du traitement des remboursements ; ceux-ci sont gérés directement par l'organisateur via sa passerelle FedaPay.</li>
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">2. Annulation par l'acheteur (participant)</h6>
@@ -36,27 +36,27 @@
                             <p>L'organisateur peut définir une date limite d'annulation (ex : 48h avant l'événement) pendant laquelle l'acheteur peut demander un remboursement partiel (ex : 80% du prix).</p>
                             <ul>
                                 <li>Dans ce cas, le remboursement est effectué directement par l'organisateur, après validation par PaxEvent (si la fonctionnalité est activée).</li>
-                                <li>Les frais de transaction KKiaPay (environ 1,5%) ne sont pas remboursés.</li>
+                                <li>Les frais de transaction FedaPay (environ 1,5%) ne sont pas remboursés.</li>
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">4. Billets gratuits</h6>
                             <p>En cas d'annulation d'un événement avec billets gratuits, les billets sont automatiquement annulés.</p>
                             <p>Aucun remboursement n'est nécessaire puisqu'aucun paiement n'a été effectué.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">5. Frais de transaction (KKiaPay)</h6>
-                            <p>Les frais de transaction préalablement prélevés par le prestataire de paiement (KKiaPay) lors de l'achat initial ne sont pas remboursés en cas de remboursement.</p>
+                            <h6 class="fw-bold mt-4 mb-2">5. Frais de transaction (FedaPay)</h6>
+                            <p>Les frais de transaction préalablement prélevés par le prestataire de paiement (FedaPay) lors de l'achat initial ne sont pas remboursés en cas de remboursement.</p>
                             <p>Ces frais représentent environ 1,9% du montant total de la transaction au Bénin (selon l'opérateur Mobile Money utilisé).</p>
 
                             <h6 class="fw-bold mt-4 mb-2">6. Billets payés (remboursement partiel)</h6>
-                            <p>En cas de remboursement partiel (ex : annulation avant l'événement), seuls les frais de transaction KKiaPay ne sont pas remboursés.</p>
-                            <p>Le montant restant (prix du ticket – frais KKiaPay) est reversé à l'acheteur.</p>
+                            <p>En cas de remboursement partiel (ex : annulation avant l'événement), seuls les frais de transaction FedaPay ne sont pas remboursés.</p>
+                            <p>Le montant restant (prix du ticket – frais FedaPay) est reversé à l'acheteur.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">7. Modification de l'événement (report, changement de lieu, etc.)</h6>
                             <p>En cas de report ou de modification substantielle de l'événement, l'organisateur doit en informer les acheteurs.</p>
                             <p>Les acheteurs peuvent alors :</p>
                             <ul>
                                 <li>Accepter la modification (le billet reste valable).</li>
-                                <li>Refuser la modification et demander un remboursement (dans ce cas, les frais de transaction KKiaPay ne sont pas remboursés).</li>
+                                <li>Refuser la modification et demander un remboursement (dans ce cas, les frais de transaction FedaPay ne sont pas remboursés).</li>
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">8. Cas particuliers</h6>

@@ -25,7 +25,7 @@
                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 64px; height: 64px; background: #f5f3ff;">
                             <i class="bi bi-wallet2" style="font-size: 1.75rem; color: #7c3aed;"></i>
                         </div>
-                        <h5 class="fw-bold mb-1">Paiement Mobile Money</h5>
+                        <h5 class="fw-bold mb-1">Paiement Mobile</h5>
                         <p class="text-muted small mb-0">Le client doit payer pour finaliser la vente</p>
                     </div>
 

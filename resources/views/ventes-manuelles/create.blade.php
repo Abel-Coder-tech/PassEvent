@@ -100,10 +100,7 @@
                                 <label for="methode_paiement" class="form-label fw-semibold">Moyen de paiement <span class="text-danger">*</span></label>
                                 <select class="form-select" id="methode_paiement" name="methode_paiement" required>
                                     <option value="especes">Espèces</option>
-                                    <option value="mtn">MTN Mobile Money</option>
-                                    <option value="moov">Moov Money</option>
-                                    <option value="movimoney">MoviMoney</option>
-                                    <option value="celtiis">Celtiis Cash</option>
+                                    <option value="mobile">Mobile</option>
                                 </select>
                             </div>
                         </div>
@@ -174,7 +171,7 @@
                                 <div class="fw-bold" style="font-size: 0.9rem; color: var(--vert);">{{ number_format($vente->montant, 0, ',', ' ') }} FCFA</div>
                             </div>
                             <div class="text-muted" style="font-size: 0.82rem;">
-                                {{ $vente->evenement?->titre ?? '—' }} — {{ ucfirst($vente->categorie) }} · {{ ucfirst($vente->methode_paiement ?? 'Espèces') }}
+                                {{ $vente->evenement?->titre ?? '—' }} — {{ ucfirst($vente->categorie) }} · {{ $vente->methode_paiement === 'especes' ? 'Espèces' : ($vente->methode_paiement === 'mobile_money' ? 'Mobile' : ucfirst($vente->methode_paiement ?? 'Espèces')) }}
                             </div>
                             <div style="font-size: 0.75rem; color: var(--gris); margin-top: 0.25rem;">
                                 {{ $vente->date_achat->diffForHumans() }}
@@ -224,10 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('email');
     const methodLabels = {
         'especes': 'Espèces',
-        'mtn': 'MTN Mobile Money',
-        'moov': 'Moov Money',
-        'movimoney': 'MoviMoney',
-        'celtiis': 'Celtiis Cash',
+        'mobile': 'Mobile',
     };
 
     const isUniversitaire = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
@@ -258,27 +252,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function isDigital() {
-        return methodeSelect.value !== 'especes';
+    function isMobile() {
+        return methodeSelect.value === 'mobile';
     }
 
     function updateUI() {
-        const digital = isDigital();
+        const mobile = isMobile();
 
-        // Toggle email required indicator
-        document.querySelector('.email-optional').classList.toggle('d-none', digital);
-        document.querySelector('.email-required').classList.toggle('d-none', !digital);
+        document.querySelector('.email-optional').classList.toggle('d-none', mobile);
+        document.querySelector('.email-required').classList.toggle('d-none', !mobile);
 
-        // Toggle button label
-        document.getElementById('btnLabel').textContent = digital ? 'Payer via ' + methodLabels[methodeSelect.value] : 'Enregistrer la vente';
+        document.getElementById('btnLabel').textContent = mobile ? 'Payer via FedaPay' : 'Enregistrer la vente';
 
-        // Toggle submit info text
-        document.getElementById('submitInfo').innerHTML = digital
-            ? '<i class="bi bi-phone me-1"></i> L\'acheteur paiera via son téléphone mobile'
+        document.getElementById('submitInfo').innerHTML = mobile
+            ? '<i class="bi bi-phone me-1"></i> L\'acheteur paiera via FedaPay (Mobile Money)'
             : '<i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail';
 
-        // Toggle digital info banner
-        document.getElementById('digitalInfo').classList.toggle('d-none', !digital);
+        document.getElementById('digitalInfo').classList.toggle('d-none', !mobile);
     }
 
     function updateRecap() {
@@ -306,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
         const telOk = document.getElementById('telephone').value.trim() !== '';
-        const emailOk = !isDigital() || emailInput.value.trim() !== '';
+        const emailOk = !isMobile() || emailInput.value.trim() !== '';
         btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && nomOk && telOk && emailOk);
     }
 

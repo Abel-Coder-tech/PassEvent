@@ -65,7 +65,7 @@ class VenteManuelleController extends Controller
 
         if (!$evenement->gratuit) {
             $rules['tarif_id'] = 'required|exists:tarifs,id';
-            $rules['methode_paiement'] = 'required|in:especes,mtn,moov,movimoney,celtiis';
+            $rules['methode_paiement'] = 'required|in:especes,mobile';
 
             $messages['tarif_id.required'] = 'Veuillez sélectionner un tarif.';
 
@@ -215,7 +215,7 @@ class VenteManuelleController extends Controller
             'type' => $tarif->type,
             'montant' => $montantTotal,
             'statut_paiement' => 'en_attente',
-            'methode_paiement' => $validated['methode_paiement'],
+            'methode_paiement' => 'mobile_money',
             'transaction_id' => 'PENDING-FEDAPAY-' . strtoupper(Str::random(8)),
             'utilise' => false,
             'date_achat' => now(),

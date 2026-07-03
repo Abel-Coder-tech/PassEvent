@@ -33,7 +33,7 @@
                             <h6 class="fw-bold mt-4 mb-2">4. Achat de tickets</h6>
                             <ul>
                                 <li>Les tickets sont achetés en ligne via la plateforme</li>
-                                <li>Le paiement est effectué via KKiaPay (mobile money)</li>
+                                <li>Le paiement est effectué via FedaPay (mobile money)</li>
                                 <li>Un ticketet est émis uniquement après confirmation du paiement</li>
                                 <li>Les tickets sont personnels et non transférables</li>
                                 <li>Un ticket ne peut être utilise qu'une seule fois</li>
@@ -42,7 +42,7 @@
                             <h6 class="fw-bold mt-4 mb-2">5. Prix et paiement</h6>
                             <ul>
                                 <li>Les prix sont fixés par les organisateurs et exprimés en FCFA</li>
-                                <li>Les frais de service KKiaPay sont inclus dans le prix affiché</li>
+                                <li>Les frais de service FedaPay sont inclus dans le prix affiché</li>
                                 <li>Le paiement est sécurisé via les opérateurs de mobile money partenaires</li>
                             </ul>
 

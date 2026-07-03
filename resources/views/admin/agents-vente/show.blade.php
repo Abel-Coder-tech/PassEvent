@@ -90,7 +90,7 @@
                             <h6 class="fw-bold small mb-2"><i class="bi bi-credit-card"></i> Par méthode</h6>
                             @forelse ($stats['par_methode'] as $s)
                             <div class="d-flex justify-content-between small">
-                                <span>{{ $s->methode_paiement === 'cash' ? 'Espèces' : 'Mobile Money' }}</span>
+                                <span>{{ $s->methode_paiement === 'cash' ? 'Espèces' : 'Mobile' }}</span>
                                 <span class="fw-medium">{{ $s->total }}</span>
                             </div>
                             @empty
@@ -132,7 +132,7 @@
                         <td>{{ optional($ticket->tarif)->getLabel() ?? 'N/A' }}</td>
                         @if($ticket->montant > 0)
                         <td class="text-end fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                        <td>{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile Money' }}</td>
+                        <td>{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile' }}</td>
                         @else
                         <td class="text-end text-muted">Gratuit</td>
                         <td>—</td>

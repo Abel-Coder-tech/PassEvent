@@ -61,7 +61,7 @@
                         <i class="bi bi-shield-check" style="color: #3498db;"></i>
                     </div>
                     <h5 class="aide-card-title">Payer en sécurisé</h5>
-                    <p class="aide-card-text">Réglez par Mobile Money (MTN, Moov, Celtiis Cash) ou par carte bancaire (Visa, Mastercard) via des passerelles sécurisées (KKiaPay, Fedapay, FexPay).</p>
+                    <p class="aide-card-text">Réglez par Mobile Money (MTN, Moov, Celtiis Cash) ou par carte bancaire (Visa, Mastercard) via des passerelles sécurisées (FedaPay).</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">

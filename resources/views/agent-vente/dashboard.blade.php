@@ -101,10 +101,10 @@
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-medium">Paiement</label>
-                            <select name="methode_paiement" class="form-select form-select-sm" required>
+                            <select name="methode_paiement" class="form-select form-select-sm" id="methodePaiement" required>
                                 <option value="">Choisir...</option>
                                 <option value="cash">Espèces (Cash)</option>
-                                <option value="mobile_money">Mobile Money</option>
+                                <option value="mobile_money">Mobile</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -116,8 +116,8 @@
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                        <button type="submit" class="btn w-100 text-white py-2 fw-medium" style="background: #7c3aed;">
-                            <i class="bi bi-check-lg"></i> Vendre le ticket
+                        <button type="submit" class="btn w-100 text-white py-2 fw-medium" id="btnVente" style="background: #7c3aed;">
+                            <i class="bi bi-check-lg"></i> <span id="btnVenteLabel">Vendre le ticket</span>
                         </button>
                     </form>
                 </div>
@@ -154,7 +154,7 @@
                                     <td class="small">{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
                                     @if($ticket->montant > 0)
                                     <td class="small fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                                    <td class="small">{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile Money' }}</td>
+                                    <td class="small">{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile' }}</td>
                                     @else
                                     <td class="small text-muted">Gratuit</td>
                                     <td class="small">—</td>
@@ -218,7 +218,7 @@ function chargerHistorique() {
                         <td class="small">${t.tarif}</td>
                         ${t.montant_val > 0 ? `
                         <td class="small fw-medium">${t.montant}</td>
-                        <td class="small">${t.methode === 'cash' ? 'Espèces' : 'Mobile Money'}</td>
+                        <td class="small">${t.methode === 'cash' ? 'Espèces' : 'Mobile'}</td>
                         ` : `
                         <td class="small text-muted">Gratuit</td>
                         <td class="small">—</td>
@@ -236,6 +236,14 @@ function chargerHistorique() {
 
 document.addEventListener('DOMContentLoaded', function () {
     historiqueInterval = setInterval(chargerHistorique, 10000);
+
+    const methodeSelect = document.getElementById('methodePaiement');
+    const btnLabel = document.getElementById('btnVenteLabel');
+    if (methodeSelect && btnLabel) {
+        methodeSelect.addEventListener('change', function() {
+            btnLabel.textContent = this.value === 'mobile_money' ? 'Payer via FedaPay' : 'Vendre le ticket';
+        });
+    }
 
     setTimeout(() => {
         const alert = document.getElementById('successAlert');
