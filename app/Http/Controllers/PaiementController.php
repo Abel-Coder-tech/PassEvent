@@ -62,7 +62,11 @@ class PaiementController extends Controller
         $source = $request->query('source');
 
         if (!$transactionId) {
-            $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('paiement.show', $ticketId);
+            $fallback = match($source) {
+                'agent_vente' => route('agent-vente.dashboard'),
+                'vente_manuelle' => route('ventes-manuelles.create'),
+                default => route('paiement.show', $ticketId),
+            };
             return redirect()->to($fallback)
                 ->with('error', 'Aucune transaction retournee par FedaPay.');
         }
@@ -70,7 +74,11 @@ class PaiementController extends Controller
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement === 'payé') {
-            $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('confirmation.show', $ticket->id);
+            $fallback = match($source) {
+                'agent_vente' => route('agent-vente.dashboard'),
+                'vente_manuelle' => route('ventes-manuelles.create'),
+                default => route('confirmation.show', $ticket->id),
+            };
             return redirect()->to($fallback);
         }
 
@@ -118,6 +126,11 @@ class PaiementController extends Controller
                     ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
             }
 
+            if ($source === 'vente_manuelle') {
+                return redirect()->route('ventes-manuelles.create')
+                    ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
+            }
+
             return redirect()->route('confirmation.show', $ticket->id)
                 ->with('success', 'Paiement confirme avec succes!');
         }
@@ -129,7 +142,11 @@ class PaiementController extends Controller
             'status' => $status,
         ]);
 
-        $fallback = $source === 'agent_vente' ? route('agent-vente.dashboard') : route('paiement.show', $ticket->id);
+        $fallback = match($source) {
+            'agent_vente' => route('agent-vente.dashboard'),
+            'vente_manuelle' => route('ventes-manuelles.create'),
+            default => route('paiement.show', $ticket->id),
+        };
         return redirect()->to($fallback)
             ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');
     }

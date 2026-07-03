@@ -14,6 +14,13 @@ use Illuminate\Support\Str;
 
 class VenteManuelleController extends Controller
 {
+    protected \App\Services\FedapayService $fedapay;
+
+    public function __construct(\App\Services\FedapayService $fedapay)
+    {
+        $this->fedapay = $fedapay;
+    }
+
     public function create()
     {
         $user = Auth::user();
@@ -35,11 +42,16 @@ class VenteManuelleController extends Controller
         $totalVentesJour = $ventesJour->count();
         $montantVentesJour = $ventesJour->sum('montant');
 
+        $publicKey = $this->fedapay->getPublicKey();
+        $sandbox = $this->fedapay->isSandbox();
+
         return view('ventes-manuelles.create', compact(
             'evenements',
             'ventesJour',
             'totalVentesJour',
             'montantVentesJour',
+            'publicKey',
+            'sandbox',
         ));
     }
 
@@ -201,7 +213,7 @@ class VenteManuelleController extends Controller
             ]);
         }
 
-        // Digital payment: create ticket as 'en_attente' and redirect to FedaPay
+        // Digital payment: create ticket as 'en_attente' and return ticket data for FedaPay widget
         $montantTotal = $tarif->prix * $validated['quantite'];
 
         $ticket = Ticket::create([
@@ -228,7 +240,13 @@ class VenteManuelleController extends Controller
 
         return response()->json([
             'success' => true,
-            'redirect' => route('paiement.show', $ticket->id),
+            'ticket' => [
+                'id' => $ticket->id,
+                'montant' => (int) $montantTotal,
+                'nom_acheteur' => $ticket->nom_acheteur,
+                'email_acheteur' => $ticket->email_acheteur,
+                'evenement_titre' => $evenement->titre,
+            ],
         ]);
     }
 

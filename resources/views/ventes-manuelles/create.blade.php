@@ -208,6 +208,7 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.fedapay.com/checkout.js?v=1.1.3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('venteForm');
@@ -223,6 +224,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'especes': 'Espèces',
         'mobile': 'Mobile',
     };
+    const fedapayPublicKey = '{{ $publicKey }}';
+    const fedapaySandbox = {{ $sandbox ? 'true' : 'false' }};
 
     const isUniversitaire = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
     let tarifUnitaire = 0;
@@ -422,8 +425,56 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(r => r.json().catch(() => null).then(body => ({ ok: r.ok, status: r.status, body })))
         .then(({ ok, status, body }) => {
-            if (body && body.redirect) {
-                window.location.href = body.redirect;
+            if (body && body.ticket && isMobile()) {
+                const t = body.ticket;
+                const nameParts = t.nom_acheteur.trim().split(' ');
+                const firstname = nameParts.slice(0, -1).join(' ') || nameParts[0] || 'Client';
+                const lastname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+                const callbackUrl = '{{ route('paiement.callback') }}?ticket=' + t.id + '&source=vente_manuelle';
+
+                if (typeof FedaPay === 'undefined') {
+                    alert('Le widget FedaPay n\'a pas pu être chargé. Veuillez réessayer.');
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Payer via FedaPay';
+                    return;
+                }
+
+                let fedapayBtn = document.getElementById('fedaPayTrigger');
+                if (!fedapayBtn) {
+                    fedapayBtn = document.createElement('button');
+                    fedapayBtn.id = 'fedaPayTrigger';
+                    fedapayBtn.style.display = 'none';
+                    document.body.appendChild(fedapayBtn);
+                }
+
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ouverture de FedaPay…';
+                btnSubmit.disabled = true;
+
+                FedaPay.init(fedapayBtn, {
+                    public_key: fedapayPublicKey,
+                    environment: fedapaySandbox ? 'sandbox' : 'live',
+                    transaction: {
+                        amount: t.montant,
+                        description: 'Ticket - ' + t.evenement_titre
+                    },
+                    customer: {
+                        email: t.email_acheteur,
+                        firstname: firstname,
+                        lastname: lastname
+                    },
+                    currency: { iso: 'XOF' },
+                    onComplete: function(data) {
+                        if (data.reason === 'CHECKOUT COMPLETE' && data.transaction && data.transaction.id) {
+                            window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved');
+                        } else {
+                            alert('Paiement annulé ou fermé. Vous pouvez réessayer.');
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Payer via FedaPay';
+                        }
+                    }
+                });
+
+                setTimeout(function() { fedapayBtn.click(); }, 300);
                 return;
             }
             if (body && body.success) {
