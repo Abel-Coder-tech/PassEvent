@@ -121,44 +121,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (!btn) return;
 
-    btn.addEventListener('click', function() {
-        errorDiv.style.display = 'none';
+    if (typeof FedaPay === 'undefined') {
+        errorDiv.textContent = 'Erreur de chargement du module de paiement. Actualisez la page.';
+        errorDiv.style.display = 'block';
+        return;
+    }
 
-        if (typeof FedaPay === 'undefined') {
-            errorDiv.textContent = 'Erreur de chargement du module de paiement. Actualisez la page.';
-            errorDiv.style.display = 'block';
-            return;
-        }
+    const nameParts = '{{ $ticket->nom_acheteur }}'.trim().split(' ');
+    const firstname = nameParts.slice(0, -1).join(' ') || nameParts[0] || 'Client';
+    const lastname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
 
-        const nameParts = '{{ $ticket->nom_acheteur }}'.trim().split(' ');
-        const firstname = nameParts.slice(0, -1).join(' ') || nameParts[0] || 'Client';
-        const lastname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-
-        FedaPay.checkout({
-            public_key: '{{ $publicKey }}',
-            transaction: {
-                amount: {{ (int) $ticket->montant }},
-                description: 'Ticket - {{ $ticket->evenement->titre }}'
-            },
-            customer: {
-                email: '{{ $ticket->email_acheteur }}',
-                firstname: firstname,
-                lastname: lastname
-            },
-            currency: {
-                iso: 'XOF'
-            },
-            callback_url: callbackUrl,
-            success: function(response) {
-                if (response && response.transaction && response.transaction.id) {
-                    window.location.href = callbackUrl + '&id=' + response.transaction.id + '&status=approved';
-                }
-            },
-            cancel: function() {
-                errorDiv.textContent = 'Paiement annulé. Vous pouvez réessayer.';
+    FedaPay.init(btn, {
+        public_key: '{{ $publicKey }}',
+        transaction: {
+            amount: {{ (int) $ticket->montant }},
+            description: 'Ticket - {{ $ticket->evenement->titre }}'
+        },
+        customer: {
+            email: '{{ $ticket->email_acheteur }}',
+            firstname: firstname,
+            lastname: lastname
+        },
+        currency: {
+            iso: 'XOF'
+        },
+        onComplete: function(data) {
+            if (data.reason === 'CHECKOUT COMPLETE' && data.transaction && data.transaction.id) {
+                window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved');
+            } else {
+                errorDiv.textContent = 'Paiement annulé ou fermé. Vous pouvez réessayer.';
                 errorDiv.style.display = 'block';
             }
-        });
+        }
     });
 });
 </script>
