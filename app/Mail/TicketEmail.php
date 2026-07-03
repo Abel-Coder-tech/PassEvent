@@ -11,33 +11,49 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
+use Illuminate\Support\Collection;
 
 class TicketEmail extends Mailable
 {
-    public Ticket $ticket;
-    public string $pdfContent;
-    public string $filename;
+    public Collection $tickets;
+    public array $pdfs;
 
-    public function __construct(Ticket $ticket)
+    public function __construct($tickets)
     {
-        $this->ticket = $ticket;
+        if ($tickets instanceof Ticket) {
+            $tickets = collect([$tickets]);
+        } elseif (is_array($tickets)) {
+            $tickets = collect($tickets);
+        }
 
-        $ticket->load('evenement', 'tarif');
+        $this->tickets = $tickets;
+        $this->pdfs = [];
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
-        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
+        foreach ($tickets as $ticket) {
+            $ticket->load('evenement', 'tarif');
 
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper('a4', 'portrait');
+            $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+            $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
 
-        $this->pdfContent = $pdf->output();
-        $this->filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
+            $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
+            $pdf->setPaper('a4', 'portrait');
+
+            $this->pdfs[] = [
+                'content' => $pdf->output(),
+                'filename' => 'PaxEvent-' . $ticket->code_unique . '.pdf',
+            ];
+        }
     }
 
     public function envelope(): Envelope
     {
+        $first = $this->tickets->first();
+        $quantite = $this->tickets->count();
+
         return new Envelope(
-            subject: 'Votre billet PaxEvent pour ' . $this->ticket->evenement->titre,
+            subject: $quantite > 1
+                ? "Vos {$quantite} billets PaxEvent pour {$first->evenement->titre}"
+                : "Votre billet PaxEvent pour {$first->evenement->titre}",
             replyTo: [new Address('contact@paxevent.com', 'PaxEvent')],
         );
     }
@@ -57,14 +73,16 @@ class TicketEmail extends Mailable
     {
         return new Content(
             view: 'emails.ticket',
+            with: ['tickets' => $this->tickets],
         );
     }
 
     public function attachments(): array
     {
-        return [
-            Attachment::fromData(fn() => $this->pdfContent, $this->filename)
+        return array_map(fn($pdf) =>
+            Attachment::fromData(fn() => $pdf['content'], $pdf['filename'])
                 ->withMime('application/pdf'),
-        ];
+            $this->pdfs
+        );
     }
 }

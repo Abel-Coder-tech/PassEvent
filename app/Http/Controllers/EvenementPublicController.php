@@ -168,39 +168,59 @@ class EvenementPublicController extends Controller
             $montantUnitaire = $tarif->prix - $montantReduction;
         }
 
-        $montantTotal = $montantUnitaire * $quantite;
+        $groupTransactionId = 'GRP-' . strtoupper(\Illuminate\Support\Str::random(16));
+        $tickets = [];
 
-        $ticket = $evenement->tickets()->create([
-            'tarif_id' => $tarif->id,
-            'code_unique' => 'TMP',
-            'qr_signature' => hash_hmac('sha256', (string) \Illuminate\Support\Str::uuid(), config('app.key') ?? 'fallback'),
-            'email_acheteur' => strtolower($validated['email_acheteur']),
-            'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
-            'nom_acheteur' => $validated['nom_acheteur'],
-            'categorie' => $tarif->categorie,
-            'type' => $tarif->type,
-            'montant' => $montantTotal,
-            'montant_reduction' => $montantReduction * $quantite,
-            'quantite' => $quantite,
-            'statut_paiement' => 'en_attente',
-            'date_achat' => now(),
-            'code_promo_utilise' => $codePromoUtilise,
-        ]);
+        for ($i = 0; $i < $quantite; $i++) {
+            $t = $evenement->tickets()->create([
+                'tarif_id' => $tarif->id,
+                'code_unique' => 'TMP',
+                'qr_signature' => hash_hmac('sha256', (string) \Illuminate\Support\Str::uuid(), config('app.key') ?? 'fallback'),
+                'email_acheteur' => strtolower($validated['email_acheteur']),
+                'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
+                'nom_acheteur' => $validated['nom_acheteur'],
+                'categorie' => $tarif->categorie,
+                'type' => $tarif->type,
+                'montant' => $montantUnitaire,
+                'montant_reduction' => $montantReduction,
+                'quantite' => 1,
+                'statut_paiement' => 'en_attente',
+                'transaction_id' => $groupTransactionId,
+                'date_achat' => now(),
+                'code_promo_utilise' => $codePromoUtilise,
+            ]);
 
-        $ticket->update([
-            'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
-        ]);
+            $t->update([
+                'code_unique' => 'PASS' . $evenement->user_id . '26' . $t->id,
+            ]);
+
+            $tickets[] = $t;
+        }
 
         if ($codePromoUtilise) {
             $codePromo->increment('nb_utilisations', 1);
         }
 
         if ($evenement->gratuit) {
-            return redirect()->route('paiement.show', $ticket->id)
+            $freeGroupId = 'GRATUIT-' . $tickets[0]->id;
+            foreach ($tickets as $t) {
+                $t->update([
+                    'statut_paiement' => 'payé',
+                    'transaction_id' => $freeGroupId,
+                ]);
+            }
+            $evenement->increment('quota_vendu', $quantite);
+            $tarif->increment('quantite_vendue', $quantite);
+            try {
+                Mail::to($tickets[0]->email_acheteur)->send(new \App\Mail\TicketEmail($tickets));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Email gratuit non envoye : ' . $e->getMessage());
+            }
+            return redirect()->route('confirmation.show', $tickets[0]->id)
                 ->with('success', $quantite > 1 ? "{$quantite} places reservées." : 'Votre place est reservée.');
         }
 
-        return redirect()->route('paiement.show', $ticket->id)
+        return redirect()->route('paiement.show', $tickets[0]->id)
             ->with('success', $quantite > 1 ? "{$quantite} places reservées. Finalisez le paiement." : 'Votre place est reservée. Finalisez le paiement.');
     }
 

@@ -213,38 +213,44 @@ class VenteManuelleController extends Controller
             ]);
         }
 
-        // Digital payment: create ticket as 'en_attente' and return ticket data for FedaPay widget
-        $montantTotal = $tarif->prix * $validated['quantite'];
+        // Digital payment: create N tickets as 'en_attente' with shared group ID
+        $prixUnitaire = $tarif->prix;
+        $montantTotal = $prixUnitaire * $validated['quantite'];
+        $groupTransactionId = 'GRP-' . strtoupper(Str::random(16));
+        $tickets = [];
 
-        $ticket = Ticket::create([
-            'evenement_id' => $evenement->id,
-            'tarif_id' => $tarif->id,
-            'code_unique' => 'TMP',
-            'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
-            'nom_acheteur' => $validated['nom_acheteur'],
-            'telephone_acheteur' => $validated['telephone'],
-            'email_acheteur' => $validated['email'],
-            'categorie' => $validated['categorie'] ?? $tarif->categorie,
-            'type' => $tarif->type,
-            'montant' => $montantTotal,
-            'quantite' => $validated['quantite'],
-            'statut_paiement' => 'en_attente',
-            'methode_paiement' => 'mobile_money',
-            'transaction_id' => 'PENDING-FEDAPAY-' . strtoupper(Str::random(8)),
-            'utilise' => false,
-            'date_achat' => now(),
-        ]);
-        $ticket->update([
-            'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
-        ]);
+        for ($i = 0; $i < $validated['quantite']; $i++) {
+            $t = Ticket::create([
+                'evenement_id' => $evenement->id,
+                'tarif_id' => $tarif->id,
+                'code_unique' => 'TMP',
+                'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
+                'nom_acheteur' => $validated['nom_acheteur'],
+                'telephone_acheteur' => $validated['telephone'],
+                'email_acheteur' => $validated['email'],
+                'categorie' => $validated['categorie'] ?? $tarif->categorie,
+                'type' => $tarif->type,
+                'montant' => $prixUnitaire,
+                'quantite' => 1,
+                'statut_paiement' => 'en_attente',
+                'methode_paiement' => 'mobile_money',
+                'transaction_id' => $groupTransactionId,
+                'utilise' => false,
+                'date_achat' => now(),
+            ]);
+            $t->update([
+                'code_unique' => 'PASS' . $evenement->user_id . '26' . $t->id,
+            ]);
+            $tickets[] = $t;
+        }
 
         return response()->json([
             'success' => true,
             'ticket' => [
-                'id' => $ticket->id,
+                'id' => $tickets[0]->id,
                 'montant' => (int) $montantTotal,
-                'nom_acheteur' => $ticket->nom_acheteur,
-                'email_acheteur' => $ticket->email_acheteur,
+                'nom_acheteur' => $tickets[0]->nom_acheteur,
+                'email_acheteur' => $tickets[0]->email_acheteur,
                 'evenement_titre' => $evenement->titre,
             ],
         ]);

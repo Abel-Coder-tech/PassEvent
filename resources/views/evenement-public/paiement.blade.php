@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>
-                                    <strong style="color: #542680; font-size: 1.1rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</strong>
+                                    <strong style="color: #542680; font-size: 1.1rem;">{{ number_format($montantTotal, 0, ',', ' ') }} FCFA</strong>
                                 </div>
                                 <div class="col-12">
                                     <span class="text-muted">Acheteur :</span><br>
@@ -78,7 +78,7 @@
 
                         @if($publicKey)
                             <button type="button" id="btnFedaPay" class="btn w-100 py-3" style="background: #542680; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
-                                <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                                <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($montantTotal, 0, ',', ' ') }} FCFA
                             </button>
                         @else
                             <div class="alert alert-warning py-2 mb-0" style="border-radius: 10px; font-size: 0.85rem;">
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         public_key: '{{ $publicKey }}',
         environment: '{{ $sandbox ? 'sandbox' : 'live' }}',
         transaction: {
-            amount: {{ (int) $ticket->montant }},
+            amount: {{ (int) $montantTotal }},
             description: 'Ticket - {{ $ticket->evenement->titre }}'
         },
         customer: {

@@ -200,9 +200,11 @@
         </div>
 
         <div class="content">
-            <p class="greeting">Bonjour <strong>{{ $ticket->nom_acheteur }}</strong>,</p>
-            <p class="intro">Votre paiement a &eacute;t&eacute; confirm&eacute;. Votre billet est pr&ecirc;t !</p>
+            @php $first = $tickets->first(); $quantite = $tickets->count(); @endphp
+            <p class="greeting">Bonjour <strong>{{ $first->nom_acheteur }}</strong>,</p>
+            <p class="intro">Votre paiement a &eacute;t&eacute; confirm&eacute;. {{ $quantite > 1 ? "Vos {$quantite} billets sont pr&ecirc;ts !" : 'Votre billet est pr&ecirc;t !' }}</p>
 
+            @foreach($tickets as $ticket)
             <div class="event-card">
                 <div class="event-header">
                     <div class="event-icon">
@@ -233,19 +235,20 @@
                     </tr>
                 </table>
             </div>
+            @endforeach
 
             <div class="info-box">
-                <h3>&#128230; Billet PDF joint</h3>
-                <p>Imprimez-le ou pr&eacute;sentez-le sur votre t&eacute;l&eacute;phone le jour de l&rsquo;&eacute;v&eacute;nement. Le QR code sera scann&eacute; pour valider votre acc&egrave;s.</p>
+                <h3>&#128230; {{ $quantite > 1 ? "{$quantite} billets PDF joints" : 'Billet PDF joint' }}</h3>
+                <p>Imprimez-les ou pr&eacute;sentez-les sur votre t&eacute;l&eacute;phone le jour de l&rsquo;&eacute;v&eacute;nement. Le QR code sera scann&eacute; pour valider votre acc&egrave;s.</p>
             </div>
 
             <div class="btn-wrap">
-                <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn">T&eacute;l&eacute;charger mon billet</a>
+                <a href="{{ route('tickets.telecharger', $first->id) }}" class="btn">T&eacute;l&eacute;charger le billet</a>
             </div>
 
             <p class="help-text">
                 En cas de probl&egrave;me, contactez <a href="mailto:contact@paxevent.com">contact@paxevent.com</a><br>
-                <span class="ref">R&eacute;f&eacute;rence : {{ $ticket->transaction_id }}</span>
+                <span class="ref">R&eacute;f&eacute;rence : {{ $first->transaction_id }}</span>
             </p>
         </div>
 
