@@ -48,7 +48,7 @@
                             et le code de vente à 6 chiffres.
                         </div>
                         <button type="submit" class="btn text-white w-100 py-2" style="background: #7c3aed;">
-                            <i class="bi bi-person-plus"></i> Créer l'agent de vente
+                            <i class="bi bi-person-plus"></i> Créer l'agent 
                         </button>
                     </form>
                 </div>

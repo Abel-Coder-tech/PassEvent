@@ -60,8 +60,8 @@
                             Un code d'accès à 6 chiffres sera généré automatiquement. L'agent recevra un email avec ses identifiants et les détails de l'événement.
                         </div>
 
-                        <button type="submit" class="btn btn-violet w-100">
-                            <i class="bi bi-check-lg me-1"></i>Créer l'agent
+                        <button type="submit" class="btn text-white w-100 py-2" style="background: #7c3aed;">
+                            <i class="bi bi-person-plus me-1"></i> Créer l'agent de scan
                         </button>
                     </form>
                 </div>
