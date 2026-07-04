@@ -49,15 +49,10 @@
 
                             @if($quantite > 1)
                             <div class="mt-3 pt-2" style="border-top: 1px solid #eee;">
-                                <span class="text-muted" style="font-size: 0.82rem;">Codes des billets ({{ $quantite }}) :</span><br>
+                                <span class="text-muted" style="font-size: 0.82rem;">Billets ({{ $quantite }}) :</span><br>
                                 @foreach($groupTickets as $gt)
-                                    <code class="fw-bold" style="font-size: 0.78rem; display: block; margin-top: 2px;">{{ $gt->code_unique }}</code>
+                                    <span style="font-size: 0.78rem; display: block; margin-top: 2px;">Billet n&deg;{{ $loop->iteration }}</span>
                                 @endforeach
-                            </div>
-                            @else
-                            <div class="mt-2">
-                                <span class="text-muted">Code :</span><br>
-                                <code class="fw-bold">{{ $ticket->code_unique }}</code>
                             </div>
                             @endif
 
@@ -76,9 +71,17 @@
 
                         <!-- Actions -->
                         <div class="d-grid gap-2">
-                            <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
-                                <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger le billet PDF
-                            </a>
+                            @if($quantite > 1)
+                                @foreach($groupTickets as $gt)
+                                    <a href="{{ route('tickets.telecharger', $gt->id) }}" class="btn btn-violet py-2" style="border-radius: 8px;">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger billet {{ $loop->iteration }}
+                                    </a>
+                                @endforeach
+                            @else
+                                <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger le billet PDF
+                                </a>
+                            @endif
                             <a href="{{ route('accueil') }}" class="btn btn-accent py-2" style="border-radius: 8px;">
                                 <i class="bi bi-house me-1"></i> Retour a l'accueil
                             </a>

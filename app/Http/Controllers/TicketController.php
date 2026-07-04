@@ -70,7 +70,7 @@ class TicketController extends Controller
         $ticket->increment('download_count');
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
-        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
+        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper('a4', 'portrait');
@@ -95,7 +95,7 @@ class TicketController extends Controller
         $ticket->increment('download_count');
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
-        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
+        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper('a4', 'portrait');

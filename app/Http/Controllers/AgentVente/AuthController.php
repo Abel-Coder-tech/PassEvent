@@ -5,6 +5,7 @@ namespace App\Http\Controllers\AgentVente;
 use App\Http\Controllers\Controller;
 use App\Models\AgentVente;
 use App\Models\Ticket;
+use App\Services\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -187,7 +188,8 @@ class AuthController extends Controller
 
         $ticket->increment('download_count');
 
-        $qrCodeDataUri = ''; $logoDataUri = '';
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $filename = 'ticket-' . $ticket->code_unique . '.pdf';
 

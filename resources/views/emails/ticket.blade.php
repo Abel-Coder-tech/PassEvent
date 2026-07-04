@@ -114,17 +114,6 @@
             color: #2E7D4F;
             font-size: 15px;
         }
-        .code-block {
-            background: #fff;
-            border: 1px solid #7B3FA0;
-            border-radius: 6px;
-            padding: 3px 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            letter-spacing: 1px;
-            color: #7B3FA0;
-            display: inline-block;
-        }
         .info-box {
             background: #f0f4f8;
             border-radius: 12px;
@@ -224,10 +213,6 @@
                     <tr>
                         <td>&#127915; Billet</td>
                         <td>{{ ucfirst($ticket->type === 'normal' ? 'Standard' : 'VIP') }} &middot; {{ ucfirst($ticket->categorie) }}</td>
-                    </tr>
-                    <tr>
-                        <td>&#128196; Code</td>
-                        <td><span class="code-block">{{ $ticket->code_unique }}</span></td>
                     </tr>
                     <tr>
                         <td>&#128178; Montant pay&eacute;</td>

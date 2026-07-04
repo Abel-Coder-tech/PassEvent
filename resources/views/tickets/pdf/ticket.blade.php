@@ -4,304 +4,192 @@
     <meta charset="UTF-8">
     <title>Billet - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
     <style>
-        @page {
-            margin: 0;
-            padding: 0;
-        }
+        @page { margin: 0; padding: 0; }
         body {
             font-family: 'DejaVu Sans', 'Helvetica', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #fff;
+            margin: 0; padding: 0;
+            background: #f5f3f0;
             color: #1d1d1f;
-            font-size: 11px;
-            line-height: 1.3;
+            font-size: 10px;
+            line-height: 1.4;
         }
         * { margin: 0; padding: 0; }
         .ticket {
-            width: 350px;
+            width: 380px;
             margin: 20px auto;
             background: #fff;
-            border: 1px solid #e0dde3;
             border-radius: 14px;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-        .inner { padding: 14px 16px 12px; }
 
-        /* Header */
-        .header-top { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-        .header-top .left { text-align: left; }
-        .header-top .right { text-align: right; }
-        .event-title { font-size: 18px; font-weight: 800; color: #1d1d1f; margin: 6px 0 3px; }
-        .event-meta { font-size: 10px; color: #888; margin-bottom: 2px; }
+        /* Header violet */
+        .header { background: #542680; padding: 20px 24px; }
+        .header-title { color: #fff; }
+        .header-title .pass { font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+        .header-title .event-name { font-size: 20px; font-weight: 800; margin-top: 2px; }
+        .header-logo img { height: 44px; display: block; }
 
-        /* Participant */
-        .participant-block {
-            margin: 12px 0 10px;
-            padding: 10px 0 8px;
-            border-top: 1px solid #eee;
-            border-bottom: 1px solid #eee;
+        /* Body */
+        .body { padding: 20px 24px 16px; }
+
+        .event-meta {
+            font-size: 11px; color: #888; margin-bottom: 14px;
+            padding-bottom: 12px; border-bottom: 1px solid #eee;
         }
-        .participant-label {
-            font-size: 8px;
-            font-weight: 700;
-            color: #888;
+
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .info-table td { padding: 5px 0; vertical-align: middle; }
+        .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 80px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
+        .info-table .iv-mono { font-size: 10px; font-weight: 700; color: #1d1d1f; }
+        .info-table .iv-green { color: #2E7D4F; }
+
+        .code-pass {
+            text-align: center;
+            margin: 12px 0 14px;
+            padding: 10px;
+            background: #f8f6f9;
+            border-radius: 8px;
+        }
+        .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+        .code-pass .value {
+            font-family: 'Courier New', monospace;
+            font-size: 18px; font-weight: 800;
+            color: #542680;
             letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-        .participant-name {
-            font-size: 16px;
-            font-weight: 800;
-            color: #1d1d1f;
-        }
-        .participant-email {
-            font-size: 10px;
-            color: #888;
-            margin-top: 1px;
-        }
-        /* Details grid 2x2 */
-        .detail-grid {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        .detail-grid td {
-            width: 50%;
-            padding: 6px 8px;
-            text-align: center;
-        }
-        .detail-grid .dl {
-            font-size: 8px;
-            font-weight: 700;
-            color: #888;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-        .detail-grid .dv {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1d1d1f;
-        }
-        .detail-grid .dv small {
-            font-size: 9px;
-            font-weight: 500;
-            color: #888;
-        }
-        .detail-grid .dv-violet { color: #7B3FA0; }
-        .detail-grid .dv-green { color: #2E7D4F; }
-
-        /* Transaction section */
-        .section-title {
-            font-size: 8px;
-            font-weight: 700;
-            color: #7B3FA0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-align: center;
-            margin: 8px 0 6px;
-        }
-        .tx-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .tx-table td {
-            padding: 3px 0;
-            vertical-align: middle;
-        }
-        .tx-table .tl {
-            font-size: 9px;
-            color: #888;
-            font-weight: 600;
-            width: 90px;
-        }
-        .tx-table .tv {
-            font-size: 10px;
-            font-weight: 700;
-            color: #1d1d1f;
-        }
-        .tx-table .tv-mono {
-            font-size: 9px;
-            font-weight: 700;
-            color: #1d1d1f;
-        }
-        /* HR */
-        hr.dashed {
-            border: none;
-            border-top: 1px dashed #ddd;
-            margin: 8px 0;
-        }
-        hr.solid {
-            border: none;
-            border-top: 1px solid #eee;
-            margin: 6px 0;
         }
 
-        /* QR code */
-        .qr-block {
-            text-align: center;
-            margin: 10px 0 4px;
-        }
+        .qr-block { text-align: center; margin: 16px 0 10px; }
         .qr-box {
-            display: inline-block;
-            padding: 6px;
-            border: 2px solid #7B3FA0;
-            border-radius: 10px;
+            display: inline-block; padding: 8px;
+            border: 3px solid #542680; border-radius: 12px;
         }
-        .qr-box img {
-            width: 140px;
-            height: 140px;
-            display: block;
-        }
-        .qr-label {
-            font-size: 7px;
-            font-weight: 700;
-            color: #7B3FA0;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
-        .qr-code-display {
-            font-size: 13px;
-            font-weight: 800;
-            color: #1d1d1f;
-            letter-spacing: 1px;
-            margin-top: 2px;
-        }
+        .qr-box img { width: 200px; height: 200px; display: block; }
+        .qr-label { font-size: 7px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
 
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 8px 16px 12px;
+        .note {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 12px 0 0;
         }
-        .footer p {
-            font-size: 7px;
-            color: #aaa;
-            margin: 0;
-            line-height: 1.6;
-        }
-        .footer strong { color: #888; font-weight: 700; }
+        .note-title { font-size: 8px; font-weight: 700; color: #f57f17; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+        .note p { font-size: 9px; color: #666; margin: 0; line-height: 1.5; }
+
+        .footer { background: #542680; padding: 14px 24px; }
+        .footer-text { color: #fff; font-size: 8px; line-height: 1.5; }
+        .footer-text strong { color: #fff; }
+        .footer-logo img { height: 32px; display: block; }
+
+        hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
     </style>
 </head>
 <body>
 
-<table class="ticket" cellpadding="0" cellspacing="0">
-    <tr><td class="inner">
+<div class="ticket">
 
-        {{-- 1. HEADER --}}
-        <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-                <td style="text-align:left;vertical-align:middle;">
-                    <div class="event-title">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
-                    @if($ticket->categorie && $ticket->montant > 0)
-                        <div style="font-size:8px;font-weight:700;color:#7B3FA0;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">{{ ucfirst($ticket->categorie) }}</div>
-                    @endif
-                    <div class="event-meta">
-                        {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
-                        &ndash; {{ $ticket->evenement?->date_event?->format('H\hi') ?? '' }}
-                        @if($ticket->evenement?->lieu)
-                            &ndash; {{ $ticket->evenement->lieu }}
-                        @endif
-                    </div>
-                </td>
-                <td style="text-align:right;vertical-align:middle;width:80px;">
-                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent" style="height:40px; display:inline-block;">
-                </td>
-            </tr>
-        </table>
+    {{-- HEADER violet --}}
+    <table class="header" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="text-align:left;vertical-align:middle;">
+                <div class="header-title">
+                    <div class="pass">Pass</div>
+                    <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
+                </div>
+            </td>
+            <td style="text-align:right;vertical-align:middle;width:80px;">
+                <div class="header-logo">
+                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent">
+                </div>
+            </td>
+        </tr>
+    </table>
 
-        {{-- 2. PARTICIPANT --}}
-        <div class="participant-block">
-            <div class="participant-label">Participant</div>
-            <div class="participant-name">{{ $ticket->nom_acheteur ?? '---' }}</div>
-            <div class="participant-email">{{ $ticket->email_acheteur ?? '' }}</div>
+    {{-- BODY --}}
+    <div class="body">
+
+        <div class="event-meta">
+            {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
+            @if($ticket->evenement?->date_event)
+                &ndash; {{ $ticket->evenement->date_event->format('H\hi') }}
+            @endif
+            @if($ticket->evenement?->lieu)
+                &ndash; {{ $ticket->evenement->lieu }}
+            @endif
         </div>
 
-        @if($ticket->montant > 0)
-        {{-- 3. DETAILS GRID 2 COLUMNS --}}
-        <table class="detail-grid" cellpadding="0" cellspacing="4">
+        <table class="info-table" cellpadding="0" cellspacing="0">
             <tr>
-                <td>
-                    <div class="dl">Catégorie</div>
-                    <div class="dv">{{ ucfirst($ticket->categorie ?? '---') }}</div>
-                </td>
-                <td>
-                    <div class="dl">Type</div>
-                    <div class="dv">{{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }}</div>
-                </td>
+                <td class="il">Billet</td>
+                <td class="iv">{{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }} &middot; {{ ucfirst($ticket->categorie) }}</td>
             </tr>
             <tr>
-                <td>
-                    <div class="dl">Montant</div>
-                    <div class="dv">{{ number_format($ticket->montant, 0, ',', ' ') }} <small>FCFA</small></div>
-                </td>
-                <td>
-                    <div class="dl">Paiement</div>
-                    <div class="dv">{{ ucfirst($ticket->methode_paiement ?? '---') }}</div>
-                </td>
+                <td class="il">Transaction</td>
+                <td class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</td>
             </tr>
+            @if($ticket->montant > 0)
+            <tr>
+                <td class="il">Montant</td>
+                <td class="iv">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</td>
+            </tr>
+            @if($ticket->montant_reduction > 0)
+            <tr>
+                <td class="il">Remise</td>
+                <td class="iv iv-green">&minus;{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA</td>
+            </tr>
+            @endif
+            @endif
         </table>
 
-        {{-- 4. TRANSACTION --}}
-        <hr class="dashed">
-        <div class="section-title">Détails de la transaction</div>
-
-        <table class="tx-table" cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="tl">Transaction</td>
-                <td class="tv-mono">{{ $ticket->transaction_id ?? '---' }}</td>
-            </tr>
-            <tr>
-                <td class="tl">Paiement</td>
-                <td class="tv">{{ $ticket->methode_paiement ?? '---' }}</td>
-            </tr>
-            <tr>
-                <td class="tl">Date d'achat</td>
-                <td class="tv">{{ $ticket->date_achat?->format('d/m/Y \\· H:i') ?? '---' }}</td>
-            </tr>
-        </table>
-
-        @if($ticket->montant_reduction > 0)
-            <table class="tx-table" cellpadding="0" cellspacing="0" style="margin-top:4px">
-                <tr>
-                    <td class="tl">Réduction</td>
-                    <td class="tv" style="color:#2E7D4F">&minus;{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA</td>
-                </tr>
-            </table>
-        @endif
-
-        <hr class="dashed">
-        @else
-        <div style="text-align:center;padding:8px 0;color:#7B3FA0;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+        @if($ticket->montant <= 0)
+        <div style="text-align:center;padding:8px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
             Entrée gratuite
         </div>
-        <hr class="dashed">
         @endif
 
-        {{-- 5. QR CODE --}}
+        @if($ticket->statut_paiement === 'payé')
+        <div class="code-pass">
+            <div class="label">Code Pass</div>
+            <div class="value">{{ $ticket->code_unique }}</div>
+        </div>
+        @endif
+
+        <hr class="dashed">
+
         <div class="qr-block">
             <div class="qr-box">
                 <img src="{{ $qrCodeDataUri }}" alt="QR Code">
             </div>
-            <div class="qr-label">Scannez ce code</div>
-            <div class="qr-code-display">{{ $ticket->code_unique }}</div>
+            <div class="qr-label">Scannez ce code pour valider votre entrée</div>
         </div>
 
-        {{-- 6. FOOTER --}}
-        <div class="footer">
-            <hr class="solid">
-            <p>
-                Présentez ce QR code à l'entrée pour scanner votre billet<br>
-                <strong>Billet personnel et non transférable</strong>
-            </p>
-            <p style="margin-top:6px;font-size:8px;color:#7B3FA0;font-weight:700;">
-                PaxEvent &mdash; Billetterie simple et rapide pour vos événements
-            </p>
+        <div class="note">
+            <div class="note-title">Note d'attention</div>
+            <p>Ce billet est personnel et non transférable. Présentez ce QR code (imprimé ou sur écran) à l'entrée de l'événement. Tout billet scanné une première fois ne pourra plus être réutilisé.</p>
         </div>
 
-    </td></tr>
-</table>
+    </div>
+
+    {{-- FOOTER violet --}}
+    <table class="footer" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="text-align:left;vertical-align:middle;">
+                <div class="footer-text">
+                    <strong>PaxEvent</strong><br>
+                    Billetterie simple et rapide pour vos événements
+                </div>
+            </td>
+            <td style="text-align:right;vertical-align:middle;width:60px;">
+                <div class="footer-logo">
+                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent">
+                </div>
+            </td>
+        </tr>
+    </table>
+
+</div>
 
 </body>
 </html>

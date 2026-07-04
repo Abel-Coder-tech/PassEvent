@@ -80,6 +80,7 @@ class CodePromoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            // table name should be plural for the exists rule
             'evenement_id' => 'required|exists:evenement,id',
             'tarif_id' => 'required|exists:tarifs,id',
             'type_reduction' => 'required|in:pourcentage,fixe',
