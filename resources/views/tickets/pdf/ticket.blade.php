@@ -6,7 +6,7 @@
     <style>
         @page { margin: 0; padding: 0; }
         body {
-            font-family: 'DejaVu Sans', 'Helvetica', Arial, sans-serif;
+            font-family: 'DejaVu Sans', sans-serif;
             margin: 0; padding: 0;
             background: #f5f3f0;
             color: #1d1d1f;
@@ -24,11 +24,10 @@
         }
 
         /* Header violet */
-        .header { background: #542680; padding: 20px 24px; }
+        .header { background: #542680; padding: 20px 24px; text-align: center; }
         .header-title { color: #fff; }
-        .header-title .pass { font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-        .header-title .event-name { font-size: 20px; font-weight: 800; margin-top: 2px; }
-        .header-logo img { height: 44px; display: block; }
+        .header-title .pass { font-size: 28px; font-weight: 800; letter-spacing: 1px; display: inline; }
+        .header-title .event-name { font-size: 17px; font-weight: 700; display: inline; }
 
         /* Body */
         .body { padding: 20px 24px 16px; }
@@ -54,7 +53,6 @@
         }
         .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
         .code-pass .value {
-            font-family: 'Courier New', monospace;
             font-size: 18px; font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
@@ -80,7 +78,6 @@
 
         .footer { background: #542680; padding: 14px 24px; }
         .footer-text { color: #fff; font-size: 8px; line-height: 1.5; }
-        .footer-text strong { color: #fff; }
         .footer-logo img { height: 32px; display: block; }
 
         hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
@@ -91,21 +88,11 @@
 <div class="ticket">
 
     {{-- HEADER violet --}}
-    <table class="header" width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-            <td style="text-align:left;vertical-align:middle;">
-                <div class="header-title">
-                    <div class="pass">Pass</div>
-                    <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
-                </div>
-            </td>
-            <td style="text-align:right;vertical-align:middle;width:80px;">
-                <div class="header-logo">
-                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent">
-                </div>
-            </td>
-        </tr>
-    </table>
+    <div class="header">
+        <div class="header-title">
+            <span class="pass">Pass</span>&nbsp;<span class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</span>
+        </div>
+    </div>
 
     {{-- BODY --}}
     <div class="body">
@@ -176,10 +163,7 @@
     <table class="footer" width="100%" cellpadding="0" cellspacing="0">
         <tr>
             <td style="text-align:left;vertical-align:middle;">
-                <div class="footer-text">
-                    <strong>PaxEvent</strong><br>
-                    Billetterie simple et rapide pour vos événements
-                </div>
+                <div class="footer-text">Billetterie simple et rapide pour vos événements</div>
             </td>
             <td style="text-align:right;vertical-align:middle;width:60px;">
                 <div class="footer-logo">
