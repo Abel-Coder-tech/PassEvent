@@ -63,6 +63,12 @@ class TicketController extends Controller
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
+        if ($ticket->download_count >= 3) {
+            return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).');
+        }
+
+        $ticket->increment('download_count');
+
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
 
@@ -81,6 +87,12 @@ class TicketController extends Controller
         if ($ticket->statut_paiement !== 'payé') {
             return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirme.');
         }
+
+        if ($ticket->download_count >= 3) {
+            return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).');
+        }
+
+        $ticket->increment('download_count');
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));

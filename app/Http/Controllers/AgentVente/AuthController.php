@@ -181,6 +181,12 @@ class AuthController extends Controller
             abort(403);
         }
 
+        if ($ticket->download_count >= 3) {
+            abort(403, 'Limite de téléchargements atteinte (3 maximum).');
+        }
+
+        $ticket->increment('download_count');
+
         $qrCodeDataUri = ''; $logoDataUri = '';
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $filename = 'ticket-' . $ticket->code_unique . '.pdf';

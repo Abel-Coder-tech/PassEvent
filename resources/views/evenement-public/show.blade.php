@@ -54,28 +54,7 @@
         <div class="row g-5 py-4">
             <!-- Colonne gauche (rendue après le formulaire sur mobile via order) -->
             <div class="col-lg-7 order-lg-first">
-                <!-- Barre infos rapides -->
-                <div class="show-infos">
-                    <div class="show-info-chip">
-                        <i class="bi bi-calendar-check"></i>
-                        <span><strong>Date :</strong> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}</span>
-                    </div>
-                    <div class="show-info-chip">
-                        <i class="bi bi-clock"></i>
-                        <span><strong>Heure :</strong> {{ $evenement->date_event->format('H:i') }}</span>
-                    </div>
-                    <div class="show-info-chip">
-                        <i class="bi bi-geo-alt"></i>
-                        <span><strong>Lieu :</strong> {{ $evenement->lieu }}</span>
-                    </div>
-                    @if(!$estComplet)
-                        <div class="show-info-chip">
-                            <i class="bi bi-people"></i>
-                            <span><strong>{{ number_format($placesRestantes, 0, ',', ' ') }}</strong> places</span>
-                        </div>
-                    @endif
-                </div>
-
+              
                 <!-- Description -->
                 <div class="show-card">
                     <h5 class="show-card-title"><i class="bi bi-info-circle"></i> Description</h5>
