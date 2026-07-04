@@ -33,6 +33,10 @@ class ScanController extends Controller
             return back()->withErrors(['code_acces' => 'L\'événement est terminé.'])->onlyInput('code_acces');
         }
 
+        if ($agent->evenement->date_fin_vente && $agent->evenement->date_fin_vente->isFuture()) {
+            return back()->withErrors(['code_acces' => 'La vente est toujours en cours. Le scan sera disponible après la clôture des ventes.'])->onlyInput('code_acces');
+        }
+
         if (!$agent->actif) {
             Auth::guard('agent')->logout();
             return redirect()->route('agent.login')->withErrors(['email' => 'Compte désactivé.']);
@@ -114,6 +118,11 @@ class ScanController extends Controller
         if ($ticket->evenement_id !== $agent->evenement_id) {
             $this->logScan($agent, $request->code, 'invalide', 'Événement non autorisé');
             return response()->json(['success' => false, 'message' => 'Ce ticket ne correspond pas à cet événement.']);
+        }
+
+        if ($ticket->evenement->date_fin_vente && $ticket->evenement->date_fin_vente->isFuture()) {
+            $this->logScan($agent, $request->code, 'invalide', 'Vente toujours en cours');
+            return response()->json(['success' => false, 'message' => 'La vente est toujours en cours. Le scan n\'est pas encore autorisé.']);
         }
 
         if ($ticket->statut_paiement !== 'payé') {
