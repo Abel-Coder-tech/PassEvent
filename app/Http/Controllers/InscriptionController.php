@@ -278,7 +278,7 @@ class InscriptionController extends Controller
 
         $user->update(['statut' => 'en_attente']);
 
-        $superAdmins = User::where('role', 'super_admin')->get();
+        $superAdmins = User::where('role',  'super_admin')->get();
         foreach ($superAdmins as $sa) {
             Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
         }
@@ -286,7 +286,7 @@ class InscriptionController extends Controller
         return redirect()->route('dashboard')->with('success', 'Votre profil a été soumis à nouveau pour validation.');
     }
 
-    public function previous($step)
+    public function previous(int$step)
     {
         $reg = $this->getReg();
         $currentStep = $reg['step'] ?? 0;

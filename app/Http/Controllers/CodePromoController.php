@@ -102,7 +102,7 @@ class CodePromoController extends Controller
             $suffixe = strtoupper(Str::random(6));
             $code = $prefixe ? $prefixe . '-' . $suffixe : $suffixe;
 
-            while (CodePromo::where('code', $code)->exists()) {
+            while (CodePromo::where('code', '=', $code)->exists()) {
                 $suffixe = strtoupper(Str::random(6));
                 $code = $prefixe ? $prefixe . '-' . $suffixe : $suffixe;
             }
@@ -125,7 +125,7 @@ class CodePromoController extends Controller
     /**
      * Suppression d'un code promo
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $codePromo = CodePromo::findOrFail($id);
 

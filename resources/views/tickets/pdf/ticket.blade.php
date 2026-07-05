@@ -13,7 +13,7 @@
             font-size: 10px;
             line-height: 1.4;
         }
-        * { margin: 0; padding: 0; }
+        * { margin: 0; padding: 0; font-family: 'DejaVu Sans', sans-serif; }
         .ticket {
             width: 380px;
             margin: 20px auto;
@@ -23,13 +23,11 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
-        /* Header violet */
-        .header { background: #542680; padding: 20px 24px; text-align: center; }
+        .header { background: #542680; padding: 20px 24px; }
         .header-title { color: #fff; }
-        .header-title .pass { font-size: 28px; font-weight: 800; letter-spacing: 1px; display: inline; }
-        .header-title .event-name { font-size: 17px; font-weight: 700; display: inline; }
+        .header-title .pass { font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+        .header-title .event-name { font-size: 20px; font-weight: 800; margin-top: 2px; }
 
-        /* Body */
         .body { padding: 20px 24px 16px; }
 
         .event-meta {
@@ -73,12 +71,11 @@
             padding: 10px 14px;
             margin: 12px 0 0;
         }
-        .note-title { font-size: 8px; font-weight: 700; color: #f57f17; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
         .note p { font-size: 9px; color: #666; margin: 0; line-height: 1.5; }
 
         .footer { background: #542680; padding: 14px 24px; }
-        .footer-text { color: #fff; font-size: 8px; line-height: 1.5; }
-        .footer-logo img { height: 32px; display: block; }
+        .footer-text { color: #fff; font-size: 9px; }
+        .footer-logo img { height: 28px; display: block; }
 
         hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
     </style>
@@ -87,10 +84,11 @@
 
 <div class="ticket">
 
-    {{-- HEADER violet --}}
+    {{-- HEADER violet (no logo) --}}
     <div class="header">
         <div class="header-title">
-            <span class="pass">Pass</span>&nbsp;<span class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</span>
+            <div class="pass">Pass</div>
+            <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
         </div>
     </div>
 
@@ -113,7 +111,7 @@
                 <td class="iv">{{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }} &middot; {{ ucfirst($ticket->categorie) }}</td>
             </tr>
             <tr>
-                <td class="il">Transaction</td>
+                <td class="il">ID transaction</td>
                 <td class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</td>
             </tr>
             @if($ticket->montant > 0)
@@ -153,8 +151,7 @@
         </div>
 
         <div class="note">
-            <div class="note-title">Note d'attention</div>
-            <p>Ce billet est personnel et non transférable. Présentez ce QR code (imprimé ou sur écran) à l'entrée de l'événement. Tout billet scanné une première fois ne pourra plus être réutilisé.</p>
+            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce billet est personnel et non transférable. Présentez ce QR code (imprimé ou sur écran) à l'entrée de l'événement. Tout billet scanné une première fois ne pourra plus être réutilisé.</p>
         </div>
 
     </div>
@@ -162,13 +159,13 @@
     {{-- FOOTER violet --}}
     <table class="footer" width="100%" cellpadding="0" cellspacing="0">
         <tr>
-            <td style="text-align:left;vertical-align:middle;">
-                <div class="footer-text">Billetterie simple et rapide pour vos événements</div>
-            </td>
-            <td style="text-align:right;vertical-align:middle;width:60px;">
+            <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
                     <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent">
                 </div>
+            </td>
+            <td style="text-align:left;vertical-align:middle;padding-left:10px;">
+                <div class="footer-text">Billetterie simple et rapide pour vos événements</div>
             </td>
         </tr>
     </table>

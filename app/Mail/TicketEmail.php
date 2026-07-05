@@ -18,7 +18,7 @@ class TicketEmail extends Mailable
     public Collection $tickets;
     public array $pdfs;
 
-    public function __construct($tickets)
+    public function __construct(Ticket|array|Collection $tickets)
     {
         if ($tickets instanceof Ticket) {
             $tickets = collect([$tickets]);
