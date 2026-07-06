@@ -632,7 +632,7 @@
     .show-event-content {
         display: grid;
         grid-template-columns: 7fr 5fr;
-        gap: 3rem;
+        gap: 1.5rem;
         align-items: start;
     }
     .show-event-content > .show-card {

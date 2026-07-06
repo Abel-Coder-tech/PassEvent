@@ -31,6 +31,7 @@ class SuperAdminController extends Controller
         $ticketsVendus = Ticket::where('statut_paiement', 'payé')->count();
         $recettesGlobales = Ticket::where('statut_paiement', 'payé')->sum('montant');
         $scansAujourdhui = Ticket::where('utilise', true)->whereDate('updated_at', $today)->count();
+        
 
         $ventes7Jours = collect();
         for ($i = 6; $i >= 0; $i--) {

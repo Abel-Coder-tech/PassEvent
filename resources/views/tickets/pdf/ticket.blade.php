@@ -25,8 +25,8 @@
 
         .header { background: #542680; padding: 20px 24px; }
         .header-title { color: #fff; }
-        .header-title .pass { font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-        .header-title .event-name { font-size: 20px; font-weight: 800; margin-top: 2px; }
+        .header-title .pass { font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+        .header-title .event-name { font-size: 18px; font-weight: 800; margin-top: 2px; }
 
         .body { padding: 20px 24px 16px; }
 
@@ -39,7 +39,7 @@
         .info-table td { padding: 5px 0; vertical-align: middle; }
         .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 80px; text-transform: uppercase; letter-spacing: 0.5px; }
         .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
-        .info-table .iv-mono { font-size: 10px; font-weight: 700; color: #1d1d1f; }
+        .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
         .info-table .iv-green { color: #2E7D4F; }
 
         .code-pass {
@@ -51,7 +51,7 @@
         }
         .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
         .code-pass .value {
-            font-size: 18px; font-weight: 800;
+            font-size: 26px; font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
         }

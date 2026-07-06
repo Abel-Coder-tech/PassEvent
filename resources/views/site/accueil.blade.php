@@ -60,6 +60,10 @@
                         <i class="bi bi-shield-check"></i>
                         <span>Paiement sécurisé</span>
                     </div>
+                    <div class="hero-float-card float-card-3">
+                        <i class="bi bi-qr-code"></i>
+                        <span>Scan QR code</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -282,6 +286,11 @@
         left: -20px;
         animation-delay: 1.5s;
     }
+    .float-card-3 {
+        bottom: 50%;
+        right: -20px;
+        animation-delay: 0.75s;
+    }
     @keyframes float {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-8px); }
@@ -297,14 +306,15 @@
         .hero-chip { margin-left: auto; margin-right: auto; }
         .hero-features { text-align: center; margin-left: auto; margin-right: auto; }
         .hero-illustration {
-            width: 260px;
-            height: 260px;
+            width: 300px;
+            height: 300px;
             border-radius: 50%;
             object-fit: cover;
             margin-top: 2rem;
         }
-        .float-card-1 { right: 0; }
-        .float-card-2 { left: 0; }
+        .float-card-1 { top: 5%; right: -10px; }
+        .float-card-2 { bottom: 20%; left: -10px; }
+        .float-card-3 { bottom: 50%; right: -10px; }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
@@ -316,13 +326,15 @@
         .hero-stats { gap: 1.5rem; }
         .hero-stat-value { font-size: 1.2rem; }
         .hero-illustration {
-            width: 200px;
-            height: 200px;
+            width: 240px;
+            height: 240px;
             border-radius: 50%;
             object-fit: cover;
             max-width: 100%;
         }
-        .hero-float-card { display: none; }
+        .float-card-1 { top: 0; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
     }
 </style>
 
