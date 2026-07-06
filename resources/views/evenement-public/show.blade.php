@@ -52,11 +52,11 @@
 
     <div class="container">
         <div class="row g-5 py-4">
-            <!-- Colonne gauche (rendue après le formulaire sur mobile via order) -->
-            <div class="col-lg-7 order-lg-first">
-              
+            <!-- Colonne principale -->
+            <div class="col-lg-12 show-event-content">
+
                 <!-- Description -->
-                <div class="show-card">
+                <div class="show-card show-card-left">
                     <h5 class="show-card-title"><i class="bi bi-info-circle"></i> Description</h5>
                     @if($evenement->description)
                         <p class="show-card-text">{{ $evenement->description }}</p>
@@ -65,38 +65,8 @@
                     @endif
                 </div>
 
-                <!-- Partager -->
-                <div class="show-card">
-                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
-                    <div class="d-flex gap-2 flex-nowrap">
-                        <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
-                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#25D366;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#1877F2;" title="Facebook"><i class="bi bi-facebook"></i></a>
-                        <button class="show-share-btn" onclick="copyLink()" title="Copier le lien"><i class="bi bi-link-45deg"></i></button>
-                    </div>
-                </div>
-
-                <!-- Lieu -->
-                <div class="show-card">
-                    <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
-                    <div class="show-map">
-                        <iframe src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                    </div>
-                </div>
-
-                <!-- Contacter -->
-                <div class="show-card">
-                    <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
-                    <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
-                    <button type="button" class="show-btn" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
-                        <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
-                    </button>
-                </div>
-            </div>
-
-            <!-- Colonne droite (rendue avant la gauche sur mobile) -->
-            <div class="col-lg-5 order-lg-last">
-                <div class="show-sidebar">
+                <!-- Achat -->
+                <div class="show-purchase-wrap">
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
                         <div class="show-card text-center py-4">
                             <div class="show-lock-icon"><i class="bi bi-lock-fill"></i></div>
@@ -213,38 +183,66 @@
                         @endif
                     </div>
                     @endif
-
-                    @php
-                        $autresEvenements = App\Models\Evenement::with('tarifs')
-                            ->where('statut', 'publié')
-                            ->where('date_event', '>=', now())
-                            ->where('id', '!=', $evenement->id)
-                            ->orderBy('date_event', 'asc')
-                            ->limit(3)
-                            ->get();
-                    @endphp
-                    @if($autresEvenements->isNotEmpty())
-                        <div class="show-card mt-4">
-                            <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
-                            <div class="d-flex flex-column gap-3">
-                                @foreach($autresEvenements as $autre)
-                                    <a href="{{ route('evenements.public.show', $autre->id) }}" class="show-other-card">
-                                        @if($autre->image)
-                                            <img src="{{ asset('storage/' . $autre->image) }}" alt="">
-                                        @else
-                                            <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
-                                        @endif
-                                        <div class="flex-grow-1 min-w-0">
-                                            <div class="show-other-title">{{ $autre->titre }}</div>
-                                            <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
-                                        </div>
-                                        <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
+
+                <!-- Partager -->
+                <div class="show-card show-card-left">
+                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
+                    <div class="d-flex gap-2 flex-nowrap">
+                        <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
+                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#25D366;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#1877F2;" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <button class="show-share-btn" onclick="copyLink()" title="Copier le lien"><i class="bi bi-link-45deg"></i></button>
+                    </div>
+                </div>
+
+                <!-- Lieu -->
+                <div class="show-card show-card-left">
+                    <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
+                    <div class="show-map">
+                        <iframe src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+
+                <!-- Contacter -->
+                <div class="show-card show-card-left">
+                    <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
+                    <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
+                    <button type="button" class="show-btn" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
+                        <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
+                    </button>
+                </div>
+
+                @php
+                    $autresEvenements = App\Models\Evenement::with('tarifs')
+                        ->where('statut', 'publié')
+                        ->where('date_event', '>=', now())
+                        ->where('id', '!=', $evenement->id)
+                        ->orderBy('date_event', 'asc')
+                        ->limit(3)
+                        ->get();
+                @endphp
+                @if($autresEvenements->isNotEmpty())
+                    <div class="show-card mt-4 show-card-left">
+                        <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach($autresEvenements as $autre)
+                                <a href="{{ route('evenements.public.show', $autre->id) }}" class="show-other-card">
+                                    @if($autre->image)
+                                        <img src="{{ asset('storage/' . $autre->image) }}" alt="">
+                                    @else
+                                        <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
+                                    @endif
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="show-other-title">{{ $autre->titre }}</div>
+                                        <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
+                                    </div>
+                                    <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -630,6 +628,26 @@
     color: #9a9a9a;
 }
 
+@media (min-width: 992px) {
+    .show-event-content {
+        display: grid;
+        grid-template-columns: 7fr 5fr;
+        gap: 3rem;
+        align-items: start;
+    }
+    .show-event-content > .show-card {
+        margin-bottom: 0;
+    }
+    .show-event-content > .show-purchase-wrap {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        position: sticky;
+        top: 90px;
+    }
+    .show-event-content > :not(.show-purchase-wrap) {
+        grid-column: 1;
+    }
+}
 @media (max-width: 991px) {
     .show-sidebar { position: static; }
 }

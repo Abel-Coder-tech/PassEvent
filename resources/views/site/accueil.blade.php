@@ -1,4 +1,4 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', 'PaxEvent — Billetterie en ligne au Bénin')
 @section('description', 'PaxEvent, la plateforme de billetterie en ligne au Bénin. Achetez et vendez vos billets d\'événements en toute simplicité et sécurité.')
@@ -25,6 +25,7 @@
                 <span class="hero-chip">Billetterie en ligne 100% Bénin</span>
                 <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez vos tickets en quelques clics</h1>
                 <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.</p>
+                <p class="hero-features align-items-center justify-content-center text-center">Billet électronique — Scan QR code — Paiement sécurisé</p>
                 <div class="hero-actions">
                     <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
                         Acheter un ticket <i class="bi bi-arrow-right ms-1"></i>
@@ -200,6 +201,24 @@
         transform: translateY(-2px);
     }
 
+    .hero-features {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #542680;
+        margin: -0.5rem 0 1.5rem;
+        letter-spacing: 0.3px;
+        animation: heroFadeUp 0.6s ease 0.3s both;
+    }
+    .hero-features::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #542680;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+    }
     .hero-stats {
         display: flex;
         gap: 2rem;
@@ -276,19 +295,33 @@
         .hero-actions { justify-content: center; }
         .hero-stats { justify-content: center; }
         .hero-chip { margin-left: auto; margin-right: auto; }
-        .hero-illustration { margin-top: 2rem; max-height: 280px; width: auto; object-fit: contain; }
+        .hero-features { text-align: center; margin-left: auto; margin-right: auto; }
+        .hero-illustration {
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 2rem;
+        }
         .float-card-1 { right: 0; }
         .float-card-2 { left: 0; }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
         .hero-subtitle { font-size: 0.95rem; }
+        .hero-features { font-size: 0.78rem; }
         .hero-actions { flex-direction: column; width: 100%; }
         .btn-hero-primary,
         .btn-hero-outline { width: 100%; justify-content: center; }
         .hero-stats { gap: 1.5rem; }
         .hero-stat-value { font-size: 1.2rem; }
-        .hero-illustration { max-width: 100%; }
+        .hero-illustration {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            max-width: 100%;
+        }
         .hero-float-card { display: none; }
     }
 </style>

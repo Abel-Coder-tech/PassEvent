@@ -21,10 +21,10 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <span class="aide-hero-chip">Guide d'utilisation</span>
+                <span class="aide-hero-chip">Guide utilisateurs</span>
                 <h1 class="aide-hero-title">Comment ça marche ?</h1>
                 <span class="aide-faq-chip" style="margin-bottom:0.5rem;">POUR UTILISATEUR</span>
-                <p class="aide-hero-sub" style="color:var(--accent);">4 étapes simples pour obtenir votre billet en un clin d'œil</p>
+                <p class="aide-hero-sub" style="color:var(--accent);">04 étapes simples pour obtenir rapidement vos tickets !</p>
             </div>
         </div>
     </div>
@@ -50,28 +50,28 @@
                         <span class="aide-card-num" style="background: var(--violet);">2</span>
                         <i class="bi bi-pencil-square" style="color: var(--violet);"></i>
                     </div>
-                    <h5 class="aide-card-title">Saisissez vos informations</h5>
-                    <p class="aide-card-text">Sélectionnez le tarif (Gratuit, Standard ou VIP, Interne ou Externe, etc.), la quantité de tickets, renseignez vos coordonnées (nom, email, téléphone/WhatsApp) et appliquez un éventuel code promo.</p>
+                    <h5 class="aide-card-title">Saisir vos informations</h5>
+                    <p class="aide-card-text">Sélectionnez le tarif (Gratuit, Standard ou VIP), la quantité de tickets, renseignez vos coordonnées et appliquez un éventuel code promo.</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="aide-card text-center h-100">
                     <div class="aide-card-icon" style="background: linear-gradient(135deg, rgba(52,152,219,0.12), rgba(52,152,219,0.04));">
-                        <span class="aide-card-num" style="background: #3498db;">3</span>
-                        <i class="bi bi-shield-check" style="color: #3498db;"></i>
+                        <span class="aide-card-num" style="background: var(--violet);">3</span>
+                        <i class="bi bi-shield-check" style="color: var(--violet);"></i>
                     </div>
-                    <h5 class="aide-card-title">Payer en sécurisé</h5>
-                    <p class="aide-card-text">Réglez par Mobile Money (MTN, Moov, Celtiis Cash) ou par carte bancaire (Visa, Mastercard) via des passerelles sécurisées (FedaPay).</p>
+                    <h5 class="aide-card-title">Payer en sécurité</h5>
+                    <p class="aide-card-text">Réglez par Mobile Money ou carte bancaire via des passerelles sécurisées (KKiaPay, Fedapay, FexPay).</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="aide-card text-center h-100">
                     <div class="aide-card-icon" style="background: linear-gradient(135deg, rgba(84,38,128,0.12), rgba(84,38,128,0.04));">
-                        <span class="aide-card-num" style="background: #542680;">4</span>
-                        <i class="bi bi-envelope-check" style="color: #542680;"></i>
+                        <span class="aide-card-num" style="background: var(--violet);">4</span>
+                        <i class="bi bi-envelope-check" style="color: var(--violet);"></i>
                     </div>
-                    <h5 class="aide-card-title">Recevez votre billet</h5>
-                    <p class="aide-card-text">Recevez votre billet PDF par email et présentez son QR code à l'entrée (imprimé ou sur smartphone) pour authentification.</p>
+                    <h5 class="aide-card-title">Recevoir votre e-ticket</h5>
+                    <p class="aide-card-text">Recevez instantanément votre ticket PDF via email et présentez le QR code à l'entrée (imprimé ou sur smartphone).</p>
                 </div>
             </div>
         </div>
@@ -88,13 +88,9 @@
 <section class="aide-faq">
     <div class="container">
         <div class="text-center mb-4">
-            <span class="aide-faq-chip">FAQ</span>
+            <span class="aide-faq-chip">FAQ UTILISATEURS</span>
             <h2 class="aide-faq-title">Questions fréquentes</h2>
-            <p class="aide-faq-sub">Tout ce que vous devez savoir avant d'acheter</p>
-        </div>
-
-        <div class="text-center mb-4">
-            <span class="aide-faq-chip" style="background:linear-gradient(135deg,rgba(84,38,128,0.08),rgba(84,38,128,0.03));color:#9972B0;">POUR UTILISATEUR</span>
+            <p class="aide-faq-sub">Tout ce que vous devez savoir avant d'acheter un ticket</p>
         </div>
 
         <div class="row g-5 justify-content-center">
@@ -104,17 +100,17 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
                                 <i class="bi bi-cart me-2" style="color: var(--violet);"></i>
-                                Comment acheter un billet ?
+                                Comment acheter un ticket ?
                             </button>
                         </h2>
                         <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
                                 <ol style="padding-left:1.2rem;margin:0;">
-                                    <li>Choisissez votre évènement et voyez tous les détails.</li>
-                                    <li>Sélectionnez le type de billet et indiquez le nombre souhaité.</li>
+                                    <li>Choisissez votre évènement.</li>
+                                    <li>Précisez votre tarif, la quantité souhaitée et informations personnelles.</li>
                                     <li>Cliquez sur "Participer" ou "Acheter".</li>
                                     <li>Payez votre ticket.</li>
-                                    <li>Recevez directement votre billet électronique.</li>
+                                    <li>Recevez instantanément votre e-ticket.</li>
                                 </ol>
                             </div>
                         </div>
@@ -129,10 +125,9 @@
                         </h2>
                         <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Vous pouvez payer en toute sécurité de deux façons :<br>
-                                - Par <strong>Mobile Money</strong> (MTN MoMo, Moov Money, Celtiis Cash).<br>
-                                - Par <strong>carte bancaire</strong> (Visa ou Mastercard).<br>
-                                Toutes les transactions sont entièrement sécurisées et protégées.
+                                Vous pouvez payer en toute sécurité par :<br>
+                                - <strong>Mobile Money</strong> (MTN MoMo, Moov Money, Celtiis Cash).<br>
+                                - <strong>Carte bancaire</strong> (Visa ou Mastercard).
                             </div>
                         </div>
                     </div>
@@ -141,14 +136,15 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
                                 <i class="bi bi-search me-2" style="color: #3498db;"></i>
-                                Où trouver mes billets après achat ?
+                                Où trouver mes tickets après achat ?
                             </button>
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Dès que votre paiement est validé, vous pouvez récupérer vos billets de trois façons :<br>
-                                - Par <strong>e-mail</strong> (envoyé instantanément).<br>
-                                - En <strong>téléchargement direct</strong> sur la page de confirmation d'achat.<br>
+                                Dès que votre paiement est validé, vous pouvez récupérer vos tickets par :<br>
+                                - <strong>E-mail</strong> (envoyé instantanément).<br>
+                                - <strong>Téléchargement direct</strong> sur la page de confirmation d'achat.<br>
+                                - <strong>SMS ou WhatsApp</strong> (le code du ticket).
                             </div>
                         </div>
                     </div>
@@ -157,15 +153,15 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
                                 <i class="bi bi-ticket-perforated me-2" style="color: #9972B0;"></i>
-                                Comment récupérer votre ticket perdu ?
+                                Comment récupérer mes tickets perdus ou non reçus ?
                             </button>
                         </h2>
                         <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
                                 <ol style="padding-left:1.2rem;margin:0;">
                                     <li>Allez sur la page <strong>"Récupérer mon ticket"</strong>.</li>
-                                    <li>Entrez les 3 informations données lors de l'achat : votre nom complet, votre email et votre numéro de téléphone.</li>
-                                    <li>Téléchargez votre billet au format PDF.</li>
+                                    <li>Entrez votre email et l'ID de la transaction (10 chiffres).</li>
+                                    <li>Téléchargez vos tickets au format PDF.</li>
                                 </ol>
                             </div>
                         </div>
@@ -180,7 +176,7 @@
                         </h2>
                         <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Non, les billets ne sont pas remboursables, sauf dans le cas exceptionnel où l'événement est annulé par l'organisateur. Pour toute réclamation ou problème rencontré, vous devez vous adresser directement à l'organisateur de l'événement.
+                                Non, les tickets ne sont pas remboursables, sauf dans le cas exceptionnel où l'événement est annulé par l'organisateur. Pour toute réclamation ou problème rencontré, vous devez vous adresser directement à l'organisateur de l'événement.
                             </div>
                         </div>
                     </div>
@@ -202,27 +198,13 @@
                     <div class="aide-accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
-                                <i class="bi bi-envelope me-2" style="color: var(--violet);"></i>
-                                Je n'ai pas reçu mon billet par email
-                            </button>
-                        </h2>
-                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Si vous n'avez pas reçu votre billet par email après confirmation du paiement, vérifiez d'abord vos <strong>spams</strong>. Si le billet n'y est pas, téléchargez-le directement au format PDF depuis la page <strong>"Récupérer mon ticket"</strong>.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="aide-accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
                                 <i class="bi bi-shield-lock me-2" style="color: var(--violet);"></i>
                                 Mes données sont-elles protégées ?
                             </button>
                         </h2>
-                        <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Vos données personnelles sont chiffrées et servent uniquement à générer vos tickets. Aucune information bancaire n'est conservée, et la sécurité des transactions est garantie par des partenaires certifiés PCI DSS.
+                                Vos données personnelles sont chiffrées et servent uniquement à générer vos tickets. Aucune information bancaire n'est conservée, et la sécurité des transactions est garantie par des agrégateurs partenaires certifiés PCI DSS.
                             </div>
                         </div>
                     </div>
@@ -233,7 +215,7 @@
                 <div class="aide-organiser">
                     <i class="bi bi-cart-check aide-organiser-icon"></i>
                     <h3 class="aide-organiser-title">Achetez vos tickets en ligne</h3>
-                    <p class="aide-organiser-text" style="color:var(--accent);">Achetez vos tickets en moins d'une minute</p>
+                    <p class="aide-organiser-text" style="color:var(--accent);">Obtenez vos tickets en moins d'une minute</p>
                     <div class="aide-organiser-grid">
                         <div class="aide-org-item">
                             <i class="bi bi-ticket-perforated"></i>
@@ -276,7 +258,7 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <span class="aide-faq-chip" style="background:rgba(178,224,214,0.12);border-color:rgba(178,224,214,0.2);color:#9972B0;">POUR ORGANISATEUR</span>
+                <span class="aide-faq-chip" style="background:rgba(178,224,214,0.12);border-color:rgba(178,224,214,0.2);color:#9972B0;">GUIDE ORGANISATEUR</span>
                 <h1 class="aide-hero-title" style="font-size:2rem;">Comment ça marche ?</h1>
                 <p class="aide-hero-sub" style="color:var(--accent);">03 étapes pour vendre vos tickets en toute simplicité</p>
             </div>
@@ -290,7 +272,7 @@
                         <i class="bi bi-person-plus" style="color:var(--violet);"></i>
                     </div>
                     <h5 class="aide-card-title" style="font-size:1rem;">Créer votre compte</h5>
-                    <p class="aide-card-text">Inscrivez-vous à l'aide de votre adresse email ou de votre compte Google, puis complétez vos informations personnelles pour finaliser l'inscription.</p>
+                    <p class="aide-card-text">Pour commencer entrez votre adresse email ou utilisez votre compte Google, puis complétez vos informations personnelles pour finaliser l'inscription.</p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -299,18 +281,18 @@
                         <span class="aide-card-num" style="width:26px;height:26px;font-size:0.75rem;background:var(--violet);">2</span>
                         <i class="bi bi-file-earmark-text" style="color:var(--violet);"></i>
                     </div>
-                    <h5 class="aide-card-title" style="font-size:1rem;">Soumettre votre profil</h5>
-                    <p class="aide-card-text">Renseignez les détails liés à votre statut (particulier, université, entreprise), importez les justificatifs demandés (CIP, RCCM / IFU) et patientez un maximum de 24 heures pour l'approbation.</p>
+                    <h5 class="aide-card-title" style="font-size:1rem;">Soumettre votre profil organisateur</h5>
+                    <p class="aide-card-text">Renseignez les détails liés à votre statut (particulier, université, entreprise), importez vos justificatifs (CIP/RCCM/IFU) et patientez 24 heures pour l'approbation de l'équipe.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="aide-card text-center h-100" style="padding:2rem 1.25rem;">
                     <div class="aide-card-icon" style="width:70px;height:70px;font-size:1.5rem;background:linear-gradient(135deg,rgba(52,152,219,0.12),rgba(52,152,219,0.04));">
-                        <span class="aide-card-num" style="width:26px;height:26px;font-size:0.75rem;background:#3498db;">3</span>
-                        <i class="bi bi-megaphone" style="color:#3498db;"></i>
+                        <span class="aide-card-num" style="width:26px;height:26px;font-size:0.75rem;background:var(--violet);">3</span>
+                        <i class="bi bi-megaphone" style="color:var(--violet);"></i>
                     </div>
                     <h5 class="aide-card-title" style="font-size:1rem;">Publier vos événements</h5>
-                    <p class="aide-card-text">Publiez librement vos différents événements ouverts au public (concerts, conférences, festivals, soirées, galas, etc.).</p>
+                    <p class="aide-card-text">Publiez librement vos différents événements ouverts au public (festivals, concerts, conférences, soirées, galas, etc.).</p>
                 </div>
             </div>
         </div>
@@ -321,16 +303,187 @@
 <section class="aide-faq">
     <div class="container">
         <div class="text-center mb-4">
-            <span class="aide-faq-chip">FAQ</span>
+            <span class="aide-faq-chip">FAQ ORGANISATEUR</span>
             <h2 class="aide-faq-title">Questions fréquentes</h2>
             <p class="aide-faq-sub">Tout ce que vous devez savoir pour devenir organisateur</p>
         </div>
 
-        <div class="text-center mb-4">
-            <span class="aide-faq-chip" style="background:linear-gradient(135deg,rgba(84,38,128,0.08),rgba(84,38,128,0.03));color:#9972B0;">POUR ORGANISATEUR</span>
-        </div>
-
         <div class="row g-5 justify-content-center">
+            <div class="col-lg-7">
+                <div class="accordion" id="orgFaqAccordion">
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq1">
+                                <i class="bi bi-person-check me-2" style="color: var(--violet);"></i>
+                                Comment devenir organisateur ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq1" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <ol style="padding-left:1.2rem;margin:0;">
+                                    <li>Cliquez sur le bouton <strong>"Devenir organisateur"</strong> ou <strong>"Se connecter"</strong>.</li>
+                                    <li>Soumettez votre profil depuis votre tableau de bord.</li>
+                                    <li>Notre équipe examinera votre demande sous 24h et vous recevrez une notification via email.</li>
+                                    <li>Connectez-vous à nouveau et commencez à publier vos événements.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq2">
+                                <i class="bi bi-pencil-square me-2" style="color: var(--violet);"></i>
+                                Comment créer un événement ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq2" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <ol style="padding-left:1.2rem;margin:0;">
+                                    <li>Connectez-vous à votre tableau de bord.</li>
+                                    <li>Cliquez sur <strong>"Créer un événement"</strong> ou sur le bouton <strong>"+"</strong>.</li>
+                                    <li>Précisez : nom, description, date, lieu, puis ajoutez un visuel de couverture attrayant.</li>
+                                    <li>Définissez vos tarifs (gratuits/payants, standards/VIP, internes/externes etc.).</li>
+                                    <li>Publiez votre événement pour le rendre visible.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq3">
+                                <i class="bi bi-people me-2" style="color: var(--violet);"></i>
+                                Puis-je attribuer des rôles à des membres de mon équipe ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq3" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                Oui. Vous pouvez créer gratuitement jusqu'à deux (02) comptes agents pour vous aider le jour de l'événement. Deux rôles distincts sont disponibles :<br><br>
+                                <i class="bi bi-phone" style="color:var(--violet);"></i> <strong>Agent Scan</strong> : Contrôle et valide les QR codes à l'entrée.<br>
+                                <i class="bi bi-cash-coin" style="color:var(--violet);"></i> <strong>Agent Vente</strong> : Gère la billetterie physique et les ventes sur place.<br><br>
+                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Au-delà de 2 agents, l'option devient payante.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq4">
+                                <i class="bi bi-person-plus me-2" style="color: #9972B0;"></i>
+                                Comment créer un agent de scan ou de vente ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq4" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
+                                    <li>Rendez-vous dans la section <strong>"créer agent"</strong> de votre tableau de bord, remplissez le formulaire, puis assignez à l'agent un seul événement et un rôle unique : scan ou vente.</li>
+                                    <li>L'agent reçoit aussitôt un e-mail contenant ses informations de connexion à son espace (lien, mot de passe, code d'accès).</li>
+                                    <li>Pour commencer sa mission, l'agent clique sur le lien reçu, entre son mot de passe et s'authentifie avec son code d'accès.</li>
+                                </ol>
+                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Le cumul n'est pas autorisé. Chaque agent est strictement affecté à un seul événement pour un seul rôle.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq5">
+                                <i class="bi bi-qr-code me-2" style="color: var(--violet);"></i>
+                                Comment scanner les tickets ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq5" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <strong>En tant qu'Organisateur :</strong><br>
+                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
+                                    <li>Connectez-vous sur votre smartphone et dans la section <strong>"Scan QR"</strong>.</li>
+                                    <li>Autorisez l'accès à votre caméra et pointez-la vers le ticket pour scanner le QR code ou saisir manuellement le code du ticket.</li>
+                                    <li>Le système vérifie et valide l'entrée automatiquement.</li>
+                                </ol>
+                                <div style="background:#e8f4f8;border:1px solid #b8d4e8;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#2c5282;margin-bottom:0.75rem;">
+                                    <i class="bi bi-info-circle me-1"></i> Vous êtes uniquement autorisé à scanner les billets de vos événements.
+                                </div>
+                                <strong>En tant qu'Agent de scan :</strong><br>
+                                <ol style="padding-left:1.2rem;margin:0;">
+                                    <li>Connectez-vous à votre espace agent depuis votre smartphone grâce aux accès transmis par l'organisateur.</li>
+                                    <li>Autorisez l'accès à votre caméra et pointez-la vers le ticket pour scanner le QR code ou saisir manuellement le code du ticket.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq6">
+                                <i class="bi bi-cash-coin me-2" style="color: var(--violet);"></i>
+                                Comment effectuer des ventes manuelles de tickets ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq6" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <strong>En tant qu'organisateur :</strong><br>
+                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
+                                    <li>Connectez-vous à votre tableau de bord.</li>
+                                    <li>Sélectionner l'événement et remplir les informations de l'acheteur.</li>
+                                    <li>Choisir le moyen de paiement (espèce ou mobile money).</li>
+                                    <li>Vérifier le récap, encaissez et cliquez sur "Enregistrer la vente".</li>
+                                    <li>L'acheteur reçoit instantanément son e-ticket via email.</li>
+                                </ol>
+                                <strong>En tant qu'agent de vente :</strong><br>
+                                <ol style="padding-left:1.2rem;margin:0;">
+                                    <li>Connectez-vous à votre espace agent grâce aux accès transmis par l'organisateur.</li>
+                                    <li>Et suivez les mêmes étapes que l'organisateur.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item" style="border-left:3px solid var(--violet);">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq7">
+                                <i class="bi bi-currency-dollar me-2" style="color: #542680;"></i>
+                                <strong>Paiements et commissions</strong>
+                            </button>
+                        </h2>
+                        <div id="orgFaq7" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quels sont les tarifs de PaxEvent ?</h6>
+                                <ul style="padding-left:1.2rem;margin:0 0 1rem;">
+                                    <li>Publier un événement ou acheter un ticket est <strong>entièrement gratuit</strong> sur paxevent.com.</li>
+                                    <li>Nous percevons <strong>10% de commission</strong> sur les tickets vendus. (ex: Sur un Pax de 1 000 FCFA, PaxEvent perçoit 100 FCFA et vous recevez 900 FCFA net).</li>
+                                    <li>PaxEvent facture l'utilisation des services additionnels suivants : la création de plus de 2 comptes Agents, les campagnes marketing ciblées (SMS et e-mails promotionnels), achat des terminaux de vente manuelle sur le terrain.</li>
+                                </ul>
+                                <div style="background:#e8f4f8;border:1px solid #b8d4e8;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#2c5282;margin-bottom:0.75rem;">
+                                    <i class="bi bi-info-circle me-1"></i> Les organisateurs peuvent suivre tous les chiffres en temps réel depuis leur "tableau de bord".
+                                </div>
+
+                                <hr style="margin:0.75rem 0;">
+
+                                <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quand et comment retirer mes revenus ?</h6>
+                                <ul style="padding-left:1.2rem;margin:0 0 1rem;">
+                                    <li>Les revenus sont principalement versés à l'organisateur <strong>après la tenue de l'événement</strong>.</li>
+                                    <li>Un organisateur peut à tout moment effectuer un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 04 jours ouvrés.</li>
+                                    <li>Un organisateur peut également planifier le retrait de ses revenus par :<br>
+                                        - <strong>Période</strong> : Des virements automatiques tous les 4, 8 ou 31 jours.<br>
+                                        - <strong>Palier</strong> : Un déclenchement automatique dès que le solde disponible atteint un minimum de 50 000 FCFA.
+                                    </li>
+                                </ul>
+
+                                <hr style="margin:0.75rem 0;">
+
+                                <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Les événements gratuits sont-ils vraiment gratuits ?</h6>
+                                <p style="font-size:0.85rem;color:#495057;margin:0;">Oui, aucun frais ni aucune commission ne s'appliquent aux billets à 0 FCFA.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-lg-5">
                 <div class="aide-organiser">
                     <i class="bi bi-megaphone aide-organiser-icon"></i>
@@ -361,146 +514,6 @@
                         <a href="{{ route('login') }}" class="aide-btn-outline" style="font-size:0.82rem; padding:0.6rem 1.2rem;">
                             Se connecter
                         </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-7">
-                <div class="accordion" id="orgFaqAccordion">
-                    <div class="aide-accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq1">
-                                <i class="bi bi-person-check me-2" style="color: var(--violet);"></i>
-                                Comment devenir organisateur ?
-                            </button>
-                        </h2>
-                        <div id="orgFaq1" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
-                            <div class="accordion-body">
-                                <ol style="padding-left:1.2rem;margin:0;">
-                                    <li>Cliquez sur le bouton <strong>"Devenir organisateur"</strong> ou sur le bouton <strong>"Se connecter"</strong> pour vous inscrire ou vous connecter.</li>
-                                    <li>Remplissez et envoyez votre profil d'organisateur depuis votre tableau de bord.</li>
-                                    <li>Un administrateur examinera votre demande sous 24h et vous recevrez un email de confirmation une fois votre demande approuvée.</li>
-                                    <li>Connectez-vous à nouveau pour commencer à publier vos événements.</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="aide-accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq2">
-                                <i class="bi bi-pencil-square me-2" style="color: var(--violet);"></i>
-                                Comment créer un événement ?
-                            </button>
-                        </h2>
-                        <div id="orgFaq2" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
-                            <div class="accordion-body">
-                                <ol style="padding-left:1.2rem;margin:0;">
-                                    <li>Accédez à votre compte à l'aide de vos identifiants.</li>
-                                    <li>Depuis votre tableau de bord organisateur, cliquez sur <strong>"Créer un événement"</strong> ou sur le bouton <strong>"+"</strong>.</li>
-                                    <li>Renseignez le titre, la description, la date et le lieu, puis ajoutez un visuel de couverture attrayant.</li>
-                                    <li>Définissez vos tarifs (gratuits/payants, standards/VIP, internes/externes).</li>
-                                    <li>Publiez votre événement pour le rendre accessible.</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="aide-accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq3">
-                                <i class="bi bi-people me-2" style="color: var(--violet);"></i>
-                                Puis-je attribuer des rôles à des membres de mon équipe ?
-                            </button>
-                        </h2>
-                        <div id="orgFaq3" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
-                            <div class="accordion-body">
-                                Oui, vous pouvez attribuer des rôles à votre équipe. Chaque organisateur dispose gratuitement de <strong>deux comptes agents</strong> pour l'assister le jour de l'événement, avec des fonctions distinctes :<br><br>
-                                - <strong>Le validateur (Agent de scan)</strong> : Responsable du contrôle et de l'authentification des tickets à l'entrée.<br>
-                                - <strong>Le vendeur (Agent de vente manuelle)</strong> : Chargé de la billetterie physique et de la vente des tickets sur place.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="aide-accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq4">
-                                <i class="bi bi-person-plus me-2" style="color: #9972B0;"></i>
-                                Comment créer un agent de scan ou de vente ?
-                            </button>
-                        </h2>
-                        <div id="orgFaq4" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
-                            <div class="accordion-body">
-                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
-                                    <li>Rendez-vous dans la section <strong>"créer agent"</strong> de votre tableau de bord. Remplissez le formulaire (nom, email, mot de passe) puis assignez à l'agent un seul événement et un rôle unique (scan ou vente).</li>
-                                    <li>L'agent reçoit aussitôt un e-mail contenant les informations de l'événement (date, heure, lieu), son mot de passe, son code d'accès et le lien vers son espace.</li>
-                                    <li>Pour commencer sa mission, l'agent clique sur le lien reçu et s'authentifie avec son code d'accès.</li>
-                                </ol>
-                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;">
-                                    <i class="bi bi-exclamation-triangle me-1"></i> Le cumul n'est pas autorisé. Chaque agent est strictement affecté à un seul événement pour un seul rôle.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="aide-accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq5">
-                                <i class="bi bi-qr-code me-2" style="color: var(--violet);"></i>
-                                Comment scanner les billets le jour de l'événement ?
-                            </button>
-                        </h2>
-                        <div id="orgFaq5" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
-                            <div class="accordion-body">
-                                <strong>En tant qu'organisateur :</strong><br>
-                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
-                                    <li>Connectez-vous sur votre téléphone et allez dans la section <strong>"Scan"</strong>.</li>
-                                    <li>Méthodes : saisissez manuellement le code du billet ou scannez le QR code en autorisant l'accès à votre caméra.</li>
-                                    <li>Le système vérifie et valide l'entrée automatiquement.</li>
-                                </ol>
-                                <div style="background:#e8f4f8;border:1px solid #b8d4e8;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#2c5282;margin-bottom:0.75rem;">
-                                    <i class="bi bi-info-circle me-1"></i> Vous êtes uniquement autorisé à scanner les billets liés à vos propres événements.
-                                </div>
-                                <strong>En tant qu'agent de scan ou de vente :</strong><br>
-                                <ol style="padding-left:1.2rem;margin:0;">
-                                    <li>Cliquez sur le lien transmis par l'organisateur depuis votre téléphone et connectez-vous avec votre mot de passe.</li>
-                                    <li>Saisissez ensuite votre <strong>code d'accès</strong> dédié pour débuter immédiatement le scan ou la vente des tickets.</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="aide-accordion-item" style="border-left:3px solid var(--violet);">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq6">
-                                <i class="bi bi-cash-coin me-2" style="color: #542680;"></i>
-                                <strong>Paiements et commissions</strong>
-                            </button>
-                        </h2>
-                        <div id="orgFaq6" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
-                            <div class="accordion-body">
-                                <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quels sont les tarifs de PaxEvent ?</h6>
-                                <ul style="padding-left:1.2rem;margin:0 0 1rem;">
-                                    <li>Publier un événement sur PaxEvent ne coûte <strong>absolument rien</strong>.</li>
-                                    <li>Une commission unique de <strong>10%</strong> est prélevée uniquement sur les billets vendus. Vous ne payez que si vous vendez (ex: sur un billet de 10 000 FCFA, PaxEvent retient 1 000 FCFA et vous touchez 9 000 FCFA net).</li>
-                                    <li>Des frais spécifiques s'appliquent si vous choisissez d'utiliser des outils complémentaires : campagnes marketing (SMS et e-mails promotionnels), gestion d'équipe (plus de 2 collaborateurs), achat de terminaux pour la vente physique de tickets.</li>
-                                </ul>
-                                <p style="font-size:0.85rem;color:#6c757d;margin-bottom:0.5rem;">Les organisateurs peuvent voir leurs revenus et commissions en temps réel depuis le <strong>tableau de bord</strong>.</p>
-
-                                <hr style="margin:0.75rem 0;">
-
-                                <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quand et comment retirer mes revenus ?</h6>
-                                <p style="font-size:0.85rem;color:#495057;margin:0 0 0.5rem;">Les revenus sont habituellement versés après la tenue de l'événement. Les organisateurs peuvent planifier leurs retraits directement depuis la section <strong>« Retrait »</strong> de leur tableau de bord :</p>
-                                <ul style="padding-left:1.2rem;margin:0 0 1rem;">
-                                    <li><strong>Par période</strong> : Des virements automatiques planifiés tous les 4, 8 ou 31 jours.</li>
-                                    <li><strong>Par palier</strong> : Un déclenchement automatique dès que le solde disponible atteint un minimum de 50 000 FCFA.</li>
-                                </ul>
-
-                                <hr style="margin:0.75rem 0;">
-
-                                <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Les événements gratuits sont-ils vraiment gratuits ?</h6>
-                                <p style="font-size:0.85rem;color:#495057;margin:0;">L'organisation d'événements gratuits est entièrement gratuite. Aucun frais ni aucune commission ne sont appliqués sur les billets à 0 FCFA.</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

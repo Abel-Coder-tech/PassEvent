@@ -22,8 +22,8 @@
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
                 <span class="ev-hero-chip">Tous les événements</span>
-                <h1 class="ev-hero-title">Découvrez les événements près de chez vous</h1>
-                <p class="ev-hero-sub" style="color:var(--accent);">Concerts, soirées, conférences &mdash; trouvez l'événement qui vous correspond</p>
+                <h1 class="ev-hero-title">Retrouvez vos évènements préférés</h1>
+                <p class="ev-hero-sub" style="color:var(--accent);">Festivals &mdash; Concerts &mdash; Chills &mdash; Galas &mdash; Conférences </p>
                 <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search">
                     <div class="ev-search-wrap">
                         <i class="bi bi-search"></i>
