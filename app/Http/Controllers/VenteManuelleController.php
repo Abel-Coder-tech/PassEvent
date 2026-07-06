@@ -10,13 +10,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Services\FedapayService;
 use Illuminate\Support\Str;
+
 
 class VenteManuelleController extends Controller
 {
-    protected \App\Services\FedapayService $fedapay;
+    protected FedapayService $fedapay;
 
-    public function __construct(\App\Services\FedapayService $fedapay)
+    public function __construct(FedapayService $fedapay)
     {
         $this->fedapay = $fedapay;
     }
@@ -104,6 +106,7 @@ class VenteManuelleController extends Controller
                     'statut' => 'actif',
                     'quantite_disponible' => $evenement->capacite,
                     'quantite_vendue' => 0,
+                    'quantite_restante' => $evenement->capacite,
                 ]);
             }
 
