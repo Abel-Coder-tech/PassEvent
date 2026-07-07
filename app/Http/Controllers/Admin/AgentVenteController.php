@@ -50,23 +50,26 @@ class AgentVenteController extends Controller
             ->findOrFail($validated['evenement_id']);
 
         $nbActifs = $evenement->agentsVentes()->where('actif', true)->count();
-        $maxAgents = min(5, max(2, $evenement->agentsVentes()->count() + 1));
-
-        if ($nbActifs >= $maxAgents) {
+        if ($nbActifs >= 2) {
             return back()->withErrors([
-                'evenement_id' => "Cet événement a déjà {$nbActifs} agent(s) de vente actif(s). Maximum autorisé : {$maxAgents}.",
+                'evenement_id' => "Maximum de 2 agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.",
+            ])->withInput();
+        }
+
+        $emailExiste = \App\Models\Agent::where('email', $validated['email'])->exists();
+        if ($emailExiste) {
+            return back()->withErrors([
+                'email' => 'Cet email est déjà utilisé par un agent de scan. Un agent ne peut pas être à la fois scan et vente.',
             ])->withInput();
         }
 
         $motDePasse = Str::random(10);
-        $codeVente = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $agent = AgentVente::create([
             'nom' => $validated['nom'],
             'email' => $validated['email'],
             'password' => Hash::make($motDePasse),
             'evenement_id' => $evenement->id,
-            'code_vente' => $codeVente,
         ]);
 
         Mail::to($agent->email)->send(new AgentVenteAssigned($agent, $motDePasse));

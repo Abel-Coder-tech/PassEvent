@@ -30,7 +30,6 @@
                 <p><span class="label">Lieu :</span> {{ $agent->evenement->lieu }}</p>
                 <p><span class="label">Email de connexion :</span> {{ $agent->email }}</p>
                 <p><span class="label">Mot de passe :</span> {{ $motDePasse }}</p>
-                <p><span class="label">Code de vente :</span> {{ $agent->code_vente }}</p>
             </div>
 
             <p style="text-align: center;">
@@ -39,8 +38,7 @@
 
             <p><strong>Important :</strong></p>
             <ul>
-                <li>Ce code de vente vous sera demandé à chaque transaction</li>
-                <li>Ne partagez jamais votre mot de passe ni votre code de vente</li>
+                <li>Ne partagez jamais votre mot de passe</li>
                 <li>Vous pouvez générer des tickets PDF à remettre aux acheteurs</li>
             </ul>
         </div>

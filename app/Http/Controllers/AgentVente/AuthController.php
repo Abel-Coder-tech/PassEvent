@@ -10,7 +10,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -109,15 +108,10 @@ class AuthController extends Controller
             'telephone_acheteur' => 'required|string|max:20',
             'tarif_id' => 'required|exists:tarifs,id',
             'methode_paiement' => 'required|in:cash,mobile_money',
-            'code_vente' => 'required|string|size:6',
         ]);
 
         if ($agent->evenement->date_event < now()) {
-            return back()->withErrors(['code_vente' => 'L\'événement est terminé.']);
-        }
-
-        if (!Hash::check($validated['code_vente'], $agent->code_vente)) {
-            return back()->withErrors(['code_vente' => 'Code de vente incorrect.']);
+            return back()->withErrors(['email_acheteur' => 'L\'événement est terminé.']);
         }
 
         $tarif = $agent->evenement->tarifs()->findOrFail($validated['tarif_id']);

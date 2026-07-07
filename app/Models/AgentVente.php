@@ -15,7 +15,6 @@ class AgentVente extends Authenticatable
         'email',
         'password',
         'evenement_id',
-        'code_vente',
         'actif',
         'tickets_count',
         'montant_total',
@@ -24,7 +23,6 @@ class AgentVente extends Authenticatable
 
     protected $hidden = [
         'password',
-        'code_vente',
     ];
 
     protected function casts(): array

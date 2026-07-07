@@ -19,8 +19,8 @@ class StatistiqueController extends Controller
         $startDate = $this->getStartDate($periode);
 
         $evenementsIds = \Illuminate\Support\Facades\Auth::id()
-            ? \App\Models\Evenement::where('user_id', \Illuminate\Support\Facades\Auth::id())->pluck('id')
-            : collect();
+            ? \App\Models\Evenement::where('user_id', \Illuminate\Support\Facades\Auth::id())->pluck('id')->toArray()
+            : [];
 
         $query = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $startDate);
         $prevQuery = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $this->getStartDate($periode, true))

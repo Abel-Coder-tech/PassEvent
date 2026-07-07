@@ -107,15 +107,7 @@
                                 <option value="mobile_money">Mobile</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-medium">Code de vente</label>
-                            <input type="text" name="code_vente" class="form-control form-control-sm"
-                                maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
-                                placeholder="Code à 6 chiffres" required>
-                            @error('code_vente')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+
                         <button type="submit" class="btn w-100 text-white py-2 fw-medium" id="btnVente" style="background: #7c3aed;">
                             <i class="bi bi-check-lg"></i> <span id="btnVenteLabel">Vendre le ticket</span>
                         </button>

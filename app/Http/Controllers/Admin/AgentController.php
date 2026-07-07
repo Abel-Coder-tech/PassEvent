@@ -46,6 +46,20 @@ class AgentController extends Controller
 
         $evenement = Evenement::findOrFail($request->evenement_id);
 
+        $nbActifs = $evenement->agents()->where('actif', true)->count();
+        if ($nbActifs >= 2) {
+            return back()->withErrors([
+                'evenement_id' => "Maximum de 2 agents de scan atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.",
+            ])->withInput();
+        }
+
+        $emailExiste = \App\Models\AgentVente::where('email', $request->email)->exists();
+        if ($emailExiste) {
+            return back()->withErrors([
+                'email' => 'Cet email est déjà utilisé par un agent de vente. Un agent ne peut pas être à la fois scan et vente.',
+            ])->withInput();
+        }
+
         $codeAcces = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $agent = Agent::create([
