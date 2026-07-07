@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evenement;
+use App\Models\Message;
 use App\Models\Tarif;
 use App\Models\CodePromo;
 use App\Models\Ticket;
@@ -238,6 +239,15 @@ class EvenementPublicController extends Controller
 
         $organisateur = $evenement->user;
 
+        Message::create([
+            'user_id' => $organisateur->id,
+            'evenement_id' => $evenement->id,
+            'nom_complet' => $validated['nom'],
+            'email' => $validated['email'],
+            'objet' => "Question sur {$evenement->titre}",
+            'message' => $validated['message'],
+        ]);
+
         Mail::raw(
             "Message de {$validated['nom']} ({$validated['email']})\n\n" .
             "Evenement : {$evenement->titre}\n\n" .
@@ -249,6 +259,6 @@ class EvenementPublicController extends Controller
             }
         );
 
-        return back()->with('success', 'Votre message a été envoyé a l\'organisateur. Vous recevrez une reponse sous peu.');
+        return back()->with('success', 'Votre message a été envoyé à l\'organisateur. Vous recevrez une réponse sous peu.');
     }
 }

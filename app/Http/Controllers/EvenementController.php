@@ -181,7 +181,8 @@ class EvenementController extends Controller
 
         $evenement->scanAccessCodes()->create(['code' => $code]);
 
-        return back()->with('success', 'Code d\'accès généré : ' . $code);
+        return redirect()->route('admin.scan-codes.index')
+            ->with('success', 'Code d\'accès généré : <strong>' . $code . '</strong><br>Rendez-vous dans le menu <strong>Scan QR</strong> pour commencer à scanner les tickets.');
     }
 
     public function supprimerCodeAcces(Evenement $evenement, \App\Models\ScanAccessCode $scanAccessCode)
@@ -195,6 +196,13 @@ class EvenementController extends Controller
         $scanAccessCode->delete();
 
         return back()->with('success', 'Code d\'accès supprimé.');
+    }
+
+    public function scanCodesIndex()
+    {
+        $evenements = auth()->user()->evenements()->orderByDesc('created_at')->get();
+
+        return view('admin.scan-codes.index', compact('evenements'));
     }
 
     public function edit(Evenement $evenement)

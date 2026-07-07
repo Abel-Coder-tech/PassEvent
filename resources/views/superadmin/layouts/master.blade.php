@@ -519,7 +519,7 @@
             <div class="sa-nav-section">Systeme</div>
             <a href="{{ route('superadmin.notifications') }}" class="sa-nav-link {{ request()->routeIs('superadmin.notifications') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
-                @php $unreadMsgs = \App\Models\Message::where('lu',false)->count(); @endphp
+                @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
                 @if($unreadMsgs > 0)<span class="sa-nav-badge">{{ $unreadMsgs }}</span>@endif
             </a>
             <a href="{{ route('superadmin.logs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.logs') ? 'active' : '' }}">
@@ -552,7 +552,7 @@
             <div class="sa-topbar-right">
                 <a href="{{ route('superadmin.notifications') }}" class="sa-notif-btn" title="Notifications">
                     <i class="bi bi-bell-fill"></i>
-                    @php $headerUnread = \App\Models\Message::where('lu',false)->count(); @endphp
+                    @php $headerUnread = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
                     @if($headerUnread > 0)<span class="sa-notif-dot">{{ $headerUnread > 99 ? '99+' : $headerUnread }}</span>@endif
                 </a>
                 <span class="sa-topbar-badge"><i class="bi bi-shield-fill-check"></i> Super Admin</span>

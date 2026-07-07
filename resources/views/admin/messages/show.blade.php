@@ -34,6 +34,12 @@
                                 <div class="fw-bold">{{ $message->nom_complet }}</div>
                                 <a href="mailto:{{ $message->email }}" class="text-decoration-none" style="color: var(--violet); font-size: 0.85rem;">{{ $message->email }}</a>
                             </div>
+                            @if($message->evenement)
+                            <div class="mb-3">
+                                <label class="text-muted" style="font-size: 0.78rem; font-weight: 600;">ÉVÉNEMENT</label>
+                                <div><a href="{{ route('admin.evenements.show', $message->evenement) }}" class="text-decoration-none fw-medium">{{ $message->evenement->titre }}</a></div>
+                            </div>
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -84,16 +90,11 @@
                             @error('reponse_admin')
                                 <div class="text-danger mt-1" style="font-size: 0.82rem;">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">La reponse sera enregistree dans le systeme et visible dans le dashboard.</small>
+                            <small class="text-muted">La reponse sera envoyee par email a <strong>{{ $message->email }}</strong> et enregistree dans le systeme.</small>
                         </div>
-                        <div class="d-flex gap-2">
-                            <a href="mailto:{{ $message->email }}" class="btn btn-vert" style="border-radius: 8px;">
-                                <i class="bi bi-envelope me-1"></i> Envoyer par email
-                            </a>
-                            <button type="submit" class="btn btn-outline-vert" style="border-radius: 8px;">
-                                <i class="bi bi-save me-1"></i> Enregistrer la reponse
-                            </button>
-                        </div>
+                        <button type="submit" class="btn btn-vert" style="border-radius: 8px;">
+                            <i class="bi bi-send me-1"></i> Envoyer la reponse
+                        </button>
                     </form>
                 </div>
             </div>

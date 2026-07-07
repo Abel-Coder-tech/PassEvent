@@ -93,7 +93,7 @@ class SuperAdminController extends Controller
         $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
         $commissionPlateforme = Ticket::where('statut_paiement', 'payé')->sum(DB::raw("montant * $commissionPct / 100"));
 
-        $messagesNonLus = Message::where('lu', false)->count();
+        $messagesNonLus = Message::where('lu', false)->whereNull('user_id')->count();
         $newsletterCount = Newsletter::where('actif', true)->count();
 
         return view('superadmin.dashboard', compact(
@@ -183,7 +183,7 @@ class SuperAdminController extends Controller
 
     public function notifications()
     {
-        $messages = Message::orderByDesc('created_at')->paginate(20);
+        $messages = Message::whereNull('user_id')->orderByDesc('created_at')->paginate(20);
         return view('superadmin.notifications', compact('messages'));
     }
 

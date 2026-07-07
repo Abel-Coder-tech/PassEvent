@@ -842,7 +842,7 @@
             @if($isActive)
             <a href="{{ route('admin.messages.index') }}" class="nav-link {{ request()->routeIs('admin.messages.*') ? 'active' : '' }}">
                 <i class="bi bi-envelope"></i> Messages
-                @php $unreadMessages = \App\Models\Message::where('lu', false)->count(); @endphp
+                @php $unreadMessages = \App\Models\Message::where('lu', false)->where('user_id', auth()->id())->count(); @endphp
                 @if($unreadMessages > 0)
                     <span class="badge bg-danger ms-auto" style="font-size: 0.65rem;">{{ $unreadMessages }}</span>
                 @endif
@@ -863,6 +863,15 @@
             @endif
 
             <div class="sidebar-section-label">Billetterie</div>
+            @if($isActive)
+            <a href="{{ route('admin.scan-codes.index') }}" class="nav-link {{ request()->routeIs('admin.scan-codes.*') ? 'active' : '' }}">
+                <i class="bi bi-key"></i> Générer code d'accès
+            </a>
+            @else
+            <span class="nav-link" style="opacity:0.5;cursor:not-allowed;" title="Disponible après validation">
+                <i class="bi bi-key"></i> Générer code d'accès <i class="bi bi-lock-fill ms-auto" style="font-size:0.65rem;"></i>
+            </span>
+            @endif
             @if($isActive)
             <a href="{{ route('scan.index') }}" class="nav-link {{ request()->routeIs('scan.*') ? 'active' : '' }}">
                 <i class="bi bi-qr-code-scan"></i> Scan QR

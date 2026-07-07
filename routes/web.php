@@ -209,6 +209,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
         Route::delete('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'destroy'])->name('tarifs.destroy');
 
+        Route::get('/scan-codes', [EvenementController::class, 'scanCodesIndex'])->name('scan-codes.index');
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
 
