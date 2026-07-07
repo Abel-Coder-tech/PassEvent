@@ -176,6 +176,12 @@ class PaiementController extends Controller
             'status' => $status,
         ]);
 
+        if (in_array($source, ['agent_vente', 'vente_manuelle']) && $ticket->statut_paiement === 'en_attente') {
+            foreach ($groupTickets as $t) {
+                $t->delete();
+            }
+        }
+
         $fallback = match($source) {
             'agent_vente' => route('agent-vente.dashboard'),
             'vente_manuelle' => route('ventes-manuelles.create'),

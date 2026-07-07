@@ -52,7 +52,13 @@ class AuthController extends Controller
     {
         $agent = Auth::guard('agent_vente')->user();
 
+        $agent->tickets()
+            ->where('statut_paiement', 'en_attente')
+            ->where('date_achat', '<', now()->subMinutes(30))
+            ->delete();
+
         $ticketsAujourdHui = $agent->tickets()
+            ->where('statut_paiement', 'payé')
             ->whereDate('date_achat', today())
             ->with('tarif')
             ->latest('date_achat')
@@ -73,6 +79,7 @@ class AuthController extends Controller
         $agent = Auth::guard('agent_vente')->user();
 
         $tickets = $agent->tickets()
+            ->where('statut_paiement', 'payé')
             ->with('tarif')
             ->latest('date_achat')
             ->take(50)
@@ -91,9 +98,9 @@ class AuthController extends Controller
             'tickets' => $tickets,
             'total_tickets' => $agent->tickets_count,
             'montant_total' => number_format($agent->montant_total, 0, ',', ' ') . ' F',
-            'aujourd_hui' => $agent->tickets()->whereDate('date_achat', today())->count(),
+            'aujourd_hui' => $agent->tickets()->where('statut_paiement', 'payé')->whereDate('date_achat', today())->count(),
             'montant_ajd' => number_format(
-                $agent->tickets()->whereDate('date_achat', today())->sum('montant'), 0, ',', ' '
+                $agent->tickets()->where('statut_paiement', 'payé')->whereDate('date_achat', today())->sum('montant'), 0, ',', ' '
             ) . ' F',
         ]);
     }
@@ -174,6 +181,10 @@ class AuthController extends Controller
 
         if ($ticket->agent_vente_id !== $agent->id) {
             abort(403);
+        }
+
+        if ($ticket->statut_paiement !== 'payé') {
+            abort(403, 'Le paiement de ce ticket n\'a pas été confirmé.');
         }
 
         if ($ticket->download_count >= 3) {
