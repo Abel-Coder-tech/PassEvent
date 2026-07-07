@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Ticket;
 use App\Models\Evenement;
 use App\Models\Log;
+use App\Models\Message;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class RemboursementController extends Controller
 {
@@ -118,7 +121,36 @@ class RemboursementController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Remboursement effectué avec succès. Un email de confirmation sera envoyé à l\'acheteur.');
+            $organisateur = Auth::user();
+
+            Message::create([
+                'user_id' => null,
+                'evenement_id' => $ticket->evenement_id,
+                'nom_complet' => $organisateur->nom,
+                'email' => $organisateur->email,
+                'objet' => '[Remboursement] ' . $ticket->evenement->titre,
+                'message' => 'Remboursement de ' . number_format($ticket->montant, 0, ',', ' ') . ' F pour le ticket ' . $ticket->code_unique . ' (' . $ticket->nom_acheteur . ").\n\nMotif : " . $validated['motif'],
+            ]);
+
+            $superAdmins = User::where('role', 'super_admin')->get();
+            foreach ($superAdmins as $sa) {
+                Mail::raw(
+                    "Nouvelle demande de remboursement\n\n" .
+                    "Organisateur : {$organisateur->nom} ({$organisateur->email})\n" .
+                    "Événement : {$ticket->evenement->titre}\n" .
+                    "Ticket : {$ticket->code_unique}\n" .
+                    "Acheteur : {$ticket->nom_acheteur} ({$ticket->email_acheteur})\n" .
+                    "Montant : " . number_format($ticket->montant, 0, ',', ' ') . " F\n" .
+                    "Motif : {$validated['motif']}\n\n" .
+                    "Connectez-vous au super dashboard pour voir les détails.",
+                    function ($m) use ($sa, $organisateur, $ticket) {
+                        $m->to($sa->email)
+                          ->subject("[PaxEvent] Remboursement - {$ticket->evenement->titre}");
+                    }
+                );
+            }
+
+            return back()->with('success', 'Remboursement effectué avec succès. L\'acheteur sera notifié.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Erreur lors du remboursement. Veuillez réessayer.']);
@@ -156,6 +188,34 @@ class RemboursementController extends Controller
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+
+        $organisateur = Auth::user();
+
+        Message::create([
+            'user_id' => null,
+            'evenement_id' => $ticket->evenement_id,
+            'nom_complet' => $organisateur->nom,
+            'email' => $organisateur->email,
+            'objet' => '[Remboursement] Annulation - ' . $ticket->evenement->titre,
+            'message' => 'Remboursement annulé pour le ticket ' . $ticket->code_unique . ' (' . $ticket->nom_acheteur . ") de " . number_format($ticket->montant, 0, ',', ' ') . " F.",
+        ]);
+
+        $superAdmins = User::where('role', 'super_admin')->get();
+        foreach ($superAdmins as $sa) {
+            Mail::raw(
+                "Annulation de remboursement\n\n" .
+                "Organisateur : {$organisateur->nom} ({$organisateur->email})\n" .
+                "Événement : {$ticket->evenement->titre}\n" .
+                "Ticket : {$ticket->code_unique}\n" .
+                "Acheteur : {$ticket->nom_acheteur} ({$ticket->email_acheteur})\n" .
+                "Montant : " . number_format($ticket->montant, 0, ',', ' ') . " F\n\n" .
+                "Le ticket est de nouveau valide.",
+                function ($m) use ($sa) {
+                    $m->to($sa->email)
+                      ->subject("[PaxEvent] Annulation remboursement");
+                }
+            );
+        }
 
         return back()->with('success', 'Remboursement annulé. Le ticket est de nouveau valide.');
     }

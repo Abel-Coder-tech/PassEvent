@@ -69,7 +69,7 @@
                 </div>
                 <div class="metric-label">Taux de scan</div>
                 <div class="metric-value" style="font-size: 1.5rem;">{{ $stats['taux_scan'] }}%</div>
-                <div class="metric-subtitle">Tickets utilises / vendus</div>
+                <div class="metric-subtitle">Tickets utilisés / vendus</div>
             </div>
         </div>
 
@@ -82,7 +82,7 @@
                 </div>
                 <div class="metric-label">Taux echec paiement</div>
                 <div class="metric-value" style="font-size: 1.5rem;">{{ $stats['taux_echec'] }}%</div>
-                <div class="metric-subtitle">Paiements non confirmes</div>
+                <div class="metric-subtitle">Paiements non confirmés</div>
             </div>
         </div>
     </div>
@@ -197,7 +197,7 @@
         <div class="col-lg-4">
             <div class="panel-card h-100">
                 <div class="panel-card-header">
-                    <h5><i class="bi bi-calendar-week me-2" style="color: var(--vert);"></i>Activite par jour</h5>
+                    <h5><i class="bi bi-calendar-week me-2" style="color: var(--vert);"></i>Activité par jour</h5>
                 </div>
                 <div class="panel-card-body">
                     <div style="height: 250px;">
@@ -253,7 +253,7 @@
                     <div class="p-3 rounded" style="background: var(--blanc-casse);">
                         <p class="mb-2 fw-semibold" style="font-size: 0.9rem;">Prochain recrutement</p>
                         <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                            J+2 apres cloture : via FedaPay. Les fonds sont transfers automatiquement apres verification des transactions.
+                            J+5 apres cloture : via FedaPay. Les fonds sont transferés automatiquement apres verification des transactions.
                         </p>
                     </div>
 
@@ -262,7 +262,7 @@
                             <i class="bi bi-lightbulb me-1"></i> Conseil
                         </p>
                         <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                            Surveillez regulierement le taux de scan pour identifier les evenements avec des billets non utilises et optimiser vos prochaines ventes.
+                            Surveillez regulièrement le taux de scan pour identifier les évènements avec des billets non utilisés et optimiser vos prochaines ventes.
                         </p>
                     </div>
                 </div>
