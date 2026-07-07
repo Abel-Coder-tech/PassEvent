@@ -125,7 +125,13 @@ class AgentVenteController extends Controller
             abort(403);
         }
 
-        $agentVente->delete();
+        try {
+            $agentVente->tickets()->update(['agent_vente_id' => null]);
+            $agentVente->delete();
+        } catch (\Exception $e) {
+            return redirect()->route('admin.agents-vente.index')
+                ->with('error', 'Erreur lors de la suppression : ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.agents-vente.index')
             ->with('success', 'Agent de vente supprimé.');

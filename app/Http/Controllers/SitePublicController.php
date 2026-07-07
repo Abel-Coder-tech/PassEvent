@@ -13,7 +13,7 @@ class SitePublicController extends Controller
 {
     public function accueil(Request $request)
     {
-        $categories = Evenement::where('statut', 'publié')
+        $categories = Evenement::where('statut', '=', 'publié')
             ->where('date_event', '>=', now())
             ->whereNotNull('categorie')
             ->distinct()
@@ -25,12 +25,12 @@ class SitePublicController extends Controller
         $q = $request->input('q');
 
         $query = Evenement::with('tarifs')
-            ->where('statut', 'publié')
+            ->where('statut', '=', 'publié')
             ->where('date_event', '>=', now())
             ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
-            $query->where('categorie', $selectedCategorie);
+            $query->where('categorie', '=', $selectedCategorie);
         }
 
         if ($selectedDate === 'weekend') {

@@ -21,8 +21,14 @@ class ScanController extends Controller
         }
 
         if (!$accessEvenement) {
-            $evenements = Evenement::where('user_id', Auth::id())
-                ->orderByRaw("FIELD(statut, 'publié', 'brouillon', 'terminé', 'annulé')")
+            $evenements = Evenement::where('user_id', '=', Auth::id())
+                ->orderByRaw("CASE statut
+                    WHEN 'publié' THEN 1
+                    WHEN 'brouillon' THEN 2
+                    WHEN 'terminé' THEN 3
+                    WHEN 'annulé' THEN 4
+                    ELSE 5
+                END")
                 ->orderBy('date_event', 'desc')
                 ->get();
 
@@ -34,26 +40,34 @@ class ScanController extends Controller
         $scanQuery = Log::where('type_operation', 'scan')
             ->with(['ticket.evenement'])
             ->whereHas('ticket', function ($q) use ($selectedEvent) {
-                $q->where('evenement_id', $selectedEvent);
+                $q->where('evenement_id', '=', $selectedEvent);
             });
 
         $scans = $scanQuery->orderByDesc('created_at')->limit(50)->get();
 
         $stats = [
-            'total_scans' => Log::where('type_operation', 'scan')
-                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
+            'total_scans' => Log::where('type_operation', '=', 'scan')
+                ->whereHas('ticket', function ($t) use ($selectedEvent) {
+                    return $t->where('evenement_id', '=', $selectedEvent);
+                })
                 ->count(),
-            'scans_today' => Log::where('type_operation', 'scan')
-                ->whereDate('created_at', today())
-                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
+            'scans_today' => Log::where('type_operation', '=', 'scan')
+                ->whereDate('created_at', '=', today())
+                ->whereHas('ticket', function ($t) use ($selectedEvent) {
+                    return $t->where('evenement_id', '=', $selectedEvent);
+                })
                 ->count(),
-            'scans_valides' => Log::where('type_operation', 'scan')
+            'scans_valides' => Log::where('type_operation', '=', 'scan')
                 ->where('details->resultat', 'valide')
-                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
+                ->whereHas('ticket', function ($t) use ($selectedEvent) {
+                    return $t->where('evenement_id', '=', $selectedEvent);
+                })
                 ->count(),
-            'scans_invalides' => Log::where('type_operation', 'scan')
+            'scans_invalides' => Log::where('type_operation', '=', 'scan')
                 ->where('details->resultat', 'invalide')
-                ->whereHas('ticket', fn($t) => $t->where('evenement_id', $selectedEvent))
+                ->whereHas('ticket', function ($t) use ($selectedEvent) {
+                    return $t->where('evenement_id', '=', $selectedEvent);
+                })
                 ->count(),
         ];
 
@@ -72,9 +86,10 @@ class ScanController extends Controller
             ]);
         }
 
-        $evenement = Evenement::where('id', $evenementId)
-            ->where('user_id', Auth::id())
+        $evenement = Evenement::where('id', '=', $evenementId)
+            ->where('user_id', '=', Auth::id())
             ->first();
+            
 
         if (!$evenement) {
             return response()->json([
@@ -90,9 +105,9 @@ class ScanController extends Controller
             ]);
         }
 
-        $accessCode = ScanAccessCode::where('code', $code)
-            ->where('evenement_id', $evenementId)
-            ->where('actif', true)
+        $accessCode = ScanAccessCode::where('code', '=', $code)
+            ->where('evenement_id', '=', $evenementId)
+            ->where('actif', '=', true)
             ->with('evenement')
             ->first();
 
@@ -144,7 +159,7 @@ class ScanController extends Controller
         }
 
         $ticket = Ticket::with('evenement', 'tarif')
-            ->where('code_unique', $code)
+            ->where('code_unique', '=', $code)
             ->first();
 
         if (!$ticket) {

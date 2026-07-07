@@ -68,14 +68,18 @@ class AgentController extends Controller
 
     public function show(Agent $agent)
     {
-        $this->authorize('view', $agent);
+        if ($agent->evenement->user_id !== auth()->id()) {
+            abort(403);
+        }
         $agent->load('logs.ticket', 'evenement');
         return view('admin.agents.show', compact('agent'));
     }
 
     public function toggleActif(Agent $agent)
     {
-        $this->authorize('update', $agent);
+        if ($agent->evenement->user_id !== auth()->id()) {
+            abort(403);
+        }
         $agent->update(['actif' => !$agent->actif]);
         $statut = $agent->actif ? 'activé' : 'désactivé';
         return redirect()->route('admin.agents.index')->with('success', "Agent {$statut} avec succès.");
@@ -83,7 +87,9 @@ class AgentController extends Controller
 
     public function destroy(Agent $agent)
     {
-        $this->authorize('delete', $agent);
+        if ($agent->evenement->user_id !== auth()->id()) {
+            abort(403);
+        }
         $agent->delete();
         return redirect()->route('admin.agents.index')->with('success', 'Agent supprimé avec succès.');
     }

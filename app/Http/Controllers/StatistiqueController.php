@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class StatistiqueController extends Controller
 {
+
+
     public function index(Request $request)
     {
         $periode = $request->input('periode', '30');

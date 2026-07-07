@@ -14,6 +14,9 @@
     @if (session('success'))
     <div class="alert alert-success py-2 small">{{ session('success') }}</div>
     @endif
+    @if (session('error'))
+    <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
+    @endif
 
     @if ($agents->isEmpty())
     <div class="text-center py-5 text-muted">
