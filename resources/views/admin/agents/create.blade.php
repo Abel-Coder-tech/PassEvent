@@ -36,8 +36,14 @@
 
                         <div class="mb-3">
                             <label class="form-label">Mot de passe</label>
-                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required placeholder="Min. 8 caractères" minlength="8">
+                            <input type="password" name="password" id="agent_password" class="form-control @error('password') is-invalid @enderror" required placeholder="Min. 8 caractères" minlength="8" oninput="checkPasswordStrengthAgent(this.value)">
                             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div id="passwordMeterAgent" class="mt-2" style="display:none;">
+                                <div style="height:3px;background:#e9ecef;border-radius:2px;overflow:hidden;">
+                                    <div id="passwordBarAgent" style="height:100%;width:0;border-radius:2px;transition:width .3s,background .3s;"></div>
+                                </div>
+                                <div id="passwordLabelAgent" class="mt-1" style="font-size:0.78rem;font-weight:600;"></div>
+                            </div>
                             <div class="form-text">L'agent utilisera ce mot de passe pour se connecter.</div>
                         </div>
 
@@ -69,4 +75,31 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+function checkPasswordStrengthAgent(pwd) {
+    var meter = document.getElementById('passwordMeterAgent');
+    var bar = document.getElementById('passwordBarAgent');
+    var label = document.getElementById('passwordLabelAgent');
+    if (!pwd) { meter.style.display = 'none'; return; }
+    meter.style.display = 'block';
+    var score = 0;
+    if (pwd.length >= 8) score += 25;
+    if (pwd.length >= 12) score += 15;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 20;
+    if (/\d/.test(pwd)) score += 20;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 20;
+    if (pwd.length > 15) score += 10;
+    score = Math.min(100, score);
+    var color, text, icon;
+    if (score < 40) { color = '#dc3545'; text = 'Faible'; icon = 'bi-exclamation-triangle-fill'; }
+    else if (score < 70) { color = '#f59e0b'; text = 'Moyen'; icon = 'bi-shield-exclamation'; }
+    else { color = '#10b981'; text = 'Fort'; icon = 'bi-shield-fill-check'; }
+    bar.style.width = score + '%';
+    bar.style.background = color;
+    label.innerHTML = '<i class="bi ' + icon + '" style="color:' + color + '"></i> <span style="color:' + color + '">' + text + '</span>';
+}
+</script>
 @endsection

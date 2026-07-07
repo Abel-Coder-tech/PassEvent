@@ -40,9 +40,15 @@
     @if(!$from_google)
     <div class="mb-3">
         <label class="form-label">Mot de passe</label>
-        <input type="password" name="mot_de_passe" class="form-control @error('mot_de_passe') is-invalid @enderror"
-               minlength="8" required placeholder="Min. 8 caractères">
+        <input type="password" name="mot_de_passe" id="reg_password" class="form-control @error('mot_de_passe') is-invalid @enderror"
+               minlength="8" required placeholder="Min. 8 caractères" oninput="checkPasswordStrength(this.value)">
         @error('mot_de_passe') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <div id="passwordMeter" class="mt-2" style="display:none;">
+            <div style="height:4px;background:#e9ecef;border-radius:2px;overflow:hidden;">
+                <div id="passwordBar" style="height:100%;width:0;border-radius:2px;transition:width .3s,background .3s;"></div>
+            </div>
+            <div id="passwordLabel" class="mt-1" style="font-size:0.78rem;font-weight:600;"></div>
+        </div>
     </div>
     <div class="mb-3">
         <label class="form-label">Confirmer le mot de passe</label>
@@ -50,6 +56,35 @@
                required placeholder="Répétez le mot de passe">
     </div>
     @endif
+
+    <style>
+    #passwordMeter { animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+    </style>
+    <script>
+    function checkPasswordStrength(pwd) {
+        var meter = document.getElementById('passwordMeter');
+        var bar = document.getElementById('passwordBar');
+        var label = document.getElementById('passwordLabel');
+        if (!pwd) { meter.style.display = 'none'; return; }
+        meter.style.display = 'block';
+        var score = 0;
+        if (pwd.length >= 8) score += 25;
+        if (pwd.length >= 12) score += 15;
+        if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 20;
+        if (/\d/.test(pwd)) score += 20;
+        if (/[^a-zA-Z0-9]/.test(pwd)) score += 20;
+        if (pwd.length > 15) score += 10;
+        score = Math.min(100, score);
+        var color, text, icon;
+        if (score < 40) { color = '#dc3545'; text = 'Mot de passe faible'; icon = 'bi-exclamation-triangle-fill'; }
+        else if (score < 70) { color = '#f59e0b'; text = 'Mot de passe moyen'; icon = 'bi-shield-exclamation'; }
+        else { color = '#10b981'; text = 'Mot de passe fort'; icon = 'bi-shield-fill-check'; }
+        bar.style.width = score + '%';
+        bar.style.background = color;
+        label.innerHTML = '<i class="bi ' + icon + '" style="color:' + color + '"></i> <span style="color:' + color + '">' + text + '</span>';
+    }
+    </script>
 
     <div class="mb-3">
         <label class="form-label">Photo de profil <span class="text-muted fw-normal">(optionnel)</span></label>

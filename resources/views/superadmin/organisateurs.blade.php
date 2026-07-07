@@ -17,10 +17,16 @@
                         <div class="col-6"><input type="text" name="nom" class="sa-form-control" placeholder="Nom complet" required></div>
                         <div class="col-6"><input type="email" name="email" class="sa-form-control" placeholder="Email" required></div>
                         <div class="col-6 position-relative">
-    <input type="password" name="mot_de_passe" id="org_password" class="sa-form-control" placeholder="Mot de passe" required>
+    <input type="password" name="mot_de_passe" id="org_password" class="sa-form-control" placeholder="Mot de passe" required oninput="checkPasswordStrengthOrg(this.value)">
     <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 24px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
         <i class="bi bi-eye" style="color: #9a9a9a;"></i>
     </button>
+    <div id="passwordMeterOrg" class="mt-1" style="display:none;">
+        <div style="height:3px;background:#e9ecef;border-radius:2px;overflow:hidden;">
+            <div id="passwordBarOrg" style="height:100%;width:0;border-radius:2px;transition:width .3s,background .3s;"></div>
+        </div>
+        <div id="passwordLabelOrg" class="mt-1" style="font-size:0.75rem;font-weight:600;"></div>
+    </div>
 </div>
                         <div class="col-3"><input type="text" name="telephone" class="sa-form-control" placeholder="Telephone"></div>
                         <div class="col-3"><input type="text" name="organisation" class="sa-form-control" placeholder="Organisation"></div>
@@ -361,6 +367,29 @@ document.querySelectorAll('.toggle-password').forEach(btn => {
         icon.classList.toggle('bi-eye-slash');
     });
 });
+
+function checkPasswordStrengthOrg(pwd) {
+    var meter = document.getElementById('passwordMeterOrg');
+    var bar = document.getElementById('passwordBarOrg');
+    var label = document.getElementById('passwordLabelOrg');
+    if (!pwd) { meter.style.display = 'none'; return; }
+    meter.style.display = 'block';
+    var score = 0;
+    if (pwd.length >= 8) score += 25;
+    if (pwd.length >= 12) score += 15;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 20;
+    if (/\d/.test(pwd)) score += 20;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 20;
+    if (pwd.length > 15) score += 10;
+    score = Math.min(100, score);
+    var color, text, icon;
+    if (score < 40) { color = '#dc3545'; text = 'Faible'; icon = 'bi-exclamation-triangle-fill'; }
+    else if (score < 70) { color = '#f59e0b'; text = 'Moyen'; icon = 'bi-shield-exclamation'; }
+    else { color = '#10b981'; text = 'Fort'; icon = 'bi-shield-fill-check'; }
+    bar.style.width = score + '%';
+    bar.style.background = color;
+    label.innerHTML = '<i class="bi ' + icon + '" style="color:' + color + '"></i> <span style="color:' + color + '">' + text + '</span>';
+}
 </script>
 @endpush
 @endsection

@@ -98,13 +98,6 @@ class ScanController extends Controller
             ]);
         }
 
-        if ($evenement->date_fin_vente && $evenement->date_fin_vente->isFuture()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La vente est toujours en cours pour cet événement. Le scan sera disponible après la clôture des ventes.',
-            ]);
-        }
-
         $accessCode = ScanAccessCode::where('code', '=', $code)
             ->where('evenement_id', '=', $evenementId)
             ->where('actif', '=', true)
@@ -201,27 +194,6 @@ class ScanController extends Controller
                 'success' => false,
                 'message' => 'Ce ticket ne correspond pas à l\'événement que vous scannéz.',
                 'type' => 'wrong_event',
-            ]);
-        }
-
-        if ($ticket->evenement->date_fin_vente && $ticket->evenement->date_fin_vente->isFuture()) {
-            Log::create([
-                'ticket_id' => $ticket->id,
-                'type_operation' => 'scan',
-                'details' => json_encode([
-                    'code' => $code,
-                    'resultat' => 'invalide',
-                    'raison' => 'vente_encours',
-                    'agent' => Auth::id(),
-                ]),
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'La vente est toujours en cours. Le scan n\'est pas encore autorisé.',
-                'type' => 'vente_encours',
             ]);
         }
 

@@ -51,16 +51,12 @@ class AgentVenteController extends Controller
 
         $nbActifs = $evenement->agentsVentes()->where('actif', true)->count();
         if ($nbActifs >= 2) {
-            return back()->withErrors([
-                'evenement_id' => "Maximum de 2 agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.",
-            ])->withInput();
+            return back()->with('error', "Maximum de 2 agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\Agent::where('email', $validated['email'])->exists();
         if ($emailExiste) {
-            return back()->withErrors([
-                'email' => 'Cet email est déjà utilisé par un agent de scan. Un agent ne peut pas être à la fois scan et vente.',
-            ])->withInput();
+            return back()->with('error', 'Cet email est déjà utilisé par un agent de scan. Un agent ne peut pas être à la fois scan et vente.');
         }
 
         $motDePasse = Str::random(10);

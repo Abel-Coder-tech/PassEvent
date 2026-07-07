@@ -48,16 +48,12 @@ class AgentController extends Controller
 
         $nbActifs = $evenement->agents()->where('actif', true)->count();
         if ($nbActifs >= 2) {
-            return back()->withErrors([
-                'evenement_id' => "Maximum de 2 agents de scan atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.",
-            ])->withInput();
+            return back()->with('error', "Maximum de 2 agents de scan atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\AgentVente::where('email', $request->email)->exists();
         if ($emailExiste) {
-            return back()->withErrors([
-                'email' => 'Cet email est déjà utilisé par un agent de vente. Un agent ne peut pas être à la fois scan et vente.',
-            ])->withInput();
+            return back()->with('error', 'Cet email est déjà utilisé par un agent de vente. Un agent ne peut pas être à la fois scan et vente.');
         }
 
         $codeAcces = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -85,8 +81,27 @@ class AgentController extends Controller
         if ($agent->evenement->user_id !== auth()->id()) {
             abort(403);
         }
+
         $agent->load('logs.ticket', 'evenement');
-        return view('admin.agents.show', compact('agent'));
+
+        $scansGroupes = $agent->logs()
+            ->selectRaw('JSON_UNQUOTE(JSON_EXTRACT(details, "$.resultat")) as resultat, COUNT(*) as total')
+            ->groupBy('resultat')
+            ->get()
+            ->keyBy('resultat');
+
+        $stats = [
+            'total_scans' => $agent->logs()->count(),
+            'scans_ajd' => $agent->logs()->whereDate('created_at', today())->count(),
+            'valides' => (int) ($scansGroupes['valide']->total ?? 0),
+            'deja_utilises' => (int) ($scansGroupes['deja_utilise']->total ?? 0),
+            'invalides' => (int) ($scansGroupes['invalide']->total ?? 0),
+            'dernier_acces' => $agent->dernier_acces,
+        ];
+
+        $logs = $agent->logs()->latest()->paginate(50);
+
+        return view('admin.agents.show', compact('agent', 'stats', 'logs'));
     }
 
     public function toggleActif(Agent $agent)
