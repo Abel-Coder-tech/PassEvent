@@ -168,6 +168,20 @@
                                 <span class="org-detail-label">Inscrit le</span>
                                 <span class="org-detail-value">{{ $org->created_at->format('d M Y à H:i') }}</span>
                             </div>
+                            @if($org->document_justificatif)
+                            <div class="org-detail-row">
+                                <span class="org-detail-label">Justificatif</span>
+                                <span class="org-detail-value">
+                                    <a href="{{ asset('storage/' . $org->document_justificatif) }}" target="_blank" class="text-decoration-none fw-semibold" style="color:var(--sa-primary);">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> Voir le document
+                                    </a>
+                                    &middot;
+                                    <a href="{{ asset('storage/' . $org->document_justificatif) }}" download class="text-decoration-none" style="color:#666;font-size:0.8rem;">
+                                        <i class="bi bi-download"></i> Télécharger
+                                    </a>
+                                </span>
+                            </div>
+                            @endif
 
                             {{-- Envoyer un email --}}
                             <hr style="margin:1rem 0;border-color:#eee;">

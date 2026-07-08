@@ -29,6 +29,19 @@
                 @if($user->telephone)
                     <p class="small mb-0"><i class="bi bi-telephone"></i> {{ $user->telephone }}</p>
                 @endif
+                @if($user->type)
+                    <p class="small mb-0 mt-1"><i class="bi bi-tag"></i> {{ ucfirst($user->type) }}</p>
+                @endif
+                @if($user->document_justificatif)
+                    <div class="mt-3 pt-2 border-top">
+                        <a href="{{ asset('storage/' . $user->document_justificatif) }}" target="_blank" class="btn btn-sm text-white fw-semibold" style="background:var(--sa-primary);border-radius:6px;text-decoration:none;">
+                            <i class="bi bi-eye me-1"></i> Voir le justificatif
+                        </a>
+                        <a href="{{ asset('storage/' . $user->document_justificatif) }}" download class="btn btn-sm" style="border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#666;">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
