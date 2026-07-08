@@ -769,6 +769,7 @@
         .toast-item.toast-success { border-left-color: #27ae60; }
         .toast-item.toast-error { border-left-color: #e74c3c; }
         .toast-item .toast-msg { flex: 1; }
+        .toast-item .toast-msg a { color: #542680; font-weight: 700; text-decoration: underline; }
         .toast-item .toast-actions {
             display: flex;
             gap: 8px;

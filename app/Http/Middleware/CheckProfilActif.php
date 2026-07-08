@@ -16,8 +16,9 @@ class CheckProfilActif
         }
 
         if ($user->statut === 'incomplet') {
-            $link = '<a href="' . route('profil.step2') . '" style="color:white;text-decoration:underline;font-weight:700;">compléter votre profil</a>';
-            return redirect()->route('dashboard')->with('error', 'Veuillez d\'abord ' . $link . ' avant d\'utiliser cette fonctionnalité.');
+            $url = route('profil.step2');
+            $link = '<a href="' . $url . '">finaliser votre profil</a>';
+            return redirect()->route('dashboard')->with('error', 'Veuillez d\'abord ' . $link . ' avant de créer.');
         }
 
         return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant d\'utiliser cette fonctionnalité.');

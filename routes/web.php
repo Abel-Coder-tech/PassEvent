@@ -149,7 +149,7 @@ Route::get('/generate-sitemap', function () {
         ->add(Url::create(url('/mentions-legales')))
         ->add(Url::create(url('/politique-remboursement')));
 
-    \App\Models\Evenement::where('statut', 'publié')->get()->each(function ($evenement) use ($sitemap) {
+    \App\Models\Evenement::where('statut', '=', 'publié')->get()->each(function ($evenement) use ($sitemap) {
         $sitemap->add(Url::create(url('/evenements/' . $evenement->id)));
     });
 
@@ -220,7 +220,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::middleware(['auth', 'profil_verifie'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('evenements', EvenementController::class);
 
@@ -237,8 +237,8 @@ Route::middleware(['auth', 'profil_verifie'])->group(function () {
 
         Route::prefix('agents')->name('agents.')->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');
-            Route::get('/creer', [AdminAgentController::class, 'create'])->name('create');
-            Route::post('/', [AdminAgentController::class, 'store'])->name('store');
+            Route::get('/creer', [AdminAgentController::class, 'create'])->name('create')->middleware('profil_verifie');
+            Route::post('/', [AdminAgentController::class, 'store'])->name('store')->middleware('profil_verifie');
             Route::get('/{agent}', [AdminAgentController::class, 'show'])->name('show');
             Route::post('/{agent}/toggle-actif', [AdminAgentController::class, 'toggleActif'])->name('toggle-actif');
             Route::delete('/{agent}', [AdminAgentController::class, 'destroy'])->name('destroy');
@@ -246,8 +246,8 @@ Route::middleware(['auth', 'profil_verifie'])->group(function () {
 
         Route::prefix('agents-vente')->name('agents-vente.')->group(function () {
             Route::get('/', [AdminAgentVenteController::class, 'index'])->name('index');
-            Route::get('/creer', [AdminAgentVenteController::class, 'create'])->name('create');
-            Route::post('/', [AdminAgentVenteController::class, 'store'])->name('store');
+            Route::get('/creer', [AdminAgentVenteController::class, 'create'])->name('create')->middleware('profil_verifie');
+            Route::post('/', [AdminAgentVenteController::class, 'store'])->name('store')->middleware('profil_verifie');
             Route::get('/{agentVente}', [AdminAgentVenteController::class, 'show'])->name('show');
             Route::post('/{agentVente}/toggle-actif', [AdminAgentVenteController::class, 'toggleActif'])->name('toggle-actif');
             Route::delete('/{agentVente}', [AdminAgentVenteController::class, 'destroy'])->name('destroy');
