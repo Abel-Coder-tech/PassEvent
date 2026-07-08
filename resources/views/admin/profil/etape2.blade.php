@@ -18,6 +18,20 @@
     .wizard-step .done .num { background: #2e7d4f; }
     .wizard-step .connector { width: 24px; height: 2px; background: #e0dde3; }
     .wizard-step .connector.done { background: #2e7d4f; }
+    .type-card { border: 2px solid #e0dde3; border-radius: 14px; padding: 1.25rem 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; height: 100%; }
+    .type-card:hover { border-color: #9972B0; background: #faf8fb; }
+    .type-card.selected { border-color: #542680; background: #f5f0f9; }
+    .type-card .icon { font-size: 1.5rem; color: #542680; margin-bottom: 0.4rem; }
+    .type-card .name { font-weight: 700; font-size: 0.85rem; color: #1d1d1f; margin-bottom: 0.2rem; }
+    .type-card .desc { font-size: 0.72rem; color: #6c757d; line-height: 1.3; }
+    input[type="radio"] { display: none; }
+    .toggle-group { display: flex; gap: 0.5rem; }
+    .toggle-btn { flex: 1; text-align: center; padding: 0.5rem 0.3rem; border-radius: 10px; border: 1.5px solid #e0dde3; cursor: pointer; font-weight: 600; font-size: 0.78rem; background: #fff; transition: 0.2s; color: #495057; }
+    .toggle-btn:hover { border-color: #9972B0; }
+    .toggle-btn.active { background: #f5f0f9; border-color: #542680; color: #542680; }
+    .toggle-btn input { display: none; }
+    .doc-info { background: #f8f6f9; border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.82rem; color: #495057; }
+    .doc-info i { color: #542680; margin-right: 0.35rem; }
 </style>
 <div class="page-content">
     <div class="wizard-card">
