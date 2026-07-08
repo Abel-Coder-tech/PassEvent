@@ -1,9 +1,14 @@
 ﻿@extends('layouts.public')
 
-@section('title', 'PaxEvent — Billetterie en ligne 100% Bénin')
-@section('description', 'PaxEvent — Billetterie en ligne 100% Bénin. Achetez et vendez vos billets d\'événements en toute simplicité et sécurité.')
-@section('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')
-@section('og_description', 'Billetterie en ligne 100% Bénin. Solution rapide et sécurisée pour gérer vos événements et vendre vos billets en ligne.')
+@section('title', 'PaxEvent - Billeterie en ligne au Bénin')
+@section('description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')
+@section('og_title', 'PaxEvent - Billeterie en ligne au Bénin')
+@section('og_description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')
+@php
+    $categories = ['Festival', 'Concert', 'Conférence', 'Soirée'];
+@endphp
+
+@section('og_image', asset('images/image_heros.jpeg'))
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
@@ -26,6 +31,11 @@
                 <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez vos tickets en quelques clics</h1>
                 <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.</p>
                 <p class="hero-features align-items-center justify-content-center text-center">Billet électronique — Scan QR code — Paiement sécurisé</p>
+                <div class="hero-categories">
+                    @foreach($categories as $cat)
+                        <span class="hero-cat-chip">{{ $cat }}</span>
+                    @endforeach
+                </div>
                 <div class="hero-actions">
                     <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
                         Acheter un ticket <i class="bi bi-arrow-right ms-1"></i>
@@ -205,15 +215,30 @@
         transform: translateY(-2px);
     }
 
-    .hero-features {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #542680;
+    .hero-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
         margin: -0.5rem 0 1.5rem;
-        letter-spacing: 0.3px;
-        animation: heroFadeUp 0.6s ease 0.3s both;
+        animation: heroFadeUp 0.6s ease 0.35s both;
     }
-    .hero-features::before {
+    .hero-cat-chip {
+        display: inline-flex;
+        padding: 0.3rem 1rem;
+        background: rgba(84,38,128,0.06);
+        border: 1px solid rgba(84,38,128,0.15);
+        border-radius: 20px;
+        color: #542680;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.2s;
+    }
+    .hero-cat-chip:hover {
+        background: rgba(84,38,128,0.12);
+        transform: translateY(-1px);
+    }
+    .hero-features {
         content: '';
         display: inline-block;
         width: 8px;
@@ -305,6 +330,7 @@
         .hero-stats { justify-content: center; }
         .hero-chip { margin-left: auto; margin-right: auto; }
         .hero-features { text-align: center; margin-left: auto; margin-right: auto; }
+        .hero-categories { justify-content: center; }
         .hero-illustration {
             width: 300px;
             height: 300px;
