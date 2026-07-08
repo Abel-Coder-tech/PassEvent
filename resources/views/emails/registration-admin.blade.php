@@ -39,7 +39,7 @@
             </p>
         </div>
         <div class="footer">
-            <p>PaxEvent &mdash; Billetterie intelligente</p>
+            <p>PaxEvent &mdash; Billetterie en ligne 100% Bénin</p>
         </div>
     </div>
 </body>

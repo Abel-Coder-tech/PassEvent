@@ -29,7 +29,7 @@
             <p style="font-size: 13px; color: #6c757d;">L'équipe PaxEvent</p>
         </div>
         <div class="footer">
-            <p>PaxEvent &mdash; Billetterie intelligente pour vos événements au Bénin</p>
+            <p>PaxEvent &mdash; Billetterie en ligne 100% Bénin</p>
         </div>
     </div>
 </body>

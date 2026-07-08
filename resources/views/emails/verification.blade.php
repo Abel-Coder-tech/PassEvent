@@ -62,7 +62,7 @@
             <p style="font-size:13px; color:#6c757d;">Si vous n'avez pas créé de compte, ignorez cet email.</p>
         </div>
         <div class="footer">
-            <p>PaxEvent — Billetterie intelligente</p>
+            <p>PaxEvent — Billetterie en ligne 100% Bénin</p>
         </div>
     </div>
 </body>

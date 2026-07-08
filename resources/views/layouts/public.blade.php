@@ -8,11 +8,11 @@
     <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'PaxEvent — Billetterie en ligne')</title>
-    <meta name="description" content="@yield('description', 'PaxEvent, la plateforme de billetterie en ligne au Bénin. Achetez vos billets et gérez vos événements en toute simplicité.')">
+    <title>@yield('title', 'PaxEvent — Billetterie en ligne 100% Bénin')</title>
+    <meta name="description" content="@yield('description', 'PaxEvent — Billetterie en ligne 100% Bénin. Achetez et vendez vos billets événementiels en toute simplicité.')">
 
-    <meta property="og:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne')">
-   <meta property="og:description" content="@yield('og_description', 'Billetterie en ligne 100% Bénin. La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.')">
+    <meta property="og:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
+    <meta property="og:description" content="@yield('og_description', 'Billetterie en ligne 100% Bénin. Solution rapide et sécurisée pour gérer vos événements et vendre vos billets en ligne.')">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
 
@@ -20,8 +20,8 @@
     <meta property="og:site_name" content="PaxEvent">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne')">
-    <meta name="twitter:description" content="@yield('og_description', 'Billetterie en ligne simple et sécurisée au Bénin.')">
+    <meta name="twitter:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
+    <meta name="twitter:description" content="@yield('og_description', 'Billetterie en ligne 100% Bénin. Solution rapide et sécurisée.')">
     <meta name="twitter:image" content="@yield('og_image', asset('images/og-image.jpg'))">
 
     @stack('meta')

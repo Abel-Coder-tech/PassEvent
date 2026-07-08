@@ -238,7 +238,7 @@
         </div>
 
         <div class="footer">
-            <p>PaxEvent &mdash; Billetterie intelligente pour vos &eacute;v&eacute;nements au B&eacute;nin</p>
+            <p>PaxEvent &mdash; Billetterie en ligne 100% B&eacute;nin</p>
             <p style="margin-top: 4px;"><a href="{{ url('/aide') }}">Centre d'aide</a></p>
         </div>
     </div>
