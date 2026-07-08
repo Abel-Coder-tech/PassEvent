@@ -21,9 +21,8 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <span class="aide-hero-chip">Guide utilisateurs</span>
+                <span class="aide-hero-chip">GUIDE UTILISATEURS</span>
                 <h1 class="aide-hero-title">Comment ça marche ?</h1>
-                <span class="aide-faq-chip" style="margin-bottom:0.5rem;">POUR UTILISATEUR</span>
                 <p class="aide-hero-sub" style="color:var(--accent);">04 étapes simples pour obtenir rapidement vos tickets !</p>
             </div>
         </div>
