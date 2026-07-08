@@ -41,9 +41,27 @@ class DashboardController extends Controller
             ->where('statut_paiement', 'payé')
             ->sum('montant');
 
+        $mobileRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->where('methode_paiement', '!=', 'cash')
+            ->sum('montant');
+
+        $cashRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->where('methode_paiement', 'cash')
+            ->sum('montant');
+
         $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
         $commission = round($recettesTotales * $commissionPct / 100, 2);
         $recettesNettes = $recettesTotales - $commission;
+
+        if ($recettesTotales > 0) {
+            $partMobile = $mobileRecettes / $recettesTotales;
+        } else {
+            $partMobile = 0;
+        }
+        $commissionMobile = round($commission * $partMobile, 2);
+        $retirable = $mobileRecettes - $commissionMobile;
 
         $ticketsScannes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('utilise', true)
@@ -168,8 +186,11 @@ class DashboardController extends Controller
             'evenementsActifs',
             'ticketsVendus',
             'recettesTotales',
+            'mobileRecettes',
+            'cashRecettes',
             'commission',
             'recettesNettes',
+            'retirable',
             'commissionPct',
             'tauxScan',
             'ticketsScannes',

@@ -78,9 +78,45 @@
         <div class="col-6 col-lg-3">
             <div class="metric-card" style="border-top-color: var(--vert);">
                 <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-wallet2" style="color:var(--vert);"></i></div>
-                <div class="metric-label">Net encaissé</div>
-                <div class="metric-value" style="font-size:1.3rem;color:var(--vert);">{{ number_format($recettesNettes, 0, ',', ' ') }}</div>
+                <div class="metric-label">Net retirable (Mobile)</div>
+                <div class="metric-value" style="font-size:1.3rem;color:var(--vert);">{{ number_format($retirable, 0, ',', ' ') }}</div>
                 <div class="metric-subtitle">FCFA après commission</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Répartition Mobile / Espèces --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: #3498db;">
+                <div class="metric-icon" style="background: rgba(52,152,219,0.1);"><i class="bi bi-phone" style="color:#3498db;"></i></div>
+                <div class="metric-label">Paiements Mobile</div>
+                <div class="metric-value" style="font-size:1.2rem;color:#3498db;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Retirable via FedaPay</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: #f39c12;">
+                <div class="metric-icon" style="background: rgba(243,156,18,0.1);"><i class="bi bi-cash" style="color:#f39c12;"></i></div>
+                <div class="metric-label">Paiements Espèces</div>
+                <div class="metric-value" style="font-size:1.2rem;color:#f39c12;">{{ number_format($cashRecettes, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Déjà en votre possession</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-percent" style="color:var(--violet);"></i></div>
+                <div class="metric-label">Commission ({{ $commissionPct }}%)</div>
+                <div class="metric-value" style="font-size:1.2rem;color:var(--danger);">{{ number_format($commission, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Sur tous les tickets</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-cash-stack" style="color:var(--vert);"></i></div>
+                <div class="metric-label">Net total</div>
+                <div class="metric-value" style="font-size:1.2rem;color:var(--vert);">{{ number_format($recettesNettes, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Brut − Commission</div>
             </div>
         </div>
     </div>

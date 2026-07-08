@@ -413,6 +413,20 @@ class SuperAdminController extends Controller
         $totalTickets = $evenements->sum('tickets_vendus');
         $totalRecettes = $evenements->sum('recettes');
 
+        $ticketsQuery = Ticket::whereIn('evenement_id', $evenements->pluck('id'))->where('statut_paiement', 'payé');
+
+        $mobileRecettes = (clone $ticketsQuery)->where('methode_paiement', '!=', 'cash')->sum('montant');
+        $cashRecettes = (clone $ticketsQuery)->where('methode_paiement', 'cash')->sum('montant');
+
+        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
+        $commission = round($totalRecettes * $commissionPct / 100, 2);
+        $recettesNettes = $totalRecettes - $commission;
+        if ($totalRecettes > 0) {
+            $retirable = $mobileRecettes - round($commission * ($mobileRecettes / $totalRecettes), 2);
+        } else {
+            $retirable = 0;
+        }
+
         $aujourdhui = Ticket::whereIn('evenement_id', $evenements->pluck('id'))
             ->where('statut_paiement', 'payé')
             ->whereDate('date_achat', today())
@@ -435,7 +449,9 @@ class SuperAdminController extends Controller
         return view('superadmin.organisateur-show', compact(
             'user', 'evenements', 'totalTickets', 'totalRecettes',
             'aujourdhui', 'scansAujourdhui',
-            'agentsScan', 'agentsVente', 'tickets'
+            'agentsScan', 'agentsVente', 'tickets',
+            'mobileRecettes', 'cashRecettes', 'commissionPct',
+            'commission', 'recettesNettes', 'retirable'
         ));
     }
 
