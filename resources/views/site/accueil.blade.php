@@ -30,7 +30,7 @@
                 <span class="hero-chip">Billetterie en ligne 100% Bénin</span>
                 <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez vos tickets en quelques clics</h1>
                 <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.</p>
-                <p class="hero-features align-items-center justify-content-center text-center">Billet électronique — Scan QR code — Paiement sécurisé</p>
+
                 <div class="hero-categories">
                     @foreach($categories as $cat)
                         <span class="hero-cat-chip">{{ $cat }}</span>
