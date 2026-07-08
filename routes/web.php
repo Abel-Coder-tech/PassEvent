@@ -201,6 +201,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+    Route::prefix('profil')->name('profil.')->group(function () {
+        Route::get('/type', [\App\Http\Controllers\ProfilController::class, 'step2'])->name('step2');
+        Route::post('/type', [\App\Http\Controllers\ProfilController::class, 'postStep2'])->name('post-step2');
+        Route::get('/recapitulatif', [\App\Http\Controllers\ProfilController::class, 'recap'])->name('recap');
+        Route::post('/soumettre', [\App\Http\Controllers\ProfilController::class, 'submit'])->name('submit');
+    });
+
+    Route::prefix('parametres')->name('parametres.')->group(function () {
+        Route::get('/', [ParametresController::class, 'index'])->name('index');
+        Route::put('/profil', [ParametresController::class, 'profil'])->name('profil.update');
+        Route::delete('/avatar', [ParametresController::class, 'supprimerAvatar'])->name('avatar.delete');
+        Route::put('/securite', [ParametresController::class, 'securite'])->name('securite.update');
+        Route::put('/notifications', [ParametresController::class, 'notifications'])->name('notifications.update');
+        Route::put('/paiement', [ParametresController::class, 'paiement'])->name('paiement.update');
+        Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
+        Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
+    });
+});
+
+Route::middleware(['auth', 'profil_verifie'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('evenements', EvenementController::class);
 
@@ -215,7 +235,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
 
-        // Gestion des agents de scan
         Route::prefix('agents')->name('agents.')->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');
             Route::get('/creer', [AdminAgentController::class, 'create'])->name('create');
@@ -225,7 +244,6 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{agent}', [AdminAgentController::class, 'destroy'])->name('destroy');
         });
 
-        // Gestion des agents de vente
         Route::prefix('agents-vente')->name('agents-vente.')->group(function () {
             Route::get('/', [AdminAgentVenteController::class, 'index'])->name('index');
             Route::get('/creer', [AdminAgentVenteController::class, 'create'])->name('create');
@@ -265,24 +283,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/logs/{id}/detail', [LogController::class, 'detail'])->name('logs.detail');
     Route::post('/admin/logs/recuperer', [LogController::class, 'recuperer'])->name('logs.recuperer');
 
-    Route::prefix('profil')->name('profil.')->group(function () {
-        Route::get('/type', [\App\Http\Controllers\ProfilController::class, 'step2'])->name('step2');
-        Route::post('/type', [\App\Http\Controllers\ProfilController::class, 'postStep2'])->name('post-step2');
-        Route::get('/recapitulatif', [\App\Http\Controllers\ProfilController::class, 'recap'])->name('recap');
-        Route::post('/soumettre', [\App\Http\Controllers\ProfilController::class, 'submit'])->name('submit');
-    });
-
-    Route::prefix('parametres')->name('parametres.')->group(function () {
-        Route::get('/', [ParametresController::class, 'index'])->name('index');
-        Route::put('/profil', [ParametresController::class, 'profil'])->name('profil.update');
-        Route::delete('/avatar', [ParametresController::class, 'supprimerAvatar'])->name('avatar.delete');
-        Route::put('/securite', [ParametresController::class, 'securite'])->name('securite.update');
-        Route::put('/notifications', [ParametresController::class, 'notifications'])->name('notifications.update');
-        Route::put('/paiement', [ParametresController::class, 'paiement'])->name('paiement.update');
-        Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
-        Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
-    });
-
     Route::get('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'index'])->name('admin.retraits.index');
     Route::post('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'store'])->name('admin.retraits.store');
 
@@ -292,11 +292,8 @@ Route::middleware('auth')->group(function () {
     });
     Route::post('/tickets/{ticket}/annuler-remboursement', [RemboursementController::class, 'annulerRemboursement'])->name('tickets.annuler-remboursement');
 
-    // Routes globales pour les codes promo
     Route::get('/admin/codes-promos', [CodePromoController::class, 'globalIndex'])->name('admin.codes-promos.index');
     Route::post('/admin/codes-promos', [CodePromoController::class, 'store'])->name('admin.codes-promos.store');
     Route::delete('/admin/codes-promos/{codePromo}', [CodePromoController::class, 'destroy'])->name('admin.codes-promos.destroy');
     Route::get('/admin/codes-promos/export', [CodePromoController::class, 'export'])->name('admin.codes-promos.export');
-
-    
 });

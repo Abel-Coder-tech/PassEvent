@@ -917,11 +917,11 @@
     </div>
 
     @if(session('success'))
-        <script>document.addEventListener('DOMContentLoaded',function(){showToast('success',{{ Js::from(session('success')) }});});</script>
+        <script>document.addEventListener('DOMContentLoaded',function(){showToast('success',{!! Js::from(session('success')) !!});});</script>
     @endif
 
     @if(session('error'))
-        <script>document.addEventListener('DOMContentLoaded',function(){showToast('error',{{ Js::from(session('error')) }});});</script>
+        <script>document.addEventListener('DOMContentLoaded',function(){showToast('error',{!! Js::from(session('error')) !!});});</script>
     @endif
     @endauth
 
