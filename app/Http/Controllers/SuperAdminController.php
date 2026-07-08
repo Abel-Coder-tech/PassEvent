@@ -190,6 +190,24 @@ class SuperAdminController extends Controller
         return view('superadmin.notifications', compact('messages'));
     }
 
+    public function lireNotification(Message $message)
+    {
+        if ($message->user_id !== null) {
+            abort(403);
+        }
+        $message->update(['lu' => true]);
+        return response()->json(['success' => true]);
+    }
+
+    public function supprimerNotification(Message $message)
+    {
+        if ($message->user_id !== null) {
+            abort(403);
+        }
+        $message->delete();
+        return back()->with('success', 'Notification supprimée.');
+    }
+
     public function parametres()
     {
         return view('superadmin.parametres');
