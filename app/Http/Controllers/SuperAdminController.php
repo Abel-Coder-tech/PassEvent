@@ -415,8 +415,8 @@ class SuperAdminController extends Controller
 
         $ticketsQuery = Ticket::whereIn('evenement_id', $evenements->pluck('id'))->where('statut_paiement', 'payé');
 
-        $mobileRecettes = (clone $ticketsQuery)->where('methode_paiement', '!=', 'cash')->sum('montant');
-        $cashRecettes = (clone $ticketsQuery)->where('methode_paiement', 'cash')->sum('montant');
+        $mobileRecettes = (clone $ticketsQuery)->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+        $cashRecettes = (clone $ticketsQuery)->whereIn('methode_paiement', ['cash', 'especes'])->sum('montant');
 
         $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
         $commission = round($totalRecettes * $commissionPct / 100, 2);

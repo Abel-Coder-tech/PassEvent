@@ -43,12 +43,12 @@ class DashboardController extends Controller
 
         $mobileRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
-            ->where('methode_paiement', '!=', 'cash')
+            ->whereNotIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
 
         $cashRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
-            ->where('methode_paiement', 'cash')
+            ->whereIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
 
         $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
