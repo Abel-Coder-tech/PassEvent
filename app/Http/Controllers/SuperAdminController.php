@@ -279,7 +279,6 @@ class SuperAdminController extends Controller
             'telephone' => 'nullable|string|max:20',
             'organisation' => 'nullable|string|max:255',
             'type' => 'nullable|string|in:universitaire,professionnel',
-            'description' => 'nullable|string|max:1000',
         ]);
         $data['mot_de_passe'] = bcrypt($data['mot_de_passe']);
         $data['role'] = 'admin';
@@ -290,7 +289,7 @@ class SuperAdminController extends Controller
 
     public function approuverOrganisateur(User $user)
     {
-        if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
+        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
@@ -310,13 +309,13 @@ class SuperAdminController extends Controller
 
     public function rejeterOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'corrections_demandees'])) {
+        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
         $request->validate(['motif' => 'required|string|max:2000']);
 
-        $user->update(['statut' => 'bloque']);
+        $user->update(['statut' => 'rejete']);
 
         Mail::to($user->email)->send(new RegistrationRejected($user, $request->motif));
 
@@ -332,7 +331,7 @@ class SuperAdminController extends Controller
 
     public function demanderCorrectionsOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || $user->statut !== 'en_attente') {
+        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 

@@ -74,16 +74,21 @@
                     <td>@if($org->type)<span class="sa-badge sa-badge-info">{{ ucfirst($org->type) }}</span>@else-@endif</td>
                     <td>{{ $org->organisation ?? '-' }}</td>
                     <td>
-                        @if($org->statut === 'en_attente')
+                        @php $st = $org->statut; @endphp
+                        @if($st === 'en_attente')
                             <span class="sa-badge sa-badge-warning">En attente</span>
-                        @elseif($org->statut === 'actif')
+                        @elseif($st === 'actif')
                             <span class="sa-badge sa-badge-success">Actif</span>
-                        @elseif($org->statut === 'corrections_demandees')
+                        @elseif($st === 'incomplet')
+                            <span class="sa-badge sa-badge-secondary">Incomplet</span>
+                        @elseif($st === 'corrections_demandees')
                             <span class="sa-badge sa-badge-warning" style="background:rgba(237,173,8,0.12);color:#8b6914;">Corrections demandées</span>
-                        @elseif($org->statut === 'bloque')
+                        @elseif($st === 'rejete')
+                            <span class="sa-badge sa-badge-danger">Rejeté</span>
+                        @elseif($st === 'bloque')
                             <span class="sa-badge sa-badge-danger">Bloqué</span>
                         @else
-                            <span class="sa-badge sa-badge-secondary">{{ $org->statut }}</span>
+                            <span class="sa-badge sa-badge-secondary">{{ $st }}</span>
                         @endif
                     </td>
                     <td>{{ $org->evenements_count }}</td>
@@ -98,7 +103,7 @@
                                 onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
                                 <i class="bi bi-info-circle"></i>
                             </button>
-                            @if($org->statut === 'en_attente')
+                            @if(in_array($org->statut, ['en_attente', 'incomplet']))
                                 <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>

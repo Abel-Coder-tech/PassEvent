@@ -93,7 +93,7 @@
         @error('avatar') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <button type="submit" class="btn-primary">Suivant</button>
-    <a href="{{ route('inscriptions.previous', 0) }}" class="btn-secondary">Précédent</a>
+    <button type="submit" class="btn-primary">Créer mon compte</button>
+    <a href="{{ route('inscriptions.organisateur') }}" class="btn-secondary">Précédent</a>
 </form>
 @endsection

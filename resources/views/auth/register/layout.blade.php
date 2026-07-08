@@ -116,50 +116,35 @@
         background: #e0dde3; margin: 0 0.5rem; flex-shrink: 0;
     }
     .step-connector.done { background: #2e7d4f; }
+    .steps-bar-card {
+        display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    }
 </style>
 @endsection
 
 @section('content')
-    @hasSection('step')
-    @php
-        $allSteps = [
-            0 => 'Compte',
-            1 => 'Identité',
-            2 => 'Organisation',
-            3 => 'Récapitulatif',
-        ];
-        $current = (int) $__env->yieldContent('step');
-    @endphp
-    <div class="steps-bar">
-        @foreach($allSteps as $i => $label)
-            @if($i > 0)
-                <div class="step-connector {{ $i <= $current ? 'done' : '' }}"></div>
-            @endif
-            @if($i < $current)
-                <a href="{{ route('inscriptions.previous', $i) }}" class="step-item done" style="text-decoration:none;">
-                    <span class="step-num"><i class="bi bi-check" style="font-size:0.7rem;"></i></span>
-                    {{ $label }}
-                </a>
-            @elseif($i === $current)
-                <div class="step-item active">
-                    <span class="step-num">{{ $i + 1 }}</span>
-                    {{ $label }}
-                </div>
-            @else
-                <div class="step-item">
-                    <span class="step-num">{{ $i + 1 }}</span>
-                    {{ $label }}
-                </div>
-            @endif
-        @endforeach
-    </div>
-    @endif
-
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6 col-xl-5">
                 <div class="card-register">
-                    <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo" style="max-width:150px;height:auto;display:block;margin:0 auto 1rem;">
+                    @hasSection('step')
+                    @php
+                        $allSteps = [0 => 'Compte', 1 => 'Identité'];
+                        $current = (int) $__env->yieldContent('step');
+                    @endphp
+                    <div class="steps-bar-card">
+                        @foreach($allSteps as $i => $label)
+                            @if($i > 0)
+                                <div class="step-connector {{ $i <= $current ? 'done' : '' }}"></div>
+                            @endif
+                            <div class="step-item {{ $i < $current ? 'done' : ($i === $current ? 'active' : '') }}">
+                                <span class="step-num">{!! $i < $current ? '<i class="bi bi-check" style="font-size:0.7rem;"></i>' : $i + 1 !!}</span>
+                                {{ $label }}
+                            </div>
+                        @endforeach
+                    </div>
+                    <hr style="margin:0.75rem 0 1.25rem;border-color:#f0eeec;">
+                    @endif
                     @hasSection('page-title')
                     <h1>@yield('page-title')</h1>
                     @endif

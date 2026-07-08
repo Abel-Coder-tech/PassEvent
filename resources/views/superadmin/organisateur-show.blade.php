@@ -20,8 +20,12 @@
                 </div>
                 <h5 class="fw-bold">{{ $user->nom }}</h5>
                 <p class="text-muted small mb-2">{{ $user->email }}</p>
-                <span class="sa-badge sa-badge-{{ $user->statut === 'actif' ? 'success' : ($user->statut === 'bloque' ? 'danger' : 'warning') }} mb-2">
-                    {{ ucfirst($user->statut ?? 'actif') }}
+                @php
+                    $badgeMap = ['actif' => 'success', 'bloque' => 'danger', 'rejete' => 'danger', 'en_attente' => 'warning', 'corrections_demandees' => 'warning', 'incomplet' => 'secondary'];
+                    $labelMap = ['actif' => 'Actif', 'bloque' => 'Bloqué', 'rejete' => 'Rejeté', 'en_attente' => 'En attente', 'corrections_demandees' => 'Corrections demandées', 'incomplet' => 'Incomplet'];
+                @endphp
+                <span class="sa-badge sa-badge-{{ $badgeMap[$user->statut] ?? 'secondary' }} mb-2">
+                    {{ $labelMap[$user->statut] ?? ucfirst($user->statut) }}
                 </span>
                 @if($user->organisation)
                     <p class="small mb-0 mt-2"><i class="bi bi-building"></i> {{ $user->organisation }}</p>

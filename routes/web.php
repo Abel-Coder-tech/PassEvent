@@ -81,12 +81,6 @@ Route::prefix('inscription')->name('inscriptions.')->group(function () {
     Route::post('/renvoyer', [InscriptionController::class, 'resendOtp'])->name('resend-otp')->middleware('throttle:2,30');
     Route::get('/identite', [InscriptionController::class, 'step1'])->name('identity');
     Route::post('/identite', [InscriptionController::class, 'postStep1'])->name('post-identity');
-    Route::get('/organisation', [InscriptionController::class, 'step2'])->name('org');
-    Route::post('/organisation', [InscriptionController::class, 'postStep2'])->name('post-org');
-    Route::get('/recapitulatif', [InscriptionController::class, 'step3'])->name('recap');
-    Route::post('/confirmer', [InscriptionController::class, 'confirm'])->name('confirm');
-    Route::get('/confirmation', [InscriptionController::class, 'confirmation'])->name('confirmation');
-    Route::get('/precedent/{step}', [InscriptionController::class, 'previous'])->name('previous');
     Route::post('/resoumettre', [InscriptionController::class, 'resubmit'])->name('resubmit')->middleware('auth');
 });
 
@@ -270,6 +264,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
     Route::get('/admin/logs/{id}/detail', [LogController::class, 'detail'])->name('logs.detail');
     Route::post('/admin/logs/recuperer', [LogController::class, 'recuperer'])->name('logs.recuperer');
+
+    Route::prefix('profil')->name('profil.')->group(function () {
+        Route::get('/type', [\App\Http\Controllers\ProfilController::class, 'step2'])->name('step2');
+        Route::post('/type', [\App\Http\Controllers\ProfilController::class, 'postStep2'])->name('post-step2');
+        Route::get('/recapitulatif', [\App\Http\Controllers\ProfilController::class, 'recap'])->name('recap');
+        Route::post('/soumettre', [\App\Http\Controllers\ProfilController::class, 'submit'])->name('submit');
+    });
 
     Route::prefix('parametres')->name('parametres.')->group(function () {
         Route::get('/', [ParametresController::class, 'index'])->name('index');

@@ -39,7 +39,7 @@ Un code de vérification a été envoyé à&nbsp;:
 </p>
 
 <p class="back-link">
-    <a href="{{ route('inscriptions.previous', 0) }}"><i class="bi bi-arrow-left"></i> Modifier l'email</a>
+    <a href="{{ route('inscriptions.organisateur') }}"><i class="bi bi-arrow-left"></i> Modifier l'email</a>
 </p>
 @endsection
 

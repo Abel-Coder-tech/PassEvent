@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\RegistrationAdminNotification;
-use App\Mail\RegistrationPending;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class InscriptionController extends Controller
@@ -143,175 +141,44 @@ class InscriptionController extends Controller
             $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        $this->putReg(['identity' => $validated, 'step' => 2]);
-
-        return redirect()->route('inscriptions.org');
-    }
-
-    public function step2()
-    {
-        $reg = $this->getReg();
-        if (empty($reg['identity'])) {
-            return redirect()->route('inscriptions.identity');
-        }
-        return view('auth.register.step2', [
-            'type' => $reg['org_data']['type'] ?? null,
-            'data' => $reg['org_data'] ?? [],
-        ]);
-    }
-
-    public function postStep2(Request $request)
-    {
-        $reg = $this->getReg();
-        if (empty($reg['identity'])) {
-            return redirect()->route('inscriptions.identity');
-        }
-
-        $rules = [
-            'type' => 'required|in:universitaire,particulier,organisation',
-            'description' => 'nullable|string|max:2000',
-            'document_justificatif' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'signature' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-        ];
-
-        $type = $request->type;
-
-        if ($type === 'universitaire' || $type === 'organisation') {
-            $rules['organisation'] = 'required|string|max:255';
-        }
-
-        if ($type === 'organisation') {
-            $rules['type_detail'] = 'required|in:entreprise,association,club';
-        }
-
-        $validated = $request->validate($rules);
-
-        if ($request->hasFile('document_justificatif')) {
-            $validated['document_justificatif'] = $request->file('document_justificatif')
-                ->store('justificatifs', 'public');
-        }
-
-        if ($request->hasFile('signature')) {
-            $validated['signature'] = $request->file('signature')
-                ->store('signatures', 'public');
-        }
-
-        $this->putReg(['type' => $type, 'org_data' => $validated, 'step' => 3]);
-
-        return redirect()->route('inscriptions.recap');
-    }
-
-    public function step3()
-    {
-        $reg = $this->getReg();
-        if (empty($reg['org_data'])) {
-            return redirect()->route('inscriptions.org');
-        }
-        return view('auth.register.step3', ['reg' => $reg]);
-    }
-
-    public function confirm(Request $request)
-    {
-        $reg = $this->getReg();
-        if (empty($reg['org_data']) || empty($reg['type']) || empty($reg['email']) || empty($reg['identity'])) {
-            return redirect()->route('inscriptions.organisateur');
-        }
-
-        $request->validate(['cgu' => 'accepted']);
-
-        $identity = $reg['identity'];
-        $orgData = $reg['org_data'];
-
         $userData = [
-            'nom' => $identity['nom'],
+            'nom' => $validated['nom'],
             'email' => $reg['email'],
-            'telephone' => $identity['telephone'],
-            'type' => $reg['type'],
-            'avatar' => $identity['avatar'] ?? null,
-            'description' => $orgData['description'] ?? null,
-            'document_justificatif' => $orgData['document_justificatif'] ?? null,
-            'signature' => $orgData['signature'] ?? null,
+            'telephone' => $validated['telephone'],
+            'avatar' => $validated['avatar'] ?? null,
             'role' => 'admin',
-            'statut' => 'en_attente',
+            'statut' => 'incomplet',
         ];
 
         if ($reg['from_google'] ?? false) {
-            $userData['mot_de_passe'] = Hash::make(\Illuminate\Support\Str::random(32));
+            $userData['mot_de_passe'] = Hash::make(Str::random(32));
         } else {
-            $userData['mot_de_passe'] = Hash::make($identity['mot_de_passe']);
-        }
-
-        if ($reg['type'] === 'universitaire' || $reg['type'] === 'organisation') {
-            $userData['organisation'] = $orgData['organisation'];
-        }
-
-        if ($reg['type'] === 'organisation') {
-            $userData['type_detail'] = $orgData['type_detail'];
+            $userData['mot_de_passe'] = Hash::make($validated['mot_de_passe']);
         }
 
         $user = User::create($userData);
 
-        Mail::to($user->email)->send(new RegistrationPending($user));
+        $this->regen();
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
+    }
+
+    public function resubmit(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || !in_array($user->statut, ['corrections_demandees', 'rejete'])) {
+            return redirect()->route('dashboard')->with('error', 'Action non autorisée.');
+        }
+
+        $user->update(['statut' => 'en_attente']);
 
         $superAdmins = User::where('role', 'super_admin')->get();
         foreach ($superAdmins as $sa) {
             Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
         }
 
-        $this->putReg(['step' => 'done']);
-
-        return redirect()->route('inscriptions.confirmation');
-    }
-
-    public function confirmation()
-    {
-        $reg = $this->getReg();
-        if (($reg['step'] ?? null) !== 'done') {
-            return redirect()->route('inscriptions.organisateur');
-        }
-
-        $email = $reg['email'] ?? '';
-        $this->regen();
-
-        return view('auth.register.confirmation', ['email' => $email]);
-    }
-
-    public function resubmit(Request $request)
-    {
-        $user = auth()->user();
-        if (!$user || $user->statut !== 'corrections_demandees') {
-            return redirect()->route('dashboard')->with('error', 'Action non autorisée.');
-        }
-
-        $user->update(['statut' => 'en_attente']);
-
-        $superAdmins = User::where('role',  'super_admin')->get();
-        foreach ($superAdmins as $sa) {
-            Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
-        }
-
         return redirect()->route('dashboard')->with('success', 'Votre profil a été soumis à nouveau pour validation.');
-    }
-
-    public function previous(int$step)
-    {
-        $reg = $this->getReg();
-        $currentStep = $reg['step'] ?? 0;
-
-        if ($step == 0) {
-            $this->regen();
-            return redirect()->route('inscriptions.organisateur');
-        }
-        if ($step == 1 && $currentStep >= 1) {
-            return redirect()->route('inscriptions.identity');
-        }
-        if ($step == 2 && $currentStep >= 2) {
-            return redirect()->route('inscriptions.org');
-        }
-        if ($step == 3 && $currentStep >= 3) {
-            return redirect()->route('inscriptions.recap');
-        }
-
-        return redirect()->route('inscriptions.organisateur');
     }
 }
