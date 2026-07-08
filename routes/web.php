@@ -115,6 +115,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/corrections', [SuperAdminController::class, 'demanderCorrectionsOrganisateur'])->name('organisateurs.corrections');
         Route::post('/organisateurs/{user}/supprimer', [SuperAdminController::class, 'supprimerOrganisateur'])->name('organisateurs.supprimer');
         Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
+        Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
         Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');
         Route::post('/evenements/{evenement}/suspendre', [SuperAdminController::class, 'suspendreEvenement'])->name('evenements.suspendre');
         Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');
@@ -132,6 +133,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/retraits/{withdrawal}/rejeter', [SuperAdminController::class, 'rejeterRetrait'])->name('retraits.rejeter');
         Route::get('/logs', [SuperAdminController::class, 'logsSysteme'])->name('logs');
         Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
+        Route::get('/remboursements', [SuperAdminController::class, 'demandesRemboursement'])->name('remboursements.demandes');
+        Route::get('/remboursements/{demande}', [SuperAdminController::class, 'voirDemandeRemboursement'])->name('remboursements.voir');
+        Route::post('/remboursements/{demande}/approuver', [SuperAdminController::class, 'approuverDemandeRemboursement'])->name('remboursements.approuver');
+        Route::post('/remboursements/{demande}/confirmer', [SuperAdminController::class, 'confirmerRemboursement'])->name('remboursements.confirmer');
+        Route::post('/remboursements/{demande}/refuser', [SuperAdminController::class, 'refuserDemandeRemboursement'])->name('remboursements.refuser');
     });
 });
 // Routes globales Spatie Sitemap
@@ -279,8 +285,8 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('admin/remboursements')->name('admin.remboursements.')->group(function () {
         Route::get('/', [RemboursementController::class, 'index'])->name('index');
+        Route::post('/demander', [RemboursementController::class, 'demander'])->name('demander');
     });
-    Route::post('/tickets/{ticket}/rembourser', [RemboursementController::class, 'rembourser'])->name('tickets.rembourser');
     Route::post('/tickets/{ticket}/annuler-remboursement', [RemboursementController::class, 'annulerRemboursement'])->name('tickets.annuler-remboursement');
 
     // Routes globales pour les codes promo

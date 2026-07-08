@@ -91,9 +91,12 @@
                     <td style="font-size:0.75rem;">{{ $org->created_at->isoFormat('D MMM YYYY') }}</td>
                     <td style="white-space:nowrap;">
                         <div class="d-flex flex-nowrap gap-1">
-                            <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les détails"
-                                onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
+                            <a href="{{ route('superadmin.organisateurs.voir', $org) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.78rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le détail">
                                 <i class="bi bi-eye"></i>
+                            </a>
+                            <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les infos"
+                                onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
+                                <i class="bi bi-info-circle"></i>
                             </button>
                             @if($org->statut === 'en_attente')
                                 <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">

@@ -12,6 +12,9 @@ use App\Models\Log;
 use App\Models\Message;
 use App\Models\Newsletter;
 use App\Models\Withdrawal;
+use App\Models\Agent;
+use App\Models\AgentVente;
+use App\Models\DemandeRemboursement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -377,6 +380,47 @@ class SuperAdminController extends Controller
         return back()->with('success', "Email envoyé à {$user->nom}.");
     }
 
+    public function voirOrganisateur(User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $evenements = Evenement::where('user_id', $user->id)
+            ->withCount(['tickets as tickets_vendus' => fn($q) => $q->where('statut_paiement', 'payé')])
+            ->withSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant')
+            ->orderByDesc('date_event')
+            ->get();
+
+        $totalTickets = $evenements->sum('tickets_vendus');
+        $totalRecettes = $evenements->sum('recettes');
+
+        $aujourdhui = Ticket::whereIn('evenement_id', $evenements->pluck('id'))
+            ->where('statut_paiement', 'payé')
+            ->whereDate('date_achat', today())
+            ->count();
+
+        $scansAujourdhui = Log::where('type_operation', 'scan')
+            ->whereDate('created_at', today())
+            ->whereHas('ticket', fn($q) => $q->whereIn('evenement_id', $evenements->pluck('id')))
+            ->count();
+
+        $agentsScan = Agent::whereIn('evenement_id', $evenements->pluck('id'))->count();
+        $agentsVente = AgentVente::whereIn('evenement_id', $evenements->pluck('id'))->count();
+
+        $tickets = Ticket::whereIn('evenement_id', $evenements->pluck('id'))
+            ->with('evenement', 'tarif')
+            ->where('statut_paiement', 'payé')
+            ->latest('date_achat')
+            ->paginate(50);
+
+        return view('superadmin.organisateur-show', compact(
+            'user', 'evenements', 'totalTickets', 'totalRecettes',
+            'aujourdhui', 'scansAujourdhui',
+            'agentsScan', 'agentsVente', 'tickets'
+        ));
+    }
+
     public function retraits()
     {
         $retraits = Withdrawal::with('user')
@@ -421,5 +465,202 @@ class SuperAdminController extends Controller
         ]);
 
         return back()->with('success', 'Retrait rejeté.');
+    }
+
+    public function demandesRemboursement()
+    {
+        $demandes = DemandeRemboursement::with('organisateur', 'evenement', 'tickets')
+            ->orderByRaw("FIELD(statut, 'en_attente', 'en_cours', 'rembourse', 'refuse')")
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        $stats = [
+            'en_attente' => DemandeRemboursement::where('statut', 'en_attente')->count(),
+            'en_cours' => DemandeRemboursement::where('statut', 'en_cours')->count(),
+            'total_montant' => DemandeRemboursement::whereIn('statut', ['en_attente', 'en_cours'])->sum('montant_total'),
+            'rembourse_mois' => DemandeRemboursement::where('statut', 'rembourse')
+                ->whereMonth('traitee_le', now()->month)->sum('montant_total'),
+        ];
+
+        return view('superadmin.remboursements.index', compact('demandes', 'stats'));
+    }
+
+    public function voirDemandeRemboursement(DemandeRemboursement $demande)
+    {
+        $demande->load('organisateur', 'evenement', 'tickets.tarif', 'traiteePar');
+        $soldeOrganisateur = $demande->organisateur->solde;
+        return view('superadmin.remboursements.show', compact('demande', 'soldeOrganisateur'));
+    }
+
+    public function approuverDemandeRemboursement(DemandeRemboursement $demande, Request $request)
+    {
+        if ($demande->statut !== 'en_attente') {
+            return back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+
+        $solde = $demande->organisateur->solde;
+        if ($solde < $demande->montant_total) {
+            return back()->with('error', 'Solde insuffisant de l\'organisateur ('
+                . number_format($solde, 0, ',', ' ') . ' F) pour couvrir ce remboursement de '
+                . number_format($demande->montant_total, 0, ',', ' ') . ' F.');
+        }
+
+        $validated = $request->validate([
+            'notes_admin' => 'nullable|string|max:1000',
+        ]);
+
+        $demande->update([
+            'statut' => 'en_cours',
+            'notes_admin' => $validated['notes_admin'] ?? null,
+            'traitee_par' => auth('superadmin')->id(),
+        ]);
+
+        Log::create([
+            'type_operation' => 'remboursement',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'action' => 'approbation_remboursement',
+                'demande_id' => $demande->id,
+                'montant' => $demande->montant_total,
+                'par' => auth('superadmin')->user()->email,
+            ]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'Demande approuvée. Le superadmin peut maintenant procéder au remboursement sur FedaPay puis confirmer.');
+    }
+
+    public function confirmerRemboursement(DemandeRemboursement $demande)
+    {
+        if ($demande->statut !== 'en_cours') {
+            return back()->with('error', 'Cette demande doit d\'abord être en cours.');
+        }
+
+        $demande->load('tickets', 'organisateur', 'evenement');
+
+        DB::beginTransaction();
+        try {
+            foreach ($demande->tickets as $ticket) {
+                $ticket->update(['statut_paiement' => 'remboursé']);
+
+                Log::create([
+                    'ticket_id' => $ticket->id,
+                    'type_operation' => 'remboursement',
+                    'details' => json_encode([
+                        'action' => 'remboursement_effectue',
+                        'demande_id' => $demande->id,
+                        'montant' => $ticket->montant,
+                        'transaction_id' => $ticket->transaction_id,
+                        'par' => auth('superadmin')->user()->email,
+                    ]),
+                    'ip' => request()->ip(),
+                ]);
+            }
+
+            $demande->update([
+                'statut' => 'rembourse',
+                'traitee_le' => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Erreur lors de la confirmation du remboursement.');
+        }
+
+        $nomsTickets = $demande->tickets->pluck('code_unique')->implode(', ');
+        $nb = $demande->tickets->count();
+        $montant = number_format($demande->montant_total, 0, ',', ' ');
+
+        foreach ($demande->tickets as $ticket) {
+            try {
+                Mail::raw(
+                    "Votre ticket pour \"{$ticket->evenement->titre}\" a été remboursé.\n\n" .
+                    "Code ticket : {$ticket->code_unique}\n" .
+                    "Montant remboursé : " . number_format($ticket->montant, 0, ',', ' ') . " F\n" .
+                    "Motif : {$demande->motif}\n\n" .
+                    "Si vous avez des questions, contactez l'organisateur.",
+                    function ($m) use ($ticket) {
+                        $m->to($ticket->email_acheteur)
+                          ->subject("[PaxEvent] Remboursement effectué - {$ticket->evenement->titre}");
+                    }
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Email remboursement non envoyé à ' . $ticket->email_acheteur);
+            }
+        }
+
+        try {
+            Mail::raw(
+                "Bonjour {$demande->organisateur->nom},\n\n" .
+                "La demande de remboursement pour {$demande->evenement?->titre} a été confirmée.\n" .
+                "Tickets concernés : {$nomsTickets}\n" .
+                "Montant total : {$montant} F\n\n" .
+                "Le remboursement a été traité via FedaPay.",
+                function ($m) use ($demande) {
+                    $m->to($demande->organisateur->email)
+                      ->subject("[PaxEvent] Remboursement confirmé - {$demande->evenement?->titre}");
+                }
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Email organisateur remboursement non envoyé');
+        }
+
+        Message::create([
+            'user_id' => null,
+            'evenement_id' => $demande->evenement_id,
+            'nom_complet' => auth('superadmin')->user()->nom,
+            'email' => auth('superadmin')->user()->email,
+            'objet' => 'Remboursement traité - ' . ($demande->evenement?->titre ?? ''),
+            'message' => "Remboursement de {$montant} F confirmé pour {$nb} ticket(s).\nTraitée par " . auth('superadmin')->user()->email,
+        ]);
+
+        return redirect()->route('superadmin.remboursements.demandes')
+            ->with('success', "Remboursement confirmé. {$nb} ticket(s) remboursé(s) pour {$montant} F. Les acheteurs ont été notifiés par email.");
+    }
+
+    public function refuserDemandeRemboursement(DemandeRemboursement $demande, Request $request)
+    {
+        if ($demande->statut !== 'en_attente') {
+            return back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+
+        $validated = $request->validate([
+            'motif_refus' => 'required|string|min:5|max:2000',
+        ]);
+
+        $demande->update([
+            'statut' => 'refuse',
+            'notes_admin' => $validated['motif_refus'],
+            'traitee_par' => auth('superadmin')->id(),
+            'traitee_le' => now(),
+        ]);
+
+        try {
+            Mail::raw(
+                "Bonjour {$demande->organisateur->nom},\n\n" .
+                "Votre demande de remboursement pour {$demande->evenement?->titre} a été refusée.\n\n" .
+                "Motif : {$validated['motif_refus']}\n\n" .
+                "Contactez le superadmin pour plus d'informations.",
+                function ($m) use ($demande) {
+                    $m->to($demande->organisateur->email)
+                      ->subject("[PaxEvent] Demande de remboursement refusée");
+                }
+            );
+        } catch (\Exception $e) {}
+
+        Log::create([
+            'type_operation' => 'remboursement',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'action' => 'refus_remboursement',
+                'demande_id' => $demande->id,
+                'motif' => $validated['motif_refus'],
+                'par' => auth('superadmin')->user()->email,
+            ]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'Demande de remboursement refusée.');
     }
 }

@@ -66,4 +66,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Withdrawal::class);
     }
+
+    public function demandesRemboursement(): HasMany
+    {
+        return $this->hasMany(DemandeRemboursement::class, 'organisateur_id');
+    }
+
+    public function getSoldeAttribute(): float
+    {
+        $evenementsIds = $this->evenements()->pluck('id');
+        $vendu = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'payé')->sum('montant');
+        $rembourse = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'remboursé')->sum('montant');
+        $enCours = DemandeRemboursement::where('organisateur_id', $this->id)
+            ->whereIn('statut', ['en_attente', 'en_cours'])
+            ->sum('montant_total');
+        return max(0, $vendu - $rembourse - $enCours);
+    }
 }

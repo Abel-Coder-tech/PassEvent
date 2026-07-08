@@ -176,7 +176,7 @@ class PaiementController extends Controller
             'status' => $status,
         ]);
 
-        if (in_array($source, ['agent_vente', 'vente_manuelle']) && $ticket->statut_paiement === 'en_attente') {
+        if ($ticket->statut_paiement === 'en_attente') {
             foreach ($groupTickets as $t) {
                 $t->delete();
             }
@@ -185,7 +185,7 @@ class PaiementController extends Controller
         $fallback = match($source) {
             'agent_vente' => route('agent-vente.dashboard'),
             'vente_manuelle' => route('ventes-manuelles.create'),
-            default => route('paiement.show', $ticket->id),
+            default => route('evenements.public.show', $ticket->evenement_id ?? 0),
         };
         return redirect()->to($fallback)
             ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');

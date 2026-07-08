@@ -506,6 +506,11 @@
                 @php $pendingRetraits = \App\Models\Withdrawal::where('status','en_attente')->count(); @endphp
                 @if($pendingRetraits > 0)<span class="sa-nav-badge">{{ $pendingRetraits }}</span>@endif
             </a>
+            <a href="{{ route('superadmin.remboursements.demandes') }}" class="sa-nav-link {{ request()->routeIs('superadmin.remboursements*') ? 'active' : '' }}">
+                <i class="bi bi-arrow-return-left"></i> Remboursements
+                @php $pendingRemb = \App\Models\DemandeRemboursement::where('statut','en_attente')->count(); @endphp
+                @if($pendingRemb > 0)<span class="sa-nav-badge">{{ $pendingRemb }}</span>@endif
+            </a>
             <a href="{{ route('superadmin.transactions') }}" class="sa-nav-link {{ request()->routeIs('superadmin.transactions') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Transactions
             </a>
