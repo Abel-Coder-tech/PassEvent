@@ -15,11 +15,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->statut !== 'actif') {
+        if ($user->statut !== 'actif' && $user->statut !== 'incomplet') {
             $message = '';
-            if ($user->statut === 'incomplet') {
-                $message = 'Finalisez la création de votre compte pour pouvoir créer et gérer des événements.';
-            } elseif ($user->statut === 'en_attente') {
+            if ($user->statut === 'en_attente') {
                 $message = 'Votre profil est en cours de validation par notre équipe. Ce processus prend généralement 12 à 24 heures.';
             } elseif ($user->statut === 'corrections_demandees') {
                 $message = 'Votre profil nécessite des corrections. Veuillez le modifier et le soumettre à nouveau.';

@@ -10,6 +10,18 @@
 @section('content')
 <div class="page-content">
 
+    @if(Auth::user()->statut === 'incomplet')
+    <div class="alert alert-warning d-flex align-items-center gap-3 flex-wrap" style="border:none;background:#fff3e0;border-radius:12px;padding:0.75rem 1rem;">
+        <div style="flex:1;">
+            <strong style="color:#8b6914;"><i class="bi bi-exclamation-triangle-fill me-1"></i> Profil incomplet</strong>
+            <span style="color:#6c5b3a;font-size:0.85rem;"> — Finalisez la création de votre compte pour créer des événements</span>
+        </div>
+        <a href="{{ route('profil.step2') }}" class="btn btn-sm" style="background:#542680;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            <i class="bi bi-arrow-right-circle me-1"></i> Compléter mon profil
+        </a>
+    </div>
+    @endif
+
     {{-- Actions rapides --}}
     <div class="row g-2 mb-4 align-items-center">
         <div class="col-md-6">

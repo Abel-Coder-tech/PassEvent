@@ -38,11 +38,18 @@ class EvenementController extends Controller
 
     public function create()
     {
+        if (Auth::user()->statut !== 'actif') {
+            return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
+        }
         return view('evenements.create');
     }
 
     public function store(Request $request)
     {
+        if (Auth::user()->statut !== 'actif') {
+            return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
+        }
+
         $gratuit = $request->boolean('gratuit');
         $estUniversitaire = Auth::user()->type === 'universitaire';
 

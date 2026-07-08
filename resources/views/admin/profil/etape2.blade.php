@@ -57,9 +57,9 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
                     <label class="type-card @if(old('type', $type) === 'universitaire') selected @endif" onclick="selectType(this, 'universitaire')">
-                        <div class="icon"><i class="bi bi-building-columns"></i></div>
+                        <div class="icon"><i class="bi bi-mortarboard-fill"></i></div>
                         <div class="name">Universitaire</div>
-                        <div class="desc">Université ou établissement scolaire</div>
+                        <div class="desc">Vous représentez une université ou un établissement scolaire</div>
                         <input type="radio" name="type" value="universitaire" @if(old('type', $type) === 'universitaire') checked @endif required>
                     </label>
                 </div>
@@ -67,7 +67,7 @@
                     <label class="type-card @if(old('type', $type) === 'particulier') selected @endif" onclick="selectType(this, 'particulier')">
                         <div class="icon"><i class="bi bi-person"></i></div>
                         <div class="name">Particulier</div>
-                        <div class="desc">Organisateur en nom propre</div>
+                        <div class="desc">Vous organisez des événements en votre nom propre</div>
                         <input type="radio" name="type" value="particulier" @if(old('type', $type) === 'particulier') checked @endif required>
                     </label>
                 </div>
@@ -75,7 +75,7 @@
                     <label class="type-card @if(old('type', $type) === 'organisation') selected @endif" onclick="selectType(this, 'organisation')">
                         <div class="icon"><i class="bi bi-building"></i></div>
                         <div class="name">Organisation</div>
-                        <div class="desc">Entreprise, association ou club</div>
+                        <div class="desc">Vous représentez une entreprise, une association ou un club</div>
                         <input type="radio" name="type" value="organisation" @if(old('type', $type) === 'organisation') checked @endif required>
                     </label>
                 </div>
