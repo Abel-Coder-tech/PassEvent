@@ -9,11 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PaxEvent — Billetterie en ligne 100% Bénin')</title>
-    <meta name="description" content="@yield('description', 'PaxEvent — Billetterie en ligne 100% Bénin. Achetez et vendez vos billets événementiels en toute simplicité.')">
-
+    <meta name="description" content="@yield('description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
+    
+    @php
+    $categories = ['Festival', 'Concert', 'Conférence', 'Soirée'];
+    @endphp
     <meta property="og:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
-    <meta property="og:description" content="@yield('og_description', 'Billetterie en ligne 100% Bénin. Solution rapide et sécurisée pour gérer vos événements et vendre vos billets en ligne.')">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:description" content="@yield('og_description','Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     <meta property="og:type" content="website">
     <meta property="og:image" content="@yield('og_image', asset('images/og-image.jpg'))">
     <meta property="og:image:width" content="1200">
@@ -24,7 +26,7 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
-    <meta name="twitter:description" content="@yield('og_description', 'Billetterie en ligne 100% Bénin. Solution rapide et sécurisée.')">
+    <meta name="twitter:description" content="@yield('og_description','Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     <meta name="twitter:image" content="@yield('og_image', asset('images/og-image.jpg'))">
 
     @stack('meta')
