@@ -35,9 +35,19 @@
                 @if($user->document_justificatif)
                     <div class="mt-3 pt-2 border-top">
                         <a href="{{ asset('storage/' . $user->document_justificatif) }}" target="_blank" class="btn btn-sm text-white fw-semibold" style="background:var(--sa-primary);border-radius:6px;text-decoration:none;">
-                            <i class="bi bi-eye me-1"></i> Voir le justificatif
+                            <i class="bi bi-eye me-1"></i> Justificatif
                         </a>
                         <a href="{{ asset('storage/' . $user->document_justificatif) }}" download class="btn btn-sm" style="border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#666;">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                @endif
+                @if($user->signature)
+                    <div class="mt-2">
+                        <a href="{{ asset('storage/' . $user->signature) }}" target="_blank" class="btn btn-sm text-white fw-semibold" style="background:var(--sa-primary);border-radius:6px;text-decoration:none;">
+                            <i class="bi bi-pen me-1"></i> Signature
+                        </a>
+                        <a href="{{ asset('storage/' . $user->signature) }}" download class="btn btn-sm" style="border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#666;">
                             <i class="bi bi-download"></i>
                         </a>
                     </div>

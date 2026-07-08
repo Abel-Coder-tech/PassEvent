@@ -171,6 +171,7 @@ class InscriptionController extends Controller
             'type' => 'required|in:universitaire,particulier,organisation',
             'description' => 'nullable|string|max:2000',
             'document_justificatif' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'signature' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
 
         $type = $request->type;
@@ -188,6 +189,11 @@ class InscriptionController extends Controller
         if ($request->hasFile('document_justificatif')) {
             $validated['document_justificatif'] = $request->file('document_justificatif')
                 ->store('justificatifs', 'public');
+        }
+
+        if ($request->hasFile('signature')) {
+            $validated['signature'] = $request->file('signature')
+                ->store('signatures', 'public');
         }
 
         $this->putReg(['type' => $type, 'org_data' => $validated, 'step' => 3]);
@@ -224,6 +230,7 @@ class InscriptionController extends Controller
             'avatar' => $identity['avatar'] ?? null,
             'description' => $orgData['description'] ?? null,
             'document_justificatif' => $orgData['document_justificatif'] ?? null,
+            'signature' => $orgData['signature'] ?? null,
             'role' => 'admin',
             'statut' => 'en_attente',
         ];

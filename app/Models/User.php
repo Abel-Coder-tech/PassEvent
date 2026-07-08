@@ -33,6 +33,7 @@ class User extends Authenticatable
         'type',
         'type_detail',
         'document_justificatif',
+        'signature',
     ];
 
     protected $hidden = [

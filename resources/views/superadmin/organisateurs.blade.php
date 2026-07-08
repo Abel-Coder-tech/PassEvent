@@ -182,6 +182,20 @@
                                 </span>
                             </div>
                             @endif
+                            @if($org->signature)
+                            <div class="org-detail-row">
+                                <span class="org-detail-label">Signature</span>
+                                <span class="org-detail-value">
+                                    <a href="{{ asset('storage/' . $org->signature) }}" target="_blank" class="text-decoration-none fw-semibold" style="color:var(--sa-primary);">
+                                        <i class="bi bi-file-earmark-image me-1"></i> Voir la signature
+                                    </a>
+                                    &middot;
+                                    <a href="{{ asset('storage/' . $org->signature) }}" download class="text-decoration-none" style="color:#666;font-size:0.8rem;">
+                                        <i class="bi bi-download"></i> Télécharger
+                                    </a>
+                                </span>
+                            </div>
+                            @endif
 
                             {{-- Envoyer un email --}}
                             <hr style="margin:1rem 0;border-color:#eee;">

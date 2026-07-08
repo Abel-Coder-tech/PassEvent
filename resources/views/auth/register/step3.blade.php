@@ -67,6 +67,10 @@
         <span class="recap-label">Justificatif</span>
         <span class="recap-value">Fourni</span>
     </div>
+    <div class="recap-row">
+        <span class="recap-label">Signature</span>
+        <span class="recap-value">Fournie</span>
+    </div>
 </div>
 
 <form method="POST" action="{{ route('inscriptions.confirm') }}">

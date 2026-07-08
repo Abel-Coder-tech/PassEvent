@@ -95,6 +95,14 @@
         @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
+    <div class="mb-3">
+        <label class="form-label">Signature <span class="text-danger">*</span></label>
+        <div class="doc-info mb-2"><i class="bi bi-pen"></i> Signez clairement sur une feuille blanche et prenez en photo ou scannez</div>
+        <input type="file" name="signature" class="form-control @error('signature') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
+        <div class="form-text">Format PDF, JPG ou PNG. Max 5 Mo. Signature sur papier blanc, lisible et nette.</div>
+        @error('signature') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    </div>
+
     <button type="submit" class="btn-primary">Suivant</button>
     <a href="{{ route('inscriptions.previous', 1) }}" class="btn-secondary">Précédent</a>
 </form>
