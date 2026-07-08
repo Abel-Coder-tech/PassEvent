@@ -12,51 +12,55 @@ class RetraitController extends Controller
 {
     const COMMISSION_PERCENTAGE = 10;
 
-    public function index()
+    protected function getSoldeDisponible($user)
     {
-        $user = Auth::user();
         $evenementsIds = $user->evenements()->pluck('id');
 
-        $recettesBrutes = (float) \App\Models\Ticket::whereIn('evenement_id', $evenementsIds)
+        $totalTickets = (float) \App\Models\Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->sum('montant');
 
-        $commission = round($recettesBrutes * self::COMMISSION_PERCENTAGE / 100, 2);
-        $recettesNettes = $recettesBrutes - $commission;
+        $mobileRecettes = (float) \App\Models\Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->whereNotIn('methode_paiement', ['cash', 'especes'])
+            ->sum('montant');
+
+        $commission = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2);
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->where('status', 'approuvé')
             ->sum('montant');
 
-        $soldeDisponible = $recettesNettes - $totalRetraits;
+        return [
+            'recettesBrutes' => $mobileRecettes,
+            'commission' => $commission,
+            'recettesNettes' => max(0, $mobileRecettes - $commission),
+            'totalRetraits' => $totalRetraits,
+            'soldeDisponible' => max(0, $mobileRecettes - $commission - $totalRetraits),
+            'totalTickets' => $totalTickets,
+        ];
+    }
+
+    public function index()
+    {
+        $user = Auth::user();
+        $data = $this->getSoldeDisponible($user);
 
         $retraits = Withdrawal::where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->paginate(10);
 
-        return view('admin.retraits.index', compact(
-            'recettesBrutes', 'commission', 'recettesNettes',
-            'totalRetraits', 'soldeDisponible', 'retraits'
+        return view('admin.retraits.index', array_merge(
+            $data,
+            ['retraits' => $retraits]
         ));
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
-        $evenementsIds = $user->evenements()->pluck('id');
-
-        $recettesBrutes = (float) \App\Models\Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->sum('montant');
-
-        $commission = round($recettesBrutes * self::COMMISSION_PERCENTAGE / 100, 2);
-        $recettesNettes = $recettesBrutes - $commission;
-
-        $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
-            ->where('status', 'approuvé')
-            ->sum('montant');
-
-        $soldeDisponible = $recettesNettes - $totalRetraits;
+        $data = $this->getSoldeDisponible($user);
+        $soldeDisponible = $data['soldeDisponible'];
 
         $data = $request->validate([
             'montant' => 'required|numeric|min:100|max:' . $soldeDisponible,

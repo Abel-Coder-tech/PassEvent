@@ -421,11 +421,7 @@ class SuperAdminController extends Controller
         $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
         $commission = round($totalRecettes * $commissionPct / 100, 2);
         $recettesNettes = $totalRecettes - $commission;
-        if ($totalRecettes > 0) {
-            $retirable = $mobileRecettes - round($commission * ($mobileRecettes / $totalRecettes), 2);
-        } else {
-            $retirable = 0;
-        }
+        $retirable = max(0, $mobileRecettes - $commission);
 
         $aujourdhui = Ticket::whereIn('evenement_id', $evenements->pluck('id'))
             ->where('statut_paiement', 'payé')

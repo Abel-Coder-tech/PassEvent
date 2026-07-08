@@ -55,13 +55,7 @@ class DashboardController extends Controller
         $commission = round($recettesTotales * $commissionPct / 100, 2);
         $recettesNettes = $recettesTotales - $commission;
 
-        if ($recettesTotales > 0) {
-            $partMobile = $mobileRecettes / $recettesTotales;
-        } else {
-            $partMobile = 0;
-        }
-        $commissionMobile = round($commission * $partMobile, 2);
-        $retirable = $mobileRecettes - $commissionMobile;
+        $retirable = max(0, $mobileRecettes - $commission);
 
         $ticketsScannes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('utilise', true)

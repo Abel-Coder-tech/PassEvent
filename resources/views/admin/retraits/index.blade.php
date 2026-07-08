@@ -14,9 +14,9 @@
         <div class="col-6 col-lg-3">
             <div class="metric-card" style="border-top-color: var(--violet);">
                 <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-cash-stack" style="color: var(--violet);"></i></div>
-                <div class="metric-label">Revenu brut</div>
+                <div class="metric-label">Revenu mobile (FedaPay)</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ number_format($recettesBrutes, 0, ',', ' ') }}</div>
-                <div class="metric-subtitle">Total ventes de tickets</div>
+                <div class="metric-subtitle">Disponible pour retrait</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
