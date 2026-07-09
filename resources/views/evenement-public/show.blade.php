@@ -52,8 +52,8 @@
 
     <div class="container">
         <div class="row g-5 py-4">
-            <!-- Colonne principale -->
-            <div class="col-lg-12 show-event-content">
+            <!-- Colonne gauche : Description + Achat -->
+            <div class="col-lg-8 show-event-content">
 
                 <!-- Description -->
                 <div class="show-card show-card-left">
@@ -184,6 +184,10 @@
                     </div>
                     @endif
                 </div>
+            </div>
+
+            <!-- Colonne droite : Partager + Lieu + Contacter + Autres -->
+            <div class="col-lg-4 show-event-sidebar">
 
                 <!-- Partager -->
                 <div class="show-card show-card-left">
@@ -223,7 +227,7 @@
                         ->get();
                 @endphp
                 @if($autresEvenements->isNotEmpty())
-                    <div class="show-card mt-4 show-card-left">
+                    <div class="show-card show-card-left">
                         <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
                         <div class="d-flex flex-column gap-3">
                             @foreach($autresEvenements as $autre)
@@ -629,27 +633,14 @@
 }
 
 @media (min-width: 992px) {
-    .show-event-content {
-        display: grid;
-        grid-template-columns: 7fr 5fr;
-        gap: 1.5rem;
-        align-items: start;
-    }
-    .show-event-content > .show-card {
-        margin-bottom: 0;
-    }
-    .show-event-content > .show-purchase-wrap {
-        grid-column: 2;
-        grid-row: 1 / -1;
+    .show-event-sidebar {
         position: sticky;
         top: 90px;
-    }
-    .show-event-content > :not(.show-purchase-wrap) {
-        grid-column: 1;
+        align-self: start;
     }
 }
 @media (max-width: 991px) {
-    .show-sidebar { position: static; }
+    .show-event-sidebar { position: static; }
 }
 .share-native {
     background: linear-gradient(135deg, #542680, #7b3fa0) !important;

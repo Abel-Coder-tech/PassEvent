@@ -884,6 +884,13 @@
             <a href="{{ route('parametres.index') }}" class="nav-link {{ request()->routeIs('parametres.*') ? 'active' : '' }}">
                 <i class="bi bi-gear"></i> Paramètres
             </a>
+            <a href="{{ route('evenements.public') }}" target="_blank" class="nav-link">
+                <i class="bi bi-globe2"></i> Voir le site
+            </a>
+            <a href="{{ route('logout') }}" class="nav-link" onclick="event.preventDefault();document.getElementById('logout-sidebar-form').submit();">
+                <i class="bi bi-box-arrow-left"></i> Déconnexion
+            </a>
+            <form id="logout-sidebar-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
         </nav>
 
         <div class="sidebar-user">
