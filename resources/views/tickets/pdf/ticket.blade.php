@@ -6,14 +6,14 @@
     <style>
         @page { margin: 0; padding: 0; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'DejaVu Sans';
             margin: 0; padding: 0;
             background: #f5f3f0;
             color: #1d1d1f;
             font-size: 10px;
             line-height: 1.4;
         }
-        * { margin: 0; padding: 0; font-family: 'DejaVu Sans', sans-serif; }
+        * { margin: 0; padding: 0; font-family: 'DejaVu Sans'; }
         .ticket {
             width: 380px;
             margin: 20px auto;
@@ -25,8 +25,8 @@
 
         .header { background: #542680; padding: 20px 24px; }
         .header-title { color: #fff; }
-        .header-title .pass { font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-        .header-title .event-name { font-size: 18px; font-weight: 800; margin-top: 2px; }
+        .header-title .pass { font-size: 20px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+        .header-title .event-name { font-size: 15px; font-weight: 800; margin-top: 2px; }
 
         .body { padding: 20px 24px 16px; }
 
@@ -151,7 +151,7 @@
         </div>
 
         <div class="note">
-            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce billet est personnel et non transférable. Présentez ce QR code (imprimé ou sur écran) à l'entrée de l'événement. Tout billet scanné une première fois ne pourra plus être réutilisé.</p>
+            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce billet ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
         </div>
 
     </div>
