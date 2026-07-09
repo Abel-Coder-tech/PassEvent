@@ -82,6 +82,6 @@ class RetraitController extends Controller
             'status' => 'en_attente',
         ]);
 
-        return back()->with('success', 'Demande de retrait envoyée. Le super admin va la traiter.');
+        return back()->with('success', 'Demande de retrait envoyée. L\'équipe PaxEvent va la traiter.');
     }
 }

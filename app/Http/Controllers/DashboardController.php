@@ -22,9 +22,9 @@ class DashboardController extends Controller
             } elseif ($user->statut === 'corrections_demandees') {
                 $message = 'Votre profil nécessite des corrections. Veuillez le modifier et le soumettre à nouveau.';
             } elseif ($user->statut === 'rejete') {
-                $message = 'Votre inscription a été rejetée. Contactez le support pour plus d\'informations.';
+                $message = 'Votre inscription a été rejetée. Contactez PaxEvent pour plus d\'informations.';
             } elseif ($user->statut === 'bloque') {
-                $message = 'Votre compte a été bloqué. Contactez le support pour plus d\'informations.';
+                $message = 'Votre compte a été bloqué. Contactez PaxEvent pour plus d\'informations.';
             }
             return view('dashboard-pending', ['message' => $message, 'statut' => $user->statut]);
         }

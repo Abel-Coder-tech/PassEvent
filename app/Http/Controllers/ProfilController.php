@@ -50,7 +50,7 @@ class ProfilController extends Controller
         }
 
         if ($request->type === 'organisation') {
-            $rules['type_detail'] = 'required|in:entreprise,association,club';
+            $rules['type_detail'] = 'required|in:entreprise,association';
         }
 
         $validated = $request->validate($rules);

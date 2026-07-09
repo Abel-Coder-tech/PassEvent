@@ -264,6 +264,10 @@ class VenteManuelleController extends Controller
         $rules = [
             'evenement_id' => 'required|exists:evenement,id',
         ];
+        $messages = [
+            'evenement_id.required' => 'Veuillez sélectionner un événement.',
+            'evenement_id.exists' => 'L\'événement sélectionné est invalide.',
+        ];
 
         if (Auth::user()->type === 'universitaire') {
             $rules['categorie'] = 'required|in:etudiant,externe';

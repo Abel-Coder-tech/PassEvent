@@ -670,7 +670,7 @@ class SuperAdminController extends Controller
                 "Bonjour {$demande->organisateur->nom},\n\n" .
                 "Votre demande de remboursement pour {$demande->evenement?->titre} a été refusée.\n\n" .
                 "Motif : {$validated['motif_refus']}\n\n" .
-                "Contactez le superadmin pour plus d'informations.",
+                "Contactez PaxEvent pour plus d'informations.",
                 function ($m) use ($demande) {
                     $m->to($demande->organisateur->email)
                       ->subject("[PaxEvent] Demande de remboursement refusée");

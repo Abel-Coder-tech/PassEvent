@@ -8,7 +8,7 @@
 @if (session('success'))
     <div class="success-icon text-center"><i class="bi bi-check-circle-fill"></i></div>
     <h2 style="font-size:1.3rem;font-weight:800;color:#211C31;text-align:center;margin-bottom:0.5rem;">Inscription réussie !</h2>
-    <p style="text-align:center;color:#6c757d;font-size:.9rem;line-height:1.5;">Votre compte a été créé avec succès.<br>Vous recevrez sous peu un email de confirmation une fois votre compte validé par l'administrateur.</p>
+    <p style="text-align:center;color:#6c757d;font-size:.9rem;line-height:1.5;">Votre compte a été créé avec succès.<br>Vous recevrez sous peu un email de confirmation une fois votre compte validé par PaxEvent.</p>
     <div style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.6rem;">
         <a href="{{ route('evenements.public') }}" class="btn-primary" style="text-align:center;text-decoration:none;display:block;">
             <i class="bi bi-calendar-event me-1"></i> Explorer les événements

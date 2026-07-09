@@ -89,36 +89,62 @@
     .back-link { font-size: 0.85rem; color: #6c757d; margin-top: 0.75rem; }
     .back-link a { color: #6c757d; text-decoration: none; }
 
-    .steps-bar {
-        display: flex; align-items: center; justify-content: center;
-        padding: 1.25rem 1rem 0.5rem;
-        background: #fff;
-        border-bottom: 1px solid #f0eeec;
-        flex-wrap: wrap;
+    .progress-volet {
+        background: #f8f6f9;
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.5rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid #eee;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s;
     }
-    .step-item {
-        display: flex; align-items: center; gap: 0.4rem;
-        font-size: 0.78rem; color: #ccc; font-weight: 500;
+    .progress-volet:hover { background: #f5f0f9; }
+    .progress-volet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #9972B0;
     }
-    .step-item.active { color: #542680; font-weight: 700; }
-    .step-item.done { color: #2e7d4f; font-weight: 600; cursor: pointer; }
-    a.step-item.done:hover { opacity: 0.8; }
-    .step-num {
-        width: 26px; height: 26px; border-radius: 50%;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 0.75rem; font-weight: 700;
-        background: #e0dde3; color: #fff; flex-shrink: 0;
+    .progress-volet-header i { font-size: 0.7rem; transition: transform 0.3s; }
+    .progress-volet.open .progress-volet-header i { transform: rotate(180deg); }
+    .progress-volet-body {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.35s ease, padding 0.3s ease;
+        padding-top: 0;
     }
-    .step-item.active .step-num { background: #542680; }
-    .step-item.done .step-num { background: #2e7d4f; }
-    .step-connector {
-        width: 24px; height: 2px;
-        background: #e0dde3; margin: 0 0.5rem; flex-shrink: 0;
+    .progress-volet.open .progress-volet-body {
+        max-height: 200px;
+        padding-top: 0.75rem;
     }
-    .step-connector.done { background: #2e7d4f; }
-    .steps-bar-card {
-        display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    .volet-steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
     }
+    .volet-step {
+        flex: 1;
+        text-align: center;
+        padding: 0.35rem 0.2rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #c5c5c5;
+        background: #e8e8e8;
+        border-right: 2px solid #fff;
+        transition: all 0.3s;
+        position: relative;
+    }
+    .volet-step:first-child { border-radius: 8px 0 0 8px; }
+    .volet-step:last-child { border-radius: 0 8px 8px 0; border-right: none; }
+    .volet-step.active { background: #542680; color: #fff; }
+    .volet-step.done { background: #2e7d4f; color: #fff; }
+    .volet-step .step-label { display: block; }
+    .volet-step .step-icon { font-size: 0.8rem; }
 </style>
 @endsection
 
@@ -132,18 +158,24 @@
                         $allSteps = [0 => 'Compte', 1 => 'Identité'];
                         $current = (int) $__env->yieldContent('step');
                     @endphp
-                    <div class="steps-bar-card">
-                        @foreach($allSteps as $i => $label)
-                            @if($i > 0)
-                                <div class="step-connector {{ $i <= $current ? 'done' : '' }}"></div>
-                            @endif
-                            <div class="step-item {{ $i < $current ? 'done' : ($i === $current ? 'active' : '') }}">
-                                <span class="step-num">{!! $i < $current ? '<i class="bi bi-check" style="font-size:0.7rem;"></i>' : $i + 1 !!}</span>
-                                {{ $label }}
+                    <div class="progress-volet open" id="progressVolet">
+                        <div class="progress-volet-header" onclick="document.getElementById('progressVolet').classList.toggle('open')">
+                            <span><i class="bi bi-stack me-1"></i> Progression</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="progress-volet-body">
+                            <div class="volet-steps">
+                                @foreach($allSteps as $i => $label)
+                                <div class="volet-step {{ $i < $current ? 'done' : ($i === $current ? 'active' : '') }}">
+                                    <span class="step-icon">
+                                        {!! $i < $current ? '<i class="bi bi-check-circle-fill"></i>' : ($i === $current ? '<i class="bi bi-circle-fill"></i>' : '<i class="bi bi-circle"></i>') !!}
+                                    </span>
+                                    <span class="step-label">{{ $label }}</span>
+                                </div>
+                                @endforeach
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                    <hr style="margin:0.75rem 0 1.25rem;border-color:#f0eeec;">
                     @endif
                     @hasSection('page-title')
                     <h1>@yield('page-title')</h1>

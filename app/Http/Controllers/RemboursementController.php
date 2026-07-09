@@ -99,7 +99,7 @@ class RemboursementController extends Controller
             ]);
             $demande->tickets()->attach($ticket->id);
 
-            return back()->with('success', 'Demande de remboursement envoyée. Le superadmin va la traiter.');
+            return back()->with('success', 'Demande de remboursement envoyée. L\'équipe PaxEvent va la traiter.');
         }
 
         if (!empty($validated['evenement_id'])) {

@@ -18,6 +18,14 @@
     .wizard-step .active .num { background: #542680; }
     .wizard-step .connector { width: 24px; height: 2px; background: #e0dde3; }
     .wizard-step .connector.done { background: #2e7d4f; }
+    .recap-card { background: #f8f6f9; border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1rem; border: 1px solid #eeedeb; }
+    .recap-card-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9972B0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
+    .recap-card-title i { font-size: 0.85rem; }
+    .recap-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.88rem; }
+    .recap-row:last-child { border-bottom: none; }
+    .recap-label { color: #6c757d; font-weight: 500; display: flex; align-items: center; gap: 0.35rem; }
+    .recap-value { font-weight: 600; color: #1d1d1f; text-align: right; max-width: 55%; word-break: break-word; }
+    .recap-badge { background: #e8f5e9; color: #2e7d4f; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.25rem; }
 </style>
 <div class="page-content">
     <div class="wizard-card">
@@ -34,32 +42,27 @@
             </div>
         @endif
 
-        <div class="recap-section">
-            <div class="recap-section-title">Identité</div>
+        <div class="recap-card">
+            <div class="recap-card-title"><i class="bi bi-person-badge"></i> Identité</div>
             <div class="recap-row">
-                <span class="recap-label">Nom</span>
+                <span class="recap-label"><i class="bi bi-person" style="color:#9972B0;font-size:0.8rem;"></i> Nom</span>
                 <span class="recap-value">{{ $user->nom }}</span>
             </div>
             <div class="recap-row">
-                <span class="recap-label">Email</span>
+                <span class="recap-label"><i class="bi bi-envelope" style="color:#9972B0;font-size:0.8rem;"></i> Email</span>
                 <span class="recap-value">{{ $user->email }}</span>
             </div>
             <div class="recap-row">
-                <span class="recap-label">Téléphone</span>
+                <span class="recap-label"><i class="bi bi-telephone" style="color:#9972B0;font-size:0.8rem;"></i> Téléphone</span>
                 <span class="recap-value">{{ $user->telephone }}</span>
             </div>
-            @if($user->avatar)
-            <div class="recap-row">
-                <span class="recap-label">Photo</span>
-                <span class="recap-value"><img src="{{ asset('storage/' . $user->avatar) }}" class="avatar-preview" alt="Avatar"></span>
-            </div>
-            @endif
+
         </div>
 
-        <div class="recap-section">
-            <div class="recap-section-title">Organisation</div>
+        <div class="recap-card">
+            <div class="recap-card-title"><i class="bi bi-building"></i> Organisation</div>
             <div class="recap-row">
-                <span class="recap-label">Type</span>
+                <span class="recap-label"><i class="bi bi-tag" style="color:#9972B0;font-size:0.8rem;"></i> Type</span>
                 <span class="recap-value">
                     @if($data['type'] === 'universitaire') <i class="bi bi-building-columns"></i>
                     @elseif($data['type'] === 'particulier') <i class="bi bi-person"></i>
@@ -70,23 +73,28 @@
             </div>
             @if($data['type'] === 'universitaire' || $data['type'] === 'organisation')
                 <div class="recap-row">
-                    <span class="recap-label">{{ $data['type'] === 'universitaire' ? 'Université' : 'Organisation' }}</span>
+                    <span class="recap-label"><i class="bi bi-house" style="color:#9972B0;font-size:0.8rem;"></i> {{ $data['type'] === 'universitaire' ? 'Université' : 'Organisation' }}</span>
                     <span class="recap-value">{{ $data['organisation'] }}</span>
                 </div>
                 @if($data['type'] === 'organisation')
                 <div class="recap-row">
-                    <span class="recap-label">Type détail</span>
-                    <span class="recap-value">{{ ucfirst($data['type_detail']) }}</span>
+                    <span class="recap-label"><i class="bi bi-briefcase" style="color:#9972B0;font-size:0.8rem;"></i> Structure</span>
+                    <span class="recap-value">
+                        @php
+                            $labels = ['entreprise' => 'Entreprise', 'association' => 'Association/ONG'];
+                        @endphp
+                        {{ $labels[$data['type_detail']] ?? ucfirst($data['type_detail']) }}
+                    </span>
                 </div>
                 @endif
             @endif
             <div class="recap-row">
-                <span class="recap-label">Justificatif</span>
-                <span class="recap-value">Fourni</span>
+                <span class="recap-label"><i class="bi bi-file-earmark-pdf" style="color:#9972B0;font-size:0.8rem;"></i> Justificatif</span>
+                <span class="recap-value"><span class="recap-badge"><i class="bi bi-check-circle-fill"></i> Fourni</span></span>
             </div>
             <div class="recap-row">
-                <span class="recap-label">Signature</span>
-                <span class="recap-value">Fournie</span>
+                <span class="recap-label"><i class="bi bi-pen" style="color:#9972B0;font-size:0.8rem;"></i> Signature</span>
+                <span class="recap-value"><span class="recap-badge"><i class="bi bi-check-circle-fill"></i> Fournie</span></span>
             </div>
         </div>
 

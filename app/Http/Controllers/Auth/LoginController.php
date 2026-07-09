@@ -33,7 +33,7 @@ class LoginController extends Controller
         }
 
         if (in_array($user->statut, ['bloque', 'rejete'])) {
-            return back()->withErrors(['email' => 'Votre compte n\'est pas accessible. Contactez le support.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'Votre compte n\'est pas accessible. Contactez PaxEvent.'])->onlyInput('email');
         }
 
         if (!\Illuminate\Support\Facades\Hash::check($credentials['mot_de_passe'], $user->mot_de_passe)) {

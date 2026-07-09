@@ -75,7 +75,7 @@
                     <label class="type-card @if(old('type', $type) === 'organisation') selected @endif" onclick="selectType(this, 'organisation')">
                         <div class="icon"><i class="bi bi-building"></i></div>
                         <div class="name">Organisation</div>
-                        <div class="desc">Vous représentez une entreprise, une association ou un club</div>
+                        <div class="desc">Vous représentez une entreprise ou une association/ONG</div>
                         <input type="radio" name="type" value="organisation" @if(old('type', $type) === 'organisation') checked @endif required>
                     </label>
                 </div>
@@ -92,12 +92,6 @@
 
             <div id="fields-organisation" style="display:none;">
                 <div class="mb-3">
-                    <label class="form-label">Nom de l'organisation</label>
-                    <input type="text" name="organisation" class="form-control @error('organisation') is-invalid @enderror"
-                           value="{{ old('organisation', $data['organisation'] ?? '') }}" placeholder="Ex: ABC SARL">
-                    @error('organisation') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="mb-3">
                     <label class="form-label">Type</label>
                     <div class="toggle-group">
                         @php $td = old('type_detail', $data['type_detail'] ?? ''); @endphp
@@ -105,13 +99,16 @@
                             <input type="radio" name="type_detail" value="entreprise" {{ $td === 'entreprise' ? 'checked' : '' }}> Entreprise
                         </label>
                         <label class="toggle-btn {{ $td === 'association' ? 'active' : '' }}">
-                            <input type="radio" name="type_detail" value="association" {{ $td === 'association' ? 'checked' : '' }}> Association
-                        </label>
-                        <label class="toggle-btn {{ $td === 'club' ? 'active' : '' }}">
-                            <input type="radio" name="type_detail" value="club" {{ $td === 'club' ? 'checked' : '' }}> Club
+                            <input type="radio" name="type_detail" value="association" {{ $td === 'association' ? 'checked' : '' }}> Association/ONG
                         </label>
                     </div>
                     @error('type_detail') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nom de l'organisation</label>
+                    <input type="text" name="organisation" class="form-control @error('organisation') is-invalid @enderror"
+                           value="{{ old('organisation', $data['organisation'] ?? '') }}" placeholder="Ex: ABC SARL">
+                    @error('organisation') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
 
@@ -123,7 +120,7 @@
                 <label class="form-label" id="doc-label">Pièce justificative</label>
                 <div id="doc-helper" class="doc-info mb-2"><i class="bi bi-file-earmark-text"></i> <span id="doc-text">Carte étudiante ou lettre de l'université</span></div>
                 <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
-                <div class="form-text">Format PDF, JPG ou PNG. Max 5 Mo.</div>
+                <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                 @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
@@ -131,7 +128,7 @@
                 <label class="form-label">Signature <span class="text-danger">*</span></label>
                 <div class="doc-info mb-2"><i class="bi bi-pen"></i> Signez clairement sur une feuille blanche et prenez en photo ou scannez</div>
                 <input type="file" name="signature" class="form-control @error('signature') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
-                <div class="form-text">Format PDF, JPG ou PNG. Max 5 Mo.</div>
+                <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                 @error('signature') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
@@ -146,8 +143,21 @@
     const docLabels = {
         universitaire: 'Carte étudiante ou lettre de l\'université',
         particulier: 'CIP (Carte d\'identité personnelle)',
-        organisation: 'IFU ou RCCM'
+        organisation: 'IFU ou RCCM',
+        association: 'IFU / RCCM / Récépissé ONG'
     };
+
+    function updateDocLabel() {
+        const orgFields = document.getElementById('fields-organisation');
+        if (orgFields.style.display === 'block') {
+            const checked = orgFields.querySelector('input[name="type_detail"]:checked');
+            if (checked && checked.value === 'association') {
+                document.getElementById('doc-text').textContent = docLabels.association;
+            } else {
+                document.getElementById('doc-text').textContent = docLabels.organisation;
+            }
+        }
+    }
 
     function selectType(el, val) {
         document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
@@ -157,6 +167,7 @@
         document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
         document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
         document.getElementById('doc-text').textContent = docLabels[val] || 'Document justificatif';
+        updateDocLabel();
     }
 
     (function init() {
@@ -167,6 +178,7 @@
             document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
             document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
             document.getElementById('doc-text').textContent = docLabels[val] || 'Document justificatif';
+            updateDocLabel();
         }
     })();
 
@@ -175,6 +187,7 @@
             this.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             this.querySelector('input').checked = true;
+            updateDocLabel();
         });
     });
 </script>

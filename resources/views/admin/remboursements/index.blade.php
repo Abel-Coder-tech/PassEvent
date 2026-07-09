@@ -16,7 +16,7 @@
         <div>
             <strong style="color: #f39c12; font-size: 0.85rem;">Politique de remboursement</strong>
             <p class="mb-0 text-muted" style="font-size: 0.82rem;">
-                Vous pouvez demander un remboursement pour tout ticket payé. La demande sera traitée par le superadmin.
+                Vous pouvez demander un remboursement pour tout ticket payé. La demande sera traitée par l'équipe PaxEvent.
             </p>
         </div>
     </div>
@@ -235,7 +235,7 @@
                     </div>
                     <div class="alert alert-warning" style="border-radius: 8px; font-size: 0.82rem; background: rgba(243,156,18,0.06); border: none;">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong>Attention :</strong> Cette demande sera traitée par le superadmin. Vous serez notifié de la décision.
+                        <strong>Attention :</strong> Cette demande sera traitée par l'équipe PaxEvent. Vous serez notifié de la décision.
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal" style="border-radius: 8px;">Annuler</button>
