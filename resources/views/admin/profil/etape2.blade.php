@@ -127,7 +127,7 @@
             <div class="mb-3">
                 <label class="form-label">Signature <span class="text-danger">*</span></label>
                 <div class="doc-info mb-2"><i class="bi bi-pen"></i> Signez clairement sur une feuille blanche et prenez en photo ou scannez</div>
-                <input type="file" name="signature" class="form-control @error('signature') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
+                <input type="file" name="signature" class="form-control @error('signature') is-invalid @enderror" accept=".jpg,.jpeg,.png" required>
                 <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                 @error('signature') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
