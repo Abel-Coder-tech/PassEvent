@@ -18,7 +18,7 @@ class DashboardController extends Controller
         if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees') {
             $message = '';
             if ($user->statut === 'en_attente') {
-                $message = 'Votre profil est en cours de validation par notre équipe. Ce processus prend généralement 12 à 24 heures.';
+                $message = 'Votre profil est en cours de validation par notre équipe..';
             } elseif ($user->statut === 'corrections_demandees') {
                 $message = 'Votre profil nécessite des corrections. Veuillez le modifier et le soumettre à nouveau.';
             } elseif ($user->statut === 'rejete') {

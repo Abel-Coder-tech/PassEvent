@@ -85,7 +85,7 @@
 <div class="ticket">
 
     {{-- HEADER violet (no logo) --}}
-    <div class="header">
+    <div class="header" style="text-align: center; justify-content: center;">
         <div class="header-title">
             <div class="pass">Pass</div>
             <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>

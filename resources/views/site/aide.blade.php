@@ -111,6 +111,9 @@
                                     <li>Payez votre ticket.</li>
                                     <li>Recevez instantanément votre e-ticket.</li>
                                 </ol>
+                                <div style="margin-top:0.5rem;font-size:0.82rem;color:#856404;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:0.4rem 0.7rem;">
+                                    <i class="bi bi-info-circle me-1"></i> NB : une personne peut acheter au maximum 05 tickets
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -175,7 +178,7 @@
                         </h2>
                         <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Non, les tickets ne sont pas remboursables, sauf dans le cas exceptionnel où l'événement est annulé par l'organisateur. Pour toute réclamation ou problème rencontré, vous devez vous adresser directement à l'organisateur de l'événement.
+                                Non, les tickets ne sont pas remboursables, sauf dans le cas exceptionnel où l'événement est annulé par l'organisateur. Selon le cas d'annulation qui se présente, les remboursements seront effectués soit directement par PaxEvent ou par l'organisateur à hauteur de 90% à 100% du montant du ticket, aux acheteurs. Pour toute réclamation ou problème rencontré, vous pouvez contacter le service client de PaxEvent ou vous adresser directement à l'organisateur de l'événement.
                             </div>
                         </div>
                     </div>
@@ -281,7 +284,7 @@
                         <i class="bi bi-file-earmark-text" style="color:var(--violet);"></i>
                     </div>
                     <h5 class="aide-card-title" style="font-size:1rem;">Soumettre votre profil organisateur</h5>
-                    <p class="aide-card-text">Renseignez les détails liés à votre statut (particulier, université, entreprise), importez vos justificatifs (CIP/RCCM/IFU) et patientez 24 heures pour l'approbation de l'équipe.</p>
+                    <p class="aide-card-text">Dans votre tableau de bord, complétez les informations liées à votre profil (particulier, université, entreprise), importez vos justificatifs (CIP/IFU/RCCM/RÉCÉPISSÉ ONG) et patientez 24 heures pour l'approbation de l'équipe.</p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -320,9 +323,9 @@
                         <div id="orgFaq1" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
                             <div class="accordion-body">
                                 <ol style="padding-left:1.2rem;margin:0;">
-                                    <li>Cliquez sur le bouton <strong>"Devenir organisateur"</strong> ou <strong>"Se connecter"</strong>.</li>
-                                    <li>Soumettez votre profil depuis votre tableau de bord.</li>
-                                    <li>Notre équipe examinera votre demande sous 24h et vous recevrez une notification via email.</li>
+                                    <li>Cliquez sur le bouton <strong>"Devenir organisateur"</strong> ou <strong>"Se connecter"</strong> pour créer un compte.</li>
+                                    <li>Complétez et soumettez votre profil depuis votre tableau de bord.</li>
+                                    <li>Attendez 24h pour la validation de votre profil par notre équipe.</li>
                                     <li>Connectez-vous à nouveau et commencez à publier vos événements.</li>
                                 </ol>
                             </div>
@@ -343,7 +346,7 @@
                                     <li>Cliquez sur <strong>"Créer un événement"</strong> ou sur le bouton <strong>"+"</strong>.</li>
                                     <li>Précisez : nom, description, date, lieu, puis ajoutez un visuel de couverture attrayant.</li>
                                     <li>Définissez vos tarifs (gratuits/payants, standards/VIP, internes/externes etc.).</li>
-                                    <li>Publiez votre événement pour le rendre visible.</li>
+                                    <li>Publiez votre événement.</li>
                                 </ol>
                             </div>
                         </div>
@@ -362,7 +365,7 @@
                                 <i class="bi bi-phone" style="color:var(--violet);"></i> <strong>Agent Scan</strong> : Contrôle et valide les QR codes à l'entrée.<br>
                                 <i class="bi bi-cash-coin" style="color:var(--violet);"></i> <strong>Agent Vente</strong> : Gère la billetterie physique et les ventes sur place.<br><br>
                                 <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;">
-                                    <i class="bi bi-exclamation-triangle me-1"></i> Au-delà de 2 agents, l'option devient payante.
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Au-delà de 2 agents (scan et vente), cette option devient payante.
                                 </div>
                             </div>
                         </div>
@@ -377,13 +380,11 @@
                         </h2>
                         <div id="orgFaq4" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
                             <div class="accordion-body">
-                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
-                                    <li>Rendez-vous dans la section <strong>"créer agent"</strong> de votre tableau de bord, remplissez le formulaire, puis assignez à l'agent un seul événement et un rôle unique : scan ou vente.</li>
-                                    <li>L'agent reçoit aussitôt un e-mail contenant ses informations de connexion à son espace (lien, mot de passe, code d'accès).</li>
-                                    <li>Pour commencer sa mission, l'agent clique sur le lien reçu, entre son mot de passe et s'authentifie avec son code d'accès.</li>
-                                </ol>
+                                <p style="margin:0 0 0.75rem;">Sur votre tableau de bord, rendez-vous dans la section <strong>"Agent de scan ou de vente"</strong> et remplissez le formulaire.</p>
+                                <p style="margin:0 0 0.75rem;">L'agent reçoit aussitôt un e-mail contenant les informations de connexion à son espace (lien, mot de passe, code d'accès).</p>
+                                <p style="margin:0 0 0.75rem;">Pour commencer sa mission, l'agent clique sur le lien reçu et entre ses coordonnées.</p>
                                 <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;">
-                                    <i class="bi bi-exclamation-triangle me-1"></i> Le cumul n'est pas autorisé. Chaque agent est strictement affecté à un seul événement pour un seul rôle.
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Règle importante : Le cumul n'est pas autorisé. Chaque agent est strictement affecté à un seul événement pour un seul rôle.
                                 </div>
                             </div>
                         </div>
@@ -404,8 +405,8 @@
                                     <li>Autorisez l'accès à votre caméra et pointez-la vers le ticket pour scanner le QR code ou saisir manuellement le code du ticket.</li>
                                     <li>Le système vérifie et valide l'entrée automatiquement.</li>
                                 </ol>
-                                <div style="background:#e8f4f8;border:1px solid #b8d4e8;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#2c5282;margin-bottom:0.75rem;">
-                                    <i class="bi bi-info-circle me-1"></i> Vous êtes uniquement autorisé à scanner les billets de vos événements.
+                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;margin-bottom:0.75rem;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Important : Vous êtes uniquement autorisé à scanner les billets de vos événements.
                                 </div>
                                 <strong>En tant qu'Agent de scan :</strong><br>
                                 <ol style="padding-left:1.2rem;margin:0;">
@@ -427,10 +428,10 @@
                             <div class="accordion-body">
                                 <strong>En tant qu'organisateur :</strong><br>
                                 <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
-                                    <li>Connectez-vous à votre tableau de bord.</li>
-                                    <li>Sélectionner l'événement et remplir les informations de l'acheteur.</li>
-                                    <li>Choisir le moyen de paiement (espèce ou mobile money).</li>
-                                    <li>Vérifier le récap, encaissez et cliquez sur "Enregistrer la vente".</li>
+                                    <li>Connectez-vous à votre tableau de bord et allez dans la section <strong>"Vente manuelle"</strong>.</li>
+                                    <li>Sélectionnez l'événement et remplissez les informations de l'acheteur.</li>
+                                    <li>Choisissez le moyen de paiement (espèce ou mobile money) de l'acheteur.</li>
+                                    <li>Vérifiez le récap, encaissez et cliquez sur "Enregistrer la vente".</li>
                                     <li>L'acheteur reçoit instantanément son e-ticket via email.</li>
                                 </ol>
                                 <strong>En tant qu'agent de vente :</strong><br>
@@ -453,24 +454,27 @@
                             <div class="accordion-body">
                                 <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quels sont les tarifs de PaxEvent ?</h6>
                                 <ul style="padding-left:1.2rem;margin:0 0 1rem;">
-                                    <li>Publier un événement ou acheter un ticket est <strong>entièrement gratuit</strong> sur paxevent.com.</li>
-                                    <li>Nous percevons <strong>10% de commission</strong> sur les tickets vendus. (ex: Sur un Pax de 1 000 FCFA, PaxEvent perçoit 100 FCFA et vous recevez 900 FCFA net).</li>
-                                    <li>PaxEvent facture l'utilisation des services additionnels suivants : la création de plus de 2 comptes Agents, les campagnes marketing ciblées (SMS et e-mails promotionnels), achat des terminaux de vente manuelle sur le terrain.</li>
+                                    <li>Accéder à un événement sur paxevent.com est <strong>gratuit</strong>.</li>
+                                    <li>Publier un événement sur paxevent.com est <strong>entièrement gratuit</strong>.</li>
+                                    <li>PaxEvent perçoit <strong>10% de commission</strong> sur chaque ticket vendu. (ex : Sur un ticket de 1 000 FCFA, PaxEvent perçoit 100 FCFA et vous recevez 900 FCFA net).</li>
+                                    <li>PaxEvent ne perçoit aucune commission sur les événements gratuits, toutefois le nombre de tickets gratuits générés par événement pourrait être limité.</li>
+                                    <li>PaxEvent facture à la demande l'utilisation des services additionnels suivants :<br>
+                                        - la création de plus de 2 comptes Agents (scan et vente)<br>
+                                        - les campagnes marketing ciblées (SMS, WhatsApp et e-mails promotionnels)<br>
+                                        - l'achat des terminaux de vente manuelle sur le terrain.</li>
                                 </ul>
-                                <div style="background:#e8f4f8;border:1px solid #b8d4e8;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#2c5282;margin-bottom:0.75rem;">
-                                    <i class="bi bi-info-circle me-1"></i> Les organisateurs peuvent suivre tous les chiffres en temps réel depuis leur "tableau de bord".
+                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;margin-bottom:0.75rem;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Les organisateurs peuvent suivre tous les chiffres en temps réel depuis leur tableau de bord.
                                 </div>
 
                                 <hr style="margin:0.75rem 0;">
 
                                 <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quand et comment retirer mes revenus ?</h6>
                                 <ul style="padding-left:1.2rem;margin:0 0 1rem;">
-                                    <li>Les revenus sont principalement versés à l'organisateur <strong>après la tenue de l'événement</strong>.</li>
-                                    <li>Un organisateur peut à tout moment effectuer un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 04 jours ouvrés.</li>
-                                    <li>Un organisateur peut également planifier le retrait de ses revenus par :<br>
-                                        - <strong>Période</strong> : Des virements automatiques tous les 4, 8 ou 31 jours.<br>
-                                        - <strong>Palier</strong> : Un déclenchement automatique dès que le solde disponible atteint un minimum de 50 000 FCFA.
-                                    </li>
+                                    <li>Les revenus sont principalement versés à l'organisateur <strong>24h à 72h après la tenue de l'événement</strong>.</li>
+                                    <li>Avant la tenue de l'événement, un organisateur peut à tout moment demander un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 04 jours ouvrés.</li>
+                                    <li><strong>Attention :</strong> À partir du moment où un retrait est validé avant la tenue de l'événement, l'organisateur ne pourra plus annuler cet événement. S'il tient à l'annuler en cas de force majeure, il devra assurer lui-même le remboursement des tickets à hauteur du montant retiré.</li>
+                                    <li>Le retrait minimal autorisé aux organisateurs varie entre <strong>1 000 F CFA</strong> et <strong>50 000 F CFA</strong> conformément aux conditions de nos agrégateurs partenaires.</li>
                                 </ul>
 
                                 <hr style="margin:0.75rem 0;">
@@ -499,11 +503,11 @@
                         </div>
                         <div class="aide-org-item">
                             <i class="bi bi-qr-code"></i>
-                            <span>Scan QR</span>
+                            <span>Scan QR Code</span>
                         </div>
                         <div class="aide-org-item">
                             <i class="bi bi-graph-up"></i>
-                            <span>Statistiques</span>
+                            <span>Statistiques &amp; Marketing</span>
                         </div>
                     </div>
                     <div class="aide-organiser-actions">
