@@ -190,15 +190,7 @@
             <div class="col-lg-4 show-event-sidebar">
 
                 <!-- Partager -->
-                <div class="show-card show-card-left">
-                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
-                    <div class="d-flex gap-2 flex-nowrap">
-                        <button class="show-share-btn share-native" onclick="shareEvent()" title="Partager"><i class="bi bi-box-arrow-up"></i></button>
-                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#25D366;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('evenements.public.show', $evenement->id)) }}" target="_blank" class="show-share-btn" style="color:#1877F2;" title="Facebook"><i class="bi bi-facebook"></i></a>
-                        <button class="show-share-btn" onclick="copyLink()" title="Copier le lien"><i class="bi bi-link-45deg"></i></button>
-                    </div>
-                </div>
+                
 
                 <!-- Lieu -->
                 <div class="show-card show-card-left">

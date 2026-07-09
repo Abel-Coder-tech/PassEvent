@@ -24,6 +24,26 @@
         <div class="body">
             <p>Bonjour <strong>{{ $user->nom }}</strong>,</p>
             <p>Votre demande de compte organisateur nécessite des corrections avant de pouvoir être validée.</p>
+            @php
+                $typeLabels = [
+                    'universitaire' => 'Universitaire',
+                    'particulier' => 'Particulier',
+                    'professionnel' => 'Professionnel',
+                    'organisation' => 'Organisation',
+                ];
+                $orgType = $typeLabels[$user->type] ?? ucfirst($user->type);
+                $orgInfo = $orgType;
+                if ($user->type_detail === 'association') {
+                    $orgInfo .= ' — Association/ONG';
+                } elseif ($user->type_detail === 'entreprise') {
+                    $orgInfo .= ' — Entreprise';
+                }
+                if ($user->organisation) {
+                    $orgInfo .= ' (' . $user->organisation . ')';
+                }
+            @endphp
+            <p style="margin-bottom:4px;"><strong>Type de compte :</strong> {{ $orgInfo }}</p>
+            <p><strong>Raisons des corrections :</strong></p>
             <div class="reason">{{ $reason }}</div>
             <p>Connectez-vous à votre compte pour apporter les modifications nécessaires, puis soumettez à nouveau votre demande.</p>
             <p style="text-align: center;">
