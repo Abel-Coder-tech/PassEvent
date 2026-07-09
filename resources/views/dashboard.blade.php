@@ -20,6 +20,16 @@
             <i class="bi bi-arrow-right-circle me-1"></i> Compléter mon profil
         </a>
     </div>
+    @elseif(Auth::user()->statut === 'corrections_demandees')
+    <div class="alert alert-warning d-flex align-items-center gap-3 flex-wrap" style="border:none;background:#fff8e1;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #e0a800;">
+        <div style="flex:1;">
+            <strong style="color:#8b6914;"><i class="bi bi-pencil-square me-1"></i> Corrections demandées</strong>
+            <span style="color:#6c5b3a;font-size:0.85rem;"> — Des modifications sont requises sur votre profil. Corrigez puis soumettez à nouveau.</span>
+        </div>
+        <a href="{{ route('profil.step2') }}" class="btn btn-sm" style="background:#542680;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            <i class="bi bi-arrow-right-circle me-1"></i> Modifier mon profil
+        </a>
+    </div>
     @endif
 
     {{-- Actions rapides --}}

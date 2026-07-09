@@ -331,7 +331,7 @@ class SuperAdminController extends Controller
 
     public function demanderCorrectionsOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet'])) {
+        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
@@ -340,6 +340,13 @@ class SuperAdminController extends Controller
         $user->update(['statut' => 'corrections_demandees']);
 
         Mail::to($user->email)->send(new RegistrationCorrections($user, $request->motif));
+
+        Message::create([
+            'user_id' => $user->id,
+            'objet' => 'Corrections demandées sur votre profil',
+            'message' => "Bonjour {$user->nom},\n\nVotre demande de compte organisateur nécessite des corrections avant de pouvoir être validée.\n\nMotif : {$request->motif}\n\nConnectez-vous à votre compte pour apporter les modifications nécessaires via \"Compléter mon profil\".",
+            'lu' => false,
+        ]);
 
         Log::create([
             'type_operation' => 'organisateur_corrections',

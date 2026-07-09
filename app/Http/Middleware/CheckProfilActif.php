@@ -21,6 +21,12 @@ class CheckProfilActif
             return redirect()->route('dashboard')->with('error', 'Veuillez d\'abord ' . $link . ' avant de créer.');
         }
 
+        if ($user->statut === 'corrections_demandees') {
+            $url = route('profil.step2');
+            $link = '<a href="' . $url . '">compléter votre profil</a>';
+            return redirect()->route('dashboard')->with('error', 'Des corrections sont requises. Veuillez d\'abord ' . $link . ' avant de créer.');
+        }
+
         return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant d\'utiliser cette fonctionnalité.');
     }
 }

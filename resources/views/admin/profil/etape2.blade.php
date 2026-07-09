@@ -119,7 +119,12 @@
             <div class="mb-3">
                 <label class="form-label" id="doc-label">Pièce justificative</label>
                 <div id="doc-helper" class="doc-info mb-2"><i class="bi bi-file-earmark-text"></i> <span id="doc-text">Carte étudiante ou lettre de l'université</span></div>
-                <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
+                @if(!empty($existingDocuments) && !empty($data['document_justificatif']))
+                <div class="alert alert-success py-2 mb-2" style="font-size:0.82rem;border-radius:8px;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
+                </div>
+                @endif
+                <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
                 <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                 @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
@@ -127,8 +132,13 @@
             <div class="mb-3">
                 <label class="form-label">Signature <span class="text-danger">*</span></label>
                 <div class="doc-info mb-2"><i class="bi bi-pen"></i> Signez clairement sur une feuille blanche et prenez en photo ou scannez</div>
-                <input type="file" name="signature" class="form-control @error('signature') is-invalid @enderror" accept=".jpg,.jpeg,.png" required>
-                <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
+                @if(!empty($existingDocuments) && !empty($data['signature']))
+                <div class="alert alert-success py-2 mb-2" style="font-size:0.82rem;border-radius:8px;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Signature déjà fournie. Vous pouvez la remplacer si besoin.
+                </div>
+                @endif
+                <input type="file" name="signature" class="form-control @error('signature') is-invalid @enderror" accept=".jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
+                <div class="form-text">Format JPG ou PNG. Max 2 Mo.</div>
                 @error('signature') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 

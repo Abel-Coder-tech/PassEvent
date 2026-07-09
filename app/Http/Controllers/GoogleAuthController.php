@@ -43,7 +43,7 @@ class GoogleAuthController extends Controller
         $existing = User::where('email', $googleUser->getEmail())->first();
 
         if ($existing) {
-            if (in_array($existing->statut, ['en_attente', 'incomplet'])) {
+            if (in_array($existing->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
                 Auth::login($existing, true);
                 request()->session()->regenerate();
                 return redirect()->intended(route('dashboard'));
@@ -51,7 +51,7 @@ class GoogleAuthController extends Controller
 
             if ($existing->statut !== 'actif') {
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Votre compte est en attente de validation (' . $googleUser->getEmail() . ').'
+                    'email' => 'Votre compte est ' . $existing->statut . ' (' . $googleUser->getEmail() . ').'
                 ]);
             }
 

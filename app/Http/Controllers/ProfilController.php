@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Storage;
 
 class ProfilController extends Controller
 {
-    private function checkIncomplet()
+    private function checkAccess()
     {
         $user = auth()->user();
-        if (!$user || $user->statut !== 'incomplet') {
+        if (!$user || !in_array($user->statut, ['incomplet', 'corrections_demandees'])) {
             return false;
         }
         return $user;
@@ -22,28 +22,49 @@ class ProfilController extends Controller
 
     public function step2()
     {
-        $user = $this->checkIncomplet();
+        $user = $this->checkAccess();
         if (!$user) {
             return redirect()->route('dashboard');
         }
+
+        if ($user->statut === 'corrections_demandees') {
+            $data = [
+                'type' => $user->type,
+                'organisation' => $user->organisation,
+                'type_detail' => $user->type_detail,
+                'document_justificatif' => $user->document_justificatif,
+                'signature' => $user->signature,
+            ];
+        } else {
+            $data = session('profil', []);
+        }
+
         return view('admin.profil.etape2', [
-            'type' => old('type', session('profil.type')),
-            'data' => session('profil', []),
+            'type' => old('type', $data['type'] ?? session('profil.type')),
+            'data' => $data,
+            'existingDocuments' => $user->statut === 'corrections_demandees',
         ]);
     }
 
     public function postStep2(Request $request)
     {
-        $user = $this->checkIncomplet();
+        $user = $this->checkAccess();
         if (!$user) {
             return redirect()->route('dashboard');
         }
 
         $rules = [
             'type' => 'required|in:universitaire,particulier,organisation',
-            'document_justificatif' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'signature' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
+
+        $hasDocs = $user->statut === 'corrections_demandees' && $user->document_justificatif && $user->signature;
+
+        if (!$hasDocs || $request->hasFile('document_justificatif')) {
+            $rules['document_justificatif'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+        }
+        if (!$hasDocs || $request->hasFile('signature')) {
+            $rules['signature'] = 'required|file|mimes:jpg,jpeg,png|max:2048';
+        }
 
         if ($request->type === 'universitaire' || $request->type === 'organisation') {
             $rules['organisation'] = 'required|string|max:255';
@@ -56,13 +77,21 @@ class ProfilController extends Controller
         $validated = $request->validate($rules);
 
         if ($request->hasFile('document_justificatif')) {
-            $validated['document_justificatif'] = $request->file('document_justificatif')
-                ->store('justificatifs', 'public');
+            if ($user->document_justificatif) {
+                Storage::disk('public')->delete($user->document_justificatif);
+            }
+            $validated['document_justificatif'] = $request->file('document_justificatif')->store('justificatifs', 'public');
+        } elseif ($hasDocs) {
+            $validated['document_justificatif'] = $user->document_justificatif;
         }
 
         if ($request->hasFile('signature')) {
-            $validated['signature'] = $request->file('signature')
-                ->store('signatures', 'public');
+            if ($user->signature) {
+                Storage::disk('public')->delete($user->signature);
+            }
+            $validated['signature'] = $request->file('signature')->store('signatures', 'public');
+        } elseif ($hasDocs) {
+            $validated['signature'] = $user->signature;
         }
 
         session(['profil' => array_merge(session('profil', []), $validated)]);
@@ -72,7 +101,7 @@ class ProfilController extends Controller
 
     public function recap()
     {
-        $user = $this->checkIncomplet();
+        $user = $this->checkAccess();
         if (!$user) {
             return redirect()->route('dashboard');
         }
@@ -90,7 +119,7 @@ class ProfilController extends Controller
 
     public function submit(Request $request)
     {
-        $user = $this->checkIncomplet();
+        $user = $this->checkAccess();
         if (!$user) {
             return redirect()->route('dashboard');
         }
@@ -108,11 +137,15 @@ class ProfilController extends Controller
         ];
 
         if ($data['type'] === 'universitaire' || $data['type'] === 'organisation') {
-            $updateData['organisation'] = $data['organisation'];
+            $updateData['organisation'] = $data['organisation'] ?? null;
+        } else {
+            $updateData['organisation'] = null;
         }
 
         if ($data['type'] === 'organisation') {
-            $updateData['type_detail'] = $data['type_detail'];
+            $updateData['type_detail'] = $data['type_detail'] ?? null;
+        } else {
+            $updateData['type_detail'] = null;
         }
 
         $user->update($updateData);
