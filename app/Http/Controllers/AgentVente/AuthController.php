@@ -91,6 +91,7 @@ class AuthController extends Controller
                 'montant' => $t->montant > 0 ? number_format($t->montant, 0, ',', ' ') . ' F' : 'Gratuit',
                 'montant_val' => $t->montant,
                 'methode' => $t->methode_paiement,
+                'methode_label' => \App\Models\Ticket::methodePaiementLabel($t->methode_paiement),
                 'date' => $t->date_achat->format('H:i'),
             ]);
 

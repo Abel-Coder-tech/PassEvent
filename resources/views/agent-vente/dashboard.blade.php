@@ -146,7 +146,7 @@
                                     <td class="small">{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
                                     @if($ticket->montant > 0)
                                     <td class="small fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                                    <td class="small">{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile' }}</td>
+                                    <td class="small">{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}</td>
                                     @else
                                     <td class="small text-muted">Gratuit</td>
                                     <td class="small">—</td>
@@ -210,7 +210,7 @@ function chargerHistorique() {
                         <td class="small">${t.tarif}</td>
                         ${t.montant_val > 0 ? `
                         <td class="small fw-medium">${t.montant}</td>
-                        <td class="small">${t.methode === 'cash' ? 'Espèces' : 'Mobile'}</td>
+                        <td class="small">${t.methode_label}</td>
                         ` : `
                         <td class="small text-muted">Gratuit</td>
                         <td class="small">—</td>

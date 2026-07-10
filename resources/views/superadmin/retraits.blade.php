@@ -50,6 +50,7 @@
                             <th>Montant</th>
                             <th>Commission</th>
                             <th>Bénéficiaire</th>
+                            <th>Opérateur</th>
                             <th>Mobile</th>
                             <th>Statut</th>
                             <th>Actions</th>
@@ -66,6 +67,13 @@
                                 <td><strong>{{ number_format($retrait->montant, 0, ',', ' ') }} F</strong></td>
                                 <td><small>{{ $retrait->commission_percentage }}%</small></td>
                                 <td>{{ $retrait->nom }}</td>
+                                <td>
+                                    @if($retrait->operateur && isset(\App\Http\Controllers\RetraitController::getOperateurs()[$retrait->operateur]))
+                                        {{ \App\Http\Controllers\RetraitController::getOperateurs()[$retrait->operateur] }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td>{{ $retrait->mobile }}</td>
                                 <td>
                                     @if($retrait->status === 'en_attente')
@@ -141,6 +149,16 @@
                                                 <div class="org-detail-row">
                                                     <span class="org-detail-label">Beneficiaire</span>
                                                     <span class="org-detail-value">{{ $retrait->nom }}</span>
+                                                </div>
+                                                <div class="org-detail-row">
+                                                    <span class="org-detail-label">Operateur</span>
+                                                    <span class="org-detail-value">
+                                                        @if($retrait->operateur && isset(\App\Http\Controllers\RetraitController::getOperateurs()[$retrait->operateur]))
+                                                            {{ \App\Http\Controllers\RetraitController::getOperateurs()[$retrait->operateur] }}
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </span>
                                                 </div>
                                                 <div class="org-detail-row">
                                                     <span class="org-detail-label">Mobile</span>

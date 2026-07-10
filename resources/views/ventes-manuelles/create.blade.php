@@ -171,7 +171,7 @@
                                 <div class="fw-bold" style="font-size: 0.9rem; color: var(--vert);">{{ number_format($vente->montant, 0, ',', ' ') }} FCFA</div>
                             </div>
                             <div class="text-muted" style="font-size: 0.82rem;">
-                                {{ $vente->evenement?->titre ?? '—' }} — {{ ucfirst($vente->categorie) }} · {{ $vente->methode_paiement === 'especes' ? 'Espèces' : ($vente->methode_paiement === 'mobile_money' ? 'Mobile' : ucfirst($vente->methode_paiement ?? 'Espèces')) }}
+                                {{ $vente->evenement?->titre ?? '—' }} — {{ ucfirst($vente->categorie) }} · {{ \App\Models\Ticket::methodePaiementLabel($vente->methode_paiement) }}
                             </div>
                             <div style="font-size: 0.75rem; color: var(--gris); margin-top: 0.25rem;">
                                 {{ $vente->date_achat->diffForHumans() }}
@@ -465,7 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     currency: { iso: 'XOF' },
                     onComplete: function(data) {
                         if (data.reason === 'CHECKOUT COMPLETE' && data.transaction && data.transaction.id) {
-                            window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved');
+                            var pm = data.transaction.payment_method || 'mobile_money';
+                            var ph = data.transaction.phone || '';
+                            window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved') + '&payment_method=' + pm + '&phone=' + ph;
                         } else {
                             alert('Paiement annulé ou fermé. Vous pouvez réessayer.');
                             btnSubmit.disabled = false;

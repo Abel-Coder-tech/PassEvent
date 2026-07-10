@@ -54,12 +54,13 @@ class TicketController extends Controller
     public function show($id)
     {
         $ticket = Ticket::with('evenement', 'tarif', 'notifications')->findOrFail($id);
-        $logs = Log::where('ticket_id', $id)->orderByDesc('created_at')->get();
+        // use two-argument where to avoid argument mismatch
+        $logs = Log::where('ticket_id', $id)->orderBy('created_at', 'desc')->get();
 
         return view('tickets.show', compact('ticket', 'logs'));
     }
 
-    public function downloadPdf($id)
+    public function downloadPdf(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
@@ -67,7 +68,7 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).');
         }
 
-        $ticket->increment('download_count');
+        $ticket->increment('download_count', 1, []);
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
@@ -92,7 +93,7 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).');
         }
 
-        $ticket->increment('download_count');
+        $ticket->increment('download_count', 1, []);
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
@@ -115,6 +116,12 @@ class TicketController extends Controller
         $request->validate([
             'transaction_id' => 'required|string|max:255',
             'email' => 'required|email',
+        ],[
+            'transaction_id.required' => 'L\'ID de transaction est requis.',
+            'transaction_id.string' => 'L\'ID de transaction doit être une chaîne de caractères.',
+            'transaction_id.max' => 'L\'ID de transaction ne peut pas dépasser 255 caractères.',
+            'email.required' => 'L\'email est requis.',
+            'email.email' => 'L\'email doit être une adresse email valide.',
         ]);
 
         $tickets = Ticket::with('evenement', 'tarif')
@@ -148,7 +155,7 @@ class TicketController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        return back()->with('success', 'Ticket renvoye a ' . $ticket->email_acheteur);
+        return back()->with('success', 'Ticket renvoyé a ' . $ticket->email_acheteur);
     }
 
     public function annuler($id)
@@ -156,20 +163,20 @@ class TicketController extends Controller
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
         if ($ticket->statut_paiement !== 'payé' && $ticket->statut_paiement !== 'en_attente') {
-            return back()->with('error', 'Ce ticket ne peut pas etre annule.');
+            return back()->with('error', 'Ce ticket ne peut pas etre annulé.');
         }
 
         $ancienStatut = $ticket->statut_paiement;
 
         $ticket->update([
-            'statut_paiement' => 'remboursé',
+            'statut_paiement' => 'rembourse',
         ]);
 
         if ($ticket->evenement) {
-            $ticket->evenement->decrement('quota_vendu');
+            $ticket->evenement->decrement('quota_vendu', 1, []);
         }
         if ($ticket->tarif) {
-            $ticket->tarif->decrement('quantite_vendue');
+            $ticket->tarif->decrement('quantite_vendue', 1, []);
         }
 
         Log::create([
@@ -180,7 +187,7 @@ class TicketController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        return back()->with('success', 'Ticket annule et quota restaure.');
+        return back()->with('success', 'Ticket annulé et quota restauré.');
     }
 
     public function create() { return view('tickets.create'); }

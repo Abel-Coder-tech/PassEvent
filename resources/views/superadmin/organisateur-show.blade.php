@@ -213,7 +213,7 @@
                     <td>{{ $ticket->nom_acheteur }}</td>
                     <td>{{ $ticket->email_acheteur }}</td>
                     <td class="fw-bold" style="color: var(--sa-success);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                    <td>{{ $ticket->methode_paiement === 'cash' ? 'Espèces' : 'Mobile' }}</td>
+                    <td>{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="6" class="text-center text-muted py-3">Aucun ticket vendu</td></tr>

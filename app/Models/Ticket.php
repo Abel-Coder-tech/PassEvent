@@ -37,6 +37,23 @@ class Ticket extends Model
         'agent_vente_id',
     ];
 
+    public static function methodePaiementLabel(?string $methode): string
+    {
+        return match ($methode) {
+            'cash', 'especes' => 'Espèces',
+            'mtn' => 'MTN MoMo',
+            'moov' => 'Moov Money',
+            'celtiis' => 'Celtiis Cash',
+            'mobile_money', null => 'Mobile',
+            default => ucfirst($methode),
+        };
+    }
+
+    public function getMethodePaiementLabelAttribute(): string
+    {
+        return static::methodePaiementLabel($this->methode_paiement);
+    }
+
     public function getLabel(): string
     {
         $categorie = ucfirst($this->categorie);

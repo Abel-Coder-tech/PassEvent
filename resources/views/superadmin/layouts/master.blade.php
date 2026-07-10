@@ -524,8 +524,12 @@
             <div class="sa-nav-section">Systeme</div>
             <a href="{{ route('superadmin.notifications') }}" class="sa-nav-link {{ request()->routeIs('superadmin.notifications') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
-                @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
-                @if($unreadMsgs > 0)<span class="sa-nav-badge">{{ $unreadMsgs }}</span>@endif
+                @php
+                    $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count();
+                    $withdrawalUnread = \App\Models\AdminNotification::unread()->count();
+                    $totalNotif = $unreadMsgs + $withdrawalUnread;
+                @endphp
+                @if($totalNotif > 0)<span class="sa-nav-badge">{{ $totalNotif > 99 ? '99+' : $totalNotif }}</span>@endif
             </a>
             <a href="{{ route('superadmin.logs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.logs') ? 'active' : '' }}">
                 <i class="bi bi-journal-text"></i> Logs systeme
@@ -557,8 +561,12 @@
             <div class="sa-topbar-right">
                 <a href="{{ route('superadmin.notifications') }}" class="sa-notif-btn" title="Notifications">
                     <i class="bi bi-bell-fill"></i>
-                    @php $headerUnread = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
-                    @if($headerUnread > 0)<span class="sa-notif-dot">{{ $headerUnread > 99 ? '99+' : $headerUnread }}</span>@endif
+                    @php
+                        $headerUnread = \App\Models\Message::where('lu',false)->whereNull('user_id')->count();
+                        $headerWithdrawal = \App\Models\AdminNotification::unread()->count();
+                        $headerTotal = $headerUnread + $headerWithdrawal;
+                    @endphp
+                    @if($headerTotal > 0)<span class="sa-notif-dot">{{ $headerTotal > 99 ? '99+' : $headerTotal }}</span>@endif
                 </a>
                 <span class="sa-topbar-badge"><i class="bi bi-shield-fill-check"></i> Super Admin</span>
                 <span class="sa-topbar-date">{{ now()->format('d M Y') }}</span>

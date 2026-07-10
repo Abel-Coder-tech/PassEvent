@@ -144,7 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         onComplete: function(data) {
             if (data.reason === 'CHECKOUT COMPLETE' && data.transaction && data.transaction.id) {
-                window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved');
+                var pm = data.transaction.payment_method || 'mobile_money';
+                var ph = data.transaction.phone || '';
+                window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved') + '&payment_method=' + pm + '&phone=' + ph;
             } else {
                 errorDiv.textContent = 'Paiement annulé ou fermé. Vous pouvez réessayer.';
                 errorDiv.style.display = 'block';

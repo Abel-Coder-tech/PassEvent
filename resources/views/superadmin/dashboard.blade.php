@@ -141,6 +141,35 @@
                     <span>Messages non lus</span>
                     <span class="sa-badge sa-badge-danger">{{ $messagesNonLus }}</span>
                 </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span>Demandes de retrait</span>
+                    @if($withdrawalNotificationsUnread > 0)
+                        <span class="sa-badge sa-badge-warning">{{ $withdrawalNotificationsUnread }}</span>
+                    @else
+                        <span class="sa-badge sa-badge-success">0</span>
+                    @endif
+                </div>
+                @if($withdrawalNotifications->count() > 0)
+                    <div style="margin-top:0.5rem;border-top:1px solid #f0f0f0;padding-top:0.5rem;">
+                        @foreach($withdrawalNotifications->take(5) as $notif)
+                            <div class="d-flex justify-content-between align-items-start py-1" style="font-size:0.78rem;border-bottom:1px solid #f8f6f9;">
+                                <div>
+                                    <strong>{{ $notif->withdrawal?->user?->nom ?? 'Organisateur' }}</strong>
+                                    <span style="color:var(--sa-text-muted);display:block;font-size:0.72rem;">
+                                        {{ number_format($notif->withdrawal?->montant ?? 0, 0, ',', ' ') }} F
+                                        &middot; {{ $notif->created_at->diffForHumans() }}
+                                    </span>
+                                </div>
+                                @if(!$notif->read_at)
+                                    <span style="width:8px;height:8px;border-radius:50%;background:var(--sa-warning);display:inline-block;flex-shrink:0;margin-top:4px;"></span>
+                                @endif
+                            </div>
+                        @endforeach
+                        <a href="{{ route('superadmin.retraits') }}" class="d-block text-center mt-2" style="font-size:0.78rem;color:var(--sa-primary);">
+                            Voir toutes les demandes <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                @endif
                 <div class="d-flex justify-content-between py-2"><span>Abonnes newsletter</span><strong>{{ $newsletterCount }}</strong></div>
             </div>
         </div>

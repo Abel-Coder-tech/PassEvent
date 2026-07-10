@@ -177,6 +177,20 @@ class DashboardController extends Controller
             return $e->capacite > 0 ? ($e->quota_vendu / $e->capacite) * 100 : 0;
         });
 
+        $reseauxPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->whereNotIn('methode_paiement', ['cash', 'especes'])
+            ->select('methode_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
+            ->groupBy('methode_paiement')
+            ->get()
+            ->keyBy('methode_paiement');
+
+        $reseauxConfig = [
+            'mtn' => ['label' => 'MTN MoMo', 'icon' => 'bi-phone'],
+            'moov' => ['label' => 'Moov Money', 'icon' => 'bi-phone'],
+            'celtiis' => ['label' => 'Celtiis Cash', 'icon' => 'bi-phone'],
+        ];
+
         return view('dashboard', compact(
             'totalEvenements',
             'evenementsActifs',
@@ -204,6 +218,8 @@ class DashboardController extends Controller
             'scanPct',
             'activiteRecents',
             'remplissageMoyen',
+            'reseauxPaiement',
+            'reseauxConfig',
         ));
     }
 }
