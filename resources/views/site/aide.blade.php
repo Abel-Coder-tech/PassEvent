@@ -477,7 +477,9 @@
                                      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;margin-bottom:0.75rem;">
                                     <i class="bi bi-exclamation-triangle me-1"></i> <strong> Attention : </strong> À partir du moment où un retrait est validé avant la tenue de l'événement, l'organisateur ne pourra plus annuler cet événement. S'il tient à l'annuler en cas de force majeure, il devra assurer lui-même le remboursement des tickets à hauteur du montant retiré.
                                 </div>
-                                    <li>Le montant minimum pouvant être retiré est de <strong>100 FCFA</strong> (sous réserve du solde disponible).</li>
+                                    <li>Le retrait minimal autorisé aux organisateurs varie conformément aux conditions de nos agrégateurs partenaires: <br> </li>
+                                        - <strong>1 000 F CFA :</strong> Fedaday <br> 
+                                        - <strong>50 000 F CFA :</strong>Kkiapay </li>
                                 </ul>
 
                                 <hr style="margin:0.75rem 0;">

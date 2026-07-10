@@ -13,7 +13,6 @@ use App\Models\Message;
 use App\Models\Newsletter;
 use App\Models\Withdrawal;
 use App\Models\Agent;
-use App\Models\AdminNotification;
 use App\Models\AgentVente;
 use App\Models\DemandeRemboursement;
 use Illuminate\Http\Request;
@@ -100,13 +99,6 @@ class SuperAdminController extends Controller
         $messagesNonLus = Message::where('lu', false)->whereNull('user_id')->count();
         $newsletterCount = Newsletter::where('actif', true)->count();
 
-        $withdrawalNotifications = AdminNotification::with('withdrawal.user')
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        $withdrawalNotificationsUnread = AdminNotification::unread()->count();
-
         return view('superadmin.dashboard', compact(
             'totalUsers', 'totalOrganisateurs', 'totalSuperAdmins',
             'totalEvenements', 'evenementsActifs', 'ticketsVendus',
@@ -116,8 +108,7 @@ class SuperAdminController extends Controller
             'transactionsReussies', 'transactionsEchouees',
             'montantsJournaliers', 'commissionPlateforme',
             'commissionPct',
-            'messagesNonLus', 'newsletterCount',
-            'withdrawalNotifications', 'withdrawalNotificationsUnread'
+            'messagesNonLus', 'newsletterCount'
         ));
     }
 

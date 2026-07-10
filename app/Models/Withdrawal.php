@@ -11,7 +11,6 @@ class Withdrawal extends Model
         'user_id',
         'montant',
         'commission_percentage',
-        'operateur',
         'nom',
         'mobile',
         'status',
