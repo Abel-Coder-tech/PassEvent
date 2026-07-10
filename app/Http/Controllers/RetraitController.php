@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ticket;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +17,11 @@ class RetraitController extends Controller
     {
         $evenementsIds = $user->evenements()->pluck('id');
 
-        $totalTickets = (float) \App\Models\Ticket::whereIn('evenement_id', $evenementsIds)
+        $totalTickets = (float) Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->sum('montant');
 
-        $mobileRecettes = (float) \App\Models\Ticket::whereIn('evenement_id', $evenementsIds)
+        $mobileRecettes = (float) Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->whereNotIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
@@ -31,6 +32,20 @@ class RetraitController extends Controller
             ->where('status', 'approuvé')
             ->sum('montant');
 
+        $reseauxPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->whereNotIn('methode_paiement', ['cash', 'especes'])
+            ->select('methode_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
+            ->groupBy('methode_paiement')
+            ->get()
+            ->keyBy('methode_paiement');
+
+        $reseauxConfig = [
+            'mtn' => ['label' => 'MTN MoMo', 'icon' => 'bi-phone'],
+            'moov' => ['label' => 'Moov Money', 'icon' => 'bi-phone'],
+            'celtiis' => ['label' => 'Celtiis Cash', 'icon' => 'bi-phone'],
+        ];
+
         return [
             'recettesBrutes' => $mobileRecettes,
             'commission' => $commission,
@@ -38,6 +53,8 @@ class RetraitController extends Controller
             'totalRetraits' => $totalRetraits,
             'soldeDisponible' => max(0, $mobileRecettes - $commission - $totalRetraits),
             'totalTickets' => $totalTickets,
+            'reseauxPaiement' => $reseauxPaiement,
+            'reseauxConfig' => $reseauxConfig,
         ];
     }
 

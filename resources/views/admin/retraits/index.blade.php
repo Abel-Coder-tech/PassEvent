@@ -52,6 +52,91 @@
         </div>
     </div>
 
+    {{-- Répartition par opérateur mobile --}}
+    @if($recettesBrutes > 0)
+    <div class="row g-3 mb-4">
+        @php $totalMobileTickets = 0; $totalMobileMontant = 0; @endphp
+        @foreach($reseauxConfig as $key => $cfg)
+            @php
+                $data = $reseauxPaiement->get($key);
+                $count = $data ? (int) $data->total : 0;
+                $montant = $data ? (int) $data->montant : 0;
+                $totalMobileTickets += $count;
+                $totalMobileMontant += $montant;
+            @endphp
+            <div class="col-md-4">
+                <div class="metric-card" style="border-top-color: #3498db; height:100%;">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div style="width:42px;height:42px;background:rgba(52,152,219,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="bi bi-phone" style="color:#3498db;font-size:1.15rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;color:var(--sombre);font-size:0.95rem;">{{ $cfg['label'] }}</div>
+                            <div style="font-size:0.75rem;color:var(--gris);">{{ $count }} ticket{{ $count > 1 ? 's' : '' }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span style="color:var(--gris);font-size:0.8rem;">Montant collecté</span>
+                        <span style="font-weight:700;font-size:1rem;">{{ number_format($montant, 0, ',', ' ') }} F</span>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    {{-- Tableau récapitulatif --}}
+    <div class="panel-card mb-4">
+        <div class="panel-card-header">
+            <h5><i class="bi bi-bar-chart me-1" style="color:#3498db;"></i> Récapitulatif par opérateur</h5>
+        </div>
+        <div class="panel-card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Opérateur</th>
+                            <th class="text-center">Tickets</th>
+                            <th class="text-end">Montant</th>
+                            <th class="text-end">Part</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($reseauxConfig as $key => $cfg)
+                            @php
+                                $data = $reseauxPaiement->get($key);
+                                $count = $data ? (int) $data->total : 0;
+                                $montant = $data ? (int) $data->montant : 0;
+                                $pct = $totalMobileMontant > 0 ? round(($montant / $totalMobileMontant) * 100, 1) : 0;
+                            @endphp
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:32px;height:32px;background:rgba(52,152,219,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                            <i class="bi bi-phone" style="color:#3498db;font-size:0.85rem;"></i>
+                                        </div>
+                                        <span style="font-weight:600;">{{ $cfg['label'] }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">{{ $count }}</td>
+                                <td class="text-end">{{ number_format($montant, 0, ',', ' ') }} F</td>
+                                <td class="text-end">{{ $pct }}%</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#f8f6f9;font-weight:700;">
+                            <td>Total</td>
+                            <td class="text-center">{{ $totalMobileTickets }}</td>
+                            <td class="text-end">{{ number_format($totalMobileMontant, 0, ',', ' ') }} F</td>
+                            <td class="text-end">100%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Modal demande retrait -->
     <div class="modal fade" id="retraitModal" tabindex="-1">
         <div class="modal-dialog">

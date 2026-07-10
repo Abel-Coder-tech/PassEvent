@@ -190,6 +190,23 @@
             <div class="col-lg-4 show-event-sidebar">
 
                 <!-- Partager -->
+                <div class="show-card show-card-left">
+                    <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="show-share-btn" onclick="shareEvent()" title="Partager">
+                            <i class="bi bi-share-fill"></i>
+                        </button>
+                        <button type="button" class="show-share-btn" onclick="copyLink()" title="Copier le lien">
+                            <i class="bi bi-link-45deg"></i>
+                        </button>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}" target="_blank" class="show-share-btn" title="Partager sur Facebook">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . url()->current()) }}" target="_blank" class="show-share-btn" title="Partager sur WhatsApp">
+                            <i class="bi bi-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
                 
 
                 <!-- Lieu -->
