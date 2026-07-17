@@ -655,7 +655,7 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="mb-0" style="color: rgba(255,255,255,0.4); font-size: 0.78rem;">
-                        &copy; {{ date('Y') }} PaxEvent . Billeterie en ligne – Tous droits réservés.
+                        &copy; {{ date('Y') }} PaxEvent . Billetterie en ligne – Tous droits réservés.
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
