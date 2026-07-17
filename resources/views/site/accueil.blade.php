@@ -28,7 +28,7 @@
         <div class="row g-5 align-items-center">
             <div class="col-lg-6 d-flex flex-column align-items-center justify-content-center text-center text-lg-start">
                 <span class="hero-chip">Billetterie en ligne 100% Bénin</span>
-                <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez rapidement vos tickets </h1>
+                <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez <div style="color: #542680;"> rapidement vos tickets </div></h1>
                 <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.</p>
                 <div class="hero-actions">
                     <a href="{{ route('evenements.public') }}" class="btn-hero-primary">

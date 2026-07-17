@@ -13,7 +13,9 @@
             font-size: 10px;
             line-height: 1.4;
         }
-        * { margin: 0; padding: 0; font-family: 'DejaVu Sans'; }
+        * { margin: 0; padding: 0; 
+            font-family: 'DejaVu Sans';
+         }
         .ticket {
             width: 380px;
             margin: 20px auto;

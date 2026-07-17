@@ -549,16 +549,17 @@
         .pagination {
             margin-bottom: 0;
             gap: 2px;
+            flex-wrap: wrap;
         }
         .page-link {
             border: 1px solid #e0dde3;
             color: var(--sombre);
             font-size: 0.82rem;
             font-weight: 600;
-            padding: 0.3rem 0.65rem;
+            padding: 0.3rem 0.5rem;
             border-radius: 6px !important;
             margin: 0;
-            min-width: 32px;
+            min-width: 30px;
             text-align: center;
         }
         .page-link i {
@@ -585,6 +586,20 @@
             background: #f8f6f9;
             border-color: var(--violet);
             color: var(--violet);
+        }
+        @media (max-width: 576px) {
+            .pagination {
+                justify-content: center !important;
+                gap: 1px;
+            }
+            .page-link {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.4rem;
+                min-width: 28px;
+            }
+            .page-link i {
+                font-size: 0.6rem;
+            }
         }
 
         /* Form controls */

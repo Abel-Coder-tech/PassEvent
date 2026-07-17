@@ -231,7 +231,7 @@
     </div>
 
     @if($retraits->hasPages())
-        <div class="mt-3">{{ $retraits->links() }}</div>
+        <div class="mt-3 pagination-wrap">{{ $retraits->links() }}</div>
     @endif
 </div>
 @endsection
