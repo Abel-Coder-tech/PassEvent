@@ -186,6 +186,8 @@
             margin-left: 250px;
             flex: 1;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .sa-topbar {
@@ -363,6 +365,11 @@
             .sa-main { margin-left: 0; }
             .toggle-sidebar { display: block; }
             .sidebar-overlay.active { display: block; }
+            .sa-topbar {
+                position: sticky;
+                top: 0;
+                z-index: 99;
+            }
         }
 
         .activity-pulse {
