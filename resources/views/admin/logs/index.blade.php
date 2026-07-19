@@ -286,10 +286,11 @@ function showLogDetail(logId) {
             let detailsHtml = '';
             if (data.details && typeof data.details === 'object') {
                 detailsHtml = Object.entries(data.details).map(([key, value]) => {
-                    return `<div class="mb-2"><strong>${key}:</strong> <code style="font-size: 0.78rem;">${typeof value === 'object' ? JSON.stringify(value) : value}</code></div>`;
+                    var v = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                    return '<div class="mb-2"><strong>' + escapeHtml(key) + ':</strong> <code style="font-size: 0.78rem;">' + escapeHtml(v) + '</code></div>';
                 }).join('');
             } else {
-                detailsHtml = `<div class="mb-2"><code style="font-size: 0.78rem; white-space: pre-wrap;">${JSON.stringify(data.details, null, 2)}</code></div>`;
+                detailsHtml = '<div class="mb-2"><code style="font-size: 0.78rem; white-space: pre-wrap;">' + escapeHtml(JSON.stringify(data.details, null, 2)) + '</code></div>';
             }
 
             content.innerHTML = `
@@ -297,25 +298,25 @@ function showLogDetail(logId) {
                     <div class="col-md-6">
                         <div class="p-3 rounded" style="background: var(--blanc-casse);">
                             <label class="text-muted" style="font-size: 0.72rem; font-weight: 600;">TYPE D'OPÉRATION</label>
-                            <div class="fw-bold" style="font-size: 0.9rem;">${data.type_operation}</div>
+                            <div class="fw-bold" style="font-size: 0.9rem;">` + escapeHtml(data.type_operation) + `</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 rounded" style="background: var(--blanc-casse);">
                             <label class="text-muted" style="font-size: 0.72rem; font-weight: 600;">HORODATAGE</label>
-                            <div class="fw-bold" style="font-size: 0.9rem;">${data.created_at}</div>
+                            <div class="fw-bold" style="font-size: 0.9rem;">` + escapeHtml(data.created_at) + `</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 rounded" style="background: var(--blanc-casse);">
                             <label class="text-muted" style="font-size: 0.72rem; font-weight: 600;">ADRESSE IP</label>
-                            <div class="fw-bold" style="font-size: 0.85rem;">${data.ip || '—'}</div>
+                            <div class="fw-bold" style="font-size: 0.85rem;">` + escapeHtml(data.ip || '—') + `</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 rounded" style="background: var(--blanc-casse);">
                             <label class="text-muted" style="font-size: 0.72rem; font-weight: 600;">USER AGENT</label>
-                            <div style="font-size: 0.75rem; word-break: break-all;">${data.user_agent || '—'}</div>
+                            <div style="font-size: 0.75rem; word-break: break-all;">` + escapeHtml(data.user_agent || '—') + `</div>
                         </div>
                     </div>
                     ${data.ticket ? `
@@ -323,10 +324,10 @@ function showLogDetail(logId) {
                         <div class="p-3 rounded" style="background: rgba(135,66,139,0.06);">
                             <label class="text-muted" style="font-size: 0.72rem; font-weight: 600;">TICKET ASSOCIÉ</label>
                             <div class="row g-2 mt-1">
-                                <div class="col-md-4"><strong>Code:</strong> <code>${data.ticket.code_unique}</code></div>
-                                <div class="col-md-4"><strong>Acheteur:</strong> ${data.ticket.nom_acheteur}</div>
-                                <div class="col-md-4"><strong>Email:</strong> ${data.ticket.email_acheteur}</div>
-                                ${data.ticket.evenement ? `<div class="col-12"><strong>Événement:</strong> ${data.ticket.evenement}</div>` : ''}
+                                <div class="col-md-4"><strong>Code:</strong> <code>` + escapeHtml(data.ticket.code_unique) + `</code></div>
+                                <div class="col-md-4"><strong>Acheteur:</strong> ` + escapeHtml(data.ticket.nom_acheteur) + `</div>
+                                <div class="col-md-4"><strong>Email:</strong> ` + escapeHtml(data.ticket.email_acheteur) + `</div>
+                                ${data.ticket.evenement ? '<div class="col-12"><strong>Événement:</strong> ' + escapeHtml(data.ticket.evenement) + '</div>' : ''}
                             </div>
                         </div>
                     </div>
@@ -334,7 +335,7 @@ function showLogDetail(logId) {
                     <div class="col-12">
                         <div class="p-3 rounded" style="background: #f5f5f5;">
                             <label class="text-muted" style="font-size: 0.72rem; font-weight: 600;">JSON BRUT</label>
-                            <pre style="font-size: 0.72rem; margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;">${JSON.stringify(data.details, null, 2)}</pre>
+                            <pre style="font-size: 0.72rem; margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;">` + escapeHtml(JSON.stringify(data.details, null, 2)) + `</pre>
                         </div>
                     </div>
                 </div>
@@ -373,9 +374,9 @@ document.getElementById('formRecuperer').addEventListener('submit', function(e) 
                     <i class="bi bi-check-circle me-2"></i>
                     <strong>Ticket trouvé et envoyé !</strong><br>
                     <span class="mt-1 d-block">
-                        Code: <strong>${data.ticket.code}</strong><br>
-                        Événement: ${data.ticket.evenement}<br>
-                        Envoyé à: ${data.ticket.email}
+                        Code: <strong>` + escapeHtml(data.ticket.code) + `</strong><br>
+                        Événement: ` + escapeHtml(data.ticket.evenement) + `<br>
+                        Envoyé à: ` + escapeHtml(data.ticket.email) + `
                     </span>
                 </div>
             `;
@@ -383,7 +384,7 @@ document.getElementById('formRecuperer').addEventListener('submit', function(e) 
         } else {
             result.innerHTML = `
                 <div class="alert alert-danger mt-3" style="border-radius: 8px; font-size: 0.85rem;">
-                    <i class="bi bi-x-circle me-2"></i> ${data.message}
+                    <i class="bi bi-x-circle me-2"></i> ` + escapeHtml(data.message) + `
                 </div>
             `;
         }

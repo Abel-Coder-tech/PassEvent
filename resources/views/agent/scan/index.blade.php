@@ -239,20 +239,20 @@ function submitScan(code) {
             resultDiv.innerHTML = '<div class="result-valid">' +
                 '<i class="bi bi-check-circle-fill" style="font-size:2.5rem;color:#28a745;"></i>' +
                 '<h5 class="mt-2 mb-1 text-success">Ticket validé !</h5>' +
-                '<p class="mb-1 fw-semibold">' + (data.ticket?.nom || '') + '</p>' +
-                '<small class="text-muted">' + (data.ticket?.categorie || '') + ' | ' + (data.ticket?.montant || '') + '</small>' +
+                '<p class="mb-1 fw-semibold">' + escapeHtml(data.ticket?.nom || '') + '</p>' +
+                '<small class="text-muted">' + escapeHtml(data.ticket?.categorie || '') + ' | ' + escapeHtml(data.ticket?.montant || '') + '</small>' +
                 '</div>';
         } else {
             let extra = '';
             if (data.ticket) {
                 extra = '<div class="mt-2 p-2 bg-light rounded small">' +
-                    'Déjà scanné par : <strong>' + (data.ticket.nom || '') + '</strong>' +
-                    ' le ' + (data.ticket.date || '') +
+                    'Déjà scanné par : <strong>' + escapeHtml(data.ticket.nom || '') + '</strong>' +
+                    ' le ' + escapeHtml(data.ticket.date || '') +
                     '</div>';
             }
             resultDiv.innerHTML = '<div class="result-invalid">' +
                 '<i class="bi bi-x-circle-fill" style="font-size:2.5rem;color:#dc3545;"></i>' +
-                '<h5 class="mt-2 mb-1 text-danger">' + data.message + '</h5>' +
+                '<h5 class="mt-2 mb-1 text-danger">' + escapeHtml(data.message) + '</h5>' +
                 extra +
                 '</div>';
         }

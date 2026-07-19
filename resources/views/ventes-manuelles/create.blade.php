@@ -483,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('successMessage').textContent = body.message;
                 let ticketsHtml = '<ul class="list-unstyled mb-0">';
                 body.tickets.forEach(t => {
-                    ticketsHtml += '<li><strong>Code :</strong> ' + t.code_unique + '</li>';
+                    ticketsHtml += '<li><strong>Code :</strong> ' + escapeHtml(t.code_unique) + '</li>';
                 });
                 if (body.total > 0) {
                     ticketsHtml += '</li><li class="fw-bold mt-1">Total : ' + numberFormat(body.total) + ' FCFA</li></ul>';

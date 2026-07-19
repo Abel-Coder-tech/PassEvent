@@ -683,13 +683,14 @@
         })
         .then(r => r.json())
         .then(d => {
-            msg.innerHTML = '<span style="color:var(--violet-clair);">' + d.message + '</span>';
+            msg.innerHTML = '<span style="color:var(--violet-clair);">' + escapeHtml(d.message) + '</span>';
             if (d.success) this.querySelector('input').value = '';
         })
         .catch(() => msg.innerHTML = '<span style="color:#e74c3c;">Erreur. Reessayez.</span>')
         .finally(() => { btn.disabled = false; btn.textContent = 'OK'; });
     });
     </script>
+    <script>function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}</script>
     @yield('scripts')
 </body>
 </html>

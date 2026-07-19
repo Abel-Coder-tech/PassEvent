@@ -9,7 +9,7 @@
     </div>
 
     @if (session('success'))
-    <div class="alert alert-success py-2 small">{!! session('success') !!}</div>
+    <div class="alert alert-success py-2 small">{{ session('success') }}</div>
     @endif
 
     <div class="card border-0 shadow-sm">

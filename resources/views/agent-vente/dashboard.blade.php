@@ -205,18 +205,18 @@ function chargerHistorique() {
             } else {
                 tbody.innerHTML = data.tickets.map(t => `
                     <tr>
-                        <td class="ps-3 small">${t.date}</td>
-                        <td class="small">${t.nom}</td>
-                        <td class="small">${t.tarif}</td>
+                        <td class="ps-3 small">${escapeHtml(t.date)}</td>
+                        <td class="small">${escapeHtml(t.nom)}</td>
+                        <td class="small">${escapeHtml(t.tarif)}</td>
                         ${t.montant_val > 0 ? `
-                        <td class="small fw-medium">${t.montant}</td>
-                        <td class="small">${t.methode_label}</td>
+                        <td class="small fw-medium">${escapeHtml(t.montant)}</td>
+                        <td class="small">${escapeHtml(t.methode_label)}</td>
                         ` : `
                         <td class="small text-muted">Gratuit</td>
                         <td class="small">—</td>
                         `}
                         <td class="pe-3">
-                            <a href="/vente/tickets/${t.id}/pdf" class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
+                            <a href="/vente/tickets/${escapeHtml(t.id)}/pdf" class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
                                 <i class="bi bi-filetype-pdf"></i>
                             </a>
                         </td>

@@ -454,14 +454,14 @@ function showResult(data) {
     if (data.ticket) {
         const t = data.ticket;
         detailsHtml = `
-            ${t.code ? `<div class="col-12"><strong>Code:</strong> <code>${t.code}</code></div>` : ''}
-            ${t.nom ? `<div class="col-md-6"><strong>Acheteur:</strong> ${t.nom}</div>` : ''}
-            ${t.evenement ? `<div class="col-md-6"><strong>Événement:</strong> ${t.evenement}</div>` : ''}
-            ${t.categorie ? `<div class="col-md-4"><strong>Catégorie:</strong> ${t.categorie}</div>` : ''}
-            ${t.type ? `<div class="col-md-4"><strong>Type:</strong> ${t.type}</div>` : ''}
-            ${t.montant ? `<div class="col-md-4"><strong>Montant:</strong> ${t.montant}</div>` : ''}
-            ${t.date_scan ? `<div class="col-12"><strong>Scanné le:</strong> ${t.date_scan}</div>` : ''}
-            ${t.date_event ? `<div class="col-12"><strong>Date événement:</strong> ${t.date_event}</div>` : ''}
+            ${t.code ? `<div class="col-12"><strong>Code:</strong> <code>${escapeHtml(t.code)}</code></div>` : ''}
+            ${t.nom ? `<div class="col-md-6"><strong>Acheteur:</strong> ${escapeHtml(t.nom)}</div>` : ''}
+            ${t.evenement ? `<div class="col-md-6"><strong>Événement:</strong> ${escapeHtml(t.evenement)}</div>` : ''}
+            ${t.categorie ? `<div class="col-md-4"><strong>Catégorie:</strong> ${escapeHtml(t.categorie)}</div>` : ''}
+            ${t.type ? `<div class="col-md-4"><strong>Type:</strong> ${escapeHtml(t.type)}</div>` : ''}
+            ${t.montant ? `<div class="col-md-4"><strong>Montant:</strong> ${escapeHtml(t.montant)}</div>` : ''}
+            ${t.date_scan ? `<div class="col-12"><strong>Scanné le:</strong> ${escapeHtml(t.date_scan)}</div>` : ''}
+            ${t.date_event ? `<div class="col-12"><strong>Date événement:</strong> ${escapeHtml(t.date_event)}</div>` : ''}
         `;
     }
     details.innerHTML = detailsHtml;
