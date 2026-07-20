@@ -28,7 +28,7 @@
         <div class="row g-5 align-items-center">
             <div class="col-lg-6 d-flex flex-column align-items-center justify-content-center text-center text-lg-start">
                 <span class="hero-chip">Billetterie en ligne 100% Bénin</span>
-                <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez <div style="color: #542680;"> rapidement vos tickets </div></h1>
+                <h1 class="hero-title align-items-center justify-content-center text-center text-center">Achetez et vendez <span style="color: #542680; display: block;"> rapidement vos tickets </span></h1>
                 <p class="hero-subtitle align-items-center justify-content-center text-center">La solution simple et rapide pour gérer vos événements et vendre vos billets en ligne.</p>
                 <div class="hero-actions">
                     <a href="{{ route('evenements.public') }}" class="btn-hero-primary">
@@ -271,10 +271,12 @@
         justify-content: center;
     }
     .hero-illustration {
-        width: 500px;
-        height: 400px;
+        width: 400px;
+        height: 320px;
         border-radius: 10px;
         animation: heroFadeUp 0.8s ease 0.3s both;
+        max-width: 100%;
+        object-fit: cover;
     }
     .hero-float-card {
         position: absolute;
@@ -340,9 +342,9 @@
         .hero-title { font-size: 1.8rem; }
         .hero-subtitle { font-size: 0.95rem; }
         .hero-features { font-size: 0.78rem; }
-        .hero-actions { flex-direction: column; width: 100%; }
+        .hero-actions { flex-direction: row; width: 100%; gap: 0.6rem; }
         .btn-hero-primary,
-        .btn-hero-outline { width: 100%; justify-content: center; }
+        .btn-hero-outline { width: auto; justify-content: center; padding: 0.7rem 1.2rem; font-size: 0.85rem; }
         .hero-stats { gap: 1.5rem; }
         .hero-stat-value { font-size: 1.2rem; }
         .hero-illustration {
