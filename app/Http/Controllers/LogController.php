@@ -11,17 +11,19 @@ use Illuminate\Support\Facades\Mail;
 
 class LogController extends Controller
 {
+    // Liste les logs d'activité avec filtres par type, recherche et période
     public function index(Request $request)
     {
         $type = $request->input('type');
         $q = $request->input('q');
-        $periode = $request->input('periode', '30');
+        $periode = $request->input('periode', '30'); // Défaut : 30 jours
 
         $startDate = $this->getStartDate($periode);
 
         $query = Log::with('ticket.evenement')
             ->where('created_at', '>=', $startDate);
 
+        // Restreint aux événements de l'organisateur sauf pour le super admin
         if (auth()->user()->role !== 'super_admin') {
             $query->whereHas('ticket.evenement', fn($q) => $q->where('user_id', auth()->id()));
         }
@@ -58,10 +60,12 @@ class LogController extends Controller
         return view('admin.logs.index', compact('logs', 'stats', 'types', 'type', 'q', 'periode'));
     }
 
+    // Affiche les détails d'un log en JSON
     public function detail($id)
     {
         $log = Log::with(['ticket.evenement', 'ticket.tarif'])->findOrFail($id);
 
+        // Vérification de propriété (sauf super admin)
         if (auth()->user()->role !== 'super_admin') {
             if (!$log->ticket || !$log->ticket->evenement || $log->ticket->evenement->user_id !== auth()->id()) {
                 abort(403);
@@ -84,6 +88,7 @@ class LogController extends Controller
         ]);
     }
 
+    // Récupère et renvoie un ticket par téléphone/email depuis l'interface admin
     public function recuperer(Request $request)
     {
         $validated = $request->validate([
@@ -136,6 +141,7 @@ class LogController extends Controller
         }
     }
 
+    // Calcule la date de début selon la période sélectionnée
     private function getStartDate(string $periode): \Carbon\Carbon
     {
         return match ($periode) {
@@ -147,6 +153,7 @@ class LogController extends Controller
         };
     }
 
+    // Calcule les statistiques agrégées des logs pour la période donnée
     private function computeStats(\Carbon\Carbon $startDate): array
     {
         $baseQuery = Log::where('created_at', '>=', $startDate);

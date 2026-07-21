@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 
 class MessageController extends Controller
 {
+    // Liste les messages reçus par l'organisateur avec compteur de non-lus
     public function index()
     {
         $messages = Message::where('user_id', auth()->id())
@@ -18,17 +19,19 @@ class MessageController extends Controller
         return view('admin.messages.index', compact('messages', 'nonLus'));
     }
 
+    // Affiche un message et le marque comme lu
     public function show($id)
     {
         $message = Message::where('user_id', auth()->id())->findOrFail($id);
 
         if (!$message->lu) {
-            $message->update(['lu' => true]);
+            $message->update(['lu' => true]); // Marque comme lu lors de la consultation
         }
 
         return view('admin.messages.show', compact('message'));
     }
 
+    // Répond à un message et envoie l'email de réponse à l'expéditeur
     public function repondre(Request $request, $id)
     {
         $validated = $request->validate([
@@ -57,6 +60,7 @@ class MessageController extends Controller
         return back()->with('success', 'Reponse envoyee avec succes.');
     }
 
+    // Supprime un message
     public function destroy($id)
     {
         $message = Message::where('user_id', auth()->id())->findOrFail($id);

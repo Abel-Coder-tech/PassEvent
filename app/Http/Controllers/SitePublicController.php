@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Mail;
 
 class SitePublicController extends Controller
 {
+    // Page d'accueil publique avec événements à la une et filtres
     public function accueil(Request $request)
     {
+        // Récupère les catégories disponibles
         $categories = Evenement::where('statut', '=', 'publié')
             ->where('date_event', '>=', now())
             ->whereNotNull('categorie')
@@ -53,16 +55,19 @@ class SitePublicController extends Controller
         return view('site.accueil', compact('evenementsVedettes', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
     }
 
+    // Page d'aide / FAQ
     public function aide()
     {
         return view('site.aide');
     }
 
+    // Formulaire de contact public
     public function contact()
     {
         return view('site.contact');
     }
 
+    // Traite le formulaire de contact et notifie les super admins
     public function contactStore(Request $request)
     {
         $validated = $request->validate([
@@ -108,16 +113,18 @@ class SitePublicController extends Controller
             ->with('success', 'Votre message a ete envoye avec succes. Nous vous repondrons dans les plus brefs delais.');
     }
 
+    // Page de politique de confidentialité
     public function confidentialite()
     {
         $file = resource_path('views/site/confidentialite.blade.php');
         $derniereMiseAJour = file_exists($file)
-            ? date('F Y', filemtime($file))
+            ? date('F Y', filemtime($file)) // Date de dernière modification du fichier
             : now()->isoFormat('MMMM YYYY');
 
         return view('site.confidentialite', compact('derniereMiseAJour'));
     }
 
+    // Page des conditions générales d'utilisation
     public function cgu()
     {
         $file = resource_path('views/site/cgu.blade.php');
@@ -128,6 +135,7 @@ class SitePublicController extends Controller
         return view('site.cgu', compact('derniereMiseAJour'));
     }
 
+    // Page des mentions légales
     public function mentionsLegales()
     {
         $file = resource_path('views/site/mentions-legales.blade.php');
@@ -138,6 +146,7 @@ class SitePublicController extends Controller
         return view('site.mentions-legales', compact('derniereMiseAJour'));
     }
 
+    // Page de politique de remboursement
     public function politiqueRemboursement()
     {
         $file = resource_path('views/site/politique-remboursement.blade.php');
@@ -148,6 +157,7 @@ class SitePublicController extends Controller
         return view('site.politique-remboursement', compact('derniereMiseAJour'));
     }
 
+    // Page des conditions générales de vente
     public function cgv()
     {
         $file = resource_path('views/site/cgv.blade.php');
@@ -158,6 +168,7 @@ class SitePublicController extends Controller
         return view('site.cgv', compact('derniereMiseAJour'));
     }
 
+    // Page du programme d'affiliation
     public function affiliation()
     {
         $file = resource_path('views/site/affiliation.blade.php');
@@ -168,6 +179,7 @@ class SitePublicController extends Controller
         return view('site.affiliation', compact('derniereMiseAJour'));
     }
 
+    // Page du contrat de prestation
     public function contratPrestation()
     {
         $file = resource_path('views/site/contrat-prestation.blade.php');

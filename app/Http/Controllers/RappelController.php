@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\Mail;
 
 class RappelController extends Controller
 {
+    // Liste les événements à venir éligibles pour envoi de rappels
     public function index()
     {
         $evenements = Evenement::where('user_id', Auth::id())
             ->where('statut', 'publié')
-            ->where('date_event', '>', now())
+            ->where('date_event', '>', now()) // Uniquement les événements futurs
             ->orderBy('date_event', 'asc')
             ->withCount(['tickets' => fn($q) => $q->where('statut_paiement', 'payé')])
             ->get();
@@ -23,6 +24,7 @@ class RappelController extends Controller
         return view('admin.rappels.index', compact('evenements'));
     }
 
+    // Envoie un email de rappel à tous les acheteurs d'un événement
     public function envoyer(Request $request)
     {
         $validated = $request->validate([
@@ -45,10 +47,10 @@ class RappelController extends Controller
         foreach ($tickets as $ticket) {
             if ($ticket->email_acheteur) {
                 try {
-                    Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
+                    Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket)); // Renvoie le ticket en pièce jointe
                     $envoyes++;
                 } catch (\Exception $e) {
-                    $erreurs++;
+                    $erreurs++; // Compte les échecs sans interrompre
                 }
             }
         }

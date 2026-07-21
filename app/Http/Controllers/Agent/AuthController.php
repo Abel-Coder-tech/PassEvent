@@ -10,11 +10,13 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    // Affiche le formulaire de connexion des agents de scan
     public function showLoginForm()
     {
         return view('agent.auth.login');
     }
 
+    // Authentifie un agent de scan avec vérifications (actif, événement non terminé)
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -46,6 +48,7 @@ class AuthController extends Controller
         return redirect()->intended(route('agent.dashboard'));
     }
 
+    // Tableau de bord de l'agent avec ses statistiques de scan
     public function dashboard()
     {
         $agent = Auth::guard('agent')->user();
@@ -59,6 +62,7 @@ class AuthController extends Controller
         return view('agent.dashboard', compact('agent', 'evenement', 'scans', 'stats'));
     }
 
+    // Déconnecte l'agent et invalide la session
     public function logout(Request $request)
     {
         Auth::guard('agent')->logout();

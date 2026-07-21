@@ -9,22 +9,25 @@ use Illuminate\Support\Facades\Auth;
 
 class TarifController extends Controller
 {
+    // Liste les tarifs d'un événement
     public function index(Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
         $tarifs = $evenement->tarifs;
         return view('tarifs.index', compact('evenement', 'tarifs'));
     }
 
+    // Affiche le formulaire de création d'un tarif
     public function create(Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
         return view('tarifs.create', compact('evenement'));
     }
 
+    // Crée un nouveau tarif pour un événement
     public function store(Request $request, Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
         $validated = $request->validate([
             'categorie' => 'required|in:etudiant,externe',
             'type' => 'required|in:normal,vip',
@@ -49,15 +52,17 @@ class TarifController extends Controller
             ->with('success', 'Tarif ajouté avec succès.');
     }
 
+    // Affiche le formulaire d'édition d'un tarif
     public function edit(Evenement $evenement, Tarif $tarif)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
         return view('tarifs.edit', compact('evenement', 'tarif'));
     }
 
+    // Met à jour un tarif existant
     public function update(Request $request, Evenement $evenement, Tarif $tarif)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
         $validated = $request->validate([
             'categorie' => 'required|in:etudiant,externe',
             'type' => 'required|in:normal,vip',
@@ -81,10 +86,11 @@ class TarifController extends Controller
             ->with('success', 'Tarif modifié avec succès.');
     }
 
+    // Supprime un tarif
     public function destroy(Evenement $evenement, Tarif $tarif)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
-        abort_if($tarif->evenement_id !== $evenement->id, 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriétaire
+        abort_if($tarif->evenement_id !== $evenement->id, 403); // Vérification d'appartenance
         Tarif::destroy($tarif->id);
 
         return redirect()->route('admin.tarifs.index', $evenement->id)

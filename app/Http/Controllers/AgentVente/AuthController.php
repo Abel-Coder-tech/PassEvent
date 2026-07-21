@@ -15,11 +15,13 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    // Affiche le formulaire de connexion des agents de vente
     public function showLoginForm(): View
     {
         return view('agent-vente.auth.login');
     }
 
+    // Authentifie un agent de vente avec vérifications (actif, événement non terminé)
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
@@ -48,10 +50,12 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'Identifiants incorrects.']);
     }
 
+    // Tableau de bord de l'agent de vente avec ventes du jour et statistiques
     public function dashboard(): View
     {
         $agent = Auth::guard('agent_vente')->user();
 
+        // Supprime les tickets en attente depuis plus de 30 minutes (expiration)
         $agent->tickets()
             ->where('statut_paiement', 'en_attente')
             ->where('date_achat', '<', now()->subMinutes(30))
@@ -74,6 +78,7 @@ class AuthController extends Controller
         return view('agent-vente.dashboard', compact('agent', 'ticketsAujourdHui', 'stats'));
     }
 
+    // Retourne l'historique des ventes en JSON pour rafraîchissement dynamique
     public function historiqueJson(): \Illuminate\Http\JsonResponse
     {
         $agent = Auth::guard('agent_vente')->user();
@@ -106,6 +111,7 @@ class AuthController extends Controller
         ]);
     }
 
+    // Enregistre une vente de ticket avec gestion espèces ou paiement mobile
     public function vendre(Request $request): RedirectResponse
     {
         $agent = Auth::guard('agent_vente')->user();
@@ -144,12 +150,12 @@ class AuthController extends Controller
         ]);
 
         if ($validated['methode_paiement'] === 'cash') {
-            $ticket->update(['statut_paiement' => 'payé']);
+            $ticket->update(['statut_paiement' => 'payé']); // Paiement espèces = confirmé immédiatement
             $agent->evenement->increment('quota_vendu', 1);
             $tarif->increment('quantite_vendue', 1);
             $agent->increment('tickets_count');
             $agent->increment('montant_total', $tarif->prix);
-            session()->flash('ticket_created', $ticket->id);
+            session()->flash('ticket_created', $ticket->id); // Pour affichage du dernier ticket
             return redirect()->route('agent-vente.dashboard')
                 ->with('success', 'Ticket vendu avec succès !');
         }
@@ -157,6 +163,7 @@ class AuthController extends Controller
         return redirect()->route('agent-vente.paiement', $ticket->id);
     }
 
+    // Affiche la page de paiement FedaPay pour un ticket
     public function payer(Ticket $ticket): View|RedirectResponse
     {
         $agent = Auth::guard('agent_vente')->user();
@@ -176,20 +183,21 @@ class AuthController extends Controller
         return view('agent-vente.paiement', compact('agent', 'ticket', 'publicKey', 'sandbox'));
     }
 
+    // Télécharge le PDF du ticket avec QR code (max 3 téléchargements)
     public function downloadPdf(Ticket $ticket): \Illuminate\Http\Response
     {
         $agent = Auth::guard('agent_vente')->user();
 
         if ($ticket->agent_vente_id !== $agent->id) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
 
         if ($ticket->statut_paiement !== 'payé') {
-            abort(403, 'Le paiement de ce ticket n\'a pas été confirmé.');
+            abort(403, 'Le paiement de ce ticket n\'a pas été confirmé.'); // Ticket non payé
         }
 
         if ($ticket->download_count >= 3) {
-            abort(403, 'Limite de téléchargements atteinte (3 maximum).');
+            abort(403, 'Limite de téléchargements atteinte (3 maximum).'); // Limite anti-abus
         }
 
         $ticket->increment('download_count');
@@ -202,6 +210,7 @@ class AuthController extends Controller
         return $pdf->download($filename);
     }
 
+    // Déconnecte l'agent de vente
     public function logout(): RedirectResponse
     {
         Auth::guard('agent_vente')->logout();

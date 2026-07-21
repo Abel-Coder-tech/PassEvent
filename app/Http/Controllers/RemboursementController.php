@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 
 class RemboursementController extends Controller
 {
+    // Liste les tickets et demandes de remboursement de l'organisateur
     public function index(Request $request)
     {
         $evenements = Evenement::where('user_id', Auth::id())
@@ -31,10 +32,11 @@ class RemboursementController extends Controller
         $query = Ticket::with('evenement', 'tarif')->whereIn('evenement_id', $evenementsIds);
 
         if ($selectedEvent && $evenementsIds->contains($selectedEvent)) {
-            $query->where('evenement_id', $selectedEvent);
+            $query->where('evenement_id', $selectedEvent); // Filtre par événement
         }
 
         if ($q) {
+            // Recherche par nom, email, code ticket ou transaction
             $query->where(function ($sub) use ($q) {
                 $sub->where('nom_acheteur', 'like', '%' . $q . '%')
                     ->orWhere('email_acheteur', 'like', '%' . $q . '%')
@@ -44,9 +46,9 @@ class RemboursementController extends Controller
         }
 
         if ($statut === 'rembourse') {
-            $tickets = (clone $query)->where('statut_paiement', 'remboursé')->orderByDesc('updated_at')->paginate(20);
+            $tickets = (clone $query)->where('statut_paiement', 'remboursé')->orderByDesc('updated_at')->paginate(20); // Affiche les remboursés
         } else {
-            $tickets = (clone $query)->where('statut_paiement', 'payé')->orderByDesc('date_achat')->paginate(20);
+            $tickets = (clone $query)->where('statut_paiement', 'payé')->orderByDesc('date_achat')->paginate(20); // Défaut : les payés
         }
 
         $stats = [
@@ -70,6 +72,7 @@ class RemboursementController extends Controller
         ));
     }
 
+    // Crée une demande de remboursement (individuelle ou groupée)
     public function demander(Request $request)
     {
         $validated = $request->validate([
@@ -79,6 +82,7 @@ class RemboursementController extends Controller
         ]);
 
         if (!empty($validated['ticket_id'])) {
+            // Demande individuelle pour un seul ticket
             $ticket = Ticket::with('evenement')->findOrFail($validated['ticket_id']);
             $evenement = $ticket->evenement;
 
@@ -103,6 +107,7 @@ class RemboursementController extends Controller
         }
 
         if (!empty($validated['evenement_id'])) {
+            // Demande groupée pour tous les tickets d'un événement
             $evenement = Evenement::findOrFail($validated['evenement_id']);
             if ($evenement->user_id !== Auth::id()) {
                 return back()->withErrors(['error' => 'Cet événement ne vous appartient pas.']);
@@ -134,6 +139,7 @@ class RemboursementController extends Controller
         return back()->withErrors(['error' => 'Aucun ticket ou événement spécifié.']);
     }
 
+    // Annule un remboursement et restaure le ticket
     public function annulerRemboursement(Request $request, $ticketId)
     {
         $ticket = Ticket::with('evenement')->findOrFail($ticketId);
@@ -146,13 +152,13 @@ class RemboursementController extends Controller
             return back()->withErrors(['error' => 'Vous n\'avez pas l\'autorisation.']);
         }
 
-        $ticket->update(['statut_paiement' => 'payé']);
+        $ticket->update(['statut_paiement' => 'payé']); // Restaure le statut payé
 
         if ($ticket->tarif) {
-            $ticket->tarif->increment('quantite_vendue');
+            $ticket->tarif->increment('quantite_vendue'); // Restaure le compteur de vente
         }
         if ($ticket->evenement) {
-            $ticket->evenement->increment('quota_vendu');
+            $ticket->evenement->increment('quota_vendu'); // Restaure le quota
         }
 
         Log::create([

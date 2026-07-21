@@ -8,17 +8,19 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    // Affiche le formulaire de connexion avec en-têtes anti-cache
     public function showLoginForm()
     {
         return response()
             ->view('auth.login')
             ->withHeaders([
-                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate', // Empêche la mise en cache
                 'Pragma' => 'no-cache',
                 'Expires' => 'Thu, 01 Jan 1970 00:00:00 GMT',
             ]);
     }
 
+    // Authentifie l'organisateur avec vérifications de statut et redirection selon le rôle
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -32,7 +34,7 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Cet email n\'est pas enregistre.'])->onlyInput('email');
         }
 
-        if (in_array($user->statut, ['bloque', 'rejete'])) {
+        if (in_array($user->statut, ['bloque', 'rejete'])) { // Comptes bloqués ou rejetés
             return back()->withErrors(['email' => 'Votre compte n\'est pas accessible. Contactez PaxEvent.'])->onlyInput('email');
         }
 
@@ -43,13 +45,14 @@ class LoginController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        if ($user->role === 'super_admin') {
+        if ($user->role === 'super_admin') { // Redirection différente pour le super admin
             return redirect()->intended(route('superadmin.dashboard'));
         }
 
         return redirect()->intended(route('dashboard'));
     }
 
+    // Déconnecte l'utilisateur et redirige vers la page de connexion
     public function logout(Request $request)
     {
         Auth::logout();

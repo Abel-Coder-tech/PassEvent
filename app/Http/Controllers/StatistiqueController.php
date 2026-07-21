@@ -12,18 +12,20 @@ class StatistiqueController extends Controller
 {
 
 
+    // Page principale des statistiques avec tous les graphiques
     public function index(Request $request)
     {
-        $periode = $request->input('periode', '30');
+        $periode = $request->input('periode', '30'); // Défaut : 30 jours
 
         $startDate = $this->getStartDate($periode);
 
+        // Récupère les IDs des événements de l'organisateur
         $evenementsIds = \Illuminate\Support\Facades\Auth::id()
             ? \App\Models\Evenement::where('user_id', \Illuminate\Support\Facades\Auth::id())->pluck('id')->toArray()
             : [];
 
         $query = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $startDate);
-        $prevQuery = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $this->getStartDate($periode, true))
+        $prevQuery = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $this->getStartDate($periode, true)) // Période précédente
             ->where('created_at', '<', $startDate);
 
         $stats = $this->computeStats($query, $prevQuery, $periode);
@@ -49,6 +51,7 @@ class StatistiqueController extends Controller
         ));
     }
 
+    // Calcule la date de début selon la période (avec support période précédente)
     private function getStartDate(string $periode, bool $previous = false): \Carbon\Carbon
     {
         $now = now();
@@ -62,6 +65,7 @@ class StatistiqueController extends Controller
         };
     }
 
+    // Calcule les statistiques principales avec évolution par rapport à la période précédente
     private function computeStats($query, $prevQuery, string $periode): array
     {
         $currentTickets = $query->where('statut_paiement', 'payé')->get();
@@ -93,6 +97,7 @@ class StatistiqueController extends Controller
         ];
     }
 
+    // Calcule le pourcentage d'évolution entre deux valeurs
     private function evolution($previous, $current): float
     {
         if ($previous == 0) {
@@ -101,6 +106,7 @@ class StatistiqueController extends Controller
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
+    // Retourne le libellé de la période sélectionnée
     private function getPeriodeLabel(string $periode): string
     {
         return match ($periode) {
@@ -112,6 +118,7 @@ class StatistiqueController extends Controller
         };
     }
 
+    // Récupère les ventes par jour avec ventilation étudiants/externes/manuelles
     private function getVentesParJour(\Carbon\Carbon $startDate, $evenementsIds): array
     {
         $data = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'payé')
@@ -136,6 +143,7 @@ class StatistiqueController extends Controller
         })->toArray();
     }
 
+    // Top 4 des événements par nombre de tickets vendus
     private function getTopEvenements($evenementsIds): \Illuminate\Database\Eloquent\Collection
     {
         return Evenement::select('evenement.*')
@@ -154,6 +162,7 @@ class StatistiqueController extends Controller
             ->get();
     }
 
+    // Répartition des paiements par réseau mobile
     private function getPaiementsParReseau(\Carbon\Carbon $startDate, $evenementsIds): array
     {
         $total = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'payé')
@@ -193,6 +202,7 @@ class StatistiqueController extends Controller
         return $reseaux;
     }
 
+    // Activité de ventes par jour de la semaine
     private function getActiviteParJourSemaine(\Carbon\Carbon $startDate, $evenementsIds): array
     {
         $jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -219,6 +229,7 @@ class StatistiqueController extends Controller
         return $result;
     }
 
+    // Résumé financier avec commissions, frais FedaPay et remboursements
     private function getResumeFinancier(\Carbon\Carbon $startDate, $evenementsIds): array
     {
         $tickets = Ticket::whereIn('evenement_id', $evenementsIds)

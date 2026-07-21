@@ -15,6 +15,7 @@ use Illuminate\View\View;
 
 class AgentVenteController extends Controller
 {
+    // Liste tous les agents de vente de l'organisateur avec le nombre d'actifs par événement
     public function index(): View
     {
         $evenements = Evenement::where('user_id', auth()->id())
@@ -31,6 +32,7 @@ class AgentVenteController extends Controller
         return view('admin.agents-vente.index', compact('evenements', 'agents'));
     }
 
+    // Affiche le formulaire de création d'un agent de vente
     public function create(): View
     {
         $evenements = Evenement::where('user_id', auth()->id())->latest()->get();
@@ -38,6 +40,7 @@ class AgentVenteController extends Controller
         return view('admin.agents-vente.create', compact('evenements'));
     }
 
+    // Crée un agent de vente avec mot de passe aléatoire et envoi d'email
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -50,16 +53,16 @@ class AgentVenteController extends Controller
             ->findOrFail($validated['evenement_id']);
 
         $nbActifs = $evenement->agentsVentes()->where('actif', true)->count();
-        if ($nbActifs >= 2) {
+        if ($nbActifs >= 2) { // Maximum 2 agents de vente par événement
             return back()->with('error', "Maximum de 2 agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\Agent::where('email', $validated['email'])->exists();
-        if ($emailExiste) {
+        if ($emailExiste) { // Un email ne peut pas servir pour scan et vente à la fois
             return back()->with('error', 'Cet email est déjà utilisé par un agent de scan. Un agent ne peut pas être à la fois scan et vente.');
         }
 
-        $motDePasse = Str::random(10);
+        $motDePasse = Str::random(10); // Mot de passe aléatoire envoyé par email
 
         $agent = AgentVente::create([
             'nom' => $validated['nom'],
@@ -74,10 +77,11 @@ class AgentVenteController extends Controller
             ->with('success', 'Agent de vente créé avec succès. Un email lui a été envoyé.');
     }
 
+    // Affiche les détails, ventes et statistiques d'un agent de vente
     public function show(AgentVente $agentVente): View
     {
         if ($agentVente->evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
 
         $tickets = $agentVente->tickets()
@@ -105,10 +109,11 @@ class AgentVenteController extends Controller
         return view('admin.agents-vente.show', compact('agentVente', 'tickets', 'stats'));
     }
 
+    // Active ou désactive un agent de vente
     public function toggleActif(AgentVente $agentVente): RedirectResponse
     {
         if ($agentVente->evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
 
         $agentVente->update(['actif' => !$agentVente->actif]);
@@ -118,14 +123,15 @@ class AgentVenteController extends Controller
             : 'Agent de vente désactivé.');
     }
 
+    // Supprime un agent de vente en détachant d'abord ses tickets
     public function destroy(AgentVente $agentVente): RedirectResponse
     {
         if ($agentVente->evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
 
         try {
-            $agentVente->tickets()->update(['agent_vente_id' => null]);
+            $agentVente->tickets()->update(['agent_vente_id' => null]); // Détache les tickets avant suppression
             $agentVente->delete();
         } catch (\Exception $e) {
             return redirect()->route('admin.agents-vente.index')
@@ -136,10 +142,11 @@ class AgentVenteController extends Controller
             ->with('success', 'Agent de vente supprimé.');
     }
 
+    // Affiche les statistiques agrégées de tous les agents de vente d'un événement
     public function statsEvenement(Evenement $evenement): View
     {
         if ($evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
 
         $agents = $evenement->agentsVentes()

@@ -11,10 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    // Tableau de bord principal de l'organisateur avec toutes ses statistiques
     public function index()
     {
         $user = Auth::user();
 
+        // Redirige vers page d'attente si le profil n'est pas validé
         if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees') {
             $message = '';
             if ($user->statut === 'en_attente') {
@@ -35,6 +37,7 @@ class DashboardController extends Controller
 
         $evenementsIds = $evenements->pluck('id');
 
+        // Tickets vendus et payés uniquement
         $ticketsVendus = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->count();
@@ -43,6 +46,7 @@ class DashboardController extends Controller
             ->where('statut_paiement', 'payé')
             ->sum('montant');
 
+        // Recettes par canal de paiement (mobile vs espèces)
         $mobileRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->whereNotIn('methode_paiement', ['cash', 'especes'])
@@ -53,12 +57,14 @@ class DashboardController extends Controller
             ->whereIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
 
+        // Calcul de la commission et des recettes nettes
         $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
         $commission = round($recettesTotales * $commissionPct / 100, 2);
         $recettesNettes = $recettesTotales - $commission;
 
-        $retirable = max(0, $mobileRecettes - $commission);
+        $retirable = max(0, $mobileRecettes - $commission); // Seuls les paiements mobiles sont retirable
 
+        // Taux de scan (tickets utilisés / tickets vendus)
         $ticketsScannes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('utilise', true)
             ->count();
@@ -173,10 +179,12 @@ class DashboardController extends Controller
 
         $activiteRecents = array_slice($activiteRecents, 0, 5);
 
+        // Calcul du remplissage moyen de tous les événements
         $remplissageMoyen = $evenements->avg(function ($e) {
             return $e->capacite > 0 ? ($e->quota_vendu / $e->capacite) * 100 : 0;
         });
 
+        // Statistiques par réseau de paiement mobile
         $reseauxPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->whereNotIn('methode_paiement', ['cash', 'especes'])

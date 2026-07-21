@@ -17,14 +17,16 @@ class GoogleAuthController extends Controller
         $this->socialite = $socialite;
     }
 
+    // Redirige vers Google pour l'authentification OAuth
     public function redirect()
     {
         if (!config('services.google.client_id')) {
-            return redirect()->route('inscriptions.organisateur')->withErrors(['email' => 'Authentification Google non configurée.']);
+            return redirect()->route('inscriptions.organisateur')->withErrors(['email' => 'Authentification Google non configurée.']); // Config manquante
         }
         return $this->socialite->driver('google')->redirect();
     }
 
+    // Traite le callback Google après authentification
     public function callback()
     {
         try {
@@ -43,6 +45,7 @@ class GoogleAuthController extends Controller
         $existing = User::where('email', $googleUser->getEmail())->first();
 
         if ($existing) {
+            // Connexion automatique si le compte existe déjà
             if (in_array($existing->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
                 Auth::login($existing, true);
                 request()->session()->regenerate();
@@ -63,6 +66,7 @@ class GoogleAuthController extends Controller
                 : redirect()->intended(route('dashboard'));
         }
 
+        // Nouveau compte : stocke les infos Google en session pour l'inscription
         $reg = session('registration', []);
         $reg['email'] = $googleUser->getEmail();
         $reg['email_verified'] = true;

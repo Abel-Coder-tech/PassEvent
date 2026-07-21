@@ -11,9 +11,10 @@ use Illuminate\Support\Facades\Auth;
 
 class ScanController extends Controller
 {
+    // Page principale du scan : choix d'événement ou affichage des scans
     public function index(Request $request)
     {
-        $accessEvenementId = session('scan_access_evenement_id');
+        $accessEvenementId = session('scan_access_evenement_id'); // Événement sélectionné via code d'accès
         $accessEvenement = null;
 
         if ($accessEvenementId) {
@@ -21,6 +22,7 @@ class ScanController extends Controller
         }
 
         if (!$accessEvenement) {
+            // Pas d'accès : affiche la sélection d'événement
             $evenements = Evenement::where('user_id', '=', Auth::id())
                 ->orderByRaw("CASE statut
                     WHEN 'publié' THEN 1
@@ -35,12 +37,13 @@ class ScanController extends Controller
             return view('admin.scan.access', compact('evenements'));
         }
 
+        // Récupère les scans récents et statistiques pour l'événement
         $selectedEvent = $accessEvenement->id;
 
         $scanQuery = Log::where('type_operation', 'scan')
             ->with(['ticket.evenement'])
             ->whereHas('ticket', function ($q) use ($selectedEvent) {
-                $q->where('evenement_id', '=', $selectedEvent);
+                $q->where('evenement_id', '=', $selectedEvent); // Filtre par événement
             });
 
         $scans = $scanQuery->orderByDesc('created_at')->limit(50)->get();
@@ -74,6 +77,7 @@ class ScanController extends Controller
         return view('admin.scan.index', compact('accessEvenement', 'scans', 'stats', 'selectedEvent'));
     }
 
+    // Vérifie un code d'accès scan pour un événement donné
     public function verifierAccessCode(Request $request)
     {
         $evenementId = $request->input('evenement_id');
@@ -82,12 +86,12 @@ class ScanController extends Controller
         if (!$evenementId || !$code) {
             return response()->json([
                 'success' => false,
-                'message' => 'Veuillez sélectionner un événement et entrer un code d\'accès.',
+                'message' => 'Veuillez sélectionner un événement et entrer un code d\'accès.', // Paramètres manquants
             ]);
         }
 
         $evenement = Evenement::where('id', '=', $evenementId)
-            ->where('user_id', '=', Auth::id())
+            ->where('user_id', '=', Auth::id()) // Vérification de propriété
             ->first();
             
 
@@ -100,7 +104,7 @@ class ScanController extends Controller
 
         $accessCode = ScanAccessCode::where('code', '=', $code)
             ->where('evenement_id', '=', $evenementId)
-            ->where('actif', '=', true)
+            ->where('actif', '=', true) // Code actif uniquement
             ->with('evenement')
             ->first();
 
@@ -111,7 +115,7 @@ class ScanController extends Controller
             ]);
         }
 
-        session(['scan_access_evenement_id' => $accessCode->evenement_id]);
+        session(['scan_access_evenement_id' => $accessCode->evenement_id]); // Stocke l'accès en session
 
         return response()->json([
             'success' => true,
@@ -123,13 +127,15 @@ class ScanController extends Controller
         ]);
     }
 
+    // Réinitialise l'accès scan (changement d'événement)
     public function clearAccess()
     {
-        session()->forget('scan_access_evenement_id');
+        session()->forget('scan_access_evenement_id'); // Supprime l'accès de la session
 
         return redirect()->route('scan.index');
     }
 
+    // Vérifie et valide un ticket par son code QR
     public function verifier(Request $request)
     {
         $code = $request->input('code');
@@ -146,7 +152,7 @@ class ScanController extends Controller
         if (!$accessEvenementId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé. Veuillez d\'abord entrer un code d\'accès.',
+                'message' => 'Accès non autorisé. Veuillez d\'abord entrer un code d\'accès.', // Pas de session de scan
                 'type' => 'no_access',
             ]);
         }
@@ -156,6 +162,7 @@ class ScanController extends Controller
             ->first();
 
         if (!$ticket) {
+            // Ticket introuvable : log et retourne erreur
             Log::create([
                 'type_operation' => 'scan',
                 'details' => json_encode([
@@ -177,6 +184,7 @@ class ScanController extends Controller
         }
 
         if ($ticket->evenement_id !== $accessEvenementId) {
+            // Mauvais événement : log et retourne erreur
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
@@ -198,6 +206,7 @@ class ScanController extends Controller
         }
 
         if ($ticket->statut_paiement !== 'payé') {
+            // Paiement non confirmé : log et retourne erreur
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
@@ -227,6 +236,7 @@ class ScanController extends Controller
         }
 
         if ($ticket->utilise) {
+            // Déjà utilisé : log et retourne erreur
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
@@ -256,6 +266,7 @@ class ScanController extends Controller
         }
 
         if ($ticket->evenement->date_event->isPast()) {
+            // Événement passé : log et retourne erreur
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
@@ -282,9 +293,9 @@ class ScanController extends Controller
             ]);
         }
 
-        $ticket->update(['utilise' => true]);
+        $ticket->update(['utilise' => true]); // Marque le ticket comme utilisé
 
-        Log::create([
+        Log::create([ // Log du scan réussi
             'ticket_id' => $ticket->id,
             'type_operation' => 'scan',
             'details' => json_encode([

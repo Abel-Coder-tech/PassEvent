@@ -12,8 +12,10 @@ use Illuminate\Support\Facades\Mail;
 
 class EvenementPublicController extends Controller
 {
+    // Liste publique des événements avec filtres par catégorie, date et recherche
     public function index(Request $request)
     {
+        // Récupère les catégories disponibles pour les événements à venir
         $categories = Evenement::where('statut', 'publié')
             ->where('date_event', '>=', now())
             ->whereNotNull('categorie')
@@ -52,23 +54,25 @@ class EvenementPublicController extends Controller
         return view('evenement-public.index', compact('evenements', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
     }
 
+    // Affiche la page publique d'un événement avec tarifs et disponibilité
     public function show(Evenement $evenement)
     {
         if ($evenement->statut !== 'publié') {
-            abort(404);
+            abort(404); // Seuls les événements publiés sont visibles
         }
 
         $evenement->load('user');
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
-        $estComplet = $placesRestantes <= 0;
-        $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast();
+        $estComplet = $placesRestantes <= 0; // Vérifie la disponibilité
+        $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast(); // Date limite dépassée
         $evenementPasse = $evenement->date_event->isPast();
-        $estUniversitaire = $evenement->user->type === 'universitaire';
+        $estUniversitaire = $evenement->user->type === 'universitaire'; // Active les tarifs étudiants
 
         return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse', 'estUniversitaire'));
     }
 
+    // Traite l'achat de tickets (gratuits ou payants) avec codes promo
     public function achat(Evenement $evenement, Request $request)
     {
         if ($evenement->statut !== 'publié') {
@@ -76,7 +80,7 @@ class EvenementPublicController extends Controller
         }
 
         if (($evenement->date_fin_vente && $evenement->date_fin_vente->isPast()) || $evenement->date_event->isPast()) {
-            return back()->with('error', 'La vente est cloturee pour cet evenement.');
+            return back()->with('error', 'La vente est cloturee pour cet evenement.'); // Vente expirée
         }
 
         $estGratuit = $evenement->gratuit || $request->boolean('gratuit');
@@ -127,7 +131,8 @@ class EvenementPublicController extends Controller
                 ->firstOrFail();
         }
 
-        $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1)));
+        // Vérification de la disponibilité des places
+        $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1))); // Max 10 tickets par achat
 
         $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
         if ($placesRestantes < $quantite) {
@@ -139,6 +144,7 @@ class EvenementPublicController extends Controller
         $montantReduction = 0;
         $montantUnitaire = $tarif->prix;
 
+        // Validation et application du code promo
         if (!empty($validated['code_promo'])) {
             $codePromo = CodePromo::where('code', strtoupper($validated['code_promo']))
                 ->whereHas('tarif', fn($q) => $q->where('evenement_id', $evenement->id))
@@ -169,9 +175,10 @@ class EvenementPublicController extends Controller
             $montantUnitaire = $tarif->prix - $montantReduction;
         }
 
-        $groupTransactionId = 'GRP-' . strtoupper(\Illuminate\Support\Str::random(16));
+        $groupTransactionId = 'GRP-' . strtoupper(\Illuminate\Support\Str::random(16)); // ID de transaction groupée
         $tickets = [];
 
+        // Création de N tickets avec un ID de transaction partagé
         for ($i = 0; $i < $quantite; $i++) {
             $t = $evenement->tickets()->create([
                 'tarif_id' => $tarif->id,
@@ -192,7 +199,7 @@ class EvenementPublicController extends Controller
             ]);
 
             $t->update([
-                'code_unique' => 'PASS' . $evenement->user_id . '26' . $t->id,
+                'code_unique' => 'PASS' . $evenement->user_id . '26' . $t->id, // Code unique basé sur l'ID du ticket
             ]);
 
             $tickets[] = $t;
@@ -202,7 +209,7 @@ class EvenementPublicController extends Controller
             $codePromo->increment('nb_utilisations', 1);
         }
 
-        if ($evenement->gratuit) {
+        if ($evenement->gratuit) { // Traitement spécial pour les événements gratuits
             $freeGroupId = 'GRATUIT-' . $tickets[0]->id;
             foreach ($tickets as $t) {
                 $t->update([
@@ -225,10 +232,11 @@ class EvenementPublicController extends Controller
             ->with('success', $quantite > 1 ? "{$quantite} places reservées. Finalisez le paiement." : 'Votre place est reservée. Finalisez le paiement.');
     }
 
+    // Permet à un utilisateur de contacter l'organisateur d'un événement
     public function contacterOrganisateur(Evenement $evenement, Request $request)
     {
         if ($evenement->statut !== 'publié') {
-            abort(404);
+            abort(404); // Événement non publié
         }
 
         $validated = $request->validate([

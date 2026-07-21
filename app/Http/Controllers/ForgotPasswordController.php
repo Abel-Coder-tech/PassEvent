@@ -10,11 +10,13 @@ use Illuminate\Support\Str;
 
 class ForgotPasswordController extends Controller
 {
+    // Affiche le formulaire de demande de réinitialisation
     public function showForm()
     {
         return view('auth.forgot');
     }
 
+    // Génère un token et envoie l'email de réinitialisation
     public function sendResetLink(Request $request)
     {
         $request->validate([
@@ -27,22 +29,24 @@ class ForgotPasswordController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        $token = Str::random(60);
+        $token = Str::random(60); // Token de réinitialisation
         $user->remember_token = $token;
         $user->save();
 
-        $url = route('password.reset', ['token' => $token]);
+        $url = route('password.reset', ['token' => $token]); // Lien de réinitialisation
 
         Mail::to($user->email)->send(new ResetPasswordEmail($user, $url));
 
         return back()->with('success', 'Un lien de réinitialisation vous a été envoyé par email.');
     }
 
+    // Affiche le formulaire de réinitialisation du mot de passe
     public function showResetForm($token)
     {
         return view('auth.reset', compact('token'));
     }
 
+    // Valide le token et réinitialise le mot de passe
     public function reset(Request $request)
     {
         $validated = $request->validate([
@@ -63,11 +67,11 @@ class ForgotPasswordController extends Controller
             ->first();
 
         if (!$user) {
-            return back()->withErrors(['email' => 'Lien de réinitialisation invalide ou expiré.']);
+            return back()->withErrors(['email' => 'Lien de réinitialisation invalide ou expiré.']); // Token invalide
         }
 
         $user->mot_de_passe = bcrypt($validated['mot_de_passe']);
-        $user->remember_token = null;
+        $user->remember_token = null; // Invalide le token après utilisation
         $user->save();
 
         return redirect()->route('login')->with('success', 'Mot de passe réinitialisé. Connectez-vous avec votre nouveau mot de passe.');

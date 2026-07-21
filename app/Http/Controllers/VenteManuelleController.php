@@ -23,19 +23,22 @@ class VenteManuelleController extends Controller
         $this->fedapay = $fedapay;
     }
 
+    // Page de vente manuelle avec historique du jour
     public function create()
     {
         $user = Auth::user();
 
+        // Événements éligibles (publiés ou brouillons)
         $evenements = Evenement::where('user_id', $user->id)
             ->whereIn('statut', ['publié', 'brouillon'])
             ->orderBy('date_event', 'asc')
             ->get();
 
+        // Ventes manuelles du jour courant
         $debutJour = now()->startOfDay()->utc();
         $finJour = now()->endOfDay()->utc();
         $ventesJour = Ticket::whereHas('evenement', fn($q) => $q->where('user_id', $user->id))
-            ->where('transaction_id', 'like', 'MANUEL-%')
+            ->where('transaction_id', 'like', 'MANUEL-%') // Filtre les ventes manuelles
             ->whereBetween('date_achat', [$debutJour, $finJour])
             ->with('evenement')
             ->latest('date_achat')
@@ -57,6 +60,7 @@ class VenteManuelleController extends Controller
         ));
     }
 
+    // Enregistre une vente manuelle (gratuite, espèces ou paiement mobile)
     public function store(Request $request)
     {
         $evenement = Evenement::findOrFail($request->evenement_id);
@@ -78,7 +82,7 @@ class VenteManuelleController extends Controller
         ];
 
         if (!$evenement->gratuit) {
-            $rules['tarif_id'] = 'required|exists:tarifs,id';
+            $rules['tarif_id'] = 'required|exists:tarifs,id'; // Tarif obligatoire pour événements payants
             $rules['methode_paiement'] = 'required|in:especes,mobile';
 
             $messages['tarif_id.required'] = 'Veuillez sélectionner un tarif.';
@@ -88,16 +92,19 @@ class VenteManuelleController extends Controller
             }
 
             if ($request->methode_paiement !== 'especes') {
-                $rules['email'] = 'required|email|max:255';
+                $rules['email'] = 'required|email|max:255'; // Email obligatoire pour paiement mobile
                 $messages['email.required'] = 'L\'email est obligatoire pour le paiement mobile.';
             }
         }
 
         $validated = $request->validate($rules, $messages);
 
+        // --- Cas 1 : Événement gratuit ---
         if ($evenement->gratuit) {
+            // Création de tickets gratuits
             $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
             if (!$tarif) {
+                // Crée un tarif par défaut si aucun n'existe
                 $tarif = Tarif::create([
                     'evenement_id' => $evenement->id,
                     'categorie' => 'externe',
@@ -163,6 +170,7 @@ class VenteManuelleController extends Controller
 
         $tarif = Tarif::where('evenement_id', $evenement->id)->findOrFail($validated['tarif_id']);
 
+        // --- Cas 2 : Paiement en espèces ---
         if ($validated['methode_paiement'] === 'especes') {
             $tickets = [];
             for ($i = 0; $i < $validated['quantite']; $i++) {
@@ -217,6 +225,7 @@ class VenteManuelleController extends Controller
         }
 
         // Digital payment: create N tickets as 'en_attente' with shared group ID
+        // --- Cas 3 : Paiement mobile (FedaPay) ---
         $prixUnitaire = $tarif->prix;
         $montantTotal = $prixUnitaire * $validated['quantite'];
         $groupTransactionId = 'GRP-' . strtoupper(Str::random(16));
@@ -259,6 +268,7 @@ class VenteManuelleController extends Controller
         ]);
     }
 
+    // Récupère les tarifs d'un événement pour le formulaire dynamique
     public function getTarifs(Request $request)
     {
         $rules = [
@@ -276,12 +286,13 @@ class VenteManuelleController extends Controller
         $request->validate($rules);
 
         $evenement = Evenement::where('id', $request->evenement_id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', Auth::id()) // Vérification de propriété
             ->firstOrFail();
 
         $tarifs = collect();
 
         if (!$evenement->gratuit) {
+            // Filtre par catégorie si organisateur universitaire
             $query = Tarif::where('evenement_id', $evenement->id)->where('statut', 'actif');
 
             if (Auth::user()->type === 'universitaire') {

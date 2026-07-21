@@ -11,6 +11,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class EvenementController extends Controller
 {
     use AuthorizesRequests;
+
+    // Liste les événements de l'organisateur avec statistiques résumées
     public function index()
     {
         $user = Auth::user();
@@ -36,14 +38,16 @@ class EvenementController extends Controller
         ));
     }
 
+    // Affiche le formulaire de création (profil vérifié requis)
     public function create()
     {
-        if (Auth::user()->statut !== 'actif') {
+        if (Auth::user()->statut !== 'actif') { // Seuls les profils vérifiés peuvent créer
             return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
         }
         return view('evenements.create');
     }
 
+    // Crée un événement avec tarifs automatiques (gratuit ou payant)
     public function store(Request $request)
     {
         if (Auth::user()->statut !== 'actif') {
@@ -51,7 +55,7 @@ class EvenementController extends Controller
         }
 
         $gratuit = $request->boolean('gratuit');
-        $estUniversitaire = Auth::user()->type === 'universitaire';
+        $estUniversitaire = Auth::user()->type === 'universitaire'; // Détermine si les tarifs étudiants s'appliquent
 
         $rules = [
             'titre' => 'required|string|max:255',
@@ -68,8 +72,8 @@ class EvenementController extends Controller
         ];
 
         if (!$gratuit) {
-            $rules['prix_base'] = 'required|numeric|min:0';
-            $rules['multiplicateur_vip'] = 'required|in:1.5,2';
+            $rules['prix_base'] = 'required|numeric|min:0'; // Prix requis pour événements payants
+            $rules['multiplicateur_vip'] = 'required|in:1.5,2'; // Multiplicateur VIP obligatoire
             if ($estUniversitaire) {
                 $rules['reduction_etudiant'] = 'nullable|numeric|min:0|max:100';
             }
@@ -110,6 +114,7 @@ class EvenementController extends Controller
 
         $evenement = Evenement::create($validated);
 
+        // Génération automatique des tarifs selon le type d'événement
         if ($gratuit) {
             $prix = 0;
             if ($estUniversitaire) {
@@ -160,6 +165,7 @@ class EvenementController extends Controller
             ->with('success', $gratuit ? 'Événement gratuit créé avec succès.' : 'Événement créé avec succès.');
     }
 
+    // Génère un contrat de prestation PDF pour l'organisateur
     public function contratPrestation()
     {
         $user = Auth::user();
@@ -179,9 +185,10 @@ class EvenementController extends Controller
         return $pdf->download($filename);
     }
 
+    // Affiche les détails d'un événement avec statistiques de ventes
     public function show(Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
         $ventes = $evenement->tickets()->where('statut_paiement', 'payé')->count();
         $revenus = $evenement->tickets()->where('statut_paiement', 'payé')->sum('montant');
@@ -197,13 +204,14 @@ class EvenementController extends Controller
         ));
     }
 
+    // Génère un code d'accès unique au format SCAN-XXXXXXXX
     public function genererCodeAcces(Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
         do {
-            $code = 'SCAN-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
-        } while (\App\Models\ScanAccessCode::where('code', $code)->exists());
+            $code = 'SCAN-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)); // Code aléatoire unique
+        } while (\App\Models\ScanAccessCode::where('code', $code)->exists()); // Évite les doublons
 
         $evenement->scanAccessCodes()->create(['code' => $code]);
 
@@ -211,12 +219,13 @@ class EvenementController extends Controller
             ->with('success', 'Code d\'accès généré : <strong>' . $code . '</strong><br>Rendez-vous dans le menu <strong>Scan QR</strong> pour commencer à scanner les tickets.');
     }
 
+    // Supprime un code d'accès scan
     public function supprimerCodeAcces(Evenement $evenement, \App\Models\ScanAccessCode $scanAccessCode)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriétaire
 
         if ($scanAccessCode->evenement_id !== $evenement->id) {
-            abort(404);
+            abort(404); // Code n'appartient pas à cet événement
         }
 
         $scanAccessCode->delete();
@@ -224,6 +233,7 @@ class EvenementController extends Controller
         return back()->with('success', 'Code d\'accès supprimé.');
     }
 
+    // Liste les codes d'accès scan par événement
     public function scanCodesIndex()
     {
         $evenements = auth()->user()->evenements()->orderByDesc('created_at')->get();
@@ -231,18 +241,20 @@ class EvenementController extends Controller
         return view('admin.scan-codes.index', compact('evenements'));
     }
 
+    // Affiche le formulaire d'édition d'un événement
     public function edit(Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
         $evenement->load('tarifs');
 
         return view('evenements.edit', compact('evenement'));
     }
 
+    // Met à jour un événement existant avec ses tarifs
     public function update(Request $request, Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
@@ -297,9 +309,10 @@ class EvenementController extends Controller
             ->with('success', 'Événement modifié avec succès.');
     }
 
+    // Supprime définitivement un événement
     public function destroy(Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
         $evenement->delete();
 

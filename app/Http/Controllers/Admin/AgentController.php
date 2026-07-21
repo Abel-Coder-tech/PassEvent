@@ -13,18 +13,21 @@ use Illuminate\Validation\Rule;
 
 class AgentController extends Controller
 {
+    // Liste tous les agents de scan appartenant à l'organisateur connecté
     public function index()
     {
-        $agents = Agent::with('evenement')->whereIn('evenement_id', auth()->user()->evenements->pluck('id'))->orderBy('created_at', 'desc')->get();
+        $agents = Agent::with('evenement')->whereIn('evenement_id', auth()->user()->evenements->pluck('id'))->orderBy('created_at', 'desc')->get(); // Agents liés aux événements de l'utilisateur
         return view('admin.agents.index', compact('agents'));
     }
 
+    // Affiche le formulaire de création d'un agent de scan
     public function create()
     {
         $evenements = auth()->user()->evenements;
         return view('admin.agents.create', compact('evenements'));
     }
 
+    // Crée un nouvel agent de scan après validation et vérification des limites
     public function store(Request $request)
     {
         $request->validate([
@@ -47,16 +50,16 @@ class AgentController extends Controller
         $evenement = Evenement::findOrFail($request->evenement_id);
 
         $nbActifs = $evenement->agents()->where('actif', true)->count();
-        if ($nbActifs >= 2) {
+        if ($nbActifs >= 2) { // Limite de 2 agents actifs par événement
             return back()->with('error', "Maximum de 2 agents de scan atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\AgentVente::where('email', $request->email)->exists();
-        if ($emailExiste) {
+        if ($emailExiste) { // Un email ne peut pas être utilisé pour un scan ET une vente
             return back()->with('error', 'Cet email est déjà utilisé par un agent de vente. Un agent ne peut pas être à la fois scan et vente.');
         }
 
-        $codeAcces = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $codeAcces = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT); // Génère un code PIN à 6 chiffres
 
         $agent = Agent::create([
             'nom' => $request->nom,
@@ -76,14 +79,16 @@ class AgentController extends Controller
         return redirect()->route('admin.agents.index')->with('success', 'Agent créé avec succès. Un email lui a été envoyé.');
     }
 
+    // Affiche les détails et statistiques d'un agent de scan
     public function show(Agent $agent)
     {
         if ($agent->evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
 
         $agent->load('logs.ticket', 'evenement');
 
+        // Regroupe les scans par résultat (valide, déjà utilisé, invalide)
         $scansGroupes = $agent->logs()
             ->selectRaw('JSON_UNQUOTE(JSON_EXTRACT(details, "$.resultat")) as resultat, COUNT(*) as total')
             ->groupBy('resultat')
@@ -104,20 +109,22 @@ class AgentController extends Controller
         return view('admin.agents.show', compact('agent', 'stats', 'logs'));
     }
 
+    // Active ou désactive un agent de scan
     public function toggleActif(Agent $agent)
     {
         if ($agent->evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
-        $agent->update(['actif' => !$agent->actif]);
+        $agent->update(['actif' => !$agent->actif]); // Bascule le statut
         $statut = $agent->actif ? 'activé' : 'désactivé';
         return redirect()->route('admin.agents.index')->with('success', "Agent {$statut} avec succès.");
     }
 
+    // Supprime définitivement un agent de scan
     public function destroy(Agent $agent)
     {
         if ($agent->evenement->user_id !== auth()->id()) {
-            abort(403);
+            abort(403); // Vérification de propriété
         }
         $agent->delete();
         return redirect()->route('admin.agents.index')->with('success', 'Agent supprimé avec succès.');

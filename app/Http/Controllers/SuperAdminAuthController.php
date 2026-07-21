@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class SuperAdminAuthController extends Controller
 {
+    // Affiche le formulaire de connexion super admin
     public function showLoginForm()
     {
         return view('superadmin.auth.login');
     }
 
+    // Authentifie le super admin par pseudo et mot de passe
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -30,18 +32,19 @@ class SuperAdminAuthController extends Controller
         }
 
         if ($user->role !== 'super_admin') {
-            return back()->withErrors(['pseudo' => 'Cet acces est reserve au super administrateur.'])->onlyInput('pseudo');
+            return back()->withErrors(['pseudo' => 'Cet acces est reserve au super administrateur.']); // Rôle vérifié
         }
 
         if (!\Illuminate\Support\Facades\Hash::check($credentials['mot_de_passe'], $user->mot_de_passe)) {
             return back()->withErrors(['mot_de_passe' => 'Mot de passe incorrect.'])->onlyInput('pseudo');
         }
 
-        auth('superadmin')->login($user);
+        auth('superadmin')->login($user); // Guard superadmin spécifique
         $request->session()->regenerate();
         return redirect()->intended(route('superadmin.dashboard'));
     }
 
+    // Déconnecte le super admin
     public function logout(Request $request)
     {
         auth('superadmin')->logout();

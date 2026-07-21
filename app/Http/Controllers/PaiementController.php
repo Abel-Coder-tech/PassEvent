@@ -20,15 +20,16 @@ class PaiementController extends Controller
         $this->fedapay = $fedapay;
     }
 
+    // Affiche la page de paiement FedaPay pour un ticket
     public function show($ticketId)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement === 'payé') {
-            return redirect()->route('confirmation.show', $ticket->id);
+            return redirect()->route('confirmation.show', $ticket->id); // Déjà payé, redirige
         }
 
-        if ($ticket->montant <= 0) {
+        if ($ticket->montant <= 0) { // Traitement spécial pour tickets gratuits
             // Find all tickets in the same free group or single ticket
             $freeTickets = collect([$ticket]);
             if (str_starts_with($ticket->transaction_id, 'GRATUIT-')) {
@@ -41,7 +42,7 @@ class PaiementController extends Controller
             $groupId = 'GRATUIT-' . $freeTickets->first()->id;
             foreach ($freeTickets as $ft) {
                 $ft->update([
-                    'statut_paiement' => 'payé',
+                    'statut_paiement' => 'payé', // Confirme le paiement gratuit
                     'transaction_id' => $groupId,
                 ]);
                 $ft->evenement->increment('quota_vendu', $ft->quantite);
@@ -60,6 +61,7 @@ class PaiementController extends Controller
                 ->with('success', 'Participation confirmee ! Votre billet a ete envoye par email.');
         }
 
+        // Calcule le montant total pour les transactions groupées
         $montantTotal = $ticket->montant;
         if (str_starts_with($ticket->transaction_id, 'GRP-')) {
             $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
@@ -76,6 +78,7 @@ class PaiementController extends Controller
         return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox', 'montantTotal'));
     }
 
+    // Callback FedaPay : traite le résultat du paiement
     public function callback(Request $request)
     {
         $ticketId = $request->query('ticket');
@@ -83,13 +86,14 @@ class PaiementController extends Controller
         $source = $request->query('source');
 
         if (!$transactionId) {
+            // Redirige vers la bonne page selon la source de la vente
             $fallback = match($source) {
                 'agent_vente' => route('agent-vente.dashboard'),
                 'vente_manuelle' => route('ventes-manuelles.create'),
                 default => route('paiement.show', $ticketId),
             };
             return redirect()->to($fallback)
-                ->with('error', 'Aucune transaction retournee par FedaPay.');
+                ->with('error', 'Aucune transaction retournee par FedaPay.'); // Pas de transaction
         }
 
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
@@ -117,9 +121,10 @@ class PaiementController extends Controller
             $paymentMethod = $request->query('payment_method', 'mobile_money');
             $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
 
+            // Met à jour tous les tickets du groupe
             foreach ($groupTickets as $t) {
                 $t->update([
-                    'statut_paiement' => 'payé',
+                    'statut_paiement' => 'payé', // Confirme le paiement
                     'transaction_id' => $transactionId,
                     'methode_paiement' => $paymentMethod,
                     'telephone_paiement' => $paymentPhone,
@@ -131,13 +136,14 @@ class PaiementController extends Controller
                 }
             }
 
-            if ($source === 'agent_vente' && $ticket->agent_vente_id) {
-                $agent = \App\Models\AgentVente::find($ticket->agent_vente_id);
-                if ($agent) {
-                    $agent->increment('tickets_count', $groupTickets->count());
-                    $agent->increment('montant_total', $groupTickets->sum('montant'));
-                }
+        // Met à jour les compteurs de l'agent de vente si applicable
+        if ($source === 'agent_vente' && $ticket->agent_vente_id) {
+            $agent = \App\Models\AgentVente::find($ticket->agent_vente_id);
+            if ($agent) {
+                $agent->increment('tickets_count', $groupTickets->count());
+                $agent->increment('montant_total', $groupTickets->sum('montant'));
             }
+        }
 
             try {
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
@@ -203,6 +209,7 @@ class PaiementController extends Controller
             ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');
     }
 
+    // Webhook FedaPay : notification serveur à serveur
     public function webhook(Request $request)
     {
         $data = $request->all();
@@ -247,14 +254,16 @@ class PaiementController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
+    // Affiche la page de confirmation après paiement réussi
     public function confirmation($ticketId)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement !== 'payé') {
-            return redirect()->route('paiement.show', $ticket->id);
+            return redirect()->route('paiement.show', $ticket->id); // Paiement non confirmé
         }
 
+        // Récupère tous les tickets du même groupe
         $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
             ->with('evenement', 'tarif')
             ->get();

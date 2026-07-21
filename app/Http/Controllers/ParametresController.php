@@ -10,11 +10,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ParametresController extends Controller
 {
+    // Page d'accueil des paramètres
     public function index()
     {
         return view('admin.parametres.index');
     }
 
+    // Met à jour le profil de l'organisateur (nom, email, avatar)
     public function profil(Request $request)
     {
         $validated = $request->validate([
@@ -29,7 +31,7 @@ class ParametresController extends Controller
 
         if ($request->hasFile('avatar')) {
             if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
+                Storage::disk('public')->delete($user->avatar); // Supprime l'ancien avatar
             }
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $path;
@@ -45,6 +47,7 @@ class ParametresController extends Controller
         return back()->with('success', 'Profil mis a jour avec succes.');
     }
 
+    // Supprime la photo de profil
     public function supprimerAvatar()
     {
         $user = Auth::user();
@@ -58,6 +61,7 @@ class ParametresController extends Controller
         return back()->with('success', 'Photo de profil supprimee.');
     }
 
+    // Modifie le mot de passe après vérification de l'ancien
     public function securite(Request $request)
     {
         $validated = $request->validate([
@@ -76,6 +80,7 @@ class ParametresController extends Controller
         return back()->with('success', 'Mot de passe modifie avec succes.');
     }
 
+    // Met à jour les préférences de notification par email
     public function notifications(Request $request)
     {
         $validated = $request->validate([
@@ -95,6 +100,7 @@ class ParametresController extends Controller
         return back()->with('success', 'Preferences de notification mises a jour.');
     }
 
+    // Configure les clés API FedaPay pour les paiements
     public function paiement(Request $request)
     {
         $validated = $request->validate([
@@ -112,6 +118,7 @@ class ParametresController extends Controller
         return back()->with('success', 'Configuration FedaPay mise a jour.');
     }
 
+    // Configure le code d'accès scan global
     public function scan(Request $request)
     {
         $validated = $request->validate([
@@ -125,6 +132,7 @@ class ParametresController extends Controller
         return back()->with('success', 'Code d\' acces scan mis a jour.');
     }
 
+    // Supprime définitivement le compte utilisateur (impossible avec des événements)
     public function supprimerCompte(Request $request)
     {
         $validated = $request->validate([
@@ -134,7 +142,7 @@ class ParametresController extends Controller
         $user = Auth::user();
 
         if ($user->evenements()->exists()) {
-            return back()->withErrors(['confirmation' => 'Impossible de supprimer un compte avec des evenements. Supprimez-les d\'abord.']);
+            return back()->withErrors(['confirmation' => 'Impossible de supprimer un compte avec des evenements. Supprimez-les d\'abord.']); // Contrainte d'intégrité
         }
 
         Auth::logout();

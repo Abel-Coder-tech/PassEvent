@@ -80,8 +80,8 @@ class CodePromoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // table name should be plural for the exists rule
-            'evenement_id' => 'required|exists:evenement,id',
+            // Validation des champs pour la création de codes promo
+            'evenement_id' => 'required|exists:evenements,id',
             'tarif_id' => 'required|exists:tarifs,id',
             'type_reduction' => 'required|in:pourcentage,fixe',
             'valeur_reduction' => 'required|numeric|min:0',
@@ -91,9 +91,12 @@ class CodePromoController extends Controller
             'count' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $evenement = Evenement::where('id', $validated['evenement_id'])
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
+        // Vérifie que l'événement existe et qu'il appartient à l'utilisateur connecté avant d'autoriser l'action.
+        $evenement = Evenement::findOrFail($validated['evenement_id']);
+
+        if ($evenement->user_id !== Auth::id()) {
+            abort(403);
+        }
 
         $count = $request->input('count', 1);
         $prefixe = strtoupper(trim($validated['prefixe'] ?? ''));
@@ -102,7 +105,8 @@ class CodePromoController extends Controller
             $suffixe = strtoupper(Str::random(6));
             $code = $prefixe ? $prefixe . '-' . $suffixe : $suffixe;
 
-            while (CodePromo::where('code', '=', $code)->exists()) {
+            // Assurez-vous que le code promo est unique
+            while (CodePromo::where('code', '=', $code, 'and')->exists()) {
                 $suffixe = strtoupper(Str::random(6));
                 $code = $prefixe ? $prefixe . '-' . $suffixe : $suffixe;
             }
@@ -129,6 +133,7 @@ class CodePromoController extends Controller
     {
         $codePromo = CodePromo::findOrFail($id);
 
+        // Vérifie que le code promo existe et qu'il appartient à l'utilisateur connecté avant d'autoriser l'action.
         if ($codePromo->evenement->user_id !== Auth::id()) {
             abort(403);
         }

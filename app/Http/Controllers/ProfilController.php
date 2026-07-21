@@ -11,15 +11,17 @@ use Illuminate\Support\Facades\Storage;
 
 class ProfilController extends Controller
 {
+    // Vérifie si l'utilisateur a le droit d'accéder à la complétion du profil
     private function checkAccess()
     {
         $user = auth()->user();
         if (!$user || !in_array($user->statut, ['incomplet', 'corrections_demandees'])) {
-            return false;
+            return false; // Accès refusé si le profil n'est pas dans le bon état
         }
         return $user;
     }
 
+    // Étape 2 : Formulaire de type d'activité et documents justificatifs
     public function step2()
     {
         $user = $this->checkAccess();
@@ -46,6 +48,7 @@ class ProfilController extends Controller
         ]);
     }
 
+    // Traite le formulaire étape 2 avec upload de documents
     public function postStep2(Request $request)
     {
         $user = $this->checkAccess();
@@ -78,16 +81,16 @@ class ProfilController extends Controller
 
         if ($request->hasFile('document_justificatif')) {
             if ($user->document_justificatif) {
-                Storage::disk('public')->delete($user->document_justificatif);
+                Storage::disk('public')->delete($user->document_justificatif); // Supprime l'ancien document
             }
             $validated['document_justificatif'] = $request->file('document_justificatif')->store('justificatifs', 'public');
         } elseif ($hasDocs) {
-            $validated['document_justificatif'] = $user->document_justificatif;
+            $validated['document_justificatif'] = $user->document_justificatif; // Conserve l'existant
         }
 
         if ($request->hasFile('signature')) {
             if ($user->signature) {
-                Storage::disk('public')->delete($user->signature);
+                Storage::disk('public')->delete($user->signature); // Supprime l'ancienne signature
             }
             $validated['signature'] = $request->file('signature')->store('signatures', 'public');
         } elseif ($hasDocs) {
@@ -99,6 +102,7 @@ class ProfilController extends Controller
         return redirect()->route('profil.recap');
     }
 
+    // Affiche le récapitulatif avant soumission
     public function recap()
     {
         $user = $this->checkAccess();
@@ -117,6 +121,7 @@ class ProfilController extends Controller
         ]);
     }
 
+    // Soumet le profil pour validation par le super admin
     public function submit(Request $request)
     {
         $user = $this->checkAccess();

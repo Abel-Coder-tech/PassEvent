@@ -11,25 +11,28 @@ use Illuminate\Support\Facades\Hash;
 
 class RetraitController extends Controller
 {
-    const COMMISSION_PERCENTAGE = 10;
+    const COMMISSION_PERCENTAGE = 10; // Commission de la plateforme (10%)
 
+    // Calcule le solde disponible pour retrait
     protected function getSoldeDisponible($user)
     {
         $evenementsIds = $user->evenements()->pluck('id');
 
+        // Recettes totales (tous paiements)
         $totalTickets = (float) Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->sum('montant');
 
+        // Seuls les paiements mobiles sont retirable (pas les espèces)
         $mobileRecettes = (float) Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->whereNotIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
 
-        $commission = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2);
+        $commission = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2); // Commission plateforme
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
-            ->where('status', 'approuvé')
+            ->where('status', 'approuvé') // Seuls les retraits approuvés comptent
             ->sum('montant');
 
         $reseauxPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
@@ -58,6 +61,7 @@ class RetraitController extends Controller
         ];
     }
 
+    // Page de liste des retraits avec solde disponible
     public function index()
     {
         $user = Auth::user();
@@ -73,6 +77,7 @@ class RetraitController extends Controller
         ));
     }
 
+    // Crée une demande de retrait avec vérification du mot de passe
     public function store(Request $request)
     {
         $user = Auth::user();

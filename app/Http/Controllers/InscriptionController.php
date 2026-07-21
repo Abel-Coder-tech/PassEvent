@@ -18,16 +18,19 @@ class InscriptionController extends Controller
         $this->otp = $otp;
     }
 
+    // Réinitialise la session d'inscription
     private function regen(): void
     {
         session()->forget('registration');
     }
 
+    // Récupère les données d'inscription depuis la session
     private function getReg()
     {
         return session('registration', []);
     }
 
+    // Fusionne des données dans la session d'inscription
     private function putReg(array $data): void
     {
         $reg = session('registration', []);
@@ -37,11 +40,13 @@ class InscriptionController extends Controller
         session(['registration' => $reg]);
     }
 
+    // Étape 0 : Formulaire de saisie de l'email
     public function step0()
     {
         return view('auth.register.step0');
     }
 
+    // Envoie un code OTP par email pour vérification
     public function sendOtp(Request $request)
     {
         $request->validate(['email' => 'required|email|max:255']);
@@ -58,6 +63,7 @@ class InscriptionController extends Controller
         return redirect()->route('inscriptions.verify');
     }
 
+    // Affiche la page de vérification OTP
     public function showVerify()
     {
         $reg = $this->getReg();
@@ -67,6 +73,7 @@ class InscriptionController extends Controller
         return view('auth.register.verify', ['email' => $reg['email']]);
     }
 
+    // Vérifie le code OTP saisi par l'utilisateur
     public function verifyOtp(Request $request)
     {
         $reg = $this->getReg();
@@ -90,6 +97,7 @@ class InscriptionController extends Controller
         return redirect()->route('inscriptions.identity');
     }
 
+    // Renvoie un nouveau code OTP
     public function resendOtp(Request $request)
     {
         $reg = $this->getReg();
@@ -106,6 +114,7 @@ class InscriptionController extends Controller
             : back()->with('success', 'Un nouveau code vous a été envoyé.');
     }
 
+    // Étape 1 : Formulaire d'identité (nom, téléphone, mot de passe)
     public function step1()
     {
         $reg = $this->getReg();
@@ -118,6 +127,7 @@ class InscriptionController extends Controller
         ]);
     }
 
+    // Traite le formulaire d'identité et crée le compte utilisateur
     public function postStep1(Request $request)
     {
         $reg = $this->getReg();
@@ -147,11 +157,11 @@ class InscriptionController extends Controller
             'telephone' => $validated['telephone'],
             'avatar' => $validated['avatar'] ?? null,
             'role' => 'admin',
-            'statut' => 'incomplet',
+            'statut' => 'incomplet', // Nécessite complétion du profil
         ];
 
         if ($reg['from_google'] ?? false) {
-            $userData['mot_de_passe'] = Hash::make(Str::random(32));
+            $userData['mot_de_passe'] = Hash::make(Str::random(32)); // Mot de passe aléatoire pour les comptes Google
         } else {
             $userData['mot_de_passe'] = Hash::make($validated['mot_de_passe']);
         }
@@ -165,6 +175,7 @@ class InscriptionController extends Controller
         return redirect()->route('dashboard');
     }
 
+    // Permet de resoumettre un profil rejeté ou nécessitant des corrections
     public function resubmit(Request $request)
     {
         $user = auth()->user();
