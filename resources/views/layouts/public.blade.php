@@ -619,6 +619,7 @@
                     <ul class="footer-links">
                         <li><a href="{{ route('evenements.public') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Événements</a></li>
                         <li><a href="{{ route('aide') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Comment ça marche</a></li>
+                        <li><a href="{{ route('contact') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Contact</a></li>
                         <li><a href="{{ route('tickets.recuperer') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Mon ticket</a></li>
                         <li><a href="{{ route('inscriptions.organisateur') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Devenir organisateur</a></li>
                     </ul>
@@ -630,7 +631,6 @@
                     <ul class="footer-links">
                         <li><a href="{{ route('cgv') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Conditions générales de vente</a></li>
                         <li><a href="{{ route('affiliation') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Affiliation</a></li>
-                        <li><a href="{{ route('contact') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Contact</a></li>
                         <li><a href="{{ route('aide') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Aide / Comment ça marche</a></li>
                         <li><a href="{{ route('politique-remboursement') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Politique de remboursement</a></li>
                     </ul>
@@ -642,7 +642,6 @@
                     <ul class="footer-links">
                         <li><a href="{{ route('cgu') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Conditions générales d'utilisation</a></li>
                         <li><a href="{{ route('confidentialite') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Politique de confidentialité</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Sécurité</a></li>
                         <li><a href="{{ route('mentions-legales') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Mentions légales</a></li>
                     </ul>
                 </div>
