@@ -486,6 +486,18 @@
                                 </button>
                             </div>
                         </div>
+
+                        <div class="p-3 rounded mt-3" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Contrat de prestation</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">Telecharger le contrat personnalise liant PaxEvent a votre structure.</div>
+                                </div>
+                                <a href="{{ route('contrat-prestation') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
+                                    <i class="bi bi-file-pdf me-1"></i> Telecharger (PDF)
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

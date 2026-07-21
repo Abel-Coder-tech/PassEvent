@@ -148,4 +148,34 @@ class SitePublicController extends Controller
         return view('site.politique-remboursement', compact('derniereMiseAJour'));
     }
 
+    public function cgv()
+    {
+        $file = resource_path('views/site/cgv.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->isoFormat('MMMM YYYY');
+
+        return view('site.cgv', compact('derniereMiseAJour'));
+    }
+
+    public function affiliation()
+    {
+        $file = resource_path('views/site/affiliation.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->isoFormat('MMMM YYYY');
+
+        return view('site.affiliation', compact('derniereMiseAJour'));
+    }
+
+    public function contratPrestation()
+    {
+        $file = resource_path('views/site/contrat-prestation.blade.php');
+        $derniereMiseAJour = file_exists($file)
+            ? date('F Y', filemtime($file))
+            : now()->isoFormat('MMMM YYYY');
+
+        return view('site.contrat-prestation', compact('derniereMiseAJour'));
+    }
+
 }

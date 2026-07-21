@@ -57,6 +57,9 @@ Route::get('/confidentialite', [SitePublicController::class, 'confidentialite'])
 Route::get('/cgu', [SitePublicController::class, 'cgu'])->name('cgu');
 Route::get('/mentions-legales', [SitePublicController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueRemboursement'])->name('politique-remboursement');
+Route::get('/conditions-generales-de-vente', [SitePublicController::class, 'cgv'])->name('cgv');
+Route::get('/affiliation', [SitePublicController::class, 'affiliation'])->name('affiliation');
+
 
 
 // Newsletter
@@ -147,7 +150,10 @@ Route::get('/generate-sitemap', function () {
         ->add(Url::create(url('/cgu')))
         ->add(Url::create(url('/confidentialite')))
         ->add(Url::create(url('/mentions-legales')))
-        ->add(Url::create(url('/politique-remboursement')));
+        ->add(Url::create(url('/politique-remboursement')))
+        ->add(Url::create(url('/conditions-generales-de-vente')))
+        ->add(Url::create(url('/affiliation')))
+        ->add(Url::create(url('/contrat-prestation')));
 
     \App\Models\Evenement::where('statut', '=', 'publié')->get()->each(function ($evenement) use ($sitemap) {
         $sitemap->add(Url::create(url('/evenements/' . $evenement->id)));
@@ -218,6 +224,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
         Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
     });
+
+    Route::get('/contrat-prestation', [EvenementController::class, 'contratPrestation'])->name('contrat-prestation');
 });
 
 Route::middleware('auth')->group(function () {

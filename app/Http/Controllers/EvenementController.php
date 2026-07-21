@@ -160,6 +160,25 @@ class EvenementController extends Controller
             ->with('success', $gratuit ? 'Événement gratuit créé avec succès.' : 'Événement créé avec succès.');
     }
 
+    public function contratPrestation()
+    {
+        $user = Auth::user();
+
+        if (!$user || !in_array($user->statut, ['approuvé', 'verifie'])) {
+            abort(403, 'Accès réservé aux organisateurs approuvés.');
+        }
+
+        $user->load('evenements');
+
+        $html = view('site.contrat-prestation', compact('user'))->render();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'Contrat-Prestation-PaxEvent-' . $user->id . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
     public function show(Evenement $evenement)
     {
         abort_if($evenement->user_id !== Auth::id(), 403);

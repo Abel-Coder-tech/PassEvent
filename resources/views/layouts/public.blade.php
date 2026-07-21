@@ -628,7 +628,8 @@
                 <div class="col-6 col-md-3">
                     <h6>Support</h6>
                     <ul class="footer-links">
-                        <li><a href="#"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Conditions générales de vente</a></li>
+                        <li><a href="{{ route('cgv') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Conditions générales de vente</a></li>
+                        <li><a href="{{ route('affiliation') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Affiliation</a></li>
                         <li><a href="{{ route('contact') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Contact</a></li>
                         <li><a href="{{ route('aide') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Aide / Comment ça marche</a></li>
                         <li><a href="{{ route('politique-remboursement') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Politique de remboursement</a></li>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentErrorAlert;
 use App\Mail\TicketEmail;
 use App\Models\Ticket;
 use App\Models\Log;
@@ -177,6 +178,17 @@ class PaiementController extends Controller
         ]);
 
         if ($ticket->statut_paiement === 'en_attente') {
+            $firstTicket = $ticket;
+            try {
+                Mail::to($ticket->email_acheteur)->send(new PaymentErrorAlert(
+                    $ticket->nom_acheteur,
+                    $ticket->evenement->titre,
+                    $transactionId
+                ));
+            } catch (\Exception $e) {
+                FacadesLog::error('Email incident paiement non envoye : ' . $e->getMessage());
+            }
+
             foreach ($groupTickets as $t) {
                 $t->delete();
             }
