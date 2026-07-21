@@ -372,10 +372,7 @@
 }
 .show-hero-image img {
     width: 100%;
-    max-height: 400px;
-    object-fit: contain;
     display: block;
-    background: #f0eeec;
 }
 
 /* ===== INFOS ===== */
