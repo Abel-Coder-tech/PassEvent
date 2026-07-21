@@ -373,8 +373,9 @@
 .show-hero-image img {
     width: 100%;
     height: 260px;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
+    background: #f0eeec;
 }
 
 /* ===== INFOS ===== */
