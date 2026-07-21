@@ -372,7 +372,7 @@
 }
 .show-hero-image img {
     width: 100%;
-    height: 260px;
+    max-height: 400px;
     object-fit: contain;
     display: block;
     background: #f0eeec;
