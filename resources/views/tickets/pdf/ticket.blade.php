@@ -25,21 +25,41 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
-        .header { background: #542680; padding: 20px 24px; }
-        .header-title { color: #fff; }
-        .header-title .pass { font-size: 20px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-        .header-title .event-name { font-size: 15px; font-weight: 800; margin-top: 2px; }
+        .header { 
+            background: #542680; 
+            padding: 20px 24px; 
+        }
 
-        .body { padding: 20px 24px 16px; }
+        .header-title { 
+            color: #fff; 
+        }
+
+        .header-title .pass { 
+            font-size: 20px; 
+            font-weight: 400; 
+            letter-spacing: 2px; 
+            opacity: 0.8; 
+        }
+
+        .header-title .event-name { 
+            font-size: 15px; 
+            font-weight: 800; 
+            margin-top: 2px; 
+        }
+
+        .body { 
+            padding: 20px 24px 16px; 
+        }
 
         .event-meta {
-            font-size: 11px; color: #888; margin-bottom: 14px;
-            padding-bottom: 12px; border-bottom: 1px solid #eee;
+            font-size: 11px; 
+            color: #888; 
+            border-bottom: 1px solid #eee;
         }
 
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
         .info-table td { padding: 5px 0; vertical-align: middle; }
-        .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 80px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 100px; text-transform: uppercase; letter-spacing: 0.5px; }
         .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
         .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
         .info-table .iv-green { color: #2E7D4F; }
@@ -56,6 +76,7 @@
             font-size: 26px; font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
+        
         }
 
         .qr-block { text-align: center; margin: 16px 0 10px; }
@@ -89,8 +110,8 @@
     {{-- HEADER violet (no logo) --}}
     <div class="header" style="text-align: center; justify-content: center;">
         <div class="header-title">
-            <div class="pass">Pass</div>
-            <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
+            <div class="pass">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
+            
         </div>
     </div>
 
@@ -138,7 +159,7 @@
 
         @if($ticket->statut_paiement === 'payé')
         <div class="code-pass">
-            <div class="label">Code Pass</div>
+            <div class="label">Code Pax</div>
             <div class="value">{{ $ticket->code_unique }}</div>
         </div>
         @endif

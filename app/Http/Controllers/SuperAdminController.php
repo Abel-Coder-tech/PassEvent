@@ -16,6 +16,7 @@ use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\DemandeRemboursement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -230,7 +231,57 @@ class SuperAdminController extends Controller
     // Page des paramètres super admin
     public function parametres()
     {
-        return view('superadmin.parametres');
+        $user = Auth::user();
+        return view('superadmin.parametres', compact('user'));
+    }
+
+    // Mise à jour du profil super admin (nom, email, téléphone)
+    public function updateParametresProfil(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'telephone' => 'nullable|string|max:20',
+        ], [
+            'nom.required' => 'Le nom est obligatoire.',
+            'email.required' => 'L\'email est obligatoire.',
+            'email.email' => 'Le format de l\'email est invalide.',
+            'email.unique' => 'Cet email est déjà utilisé par un autre compte.',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('superadmin.parametres')->with('success', 'Profil mis à jour avec succès.');
+    }
+
+    // Mise à jour des réseaux sociaux du super admin
+    public function updateParametresReseaux(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'facebook_url' => 'nullable|url|max:500',
+            'instagram_url' => 'nullable|url|max:500',
+            'tiktok_url' => 'nullable|url|max:500',
+            'twitter_url' => 'nullable|url|max:500',
+            'youtube_url' => 'nullable|url|max:500',
+            'linkedin_url' => 'nullable|url|max:500',
+            'website_url' => 'nullable|url|max:500',
+        ], [
+            'facebook_url.url' => 'L\'URL Facebook est invalide.',
+            'instagram_url.url' => 'L\'URL Instagram est invalide.',
+            'tiktok_url.url' => 'L\'URL TikTok est invalide.',
+            'twitter_url.url' => 'L\'URL Twitter est invalide.',
+            'youtube_url.url' => 'L\'URL YouTube est invalide.',
+            'linkedin_url.url' => 'L\'URL LinkedIn est invalide.',
+            'website_url.url' => 'L\'URL du site web est invalide.',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('superadmin.parametres')->with('success', 'Réseaux sociaux mis à jour avec succès.');
     }
 
     // Logs système complets

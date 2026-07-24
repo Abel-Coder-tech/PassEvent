@@ -127,6 +127,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/notifications/{message}/lire', [SuperAdminController::class, 'lireNotification'])->name('notifications.lire');
         Route::delete('/notifications/{message}', [SuperAdminController::class, 'supprimerNotification'])->name('notifications.supprimer');
         Route::get('/parametres', [SuperAdminController::class, 'parametres'])->name('parametres');
+        Route::put('/parametres/profil', [SuperAdminController::class, 'updateParametresProfil'])->name('parametres.profil.update');
+        Route::put('/parametres/reseaux', [SuperAdminController::class, 'updateParametresReseaux'])->name('parametres.reseaux.update');
         Route::get('/retraits', [SuperAdminController::class, 'retraits'])->name('retraits');
         Route::post('/retraits/{withdrawal}/approuver', [SuperAdminController::class, 'approuverRetrait'])->name('retraits.approuver');
         Route::post('/retraits/{withdrawal}/rejeter', [SuperAdminController::class, 'rejeterRetrait'])->name('retraits.rejeter');
