@@ -18,7 +18,7 @@ class CodePromoController extends Controller
     public function globalIndex(Request $request)
     {
         $user = Auth::user();
-        $evenements = Evenement::where('user_id', $user->id)
+        $evenements = Evenement::where('user_id',"=", $user->id)
             ->orderBy('date_event', 'desc')
             ->get();
 
@@ -106,7 +106,7 @@ class CodePromoController extends Controller
             $code = $prefixe ? $prefixe . '-' . $suffixe : $suffixe;
 
             // Assurez-vous que le code promo est unique
-            while (CodePromo::where('code', '=', $code, 'and')->exists()) {
+            while (CodePromo::where('code', $code)->exists()) {
                 $suffixe = strtoupper(Str::random(6));
                 $code = $prefixe ? $prefixe . '-' . $suffixe : $suffixe;
             }
