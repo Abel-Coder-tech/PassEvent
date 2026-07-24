@@ -537,6 +537,9 @@
             <a href="{{ route('superadmin.logs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.logs') ? 'active' : '' }}">
                 <i class="bi bi-journal-text"></i> Logs systeme
             </a>
+            <a href="{{ route('superadmin.newsletter') }}" class="sa-nav-link {{ request()->routeIs('superadmin.newsletter*') ? 'active' : '' }}">
+                <i class="bi bi-envelope-fill"></i> Newsletter
+            </a>
             <a href="{{ route('superadmin.parametres') }}" class="sa-nav-link {{ request()->routeIs('superadmin.parametres') ? 'active' : '' }}">
                 <i class="bi bi-gear-fill"></i> Parametres
             </a>

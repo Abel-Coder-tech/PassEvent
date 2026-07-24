@@ -135,6 +135,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/logs', [SuperAdminController::class, 'logsSysteme'])->name('logs');
         Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
         Route::get('/remboursements', [SuperAdminController::class, 'demandesRemboursement'])->name('remboursements.demandes');
+        Route::get('/newsletter', [SuperAdminController::class, 'newsletter'])->name('newsletter');
+        Route::post('/newsletter/envoyer', [SuperAdminController::class, 'envoyerNewsletter'])->name('newsletter.envoyer');
         Route::get('/remboursements/{demande}', [SuperAdminController::class, 'voirDemandeRemboursement'])->name('remboursements.voir');
         Route::post('/remboursements/{demande}/approuver', [SuperAdminController::class, 'approuverDemandeRemboursement'])->name('remboursements.approuver');
         Route::post('/remboursements/{demande}/confirmer', [SuperAdminController::class, 'confirmerRemboursement'])->name('remboursements.confirmer');

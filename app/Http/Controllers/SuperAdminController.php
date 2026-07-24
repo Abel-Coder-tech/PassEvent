@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\RegistrationApproved;
 use App\Mail\RegistrationRejected;
 use App\Mail\RegistrationCorrections;
+use App\Mail\NewsletterMassEmail;
 use App\Models\User;
 use App\Models\Evenement;
 use App\Models\Ticket;
@@ -793,5 +794,55 @@ class SuperAdminController extends Controller
         ]);
 
         return back()->with('success', 'Demande de remboursement refusée.');
+    }
+
+    // Liste de tous les abonnés newsletter
+    public function newsletter()
+    {
+        $abonnes = Newsletter::orderByDesc('created_at')->paginate(20);
+        $totalActifs = Newsletter::where('actif', true)->count();
+        $totalInactifs = Newsletter::where('actif', false)->count();
+
+        return view('superadmin.newsletter', compact('abonnes', 'totalActifs', 'totalInactifs'));
+    }
+
+    // Envoyer un message à tous les abonnés actifs
+    public function envoyerNewsletter(Request $request)
+    {
+        $validated = $request->validate([
+            'objet' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $abonnesActifs = Newsletter::where('actif', true)->pluck('email');
+
+        if ($abonnesActifs->isEmpty()) {
+            return back()->with('error', 'Aucun abonné actif à qui envoyer un message.');
+        }
+
+        $superadmin = auth('superadmin')->user();
+
+        foreach ($abonnesActifs as $email) {
+            Mail::to($email)->queue(new NewsletterMassEmail(
+                $validated['objet'],
+                $validated['message'],
+                $superadmin->nom,
+                $superadmin->email
+            ));
+        }
+
+        Log::create([
+            'type_operation' => 'newsletter',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'action' => 'envoi_newsletter_masse',
+                'objet' => $validated['objet'],
+                'destinataires' => $abonnesActifs->count(),
+                'par' => $superadmin->email,
+            ]),
+            'ip' => $request->ip(),
+        ]);
+
+        return back()->with('success', "Message envoyé à {$abonnesActifs->count()} abonné(s).");
     }
 }
