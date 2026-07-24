@@ -174,7 +174,7 @@
             <div class="qr-box">
                 <img src="{{ $qrCodeDataUri }}" alt="QR Code">
             </div>
-            <div class="qr-label">Scannez ce code pour valider votre entrée</div>
+            <div class="qr-label">Scannez ce code à l'entrée</div>
         </div>
 
         <div class="note">
