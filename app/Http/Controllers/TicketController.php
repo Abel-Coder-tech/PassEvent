@@ -56,7 +56,7 @@ class TicketController extends Controller
     }
 
     // Détails d'un ticket avec historique de logs
-    public function show($id)
+    public function show(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif', 'notifications')->findOrFail($id);
         // use two-argument where to avoid argument mismatch
@@ -88,7 +88,7 @@ class TicketController extends Controller
     }
 
     // Télécharge le ticket (avec vérification de paiement)
-    public function downloadTicket($id)
+    public function downloadTicket(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
@@ -147,7 +147,7 @@ class TicketController extends Controller
     }
 
     // Renvoie le ticket par email depuis l'interface admin
-    public function renvoyer($id)
+    public function renvoyer(int $id)
     {
         $ticket = Ticket::with('evenement')->findOrFail($id);
 
@@ -169,7 +169,7 @@ class TicketController extends Controller
     }
 
     // Annule un ticket et restaure les quotas
-    public function annuler($id)
+    public function annuler(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
@@ -201,9 +201,12 @@ class TicketController extends Controller
         return back()->with('success', 'Ticket annulé et quota restauré.');
     }
 
-    public function create() { return view('tickets.create'); }
+    public function create()
+    {
+        return view('tickets.index');
+    }
     public function store(Request $request) { return back(); }
-    public function edit($id) { return back(); }
-    public function update(Request $request, $id) { return back(); }
-    public function destroy($id) { return back(); }
+    public function edit(int $id) { return back(); }
+    public function update(Request $request, int $id) { return back(); }
+    public function destroy(int $id) { return back(); }
 }

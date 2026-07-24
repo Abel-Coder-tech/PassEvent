@@ -55,6 +55,8 @@
             font-size: 11px; 
             color: #888; 
             border-bottom: 1px solid #eee;
+            margin-bottom: 5px;
+            padding-bottom: 6px;
         }
 
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
@@ -73,9 +75,11 @@
         }
         .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
         .code-pass .value {
-            font-size: 26px; font-weight: 800;
+            font-size: 26px; 
+            font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
+            font-family: 'DejaVu Sans Mono', monospace;
         
         }
 
@@ -152,14 +156,14 @@
         </table>
 
         @if($ticket->montant <= 0)
-        <div style="text-align:center;padding:8px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+        <div style="text-align:center;padding:3px 0;color:#542680;font-weight:700;font-size:12px; font-family: 'DejaVu Sans Mono', monospace; letter-spacing:1px;text-transform:uppercase;">
             Entrée gratuite
         </div>
         @endif
 
         @if($ticket->statut_paiement === 'payé')
         <div class="code-pass">
-            <div class="label">Code Pax</div>
+            <div class="label">Code Pass</div>
             <div class="value">{{ $ticket->code_unique }}</div>
         </div>
         @endif
