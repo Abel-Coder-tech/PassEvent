@@ -101,9 +101,16 @@
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-medium">Paiement</label>
+                            @php $especesOk = $agent->evenement->ventesEspecesActivees(); @endphp
+                            @if(!$agent->evenement->gratuit && !$especesOk)
+                                <div class="alert alert-warning py-1 px-2 mb-1" style="font-size:0.78rem;border-radius:6px;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Espèces bloquées — {{ $agent->evenement->ticketsEnLigneCount() }}/{{ (int) ceil($agent->evenement->capacite * 15 / 100) }} tickets vendus en ligne.
+                                </div>
+                            @endif
                             <select name="methode_paiement" class="form-select form-select-sm" id="methodePaiement" required>
                                 <option value="">Choisir...</option>
-                                <option value="cash">Espèces (Cash)</option>
+                                <option value="cash" {{ !$especesOk ? 'disabled' : '' }}>{{ $especesOk ? 'Espèces (Cash)' : 'Espèces (bloquées)' }}</option>
                                 <option value="mobile_money">Mobile</option>
                             </select>
                         </div>

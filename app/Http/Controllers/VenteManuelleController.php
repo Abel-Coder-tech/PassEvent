@@ -95,6 +95,19 @@ class VenteManuelleController extends Controller
                 $rules['email'] = 'required|email|max:255'; // Email obligatoire pour paiement mobile
                 $messages['email.required'] = 'L\'email est obligatoire pour le paiement mobile.';
             }
+
+            // Blocage espèces si seuil mobile money non atteint
+            if ($request->methode_paiement === 'especes' && !$evenement->ventesEspecesActivees()) {
+                $seuil = (int) ceil($evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100);
+                $vendus = $evenement->ticketsEnLigneCount();
+                return response()->json([
+                    'errors' => [
+                        'methode_paiement' => [
+                            "Ventes espèces bloquées. Vous devez vendre au moins {$seuil} ticket(s) par mobile money avant de pouvoir vendre en espèces. Progression : {$vendus}/{$seuil} tickets vendus en ligne."
+                        ]
+                    ]
+                ], 422);
+            }
         }
 
         $validated = $request->validate($rules, $messages);
@@ -302,6 +315,12 @@ class VenteManuelleController extends Controller
             $tarifs = $query->get();
         }
 
-        return response()->json(['tarifs' => $tarifs, 'gratuit' => $evenement->gratuit]);
+        return response()->json([
+            'tarifs' => $tarifs,
+            'gratuit' => $evenement->gratuit,
+            'especes_activees' => $evenement->ventesEspecesActivees(),
+            'seuil' => $evenement->gratuit ? 0 : (int) ceil($evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100),
+            'vendus_en_ligne' => $evenement->ticketsEnLigneCount(),
+        ]);
     }
 }

@@ -99,9 +99,10 @@
                             <div class="col-md-6" id="fieldPaiement">
                                 <label for="methode_paiement" class="form-label fw-semibold">Moyen de paiement <span class="text-danger">*</span></label>
                                 <select class="form-select" id="methode_paiement" name="methode_paiement" required>
-                                    <option value="especes">Espèces</option>
+                                    <option value="especes" id="optEspeces">Espèces</option>
                                     <option value="mobile">Mobile</option>
                                 </select>
+                                <div id="alertEspeces" class="mt-2" style="display:none;"></div>
                             </div>
                         </div>
                     </div>
@@ -230,6 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isUniversitaire = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
     let tarifUnitaire = 0;
     let isFreeEvent = false;
+    let especesActivees = true;
 
     function toggleFieldsPayants(hide) {
         document.getElementById('fieldStatut').style.display = (hide || !isUniversitaire) ? 'none' : '';
@@ -358,6 +360,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 opt.dataset.prix = t.prix;
                 tarifSelect.appendChild(opt);
             });
+
+            // Gestion du seuil espèces
+            especesActivees = data.especes_activees;
+            const optEspeces = document.getElementById('optEspeces');
+            const alertEspeces = document.getElementById('alertEspeces');
+
+            if (!data.gratuit && !data.especes_activees) {
+                optEspeces.disabled = true;
+                optEspeces.textContent = 'Espèces (bloquées — seuil non atteint)';
+                methodeSelect.value = 'mobile';
+                alertEspeces.style.display = 'block';
+                alertEspeces.innerHTML = '<div class="alert alert-warning py-1 px-2 mb-0" style="font-size:0.78rem;border-radius:6px;">'
+                    + '<i class="bi bi-exclamation-triangle me-1"></i>'
+                    + 'Ventes espèces bloquées. <strong>' + data.vendus_en_ligne + '/' + data.seuil + '</strong> tickets vendus en ligne (seuil : 15 %).'
+                    + '</div>';
+            } else {
+                optEspeces.disabled = false;
+                optEspeces.textContent = 'Espèces';
+                alertEspeces.style.display = 'none';
+                alertEspeces.innerHTML = '';
+            }
         })
         .catch(() => {
             tarifSelect.innerHTML = '<option value="">Erreur de chargement</option>';

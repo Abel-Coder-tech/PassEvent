@@ -130,6 +130,15 @@ class AuthController extends Controller
 
         $tarif = $agent->evenement->tarifs()->findOrFail($validated['tarif_id']);
 
+        // Blocage espèces si seuil mobile money non atteint
+        if ($validated['methode_paiement'] === 'cash' && !$agent->evenement->ventesEspecesActivees()) {
+            $seuil = (int) ceil($agent->evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100);
+            $vendus = $agent->evenement->ticketsEnLigneCount();
+            return back()->withErrors([
+                'methode_paiement' => "Ventes espèces bloquées. Vendre d'abord {$seuil} ticket(s) en ligne. Progression : {$vendus}/{$seuil}."
+            ]);
+        }
+
         $ticket = Ticket::create([
             'evenement_id' => $agent->evenement->id,
             'tarif_id' => $tarif->id,
