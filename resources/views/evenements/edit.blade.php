@@ -101,25 +101,6 @@
                     </label>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold d-block">Statut <span class="text-danger">*</span></label>
-                    <div class="d-flex gap-3">
-                        <div class="form-check">
-                            <input type="radio" class="form-check-input @error('statut') is-invalid @enderror" id="statut_brouillon" name="statut" value="brouillon" {{ old('statut', $evenement->statut) == 'brouillon' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="statut_brouillon">
-                                <i class="bi bi-pencil-square me-1"></i>Brouillon
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input type="radio" class="form-check-input @error('statut') is-invalid @enderror" id="statut_publie" name="statut" value="publié" {{ old('statut', $evenement->statut) == 'publié' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="statut_publie">
-                                <i class="bi bi-globe2 me-1"></i>Publié
-                            </label>
-                        </div>
-                    </div>
-                    @error('statut') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                </div>
-
                 <div class="panel-card mt-4 mb-4" style="border-left: 3px solid var(--violet);">
                     <div class="panel-card-body p-3">
                         <h6 class="fw-bold mb-3" style="color: var(--violet);">
@@ -172,6 +153,25 @@
                             </p>
                         @endif
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold d-block">Statut <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input @error('statut') is-invalid @enderror" id="statut_publie" name="statut" value="publié" {{ old('statut', $evenement->statut) == 'publié' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="statut_publie">
+                                <i class="bi bi-globe2 me-1"></i>Publié
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input @error('statut') is-invalid @enderror" id="statut_brouillon" name="statut" value="brouillon" {{ old('statut', $evenement->statut) == 'brouillon' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="statut_brouillon">
+                                <i class="bi bi-pencil-square me-1"></i>Brouillon
+                            </label>
+                        </div>
+                    </div>
+                    @error('statut') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="d-flex flex-column flex-md-row justify-content-md-end gap-2">
