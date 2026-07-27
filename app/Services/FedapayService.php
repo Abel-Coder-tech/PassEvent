@@ -49,10 +49,9 @@ class FedapayService
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info('FedapayService::getTransaction - Succès', [
+                Log::info('FedapayService::getTransaction - Payload complet', [
                     'transaction_id' => $transactionId,
-                    'payment_method' => $data['payment_method'] ?? null,
-                    'status' => $data['status'] ?? null,
+                    'payload' => $data,
                 ]);
                 return $data;
             }
