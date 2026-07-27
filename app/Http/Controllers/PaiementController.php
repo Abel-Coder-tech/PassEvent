@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\PaymentErrorAlert;
 use App\Mail\TicketEmail;
 use App\Models\Ticket;
-use App\Models\Log;
+use App\Models\Log as LogModel;
 use App\Services\FedapayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log as FacadesLog;
@@ -121,7 +121,7 @@ class PaiementController extends Controller
             $paymentMethod = $request->query('payment_method', 'mobile_money');
             $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
 
-            Log::info('FedaPay callback - payment_method brut', [
+            FacadesLog::info('FedaPay callback - payment_method brut', [
                 'ticket_id' => $ticket->id,
                 'payment_method_raw' => $paymentMethod,
                 'query_all' => $request->query(),
@@ -160,7 +160,7 @@ class PaiementController extends Controller
             }
 
             foreach ($groupTickets as $t) {
-                Log::create([
+                LogModel::create([
                     'ticket_id' => $t->id,
                     'type_operation' => 'achat',
                     'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay', 'agent_vente' => $source === 'agent_vente'],
@@ -223,7 +223,7 @@ class PaiementController extends Controller
         $data = $request->all();
 
         // Log complet du payload pour diagnostic
-        Log::info('FedaPay webhook payload complet', $data);
+        FacadesLog::info('FedaPay webhook payload complet', $data);
 
         if (!isset($data['id']) || !isset($data['status'])) {
             return response()->json(['error' => 'Invalid payload'], 400);
@@ -247,7 +247,7 @@ class PaiementController extends Controller
                 $paymentMethodRaw = $data['payment_method'] ?? 'mobile_money';
                 $paymentMethod = self::extractPaymentMethod($paymentMethodRaw);
 
-                Log::info('FedaPay webhook - payment_method extrait', [
+                FacadesLog::info('FedaPay webhook - payment_method extrait', [
                     'ticket_id' => $ticket->id,
                     'payment_method_brut' => $paymentMethodRaw,
                     'payment_method_normalise' => $paymentMethod,
