@@ -93,7 +93,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmez votre mot de passe <span class="text-danger">*</span></label>
-                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="new-password">
+                            <div class="input-group">
+                                <input type="password" name="password" id="retraitPassword" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="off" style="border-radius:8px 0 0 8px;">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleRetraitPwd" style="border-color:#ede5f0; color:#6c757d;">
+                                    <i class="bi bi-eye" id="retraitPwdIcon"></i>
+                                </button>
+                            </div>
                             @error('password')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         </div>
                         <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
@@ -213,6 +218,17 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleRetraitPwd');
+    const pwdInput = document.getElementById('retraitPassword');
+    const pwdIcon = document.getElementById('retraitPwdIcon');
+    if (toggleBtn && pwdInput) {
+        toggleBtn.addEventListener('click', function() {
+            const isPassword = pwdInput.type === 'password';
+            pwdInput.type = isPassword ? 'text' : 'password';
+            pwdIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        });
+    }
+
     const form = document.getElementById('formRetrait');
     const retraitModal = document.getElementById('retraitModal');
     const successModal = document.getElementById('successRetraitModal');

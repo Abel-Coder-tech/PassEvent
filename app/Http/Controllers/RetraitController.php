@@ -80,7 +80,7 @@ class RetraitController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Hash::check($validated['password'], $user->password)) {
+        if (!Hash::check($validated['password'], $user->getAuthPassword())) {
             $msg = 'Mot de passe incorrect.';
             if ($isAjax) return response()->json(['success' => false, 'message' => $msg], 422);
             return back()->withErrors(['password' => $msg])->withInput();
