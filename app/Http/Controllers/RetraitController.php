@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RetraitApproved;
+use App\Mail\RetraitConfirmed;
+use App\Mail\RetraitRejected;
 use App\Mail\RetraitRequested;
 use App\Models\Message;
 use App\Models\Ticket;
@@ -40,7 +43,7 @@ class RetraitController extends Controller
         $commissionTotale = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2);
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
-            ->where('status', 'approuvé')
+            ->whereIn('status', ['approuvé', 'en_cours', 'payé'])
             ->sum('montant');
 
         $soldeDisponible = max(0, $mobileRecettes - $commissionTotale - $totalRetraits);
@@ -130,6 +133,52 @@ class RetraitController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Email retrait non envoyé : ' . $e->getMessage());
+        }
+    }
+
+    public static function getLabelReseau(?string $reseau): string
+    {
+        return self::RESEAUX_CONFIG[$reseau]['label'] ?? ucfirst($reseau ?? 'inconnu');
+    }
+
+    public static function notifierOrganisateur(Withdrawal $retrait, string $type)
+    {
+        $user = $retrait->user;
+        $label = self::getLabelReseau($retrait->reseau);
+
+        $messages = [
+            'en_cours' => "Votre retrait de " . number_format($retrait->montant, 0, ',', ' ') . " FCFA sur {$label} est en cours de traitement.",
+            'paye' => "Votre retrait de " . number_format($retrait->montant, 0, ',', ' ') . " FCFA sur {$label} a été effectué. Merci d'avoir utilisé PaxEvent !",
+            'rejete' => "Votre retrait de " . number_format($retrait->montant, 0, ',', ' ') . " FCFA sur {$label} a été rejeté. Raison : " . ($retrait->admin_notes ?? 'Non spécifiée'),
+        ];
+
+        $objets = [
+            'en_cours' => 'Retrait en cours de traitement — PaxEvent',
+            'paye' => 'Retrait effectué — Merci ! PaxEvent',
+            'rejete' => 'Retrait rejeté — PaxEvent',
+        ];
+
+        Message::create([
+            'user_id' => $user->id,
+            'nom_complet' => 'PaxEvent',
+            'email' => 'contact@paxevent.com',
+            'objet' => $objets[$type] ?? 'Retrait — PaxEvent',
+            'message' => $messages[$type] ?? '',
+            'lu' => false,
+        ]);
+
+        try {
+            $mailClass = match($type) {
+                'en_cours' => new RetraitApproved($user->nom, $label, $retrait->montant),
+                'paye' => new RetraitConfirmed($user->nom, $label, $retrait->montant),
+                'rejete' => new RetraitRejected($user->nom, $label, $retrait->montant, $retrait->admin_notes ?? 'Non spécifiée'),
+                default => null,
+            };
+            if ($mailClass) {
+                Mail::to($user->email)->send($mailClass);
+            }
+        } catch (\Exception $e) {
+            Log::error("Email retrait {$type} non envoyé : " . $e->getMessage());
         }
     }
 }

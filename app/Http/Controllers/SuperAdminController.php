@@ -547,49 +547,88 @@ class SuperAdminController extends Controller
     public function retraits()
     {
         $retraits = Withdrawal::with('user')
-            ->orderByRaw("FIELD(status, 'en_attente', 'approuvé', 'rejeté')")
+            ->orderByRaw("FIELD(status, 'en_attente', 'en_cours', 'approuvé', 'payé', 'rejeté')")
             ->orderByDesc('created_at')
             ->paginate(20);
 
         $stats = [
             'en_attente' => Withdrawal::where('status', 'en_attente')->count(),
-            'approuve' => Withdrawal::where('status', 'approuvé')->sum('montant'),
-            'total' => Withdrawal::where('status', 'approuvé')->count(),
+            'en_cours' => Withdrawal::where('status', 'en_cours')->count(),
+            'approuve' => Withdrawal::where('status', 'payé')->sum('montant'),
+            'total' => Withdrawal::where('status', 'payé')->count(),
         ];
 
         return view('superadmin.retraits', compact('retraits', 'stats'));
     }
 
-    // Approuve une demande de retrait
+    // Approuve une demande → en cours de traitement
     public function approuverRetrait(Withdrawal $withdrawal, Request $request)
     {
         if ($withdrawal->status !== 'en_attente') {
-            return back()->with('error', 'Ce retrait a déjà été traité.'); // Déjà traité
+            return back()->with('error', 'Ce retrait a déjà été traité.');
         }
 
         $withdrawal->update([
-            'status' => 'approuvé',
+            'status' => 'en_cours',
             'admin_notes' => $request->input('admin_notes'),
             'processed_at' => now(),
         ]);
 
-        return back()->with('success', 'Retrait approuvé.');
+        RetraitController::notifierOrganisateur($withdrawal, 'en_cours');
+
+        return back()->with('success', 'Retrait approuvé. En attente de transfert.');
+    }
+
+    // Confirme le paiement effectué → payé
+    public function confirmerRetrait(Withdrawal $withdrawal, Request $request)
+    {
+        if ($withdrawal->status !== 'en_cours') {
+            return back()->with('error', 'Ce retrait n\'est pas en cours de traitement.');
+        }
+
+        $withdrawal->update([
+            'status' => 'payé',
+            'admin_notes' => $request->input('admin_notes', $withdrawal->admin_notes),
+            'processed_at' => now(),
+        ]);
+
+        RetraitController::notifierOrganisateur($withdrawal, 'paye');
+
+        return back()->with('success', 'Paiement confirmé. L\'organisateur a été notifié.');
     }
 
     // Rejette une demande de retrait
     public function rejeterRetrait(Withdrawal $withdrawal, Request $request)
     {
         if ($withdrawal->status !== 'en_attente') {
-            return back()->with('error', 'Ce retrait a déjà été traité.'); // Déjà traité
+            return back()->with('error', 'Ce retrait a déjà été traité.');
         }
+
+        $motifs = $request->input('motifs', []);
+        $autreRaison = trim($request->input('autre_raison', ''));
+
+        $raisons = [];
+        $labels = [
+            'numero_invalide' => 'Numéro invalide',
+            'doublon' => 'Doublon de demande',
+            'numero_reseau' => 'Numéro ne correspond pas au réseau sélectionné',
+        ];
+        foreach ($motifs as $m) {
+            if (isset($labels[$m])) $raisons[] = $labels[$m];
+        }
+        if ($autreRaison !== '') $raisons[] = $autreRaison;
+
+        $notes = $raisons ? implode("\n", $raisons) : ($request->input('admin_notes') ?: 'Non spécifiée');
 
         $withdrawal->update([
             'status' => 'rejeté',
-            'admin_notes' => $request->input('admin_notes'),
+            'admin_notes' => $notes,
             'processed_at' => now(),
         ]);
 
-        return back()->with('success', 'Retrait rejeté.');
+        RetraitController::notifierOrganisateur($withdrawal, 'rejete');
+
+        return back()->with('success', 'Retrait rejeté. L\'organisateur a été notifié.');
     }
 
     // Liste des demandes de remboursement

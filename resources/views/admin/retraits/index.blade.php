@@ -186,10 +186,14 @@
                                     <td>
                                         @if($retrait->status === 'en_attente')
                                             <span class="status-badge" style="background: rgba(243,156,18,0.12); color: #f39c12;">En attente</span>
-                                        @elseif($retrait->status === 'approuvé')
-                                            <span class="status-badge" style="background: rgba(18,151,110,0.12); color: var(--vert);">Approuvé</span>
-                                        @else
+                                        @elseif($retrait->status === 'en_cours')
+                                            <span class="status-badge" style="background: rgba(52,152,219,0.12); color: #3498db;">En cours</span>
+                                        @elseif($retrait->status === 'payé')
+                                            <span class="status-badge" style="background: rgba(18,151,110,0.12); color: var(--vert);">Payé</span>
+                                        @elseif($retrait->status === 'rejeté')
                                             <span class="status-badge" style="background: rgba(231,76,60,0.12); color: #e74c3c;">Rejeté</span>
+                                        @else
+                                            <span class="status-badge" style="background: rgba(152,145,155,0.12); color: var(--gris);">{{ $retrait->status }}</span>
                                         @endif
                                     </td>
                                     <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--gris);">
