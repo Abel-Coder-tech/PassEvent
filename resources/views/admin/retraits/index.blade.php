@@ -9,131 +9,72 @@
 
 @section('content')
 <div class="page-content">
-    <!-- Solde & Stats -->
+    <!-- Cartes solde par réseau -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-cash-stack" style="color: var(--violet);"></i></div>
-                <div class="metric-label">Revenu mobile (FedaPay)</div>
-                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($recettesBrutes, 0, ',', ' ') }}</div>
-                <div class="metric-subtitle">Disponible pour retrait</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="metric-card" style="border-top-color: var(--gris);">
-                <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
-                <div class="metric-label">Commission ({{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%)</div>
-                <div class="metric-value" style="font-size:1.3rem;"> {{ number_format($commission, 0, ',', ' ') }}</div>
-                <div class="metric-subtitle">Part de la plateforme</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="metric-card" style="border-top-color: var(--vert);">
-                <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-wallet2" style="color: var(--vert);"></i></div>
-                <div class="metric-label">Solde disponible</div>
-                <div class="metric-value" style="font-size:1.3rem; color: var(--vert);">{{ number_format(max(0, $soldeDisponible), 0, ',', ' ') }}</div>
-                <div class="metric-subtitle">
-                    Net ({{ number_format($recettesNettes, 0, ',', ' ') }}) 
-                    - Retiré ({{ number_format($totalRetraits, 0, ',', ' ') }})
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3 d-flex align-items-center justify-content-center">
-            @if($soldeDisponible >= 100)
-                <button type="button" class="btn" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; padding: 0.85rem 1.5rem; border-radius: 12px; border: none; width: 100%; box-shadow: 0 4px 16px rgba(123,63,160,0.3);" data-bs-toggle="modal" data-bs-target="#retraitModal">
-                    <i class="bi bi-send me-1"></i> Demander un retrait
-                </button>
-            @else
-                <div class="text-center" style="color: var(--gris); font-size: 0.82rem;">
-                    <i class="bi bi-lock d-block mb-1" style="font-size:1.5rem;"></i>
-                    Solde insuffisant
-                </div>
-            @endif
-        </div>
-    </div>
-
-    {{-- Répartition par opérateur mobile --}}
-    @if($recettesBrutes > 0)
-    <div class="row g-3 mb-4">
-        @php $totalMobileTickets = 0; $totalMobileMontant = 0; @endphp
-        @foreach($reseauxConfig as $key => $cfg)
-            @php
-                $data = $reseauxPaiement->get($key);
-                $count = $data ? (int) $data->total : 0;
-                $montant = $data ? (int) $data->montant : 0;
-                $totalMobileTickets += $count;
-                $totalMobileMontant += $montant;
-            @endphp
-            <div class="col-md-4">
-                <div class="metric-card" style="border-top-color: #3498db; height:100%;">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <div style="width:42px;height:42px;background:rgba(52,152,219,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <i class="bi bi-phone" style="color:#3498db;font-size:1.15rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight:700;color:var(--sombre);font-size:0.95rem;">{{ $cfg['label'] }}</div>
-                            <div style="font-size:0.75rem;color:var(--gris);">{{ $count }} ticket{{ $count > 1 ? 's' : '' }}</div>
-                        </div>
+        @foreach($soldes as $key => $s)
+        <div class="col-md-4">
+            <div class="metric-card" style="border-top-color: {{ $s['solde'] > 0 ? 'var(--vert)' : 'var(--gris)' }}; height:100%;">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div style="width:42px;height:42px;background:rgba(52,152,219,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi {{ $s['icon'] }}" style="color:#3498db;font-size:1.15rem;"></i>
                     </div>
-                    <div class="d-flex justify-content-between py-1">
-                        <span style="color:var(--gris);font-size:0.8rem;">Montant collecté</span>
-                        <span style="font-weight:700;font-size:1rem;">{{ number_format($montant, 0, ',', ' ') }} F</span>
+                    <div>
+                        <div style="font-weight:700;color:var(--sombre);font-size:0.95rem;">{{ $s['label'] }}</div>
+                        <div style="font-size:0.75rem;color:var(--gris);">{{ number_format($s['recettes'], 0, ',', ' ') }} F collectés</div>
+                    </div>
+                </div>
+                <div style="border-top:1px solid #f5f5f5;padding-top:0.5rem;margin-top:0.25rem;">
+                    <div class="d-flex justify-content-between py-1" style="font-size:0.8rem;">
+                        <span style="color:var(--gris);">Commission</span>
+                        <span style="color:#e74c3c;">-{{ number_format($s['commission'], 0, ',', ' ') }} F</span>
+                    </div>
+                    @if($s['retraits'] > 0)
+                    <div class="d-flex justify-content-between py-1" style="font-size:0.8rem;">
+                        <span style="color:var(--gris);">Déjà retiré</span>
+                        <span style="color:#f39c12;">-{{ number_format($s['retraits'], 0, ',', ' ') }} F</span>
+                    </div>
+                    @endif
+                    <div class="d-flex justify-content-between py-1" style="font-size:0.9rem;border-top:1px solid #f5f5f5;margin-top:0.25rem;">
+                        <span style="font-weight:700;">Solde retirable</span>
+                        <span style="font-weight:800;color:{{ $s['solde'] > 0 ? 'var(--vert)' : 'var(--gris)' }};">{{ number_format($s['solde'], 0, ',', ' ') }} F</span>
                     </div>
                 </div>
             </div>
+        </div>
         @endforeach
     </div>
 
-    {{-- Tableau récapitulatif --}}
-    <div class="panel-card mb-4">
-        <div class="panel-card-header">
-            <h5><i class="bi bi-bar-chart me-1" style="color:#3498db;"></i> Récapitulatif par opérateur</h5>
-        </div>
-        <div class="panel-card-body p-0">
-            <div class="table-responsive">
-                <table class="custom-table table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Opérateur</th>
-                            <th class="text-center">Tickets</th>
-                            <th class="text-end">Montant</th>
-                            <th class="text-end">Part</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($reseauxConfig as $key => $cfg)
-                            @php
-                                $data = $reseauxPaiement->get($key);
-                                $count = $data ? (int) $data->total : 0;
-                                $montant = $data ? (int) $data->montant : 0;
-                                $pct = $totalMobileMontant > 0 ? round(($montant / $totalMobileMontant) * 100, 1) : 0;
-                            @endphp
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div style="width:32px;height:32px;background:rgba(52,152,219,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                                            <i class="bi bi-phone" style="color:#3498db;font-size:0.85rem;"></i>
-                                        </div>
-                                        <span style="font-weight:600;">{{ $cfg['label'] }}</span>
-                                    </div>
-                                </td>
-                                <td class="text-center">{{ $count }}</td>
-                                <td class="text-end">{{ number_format($montant, 0, ',', ' ') }} F</td>
-                                <td class="text-end">{{ $pct }}%</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr style="background:#f8f6f9;font-weight:700;">
-                            <td>Total</td>
-                            <td class="text-center">{{ $totalMobileTickets }}</td>
-                            <td class="text-end">{{ number_format($totalMobileMontant, 0, ',', ' ') }} F</td>
-                            <td class="text-end">100%</td>
-                        </tr>
-                    </tfoot>
-                </table>
+    <!-- Résumé global -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-label">Recettes mobile</div>
+                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Tous réseaux confondus</div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="metric-card" style="border-top-color: var(--gris);">
+                <div class="metric-label">Commission totale ({{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%)</div>
+                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionTotale, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Inclut la part espèces répartie</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-label">Solde total retirable</div>
+                <div class="metric-value" style="font-size:1.3rem;color:var(--vert);">{{ number_format($soldeTotalDisponible, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Après commission et retraits</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton retrait -->
+    @if($soldeTotalDisponible >= 1000)
+    <div class="mb-4">
+        <button type="button" class="btn" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; padding: 0.85rem 2rem; border-radius: 12px; border: none; box-shadow: 0 4px 16px rgba(123,63,160,0.3);" data-bs-toggle="modal" data-bs-target="#retraitModal">
+            <i class="bi bi-send me-1"></i> Demander un retrait
+        </button>
     </div>
     @endif
 
@@ -146,33 +87,71 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p style="color: #6c757d; font-size: 0.85rem; margin-bottom: 1rem;">
-                        Solde disponible : <strong style="color: var(--vert);">{{ number_format(max(0, $soldeDisponible), 0, ',', ' ') }} FCFA</strong>
-                    </p>
-                    <form action="{{ route('admin.retraits.store') }}" method="POST">
+                    <form action="{{ route('admin.retraits.store') }}" method="POST" id="formRetrait" autocomplete="off">
                         @csrf
                         <div class="mb-3">
+                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Réseau <span class="text-danger">*</span></label>
+                            <select name="reseau" id="reseauSelect" class="form-select" required autocomplete="off">
+                                <option value="">Choisir un réseau —</option>
+                                @foreach($soldes as $key => $s)
+                                    @if($s['solde'] > 0)
+                                    <option value="{{ $key }}" data-solde="{{ $s['solde'] }}" data-label="{{ $s['label'] }}">
+                                        {{ $s['label'] }} — {{ number_format($s['solde'], 0, ',', ' ') }} F disponible(s)
+                                    </option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                        <div id="soldeInfo" class="mb-3" style="display:none;">
+                            <div class="alert alert-success py-2 px-3 mb-0" style="font-size:0.85rem;border-radius:8px;">
+                                <i class="bi bi-wallet2 me-1"></i> Solde disponible : <strong id="soldeAffiche">0</strong> FCFA
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Montant à retirer <span class="text-danger">*</span></label>
-                            <input type="number" name="montant" class="form-control" min="100" max="{{ max(0, $soldeDisponible) }}" step="100" placeholder="Ex: 50000" required>
-                            <small class="text-muted">Min 100 FCFA · Max {{ number_format(max(0, $soldeDisponible), 0, ',', ' ') }} FCFA</small>
+                            <input type="number" name="montant" id="montantInput" class="form-control" min="1000" step="100" placeholder="Ex: 50000" required disabled autocomplete="off">
+                            <small class="text-muted">Min 1 000 FCFA · Max <span id="maxLabel">0</span> FCFA</small>
+                            @error('montant')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nom du bénéficiaire <span class="text-danger">*</span></label>
-                            <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required>
+                            <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required autocomplete="off">
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro Mobile Money <span class="text-danger">*</span></label>
-                            <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 XX XX XX XX" required>
+                            <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 6X XX XX XX" required autocomplete="off">
+                            <small class="text-muted">Doit correspondre au réseau sélectionné</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmez votre mot de passe <span class="text-danger">*</span></label>
-                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Votre mot de passe actuel" required>
+                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="new-password">
                             @error('password')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         </div>
-                        <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
+                        <button type="submit" id="btnSubmit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;" disabled>
                             <i class="bi bi-send me-1"></i> Envoyer la demande
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal succès retrait -->
+    <div class="modal fade" id="successRetraitModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px; border: none;">
+                <div class="modal-body text-center p-4">
+                    <div style="width:64px;height:64px;background:rgba(18,151,110,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                        <i class="bi bi-check-circle" style="font-size:2rem;color:var(--vert);"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2" style="color:#1a1a2e;">Demande envoyée !</h5>
+                    <p style="color:#6c757d;font-size:0.9rem;margin-bottom:1rem;">{{ session('success') }}</p>
+                    <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:0.85rem;border-radius:8px;text-align:left;">
+                        <i class="bi bi-info-circle me-1"></i> <strong>Rappel :</strong> Les retraits sont effectués sous un délai minimum de <strong>72 heures</strong> après la demande. Vous recevrez une notification une fois votre retrait traité.
+                    </div>
+                    <button type="button" class="btn w-100 py-2 fw-bold text-white mt-3" style="background: var(--vert); border: none; border-radius: 8px;" data-bs-dismiss="modal">
+                        Compris
+                    </button>
                 </div>
             </div>
         </div>
@@ -190,6 +169,7 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
+                                <th>Réseau</th>
                                 <th>Montant</th>
                                 <th>Bénéficiaire</th>
                                 <th>Mobile</th>
@@ -201,6 +181,13 @@
                             @foreach($retraits as $retrait)
                                 <tr>
                                     <td style="white-space:nowrap;">{{ $retrait->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
+                                    <td>
+                                        @if($retrait->reseau && isset(\App\Http\Controllers\RetraitController::RESEAUX_CONFIG[$retrait->reseau]))
+                                            <span style="font-weight:600;">{{ \App\Http\Controllers\RetraitController::RESEAUX_CONFIG[$retrait->reseau]['label'] }}</span>
+                                        @else
+                                            <span style="color:var(--gris);">—</span>
+                                        @endif
+                                    </td>
                                     <td><strong>{{ number_format($retrait->montant, 0, ',', ' ') }} F</strong></td>
                                     <td>{{ $retrait->nom }}</td>
                                     <td>{{ $retrait->mobile }}</td>
@@ -234,4 +221,52 @@
         <div class="mt-3 pagination-wrap">{{ $retraits->links() }}</div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @if(session('success'))
+        const successModal = new bootstrap.Modal(document.getElementById('successRetraitModal'));
+        successModal.show();
+    @endif
+
+    const reseauSelect = document.getElementById('reseauSelect');
+    const montantInput = document.getElementById('montantInput');
+    const soldeInfo = document.getElementById('soldeInfo');
+    const soldeAffiche = document.getElementById('soldeAffiche');
+    const maxLabel = document.getElementById('maxLabel');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    if (!reseauSelect) return;
+
+    reseauSelect.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if (this.value && opt.dataset.solde) {
+            const solde = parseFloat(opt.dataset.solde);
+            soldeInfo.style.display = 'block';
+            soldeAffiche.textContent = new Intl.NumberFormat('fr-FR').format(solde);
+            maxLabel.textContent = new Intl.NumberFormat('fr-FR').format(solde);
+            montantInput.max = solde;
+            montantInput.disabled = false;
+            montantInput.required = true;
+            montantInput.focus();
+        } else {
+            soldeInfo.style.display = 'none';
+            montantInput.disabled = true;
+            montantInput.required = false;
+            montantInput.value = '';
+        }
+        updateBtn();
+    });
+
+    montantInput.addEventListener('input', updateBtn);
+
+    function updateBtn() {
+        const reseauOk = reseauSelect.value !== '';
+        const montantOk = montantInput.value && parseFloat(montantInput.value) >= 1000;
+        btnSubmit.disabled = !(reseauOk && montantOk);
+    }
+});
+</script>
 @endsection

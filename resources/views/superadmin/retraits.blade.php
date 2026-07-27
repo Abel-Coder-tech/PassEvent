@@ -47,6 +47,7 @@
                         <tr>
                             <th>Date</th>
                             <th>Organisateur</th>
+                            <th>Réseau</th>
                             <th>Montant</th>
                             <th>Commission</th>
                             <th>Bénéficiaire</th>
@@ -62,6 +63,13 @@
                                 <td>
                                     <strong>{{ $retrait->user->nom }}</strong>
                                     <br><small style="color:var(--sa-text-muted);">{{ $retrait->user->email }}</small>
+                                </td>
+                                <td>
+                                    @if($retrait->reseau && isset(\App\Http\Controllers\RetraitController::RESEAUX_CONFIG[$retrait->reseau]))
+                                        <span class="sa-badge" style="background:rgba(52,152,219,0.1);color:#3498db;">{{ \App\Http\Controllers\RetraitController::RESEAUX_CONFIG[$retrait->reseau]['label'] }}</span>
+                                    @else
+                                        <span style="color:var(--sa-text-muted);">—</span>
+                                    @endif
                                 </td>
                                 <td><strong>{{ number_format($retrait->montant, 0, ',', ' ') }} F</strong></td>
                                 <td><small>{{ $retrait->commission_percentage }}%</small></td>

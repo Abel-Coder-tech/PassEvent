@@ -13,6 +13,7 @@ class Withdrawal extends Model
         'commission_percentage',
         'nom',
         'mobile',
+        'reseau',
         'status',
         'admin_notes',
         'processed_at',
