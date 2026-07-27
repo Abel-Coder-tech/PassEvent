@@ -81,7 +81,7 @@ class CodePromoController extends Controller
     {
         $validated = $request->validate([
             // Validation des champs pour la création de codes promo
-            'evenement_id' => 'required|exists:evenements,id',
+            'evenement_id' => 'required|exists:evenement,id',
             'tarif_id' => 'required|exists:tarifs,id',
             'type_reduction' => 'required|in:pourcentage,fixe',
             'valeur_reduction' => 'required|numeric|min:0',

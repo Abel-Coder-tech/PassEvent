@@ -127,6 +127,23 @@ class PaiementController extends Controller
                 'query_all' => $request->query(),
             ]);
 
+            // Si le callback ne donne que "mobile_money", on interroge l'API pour trouver l'opérateur
+            if ($paymentMethod === 'mobile_money' && $transactionId) {
+                $txData = $this->fedapay->getTransaction($transactionId);
+                if ($txData && isset($txData['payment_method'])) {
+                    $apiMethod = is_array($txData['payment_method'])
+                        ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
+                        : $txData['payment_method'];
+                    if ($apiMethod && $apiMethod !== 'mobile_money') {
+                        FacadesLog::info('FedaPay callback - opérateur trouvé via API', [
+                            'ticket_id' => $ticket->id,
+                            'api_payment_method' => $apiMethod,
+                        ]);
+                        $paymentMethod = $apiMethod;
+                    }
+                }
+            }
+
             $paymentMethod = self::extractPaymentMethod($paymentMethod);
 
             // Met à jour tous les tickets du groupe
@@ -246,6 +263,23 @@ class PaiementController extends Controller
                 // Extraction du réseau depuis payment_method (string ou objet)
                 $paymentMethodRaw = $data['payment_method'] ?? 'mobile_money';
                 $paymentMethod = self::extractPaymentMethod($paymentMethodRaw);
+
+                // Si le webhook ne donne que "mobile_money", on interroge l'API pour trouver l'opérateur
+                if ($paymentMethod === 'mobile_money' && isset($data['id'])) {
+                    $txData = $this->fedapay->getTransaction((string) $data['id']);
+                    if ($txData && isset($txData['payment_method'])) {
+                        $apiMethod = is_array($txData['payment_method'])
+                            ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
+                            : $txData['payment_method'];
+                        if ($apiMethod && $apiMethod !== 'mobile_money') {
+                            FacadesLog::info('FedaPay webhook - opérateur trouvé via API', [
+                                'ticket_id' => $ticket->id,
+                                'api_payment_method' => $apiMethod,
+                            ]);
+                            $paymentMethod = self::normalizePaymentMethod($apiMethod);
+                        }
+                    }
+                }
 
                 FacadesLog::info('FedaPay webhook - payment_method extrait', [
                     'ticket_id' => $ticket->id,

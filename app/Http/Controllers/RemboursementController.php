@@ -77,7 +77,7 @@ class RemboursementController extends Controller
     {
         $validated = $request->validate([
             'ticket_id' => 'required_without:evenement_id|exists:ticket,id',
-            'evenement_id' => 'required_without:ticket_id|exists:evenements,id',
+            'evenement_id' => 'required_without:ticket_id|exists:evenement,id',
             'motif' => 'required|string|min:5|max:1000',
         ]);
 
