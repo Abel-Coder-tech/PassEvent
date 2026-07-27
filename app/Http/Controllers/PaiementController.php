@@ -121,14 +121,13 @@ class PaiementController extends Controller
             $paymentMethod = $request->query('payment_method', 'mobile_money');
             $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
 
-            // Log pour tracer la valeur exacte reçue de FedaPay
             Log::info('FedaPay callback - payment_method brut', [
                 'ticket_id' => $ticket->id,
                 'payment_method_raw' => $paymentMethod,
                 'query_all' => $request->query(),
             ]);
 
-            $paymentMethod = self::normalizePaymentMethod($paymentMethod);
+            $paymentMethod = self::extractPaymentMethod($paymentMethod);
 
             // Met à jour tous les tickets du groupe
             foreach ($groupTickets as $t) {
@@ -223,6 +222,9 @@ class PaiementController extends Controller
     {
         $data = $request->all();
 
+        // Log complet du payload pour diagnostic
+        Log::info('FedaPay webhook payload complet', $data);
+
         if (!isset($data['id']) || !isset($data['status'])) {
             return response()->json(['error' => 'Invalid payload'], 400);
         }
@@ -241,11 +243,13 @@ class PaiementController extends Controller
                         ->get();
                 }
 
-                $paymentMethod = self::normalizePaymentMethod($data['payment_method'] ?? 'mobile_money');
+                // Extraction du réseau depuis payment_method (string ou objet)
+                $paymentMethodRaw = $data['payment_method'] ?? 'mobile_money';
+                $paymentMethod = self::extractPaymentMethod($paymentMethodRaw);
 
-                Log::info('FedaPay webhook - payment_method brut', [
+                Log::info('FedaPay webhook - payment_method extrait', [
                     'ticket_id' => $ticket->id,
-                    'payment_method_raw' => $data['payment_method'] ?? null,
+                    'payment_method_brut' => $paymentMethodRaw,
                     'payment_method_normalise' => $paymentMethod,
                 ]);
 
@@ -288,7 +292,24 @@ class PaiementController extends Controller
         return view('evenement-public.confirmation', compact('ticket', 'groupTickets'));
     }
 
-    // Normalise les valeurs FedaPay vers nos clés standardisées
+    // Extrait et normalise le réseau depuis payment_method (string ou objet FedaPay)
+    protected static function extractPaymentMethod($paymentMethod): string
+    {
+        // Si c'est un objet avec clé "provider" ou "name"
+        if (is_array($paymentMethod) || is_object($paymentMethod)) {
+            $paymentMethod = (array) $paymentMethod;
+            $provider = strtolower(trim($paymentMethod['provider'] ?? ''));
+            $name = strtolower(trim($paymentMethod['name'] ?? ''));
+
+            // Priorité au provider, sinon le name
+            $raw = $provider ?: $name;
+            return self::normalizePaymentMethod($raw ?: 'mobile_money');
+        }
+
+        return self::normalizePaymentMethod((string) $paymentMethod);
+    }
+
+    // Normalise les valeurs vers nos clés standardisées
     protected static function normalizePaymentMethod(?string $method): string
     {
         if (!$method) {
