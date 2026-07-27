@@ -56,7 +56,7 @@
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted">Type :</span><br>
-                                    <strong>{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</strong>
+                                    <strong>{{ $ticket->nom_tarif }}</strong>
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>

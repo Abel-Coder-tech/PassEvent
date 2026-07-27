@@ -29,8 +29,7 @@
                 <table class="table custom-table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th>Catégorie</th>
-                            <th>Type</th>
+                            <th>Nom</th>
                             <th>Prix</th>
                             <th>Quantité disponible</th>
                             <th>Vendus</th>
@@ -48,20 +47,7 @@
                                 };
                             @endphp
                             <tr>
-                                <td>
-                                    @if($tarif->categorie === 'etudiant')
-                                        <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet);">Étudiant</span>
-                                    @else
-                                        <span class="badge" style="background: rgba(66,140,121,0.1); color: var(--teal);">Externe</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($tarif->type === 'vip')
-                                        <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet);">VIP</span>
-                                    @else
-                                        Normal
-                                    @endif
-                                </td>
+                                <td class="fw-semibold">{{ $tarif->nom }}</td>
                                 <td class="fw-semibold">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
                                 <td>{{ $tarif->quantite_disponible ?? 'Illimité' }}</td>
                                 <td>{{ $tarif->quantite_vendue }}</td>

@@ -38,7 +38,7 @@
                                 @if($ticket->montant > 0)
                                 <div class="col-6">
                                     <span class="text-muted">Type</span><br>
-                                    <strong>{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</strong>
+                                    <strong>{{ $ticket->nom_tarif }}</strong>
                                 </div>
                                 @endif
                                 <div class="col-6">

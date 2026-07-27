@@ -69,19 +69,7 @@
                     </div>
                     <div class="panel-card-body">
                         <div class="row g-3">
-                            <div class="col-md-6" id="fieldStatut">
-                                <label class="form-label fw-semibold">Statut de l'acheteur <span class="text-danger">*</span></label>
-                                <div class="d-flex gap-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="categorie" id="cat_externe" value="externe" checked>
-                                        <label class="form-check-label" for="cat_externe">Externe</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="categorie" id="cat_etudiant" value="etudiant">
-                                        <label class="form-check-label" for="cat_etudiant">Étudiant</label>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="col-md-6 d-none" id="fieldStatut"></div>
                             <div class="col-md-6" id="fieldTarif">
                                 <label for="tarif_id" class="form-label fw-semibold">Tarif <span class="text-danger">*</span></label>
                                 <select class="form-select" id="tarif_id" name="tarif_id" required>
@@ -172,7 +160,7 @@
                                 <div class="fw-bold" style="font-size: 0.9rem; color: var(--vert);">{{ number_format($vente->montant, 0, ',', ' ') }} FCFA</div>
                             </div>
                             <div class="text-muted" style="font-size: 0.82rem;">
-                                {{ $vente->evenement?->titre ?? '—' }} — {{ ucfirst($vente->categorie) }} · {{ \App\Models\Ticket::methodePaiementLabel($vente->methode_paiement) }}
+                                {{ $vente->evenement?->titre ?? '—' }} — {{ $vente->nom_tarif }} · {{ \App\Models\Ticket::methodePaiementLabel($vente->methode_paiement) }}
                             </div>
                             <div style="font-size: 0.75rem; color: var(--gris); margin-top: 0.25rem;">
                                 {{ $vente->date_achat->diffForHumans() }}

@@ -52,8 +52,8 @@ class SuperAdminController extends Controller
         }
 
         $usersParRole = [
-            'etudiants' => Ticket::where('categorie', 'etudiant')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
-            'externes' => Ticket::where('categorie', 'externe')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
+            'etudiants' => Ticket::where('nom_tarif', 'like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
+            'externes' => Ticket::where('nom_tarif', 'not like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
             'admins' => User::whereIn('role', ['admin', 'super_admin'])->count(),
         ];
 

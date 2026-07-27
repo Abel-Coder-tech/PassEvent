@@ -129,7 +129,7 @@ class ScanController extends Controller
             $this->logScan($agent, $request->code, 'deja_utilise', 'Ticket déjà scanné');
             return response()->json(['success' => false, 'message' => 'Ce ticket a déjà été utilisé.', 'ticket' => [
                 'nom' => $ticket->nom_acheteur,
-                'categorie' => $ticket->categorie,
+                'nom_tarif' => $ticket->nom_tarif,
                 'date' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
             ]]);
         }
@@ -141,7 +141,7 @@ class ScanController extends Controller
         return response()->json(['success' => true, 'message' => 'Ticket validé avec succès !', 'ticket' => [
             'nom' => $ticket->nom_acheteur,
             'email' => $ticket->email_acheteur,
-            'categorie' => $ticket->categorie,
+            'nom_tarif' => $ticket->nom_tarif,
             'montant' => number_format($ticket->montant, 0, ',', ' '),
             'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
         ]]);

@@ -35,7 +35,7 @@
                             <div class="row g-2" style="font-size: 0.9rem;">
                                 <div class="col-6">
                                     <span class="text-muted">Tarif :</span><br>
-                                    <strong>{{ ucfirst($ticket->categorie) }} / {{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }}</strong>
+                                    <strong>{{ $ticket->nom_tarif }}</strong>
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>

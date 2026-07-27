@@ -161,10 +161,7 @@
                                     </td>
                                     @if($ticket->montant > 0)
                                     <td>
-                                        <span class="badge me-1" style="background: {{ $ticket->categorie === 'etudiant' ? 'rgba(135,66,139,0.1)' : 'rgba(66,140,121,0.1)' }}; color: {{ $ticket->categorie === 'etudiant' ? 'var(--violet)' : 'var(--teal)' }};">
-                                            {{ ucfirst($ticket->categorie) }}
-                                        </span>
-                                        <small class="text-muted d-block">{{ ucfirst($ticket->type) }}</small>
+                                        {{ $ticket->nom_tarif }}
                                     </td>
                                     <td>
                                         <span class="fw-bold" style="color: var(--vert);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</span>

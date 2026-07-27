@@ -27,17 +27,20 @@ class TarifController extends Controller
     // Crée un nouveau tarif pour un événement
     public function store(Request $request, Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
+        $nbTarifs = $evenement->tarifs()->count();
+        if ($nbTarifs >= 4) {
+            return back()->withErrors(['error' => 'Maximum 4 tarifs par événement.']);
+        }
+
         $validated = $request->validate([
-            'categorie' => 'required|in:etudiant,externe',
-            'type' => 'required|in:normal,vip',
+            'nom' => 'required|string|max:100',
             'prix' => 'required|numeric|min:0',
             'quantite_disponible' => 'nullable|integer|min:1',
         ], [
-            'categorie.required' => 'La catégorie est obligatoire.',
-            'categorie.in' => 'La catégorie doit être Étudiant ou Externe.',
-            'type.required' => 'Le type est obligatoire.',
-            'type.in' => 'Le type doit être Normal ou VIP.',
+            'nom.required' => 'Le nom du tarif est obligatoire.',
+            'nom.max' => 'Le nom ne doit pas dépasser 100 caractères.',
             'prix.required' => 'Le prix est obligatoire.',
             'prix.numeric' => 'Le prix doit être un nombre valide.',
             'prix.min' => 'Le prix ne peut pas être négatif.',
@@ -46,6 +49,8 @@ class TarifController extends Controller
         ]);
 
         $validated['evenement_id'] = $evenement->id;
+        $validated['quantite_vendue'] = 0;
+        $validated['statut'] = 'actif';
         Tarif::create($validated);
 
         return redirect()->route('admin.tarifs.index', $evenement->id)
@@ -55,24 +60,22 @@ class TarifController extends Controller
     // Affiche le formulaire d'édition d'un tarif
     public function edit(Evenement $evenement, Tarif $tarif)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
+        abort_if($evenement->user_id !== Auth::id(), 403);
         return view('tarifs.edit', compact('evenement', 'tarif'));
     }
 
     // Met à jour un tarif existant
     public function update(Request $request, Evenement $evenement, Tarif $tarif)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
         $validated = $request->validate([
-            'categorie' => 'required|in:etudiant,externe',
-            'type' => 'required|in:normal,vip',
+            'nom' => 'required|string|max:100',
             'prix' => 'required|numeric|min:0',
             'quantite_disponible' => 'nullable|integer|min:1',
         ], [
-            'categorie.required' => 'La catégorie est obligatoire.',
-            'categorie.in' => 'La catégorie doit être Étudiant ou Externe.',
-            'type.required' => 'Le type est obligatoire.',
-            'type.in' => 'Le type doit être Normal ou VIP.',
+            'nom.required' => 'Le nom du tarif est obligatoire.',
+            'nom.max' => 'Le nom ne doit pas dépasser 100 caractères.',
             'prix.required' => 'Le prix est obligatoire.',
             'prix.numeric' => 'Le prix doit être un nombre valide.',
             'prix.min' => 'Le prix ne peut pas être négatif.',

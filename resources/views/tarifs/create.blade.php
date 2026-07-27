@@ -25,23 +25,10 @@
             <form action="{{ route('admin.tarifs.store', $evenement->id) }}" method="POST">
                 @csrf
 
-                <div class="row">
-                    <div class="col-12 col-md-6 mb-3">
-                        <label for="categorie" class="form-label fw-semibold">Catégorie <span class="text-danger">*</span></label>
-                        <select class="form-select @error('categorie') is-invalid @enderror" id="categorie" name="categorie" required>
-                            <option value="etudiant" {{ old('categorie') == 'etudiant' ? 'selected' : '' }}>Étudiant</option>
-                            <option value="externe" {{ old('categorie') == 'externe' ? 'selected' : '' }}>Externe</option>
-                        </select>
-                        @error('categorie') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-12 col-md-6 mb-3">
-                        <label for="type" class="form-label fw-semibold">Type <span class="text-danger">*</span></label>
-                        <select class="form-select @error('type') is-invalid @enderror" id="type" name="type" required>
-                            <option value="normal" {{ old('type') == 'normal' ? 'selected' : '' }}>Normal</option>
-                            <option value="vip" {{ old('type') == 'vip' ? 'selected' : '' }}>VIP</option>
-                        </select>
-                        @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                <div class="mb-3">
+                    <label for="nom" class="form-label fw-semibold">Nom du tarif <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control @error('nom') is-invalid @enderror" id="nom" name="nom" value="{{ old('nom') }}" placeholder="Ex: Enfant, Ordinaire, VIP..." maxlength="100" required>
+                    @error('nom') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="mb-3">

@@ -23,8 +23,7 @@ class Ticket extends Model
         'telephone_acheteur',
         'telephone_paiement',
         'nom_acheteur',
-        'categorie',
-        'type',
+        'nom_tarif',
         'montant',
         'montant_reduction',
         'quantite',
@@ -56,9 +55,7 @@ class Ticket extends Model
 
     public function getLabel(): string
     {
-        $categorie = ucfirst($this->categorie);
-        $type = ucfirst($this->type);
-        return "{$categorie} / {$type}";
+        return $this->nom_tarif ?? 'Standard';
     }
 
     protected function casts(): array

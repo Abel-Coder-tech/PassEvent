@@ -212,7 +212,7 @@
                     </tr>
                     <tr>
                         <td>&#127915; Billet</td>
-                        <td>{{ ucfirst($ticket->type === 'normal' ? 'Standard' : 'VIP') }} &middot; {{ ucfirst($ticket->categorie) }}</td>
+                        <td>{{ $ticket->nom_tarif }}</td>
                     </tr>
                     <tr>
                         <td>&#128178; Montant pay&eacute;</td>

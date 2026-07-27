@@ -229,8 +229,7 @@ class ScanController extends Controller
                     'code' => $ticket->code_unique,
                     'nom' => $ticket->nom_acheteur,
                     'evenement' => $ticket->evenement->titre,
-                    'categorie' => ucfirst($ticket->categorie),
-                    'type' => ucfirst($ticket->type),
+                    'nom_tarif' => $ticket->nom_tarif,
                 ],
             ]);
         }
@@ -258,8 +257,7 @@ class ScanController extends Controller
                     'code' => $ticket->code_unique,
                     'nom' => $ticket->nom_acheteur,
                     'evenement' => $ticket->evenement->titre,
-                    'categorie' => ucfirst($ticket->categorie),
-                    'type' => ucfirst($ticket->type),
+                    'nom_tarif' => $ticket->nom_tarif,
                     'date_scan' => $ticket->updated_at->format('d/m/Y H:i'),
                 ],
             ]);
@@ -316,8 +314,7 @@ class ScanController extends Controller
                 'nom' => $ticket->nom_acheteur,
                 'email' => $ticket->email_acheteur,
                 'evenement' => $ticket->evenement->titre,
-                'categorie' => ucfirst($ticket->categorie),
-                'type' => ucfirst($ticket->type),
+                'nom_tarif' => $ticket->nom_tarif,
                 'montant' => number_format($ticket->montant, 0, ',', ' ') . ' FCFA',
             ],
         ]);

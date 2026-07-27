@@ -137,10 +137,7 @@
                         @foreach($tarifs as $tarif)
                             <tr>
                                 <td style="font-size: 0.82rem;">
-                                    {{ ucfirst($tarif->categorie) }} / {{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}
-                                    @if($tarif->categorie === 'etudiant')
-                                        <span class="badge" style="background: rgba(135,66,139,0.12); color: var(--violet); font-size: 0.6rem; vertical-align: middle;">Étudiant</span>
-                                    @endif
+                                    {{ $tarif->nom }}
                                 </td>
                                 <td style="font-size: 0.82rem;">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
                                 <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible - $tarif->quantite_vendue }}</td>

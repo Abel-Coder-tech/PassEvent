@@ -49,7 +49,7 @@ class TicketController extends Controller
         $totalTickets = $statsQuery->count();
         $valides = (clone $statsQuery)->where('statut_paiement', 'payé')->where('utilise', false)->count();
         $scannes = (clone $statsQuery)->where('utilise', true)->count();
-        $etudiants = (clone $statsQuery)->where('categorie', 'etudiant')->count();
+        $etudiants = (clone $statsQuery)->where('nom_tarif', 'like', '%tudiant%')->count();
         $annules = (clone $statsQuery)->whereIn('statut_paiement', ['annulé', 'remboursé'])->count();
 
         return view('tickets.index', compact('tickets', 'totalTickets', 'valides', 'scannes', 'etudiants', 'annules', 'search'));

@@ -99,29 +99,38 @@
                         </div>
 
                         <div id="pricing-fields">
-                            <div class="mb-3">
-                                <label for="prix_base" class="form-label fw-semibold">Prix de base (Externe Simple) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control @error('prix_base') is-invalid @enderror" id="prix_base" name="prix_base" value="{{ old('prix_base') }}" min="0" step="100" placeholder="Ex: 10000" required>
-                                <small class="text-muted">Prix du billet externe simple</small>
-                                @error('prix_base') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div id="tarifs-container">
+                                <div class="tarif-row mb-3 p-3 rounded" style="background: #f8f6f9; border: 1px solid #ede5f0;">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label fw-semibold" style="font-size:0.8rem;">Nom du tarif <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="tarif_nom_1" value="{{ old('tarif_nom_1') }}" placeholder="Ex: Enfant" required>
+                                        </div>
+                                        <div class="col-12 col-md-3">
+                                            <label class="form-label fw-semibold" style="font-size:0.8rem;">Prix (FCFA) <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" name="tarif_prix_1" value="{{ old('tarif_prix_1') }}" min="0" step="100" placeholder="Ex: 1000" required>
+                                        </div>
+                                        <div class="col-12 col-md-3">
+                                            <label class="form-label fw-semibold" style="font-size:0.8rem;">Places max</label>
+                                            <input type="number" class="form-control" name="tarif_qte_1" value="{{ old('tarif_qte_1') }}" min="1" placeholder="Illimité">
+                                        </div>
+                                        <div class="col-12 col-md-2">
+                                            <small class="text-muted">Obligatoire</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="multiplicateur_vip" class="form-label fw-semibold">Multiplicateur VIP</label>
-                                    <select class="form-select" id="multiplicateur_vip" name="multiplicateur_vip">
-                                        <option value="1.5" {{ old('multiplicateur_vip') == '1.5' ? 'selected' : '' }}>x1.5 (50% plus cher)</option>
-                                        <option value="2" {{ old('multiplicateur_vip') == '2' ? 'selected' : '' }}>x2 (2x plus cher)</option>
-                                    </select>
-                                    <small class="text-muted">Les billets VIP seront calculés automatiquement</small>
-                                </div>
-                                @if(auth()->user()->type === 'universitaire')
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="reduction_etudiant" class="form-label fw-semibold">Réduction étudiant (%)</label>
-                                    <input type="number" class="form-control" id="reduction_etudiant" name="reduction_etudiant" value="{{ old('reduction_etudiant', 30) }}" min="0" max="100">
-                                    <small class="text-muted">Les étudiants bénéficient d'une réduction sur tous les tarifs</small>
-                                </div>
-                                @endif
+                            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="addTarifBtn" onclick="addTarif()">
+                                <i class="bi bi-plus-lg me-1"></i> Ajouter un tarif
+                            </button>
+
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="generer_vip" name="generer_vip" value="1" {{ old('generer_vip') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="generer_vip">
+                                    <strong>Générer automatiquement le tarif VIP</strong>
+                                    <small class="text-muted d-block">Crée un 2ème tarif à 2× le prix du premier tarif saisi</small>
+                                </label>
                             </div>
                         </div>
 
@@ -181,44 +190,79 @@ if (document.getElementById('categorie')?.value === 'Autre') {
     document.getElementById('autre-categorie-wrapper').style.display = 'block';
 }
 
+let tarifCount = 1;
+const maxTarifs = 4;
+
+function addTarif() {
+    if (tarifCount >= maxTarifs) return;
+    tarifCount++;
+    const num = tarifCount;
+    const html = `
+        <div class="tarif-row mb-3 p-3 rounded" style="background: #f8f6f9; border: 1px solid #ede5f0;" id="tarif-row-${num}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="fw-bold text-muted">Tarif ${num}</small>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTarif(${num})" style="font-size:0.7rem; padding:0.15rem 0.5rem;">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-semibold" style="font-size:0.8rem;">Nom du tarif</label>
+                    <input type="text" class="form-control" name="tarif_nom_${num}" placeholder="Ex: VIP">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label fw-semibold" style="font-size:0.8rem;">Prix (FCFA)</label>
+                    <input type="number" class="form-control" name="tarif_prix_${num}" min="0" step="100" placeholder="Ex: 5000">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label fw-semibold" style="font-size:0.8rem;">Places max</label>
+                    <input type="number" class="form-control" name="tarif_qte_${num}" min="1" placeholder="Illimité">
+                </div>
+                <div class="col-12 col-md-2"></div>
+            </div>
+        </div>
+    `;
+    document.getElementById('tarifs-container').insertAdjacentHTML('beforeend', html);
+    if (tarifCount >= maxTarifs) {
+        document.getElementById('addTarifBtn').style.display = 'none';
+    }
+    updatePreview();
+}
+
+function removeTarif(num) {
+    const row = document.getElementById('tarif-row-' + num);
+    if (row) row.remove();
+    tarifCount--;
+    document.getElementById('addTarifBtn').style.display = tarifCount >= maxTarifs ? 'none' : 'inline-flex';
+    updatePreview();
+}
+
 function updatePreview() {
     const gratuit = document.getElementById('gratuit')?.checked;
     if (gratuit) {
-        document.getElementById('preview-tarifs').innerHTML =
-            '<strong>Étudiant Simple:</strong> Gratuit<br>' +
-            '<strong>Étudiant VIP:</strong> Gratuit<br>' +
-            '<strong>Externe Simple:</strong> Gratuit<br>' +
-            '<strong>Externe VIP:</strong> Gratuit';
+        document.getElementById('preview-tarifs').innerHTML = '<strong>Gratuit :</strong> 0 F';
         return;
     }
 
-    const isUniv = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
-    const base = parseFloat(document.getElementById('prix_base')?.value || 0);
-    const mult = parseFloat(document.getElementById('multiplicateur_vip')?.value || 1.5);
-
-    if (base <= 0) {
-        document.getElementById('preview-tarifs').textContent = 'Entrez un prix de base pour voir l\'aperçu';
-        return;
+    let lines = [];
+    for (let i = 1; i <= 4; i++) {
+        const nomInput = document.querySelector(`[name="tarif_nom_${i}"]`);
+        const prixInput = document.querySelector(`[name="tarif_prix_${i}"]`);
+        if (nomInput && prixInput && nomInput.value.trim() && prixInput.value) {
+            const nom = nomInput.value.trim();
+            const prix = Math.round(parseFloat(prixInput.value));
+            lines.push(`<strong>${nom}:</strong> ${formatPrice(prix)}`);
+        }
     }
 
-    const extSimple = base;
-    const extVip = base * mult;
-
-    if (isUniv) {
-        const reducInput = document.getElementById('reduction_etudiant');
-        const reduc = parseFloat(reducInput?.value || 0) / 100;
-        const etuSimple = base * (1 - reduc);
-        const etuVip = base * mult * (1 - reduc);
-        document.getElementById('preview-tarifs').innerHTML =
-            '<strong>Étudiant Simple:</strong> ' + formatPrice(etuSimple) + '<br>' +
-            '<strong>Étudiant VIP:</strong> ' + formatPrice(etuVip) + '<br>' +
-            '<strong>Externe Simple:</strong> ' + formatPrice(extSimple) + '<br>' +
-            '<strong>Externe VIP:</strong> ' + formatPrice(extVip);
-    } else {
-        document.getElementById('preview-tarifs').innerHTML =
-            '<strong>Simple:</strong> ' + formatPrice(extSimple) + '<br>' +
-            '<strong>VIP:</strong> ' + formatPrice(extVip);
+    if (document.getElementById('generer_vip')?.checked && lines.length > 0) {
+        const firstPrix = parseFloat(document.querySelector('[name="tarif_prix_1"]')?.value || 0);
+        if (firstPrix > 0) {
+            lines.push(`<strong>VIP (auto):</strong> ${formatPrice(firstPrix * 2)}`);
+        }
     }
+
+    document.getElementById('preview-tarifs').innerHTML = lines.length > 0 ? lines.join('<br>') : 'Ajoutez un tarif pour voir l\'aperçu';
 }
 
 function formatPrice(price) {
@@ -233,9 +277,9 @@ function toggleGratuit() {
 }
 
 document.getElementById('gratuit')?.addEventListener('change', toggleGratuit);
-document.getElementById('prix_base')?.addEventListener('input', updatePreview);
-document.getElementById('multiplicateur_vip')?.addEventListener('change', updatePreview);
-document.getElementById('reduction_etudiant')?.addEventListener('input', updatePreview);
+document.getElementById('generer_vip')?.addEventListener('change', updatePreview);
+document.querySelectorAll('[name^="tarif_prix_"]').forEach(el => el.addEventListener('input', updatePreview));
+document.querySelectorAll('[name^="tarif_nom_"]').forEach(el => el.addEventListener('input', updatePreview));
 toggleGratuit();
 </script>
 @endsection

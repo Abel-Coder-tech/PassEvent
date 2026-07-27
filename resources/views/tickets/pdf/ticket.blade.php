@@ -135,7 +135,7 @@
         <table class="info-table" cellpadding="0" cellspacing="0">
             <tr>
                 <td class="il">Billet</td>
-                <td class="iv">{{ $ticket->type === 'normal' ? 'Standard' : 'VIP' }} &middot; {{ ucfirst($ticket->categorie) }}</td>
+                <td class="iv">{{ $ticket->nom_tarif }}</td>
             </tr>
             <tr>
                 <td class="il">ID transaction</td>

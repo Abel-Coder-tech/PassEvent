@@ -47,7 +47,7 @@ class EvenementController extends Controller
         return view('evenements.create');
     }
 
-    // Crée un événement avec tarifs automatiques (gratuit ou payant)
+    // Crée un événement avec tarifs personnalisés
     public function store(Request $request)
     {
         if (Auth::user()->statut !== 'actif') {
@@ -55,7 +55,6 @@ class EvenementController extends Controller
         }
 
         $gratuit = $request->boolean('gratuit');
-        $estUniversitaire = Auth::user()->type === 'universitaire'; // Détermine si les tarifs étudiants s'appliquent
 
         $rules = [
             'titre' => 'required|string|max:255',
@@ -69,15 +68,20 @@ class EvenementController extends Controller
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié',
             'gratuit' => 'nullable|boolean',
+            'tarif_nom_1' => 'required_without:gratuit|string|max:100',
+            'tarif_prix_1' => 'required_without:gratuit|numeric|min:0',
+            'tarif_qte_1' => 'nullable|integer|min:1',
+            'tarif_nom_2' => 'nullable|string|max:100',
+            'tarif_prix_2' => 'nullable|numeric|min:0',
+            'tarif_qte_2' => 'nullable|integer|min:1',
+            'tarif_nom_3' => 'nullable|string|max:100',
+            'tarif_prix_3' => 'nullable|numeric|min:0',
+            'tarif_qte_3' => 'nullable|integer|min:1',
+            'tarif_nom_4' => 'nullable|string|max:100',
+            'tarif_prix_4' => 'nullable|numeric|min:0',
+            'tarif_qte_4' => 'nullable|integer|min:1',
+            'generer_vip' => 'nullable|boolean',
         ];
-
-        if (!$gratuit) {
-            $rules['prix_base'] = 'required|numeric|min:0'; // Prix requis pour événements payants
-            $rules['multiplicateur_vip'] = 'required|in:1.5,2'; // Multiplicateur VIP obligatoire
-            if ($estUniversitaire) {
-                $rules['reduction_etudiant'] = 'nullable|numeric|min:0|max:100';
-            }
-        }
 
         $validated = $request->validate($rules, [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
@@ -88,7 +92,6 @@ class EvenementController extends Controller
             'lieu.required' => 'Le lieu est obligatoire.',
             'lieu.max' => 'Le lieu ne doit pas dépasser 255 caractères.',
             'categorie.required' => 'La categorie est obligatoire.',
-            'categorie.in' => 'La categorie doit etre : Sport, Soiree gala, Ceremonie officielle ou Webinaire.',
             'capacite.required' => 'La capacité est obligatoire.',
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
@@ -96,8 +99,8 @@ class EvenementController extends Controller
             'image.image' => 'Le fichier doit être une image.',
             'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
             'statut.required' => 'Le statut est obligatoire.',
-            'prix_base.required' => 'Le prix de base est obligatoire.',
-            'prix_base.numeric' => 'Le prix doit être un nombre.',
+            'tarif_nom_1.required_without' => 'Le nom du tarif est obligatoire.',
+            'tarif_prix_1.required_without' => 'Le prix du tarif est obligatoire.',
         ]);
 
         if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
@@ -112,50 +115,52 @@ class EvenementController extends Controller
             $validated['image'] = $request->file('image')->store('evenements', 'public');
         }
 
-        $evenement = Evenement::create($validated);
-
-        // Génération automatique des tarifs selon le type d'événement
+        // Extraire les données de tarifs avant de créer l'événement
+        $tarifsData = [];
         if ($gratuit) {
-            $prix = 0;
-            if ($estUniversitaire) {
-                $tarifs = [
-                    ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => $prix],
-                    ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => $prix],
-                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => $prix],
-                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => $prix],
-                ];
-            } else {
-                $tarifs = [
-                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => $prix],
-                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => $prix],
-                ];
-            }
+            $tarifsData[] = ['nom' => 'Gratuit', 'prix' => 0, 'quantite_disponible' => null];
         } else {
-            $prixBase = floatval($validated['prix_base']);
-            $multVip = floatval($validated['multiplicateur_vip']);
+            for ($i = 1; $i <= 4; $i++) {
+                $nom = trim($validated["tarif_nom_{$i}"] ?? '');
+                $prix = $validated["tarif_prix_{$i}"] ?? null;
+                $qte = !empty($validated["tarif_qte_{$i}"]) ? (int) $validated["tarif_qte_{$i}"] : null;
 
-            if ($estUniversitaire) {
-                $reductionEtu = floatval($validated['reduction_etudiant'] ?? 30) / 100;
-                $tarifs = [
-                    ['categorie' => 'etudiant', 'type' => 'normal', 'prix' => round($prixBase * (1 - $reductionEtu))],
-                    ['categorie' => 'etudiant', 'type' => 'vip', 'prix' => round($prixBase * $multVip * (1 - $reductionEtu))],
-                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
-                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
-                ];
-            } else {
-                $tarifs = [
-                    ['categorie' => 'externe', 'type' => 'normal', 'prix' => round($prixBase)],
-                    ['categorie' => 'externe', 'type' => 'vip', 'prix' => round($prixBase * $multVip)],
+                if ($nom !== '' && $prix !== null) {
+                    $tarifsData[] = [
+                        'nom' => $nom,
+                        'prix' => round(floatval($prix)),
+                        'quantite_disponible' => $qte,
+                    ];
+                }
+            }
+
+            // Génération automatique VIP si cochée
+            if ($request->boolean('generer_vip') && count($tarifsData) >= 1) {
+                $premierPrix = $tarifsData[0]['prix'];
+                $tarifsData[] = [
+                    'nom' => 'VIP',
+                    'prix' => $premierPrix * 2,
+                    'quantite_disponible' => null,
                 ];
             }
         }
 
-        foreach ($tarifs as $t) {
+        // Nettoyer les champs tarif du validated
+        foreach (['tarif_nom_', 'tarif_prix_', 'tarif_qte_'] as $prefix) {
+            for ($i = 1; $i <= 4; $i++) {
+                unset($validated["{$prefix}{$i}"]);
+            }
+        }
+        unset($validated['generer_vip']);
+
+        $evenement = Evenement::create($validated);
+
+        // Créer les tarifs
+        foreach ($tarifsData as $t) {
             $evenement->tarifs()->create([
-                'categorie' => $t['categorie'],
-                'type' => $t['type'],
+                'nom' => $t['nom'],
                 'prix' => $t['prix'],
-                'quantite_disponible' => $evenement->capacite,
+                'quantite_disponible' => $t['quantite_disponible'],
                 'quantite_vendue' => 0,
                 'statut' => 'actif',
             ]);
@@ -251,10 +256,10 @@ class EvenementController extends Controller
         return view('evenements.edit', compact('evenement'));
     }
 
-    // Met à jour un événement existant avec ses tarifs
+    // Met à jour un événement existant
     public function update(Request $request, Evenement $evenement)
     {
-        abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
+        abort_if($evenement->user_id !== Auth::id(), 403);
 
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
@@ -277,7 +282,6 @@ class EvenementController extends Controller
             'lieu.required' => 'Le lieu est obligatoire.',
             'lieu.max' => 'Le lieu ne doit pas dépasser 255 caractères.',
             'categorie.required' => 'La categorie est obligatoire.',
-            'autre_categorie.max' => 'La categorie personnalisee ne doit pas depasser 255 caracteres.',
             'capacite.required' => 'La capacité est obligatoire.',
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
@@ -303,7 +307,6 @@ class EvenementController extends Controller
         if ($validated['gratuit']) {
             $evenement->tarifs()->update(['prix' => 0]);
         }
-        // Si on décoche gratuit, les tarifs gardent leur prix actuel;
 
         return redirect()->route('admin.evenements.index')
             ->with('success', 'Événement modifié avec succès.');

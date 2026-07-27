@@ -88,7 +88,7 @@ class VenteManuelleController extends Controller
             $messages['tarif_id.required'] = 'Veuillez sélectionner un tarif.';
 
             if (Auth::user()->type === 'universitaire') {
-                $rules['categorie'] = 'required|in:etudiant,externe';
+                $rules['categorie'] = 'nullable|string';
             }
 
             if ($request->methode_paiement !== 'especes') {
@@ -120,13 +120,11 @@ class VenteManuelleController extends Controller
                 // Crée un tarif par défaut si aucun n'existe
                 $tarif = Tarif::create([
                     'evenement_id' => $evenement->id,
-                    'categorie' => 'externe',
-                    'type' => 'normal',
+                    'nom' => 'Gratuit',
                     'prix' => 0,
                     'statut' => 'actif',
                     'quantite_disponible' => $evenement->capacite,
                     'quantite_vendue' => 0,
-                    'quantite_restante' => $evenement->capacite,
                 ]);
             }
 
@@ -140,8 +138,7 @@ class VenteManuelleController extends Controller
                     'nom_acheteur' => $validated['nom_acheteur'],
                     'telephone_acheteur' => $validated['telephone'],
                     'email_acheteur' => $validated['email'] ?? null,
-                    'categorie' => $tarif->categorie,
-                    'type' => $tarif->type,
+                    'nom_tarif' => $tarif->nom,
                     'montant' => 0,
                     'statut_paiement' => 'payé',
                     'methode_paiement' => null,
@@ -195,8 +192,7 @@ class VenteManuelleController extends Controller
                     'nom_acheteur' => $validated['nom_acheteur'],
                     'telephone_acheteur' => $validated['telephone'],
                     'email_acheteur' => $validated['email'] ?? null,
-                    'categorie' => $validated['categorie'] ?? $tarif->categorie,
-                    'type' => $tarif->type,
+                    'nom_tarif' => $tarif->nom,
                     'montant' => $tarif->prix,
                     'quantite' => 1,
                     'statut_paiement' => 'payé',
@@ -253,8 +249,7 @@ class VenteManuelleController extends Controller
                 'nom_acheteur' => $validated['nom_acheteur'],
                 'telephone_acheteur' => $validated['telephone'],
                 'email_acheteur' => $validated['email'],
-                'categorie' => $validated['categorie'] ?? $tarif->categorie,
-                'type' => $tarif->type,
+                'nom_tarif' => $tarif->nom,
                 'montant' => $prixUnitaire,
                 'quantite' => 1,
                 'statut_paiement' => 'en_attente',

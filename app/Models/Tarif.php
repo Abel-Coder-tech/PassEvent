@@ -13,8 +13,7 @@ class Tarif extends Model
 
     protected $fillable = [
         'evenement_id',
-        'categorie',
-        'type',
+        'nom',
         'prix',
         'quantite_disponible',
         'quantite_vendue',
@@ -23,9 +22,7 @@ class Tarif extends Model
 
     public function getLabel(): string
     {
-        $categorie = ucfirst($this->categorie);
-        $type = ucfirst($this->type);
-        return "{$categorie} / {$type}";
+        return $this->nom;
     }
 
     public function evenement(): BelongsTo

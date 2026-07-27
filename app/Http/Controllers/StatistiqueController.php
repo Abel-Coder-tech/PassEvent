@@ -125,8 +125,8 @@ class StatistiqueController extends Controller
             ->where('created_at', '>=', $startDate)
             ->select(
                 DB::raw('DATE(created_at) as date'),
-                DB::raw("COUNT(CASE WHEN categorie = 'etudiant' THEN 1 END) as etudiants"),
-                DB::raw("COUNT(CASE WHEN categorie = 'externe' THEN 1 END) as externes"),
+                DB::raw("COUNT(CASE WHEN nom_tarif LIKE '%tudiant%' THEN 1 END) as etudiants"),
+                DB::raw("COUNT(CASE WHEN nom_tarif NOT LIKE '%tudiant%' THEN 1 END) as externes"),
                 DB::raw("COUNT(CASE WHEN methode_paiement = 'especes' THEN 1 END) as manuelles")
             )
             ->groupBy('date')

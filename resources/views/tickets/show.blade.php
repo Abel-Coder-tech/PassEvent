@@ -72,7 +72,7 @@
                         @if($ticket->montant > 0)
                         <div class="col-md-6">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Tarif</label>
-                            <div class="fw-bold">{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</div>
+                            <div class="fw-bold">{{ $ticket->nom_tarif }}</div>
                             <small class="text-muted">{{ $ticket->tarif?->libelle ?? '—' }}</small>
                         </div>
                         @endif

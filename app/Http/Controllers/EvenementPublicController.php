@@ -67,9 +67,8 @@ class EvenementPublicController extends Controller
         $estComplet = $placesRestantes <= 0; // Vérifie la disponibilité
         $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast(); // Date limite dépassée
         $evenementPasse = $evenement->date_event->isPast();
-        $estUniversitaire = $evenement->user->type === 'universitaire'; // Active les tarifs étudiants
 
-        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse', 'estUniversitaire'));
+        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse'));
     }
 
     // Traite l'achat de tickets (gratuits ou payants) avec codes promo
@@ -115,8 +114,7 @@ class EvenementPublicController extends Controller
             if (!$tarif) {
                 $tarif = Tarif::create([
                     'evenement_id' => $evenement->id,
-                    'categorie' => 'externe',
-                    'type' => 'normal',
+                    'nom' => 'Gratuit',
                     'prix' => 0,
                     'statut' => 'actif',
                     'quantite_disponible' => $evenement->capacite ?? 9999,
@@ -187,8 +185,7 @@ class EvenementPublicController extends Controller
                 'email_acheteur' => strtolower($validated['email_acheteur']),
                 'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
                 'nom_acheteur' => $validated['nom_acheteur'],
-                'categorie' => $tarif->categorie,
-                'type' => $tarif->type,
+                'nom_tarif' => $tarif->nom,
                 'montant' => $montantUnitaire,
                 'montant_reduction' => $montantReduction,
                 'quantite' => 1,

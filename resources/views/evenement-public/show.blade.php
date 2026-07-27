@@ -130,12 +130,7 @@
                                     @foreach($tarifs as $tarif)
                                         <label class="show-tarif" onclick="selectTarif(this)">
                                             <input type="radio" name="tarif_id" value="{{ $tarif->id }}" {{ $loop->first ? 'checked' : '' }}>
-                                            @if($estUniversitaire)
-                                                <span class="show-tarif-badge" style="background:{{ $tarif->categorie === 'etudiant' ? 'rgba(84,38,128,0.1)' : 'rgba(84,38,128,0.06)' }}; color:{{ $tarif->categorie === 'etudiant' ? '#542680' : '#211C31' }};">
-                                                    {{ $tarif->categorie === 'etudiant' ? 'Étudiant' : 'Externe' }}
-                                                </span>
-                                            @endif
-                                            <strong>{{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}</strong>
+                                            <strong>{{ $tarif->nom }}</strong>
                                             <strong class="show-tarif-price">{{ number_format($tarif->prix, 0, ',', ' ') . ' F' }}</strong>
                                         </label>
                                     @endforeach

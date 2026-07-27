@@ -114,8 +114,7 @@
                                 <table class="table custom-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th style="font-size: 0.75rem;">Catégorie</th>
-                                            <th style="font-size: 0.75rem;">Type</th>
+                                            <th style="font-size: 0.75rem;">Nom</th>
                                             <th style="font-size: 0.75rem;">Prix</th>
                                             <th style="font-size: 0.75rem;">Dispo.</th>
                                             <th style="font-size: 0.75rem;">Vendu</th>
@@ -125,15 +124,9 @@
                                     <tbody>
                                         @foreach($evenement->tarifs as $tarif)
                                             <tr>
-                                                <td style="font-size: 0.82rem;">
-                                                    {{ ucfirst($tarif->categorie) }}
-                                                    @if($tarif->categorie === 'etudiant')
-                                                        <span class="badge" style="background: rgba(135,66,139,0.12); color: var(--violet); font-size: 0.6rem;">Étudiant</span>
-                                                    @endif
-                                                </td>
-                                                <td style="font-size: 0.82rem;">{{ $tarif->type === 'normal' ? 'Standard' : 'VIP' }}</td>
+                                                <td style="font-size: 0.82rem;">{{ $tarif->nom }}</td>
                                                 <td style="font-size: 0.82rem;" class="fw-bold">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
-                                                <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible }}</td>
+                                                <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible ?? 'Illimité' }}</td>
                                                 <td style="font-size: 0.82rem;">{{ $tarif->quantite_vendue }}</td>
                                                 <td style="font-size: 0.82rem;">
                                                     @if($tarif->statut === 'actif')
