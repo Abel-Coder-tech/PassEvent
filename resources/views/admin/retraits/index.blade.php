@@ -9,39 +9,60 @@
 
 @section('content')
 <div class="page-content">
-    <!-- Cartes solde par réseau -->
+    <!-- Cartes solde par réseau + bouton retrait -->
     <div class="row g-3 mb-4">
+        @php
+            $reseauColors = [
+                'mtn' => '#f5a623',
+                'moov' => '#7B3FA0',
+                'celtiis' => '#3498db',
+            ];
+        @endphp
         @foreach($soldes as $key => $s)
-        <div class="col-md-4">
-            <div class="metric-card" style="border-top-color: {{ $s['solde'] > 0 ? 'var(--vert)' : 'var(--gris)' }}; height:100%;">
+        <div class="col-md-3">
+            <div class="metric-card" style="border-top-color: {{ $reseauColors[$key] ?? 'var(--gris)' }}; height:100%;">
                 <div class="d-flex align-items-center gap-3 mb-2">
-                    <div style="width:42px;height:42px;background:rgba(52,152,219,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi {{ $s['icon'] }}" style="color:#3498db;font-size:1.15rem;"></i>
+                    <div style="width:42px;height:42px;background:{{ $reseauColors[$key] ?? '#3498db' }}1a;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi {{ $s['icon'] }}" style="color:{{ $reseauColors[$key] ?? '#3498db' }};font-size:1.15rem;"></i>
                     </div>
                     <div>
-                        <div style="font-weight:700;color:var(--sombre);font-size:0.95rem;">{{ $s['label'] }}</div>
-                        <div style="font-size:0.75rem;color:var(--gris);">{{ number_format($s['recettes'], 0, ',', ' ') }} F collectés</div>
+                        <div style="font-weight:700;color:var(--sombre);font-size:0.9rem;">{{ $s['label'] }}</div>
+                        <div style="font-size:0.72rem;color:var(--gris);">{{ number_format($s['recettes'], 0, ',', ' ') }} F collectés</div>
                     </div>
                 </div>
-                <div style="border-top:1px solid #f5f5f5;padding-top:0.5rem;margin-top:0.25rem;">
-                    <div class="d-flex justify-content-between py-1" style="font-size:0.8rem;">
+                <div style="border-top:1px solid #f5f5f5;padding-top:0.4rem;margin-top:0.2rem;">
+                    <div class="d-flex justify-content-between py-1" style="font-size:0.78rem;">
                         <span style="color:var(--gris);">Commission</span>
                         <span style="color:#e74c3c;">-{{ number_format($s['commission'], 0, ',', ' ') }} F</span>
                     </div>
                     @if($s['retraits'] > 0)
-                    <div class="d-flex justify-content-between py-1" style="font-size:0.8rem;">
+                    <div class="d-flex justify-content-between py-1" style="font-size:0.78rem;">
                         <span style="color:var(--gris);">Déjà retiré</span>
                         <span style="color:#f39c12;">-{{ number_format($s['retraits'], 0, ',', ' ') }} F</span>
                     </div>
                     @endif
-                    <div class="d-flex justify-content-between py-1" style="font-size:0.9rem;border-top:1px solid #f5f5f5;margin-top:0.25rem;">
-                        <span style="font-weight:700;">Solde retirable</span>
+                    <div class="d-flex justify-content-between py-1" style="font-size:0.85rem;border-top:1px solid #f5f5f5;margin-top:0.2rem;">
+                        <span style="font-weight:700;">Solde</span>
                         <span style="font-weight:800;color:{{ $s['solde'] > 0 ? 'var(--vert)' : 'var(--gris)' }};">{{ number_format($s['solde'], 0, ',', ' ') }} F</span>
                     </div>
                 </div>
             </div>
         </div>
         @endforeach
+
+        <div class="col-md-3 d-flex align-items-stretch">
+            @if($soldeTotalDisponible >= 1000)
+                <button type="button" class="btn w-100" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; border-radius: 12px; border: none; box-shadow: 0 4px 16px rgba(123,63,160,0.3); min-height:100%;" data-bs-toggle="modal" data-bs-target="#retraitModal">
+                    <i class="bi bi-send d-block mb-1" style="font-size:1.5rem;"></i>
+                    <span style="font-size:0.9rem;">Demander un retrait</span>
+                </button>
+            @else
+                <div class="metric-card w-100 text-center d-flex flex-column align-items-center justify-content-center" style="border-top-color: var(--gris);">
+                    <i class="bi bi-lock d-block mb-1" style="font-size:1.5rem;color:var(--gris);"></i>
+                    <span style="font-size:0.82rem;color:var(--gris);">Solde insuffisant</span>
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Résumé global -->
@@ -68,15 +89,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Bouton retrait -->
-    @if($soldeTotalDisponible >= 1000)
-    <div class="mb-4">
-        <button type="button" class="btn" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; padding: 0.85rem 2rem; border-radius: 12px; border: none; box-shadow: 0 4px 16px rgba(123,63,160,0.3);" data-bs-toggle="modal" data-bs-target="#retraitModal">
-            <i class="bi bi-send me-1"></i> Demander un retrait
-        </button>
-    </div>
-    @endif
 
     <!-- Modal demande retrait -->
     <div class="modal fade" id="retraitModal" tabindex="-1">
