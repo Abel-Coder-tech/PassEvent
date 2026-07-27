@@ -766,7 +766,10 @@ function selectTarif(el) {
     document.querySelectorAll('.show-tarif').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     const radio = el.querySelector('input[type="radio"]');
-    if (radio) radio.checked = true;
+    if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change'));
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
