@@ -64,11 +64,11 @@
                     <p style="color: #6c757d; font-size: 0.85rem; margin-bottom: 1rem;">
                         Solde disponible : <strong style="color: var(--vert);">{{ number_format($soldeDisponible, 0, ',', ' ') }} FCFA</strong>
                     </p>
-                    <form action="{{ route('admin.retraits.store') }}" method="POST" id="formRetrait" autocomplete="off">
+                    <form action="{{ route('admin.retraits.store') }}" method="POST" id="formRetrait" autocomplete="none">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Réseau cible <span class="text-danger">*</span></label>
-                            <select name="reseau" id="reseauSelect" class="form-select" required autocomplete="off">
+                            <select name="reseau" id="reseauSelect" class="form-select" required autocomplete="one-time-code">
                                 <option value="">Choisir le réseau du retrait —</option>
                                 @foreach(\App\Http\Controllers\RetraitController::RESEAUX_CONFIG as $key => $cfg)
                                 <option value="{{ $key }}">{{ $cfg['label'] }}</option>
@@ -78,23 +78,23 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Montant à retirer <span class="text-danger">*</span></label>
-                            <input type="number" name="montant" class="form-control" min="1000" max="{{ $soldeDisponible }}" step="100" placeholder="Ex: 50000" required autocomplete="off">
+                            <input type="number" name="montant" class="form-control" min="1000" max="{{ $soldeDisponible }}" step="100" placeholder="Ex: 50000" required autocomplete="one-time-code">
                             <small class="text-muted">Min 1 000 FCFA · Max {{ number_format($soldeDisponible, 0, ',', ' ') }} FCFA</small>
                             @error('montant')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nom du bénéficiaire <span class="text-danger">*</span></label>
-                            <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required autocomplete="off">
+                            <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required autocomplete="one-time-code">
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro Mobile Money <span class="text-danger">*</span></label>
-                            <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 6X XX XX XX" required autocomplete="off">
+                            <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 6X XX XX XX" required autocomplete="one-time-code">
                             <small class="text-muted">Doit correspondre au réseau sélectionné</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmez votre mot de passe <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="password" name="password" id="retraitPassword" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="off" style="border-radius:8px 0 0 8px;">
+                                <input type="password" name="password" id="retraitPassword" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="new-password" style="border-radius:8px 0 0 8px;">
                                 <button class="btn btn-outline-secondary" type="button" id="toggleRetraitPwd" style="border-color:#ede5f0; color:#6c757d;">
                                     <i class="bi bi-eye" id="retraitPwdIcon"></i>
                                 </button>
@@ -231,6 +231,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const form = document.getElementById('formRetrait');
     const retraitModal = document.getElementById('retraitModal');
+
+    retraitModal.addEventListener('show.bs.modal', function() {
+        setTimeout(function() {
+            form.reset();
+            document.getElementById('retraitPassword').value = '';
+            document.getElementById('retraitPassword').type = 'password';
+            document.getElementById('retraitPwdIcon').className = 'bi bi-eye';
+        }, 100);
+    });
     const successModal = document.getElementById('successRetraitModal');
     const errorModal = document.getElementById('errorRetraitModal');
 
