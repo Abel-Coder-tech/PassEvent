@@ -115,51 +115,73 @@ class PaiementController extends Controller
             return redirect()->to($fallback);
         }
 
-        $status = $request->query('status');
+        // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance aux query params)
+        $txData = $this->fedapay->getTransaction($transactionId);
+        $status = $txData['status'] ?? null;
 
-        if (in_array($status, ['approved', 'completed', 'accepted'], true)) {
-            $paymentMethod = $request->query('payment_method', 'mobile_money');
-            $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
-
-            FacadesLog::info('FedaPay callback - payment_method brut', [
-                'ticket_id' => $ticket->id,
-                'payment_method_raw' => $paymentMethod,
-                'query_all' => $request->query(),
+        if (!$status || !in_array($status, ['approved', 'completed', 'accepted'], true)) {
+            FacadesLog::warning('FedaPay callback - status non approuvé via API', [
+                'ticket' => $ticket->id,
+                'transaction_id' => $transactionId,
+                'api_status' => $status,
+                'query_status' => $request->query('status'),
             ]);
 
-            // Si le callback ne donne que "mobile_money", on interroge l'API pour trouver l'opérateur
-            if ($paymentMethod === 'mobile_money' && $transactionId) {
-                $txData = $this->fedapay->getTransaction($transactionId);
-                if ($txData && isset($txData['payment_method'])) {
-                    $apiMethod = is_array($txData['payment_method'])
-                        ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
-                        : $txData['payment_method'];
-                    if ($apiMethod && $apiMethod !== 'mobile_money') {
-                        FacadesLog::info('FedaPay callback - opérateur trouvé via API', [
-                            'ticket_id' => $ticket->id,
-                            'api_payment_method' => $apiMethod,
-                        ]);
-                        $paymentMethod = $apiMethod;
-                    }
+            if ($ticket->statut_paiement === 'en_attente') {
+                try {
+                    Mail::to($ticket->email_acheteur)->send(new PaymentErrorAlert(
+                        $ticket->nom_acheteur,
+                        $ticket->evenement->titre,
+                        $transactionId
+                    ));
+                } catch (\Exception $e) {
+                    FacadesLog::error('Email incident paiement non envoye : ' . $e->getMessage());
+                }
+
+                foreach ($groupTickets as $t) {
+                    $t->delete();
                 }
             }
 
-            $paymentMethod = self::extractPaymentMethod($paymentMethod);
+            $fallback = match($source) {
+                'agent_vente' => route('agent-vente.dashboard'),
+                'vente_manuelle' => route('ventes-manuelles.create'),
+                default => route('evenements.public.show', $ticket->evenement_id ?? 0),
+            };
+            return redirect()->to($fallback)
+                ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');
+        }
 
-            // Met à jour tous les tickets du groupe
-            foreach ($groupTickets as $t) {
-                $t->update([
-                    'statut_paiement' => 'payé', // Confirme le paiement
-                    'transaction_id' => $transactionId,
-                    'methode_paiement' => $paymentMethod,
-                    'telephone_paiement' => $paymentPhone,
-                ]);
+        // Paiement vérifié via API — traitement
+        $paymentMethod = $request->query('payment_method', 'mobile_money');
+        $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
 
-                $t->evenement->increment('quota_vendu', $t->quantite);
-                if ($t->tarif) {
-                    $t->tarif->increment('quantite_vendue', $t->quantite);
-                }
+        // Normalise l'opérateur depuis les données API
+        if (isset($txData['payment_method'])) {
+            $apiMethod = is_array($txData['payment_method'])
+                ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
+                : $txData['payment_method'];
+            if ($apiMethod && $apiMethod !== 'mobile_money') {
+                $paymentMethod = $apiMethod;
             }
+        }
+
+        $paymentMethod = self::extractPaymentMethod($paymentMethod);
+
+        // Met à jour tous les tickets du groupe
+        foreach ($groupTickets as $t) {
+            $t->update([
+                'statut_paiement' => 'payé',
+                'transaction_id' => $transactionId,
+                'methode_paiement' => $paymentMethod,
+                'telephone_paiement' => $paymentPhone,
+            ]);
+
+            $t->evenement->increment('quota_vendu', $t->quantite);
+            if ($t->tarif) {
+                $t->tarif->increment('quantite_vendue', $t->quantite);
+            }
+        }
 
         // Met à jour les compteurs de l'agent de vente si applicable
         if ($source === 'agent_vente' && $ticket->agent_vente_id) {
@@ -170,68 +192,35 @@ class PaiementController extends Controller
             }
         }
 
-            try {
-                Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
-            } catch (\Exception $e) {
-                FacadesLog::error('Email non envoye pour ticket ' . $ticket->id . ' : ' . $e->getMessage());
-            }
-
-            foreach ($groupTickets as $t) {
-                LogModel::create([
-                    'ticket_id' => $t->id,
-                    'type_operation' => 'achat',
-                    'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay', 'agent_vente' => $source === 'agent_vente'],
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-            }
-
-            if ($source === 'agent_vente') {
-                session()->flash('ticket_created', $ticket->id);
-                return redirect()->route('agent-vente.dashboard')
-                    ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
-            }
-
-            if ($source === 'vente_manuelle') {
-                return redirect()->route('ventes-manuelles.create')
-                    ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
-            }
-
-            return redirect()->route('confirmation.show', $ticket->id)
-                ->with('success', 'Paiement confirme avec succes!');
+        try {
+            Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
+        } catch (\Exception $e) {
+            FacadesLog::error('Email non envoye pour ticket ' . $ticket->id . ' : ' . $e->getMessage());
         }
 
-        FacadesLog::warning('FedaPay verification failed', [
-            'ticket' => $ticket->id,
-            'source' => $source,
-            'transaction_id' => $transactionId,
-            'status' => $status,
-        ]);
-
-        if ($ticket->statut_paiement === 'en_attente') {
-            $firstTicket = $ticket;
-            try {
-                Mail::to($ticket->email_acheteur)->send(new PaymentErrorAlert(
-                    $ticket->nom_acheteur,
-                    $ticket->evenement->titre,
-                    $transactionId
-                ));
-            } catch (\Exception $e) {
-                FacadesLog::error('Email incident paiement non envoye : ' . $e->getMessage());
-            }
-
-            foreach ($groupTickets as $t) {
-                $t->delete();
-            }
+        foreach ($groupTickets as $t) {
+            LogModel::create([
+                'ticket_id' => $t->id,
+                'type_operation' => 'achat',
+                'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay', 'agent_vente' => $source === 'agent_vente'],
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
         }
 
-        $fallback = match($source) {
-            'agent_vente' => route('agent-vente.dashboard'),
-            'vente_manuelle' => route('ventes-manuelles.create'),
-            default => route('evenements.public.show', $ticket->evenement_id ?? 0),
-        };
-        return redirect()->to($fallback)
-            ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');
+        if ($source === 'agent_vente') {
+            session()->flash('ticket_created', $ticket->id);
+            return redirect()->route('agent-vente.dashboard')
+                ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
+        }
+
+        if ($source === 'vente_manuelle') {
+            return redirect()->route('ventes-manuelles.create')
+                ->with('success', 'Paiement confirmé ! Ticket vendu avec succès.');
+        }
+
+        return redirect()->route('confirmation.show', $ticket->id)
+            ->with('success', 'Paiement confirme avec succes!');
     }
 
     // Webhook FedaPay : notification serveur à serveur
@@ -246,64 +235,68 @@ class PaiementController extends Controller
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
-        if (in_array($data['status'], ['approved', 'completed', 'accepted'], true)) {
-            $ticket = Ticket::where('transaction_id', $data['id'])
-                ->orWhere('id', $data['external_id'] ?? null)
-                ->with('evenement')
-                ->first();
+        // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance au webhook)
+        $txData = $this->fedapay->getTransaction((string) $data['id']);
+        $verifiedStatus = $txData['status'] ?? null;
 
-            if ($ticket && $ticket->statut_paiement !== 'payé') {
-                $groupTickets = collect([$ticket]);
-                if (str_starts_with($ticket->transaction_id, 'GRP-')) {
-                    $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
-                        ->with('evenement')
-                        ->get();
+        if (!$verifiedStatus || !in_array($verifiedStatus, ['approved', 'completed', 'accepted'], true)) {
+            FacadesLog::warning('FedaPay webhook - status non approuvé via API', [
+                'transaction_id' => $data['id'],
+                'api_status' => $verifiedStatus,
+                'webhook_status' => $data['status'],
+            ]);
+            return response()->json(['status' => 'ignored', 'reason' => 'status_not_verified']);
+        }
+
+        $ticket = Ticket::where('transaction_id', $data['id'])
+            ->orWhere('id', $data['external_id'] ?? null)
+            ->with('evenement')
+            ->first();
+
+        if ($ticket && $ticket->statut_paiement !== 'payé') {
+            $groupTickets = collect([$ticket]);
+            if (str_starts_with($ticket->transaction_id, 'GRP-')) {
+                $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
+                    ->with('evenement')
+                    ->get();
+            }
+
+            // Extraction du réseau depuis payment_method (string ou objet)
+            $paymentMethodRaw = $data['payment_method'] ?? 'mobile_money';
+
+            // Normalise depuis les données API
+            if (isset($txData['payment_method'])) {
+                $apiMethod = is_array($txData['payment_method'])
+                    ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
+                    : $txData['payment_method'];
+                if ($apiMethod && $apiMethod !== 'mobile_money') {
+                    $paymentMethodRaw = $apiMethod;
                 }
+            }
 
-                // Extraction du réseau depuis payment_method (string ou objet)
-                $paymentMethodRaw = $data['payment_method'] ?? 'mobile_money';
-                $paymentMethod = self::extractPaymentMethod($paymentMethodRaw);
+            $paymentMethod = self::extractPaymentMethod($paymentMethodRaw);
 
-                // Si le webhook ne donne que "mobile_money", on interroge l'API pour trouver l'opérateur
-                if ($paymentMethod === 'mobile_money' && isset($data['id'])) {
-                    $txData = $this->fedapay->getTransaction((string) $data['id']);
-                    if ($txData && isset($txData['payment_method'])) {
-                        $apiMethod = is_array($txData['payment_method'])
-                            ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
-                            : $txData['payment_method'];
-                        if ($apiMethod && $apiMethod !== 'mobile_money') {
-                            FacadesLog::info('FedaPay webhook - opérateur trouvé via API', [
-                                'ticket_id' => $ticket->id,
-                                'api_payment_method' => $apiMethod,
-                            ]);
-                            $paymentMethod = self::normalizePaymentMethod($apiMethod);
-                        }
-                    }
-                }
+            FacadesLog::info('FedaPay webhook - payment_method normalisé', [
+                'ticket_id' => $ticket->id,
+                'payment_method_final' => $paymentMethod,
+            ]);
 
-                FacadesLog::info('FedaPay webhook - payment_method extrait', [
-                    'ticket_id' => $ticket->id,
-                    'payment_method_brut' => $paymentMethodRaw,
-                    'payment_method_normalise' => $paymentMethod,
+            foreach ($groupTickets as $t) {
+                $t->update([
+                    'statut_paiement' => 'payé',
+                    'transaction_id' => $data['id'],
+                    'methode_paiement' => $paymentMethod,
+                    'telephone_paiement' => $data['phone'] ?? $t->telephone_acheteur,
                 ]);
 
-                foreach ($groupTickets as $t) {
-                    $t->update([
-                        'statut_paiement' => 'payé',
-                        'transaction_id' => $data['id'],
-                        'methode_paiement' => $paymentMethod,
-                        'telephone_paiement' => $data['phone'] ?? $t->telephone_acheteur,
-                    ]);
-
-                    $t->load('evenement', 'tarif');
-                    $t->evenement->increment('quota_vendu', $t->quantite);
-                    if ($t->tarif) {
-                        $t->tarif->increment('quantite_vendue', $t->quantite);
-                    }
+                $t->load('evenement', 'tarif');
+                $t->evenement->increment('quota_vendu', $t->quantite);
+                if ($t->tarif) {
+                    $t->tarif->increment('quantite_vendue', $t->quantite);
                 }
-
-                Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
             }
+
+            Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
         }
 
         return response()->json(['status' => 'ok']);

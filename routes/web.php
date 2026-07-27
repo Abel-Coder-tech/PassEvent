@@ -297,7 +297,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/logs/recuperer', [LogController::class, 'recuperer'])->name('logs.recuperer');
 
     Route::get('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'index'])->name('admin.retraits.index');
-    Route::post('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'store'])->name('admin.retraits.store');
+    Route::post('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'store'])->middleware('throttle:5,1')->name('admin.retraits.store');
 
     Route::prefix('admin/remboursements')->name('admin.remboursements.')->group(function () {
         Route::get('/', [RemboursementController::class, 'index'])->name('index');

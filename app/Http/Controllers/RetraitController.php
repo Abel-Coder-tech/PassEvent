@@ -42,16 +42,30 @@ class RetraitController extends Controller
 
         $commissionTotale = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2);
 
+        // Commission directe sur mobile money
+        $commissionMobile = round($mobileRecettes * self::COMMISSION_PERCENTAGE / 100, 2);
+
+        // Commission des espèces absorbée proportionnellement par le mobile money
+        $cashRecettes = $totalTickets - $mobileRecettes;
+        $commissionCash = round($cashRecettes * self::COMMISSION_PERCENTAGE / 100, 2);
+        $commissionCashAbsorbee = $mobileRecettes > 0 ? $commissionCash : 0;
+
+        // Commission totale imputée au mobile money
+        $commissionImputee = $commissionMobile + $commissionCashAbsorbee;
+
+        // Inclut les retraits en_attente, en_cours ET payé pour bloquer les doubles retraits
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
-            ->where('status', 'payé')
+            ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
 
-        $soldeDisponible = max(0, $mobileRecettes - $commissionTotale - $totalRetraits);
+        $soldeDisponible = max(0, $mobileRecettes - $commissionImputee - $totalRetraits);
 
         return [
             'totalTickets' => $totalTickets,
             'mobileRecettes' => $mobileRecettes,
+            'cashRecettes' => $cashRecettes,
             'commissionTotale' => $commissionTotale,
+            'commissionImputee' => $commissionImputee,
             'totalRetraits' => $totalRetraits,
             'soldeDisponible' => $soldeDisponible,
         ];
@@ -72,35 +86,46 @@ class RetraitController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $data = $this->getSoldeDisponible($user);
         $isAjax = $request->ajax() || $request->expectsJson();
 
-        $validated = $request->validate([
-            'reseau' => 'required|in:mtn,moov,celtiis',
-            'montant' => 'required|numeric|min:1000|max:' . $data['soldeDisponible'],
-            'nom' => 'required|string|max:255',
-            'mobile' => 'required|string|max:50',
-            'password' => 'required|string',
-        ]);
+        // Transaction atomique avec lock pour éviter les doubles retraits (race condition)
+        $retrait = DB::transaction(function () use ($user, $request, $isAjax) {
+            $data = $this->getSoldeDisponible($user);
 
-        if (!Hash::check($validated['password'], $user->getAuthPassword())) {
-            $msg = 'Mot de passe incorrect.';
-            if ($isAjax) return response()->json(['success' => false, 'message' => $msg], 422);
-            return back()->withErrors(['password' => $msg])->withInput();
+            $validated = $request->validate([
+                'reseau' => 'required|in:mtn,moov,celtiis',
+                'montant' => 'required|numeric|min:1000|max:' . $data['soldeDisponible'],
+                'nom' => 'required|string|max:255',
+                'mobile' => 'required|string|max:50',
+                'password' => 'required|string',
+            ]);
+
+            if (!Hash::check($validated['password'], $user->getAuthPassword())) {
+                return ['error' => true, 'message' => 'Mot de passe incorrect.'];
+            }
+
+            return Withdrawal::create([
+                'user_id' => $user->id,
+                'montant' => $validated['montant'],
+                'commission_percentage' => self::COMMISSION_PERCENTAGE,
+                'nom' => $validated['nom'],
+                'mobile' => $validated['mobile'],
+                'reseau' => $validated['reseau'],
+                'status' => 'en_attente',
+            ]);
+        });
+
+        if (is_array($retrait) && isset($retrait['error'])) {
+            if ($isAjax) return response()->json(['success' => false, 'message' => $retrait['message']], 422);
+            return back()->withErrors(['password' => $retrait['message']])->withInput();
         }
 
-        $retrait = Withdrawal::create([
-            'user_id' => $user->id,
-            'montant' => $validated['montant'],
-            'commission_percentage' => self::COMMISSION_PERCENTAGE,
-            'nom' => $validated['nom'],
-            'mobile' => $validated['mobile'],
-            'reseau' => $validated['reseau'],
-            'status' => 'en_attente',
-        ]);
-
-        $label = self::RESEAUX_CONFIG[$validated['reseau']]['label'];
-        $this->notifierSuperAdmin($user, $validated, $label);
+        $label = self::RESEAUX_CONFIG[$retrait->reseau]['label'];
+        $this->notifierSuperAdmin($user, [
+            'montant' => $retrait->montant,
+            'nom' => $retrait->nom,
+            'mobile' => $retrait->mobile,
+        ], $label);
 
         $msg = "Demande de retrait de {$label} envoyée. L'équipe PaxEvent va la traiter sous 72h.";
         if ($isAjax) return response()->json(['success' => true, 'message' => $msg]);

@@ -564,16 +564,17 @@ class SuperAdminController extends Controller
     // Approuve une demande → en cours de traitement
     public function approuverRetrait(Withdrawal $withdrawal, Request $request)
     {
-        if ($withdrawal->status !== 'en_attente') {
-            return back()->with('error', 'Ce retrait a déjà été traité.');
-        }
-
-        $withdrawal->update([
+        $updated = Withdrawal::where('id', $withdrawal->id)->where('status', 'en_attente')->update([
             'status' => 'en_cours',
             'admin_notes' => $request->input('admin_notes'),
             'processed_at' => now(),
         ]);
 
+        if (!$updated) {
+            return back()->with('error', 'Ce retrait a déjà été traité.');
+        }
+
+        $withdrawal->refresh();
         RetraitController::notifierOrganisateur($withdrawal, 'en_cours');
 
         return back()->with('success', 'Retrait approuvé. En attente de transfert.');
@@ -582,16 +583,17 @@ class SuperAdminController extends Controller
     // Confirme le paiement effectué → payé
     public function confirmerRetrait(Withdrawal $withdrawal, Request $request)
     {
-        if ($withdrawal->status !== 'en_cours') {
-            return back()->with('error', 'Ce retrait n\'est pas en cours de traitement.');
-        }
-
-        $withdrawal->update([
+        $updated = Withdrawal::where('id', $withdrawal->id)->where('status', 'en_cours')->update([
             'status' => 'payé',
             'admin_notes' => $request->input('admin_notes', $withdrawal->admin_notes),
             'processed_at' => now(),
         ]);
 
+        if (!$updated) {
+            return back()->with('error', 'Ce retrait n\'est pas en cours de traitement.');
+        }
+
+        $withdrawal->refresh();
         RetraitController::notifierOrganisateur($withdrawal, 'paye');
 
         return back()->with('success', 'Paiement confirmé. L\'organisateur a été notifié.');

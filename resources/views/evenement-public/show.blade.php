@@ -689,12 +689,22 @@ function copyLink() {
 function shareEvent() {
     if (navigator.share) {
         navigator.share({
-            title: '{{ $evenement->titre }}',
-            text: '{{ $evenement->titre }} - {{ $evenement->date_event->isoFormat('D MMM YYYY') }} à {{ $evenement->lieu }}@if($evenement->description) - {{ strip_tags(Str::limit($evenement->description, 120)) }}@endif',
+            title: @json($evenement->titre),
+            text: @json($evenement->titre . ' - ' . $evenement->date_event->isoFormat('D MMM YYYY') . ' à ' . $evenement->lieu . ($evenement->description ? ' - ' . strip_tags(Str::limit($evenement->description, 120)) : '')),
             url: window.location.href,
         }).catch(() => {});
     } else {
         copyLink();
+    }
+}
+
+function selectTarif(el) {
+    document.querySelectorAll('.show-tarif').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    const radio = el.querySelector('input[type="radio"]');
+    if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change'));
     }
 }
 
@@ -759,22 +769,9 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', updateTotal);
     });
 
-    updateTotal();
-});
-
-function selectTarif(el) {
-    document.querySelectorAll('.show-tarif').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    const radio = el.querySelector('input[type="radio"]');
-    if (radio) {
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
     const first = document.querySelector('.show-tarif');
     if (first) selectTarif(first);
+    else updateTotal();
 });
 @endif
 </script>

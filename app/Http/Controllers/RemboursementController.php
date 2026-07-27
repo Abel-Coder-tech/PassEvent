@@ -142,7 +142,7 @@ class RemboursementController extends Controller
     // Annule un remboursement et restaure le ticket
     public function annulerRemboursement(Request $request, $ticketId)
     {
-        $ticket = Ticket::with('evenement')->findOrFail($ticketId);
+        $ticket = Ticket::with('evenement', 'demandesRemboursement')->findOrFail($ticketId);
 
         if ($ticket->statut_paiement !== 'remboursé') {
             return back()->withErrors(['error' => 'Ce ticket n\'est pas remboursé.']);
@@ -150,6 +150,15 @@ class RemboursementController extends Controller
 
         if ($ticket->evenement->user_id !== Auth::id()) {
             return back()->withErrors(['error' => 'Vous n\'avez pas l\'autorisation.']);
+        }
+
+        // Bloquer si une demande de remboursement a été traitée financièrement par le superadmin
+        $demandeTraitee = $ticket->demandesRemboursement()
+            ->whereIn('statut', ['en_cours', 'rembourse'])
+            ->exists();
+
+        if ($demandeTraitee) {
+            return back()->withErrors(['error' => 'Ce remboursement a été traité par PaxEvent et ne peut plus être annulé.']);
         }
 
         $ticket->update(['statut_paiement' => 'payé']); // Restaure le statut payé

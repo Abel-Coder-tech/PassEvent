@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Withdrawal;
 
 class User extends Authenticatable
 {
@@ -88,6 +89,12 @@ class User extends Authenticatable
         $enCours = DemandeRemboursement::where('organisateur_id', $this->id)
             ->whereIn('statut', ['en_attente', 'en_cours'])
             ->sum('montant_total');
-        return max(0, $vendu - $rembourse - $enCours);
+        // Commission de 10% sur les ventes
+        $commission = round($vendu * 10 / 100, 2);
+        // Retraits en attente, en cours ou payés
+        $retires = Withdrawal::where('user_id', $this->id)
+            ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
+            ->sum('montant');
+        return max(0, $vendu - $rembourse - $enCours - $commission - $retires);
     }
 }
