@@ -51,7 +51,7 @@
         @endforeach
 
         <div class="col-md-3 d-flex align-items-stretch">
-            @if($soldeTotalDisponible >= 1000)
+            @if($soldeTotalDisponible > 0)
                 <button type="button" class="btn w-100" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; border-radius: 12px; border: none; box-shadow: 0 4px 16px rgba(123,63,160,0.3); min-height:100%;" data-bs-toggle="modal" data-bs-target="#retraitModal">
                     <i class="bi bi-send d-block mb-1" style="font-size:1.5rem;"></i>
                     <span style="font-size:0.9rem;">Demander un retrait</span>
@@ -59,7 +59,7 @@
             @else
                 <div class="metric-card w-100 text-center d-flex flex-column align-items-center justify-content-center" style="border-top-color: var(--gris);">
                     <i class="bi bi-lock d-block mb-1" style="font-size:1.5rem;color:var(--gris);"></i>
-                    <span style="font-size:0.82rem;color:var(--gris);">Solde insuffisant</span>
+                    <span style="font-size:0.82rem;color:var(--gris);">Aucun solde disponible</span>
                 </div>
             @endif
         </div>
@@ -119,6 +119,7 @@
                                 <i class="bi bi-wallet2 me-1"></i> Solde disponible : <strong id="soldeAffiche">0</strong> FCFA
                             </div>
                         </div>
+                        <div id="warningSolde" class="mb-3" style="display:none;"></div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Montant à retirer <span class="text-danger">*</span></label>
                             <input type="number" name="montant" id="montantInput" class="form-control" min="1000" step="100" placeholder="Ex: 50000" required disabled autocomplete="off">
@@ -254,6 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     reseauSelect.addEventListener('change', function() {
         const opt = this.options[this.selectedIndex];
+        const warningSolde = document.getElementById('warningSolde');
         if (this.value && opt.dataset.solde) {
             const solde = parseFloat(opt.dataset.solde);
             soldeInfo.style.display = 'block';
@@ -262,9 +264,21 @@ document.addEventListener('DOMContentLoaded', function() {
             montantInput.max = solde;
             montantInput.disabled = false;
             montantInput.required = true;
-            montantInput.focus();
+            montantInput.value = '';
+
+            if (solde < 1000) {
+                warningSolde.style.display = 'block';
+                warningSolde.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Solde insuffisant pour un retrait (minimum 1 000 FCFA). Vendre plus de tickets en ligne pour atteindre le seuil.';
+                montantInput.disabled = true;
+            } else {
+                warningSolde.style.display = 'none';
+                warningSolde.innerHTML = '';
+                montantInput.focus();
+            }
         } else {
             soldeInfo.style.display = 'none';
+            warningSolde.style.display = 'none';
+            warningSolde.innerHTML = '';
             montantInput.disabled = true;
             montantInput.required = false;
             montantInput.value = '';
