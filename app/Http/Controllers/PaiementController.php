@@ -121,6 +121,15 @@ class PaiementController extends Controller
             $paymentMethod = $request->query('payment_method', 'mobile_money');
             $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
 
+            // Log pour tracer la valeur exacte reçue de FedaPay
+            Log::info('FedaPay callback - payment_method brut', [
+                'ticket_id' => $ticket->id,
+                'payment_method_raw' => $paymentMethod,
+                'query_all' => $request->query(),
+            ]);
+
+            $paymentMethod = self::normalizePaymentMethod($paymentMethod);
+
             // Met à jour tous les tickets du groupe
             foreach ($groupTickets as $t) {
                 $t->update([
@@ -232,11 +241,19 @@ class PaiementController extends Controller
                         ->get();
                 }
 
+                $paymentMethod = self::normalizePaymentMethod($data['payment_method'] ?? 'mobile_money');
+
+                Log::info('FedaPay webhook - payment_method brut', [
+                    'ticket_id' => $ticket->id,
+                    'payment_method_raw' => $data['payment_method'] ?? null,
+                    'payment_method_normalise' => $paymentMethod,
+                ]);
+
                 foreach ($groupTickets as $t) {
                     $t->update([
                         'statut_paiement' => 'payé',
                         'transaction_id' => $data['id'],
-                        'methode_paiement' => $data['payment_method'] ?? 'mobile_money',
+                        'methode_paiement' => $paymentMethod,
                         'telephone_paiement' => $data['phone'] ?? $t->telephone_acheteur,
                     ]);
 
@@ -269,5 +286,57 @@ class PaiementController extends Controller
             ->get();
 
         return view('evenement-public.confirmation', compact('ticket', 'groupTickets'));
+    }
+
+    // Normalise les valeurs FedaPay vers nos clés standardisées
+    protected static function normalizePaymentMethod(?string $method): string
+    {
+        if (!$method) {
+            return 'mobile_money';
+        }
+
+        $lower = strtolower(trim($method));
+
+        // Espèces
+        if (in_array($lower, ['cash', 'especes', 'espèces'])) {
+            return 'especes';
+        }
+
+        // MTN
+        if (str_contains($lower, 'mtn')) {
+            return 'mtn';
+        }
+
+        // Moov
+        if (str_contains($lower, 'moov')) {
+            return 'moov';
+        }
+
+        // Celtiis
+        if (str_contains($lower, 'celtiis') || str_contains($lower, 'celti')) {
+            return 'celtiis';
+        }
+
+        // Orange
+        if (str_contains($lower, 'orange')) {
+            return 'orange';
+        }
+
+        // Togocel
+        if (str_contains($lower, 'togocel') || str_contains($lower, 'togo')) {
+            return 'togocel';
+        }
+
+        // Airtel
+        if (str_contains($lower, 'airtel')) {
+            return 'airtel';
+        }
+
+        // Free
+        if (str_contains($lower, 'free')) {
+            return 'free';
+        }
+
+        return $lower;
     }
 }

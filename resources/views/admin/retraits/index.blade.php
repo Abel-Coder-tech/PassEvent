@@ -9,84 +9,46 @@
 
 @section('content')
 <div class="page-content">
-    <!-- Cartes solde par réseau + bouton retrait -->
+    <!-- Cartes stats -->
     <div class="row g-3 mb-4">
-        @php
-            $reseauColors = [
-                'mtn' => '#f5a623',
-                'moov' => '#7B3FA0',
-                'celtiis' => '#3498db',
-            ];
-        @endphp
-        @foreach($soldes as $key => $s)
-        <div class="col-md-3">
-            <div class="metric-card" style="border-top-color: {{ $reseauColors[$key] ?? 'var(--gris)' }}; height:100%;">
-                <div class="d-flex align-items-center gap-3 mb-2">
-                    <div style="width:42px;height:42px;background:{{ $reseauColors[$key] ?? '#3498db' }}1a;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi {{ $s['icon'] }}" style="color:{{ $reseauColors[$key] ?? '#3498db' }};font-size:1.15rem;"></i>
-                    </div>
-                    <div>
-                        <div style="font-weight:700;color:var(--sombre);font-size:0.9rem;">{{ $s['label'] }}</div>
-                        <div style="font-size:0.72rem;color:var(--gris);">{{ number_format($s['recettes'], 0, ',', ' ') }} F collectés</div>
-                    </div>
-                </div>
-                <div style="border-top:1px solid #f5f5f5;padding-top:0.4rem;margin-top:0.2rem;">
-                    <div class="d-flex justify-content-between py-1" style="font-size:0.78rem;">
-                        <span style="color:var(--gris);">Commission</span>
-                        <span style="color:#e74c3c;">-{{ number_format($s['commission'], 0, ',', ' ') }} F</span>
-                    </div>
-                    @if($s['retraits'] > 0)
-                    <div class="d-flex justify-content-between py-1" style="font-size:0.78rem;">
-                        <span style="color:var(--gris);">Déjà retiré</span>
-                        <span style="color:#f39c12;">-{{ number_format($s['retraits'], 0, ',', ' ') }} F</span>
-                    </div>
-                    @endif
-                    <div class="d-flex justify-content-between py-1" style="font-size:0.85rem;border-top:1px solid #f5f5f5;margin-top:0.2rem;">
-                        <span style="font-weight:700;">Solde</span>
-                        <span style="font-weight:800;color:{{ $s['solde'] > 0 ? 'var(--vert)' : 'var(--gris)' }};">{{ number_format($s['solde'], 0, ',', ' ') }} F</span>
-                    </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-phone" style="color: var(--violet);"></i></div>
+                <div class="metric-label">Mobile Money (FedaPay)</div>
+                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Recettes totales</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--gris);">
+                <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
+                <div class="metric-label">Commission ({{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%)</div>
+                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionTotale, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Sur tous les tickets</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-wallet2" style="color: var(--vert);"></i></div>
+                <div class="metric-label">Solde disponible</div>
+                <div class="metric-value" style="font-size:1.3rem; color: var(--vert);">{{ number_format($soldeDisponible, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">
+                    Net ({{ number_format(max(0, $mobileRecettes - $commissionTotale), 0, ',', ' ') }})
+                    - Retiré ({{ number_format($totalRetraits, 0, ',', ' ') }})
                 </div>
             </div>
         </div>
-        @endforeach
-
-        <div class="col-md-3 d-flex align-items-stretch">
-            @if($soldeTotalDisponible > 0)
-                <button type="button" class="btn w-100" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; border-radius: 12px; border: none; box-shadow: 0 4px 16px rgba(123,63,160,0.3); min-height:100%;" data-bs-toggle="modal" data-bs-target="#retraitModal">
-                    <i class="bi bi-send d-block mb-1" style="font-size:1.5rem;"></i>
-                    <span style="font-size:0.9rem;">Demander un retrait</span>
+        <div class="col-6 col-lg-3 d-flex align-items-center justify-content-center">
+            @if($soldeDisponible > 0)
+                <button type="button" class="btn" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; padding: 0.85rem 1.5rem; border-radius: 12px; border: none; width: 100%; box-shadow: 0 4px 16px rgba(123,63,160,0.3);" data-bs-toggle="modal" data-bs-target="#retraitModal">
+                    <i class="bi bi-send me-1"></i> Demander un retrait
                 </button>
             @else
-                <div class="metric-card w-100 text-center d-flex flex-column align-items-center justify-content-center" style="border-top-color: var(--gris);">
-                    <i class="bi bi-lock d-block mb-1" style="font-size:1.5rem;color:var(--gris);"></i>
-                    <span style="font-size:0.82rem;color:var(--gris);">Aucun solde disponible</span>
+                <div class="text-center" style="color: var(--gris); font-size: 0.82rem;">
+                    <i class="bi bi-lock d-block mb-1" style="font-size:1.5rem;"></i>
+                    Solde insuffisant
                 </div>
             @endif
-        </div>
-    </div>
-
-    <!-- Résumé global -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-label">Recettes mobile</div>
-                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">Tous réseaux confondus</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="metric-card" style="border-top-color: var(--gris);">
-                <div class="metric-label">Commission totale ({{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%)</div>
-                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionTotale, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">Inclut la part espèces répartie</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="metric-card" style="border-top-color: var(--vert);">
-                <div class="metric-label">Solde total retirable</div>
-                <div class="metric-value" style="font-size:1.3rem;color:var(--vert);">{{ number_format($soldeTotalDisponible, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">Après commission et retraits</div>
-            </div>
         </div>
     </div>
 
@@ -99,31 +61,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <p style="color: #6c757d; font-size: 0.85rem; margin-bottom: 1rem;">
+                        Solde disponible : <strong style="color: var(--vert);">{{ number_format($soldeDisponible, 0, ',', ' ') }} FCFA</strong>
+                    </p>
                     <form action="{{ route('admin.retraits.store') }}" method="POST" id="formRetrait" autocomplete="off">
                         @csrf
                         <div class="mb-3">
-                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Réseau <span class="text-danger">*</span></label>
+                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Réseau cible <span class="text-danger">*</span></label>
                             <select name="reseau" id="reseauSelect" class="form-select" required autocomplete="off">
-                                <option value="">Choisir un réseau —</option>
-                                @foreach($soldes as $key => $s)
-                                    @if($s['solde'] > 0)
-                                    <option value="{{ $key }}" data-solde="{{ $s['solde'] }}" data-label="{{ $s['label'] }}">
-                                        {{ $s['label'] }} — {{ number_format($s['solde'], 0, ',', ' ') }} F disponible(s)
-                                    </option>
-                                    @endif
+                                <option value="">Choisir le réseau du retrait —</option>
+                                @foreach(\App\Http\Controllers\RetraitController::RESEAUX_CONFIG as $key => $cfg)
+                                <option value="{{ $key }}">{{ $cfg['label'] }}</option>
                                 @endforeach
                             </select>
+                            <small class="text-muted">Réseau sur lequel vous souhaitez recevoir le montant</small>
                         </div>
-                        <div id="soldeInfo" class="mb-3" style="display:none;">
-                            <div class="alert alert-success py-2 px-3 mb-0" style="font-size:0.85rem;border-radius:8px;">
-                                <i class="bi bi-wallet2 me-1"></i> Solde disponible : <strong id="soldeAffiche">0</strong> FCFA
-                            </div>
-                        </div>
-                        <div id="warningSolde" class="mb-3" style="display:none;"></div>
                         <div class="mb-3">
                             <label class="form-label" style="font-size:0.82rem; font-weight:600;">Montant à retirer <span class="text-danger">*</span></label>
-                            <input type="number" name="montant" id="montantInput" class="form-control" min="1000" step="100" placeholder="Ex: 50000" required disabled autocomplete="off">
-                            <small class="text-muted">Min 1 000 FCFA · Max <span id="maxLabel">0</span> FCFA</small>
+                            <input type="number" name="montant" class="form-control" min="1000" max="{{ $soldeDisponible }}" step="100" placeholder="Ex: 50000" required autocomplete="off">
+                            <small class="text-muted">Min 1 000 FCFA · Max {{ number_format($soldeDisponible, 0, ',', ' ') }} FCFA</small>
                             @error('montant')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
@@ -140,7 +96,7 @@
                             <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="new-password">
                             @error('password')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         </div>
-                        <button type="submit" id="btnSubmit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;" disabled>
+                        <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
                             <i class="bi bi-send me-1"></i> Envoyer la demande
                         </button>
                     </form>
@@ -243,56 +199,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const successModal = new bootstrap.Modal(document.getElementById('successRetraitModal'));
         successModal.show();
     @endif
-
-    const reseauSelect = document.getElementById('reseauSelect');
-    const montantInput = document.getElementById('montantInput');
-    const soldeInfo = document.getElementById('soldeInfo');
-    const soldeAffiche = document.getElementById('soldeAffiche');
-    const maxLabel = document.getElementById('maxLabel');
-    const btnSubmit = document.getElementById('btnSubmit');
-
-    if (!reseauSelect) return;
-
-    reseauSelect.addEventListener('change', function() {
-        const opt = this.options[this.selectedIndex];
-        const warningSolde = document.getElementById('warningSolde');
-        if (this.value && opt.dataset.solde) {
-            const solde = parseFloat(opt.dataset.solde);
-            soldeInfo.style.display = 'block';
-            soldeAffiche.textContent = new Intl.NumberFormat('fr-FR').format(solde);
-            maxLabel.textContent = new Intl.NumberFormat('fr-FR').format(solde);
-            montantInput.max = solde;
-            montantInput.disabled = false;
-            montantInput.required = true;
-            montantInput.value = '';
-
-            if (solde < 1000) {
-                warningSolde.style.display = 'block';
-                warningSolde.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Solde insuffisant pour un retrait (minimum 1 000 FCFA). Vendre plus de tickets en ligne pour atteindre le seuil.';
-                montantInput.disabled = true;
-            } else {
-                warningSolde.style.display = 'none';
-                warningSolde.innerHTML = '';
-                montantInput.focus();
-            }
-        } else {
-            soldeInfo.style.display = 'none';
-            warningSolde.style.display = 'none';
-            warningSolde.innerHTML = '';
-            montantInput.disabled = true;
-            montantInput.required = false;
-            montantInput.value = '';
-        }
-        updateBtn();
-    });
-
-    montantInput.addEventListener('input', updateBtn);
-
-    function updateBtn() {
-        const reseauOk = reseauSelect.value !== '';
-        const montantOk = montantInput.value && parseFloat(montantInput.value) >= 1000;
-        btnSubmit.disabled = !(reseauOk && montantOk);
-    }
 });
 </script>
 @endsection
