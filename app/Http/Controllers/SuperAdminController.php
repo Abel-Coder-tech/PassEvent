@@ -600,8 +600,8 @@ class SuperAdminController extends Controller
     // Rejette une demande de retrait
     public function rejeterRetrait(Withdrawal $withdrawal, Request $request)
     {
-        if ($withdrawal->status !== 'en_attente') {
-            return back()->with('error', 'Ce retrait a déjà été traité.');
+        if (!in_array($withdrawal->status, ['en_attente', 'en_cours'])) {
+            return back()->with('error', 'Ce retrait ne peut plus être rejeté.');
         }
 
         $motifs = $request->input('motifs', []);

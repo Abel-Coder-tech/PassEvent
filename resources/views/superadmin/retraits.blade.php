@@ -180,6 +180,9 @@
                                                             <i class="bi bi-check-circle"></i> Confirmer le paiement
                                                         </button>
                                                     </form>
+                                                    <button type="button" class="sa-btn sa-btn-danger" onclick="this.closest('.modal-overlay').style.display='none'; document.getElementById('rejectModal{{ $retrait->id }}').style.display='flex';">
+                                                        <i class="bi bi-x-lg"></i> Rejeter
+                                                    </button>
                                                 @endif
                                                 <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
                                             </div>

@@ -43,7 +43,7 @@ class RetraitController extends Controller
         $commissionTotale = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2);
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
-            ->whereIn('status', ['approuvé', 'en_cours', 'payé'])
+            ->where('status', 'payé')
             ->sum('montant');
 
         $soldeDisponible = max(0, $mobileRecettes - $commissionTotale - $totalRetraits);

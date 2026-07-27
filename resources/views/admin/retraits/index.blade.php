@@ -202,6 +202,13 @@
                                 </tr>
                             @endforeach
                         </tbody>
+                        <tfoot>
+                            <tr style="background:#f8f6f9;">
+                                <td colspan="2" class="text-end fw-bold" style="font-size:0.88rem;">Total</td>
+                                <td><strong>{{ number_format($retraits->sum('montant'), 0, ',', ' ') }} F</strong></td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             @else
