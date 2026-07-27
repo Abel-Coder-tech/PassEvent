@@ -114,12 +114,30 @@
                         <i class="bi bi-check-circle" style="font-size:2rem;color:var(--vert);"></i>
                     </div>
                     <h5 class="fw-bold mb-2" style="color:#1a1a2e;">Demande envoyée !</h5>
-                    <p style="color:#6c757d;font-size:0.9rem;margin-bottom:1rem;">{{ session('success') }}</p>
+                    <p style="color:#6c757d;font-size:0.9rem;margin-bottom:1rem;" id="successMessage"></p>
                     <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:0.85rem;border-radius:8px;text-align:left;">
                         <i class="bi bi-info-circle me-1"></i> <strong>Rappel :</strong> Les retraits sont effectués sous un délai minimum de <strong>72 heures</strong> après la demande. Vous recevrez une notification une fois votre retrait traité.
                     </div>
                     <button type="button" class="btn w-100 py-2 fw-bold text-white mt-3" style="background: var(--vert); border: none; border-radius: 8px;" data-bs-dismiss="modal">
                         Compris
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal erreur retrait -->
+    <div class="modal fade" id="errorRetraitModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px; border: none;">
+                <div class="modal-body text-center p-4">
+                    <div style="width:64px;height:64px;background:rgba(231,76,60,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                        <i class="bi bi-x-circle" style="font-size:2rem;color:#e74c3c;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2" style="color:#1a1a2e;">Échec de la demande</h5>
+                    <p style="color:#6c757d;font-size:0.9rem;margin-bottom:1rem;" id="errorMessage"></p>
+                    <button type="button" class="btn w-100 py-2 fw-bold text-white mt-3" style="background: #e74c3c; border: none; border-radius: 8px;" data-bs-dismiss="modal">
+                        Réessayer
                     </button>
                 </div>
             </div>
@@ -195,10 +213,56 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    @if(session('success'))
-        const successModal = new bootstrap.Modal(document.getElementById('successRetraitModal'));
-        successModal.show();
-    @endif
+    const form = document.getElementById('formRetrait');
+    const retraitModal = document.getElementById('retraitModal');
+    const successModal = document.getElementById('successRetraitModal');
+    const errorModal = document.getElementById('errorRetraitModal');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const btn = form.querySelector('button[type="submit"]');
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Envoi en cours…';
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(Object.fromEntries(new FormData(form))),
+        })
+        .then(r => r.json().then(body => ({ ok: r.ok, body })))
+        .then(({ ok, body }) => {
+            const bsRetrait = bootstrap.Modal.getInstance(retraitModal);
+            if (bsRetrait) bsRetrait.hide();
+
+            if (body.success) {
+                document.getElementById('successMessage').textContent = body.message;
+                const bsSuccess = new bootstrap.Modal(successModal);
+                bsSuccess.show();
+                form.reset();
+            } else {
+                document.getElementById('errorMessage').textContent = body.message || 'Une erreur est survenue.';
+                const bsError = new bootstrap.Modal(errorModal);
+                bsError.show();
+            }
+        })
+        .catch(() => {
+            const bsRetrait = bootstrap.Modal.getInstance(retraitModal);
+            if (bsRetrait) bsRetrait.hide();
+            document.getElementById('errorMessage').textContent = 'Erreur réseau. Veuillez réessayer.';
+            const bsError = new bootstrap.Modal(errorModal);
+            bsError.show();
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        });
+    });
 });
 </script>
 @endsection

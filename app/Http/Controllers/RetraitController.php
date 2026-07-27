@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RetraitRequested;
+use App\Models\Message;
 use App\Models\Ticket;
+use App\Models\User;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class RetraitController extends Controller
 {
@@ -19,7 +24,6 @@ class RetraitController extends Controller
         'celtiis' => ['label' => 'Celtiis Cash', 'icon' => 'bi-phone'],
     ];
 
-    // Calcule le solde disponible pour retrait
     protected function getSoldeDisponible($user)
     {
         $evenementsIds = $user->evenements()->pluck('id');
@@ -50,7 +54,6 @@ class RetraitController extends Controller
         ];
     }
 
-    // Page de retraits
     public function index()
     {
         $user = Auth::user();
@@ -63,11 +66,11 @@ class RetraitController extends Controller
         return view('admin.retraits.index', array_merge($data, ['retraits' => $retraits]));
     }
 
-    // Demande de retrait
     public function store(Request $request)
     {
         $user = Auth::user();
         $data = $this->getSoldeDisponible($user);
+        $isAjax = $request->ajax() || $request->expectsJson();
 
         $validated = $request->validate([
             'reseau' => 'required|in:mtn,moov,celtiis',
@@ -78,10 +81,12 @@ class RetraitController extends Controller
         ]);
 
         if (!Hash::check($validated['password'], $user->password)) {
-            return back()->withErrors(['password' => 'Mot de passe incorrect.'])->withInput();
+            $msg = 'Mot de passe incorrect.';
+            if ($isAjax) return response()->json(['success' => false, 'message' => $msg], 422);
+            return back()->withErrors(['password' => $msg])->withInput();
         }
 
-        Withdrawal::create([
+        $retrait = Withdrawal::create([
             'user_id' => $user->id,
             'montant' => $validated['montant'],
             'commission_percentage' => self::COMMISSION_PERCENTAGE,
@@ -92,7 +97,39 @@ class RetraitController extends Controller
         ]);
 
         $label = self::RESEAUX_CONFIG[$validated['reseau']]['label'];
+        $this->notifierSuperAdmin($user, $validated, $label);
 
-        return back()->with('success', "Demande de retrait de {$label} envoyée. L'équipe PaxEvent va la traiter.");
+        $msg = "Demande de retrait de {$label} envoyée. L'équipe PaxEvent va la traiter sous 72h.";
+        if ($isAjax) return response()->json(['success' => true, 'message' => $msg]);
+        return back()->with('success', $msg);
+    }
+
+    protected function notifierSuperAdmin(User $user, array $validated, string $label)
+    {
+        Message::create([
+            'nom_complet' => $user->nom,
+            'email' => $user->email,
+            'objet' => 'Demande de retrait — ' . $user->nom,
+            'message' => "L'organisateur {$user->nom} ({$user->email}) a demandé un retrait de " . number_format($validated['montant'], 0, ',', ' ') . " FCFA sur {$label}.\nBénéficiaire : {$validated['nom']}\nMobile : {$validated['mobile']}",
+            'lu' => false,
+        ]);
+
+        try {
+            $superadmin = User::where('role', 'super_admin')->first();
+            if ($superadmin) {
+                Mail::to($superadmin->email)->send(
+                    new RetraitRequested(
+                        $user->nom,
+                        $user->email,
+                        $label,
+                        $validated['montant'],
+                        $validated['nom'],
+                        $validated['mobile']
+                    )
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Email retrait non envoyé : ' . $e->getMessage());
+        }
     }
 }
