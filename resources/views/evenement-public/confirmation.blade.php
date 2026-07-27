@@ -31,18 +31,29 @@
                         <!-- Ticket details -->
                         <div class="p-3 rounded mb-4 text-start" style="background: var(--blanc-casse);">
                             <div class="row g-2" style="font-size: 0.88rem;">
-                                <div class="col-12">
-                                    <span class="text-muted">Evenement :</span><br>
+                                <div class="col-6">
+                                    <span class="text-muted">Evenement</span><br>
                                     <strong>{{ $ticket->evenement->titre }}</strong>
                                 </div>
+                                @if($ticket->montant > 0)
                                 <div class="col-6">
-                                    <span class="text-muted">Date :</span><br>
+                                    <span class="text-muted">Type</span><br>
+                                    <strong>{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</strong>
+                                </div>
+                                @endif
+                                <div class="col-6">
+                                    <span class="text-muted">Date</span><br>
                                     <strong>{{ $ticket->evenement->date_event->format('d/m/Y') }}</strong>
                                 </div>
                                 @if($ticket->montant > 0)
                                 <div class="col-6">
-                                    <span class="text-muted">Type :</span><br>
-                                    <strong>{{ ucfirst($ticket->categorie) }} / {{ ucfirst($ticket->type) }}</strong>
+                                    <span class="text-muted">Total paye</span><br>
+                                    @if($quantite > 1)
+                                        <strong style="color: var(--violet);">{{ number_format($groupTickets->sum('montant'), 0, ',', ' ') }} F</strong>
+                                        <small class="d-block text-muted" style="font-size: 0.72rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} F × {{ $quantite }}</small>
+                                    @else
+                                        <strong style="color: var(--violet);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
+                                    @endif
                                 </div>
                                 @endif
                             </div>
@@ -53,18 +64,6 @@
                                 @foreach($groupTickets as $gt)
                                     <span style="font-size: 0.78rem; display: block; margin-top: 2px;">Billet n&deg;{{ $loop->iteration }}</span>
                                 @endforeach
-                            </div>
-                            @endif
-
-                            @if($ticket->montant > 0)
-                            <div class="mt-2 text-end">
-                                <span class="text-muted">Total paye :</span><br>
-                                @if($quantite > 1)
-                                    <strong style="color: var(--violet);">{{ number_format($groupTickets->sum('montant'), 0, ',', ' ') }} F</strong>
-                                    <small class="d-block text-muted" style="font-size: 0.72rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} F × {{ $quantite }} billet(s)</small>
-                                @else
-                                    <strong style="color: var(--violet);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
-                                @endif
                             </div>
                             @endif
                         </div>
