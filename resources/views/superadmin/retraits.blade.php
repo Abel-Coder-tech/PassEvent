@@ -95,6 +95,29 @@
                                     @endif
                                 </td>
                                 <td>
+                                    @if($retrait->status === 'en_attente')
+                                        <form action="{{ route('superadmin.retraits.approuver', $retrait) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="sa-btn sa-btn-sm sa-btn-primary" title="Approuver" onclick="return confirm('Approuver ce retrait ?')">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"
+                                            onclick="document.getElementById('rejectModal{{ $retrait->id }}').style.display='flex'">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    @elseif($retrait->status === 'en_cours')
+                                        <form action="{{ route('superadmin.retraits.confirmer', $retrait) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="sa-btn sa-btn-sm sa-btn-primary" title="Confirmer le paiement" style="background:var(--sa-success);border-color:var(--sa-success);" onclick="return confirm('Confirmer le paiement ?')">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"
+                                            onclick="document.getElementById('rejectModal{{ $retrait->id }}').style.display='flex'">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    @endif
                                     <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les détails"
                                         onclick="document.getElementById('detailModal{{ $retrait->id }}').style.display='flex'">
                                         <i class="bi bi-eye"></i>
