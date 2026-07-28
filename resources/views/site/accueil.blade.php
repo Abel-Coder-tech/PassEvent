@@ -388,8 +388,6 @@
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
-                        $prixEtudiant = $evenement->tarifs->where('categorie', 'etudiant')->min('prix');
-                        $prixExterne = $evenement->tarifs->where('categorie', 'externe')->min('prix');
                         $prixDernier = $evenement->tarifs->min('prix');
                     @endphp
                     <div class="event-col">

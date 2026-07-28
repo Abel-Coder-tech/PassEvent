@@ -278,9 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const tarifOption = tarifSelect.options[tarifSelect.selectedIndex];
-        const catRadio = document.querySelector('input[name="categorie"]:checked');
 
-        document.getElementById('recapStatut').textContent = catRadio ? catRadio.nextElementSibling.textContent : '—';
+        document.getElementById('recapStatut').textContent = '—';
         document.getElementById('recapTarif').textContent = tarifUnitaire > 0 ? numberFormat(tarifUnitaire) + ' FCFA' : '—';
         document.getElementById('recapPaiement').textContent = methodLabels[methodeSelect.value] || '—';
 
@@ -299,8 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadTarifs() {
         const eventId = eventSelect.value;
-        const catRadio = document.querySelector('input[name="categorie"]:checked');
-        const cat = catRadio ? catRadio.value : 'externe';
 
         tarifSelect.innerHTML = '<option value="">Chargement…</option>';
 
@@ -326,9 +323,6 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleFieldsPayants(false);
 
         const body = { evenement_id: eventId };
-        if (isUniversitaire) {
-            body.categorie = cat;
-        }
 
         fetch('{{ route('ventes-manuelles.tarifs') }}', {
             method: 'POST',
@@ -344,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data.tarifs.forEach(t => {
                 const opt = document.createElement('option');
                 opt.value = t.id;
-                opt.textContent = t.type.toUpperCase() + ' — ' + numberFormat(t.prix) + ' FCFA';
+                opt.textContent = t.nom + ' — ' + numberFormat(t.prix) + ' FCFA';
                 opt.dataset.prix = t.prix;
                 tarifSelect.appendChild(opt);
             });
@@ -376,13 +370,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     eventSelect.addEventListener('change', loadTarifs);
-
-    document.querySelectorAll('input[name="categorie"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (eventSelect.value) loadTarifs();
-            updateRecap();
-        });
-    });
 
     tarifSelect.addEventListener('change', function() {
         const opt = this.options[this.selectedIndex];
@@ -418,7 +405,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (isFreeEvent) {
             delete data.tarif_id;
-            delete data.categorie;
             delete data.methode_paiement;
         }
 
@@ -507,7 +493,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 form.reset();
                 document.getElementById('quantite').value = 1;
-                document.getElementById('cat_externe').checked = true;
                 tarifUnitaire = 0;
                 isFreeEvent = false;
                 tarifSelect.innerHTML = '<option value="">— Sélectionnez d\'abord un événement —</option>';

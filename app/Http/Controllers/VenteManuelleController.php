@@ -287,10 +287,6 @@ class VenteManuelleController extends Controller
             'evenement_id.exists' => 'L\'événement sélectionné est invalide.',
         ];
 
-        if (Auth::user()->type === 'universitaire') {
-            $rules['categorie'] = 'required|in:etudiant,externe';
-        }
-
         $request->validate($rules);
 
         $evenement = Evenement::where('id', $request->evenement_id)
@@ -300,14 +296,7 @@ class VenteManuelleController extends Controller
         $tarifs = collect();
 
         if (!$evenement->gratuit) {
-            // Filtre par catégorie si organisateur universitaire
-            $query = Tarif::where('evenement_id', $evenement->id)->where('statut', 'actif');
-
-            if (Auth::user()->type === 'universitaire') {
-                $query->where('categorie', $request->categorie);
-            }
-
-            $tarifs = $query->get();
+            $tarifs = Tarif::where('evenement_id', $evenement->id)->where('statut', 'actif')->get();
         }
 
         return response()->json([
