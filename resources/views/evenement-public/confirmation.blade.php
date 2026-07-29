@@ -91,7 +91,7 @@
 
                         <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
                             <i class="bi bi-info-circle me-1"></i>
-                            Presentez votre billet (impression ou ecran) a l'entree de l'evenement
+                            Presentez votre billet (impression ou ecran) a l'entrée de l'evenement
                         </p>
                     </div>
                 </div>
