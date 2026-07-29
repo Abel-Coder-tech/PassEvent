@@ -107,10 +107,8 @@ class Ticket extends Model
             for ($y = 0; $y < $h; $y++) {
                 $rgba = imagecolorat($src, $x, $y);
                 $alpha = ($rgba >> 24) & 0x7F;
-                $alpha = 127 - $alpha;
-                $a = 127 - round($alpha * 127 / 255);
-                if ($a < 127) {
-                    $color = imagecolorallocatealpha($dst, 255, 255, 255, $a);
+                if ($alpha < 127) {
+                    $color = imagecolorallocatealpha($dst, 255, 255, 255, $alpha);
                     imagesetpixel($dst, $x, $y, $color);
                 }
             }

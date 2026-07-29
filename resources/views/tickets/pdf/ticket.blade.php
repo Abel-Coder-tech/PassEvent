@@ -95,7 +95,7 @@
             padding: 8px 12px;
             margin: 8px 0 0;
         }
-        .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; }
+        .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; text-align: center; }
 
         .footer { background: #542680; padding: 14px 20px; position: absolute; bottom: 0; width: 100%; }
         .footer-text { color: #fff; font-size: 9px; }
@@ -153,7 +153,7 @@
         </table>
 
         @if($ticket->montant <= 0)
-        <div         style="text-align:center;padding:3px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+        <div style="text-align:center;padding:3px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
             Entrée gratuite
         </div>
         @endif
@@ -175,7 +175,7 @@
         </div>
 
         <div class="note">
-            <p><span style="font-size:12px; text-align: center;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
+            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
         </div>
 
     </div>
