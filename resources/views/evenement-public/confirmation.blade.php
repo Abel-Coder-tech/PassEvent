@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'Paiement confirmé — PaxEvent')
-@section('description', 'Votre paiement a été confirmé. Votre billet vous sera envoyé par email.')
+@section('description', 'Votre paiement a été confirmé. Votre ticket vous sera envoyé par email.')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
@@ -21,10 +21,10 @@
                                 <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: var(--violet);"></i>
                             </div>
                             @php $quantite = $groupTickets->count(); @endphp
-                            <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? 'Inscription confirmee !' : 'Paiement confirme !' }}</h4>
+                            <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? 'Inscription confirmée !' : 'Paiement confirmé !' }}</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                {{ $quantite > 1 ? "Vos {$quantite} billets ont ete generes avec succes." : 'Votre billet a ete genere avec succes.' }}<br>
-                                Il{{ $quantite > 1 ? 's' : '' }} ont ete envoye{{ $quantite > 1 ? 's' : '' }} par email a <strong>{{ $ticket->email_acheteur }}</strong>
+                                {{ $quantite > 1 ? "Vos {$quantite} tickets ont été générés avec succès." : 'Votre ticket a été généré avec succès.' }}<br>
+                                {{ $quantite > 1 ? 'Ils ont été envoyés par email à' : 'Il a été envoyé par email à' }} <strong>{{ $ticket->email_acheteur }}</strong>
                             </p>
                         </div>
 
