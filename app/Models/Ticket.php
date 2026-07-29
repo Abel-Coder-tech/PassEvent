@@ -92,7 +92,7 @@ class Ticket extends Model
     public static function genererCodeSecurise(): string
     {
         do {
-            $code = 'PASS' . strtoupper(Str::random(10));
+            $code = 'PAX' . strtoupper(Str::random(10));
         } while (self::where('code_unique', $code)->exists());
         return $code;
     }

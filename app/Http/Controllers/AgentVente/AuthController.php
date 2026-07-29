@@ -210,6 +210,11 @@ class AuthController extends Controller
 
         $ticket->increment('download_count');
 
+        $reste = 3 - $ticket->download_count;
+        if ($reste === 1) {
+            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les 3 autorisés.");
+        }
+
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));

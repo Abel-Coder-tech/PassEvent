@@ -58,7 +58,7 @@ class PaiementController extends Controller
             }
 
             return redirect()->route('confirmation.show', $ticket->id)
-                ->with('success', 'Participation confirmee ! Votre billet a ete envoye par email.');
+                ->with('success', 'Participation confirmée ! Votre billet a été envoyé par email.');
         }
 
         // Calcule le montant total pour les transactions groupées

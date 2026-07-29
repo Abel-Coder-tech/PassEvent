@@ -79,7 +79,7 @@ class EvenementPublicController extends Controller
         }
 
         if (($evenement->date_fin_vente && $evenement->date_fin_vente->isPast()) || $evenement->date_event->isPast()) {
-            return back()->with('error', 'La vente est cloturee pour cet evenement.'); // Vente expirée
+            return back()->with('error', 'La vente est clôturée pour cet événement.'); // Vente expirée
         }
 
         $estGratuit = $evenement->gratuit || $request->boolean('gratuit');
@@ -219,14 +219,14 @@ class EvenementPublicController extends Controller
             try {
                 Mail::to($tickets[0]->email_acheteur)->send(new \App\Mail\TicketEmail($tickets));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Email gratuit non envoye : ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Email gratuit non envoyé : ' . $e->getMessage());
             }
             return redirect()->route('confirmation.show', $tickets[0]->id)
-                ->with('success', $quantite > 1 ? "{$quantite} places reservées." : 'Votre place est reservée.');
+                ->with('success', $quantite > 1 ? "{$quantite} places réservées." : 'Votre place est réservée.');
         }
 
         return redirect()->route('paiement.show', $tickets[0]->id)
-            ->with('success', $quantite > 1 ? "{$quantite} places reservées. Finalisez le paiement." : 'Votre place est reservée. Finalisez le paiement.');
+            ->with('success', $quantite > 1 ? "{$quantite} places réservées. Finalisez le paiement." : 'Votre place est réservée. Finalisez le paiement.');
     }
 
     // Permet à un utilisateur de contacter l'organisateur d'un événement

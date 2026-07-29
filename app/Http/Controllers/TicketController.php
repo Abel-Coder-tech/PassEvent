@@ -76,6 +76,11 @@ class TicketController extends Controller
 
         $ticket->increment('download_count', 1, []); // Incrémente le compteur
 
+        $reste = 3 - $ticket->download_count;
+        if ($reste === 1) {
+            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les 3 autorisés.");
+        }
+
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = Ticket::logoBlancDataUri();
 
@@ -93,7 +98,7 @@ class TicketController extends Controller
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
 
         if ($ticket->statut_paiement !== 'payé') {
-            return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirme.'); // Paiement requis
+            return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.'); // Paiement requis
         }
 
         if ($ticket->download_count >= 3) {
@@ -101,6 +106,11 @@ class TicketController extends Controller
         }
 
         $ticket->increment('download_count', 1, []);
+
+        $reste = 3 - $ticket->download_count;
+        if ($reste === 1) {
+            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les 3 autorisés.");
+        }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = Ticket::logoBlancDataUri();
