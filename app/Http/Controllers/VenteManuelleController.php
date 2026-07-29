@@ -147,7 +147,7 @@ class VenteManuelleController extends Controller
                     'date_achat' => now(),
                 ]);
                 $ticket->update([
-                    'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
+                    'code_unique' => Ticket::genererCodeSecurise(),
                 ]);
                 $ticket->load('evenement');
                 $tickets[] = $ticket;
@@ -202,7 +202,7 @@ class VenteManuelleController extends Controller
                     'date_achat' => now(),
                 ]);
                 $ticket->update([
-                    'code_unique' => 'PASS' . $evenement->user_id . '26' . $ticket->id,
+                    'code_unique' => Ticket::genererCodeSecurise(),
                 ]);
                 $ticket->load('evenement');
                 $tickets[] = $ticket;
@@ -259,7 +259,7 @@ class VenteManuelleController extends Controller
                 'date_achat' => now(),
             ]);
             $t->update([
-                'code_unique' => 'PASS' . $evenement->user_id . '26' . $t->id,
+                'code_unique' => Ticket::genererCodeSecurise(),
             ]);
             $tickets[] = $t;
         }

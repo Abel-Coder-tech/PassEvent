@@ -196,7 +196,7 @@ class EvenementPublicController extends Controller
             ]);
 
             $t->update([
-                'code_unique' => 'PASS' . $evenement->user_id . '26' . $t->id, // Code unique basé sur l'ID du ticket
+                'code_unique' => Ticket::genererCodeSecurise(),
             ]);
 
             $tickets[] = $t;

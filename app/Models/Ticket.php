@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Ticket extends Model
 {
@@ -86,6 +87,14 @@ class Ticket extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
+    }
+
+    public static function genererCodeSecurise(): string
+    {
+        do {
+            $code = 'PASS' . strtoupper(Str::random(10));
+        } while (self::where('code_unique', $code)->exists());
+        return $code;
     }
 
     public static function logoBlancDataUri(): string
