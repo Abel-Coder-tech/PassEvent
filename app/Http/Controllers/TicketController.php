@@ -80,7 +80,7 @@ class TicketController extends Controller
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 300, 560], 'portrait');
+        $pdf->setPaper([0, 0, 287.43, 545.39], 'portrait');
 
         $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
@@ -106,7 +106,7 @@ class TicketController extends Controller
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 300, 560], 'portrait');
+        $pdf->setPaper([0, 0, 287.43, 545.39], 'portrait');
 
         $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
