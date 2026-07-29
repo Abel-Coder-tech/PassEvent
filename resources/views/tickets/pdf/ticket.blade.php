@@ -5,10 +5,10 @@
     <title>Billet - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
     <style>
         @page { margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; }
         body {
             font-family: 'DejaVu Sans';
-            margin: 0; padding: 5pt;
-            background: #f5f3f0;
+            margin: 0; padding: 0;
             color: #1d1d1f;
             font-size: 10px;
             line-height: 1.4;
@@ -18,16 +18,14 @@
          }
         .ticket {
             width: 100%;
+            height: 100%;
             margin: 0;
             background: #fff;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         .header { 
             background: #542680; 
-            padding: 20px 24px; 
+            padding: 14px 20px; 
         }
 
         .header-title { 
@@ -98,9 +96,10 @@
         }
         .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; }
 
-        .footer { background: #542680; padding: 10px 20px; }
+        .footer { background: #542680; padding: 14px 20px; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo svg { display: block; }
+        .footer-logo img { display: block; }
 
         hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
     </style>
@@ -176,7 +175,7 @@
         </div>
 
         <div class="note">
-            <p><span style="font-size:12px; justify-content: center; text-align: center;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
+            <p><span style="font-size:12px; text-align: center;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
         </div>
 
     </div>
@@ -186,8 +185,13 @@
         <tr>
             <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
-                    <svg width="110" height="28" viewBox="0 0 110 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <text x="0" y="20" font-family="DejaVu Sans" font-size="16" font-weight="bold" fill="#FFFFFF">PaxEvent</text>
+                    <svg width="110" height="28" viewBox="0 0 110 28" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="toWhite">
+                                <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+                            </filter>
+                        </defs>
+                        <image href="{{ $logoDataUri }}" width="110" height="28" filter="url(#toWhite)" preserveAspectRatio="xMidYMid meet"/>
                     </svg>
                 </div>
             </td>
