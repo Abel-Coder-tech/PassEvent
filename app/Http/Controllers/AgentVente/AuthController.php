@@ -213,7 +213,7 @@ class AuthController extends Controller
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
+        $pdf->setPaper([0, 0, 283.46, 425.20], 'portrait');
         $filename = 'ticket-' . $ticket->code_unique . '.pdf';
 
         return $pdf->download($filename);
