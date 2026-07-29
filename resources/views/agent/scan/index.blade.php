@@ -240,7 +240,7 @@ function submitScan(code) {
                 '<i class="bi bi-check-circle-fill" style="font-size:2.5rem;color:#28a745;"></i>' +
                 '<h5 class="mt-2 mb-1 text-success">Ticket validé !</h5>' +
                 '<p class="mb-1 fw-semibold">' + escapeHtml(data.ticket?.nom || '') + '</p>' +
-                '<small class="text-muted">' + escapeHtml(data.ticket?.categorie || '') + ' | ' + escapeHtml(data.ticket?.montant || '') + '</small>' +
+                '<small class="text-muted">' + escapeHtml(data.ticket?.nom_tarif || '') + ' | ' + escapeHtml(data.ticket?.montant || '') + '</small>' +
                 '</div>';
         } else {
             let extra = '';

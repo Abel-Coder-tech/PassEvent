@@ -238,7 +238,7 @@
 
                         <form id="manualScanForm">
                             <div class="mb-3">
-                                <input type="text" id="codeInput" name="code" class="form-control code-input py-3 text-center" placeholder="EX: PASS-ABC123" autocomplete="off" required>
+                                <input type="text" id="codeInput" name="code" class="form-control code-input py-3 text-center" placeholder="EX: PAX-ABC123" autocomplete="off" required>
                             </div>
                             <button type="submit" class="btn btn-vert w-100 py-3" id="btnVerify" style="border-radius: 8px;">
                                 <i class="bi bi-search me-1"></i> Vérifier le ticket
@@ -457,8 +457,7 @@ function showResult(data) {
             ${t.code ? `<div class="col-12"><strong>Code:</strong> <code>${escapeHtml(t.code)}</code></div>` : ''}
             ${t.nom ? `<div class="col-md-6"><strong>Acheteur:</strong> ${escapeHtml(t.nom)}</div>` : ''}
             ${t.evenement ? `<div class="col-md-6"><strong>Événement:</strong> ${escapeHtml(t.evenement)}</div>` : ''}
-            ${t.categorie ? `<div class="col-md-4"><strong>Catégorie:</strong> ${escapeHtml(t.categorie)}</div>` : ''}
-            ${t.type ? `<div class="col-md-4"><strong>Type:</strong> ${escapeHtml(t.type)}</div>` : ''}
+            ${t.nom_tarif ? `<div class="col-md-4"><strong>Tarif:</strong> ${escapeHtml(t.nom_tarif)}</div>` : ''}
             ${t.montant ? `<div class="col-md-4"><strong>Montant:</strong> ${escapeHtml(t.montant)}</div>` : ''}
             ${t.date_scan ? `<div class="col-12"><strong>Scanné le:</strong> ${escapeHtml(t.date_scan)}</div>` : ''}
             ${t.date_event ? `<div class="col-12"><strong>Date événement:</strong> ${escapeHtml(t.date_event)}</div>` : ''}
