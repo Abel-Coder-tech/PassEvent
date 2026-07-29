@@ -18,8 +18,10 @@
          }
         .ticket {
             width: 100%;
+            min-height: 100%;
             margin: 0;
             background: #fff;
+            position: relative;
         }
 
         .header { 
@@ -45,7 +47,7 @@
         }
 
         .body { 
-            padding: 14px 20px 10px; 
+            padding: 14px 20px 70px; 
         }
 
         .event-meta {
@@ -95,7 +97,7 @@
         }
         .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; text-align: center; }
 
-        .footer { background: #542680; padding: 14px 20px; margin-top: 20px; }
+        .footer { background: #542680; padding: 14px 20px; position: absolute; bottom: 0; width: 100%; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo img { display: block; }
 

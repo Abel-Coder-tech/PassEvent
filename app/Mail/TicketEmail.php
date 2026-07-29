@@ -36,7 +36,7 @@ class TicketEmail extends Mailable
             $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
 
             $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-            $pdf->setPaper([0, 0, 283.46, 425.20], 'portrait');
+            $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
 
             $this->pdfs[] = [
                 'content' => $pdf->output(),
