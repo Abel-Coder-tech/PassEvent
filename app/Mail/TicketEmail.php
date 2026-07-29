@@ -36,7 +36,7 @@ class TicketEmail extends Mailable
             $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
 
             $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-            $pdf->setPaper('a4', 'portrait');
+            $pdf->setPaper([0, 0, 300, 560], 'portrait');
 
             $this->pdfs[] = [
                 'content' => $pdf->output(),

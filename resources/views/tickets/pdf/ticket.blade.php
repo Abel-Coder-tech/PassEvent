@@ -7,7 +7,7 @@
         @page { margin: 0; padding: 0; }
         body {
             font-family: 'DejaVu Sans';
-            margin: 0; padding: 0;
+            margin: 0; padding: 5pt;
             background: #f5f3f0;
             color: #1d1d1f;
             font-size: 10px;
@@ -17,8 +17,8 @@
             font-family: 'DejaVu Sans';
          }
         .ticket {
-            width: 380px;
-            margin: 20px auto;
+            width: 100%;
+            margin: 0;
             background: #fff;
             border-radius: 14px;
             overflow: hidden;
@@ -79,8 +79,6 @@
             font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
-            font-family: 'DejaVu Sans Mono', monospace;
-        
         }
 
         .qr-block { text-align: center; margin: 16px 0 10px; }
@@ -102,7 +100,7 @@
 
         .footer { background: #542680; padding: 14px 24px; }
         .footer-text { color: #fff; font-size: 9px; }
-        .footer-logo img { height: 28px; display: block; }
+        .footer-logo svg { display: block; }
 
         hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
     </style>
@@ -156,7 +154,7 @@
         </table>
 
         @if($ticket->montant <= 0)
-        <div style="text-align:center;padding:3px 0;color:#542680;font-weight:700;font-size:12px; font-family: 'DejaVu Sans Mono', monospace; letter-spacing:1px;text-transform:uppercase;">
+        <div         style="text-align:center;padding:3px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
             Entrée gratuite
         </div>
         @endif
@@ -188,7 +186,9 @@
         <tr>
             <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
-                    <img src="{{ $logoDataUri ?? '' }}" alt="PaxEvent">
+                    <svg width="110" height="28" viewBox="0 0 110 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <text x="0" y="20" font-family="DejaVu Sans" font-size="16" font-weight="bold" fill="#FFFFFF">PaxEvent</text>
+                    </svg>
                 </div>
             </td>
             <td style="text-align:left;vertical-align:middle;padding-left:10px;">
