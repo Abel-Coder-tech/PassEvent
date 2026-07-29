@@ -76,7 +76,7 @@ class TicketController extends Controller
 
         $ticket->increment('download_count', 1, []); // Incrémente le compteur
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
@@ -102,7 +102,7 @@ class TicketController extends Controller
 
         $ticket->increment('download_count', 1, []);
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));

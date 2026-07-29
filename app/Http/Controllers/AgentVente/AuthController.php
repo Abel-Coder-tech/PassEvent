@@ -210,7 +210,7 @@ class AuthController extends Controller
 
         $ticket->increment('download_count');
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 200);
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper([0, 0, 287.43, 545.39], 'portrait');

@@ -35,20 +35,20 @@
         }
 
         .header-title .pass { 
-            font-size: 20px; 
+            font-size: 18px; 
             font-weight: 400; 
             letter-spacing: 2px; 
             opacity: 0.8; 
         }
 
         .header-title .event-name { 
-            font-size: 15px; 
+            font-size: 14px; 
             font-weight: 800; 
             margin-top: 2px; 
         }
 
         .body { 
-            padding: 20px 24px 16px; 
+            padding: 14px 20px 10px; 
         }
 
         .event-meta {
@@ -68,37 +68,37 @@
 
         .code-pass {
             text-align: center;
-            margin: 12px 0 14px;
-            padding: 10px;
+            margin: 8px 0 10px;
+            padding: 8px;
             background: #f8f6f9;
             border-radius: 8px;
         }
-        .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+        .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; }
         .code-pass .value {
-            font-size: 26px; 
+            font-size: 24px; 
             font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
         }
 
-        .qr-block { text-align: center; margin: 16px 0 10px; }
+        .qr-block { text-align: center; margin: 10px 0 6px; }
         .qr-box {
             display: inline-block; padding: 8px;
             border: 3px solid #542680; border-radius: 12px;
         }
-        .qr-box img { width: 200px; height: 200px; display: block; }
+        .qr-box img { width: 170px; height: 170px; display: block; }
         .qr-label { font-size: 7px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
 
         .note {
             background: #fff8e1;
             border: 1px solid #ffe082;
             border-radius: 8px;
-            padding: 10px 14px;
-            margin: 12px 0 0;
+            padding: 8px 12px;
+            margin: 8px 0 0;
         }
-        .note p { font-size: 9px; color: #666; margin: 0; line-height: 1.5; }
+        .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; }
 
-        .footer { background: #542680; padding: 14px 24px; }
+        .footer { background: #542680; padding: 10px 20px; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo svg { display: block; }
 
@@ -176,7 +176,7 @@
         </div>
 
         <div class="note">
-            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce billet ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
+            <p><span style="font-size:12px; justify-content: center; text-align: center;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
         </div>
 
     </div>
