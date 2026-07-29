@@ -103,6 +103,8 @@ class Ticket extends Model
         $dst = imagecreatetruecolor($w, $h);
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
+        $trans = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefill($dst, 0, 0, $trans);
         for ($x = 0; $x < $w; $x++) {
             for ($y = 0; $y < $h; $y++) {
                 $rgba = imagecolorat($src, $x, $y);

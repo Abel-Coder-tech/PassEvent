@@ -183,10 +183,10 @@
         <tr>
             <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
-                    <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height: 28px; width: auto; display: block;">
+                    <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height: 28px; display: block;">
                 </div>
             </td>
-            <td style="text-align:left;vertical-align:middle;padding-left:10px;">
+            <td style="text-align:right;vertical-align:middle;">
                 <div class="footer-text">Billetterie simple et rapide pour vos événements</div>
             </td>
         </tr>
