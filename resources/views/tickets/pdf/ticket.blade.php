@@ -18,9 +18,10 @@
          }
         .ticket {
             width: 100%;
-            height: 100%;
+            min-height: 100%;
             margin: 0;
             background: #fff;
+            position: relative;
         }
 
         .header { 
@@ -46,7 +47,7 @@
         }
 
         .body { 
-            padding: 14px 20px 10px; 
+            padding: 14px 20px 70px; 
         }
 
         .event-meta {
@@ -96,9 +97,8 @@
         }
         .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; }
 
-        .footer { background: #542680; padding: 14px 20px; }
+        .footer { background: #542680; padding: 14px 20px; position: absolute; bottom: 0; width: 100%; }
         .footer-text { color: #fff; font-size: 9px; }
-        .footer-logo svg { display: block; }
         .footer-logo img { display: block; }
 
         hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
@@ -185,14 +185,7 @@
         <tr>
             <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
-                    <svg width="110" height="28" viewBox="0 0 110 28" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <filter id="toWhite">
-                                <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
-                            </filter>
-                        </defs>
-                        <image href="{{ $logoDataUri }}" width="110" height="28" filter="url(#toWhite)" preserveAspectRatio="xMidYMid meet"/>
-                    </svg>
+                    <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height: 28px; width: auto; display: block;">
                 </div>
             </td>
             <td style="text-align:left;vertical-align:middle;padding-left:10px;">

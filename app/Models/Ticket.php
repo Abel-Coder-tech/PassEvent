@@ -87,4 +87,58 @@ class Ticket extends Model
     {
         return $this->hasMany(Notification::class);
     }
+
+    public static function logoBlancDataUri(): string
+    {
+        $path = public_path('images/logo-ticket.png');
+        if (!file_exists($path)) {
+            return '';
+        }
+        $src = @imagecreatefrompng($path);
+        if (!$src) {
+            return 'data:image/png;base64,' . base64_encode(file_get_contents($path));
+        }
+        $w = imagesx($src);
+        $h = imagesy($src);
+        $dst = imagecreatetruecolor($w, $h);
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        for ($x = 0; $x < $w; $x++) {
+            for ($y = 0; $y < $h; $y++) {
+                $rgba = imagecolorat($src, $x, $y);
+                $alpha = ($rgba >> 24) & 0x7F;
+                $alpha = 127 - $alpha;
+                $a = 127 - round($alpha * 127 / 255);
+                if ($a < 127) {
+                    $color = imagecolorallocatealpha($dst, 255, 255, 255, $a);
+                    imagesetpixel($dst, $x, $y, $color);
+                }
+            }
+        }
+        ob_start();
+        imagepng($dst);
+        $data = ob_get_clean();
+        imagedestroy($src);
+        imagedestroy($dst);
+        return 'data:image/png;base64,' . base64_encode($data);
+    }
+
+    public function estimerHauteurPdf(): float
+    {
+        $px = 0;
+        $px += 66;  // header
+        $px += 84;  // body padding (14 top + 70 bottom pour footer absolu)
+        $px += 31;  // event-meta
+        $rows = 2;
+        if ($this->montant > 0) $rows += 1;
+        if ($this->montant_reduction > 0) $rows += 1;
+        $px += $rows * 20;
+        if ($this->statut_paiement === 'payé') $px += 69;
+        if ($this->montant <= 0) $px += 18;
+        $px += 8;   // hr
+        $px += 221; // qr-block
+        $px += 44;  // note
+        $px += 56;  // footer
+        return $px * 0.75 + 10;
+    }
 }

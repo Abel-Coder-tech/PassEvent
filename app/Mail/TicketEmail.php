@@ -33,10 +33,10 @@ class TicketEmail extends Mailable
             $ticket->load('evenement', 'tarif');
 
             $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-            $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo_paxevent.png')));
+            $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
 
             $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-            $pdf->setPaper([0, 0, 287.43, 545.39], 'portrait');
+            $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
 
             $this->pdfs[] = [
                 'content' => $pdf->output(),

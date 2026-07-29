@@ -77,10 +77,10 @@ class TicketController extends Controller
         $ticket->increment('download_count', 1, []); // Incrémente le compteur
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
+        $logoDataUri = Ticket::logoBlancDataUri();
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 287.43, 545.39], 'portrait');
+        $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
 
         $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
@@ -103,10 +103,10 @@ class TicketController extends Controller
         $ticket->increment('download_count', 1, []);
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-        $logoDataUri = 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/logo-ticket.png')));
+        $logoDataUri = Ticket::logoBlancDataUri();
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 287.43, 545.39], 'portrait');
+        $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
 
         $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
