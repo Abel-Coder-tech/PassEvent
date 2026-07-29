@@ -125,7 +125,7 @@ class Ticket extends Model
     {
         $px = 0;
         $px += 66;  // header
-        $px += 84;  // body padding (14 top + 70 bottom pour footer absolu)
+        $px += 24;  // body padding (14 top + 10 bottom)
         $px += 31;  // event-meta
         $rows = 2;
         if ($this->montant > 0) $rows += 1;
