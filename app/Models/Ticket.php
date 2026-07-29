@@ -124,19 +124,20 @@ class Ticket extends Model
     public function estimerHauteurPdf(): float
     {
         $px = 0;
-        $px += 66;  // header
+        $px += 66;  // header (14+14 padding + ~18 titre + ~14 event-name + 2 gap)
         $px += 24;  // body padding (14 top + 10 bottom)
-        $px += 31;  // event-meta
+        $px += 26;  // event-meta (~15 text + 6 pad-bottom + 5 margin-bottom)
         $rows = 2;
         if ($this->montant > 0) $rows += 1;
         if ($this->montant_reduction > 0) $rows += 1;
-        $px += $rows * 20;
-        if ($this->statut_paiement === 'payé') $px += 69;
+        $px += $rows * 22; // info-table rows: padding(5+5) + line-height(~12)
+        $px += 10;          // info-table margin-bottom
+        if ($this->statut_paiement === 'payé') $px += 71; // code-pass: padding(8+8) + label(8+3) + value(24) + margin-bottom(10) + pad-top(8) collapsed
         if ($this->montant <= 0) $px += 18;
-        $px += 8;   // hr
+        $px += 8;   // hr margin-bottom only (top margin collapsed)
         $px += 221; // qr-block
-        $px += 44;  // note
-        $px += 56;  // footer
-        return $px * 0.75 + 10;
+        $px += 46;  // note (8 margin-top + 16 padding + ~22 text)
+        $px += 56;  // footer (28 padding + 28 content)
+        return $px * 0.75 + 15;
     }
 }
