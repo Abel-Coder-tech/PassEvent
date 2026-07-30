@@ -56,7 +56,7 @@
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
                         $prixDernier = $evenement->tarifs->min('prix');
-                        $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast();
+                        $venteCloturee = $evenement->ventes_fermees;
                     @endphp
                     <div class="ev-grid-col">
                         <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">

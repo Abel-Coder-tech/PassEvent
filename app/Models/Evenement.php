@@ -22,18 +22,18 @@ class Evenement extends Model
         'categorie',
         'capacite',
         'quota_vendu',
-        'date_fin_vente',
         'image',
         'statut',
         'gratuit',
+        'ventes_fermees',
     ];
 
     protected function casts(): array
     {
         return [
             'date_event' => 'datetime',
-            'date_fin_vente' => 'datetime',
             'gratuit' => 'boolean',
+            'ventes_fermees' => 'boolean',
         ];
     }
 

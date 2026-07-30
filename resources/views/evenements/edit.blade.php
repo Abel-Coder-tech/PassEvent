@@ -75,11 +75,7 @@
                         <input type="number" class="form-control @error('capacite') is-invalid @enderror" id="capacite" name="capacite" value="{{ old('capacite', $evenement->capacite) }}" min="1" required>
                         @error('capacite') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-12 col-md-6 mb-3">
-                        <label for="date_fin_vente" class="form-label fw-semibold">Date fin de vente</label>
-                        <input type="datetime-local" class="form-control @error('date_fin_vente') is-invalid @enderror" id="date_fin_vente" name="date_fin_vente" value="{{ old('date_fin_vente', $evenement->date_fin_vente?->format('Y-m-d\TH:i')) }}">
-                        @error('date_fin_vente') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+
                 </div>
 
                 <div class="mb-3">

@@ -103,11 +103,14 @@
                         @endphp
                         <span class="status-badge {{ $badgeClass }}">{{ ucfirst($evenement->statut) }}</span>
                     </div>
-                    @if($evenement->date_fin_vente)
-                        <div class="col-md-6 mb-3">
-                            <strong>Fin de vente :</strong> {{ $evenement->date_fin_vente->format('d/m/Y à H:i') }}
-                        </div>
-                    @endif
+                    <div class="col-md-6 mb-3">
+                        <strong>Ventes :</strong>
+                        @if($evenement->ventes_fermees)
+                            <span class="badge bg-danger">Fermées</span>
+                        @else
+                            <span class="badge bg-success">Ouvertes</span>
+                        @endif
+                    </div>
                 </div>
                 @if($evenement->description)
                     <div class="mt-3">
@@ -183,6 +186,28 @@
                     @csrf
                     <button type="submit" class="btn btn-vert btn-sm w-100" style="border-radius: 8px;">
                         <i class="bi bi-plus-lg me-1"></i> Générer un code d'accès
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel-card mb-4">
+            <div class="panel-card-header">
+                <h5><i class="bi bi-toggle-on me-2" style="color: var(--violet);"></i>Gestion des ventes</h5>
+            </div>
+            <div class="panel-card-body">
+                <p class="mb-2" style="font-size:0.85rem;">
+                    @if($evenement->ventes_fermees)
+                        <span class="badge bg-danger">Ventes fermées</span>
+                    @else
+                        <span class="badge bg-success">Ventes ouvertes</span>
+                    @endif
+                </p>
+                <form action="{{ route('admin.evenements.fermer-vente', $evenement->id) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn w-100 py-2 text-white fw-semibold" style="border-radius:8px; background: {{ $evenement->ventes_fermees ? 'var(--vert)' : 'var(--danger)' }};">
+                        <i class="bi {{ $evenement->ventes_fermees ? 'bi-unlock' : 'bi-lock' }} me-1"></i>
+                        {{ $evenement->ventes_fermees ? 'Rouvrir les ventes' : 'Clôturer les ventes' }}
                     </button>
                 </form>
             </div>

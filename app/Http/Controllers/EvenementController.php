@@ -64,7 +64,6 @@ class EvenementController extends Controller
             'categorie' => 'required',
             'autre_categorie' => 'nullable|string|max:255',
             'capacite' => 'required|integer|min:1',
-            'date_fin_vente' => 'nullable|date|after:now|before_or_equal:date_event',
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié',
             'gratuit' => 'nullable|boolean',
@@ -95,7 +94,6 @@ class EvenementController extends Controller
             'capacite.required' => 'La capacité est obligatoire.',
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
-            'date_fin_vente.after' => 'La date de fin de vente doit être dans le futur.',
             'image.image' => 'Le fichier doit être une image.',
             'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
             'statut.required' => 'Le statut est obligatoire.',
@@ -269,7 +267,6 @@ class EvenementController extends Controller
             'categorie' => 'required',
             'autre_categorie' => 'nullable|string|max:255',
             'capacite' => 'required|integer|min:1',
-            'date_fin_vente' => 'nullable|date|before_or_equal:date_event',
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié',
             'gratuit' => 'nullable|boolean',
@@ -285,7 +282,6 @@ class EvenementController extends Controller
             'capacite.required' => 'La capacité est obligatoire.',
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
-            'date_fin_vente.before_or_equal' => 'La date de fin de vente doit être antérieure ou égale à la date de l\'événement.',
             'image.image' => 'Le fichier doit être une image.',
             'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
             'statut.required' => 'Le statut est obligatoire.',
@@ -310,6 +306,23 @@ class EvenementController extends Controller
 
         return redirect()->route('admin.evenements.index')
             ->with('success', 'Événement modifié avec succès.');
+    }
+
+    // Bascule la fermeture des ventes
+    public function fermerVente(Evenement $evenement)
+    {
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
+        $evenement->update([
+            'ventes_fermees' => !$evenement->ventes_fermees,
+        ]);
+
+        $message = $evenement->ventes_fermees
+            ? 'Les ventes sont désormais fermées pour cet événement.'
+            : 'Les ventes sont désormais rouvertes pour cet événement.';
+
+        return redirect()->route('admin.evenements.show', $evenement->id)
+            ->with('success', $message);
     }
 
     // Supprime définitivement un événement

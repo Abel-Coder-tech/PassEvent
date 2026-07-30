@@ -65,7 +65,7 @@ class EvenementPublicController extends Controller
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
         $estComplet = $placesRestantes <= 0; // Vérifie la disponibilité
-        $venteCloturee = $evenement->date_fin_vente && $evenement->date_fin_vente->isPast(); // Date limite dépassée
+        $venteCloturee = $evenement->ventes_fermees; // Fermeture manuelle par l'organisateur
         $evenementPasse = $evenement->date_event->isPast();
 
         return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse'));
@@ -78,7 +78,7 @@ class EvenementPublicController extends Controller
             abort(404);
         }
 
-        if (($evenement->date_fin_vente && $evenement->date_fin_vente->isPast()) || $evenement->date_event->isPast()) {
+        if ($evenement->ventes_fermees || $evenement->date_event->isPast()) {
             return back()->with('error', 'La vente est clôturée pour cet événement.'); // Vente expirée
         }
 

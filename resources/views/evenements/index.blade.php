@@ -114,6 +114,9 @@
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="fw-bold mb-0" style="font-size: 1.05rem;">{{ $evenement->titre }}</h5>
                         <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                        @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
+                            <span class="badge ms-2" style="font-size:0.7rem; {{ $evenement->ventes_fermees ? 'background:var(--danger);' : 'background:var(--vert);' }}">{{ $evenement->ventes_fermees ? 'Ventes fermées' : 'Ventes ouvertes' }}</span>
+                        @endif
                     </div>
 
                     <!-- Date + Location -->
@@ -149,7 +152,15 @@
                     </div>
 
                     <!-- Action buttons -->
-                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                        @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
+                            <form action="{{ route('admin.evenements.fermer-vente', $evenement->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; {{ $evenement->ventes_fermees ? 'background:var(--vert);color:#fff;border:none;' : 'border:1px solid var(--danger);color:var(--danger);background:transparent;' }}" title="{{ $evenement->ventes_fermees ? 'Rouvrir les ventes' : 'Clôturer les ventes' }}">
+                                    <i class="bi {{ $evenement->ventes_fermees ? 'bi-unlock' : 'bi-lock' }}"></i>
+                                </button>
+                            </form>
+                        @endif
                         <a href="{{ route('admin.evenements.show', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;">
                             <i class="bi bi-eye"></i>
                         </a>

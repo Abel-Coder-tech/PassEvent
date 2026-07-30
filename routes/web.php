@@ -247,6 +247,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/scan-codes', [EvenementController::class, 'scanCodesIndex'])->name('scan-codes.index');
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
+        Route::post('/evenements/{evenement}/fermer-vente', [EvenementController::class, 'fermerVente'])->name('evenements.fermer-vente');
 
         Route::prefix('agents')->name('agents.')->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');
