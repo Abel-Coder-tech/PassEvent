@@ -394,7 +394,7 @@
                         <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">
                             <div class="ev-img">
                                 @if($evenement->image)
-                                    <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}">
+                                    <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=ev-img-placeholder><i class=bi bi-calendar-event></i></div>'">
                                 @else
                                     <div class="ev-img-placeholder">
                                         <i class="bi bi-calendar-event"></i>
