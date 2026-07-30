@@ -17,6 +17,7 @@
     <meta property="og:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
     <meta property="og:description" content="@yield('og_description','Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="@yield('og_url', url()->current())">
     <meta property="og:image" content="@yield('og_image', asset('images/og-image.jpg'))">
     <meta property="og:image:width" content="5001">
     <meta property="og:image:height" content="2626">
