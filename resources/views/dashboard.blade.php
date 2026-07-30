@@ -102,7 +102,7 @@
                 <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-wallet2" style="color:var(--vert);"></i></div>
                 <div class="metric-label">Net retirable (Mobile)</div>
                 <div class="metric-value" style="font-size:1.3rem;color:var(--vert);">{{ number_format($retirable, 0, ',', ' ') }}</div>
-                <div class="metric-subtitle">FCFA après commission</div>
+                <div class="metric-subtitle">FCFA après commission et retraits</div>
             </div>
         </div>
     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Evenement;
 use App\Models\Ticket;
 use App\Models\CodePromo;
+use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +63,11 @@ class DashboardController extends Controller
         $commission = round($recettesTotales * $commissionPct / 100, 2);
         $recettesNettes = $recettesTotales - $commission;
 
-        $retirable = max(0, $mobileRecettes - $commission); // Seuls les paiements mobiles sont retirable
+        $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
+            ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
+            ->sum('montant');
+
+        $retirable = max(0, $mobileRecettes - $commission - $totalRetraits); // Seuls les paiements mobiles sont retirable
 
         // Taux de scan (tickets utilisés / tickets vendus)
         $ticketsScannes = Ticket::whereIn('evenement_id', $evenementsIds)
