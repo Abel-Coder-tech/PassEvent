@@ -8,7 +8,7 @@
     $categories = ['Festival', 'Concert', 'Conférence', 'Soirée'];
 @endphp
 
-@section('og_image', asset('images/og-image.jpg'))
+@section('og_image', asset('images/og-image.png'))
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>

@@ -18,7 +18,7 @@
     <meta property="og:description" content="@yield('og_description','Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     <meta property="og:type" content="website">
     <meta property="og:url" content="@yield('og_url', url()->current())">
-    <meta property="og:image" content="@yield('og_image', asset('images/og-image.jpg'))">
+    <meta property="og:image" content="@yield('og_image', asset('images/og-image.png'))">
     <meta property="og:image:width" content="5001">
     <meta property="og:image:height" content="2626">
 
@@ -28,7 +28,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
     <meta name="twitter:description" content="@yield('og_description','Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
-    <meta name="twitter:image" content="@yield('og_image', asset('images/og-image.jpg'))">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/og-image.png'))">
 
     @stack('meta')
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
