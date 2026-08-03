@@ -32,9 +32,6 @@ class User extends Authenticatable
         'notif_email_ticket',
         'notif_email_paiement',
         'notif_scan',
-        'fedapay_public_key',
-        'fedapay_secret_key',
-        'fedapay_active',
         'code_acces_scan',
         'pseudo',
         'statut',
@@ -57,7 +54,6 @@ class User extends Authenticatable
             'notif_email_ticket' => 'boolean',
             'notif_email_paiement' => 'boolean',
             'notif_scan' => 'boolean',
-            'fedapay_active' => 'boolean',
         ];
     }
 

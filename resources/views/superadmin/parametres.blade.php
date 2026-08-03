@@ -138,7 +138,11 @@
                 </div>
                 <div class="d-flex justify-content-between py-2">
                     <span>FedaPay</span>
-                    <span class="sa-badge sa-badge-success">Configuré</span>
+                    @if(config('services.fedapay.public_key') && config('services.fedapay.secret_key'))
+                        <span class="sa-badge sa-badge-success">Configuré</span>
+                    @else
+                        <span class="sa-badge sa-badge-danger">Non configuré</span>
+                    @endif
                 </div>
             </div>
         </div>

@@ -100,24 +100,6 @@ class ParametresController extends Controller
         return back()->with('success', 'Preferences de notification mises a jour.');
     }
 
-    // Configure les clés API FedaPay pour les paiements
-    public function paiement(Request $request)
-    {
-        $validated = $request->validate([
-            'fedapay_public_key' => 'nullable|string|max:255',
-            'fedapay_secret_key' => 'nullable|string|max:255',
-            'fedapay_active' => 'boolean',
-        ]);
-
-        Auth::user()->update([
-            'fedapay_public_key' => $validated['fedapay_public_key'] ?: null,
-            'fedapay_secret_key' => $validated['fedapay_secret_key'] ?: null,
-            'fedapay_active' => $request->boolean('fedapay_active'),
-        ]);
-
-        return back()->with('success', 'Configuration FedaPay mise a jour.');
-    }
-
     // Configure le code d'accès scan global
     public function scan(Request $request)
     {

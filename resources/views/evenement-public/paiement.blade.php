@@ -84,7 +84,7 @@
                         @else
                             <div class="alert alert-warning py-2 mb-0" style="border-radius: 10px; font-size: 0.85rem;">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
-                                L'organisateur n'a pas encore configuré sa méthode de paiement.
+                                Le paiement est temporairement indisponible. Réessayez dans quelques minutes.
                             </div>
                         @endif
 

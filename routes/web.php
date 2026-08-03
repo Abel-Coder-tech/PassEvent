@@ -225,7 +225,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/avatar', [ParametresController::class, 'supprimerAvatar'])->name('avatar.delete');
         Route::put('/securite', [ParametresController::class, 'securite'])->name('securite.update');
         Route::put('/notifications', [ParametresController::class, 'notifications'])->name('notifications.update');
-        Route::put('/paiement', [ParametresController::class, 'paiement'])->name('paiement.update');
         Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
         Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
     });
