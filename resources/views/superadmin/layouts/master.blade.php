@@ -290,6 +290,7 @@
         .sa-badge-warning { background: rgba(243,156,18,0.1); color: var(--sa-warning); }
         .sa-badge-info { background: rgba(107,63,160,0.1); color: var(--sa-primary); }
         .sa-badge-secondary { background: rgba(136,152,168,0.1); color: var(--sa-text-muted); }
+        .sa-badge-passed { background: rgba(52,73,94,0.12); color: #2c3e50; }
 
         .sa-activity-item {
             display: flex;

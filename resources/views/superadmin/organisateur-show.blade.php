@@ -154,17 +154,62 @@
                             <option value="toujours" @selected($user->ventes_especes === 'toujours')>Toujours autorisées</option>
                             <option value="jamais" @selected($user->ventes_especes === 'jamais')>Jamais (bloquées)</option>
                         </select>
-                        <div class="form-text" style="font-size:0.75rem;">Vide = règle par défaut (15 % de la capacité en mobile money).</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold mb-1">Commission (%)</label>
                         <input type="number" name="commission_pourcentage" class="sa-form-control" min="0" max="10" step="0.5" value="{{ $user->commission_pourcentage }}" placeholder="Défaut : 10 %">
-                        <div class="form-text" style="font-size:0.75rem;">Vide = commission globale de 10 %. Entre 0 et 10 %.</div>
                     </div>
                     <div class="col-md-4">
                         <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-check-lg"></i> Enregistrer les contrôles</button>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="sa-card mb-4">
+        <div class="sa-card-header">
+            <span><i class="bi bi-shield-exclamation me-2" style="color: var(--sa-danger);"></i>Actions</span>
+            <span class="text-muted" style="font-size:0.8rem;">Modération et communication</span>
+        </div>
+        <div class="sa-card-body">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                @if(in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees']))
+                    <form action="{{ route('superadmin.organisateurs.approuver', $user) }}" method="POST" onsubmit="return confirm('Approuver {{ $user->nom }} ?')">
+                        @csrf
+                        <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-check-lg"></i> Approuver</button>
+                    </form>
+                    <button class="sa-btn sa-btn-warning" onclick="document.getElementById('correctionsModal').style.display='flex'">
+                        <i class="bi bi-pencil-square"></i> Demander des corrections
+                    </button>
+                    <button class="sa-btn sa-btn-danger" onclick="document.getElementById('rejetModal').style.display='flex'">
+                        <i class="bi bi-x-lg"></i> Rejeter
+                    </button>
+                @endif
+                @if($user->statut === 'actif')
+                    <form action="{{ route('superadmin.organisateurs.suspendre', $user) }}" method="POST" onsubmit="return confirm('Suspendre {{ $user->nom }} ? Ses événements seront annulés.')">
+                        @csrf
+                        <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-pause-fill"></i> Suspendre</button>
+                    </form>
+                @endif
+                <form action="{{ route('superadmin.organisateurs.supprimer', $user) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $user->nom }} ? Cette action est irréversible.')">
+                    @csrf
+                    <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
+                </form>
+            </div>
+            <hr style="margin:0.75rem 0;border-color:#eee;">
+            <h6 style="font-size:0.85rem;font-weight:700;margin-bottom:0.5rem;color:var(--sa-primary);">
+                <i class="bi bi-envelope me-1"></i> Envoyer un email
+            </h6>
+            <form action="{{ route('superadmin.organisateurs.email', $user) }}" method="POST">
+                @csrf
+                <div class="mb-2">
+                    <input type="text" name="sujet" class="sa-form-control" placeholder="Sujet" required>
+                </div>
+                <div class="mb-2">
+                    <textarea name="message" class="sa-form-control" rows="3" placeholder="Votre message..." required style="resize:vertical;"></textarea>
+                </div>
+                <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-send"></i> Envoyer</button>
             </form>
         </div>
     </div>
@@ -188,12 +233,15 @@
                             <td>{{ $ev->tickets_vendus }} / {{ $ev->capacite }}</td>
                             <td>{{ number_format($ev->recettes, 0, ',', ' ') }} F</td>
                             <td>
-                                @if($ev->statut === 'publié')
+                                @php $st = $ev->statutEffectif(); @endphp
+                                @if($st === 'passé')
+                                    <span class="sa-badge sa-badge-passed">Passé</span>
+                                @elseif($st === 'publié')
                                     <span class="sa-badge sa-badge-success">Publié</span>
-                                @elseif($ev->statut === 'brouillon')
+                                @elseif($st === 'brouillon')
                                     <span class="sa-badge sa-badge-secondary">Brouillon</span>
                                 @else
-                                    <span class="sa-badge sa-badge-danger">{{ ucfirst($ev->statut) }}</span>
+                                    <span class="sa-badge sa-badge-danger">{{ ucfirst($st) }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -308,6 +356,104 @@
                 @endforelse
             </tbody>
         </table>
+        @if ($historique->hasPages())
+        <div class="p-3 d-flex justify-content-center">{{ $historique->links() }}</div>
+        @endif
     </div>
 </div>
+
+{{-- Modal Rejet --}}
+<div id="rejetModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h5><i class="bi bi-x-circle me-2" style="color:var(--sa-danger);"></i>Rejeter {{ $user->nom }}</h5>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+        </div>
+        <form action="{{ route('superadmin.organisateurs.rejeter', $user) }}" method="POST">
+            @csrf
+            <div class="modal-body">
+                <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">Expliquez le motif du rejet. L'organisateur recevra un email avec cette explication.</p>
+                <textarea name="motif" class="sa-form-control" rows="4" placeholder="Motif du rejet..." required style="resize:vertical;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Annuler</button>
+                <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-x-lg"></i> Rejeter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Corrections --}}
+<div id="correctionsModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h5><i class="bi bi-pencil-square me-2" style="color:var(--sa-warning);"></i>Demander des corrections</h5>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+        </div>
+        <form action="{{ route('superadmin.organisateurs.corrections', $user) }}" method="POST">
+            @csrf
+            <div class="modal-body">
+                <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">Indiquez les modifications nécessaires. L'organisateur recevra un email et pourra corriger son profil.</p>
+                <textarea name="motif" class="sa-form-control" rows="4" placeholder="Détail des corrections à apporter..." required style="resize:vertical;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Annuler</button>
+                <button type="submit" class="sa-btn sa-btn-warning"><i class="bi bi-send"></i> Envoyer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+.modal-box {
+    background: #fff;
+    border-radius: 14px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #eee;
+}
+.modal-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+.modal-close {
+    background: none; border: none;
+    font-size: 1.5rem; cursor: pointer;
+    color: #999; line-height: 1;
+}
+.modal-close:hover { color: #333; }
+.modal-body { padding: 1.25rem; }
+.modal-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+.sa-btn-warning {
+    background: #e0a800; border: none; color: #fff; padding: 0.4rem 0.9rem;
+    border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s;
+}
+.sa-btn-warning:hover { opacity: 0.85; }
+</style>
 @endsection

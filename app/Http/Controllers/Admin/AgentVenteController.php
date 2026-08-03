@@ -53,8 +53,9 @@ class AgentVenteController extends Controller
             ->findOrFail($validated['evenement_id']);
 
         $nbActifs = $evenement->agentsVentes()->where('actif', true)->count();
-        if ($nbActifs >= 2) { // Maximum 2 agents de vente par événement
-            return back()->with('error', "Maximum de 2 agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
+        $limite = $evenement->limiteAgentsVente();
+        if ($limite !== null && $nbActifs >= $limite) {
+            return back()->with('error', "Maximum de {$limite} agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\Agent::where('email', $validated['email'])->exists();

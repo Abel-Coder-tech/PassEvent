@@ -64,7 +64,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Nom</th><th>Email</th><th>Type</th><th>Organisation</th><th>Statut</th><th>Evenements</th><th>Téléphone</th><th>Inscrit</th><th>Actions</th></tr>
+                <tr><th>Nom</th><th>Email</th><th>Type</th><th>Statut</th><th>Evenements</th><th>Actions</th></tr>
             </thead>
             <tbody>
                 @foreach($organisateurs as $org)
@@ -72,7 +72,6 @@
                     <td><strong>{{ $org->nom }}</strong></td>
                     <td>{{ $org->email }}</td>
                     <td>@if($org->type)<span class="sa-badge sa-badge-info">{{ ucfirst($org->type) }}</span>@else-@endif</td>
-                    <td>{{ $org->organisation ?? '-' }}</td>
                     <td>
                         @php $st = $org->statut; @endphp
                         @if($st === 'en_attente')
@@ -92,158 +91,40 @@
                         @endif
                     </td>
                     <td>{{ $org->evenements_count }}</td>
-                    <td>{{ $org->telephone ?? '-' }}</td>
-                    <td style="font-size:0.75rem;">{{ $org->created_at->isoFormat('D MMM YYYY') }}</td>
                     <td style="white-space:nowrap;">
                         <div class="d-flex flex-nowrap gap-1">
                             <a href="{{ route('superadmin.organisateurs.voir', $org) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.78rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le détail">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <button class="sa-btn sa-btn-sm sa-btn-info" title="Voir les infos"
-                                onclick="document.getElementById('voirModal{{ $org->id }}').style.display='flex'">
-                                <i class="bi bi-info-circle"></i>
-                            </button>
-                            @if(in_array($org->statut, ['en_attente', 'incomplet']))
+                            @if(in_array($org->statut, ['en_attente', 'incomplet', 'corrections_demandees']))
                                 <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
                                 </form>
-                                <button class="sa-btn sa-btn-sm sa-btn-warning" title="Demander des corrections"
-                                    onclick="document.getElementById('correctionsModal{{ $org->id }}').style.display='flex'">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
                                 <button class="sa-btn sa-btn-sm sa-btn-danger" title="Rejeter"
                                     onclick="document.getElementById('rejetModal{{ $org->id }}').style.display='flex'">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
-                            @endif
-                            @if($org->statut === 'actif')
+                            @elseif($org->statut === 'actif')
                                 <form action="{{ route('superadmin.organisateurs.suspendre', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspendre {{ $org->nom }} ? Ses événements seront annulés.')">
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-warning" title="Suspendre"><i class="bi bi-pause-fill"></i></button>
+                                </form>
+                                <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                </form>
+                            @else
+                                <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                                 </form>
                             @endif
                         </div>
                     </td>
                 </tr>
 
-                {{-- Modal Voir --}}
-                <div id="voirModal{{ $org->id }}" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
-                    <div class="modal-box">
-                        <div class="modal-header">
-                            <h5><i class="bi bi-person-badge me-2" style="color:var(--sa-primary);"></i>{{ $org->nom }}</h5>
-                            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Email</span>
-                                <span class="org-detail-value">{{ $org->email }}</span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Téléphone</span>
-                                <span class="org-detail-value">{{ $org->telephone ?? '-' }}</span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Type</span>
-                                <span class="org-detail-value">{{ $org->type ? ucfirst($org->type) : '-' }}</span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Organisation</span>
-                                <span class="org-detail-value">{{ $org->organisation ?? '-' }}</span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Statut</span>
-                                <span class="org-detail-value">
-                                    @if($org->statut === 'en_attente')<span class="sa-badge sa-badge-warning">En attente</span>
-                                    @elseif($org->statut === 'actif')<span class="sa-badge sa-badge-success">Actif</span>
-                                    @elseif($org->statut === 'corrections_demandees')<span class="sa-badge sa-badge-warning" style="background:rgba(237,173,8,0.12);color:#8b6914;">Corrections demandées</span>
-                                    @elseif($org->statut === 'bloque')<span class="sa-badge sa-badge-danger">Bloqué</span>
-                                    @else<span class="sa-badge sa-badge-secondary">{{ $org->statut }}</span>@endif
-                                </span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Description</span>
-                                <span class="org-detail-value">{{ $org->description ?? 'Aucune description' }}</span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Evenements</span>
-                                <span class="org-detail-value">{{ $org->evenements_count }}</span>
-                            </div>
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Inscrit le</span>
-                                <span class="org-detail-value">{{ $org->created_at->format('d M Y à H:i') }}</span>
-                            </div>
-                            @if($org->document_justificatif)
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Justificatif</span>
-                                <span class="org-detail-value">
-                                    <a href="{{ asset('storage/' . $org->document_justificatif) }}" target="_blank" class="text-decoration-none fw-semibold" style="color:var(--sa-primary);">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i> Voir le document
-                                    </a>
-                                    &middot;
-                                    <a href="{{ asset('storage/' . $org->document_justificatif) }}" download class="text-decoration-none" style="color:#666;font-size:0.8rem;">
-                                        <i class="bi bi-download"></i> Télécharger
-                                    </a>
-                                </span>
-                            </div>
-                            @endif
-                            @if($org->signature)
-                            <div class="org-detail-row">
-                                <span class="org-detail-label">Signature</span>
-                                <span class="org-detail-value">
-                                    <a href="{{ asset('storage/' . $org->signature) }}" target="_blank" class="text-decoration-none fw-semibold" style="color:var(--sa-primary);">
-                                        <i class="bi bi-file-earmark-image me-1"></i> Voir la signature
-                                    </a>
-                                    &middot;
-                                    <a href="{{ asset('storage/' . $org->signature) }}" download class="text-decoration-none" style="color:#666;font-size:0.8rem;">
-                                        <i class="bi bi-download"></i> Télécharger
-                                    </a>
-                                </span>
-                            </div>
-                            @endif
-
-                            {{-- Envoyer un email --}}
-                            <hr style="margin:1rem 0;border-color:#eee;">
-                            <h6 style="font-size:0.85rem;font-weight:700;margin-bottom:0.5rem;color:var(--sa-primary);">
-                                <i class="bi bi-envelope me-1"></i> Envoyer un email
-                            </h6>
-                            <form action="{{ route('superadmin.organisateurs.email', $org) }}" method="POST">
-                                @csrf
-                                <div class="mb-2">
-                                    <input type="text" name="sujet" class="sa-form-control" placeholder="Sujet" required>
-                                </div>
-                                <div class="mb-2">
-                                    <textarea name="message" class="sa-form-control" rows="3" placeholder="Votre message..." required style="resize:vertical;"></textarea>
-                                </div>
-                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-primary">
-                                    <i class="bi bi-send"></i> Envoyer
-                                </button>
-                            </form>
-                        </div>
-                        <div class="modal-footer" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
-                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                                @if($org->statut === 'en_attente')
-                                    <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="sa-btn sa-btn-primary">
-                                            <i class="bi bi-check-lg"></i> Valider
-                                        </button>
-                                    </form>
-                                    <button class="sa-btn sa-btn-warning" onclick="this.closest('.modal-overlay').style.display='none';document.getElementById('correctionsModal{{ $org->id }}').style.display='flex'">
-                                        <i class="bi bi-pencil-square"></i> Corrections
-                                    </button>
-                                @endif
-                                <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
-                                    @csrf
-                                    <button type="submit" class="sa-btn sa-btn-danger">
-                                        <i class="bi bi-trash"></i> Supprimer
-                                    </button>
-                                </form>
-                            </div>
-                            <button class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Fermer</button>
-                        </div>
-                    </div>
-{{-- Modal Rejet --}}
+                {{-- Modal Rejet --}}
                 <div id="rejetModal{{ $org->id }}" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
                     <div class="modal-box">
                         <div class="modal-header">
@@ -263,30 +144,6 @@
                         </form>
                     </div>
                 </div>
-
-                {{-- Modal Corrections --}}
-                <div id="correctionsModal{{ $org->id }}" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
-                    <div class="modal-box">
-                        <div class="modal-header">
-                            <h5><i class="bi bi-pencil-square me-2" style="color:var(--sa-warning);"></i>Demander des corrections</h5>
-                            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
-                        </div>
-                        <form action="{{ route('superadmin.organisateurs.corrections', $org) }}" method="POST">
-                            @csrf
-                            <div class="modal-body">
-                                <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">Indiquez les modifications nécessaires. L'organisateur recevra un email et pourra corriger son profil.</p>
-                                <textarea name="motif" class="sa-form-control" rows="4" placeholder="Détail des corrections à apporter..." required style="resize:vertical;"></textarea>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="sa-btn sa-btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">Annuler</button>
-                                <button type="submit" class="sa-btn sa-btn-warning"><i class="bi bi-send"></i> Envoyer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                </div>
-                </tr>
                 @endforeach
             </tbody>
         </table>

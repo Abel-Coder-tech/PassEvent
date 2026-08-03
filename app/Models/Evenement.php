@@ -29,6 +29,7 @@ class Evenement extends Model
         'ventes_fermees',
         'ventes_especes',
         'commission_pourcentage',
+        'max_agents_vente',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class Evenement extends Model
             'gratuit' => 'boolean',
             'ventes_fermees' => 'boolean',
             'commission_pourcentage' => 'float',
+            'max_agents_vente' => 'integer',
         ];
     }
 
@@ -165,6 +167,26 @@ class Evenement extends Model
         }
 
         return ($this->ventes_especes ?? $this->user?->ventes_especes) === 'jamais';
+    }
+
+    // Statut effectif pour l'affichage superadmin : événement passé (date dépassée), sauf annulé
+    public function statutEffectif(): string
+    {
+        if ($this->date_event && $this->date_event->isPast() && $this->statut !== 'annulé') {
+            return 'passé';
+        }
+
+        return $this->statut;
+    }
+
+    // Limite d'agents de vente : vide = 2 (défaut), 0 = illimité
+    public function limiteAgentsVente(): ?int
+    {
+        if ($this->max_agents_vente === 0) {
+            return null; // illimité
+        }
+
+        return $this->max_agents_vente ?? 2;
     }
 
     // Nombre de tickets vendus en ligne (hors espèces) pour le suivi du seuil

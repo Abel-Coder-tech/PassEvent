@@ -28,10 +28,12 @@
                     <td><strong><a href="{{ route('superadmin.evenements.voir', $ev) }}" class="text-decoration-none" style="color: var(--sa-primary);">{{ $ev->titre }}</a></strong></td>
                     <td>{{ $ev->user->nom ?? '-' }}</td>
                     <td>
-                        @if($ev->statut === 'publié') <span class="sa-badge sa-badge-success">Publie</span>
-                        @elseif($ev->statut === 'brouillon') <span class="sa-badge sa-badge-secondary">Brouillon</span>
-                        @elseif($ev->statut === 'annulé') <span class="sa-badge sa-badge-danger">Annule</span>
-                        @else <span class="sa-badge sa-badge-warning">{{ $ev->statut }}</span>
+                        @php $statut = $ev->statutEffectif(); @endphp
+                        @if($statut === 'passé') <span class="sa-badge sa-badge-passed">Passé</span>
+                        @elseif($statut === 'publié') <span class="sa-badge sa-badge-success">Publie</span>
+                        @elseif($statut === 'brouillon') <span class="sa-badge sa-badge-secondary">Brouillon</span>
+                        @elseif($statut === 'annulé') <span class="sa-badge sa-badge-danger">Annule</span>
+                        @else <span class="sa-badge sa-badge-warning">{{ $statut }}</span>
                         @endif
                     </td>
                     <td>{{ $ev->tickets_vendus ?? 0 }} / {{ $ev->capacite }}</td>

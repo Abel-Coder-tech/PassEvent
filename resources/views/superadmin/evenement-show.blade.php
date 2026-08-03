@@ -14,11 +14,14 @@
 </div>
 
 @php
-    $badgeMap = ['publié' => 'success', 'brouillon' => 'secondary', 'annulé' => 'danger'];
-    $labelMap = ['publié' => 'Publié', 'brouillon' => 'Brouillon', 'annulé' => 'Annulé'];
+    $statutEffectif = $evenement->statutEffectif();
+    $badgeMap = ['publié' => 'success', 'brouillon' => 'secondary', 'annulé' => 'danger', 'passé' => 'passed'];
+    $labelMap = ['publié' => 'Publié', 'brouillon' => 'Brouillon', 'annulé' => 'Annulé', 'passé' => 'Passé'];
     $statutEspeces = $evenement->ventes_especes ?? $evenement->user?->ventes_especes;
     $labelEspecesEffectif = $statutEspeces === 'toujours' ? 'Toujours autorisées' : ($statutEspeces === 'jamais' ? 'Jamais (bloquées)' : 'Auto (règle 15 %)');
     $labelCommissionEffectif = $commissionPct;
+    $limiteAgents = $evenement->limiteAgentsVente();
+    $labelAgentsEffectif = $limiteAgents === null ? 'illimité' : ($limiteAgents . ' agents');
 @endphp
 
 <div class="row g-2 mb-4">
@@ -98,7 +101,7 @@
                 <form action="{{ route('superadmin.evenements.controles', $evenement) }}" method="POST">
                     @csrf
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="form-label small fw-semibold mb-1">Ventes espèces</label>
                             <select name="ventes_especes" class="sa-form-control">
                                 <option value="">Héritage ({{ $labelEspecesEffectif }})</option>
@@ -106,18 +109,26 @@
                                 <option value="jamais" @selected($evenement->ventes_especes === 'jamais')>Jamais (bloquées)</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-semibold mb-1">Commission (%)</label>
                             <input type="number" name="commission_pourcentage" class="sa-form-control" min="0" max="10" step="0.5" value="{{ $evenement->commission_pourcentage }}" placeholder="Héritage ({{ $labelCommissionEffectif }} %)">
-                            <div class="form-text" style="font-size:0.75rem;">Vide = héritage. Entre 0 et 10 %.</div>
                         </div>
                         <div class="col-md-3">
+                            <label class="form-label small fw-semibold mb-1">Agents de vente (max)</label>
+                            <select name="max_agents_vente" class="sa-form-control">
+                                <option value="">Défaut (2 agents)</option>
+                                <option value="5" @selected($evenement->max_agents_vente === 5)>5 agents</option>
+                                <option value="10" @selected($evenement->max_agents_vente === 10)>10 agents</option>
+                                <option value="0" @selected($evenement->max_agents_vente === 0)>Illimité</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i> Enregistrer</button>
                         </div>
                     </div>
                 </form>
                 <div class="mt-3 small text-muted">
-                    <i class="bi bi-info-circle me-1"></i>Effectif actuel : espèces « {{ $labelEspecesEffectif }} », commission {{ $labelCommissionEffectif }} %.
+                    <i class="bi bi-info-circle me-1"></i>Effectif actuel : espèces « {{ $labelEspecesEffectif }} », commission {{ $labelCommissionEffectif }} %, agents de vente : {{ $labelAgentsEffectif }}.
                 </div>
             </div>
         </div>
@@ -186,7 +197,7 @@
             <div class="sa-card-body">
                 <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f0f0f0;">
                     <span class="text-muted small">Statut</span>
-                    <span class="sa-badge sa-badge-{{ $badgeMap[$evenement->statut] ?? 'warning' }}">{{ $labelMap[$evenement->statut] ?? $evenement->statut }}</span>
+                    <span class="sa-badge sa-badge-{{ $badgeMap[$statutEffectif] ?? 'warning' }}">{{ $labelMap[$statutEffectif] ?? $statutEffectif }}</span>
                 </div>
                 <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f0f0f0;">
                     <span class="text-muted small">Date</span>
@@ -246,9 +257,21 @@
     </div>
     <div class="sa-card-body p-0">
         @php
-            $labelsEspeces = [null => 'Héritage', 'toujours' => 'Toujours', 'jamais' => 'Jamais'];
-            $labelsCommission = fn($v) => $v === null || $v === '' ? 'Défaut (10 %)' : number_format((float) $v, 2, ',', '') . ' %';
-            $champsControles = ['ventes_especes' => 'Ventes espèces', 'commission_pourcentage' => 'Commission'];
+            $formatControle = function ($champ, $valeur) {
+                if ($champ === 'ventes_especes') {
+                    return $valeur === 'toujours' ? 'Toujours' : ($valeur === 'jamais' ? 'Jamais' : 'Héritage');
+                }
+                if ($champ === 'commission_pourcentage') {
+                    return $valeur === null || $valeur === '' ? 'Défaut (10 %)' : number_format((float) $valeur, 2, ',', '') . ' %';
+                }
+                if ($champ === 'max_agents_vente') {
+                    if ($valeur === null || $valeur === '') return 'Défaut (2 agents)';
+                    if ((int) $valeur === 0) return 'Illimité';
+                    return (int) $valeur . ' agents';
+                }
+                return '-';
+            };
+            $champsControles = ['ventes_especes' => 'Ventes espèces', 'commission_pourcentage' => 'Commission', 'max_agents_vente' => 'Agents de vente'];
         @endphp
         <table class="sa-table">
             <thead>
@@ -271,8 +294,8 @@
                             <tr>
                                 <td style="font-size:0.78rem;">{{ \Carbon\Carbon::parse($log->created_at)->isoFormat('D MMM YYYY HH:mm') }}</td>
                                 <td>{{ $libelle }}</td>
-                                <td>{{ $champ === 'ventes_especes' ? ($labelsEspeces[$ancienne] ?? '-') : $labelsCommission($ancienne) }}</td>
-                                <td>{{ $champ === 'ventes_especes' ? ($labelsEspeces[$nouvelle] ?? '-') : $labelsCommission($nouvelle) }}</td>
+                                <td>{{ $formatControle($champ, $ancienne) }}</td>
+                                <td>{{ $formatControle($champ, $nouvelle) }}</td>
                                 <td>{{ $log->details['par'] ?? '-' }}</td>
                             </tr>
                         @endif
@@ -290,6 +313,9 @@
                 @endforelse
             </tbody>
         </table>
+        @if ($historique->hasPages())
+        <div class="p-3 d-flex justify-content-center">{{ $historique->links() }}</div>
+        @endif
     </div>
 </div>
 @endsection

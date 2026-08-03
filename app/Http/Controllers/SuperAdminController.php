@@ -17,6 +17,7 @@ use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\DemandeRemboursement;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -144,7 +145,7 @@ class SuperAdminController extends Controller
                 $q->where('statut', 'publié');
             }], 'quota_vendu')
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(10);
         return view('superadmin.organisateurs', compact('organisateurs'));
     }
 
@@ -375,18 +376,23 @@ class SuperAdminController extends Controller
         ));
     }
 
-    // Met à jour les contrôles spécifiques d'un événement (ventes espèces + commission)
+    // Met à jour les contrôles spécifiques d'un événement (ventes espèces + commission + agents de vente)
     public function updateControlesEvenement(Request $request, Evenement $evenement)
     {
         $validated = $request->validate([
             'ventes_especes' => 'nullable|in:toujours,jamais',
             'commission_pourcentage' => 'nullable|numeric|min:0|max:10',
+            'max_agents_vente' => 'nullable|integer|in:0,5,10',
         ]);
 
         $nouveau = $this->normaliserControles($validated);
+        $nouveau['max_agents_vente'] = (isset($validated['max_agents_vente']) && $validated['max_agents_vente'] !== '')
+            ? (int) $validated['max_agents_vente']
+            : null;
         $ancien = [
             'ventes_especes' => $evenement->ventes_especes,
             'commission_pourcentage' => $evenement->commission_pourcentage,
+            'max_agents_vente' => $evenement->max_agents_vente,
         ];
 
         $evenement->update($nouveau);
@@ -451,13 +457,13 @@ class SuperAdminController extends Controller
         ]);
     }
 
-    // Historique des ajustements (et annulations) pour un événement ou un organisateur
-    protected function historiqueAjustements(string $niveau, int $id)
+    // Historique paginé des ajustements (et annulations) pour un événement ou un organisateur
+    protected function historiqueAjustements(string $niveau, int $id, int $perPage = 10)
     {
         $logs = Log::where('ticket_id', null)
             ->whereIn('type_operation', ['ajustement', 'evenement_annule'])
             ->orderByDesc('created_at')
-            ->limit(300)
+            ->limit(500)
             ->get()
             ->filter(function ($log) use ($niveau, $id) {
                 $details = $log->details ?? [];
@@ -471,7 +477,13 @@ class SuperAdminController extends Controller
             })
             ->values();
 
-        return $logs->take(20);
+        $pageName = 'historique';
+        $page = LengthAwarePaginator::resolveCurrentPage($pageName);
+        $items = $logs->forPage($page, $perPage)->values();
+
+        return (new LengthAwarePaginator($items, $logs->count(), $perPage, $page, [
+            'path' => request()->url(),
+        ]))->withQueryString()->setPageName($pageName);
     }
 
     // Suspend un organisateur et annule tous ses événements publiés
