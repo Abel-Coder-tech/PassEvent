@@ -59,8 +59,8 @@ class DashboardController extends Controller
             ->sum('montant');
 
         // Calcul de la commission et des recettes nettes
-        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
-        $commission = round($recettesTotales * $commissionPct / 100, 2);
+        $commissionPct = $user->commissionPourcentage();
+        $commission = $user->statsFinancieres()['commissionTotale'];
         $recettesNettes = $recettesTotales - $commission;
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)

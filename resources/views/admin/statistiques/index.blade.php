@@ -225,7 +225,7 @@
                         <span class="fw-bold">{{ $resumeFinancier['gratuits'] }}</span>
                     </div>
                     <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
-                        <span class="text-muted">Commission PaxEvent : {{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%</span>
+                        <span class="text-muted">Commission PaxEvent : {{ $commissionPct }}%</span>
                         <span class="fw-bold" style="color: var(--vert);">{{ number_format($resumeFinancier['commission'], 0, ',', ' ') }} FCFA</span>
                     </div>
                     <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">

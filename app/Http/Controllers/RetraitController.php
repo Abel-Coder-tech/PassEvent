@@ -7,7 +7,6 @@ use App\Mail\RetraitConfirmed;
 use App\Mail\RetraitRejected;
 use App\Mail\RetraitRequested;
 use App\Models\Message;
-use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
@@ -29,25 +28,19 @@ class RetraitController extends Controller
 
     protected function getSoldeDisponible($user)
     {
-        $evenementsIds = $user->evenements()->pluck('id');
+        $stats = $user->statsFinancieres();
 
-        $totalTickets = (float) Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->sum('montant');
+        $totalTickets = $stats['totalTickets'];
+        $mobileRecettes = $stats['mobileRecettes'];
+        $cashRecettes = $stats['cashRecettes'];
 
-        $mobileRecettes = (float) Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNotIn('methode_paiement', ['cash', 'especes'])
-            ->sum('montant');
-
-        $commissionTotale = round($totalTickets * self::COMMISSION_PERCENTAGE / 100, 2);
+        $commissionTotale = $stats['commissionTotale'];
 
         // Commission directe sur mobile money
-        $commissionMobile = round($mobileRecettes * self::COMMISSION_PERCENTAGE / 100, 2);
+        $commissionMobile = $stats['commissionMobile'];
 
         // Commission des espèces absorbée proportionnellement par le mobile money
-        $cashRecettes = $totalTickets - $mobileRecettes;
-        $commissionCash = round($cashRecettes * self::COMMISSION_PERCENTAGE / 100, 2);
+        $commissionCash = $stats['commissionCash'];
         $commissionCashAbsorbee = $mobileRecettes > 0 ? $commissionCash : 0;
 
         // Commission totale imputée au mobile money
@@ -80,7 +73,10 @@ class RetraitController extends Controller
             ->orderByDesc('created_at')
             ->paginate(10);
 
-        return view('admin.retraits.index', array_merge($data, ['retraits' => $retraits]));
+        return view('admin.retraits.index', array_merge($data, [
+            'retraits' => $retraits,
+            'commissionPct' => $user->commissionPourcentage(),
+        ]));
     }
 
     public function store(Request $request)
@@ -107,7 +103,7 @@ class RetraitController extends Controller
             return Withdrawal::create([
                 'user_id' => $user->id,
                 'montant' => $validated['montant'],
-                'commission_percentage' => self::COMMISSION_PERCENTAGE,
+                'commission_percentage' => $user->commissionPourcentage(),
                 'nom' => $validated['nom'],
                 'mobile' => $validated['mobile'],
                 'reseau' => $validated['reseau'],

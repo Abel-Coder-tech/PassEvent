@@ -96,8 +96,17 @@ class VenteManuelleController extends Controller
                 $messages['email.required'] = 'L\'email est obligatoire pour le paiement mobile.';
             }
 
-            // Blocage espèces si seuil mobile money non atteint
+            // Blocage espèces si seuil mobile money non atteint ou si bloqué par le superadmin
             if ($request->methode_paiement === 'especes' && !$evenement->ventesEspecesActivees()) {
+                if ($evenement->ventesEspecesBloqueesSuperadmin()) {
+                    return response()->json([
+                        'errors' => [
+                            'methode_paiement' => [
+                                'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.'
+                            ]
+                        ]
+                    ], 422);
+                }
                 $seuil = (int) ceil($evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100);
                 $vendus = $evenement->ticketsEnLigneCount();
                 return response()->json([

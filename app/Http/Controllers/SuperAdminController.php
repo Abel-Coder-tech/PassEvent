@@ -103,8 +103,14 @@ class SuperAdminController extends Controller
         $transactionsReussies = Ticket::where('statut_paiement', 'payé')->where('transaction_id', 'not like', 'GRATUIT-%')->count();
         $transactionsEchouees = Ticket::where('statut_paiement', 'échoué')->count();
         $montantsJournaliers = Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $today)->sum('montant');
-        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
-        $commissionPlateforme = Ticket::where('statut_paiement', 'payé')->sum(DB::raw("montant * $commissionPct / 100")); // Commission totale
+        $commissionPlateforme = round(Ticket::where('statut_paiement', 'payé')
+            ->get(['evenement_id', 'montant'])
+            ->groupBy('evenement_id')
+            ->sum(function ($group) {
+                $evenement = Evenement::with('user')->find($group->first()->evenement_id);
+                return $group->sum('montant') * ($evenement?->commissionEffective() ?? 10) / 100;
+            }), 2); // Commission effective par événement
+        $commissionPct = $recettesGlobales > 0 ? round($commissionPlateforme / $recettesGlobales * 100, 1) : 10;
 
         $messagesNonLus = Message::where('lu', false)->whereNull('user_id')->count();
         $newsletterCount = Newsletter::where('actif', true)->count();
@@ -335,6 +341,139 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Evenement mis en avant.');
     }
 
+    // Page événement : regroupe les contrôles, les infos et les actions
+    public function voirEvenement(Evenement $evenement)
+    {
+        $evenement->load('user', 'tarifs');
+        $evenement->loadCount(['tickets as tickets_vendus' => fn($q) => $q->where('statut_paiement', 'payé')]);
+        $evenement->loadSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant');
+
+        $ticketsQuery = Ticket::where('evenement_id', $evenement->id)->where('statut_paiement', 'payé');
+        $mobileRecettes = (clone $ticketsQuery)->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+        $cashRecettes = (clone $ticketsQuery)->whereIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+
+        $commissionPct = $evenement->commissionEffective();
+        $commission = round($evenement->recettes * $commissionPct / 100, 2);
+        $recettesNettes = $evenement->recettes - $commission;
+
+        $tickets = Ticket::where('evenement_id', $evenement->id)
+            ->with('tarif')
+            ->latest('date_achat')
+            ->limit(20)
+            ->get();
+        $ticketsScannes = Ticket::where('evenement_id', $evenement->id)->where('utilise', true)->count();
+        $agentsScan = Agent::where('evenement_id', $evenement->id)->count();
+        $agentsVente = AgentVente::where('evenement_id', $evenement->id)->count();
+
+        $historique = $this->historiqueAjustements('evenement', $evenement->id);
+
+        return view('superadmin.evenement-show', compact(
+            'evenement', 'mobileRecettes', 'cashRecettes',
+            'commissionPct', 'commission', 'recettesNettes',
+            'tickets', 'ticketsScannes', 'agentsScan', 'agentsVente',
+            'historique'
+        ));
+    }
+
+    // Met à jour les contrôles spécifiques d'un événement (ventes espèces + commission)
+    public function updateControlesEvenement(Request $request, Evenement $evenement)
+    {
+        $validated = $request->validate([
+            'ventes_especes' => 'nullable|in:toujours,jamais',
+            'commission_pourcentage' => 'nullable|numeric|min:0|max:10',
+        ]);
+
+        $nouveau = $this->normaliserControles($validated);
+        $ancien = [
+            'ventes_especes' => $evenement->ventes_especes,
+            'commission_pourcentage' => $evenement->commission_pourcentage,
+        ];
+
+        $evenement->update($nouveau);
+        $this->logAjustement('evenement', [
+            'evenement_id' => $evenement->id,
+            'evenement_titre' => $evenement->titre,
+            'ancien' => $ancien,
+            'nouveau' => $nouveau,
+        ]);
+
+        return back()->with('success', "Contrôles de l'événement mis à jour.");
+    }
+
+    // Met à jour les contrôles spécifiques d'un organisateur (ventes espèces + commission)
+    public function updateControlesOrganisateur(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'ventes_especes' => 'nullable|in:toujours,jamais',
+            'commission_pourcentage' => 'nullable|numeric|min:0|max:10',
+        ]);
+
+        $nouveau = $this->normaliserControles($validated);
+        $ancien = [
+            'ventes_especes' => $user->ventes_especes,
+            'commission_pourcentage' => $user->commission_pourcentage,
+        ];
+
+        $user->update($nouveau);
+        $this->logAjustement('organisateur', [
+            'organisateur_id' => $user->id,
+            'organisateur_nom' => $user->nom,
+            'ancien' => $ancien,
+            'nouveau' => $nouveau,
+        ]);
+
+        return back()->with('success', "Contrôles de l'organisateur mis à jour.");
+    }
+
+    // Convertit les valeurs du formulaire (champ vide = héritage / défaut)
+    protected function normaliserControles(array $validated): array
+    {
+        return [
+            'ventes_especes' => $validated['ventes_especes'] ?? null,
+            'commission_pourcentage' => (isset($validated['commission_pourcentage']) && $validated['commission_pourcentage'] !== '')
+                ? (float) $validated['commission_pourcentage']
+                : null,
+        ];
+    }
+
+    // Enregistre un changement de taux/statut dans l'historique
+    protected function logAjustement(string $niveau, array $details): void
+    {
+        Log::create([
+            'type_operation' => 'ajustement',
+            'ticket_id' => null,
+            'details' => array_merge([
+                'niveau' => $niveau,
+                'par' => auth('superadmin')->user()?->email ?? 'superadmin',
+            ], $details),
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+    }
+
+    // Historique des ajustements (et annulations) pour un événement ou un organisateur
+    protected function historiqueAjustements(string $niveau, int $id)
+    {
+        $logs = Log::where('ticket_id', null)
+            ->whereIn('type_operation', ['ajustement', 'evenement_annule'])
+            ->orderByDesc('created_at')
+            ->limit(300)
+            ->get()
+            ->filter(function ($log) use ($niveau, $id) {
+                $details = $log->details ?? [];
+                if (($details['niveau'] ?? null) === $niveau) {
+                    return (int) ($details[$niveau . '_id'] ?? 0) === $id;
+                }
+                if ($niveau === 'evenement' && $log->type_operation === 'evenement_annule') {
+                    return (int) ($details['evenement_id'] ?? 0) === $id;
+                }
+                return false;
+            })
+            ->values();
+
+        return $logs->take(20);
+    }
+
     // Suspend un organisateur et annule tous ses événements publiés
     public function suspendreOrganisateur(User $user)
     {
@@ -510,13 +649,15 @@ class SuperAdminController extends Controller
         $mobileRecettes = (clone $ticketsQuery)->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
         $cashRecettes = (clone $ticketsQuery)->whereIn('methode_paiement', ['cash', 'especes'])->sum('montant');
 
-        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
-        $commission = round($totalRecettes * $commissionPct / 100, 2);
+        $commissionPct = $user->commissionPourcentage();
+        $commission = $user->statsFinancieres()['commissionTotale'];
         $recettesNettes = $totalRecettes - $commission;
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
         $retirable = max(0, $mobileRecettes - $commission - $totalRetraits);
+
+        $historique = $this->historiqueAjustements('organisateur', $user->id);
 
         $aujourdhui = Ticket::whereIn('evenement_id', $evenements->pluck('id'))
             ->where('statut_paiement', 'payé')
@@ -542,7 +683,8 @@ class SuperAdminController extends Controller
             'aujourdhui', 'scansAujourdhui',
             'agentsScan', 'agentsVente', 'tickets',
             'mobileRecettes', 'cashRecettes', 'commissionPct',
-            'commission', 'recettesNettes', 'retirable'
+            'commission', 'recettesNettes', 'retirable',
+            'historique'
         ));
     }
 

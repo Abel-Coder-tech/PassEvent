@@ -48,7 +48,7 @@ class StatistiqueController extends Controller
             'resumeFinancier',
             'paiementsEchoues',
             'periode'
-        ));
+        ))->with('commissionPct', \Illuminate\Support\Facades\Auth::user()?->commissionPourcentage() ?? 10);
     }
 
     // Calcule la date de début selon la période (avec support période précédente)
@@ -239,8 +239,12 @@ class StatistiqueController extends Controller
 
         $revenusBruts = $tickets->sum('montant');
         $gratuits = $tickets->where('montant', '<', 100)->count();
-        $commissionPct = \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE;
-        $commission = $revenusBruts * $commissionPct / 100;
+        $evenements = Evenement::whereIn('id', $evenementsIds)->with('user')->get()->keyBy('id');
+        $commission = $tickets->groupBy('evenement_id')->sum(function ($group) use ($evenements) {
+            $evenement = $evenements->get($group->first()->evenement_id);
+            $taux = $evenement ? $evenement->commissionEffective() : 10;
+            return $group->sum('montant') * $taux / 100;
+        });
         $remboursements = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'remboursé')
             ->where('created_at', '>=', $startDate)

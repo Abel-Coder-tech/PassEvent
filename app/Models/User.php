@@ -39,6 +39,8 @@ class User extends Authenticatable
         'type_detail',
         'document_justificatif',
         'signature',
+        'ventes_especes',
+        'commission_pourcentage',
     ];
 
     protected $hidden = [
@@ -54,6 +56,7 @@ class User extends Authenticatable
             'notif_email_ticket' => 'boolean',
             'notif_email_paiement' => 'boolean',
             'notif_scan' => 'boolean',
+            'commission_pourcentage' => 'float',
         ];
     }
 
@@ -80,17 +83,60 @@ class User extends Authenticatable
     public function getSoldeAttribute(): float
     {
         $evenementsIds = $this->evenements()->pluck('id');
-        $vendu = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'payé')->sum('montant');
+        $stats = $this->statsFinancieres();
         $rembourse = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'remboursé')->sum('montant');
         $enCours = DemandeRemboursement::where('organisateur_id', $this->id)
             ->whereIn('statut', ['en_attente', 'en_cours'])
             ->sum('montant_total');
-        // Commission de 10% sur les ventes
-        $commission = round($vendu * 10 / 100, 2);
+        // Commission effective par événement
+        $commission = $stats['commissionTotale'];
         // Retraits en attente, en cours ou payés
         $retires = Withdrawal::where('user_id', $this->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
-        return max(0, $vendu - $rembourse - $enCours - $commission - $retires);
+        return max(0, $stats['totalTickets'] - $rembourse - $enCours - $commission - $retires);
+    }
+
+    // Commission par défaut de l'organisateur (null = 10 % global)
+    public function commissionPourcentage(): float
+    {
+        return (float) ($this->commission_pourcentage ?? 10);
+    }
+
+    // Statistiques financières de l'organisateur avec commissions effectives par événement
+    public function statsFinancieres(): array
+    {
+        $evenementsIds = $this->evenements()->pluck('id');
+        $evenements = Evenement::whereIn('id', $evenementsIds)->with('user')->get()->keyBy('id');
+        $tickets = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->get(['evenement_id', 'montant', 'methode_paiement']);
+
+        $totalTickets = (float) $tickets->sum('montant');
+        $mobileRecettes = (float) $tickets->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+        $cashRecettes = $totalTickets - $mobileRecettes;
+
+        $commissionTotale = 0.0;
+        $commissionMobile = 0.0;
+        $commissionCash = 0.0;
+
+        foreach ($evenements as $evenement) {
+            $evTickets = $tickets->where('evenement_id', $evenement->id);
+            $evMobile = (float) $evTickets->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+            $evCash = (float) $evTickets->whereIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+            $taux = $evenement->commissionEffective();
+            $commissionTotale += ($evMobile + $evCash) * $taux / 100;
+            $commissionMobile += $evMobile * $taux / 100;
+            $commissionCash += $evCash * $taux / 100;
+        }
+
+        return [
+            'totalTickets' => round($totalTickets, 2),
+            'mobileRecettes' => round($mobileRecettes, 2),
+            'cashRecettes' => round($cashRecettes, 2),
+            'commissionTotale' => round($commissionTotale, 2),
+            'commissionMobile' => round($commissionMobile, 2),
+            'commissionCash' => round($commissionCash, 2),
+        ];
     }
 }

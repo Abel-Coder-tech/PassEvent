@@ -25,7 +25,7 @@
             <tbody>
                 @foreach($evenements as $ev)
                 <tr>
-                    <td><strong>{{ $ev->titre }}</strong></td>
+                    <td><strong><a href="{{ route('superadmin.evenements.voir', $ev) }}" class="text-decoration-none" style="color: var(--sa-primary);">{{ $ev->titre }}</a></strong></td>
                     <td>{{ $ev->user->nom ?? '-' }}</td>
                     <td>
                         @if($ev->statut === 'publié') <span class="sa-badge sa-badge-success">Publie</span>

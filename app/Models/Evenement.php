@@ -27,6 +27,8 @@ class Evenement extends Model
         'type_evenement',
         'gratuit',
         'ventes_fermees',
+        'ventes_especes',
+        'commission_pourcentage',
     ];
 
     protected function casts(): array
@@ -35,6 +37,7 @@ class Evenement extends Model
             'date_event' => 'datetime',
             'gratuit' => 'boolean',
             'ventes_fermees' => 'boolean',
+            'commission_pourcentage' => 'float',
         ];
     }
 
@@ -115,10 +118,27 @@ class Evenement extends Model
     // Seuil mobile money atteint pour débloquer les ventes espèces (15 % de la capacité)
     public const SEUIL_ESPECES_PCT = 15;
 
+    // Commission effective : spécifique (événement) > défaut (organisateur) > global 10 %
+    public function commissionEffective(): float
+    {
+        return (float) ($this->commission_pourcentage ?? $this->user?->commission_pourcentage ?? 10);
+    }
+
     public function ventesEspecesActivees(): bool
     {
         if ($this->gratuit) {
             return true;
+        }
+
+        // Contrôle superadmin : spécifique (événement) > défaut (organisateur) > règle 15 %
+        $statut = $this->ventes_especes ?? $this->user?->ventes_especes;
+
+        if ($statut === 'toujours') {
+            return true;
+        }
+
+        if ($statut === 'jamais') {
+            return false;
         }
 
         $seuil = (int) ceil($this->capacite * self::SEUIL_ESPECES_PCT / 100);
@@ -135,6 +155,16 @@ class Evenement extends Model
             ->count();
 
         return $vendusEnLigne >= $seuil;
+    }
+
+    // Les ventes espèces sont-elles explicitement bloquées par un superadmin ?
+    public function ventesEspecesBloqueesSuperadmin(): bool
+    {
+        if ($this->gratuit) {
+            return false;
+        }
+
+        return ($this->ventes_especes ?? $this->user?->ventes_especes) === 'jamais';
     }
 
     // Nombre de tickets vendus en ligne (hors espèces) pour le suivi du seuil

@@ -130,8 +130,13 @@ class AuthController extends Controller
 
         $tarif = $agent->evenement->tarifs()->findOrFail($validated['tarif_id']);
 
-        // Blocage espèces si seuil mobile money non atteint
+        // Blocage espèces si seuil mobile money non atteint ou si bloqué par le superadmin
         if ($validated['methode_paiement'] === 'cash' && !$agent->evenement->ventesEspecesActivees()) {
+            if ($agent->evenement->ventesEspecesBloqueesSuperadmin()) {
+                return back()->withErrors([
+                    'methode_paiement' => 'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.'
+                ]);
+            }
             $seuil = (int) ceil($agent->evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100);
             $vendus = $agent->evenement->ticketsEnLigneCount();
             return back()->withErrors([

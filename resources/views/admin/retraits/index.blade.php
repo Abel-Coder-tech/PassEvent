@@ -22,7 +22,7 @@
         <div class="col-6 col-lg-3">
             <div class="metric-card" style="border-top-color: var(--gris);">
                 <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
-                <div class="metric-label">Commission ({{ \App\Http\Controllers\RetraitController::COMMISSION_PERCENTAGE }}%)</div>
+                <div class="metric-label">Commission ({{ $commissionPct }}%)</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionTotale, 0, ',', ' ') }} F</div>
                 <div class="metric-subtitle">Sur tous les tickets</div>
             </div>

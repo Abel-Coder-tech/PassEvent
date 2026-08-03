@@ -138,6 +138,37 @@
         </div>
     </div>
 
+    <div class="sa-card mb-4">
+        <div class="sa-card-header">
+            <span><i class="bi bi-sliders me-2" style="color: var(--sa-primary);"></i>Contrôles organisateur</span>
+            <span class="text-muted" style="font-size:0.8rem;">S'applique à tous ses événements, sauf surchargés</span>
+        </div>
+        <div class="sa-card-body">
+            <form action="{{ route('superadmin.organisateurs.controles', $user) }}" method="POST">
+                @csrf
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold mb-1">Ventes espèces</label>
+                        <select name="ventes_especes" class="sa-form-control">
+                            <option value="">Auto (règle 15 %)</option>
+                            <option value="toujours" @selected($user->ventes_especes === 'toujours')>Toujours autorisées</option>
+                            <option value="jamais" @selected($user->ventes_especes === 'jamais')>Jamais (bloquées)</option>
+                        </select>
+                        <div class="form-text" style="font-size:0.75rem;">Vide = règle par défaut (15 % de la capacité en mobile money).</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold mb-1">Commission (%)</label>
+                        <input type="number" name="commission_pourcentage" class="sa-form-control" min="0" max="10" step="0.5" value="{{ $user->commission_pourcentage }}" placeholder="Défaut : 10 %">
+                        <div class="form-text" style="font-size:0.75rem;">Vide = commission globale de 10 %. Entre 0 et 10 %.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-check-lg"></i> Enregistrer les contrôles</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row g-3 mb-4">
     <div class="col-md-6">
         <div class="sa-card">
@@ -152,7 +183,7 @@
                     <tbody>
                         @forelse($evenements as $ev)
                         <tr>
-                            <td><strong>{{ $ev->titre }}</strong></td>
+                            <td><strong><a href="{{ route('superadmin.evenements.voir', $ev) }}" class="text-decoration-none" style="color: var(--sa-primary);">{{ $ev->titre }}</a></strong></td>
                             <td style="font-size:0.78rem;">{{ $ev->date_event->isoFormat('D MMM YYYY') }}</td>
                             <td>{{ $ev->tickets_vendus }} / {{ $ev->capacite }}</td>
                             <td>{{ number_format($ev->recettes, 0, ',', ' ') }} F</td>
@@ -224,5 +255,59 @@
     @if ($tickets->hasPages())
     <div class="p-3 d-flex justify-content-center">{{ $tickets->links() }}</div>
     @endif
+</div>
+
+<div class="sa-card">
+    <div class="sa-card-header">
+        <span><i class="bi bi-arrow-repeat me-2" style="color: var(--sa-primary);"></i>Historique des modifications</span>
+        <span class="text-muted" style="font-size:0.8rem;">Taux et statuts</span>
+    </div>
+    <div class="sa-card-body p-0">
+        @php
+            $labelsEspeces = [null => 'Auto (règle 15 %)', 'toujours' => 'Toujours', 'jamais' => 'Jamais'];
+            $labelsCommission = fn($v) => $v === null || $v === '' ? 'Défaut (10 %)' : number_format((float) $v, 2, ',', '') . ' %';
+            $champsControles = ['ventes_especes' => 'Ventes espèces', 'commission_pourcentage' => 'Commission'];
+        @endphp
+        <table class="sa-table">
+            <thead>
+                <tr><th>Date</th><th>Champ</th><th>Ancienne valeur</th><th>Nouvelle valeur</th><th>Superadmin</th></tr>
+            </thead>
+            <tbody>
+                @forelse($historique as $log)
+                    @php
+                        $anciens = $log->details['ancien'] ?? [];
+                        $nouveaux = $log->details['nouveau'] ?? [];
+                        $aDesChangements = false;
+                    @endphp
+                    @foreach($champsControles as $champ => $libelle)
+                        @php
+                            $ancienne = $anciens[$champ] ?? null;
+                            $nouvelle = $nouveaux[$champ] ?? null;
+                        @endphp
+                        @if($ancienne !== $nouvelle)
+                            @php $aDesChangements = true; @endphp
+                            <tr>
+                                <td style="font-size:0.78rem;">{{ \Carbon\Carbon::parse($log->created_at)->isoFormat('D MMM YYYY HH:mm') }}</td>
+                                <td>{{ $libelle }}</td>
+                                <td>{{ $champ === 'ventes_especes' ? ($labelsEspeces[$ancienne] ?? '-') : $labelsCommission($ancienne) }}</td>
+                                <td>{{ $champ === 'ventes_especes' ? ($labelsEspeces[$nouvelle] ?? '-') : $labelsCommission($nouvelle) }}</td>
+                                <td>{{ $log->details['par'] ?? '-' }}</td>
+                            </tr>
+                        @endif
+                    @endforeach
+                    @if(!$aDesChangements)
+                        <tr>
+                            <td style="font-size:0.78rem;">{{ \Carbon\Carbon::parse($log->created_at)->isoFormat('D MMM YYYY HH:mm') }}</td>
+                            <td>{{ $log->type_operation === 'evenement_annule' ? 'Annulation' : 'Contrôles' }}</td>
+                            <td colspan="2" class="text-muted">{{ $log->type_operation === 'evenement_annule' ? 'Événement annulé' : 'Modification enregistrée' }}</td>
+                            <td>{{ $log->details['par'] ?? '-' }}</td>
+                        </tr>
+                    @endif
+                @empty
+                <tr><td colspan="5" class="text-center text-muted py-3">Aucune modification enregistrée</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 @endsection
