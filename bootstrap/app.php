@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'agent_vente' => \App\Http\Middleware\CheckAgentVente::class,
             'profil_verifie' => \App\Http\Middleware\CheckProfilActif::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'paiement/webhook',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -103,7 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
         environment: '{{ $sandbox ? 'sandbox' : 'live' }}',
         transaction: {
             amount: {{ (int) $ticket->montant }},
-            description: 'Ticket - {{ $ticket->evenement->titre }}'
+            description: 'Ticket - {{ $ticket->evenement->titre }}',
+            external_id: '{{ $ticket->id }}'
         },
         customer: {
             email: '{{ $ticket->email_acheteur }}',
@@ -114,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             iso: 'XOF'
         },
         onComplete: function(data) {
-            if (data.reason === 'CHECKOUT COMPLETE' && data.transaction && data.transaction.id) {
+            if (data.transaction && data.transaction.id) {
                 var pm = data.transaction.payment_method || 'mobile_money';
                 var ph = data.transaction.phone || '';
                 window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved') + '&payment_method=' + pm + '&phone=' + ph;

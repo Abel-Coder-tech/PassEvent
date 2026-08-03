@@ -454,7 +454,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     environment: fedapaySandbox ? 'sandbox' : 'live',
                     transaction: {
                         amount: t.montant,
-                        description: 'Ticket - ' + t.evenement_titre
+                        description: 'Ticket - ' + t.evenement_titre,
+                        external_id: String(t.id)
                     },
                     customer: {
                         email: t.email_acheteur,
@@ -463,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     currency: { iso: 'XOF' },
                     onComplete: function(data) {
-                        if (data.reason === 'CHECKOUT COMPLETE' && data.transaction && data.transaction.id) {
+                        if (data.transaction && data.transaction.id) {
                             var pm = data.transaction.payment_method || 'mobile_money';
                             var ph = data.transaction.phone || '';
                             window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved') + '&payment_method=' + pm + '&phone=' + ph;

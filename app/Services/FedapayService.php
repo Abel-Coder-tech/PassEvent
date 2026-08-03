@@ -31,7 +31,7 @@ class FedapayService
         }
 
         $baseUrl = $this->isSandbox()
-            ? 'https://sandbox.fedapay.com'
+            ? 'https://sandbox-api.fedapay.com'
             : 'https://api.fedapay.com';
 
         try {
@@ -42,11 +42,15 @@ class FedapayService
 
             if ($response->successful()) {
                 $data = $response->json();
+
+                // L'API FedaPay enveloppe la ressource : {"v1/transaction": {...}}
+                $transaction = $data['v1/transaction'] ?? $data['transaction'] ?? $data;
+
                 Log::info('FedapayService::getTransaction - Payload complet', [
                     'transaction_id' => $transactionId,
-                    'payload' => $data,
+                    'payload' => $transaction,
                 ]);
-                return $data;
+                return $transaction;
             }
 
             Log::warning('FedapayService::getTransaction - Échec HTTP', [
