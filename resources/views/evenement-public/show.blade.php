@@ -3,7 +3,7 @@
 @section('title', $evenement->titre . ' — PaxEvent')
 @section('description', Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160))
 @section('og_title', $evenement->titre)
-@section('og_description', Str::limit($evenement->description ?? 'Réservez vos billets pour ' . $evenement->titre . ' sur PaxEvent.', 160))
+@section('og_description', Str::limit($evenement->description ?? (Str::ucfirst($evenement->getTextes()['acheter']) . ' pour ' . $evenement->titre . ' sur PaxEvent.'), 160))
 @if($evenement->image)
     @section('og_image', asset('storage/' . $evenement->image))
 @endif
@@ -18,6 +18,7 @@
     $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
     $estComplet = $placesRestantes <= 0;
     $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
+    $textes = $evenement->getTextes();
 @endphp
 
 <div class="show-event">
@@ -70,12 +71,12 @@
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
                         <div class="show-card text-center py-4">
                             <div class="show-lock-icon"><i class="bi bi-lock-fill"></i></div>
-                            <h5 style="color:var(--danger); font-weight:700; margin-bottom:0.25rem;">Vente clôturée</h5>
+                            <h5 style="color:var(--danger); font-weight:700; margin-bottom:0.25rem;">{{ $textes['cloturee'] }}</h5>
                             <p class="show-card-text mb-0">
                                 @if($evenementPasse ?? false)
                                     Cet événement a déjà eu lieu.
                                 @else
-                                    Les inscriptions ne sont plus possibles pour cet événement.
+                                    {{ $textes['type'] === 'spectacle' ? 'Les ventes sont clôturées pour cet événement.' : 'Les inscriptions sont clôturées pour cet événement.' }}
                                 @endif
                             </p>
                         </div>
@@ -84,8 +85,8 @@
                         <div class="show-ticket-header">
                             <div class="show-ticket-icon"><i class="bi bi-ticket-perforated"></i></div>
                             <div>
-                                <h5 class="fw-bold mb-0">{{ $evenement->gratuit ? 'Participer gratuitement' : 'Acheter un billet' }}</h5>
-                                <small class="text-muted">{{ number_format($placesRestantes, 0, ',', ' ') }} places disponibles</small>
+                                <h5 class="fw-bold mb-0">{{ $evenement->gratuit ? $textes['participer_gratuit'] : $textes['acheter'] }}</h5>
+                                <small class="text-muted">{{ number_format($placesRestantes, 0, ',', ' ') }} {{ $textes['places'] }}</small>
                             </div>
                         </div>
                         <hr class="my-3">
@@ -112,11 +113,11 @@
                                 <input type="email" class="show-input" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
                             </div>
                             <div class="show-total">
-                                <span class="fw-bold">Billets</span>
+                                <span class="fw-bold">{{ $textes['billet_pluriel'] }}</span>
                                 <span class="show-total-price">Gratuit</span>
                             </div>
                             <button type="submit" class="show-btn show-btn-primary" {{ $estComplet ? 'disabled' : '' }}>
-                                <i class="bi bi-check-circle me-2"></i> Participer
+                                <i class="bi bi-check-circle me-2"></i> {{ $textes['acheter'] }}
                             </button>
                             <p class="show-secure"><i class="bi bi-check-circle me-1" style="color:var(--violet);"></i> Réservation gratuite — Ticket PDF reçu par email</p>
                         </form>

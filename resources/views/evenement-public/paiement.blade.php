@@ -11,6 +11,7 @@
 @endsection
 
 @section('content')
+@php $textes = $ticket->evenement->getTextes(); @endphp
 <section class="py-5">
     <div class="container">
         <div class="row justify-content-center">
@@ -94,7 +95,7 @@
 
                         <p class="text-center text-muted mt-3 mb-0" style="font-size: 0.78rem;">
                             <i class="bi bi-envelope me-1" style="color: #542680;"></i>
-                            Votre billet PDF sera envoye a <strong>{{ $ticket->email_acheteur }}</strong>
+                            Votre {{ mb_strtolower($textes['billet']) }} PDF sera envoye a <strong>{{ $ticket->email_acheteur }}</strong>
                         </p>
 
                         <div id="paymentError" class="mt-3" style="display: none; color: var(--danger); font-size: 0.85rem;"></div>

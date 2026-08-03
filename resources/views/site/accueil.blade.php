@@ -389,6 +389,8 @@
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
                         $prixDernier = $evenement->tarifs->min('prix');
+                        $textes = $evenement->getTextes();
+                        $venteCloturee = $evenement->ventes_fermees;
                     @endphp
                     <div class="event-col">
                         <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">
@@ -403,7 +405,9 @@
                                 @if($evenement->categorie)
                                     <span class="ev-badge">{{ ucfirst($evenement->categorie) }}</span>
                                 @endif
-                                @if($estComplet)
+                                @if($venteCloturee)
+                                    <span class="ev-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
+                                @elseif($estComplet)
                                     <span class="ev-badge ev-badge-complet">Complet</span>
                                 @endif
                                 <div class="ev-img-overlay">
@@ -425,19 +429,21 @@
                                 @endif
                                 <div class="ev-gauge">
                                     <div class="d-flex justify-content-between" style="font-size:0.68rem;">
-                                        <span>{{ $placesRestantes }} places</span>
+                                        <span>{{ $placesRestantes }} {{ $textes['places'] }}</span>
                                         <span>{{ $remplissage }}%</span>
                                     </div>
                                     <div class="gauge-track"><div class="gauge-fill" style="width:{{ min($remplissage,100) }}%"></div></div>
                                 </div>
-                                @if($estComplet)
+                                @if($venteCloturee)
+                                    <span class="ev-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
+                                @elseif($estComplet)
                                     <span class="ev-btn disabled">Complet</span>
                                 @else
                                     <span class="ev-btn">
                                         @if($evenement->gratuit)
-                                            <i class="bi bi-check-circle me-1"></i> Participer
+                                            <i class="bi bi-check-circle me-1"></i> {{ $textes['participer_gratuit'] }}
                                         @else
-                                            <i class="bi bi-ticket-perforated me-1"></i> Acheter ticket
+                                            <i class="bi bi-ticket-perforated me-1"></i> {{ $textes['acheter'] }}
                                         @endif
                                     </span>
                                 @endif

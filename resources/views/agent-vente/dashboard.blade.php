@@ -3,6 +3,7 @@
 @section('title', 'Tableau de bord - ' . $agent->evenement->titre)
 
 @section('content')
+@php $textes = $agent->evenement->getTextes(); @endphp
 <div class="container py-4">
     {{-- En-tête --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -116,7 +117,7 @@
                         </div>
 
                         <button type="submit" class="btn w-100 text-white py-2 fw-medium" id="btnVente" style="background: #7c3aed;">
-                            <i class="bi bi-check-lg"></i> <span id="btnVenteLabel">Vendre le ticket</span>
+                            <i class="bi bi-check-lg"></i> <span id="btnVenteLabel">{{ $textes['type'] === 'spectacle' ? 'Vendre le billet' : 'Enregistrer l\'inscription' }}</span>
                         </button>
                     </form>
                 </div>
@@ -239,8 +240,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const methodeSelect = document.getElementById('methodePaiement');
     const btnLabel = document.getElementById('btnVenteLabel');
     if (methodeSelect && btnLabel) {
+        const labelVente = @json($textes['type'] === 'spectacle' ? 'Vendre le billet' : "Enregistrer l'inscription");
         methodeSelect.addEventListener('change', function() {
-            btnLabel.textContent = this.value === 'mobile_money' ? 'Payer via FedaPay' : 'Vendre le ticket';
+            btnLabel.textContent = this.value === 'mobile_money' ? 'Payer via FedaPay' : labelVente;
         });
     }
 

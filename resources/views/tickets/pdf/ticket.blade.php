@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Billet - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
+    <title>{{ $textes['billet'] ?? 'Billet' }} - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
     <style>
         @page { margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'DejaVu Sans', sans-serif; }
@@ -104,6 +104,7 @@
 </head>
 <body>
 
+@php $textes = $ticket->evenement?->getTextes() ?? ['billet' => 'Billet']; @endphp
 <div class="ticket">
 
     {{-- HEADER violet (no logo) --}}
@@ -129,7 +130,7 @@
 
         <table class="info-table" cellpadding="0" cellspacing="0">
             <tr>
-                <td class="il">Billet</td>
+                <td class="il">{{ $textes['billet'] }}</td>
                 <td class="iv">{{ $ticket->nom_tarif }}</td>
             </tr>
             <tr>

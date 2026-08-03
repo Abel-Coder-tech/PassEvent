@@ -66,6 +66,7 @@ class EvenementController extends Controller
             'capacite' => 'required|integer|min:1',
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié',
+            'type_evenement' => 'required|in:spectacle,formation,conference',
             'gratuit' => 'nullable|boolean',
             'tarif_nom_1' => 'required_without:gratuit|string|max:100',
             'tarif_prix_1' => 'required_without:gratuit|numeric|min:0',
@@ -269,6 +270,7 @@ class EvenementController extends Controller
             'capacite' => 'required|integer|min:1',
             'image' => 'nullable|image|max:2048',
             'statut' => 'required|in:brouillon,publié',
+            'type_evenement' => 'required|in:spectacle,formation,conference',
             'gratuit' => 'nullable|boolean',
         ], [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',

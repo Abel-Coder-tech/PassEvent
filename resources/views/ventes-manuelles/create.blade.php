@@ -31,7 +31,7 @@
                             <select class="form-select" id="evenement_id" name="evenement_id" required>
                                 <option value="">Choisir un événement —</option>
                                 @foreach($evenements as $evt)
-                                    <option value="{{ $evt->id }}" data-tarif-min="{{ $evt->tarifs->min('prix') }}" data-gratuit="{{ $evt->gratuit ? '1' : '0' }}">{{ $evt->titre }} — {{ $evt->date_event->isoFormat('D MMM YYYY') }}</option>
+                                    <option value="{{ $evt->id }}" data-tarif-min="{{ $evt->tarifs->min('prix') }}" data-gratuit="{{ $evt->gratuit ? '1' : '0' }}" data-type="{{ $evt->type_evenement }}">{{ $evt->titre }} — {{ $evt->date_event->isoFormat('D MMM YYYY') }}</option>
                                 @endforeach
                             </select>
                             @error('evenement_id') <div class="text-danger mt-1" style="font-size:0.85rem;">{{ $message }}</div> @enderror
@@ -219,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isUniversitaire = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
     let tarifUnitaire = 0;
     let isFreeEvent = false;
+    let eventType = 'spectacle';
     let especesActivees = true;
 
     function toggleFieldsPayants(hide) {
@@ -228,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('sectionTarif').style.display = hide ? 'none' : '';
 
         if (hide) {
-            document.getElementById('recapTotalLabel').textContent = 'Inscription';
+            document.getElementById('recapTotalLabel').textContent = eventType === 'spectacle' ? 'Billet' : 'Inscription';
             document.getElementById('recapTotal').textContent = 'Gratuite';
             document.getElementById('recapStatut').closest('.d-flex').style.display = 'none';
             document.getElementById('recapTarif').closest('.d-flex').style.display = 'none';
@@ -311,6 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const eventOption = eventSelect.options[eventSelect.selectedIndex];
+        eventType = eventOption.dataset.type || 'spectacle';
         isFreeEvent = eventOption.dataset.gratuit === '1';
 
         if (isFreeEvent) {

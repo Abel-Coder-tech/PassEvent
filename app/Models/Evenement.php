@@ -24,6 +24,7 @@ class Evenement extends Model
         'quota_vendu',
         'image',
         'statut',
+        'type_evenement',
         'gratuit',
         'ventes_fermees',
     ];
@@ -35,6 +36,45 @@ class Evenement extends Model
             'gratuit' => 'boolean',
             'ventes_fermees' => 'boolean',
         ];
+    }
+
+    public function getTextes(): array
+    {
+        return match ($this->type_evenement) {
+            'formation' => [
+                'type' => 'formation',
+                'acheter' => "S'inscrire",
+                'acheter_billet' => "S'inscrire à la formation",
+                'cloturee' => 'Inscriptions clôturées',
+                'billet' => "Confirmation d'inscription",
+                'billet_pluriel' => "Confirmations d'inscription",
+                'participer_gratuit' => "S'inscrire gratuitement",
+                'places' => 'places disponibles',
+                'presenter' => "Présentez votre confirmation d'inscription à l'entrée",
+            ],
+            'conference' => [
+                'type' => 'conference',
+                'acheter' => "S'inscrire",
+                'acheter_billet' => "S'inscrire à la conférence",
+                'cloturee' => 'Inscriptions clôturées',
+                'billet' => 'Place',
+                'billet_pluriel' => 'Places',
+                'participer_gratuit' => "S'inscrire gratuitement",
+                'places' => 'places disponibles',
+                'presenter' => 'Présentez votre confirmation à l\'entrée',
+            ],
+            default => [
+                'type' => 'spectacle',
+                'acheter' => 'Acheter un billet',
+                'acheter_billet' => 'Acheter un billet',
+                'cloturee' => 'Vente clôturée',
+                'billet' => 'Billet',
+                'billet_pluriel' => 'Billets',
+                'participer_gratuit' => 'Participer gratuitement',
+                'places' => 'places disponibles',
+                'presenter' => 'Présentez votre billet à l\'entrée de l\'événement',
+            ],
+        };
     }
 
     public function user(): BelongsTo

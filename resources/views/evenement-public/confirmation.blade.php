@@ -20,10 +20,10 @@
                             <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; background: rgba(18,151,110,0.1);">
                                 <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: var(--violet);"></i>
                             </div>
-                            @php $quantite = $groupTickets->count(); @endphp
-                            <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? 'Inscription confirmée !' : 'Paiement confirmé !' }}</h4>
+                            @php $quantite = $groupTickets->count(); $textes = $ticket->evenement->getTextes(); @endphp
+                            <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? ($textes['type'] === 'spectacle' ? 'Réservation confirmée !' : 'Inscription confirmée !') : 'Paiement confirmé !' }}</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                {{ $quantite > 1 ? "Vos {$quantite} tickets ont été générés avec succès." : 'Votre ticket a été généré avec succès.' }}<br>
+                                {{ $quantite > 1 ? "Vos {$quantite} " . mb_strtolower($textes['billet_pluriel']) . ' ont été générés avec succès.' : 'Votre ' . mb_strtolower($textes['billet']) . ' a été généré avec succès.' }}<br>
                                 {{ $quantite > 1 ? 'Ils ont été envoyés par email à' : 'Il a été envoyé par email à' }} <strong>{{ $ticket->email_acheteur }}</strong>
                             </p>
                         </div>
@@ -60,9 +60,9 @@
 
                             @if($quantite > 1)
                             <div class="mt-3 pt-2" style="border-top: 1px solid #eee;">
-                                <span class="text-muted" style="font-size: 0.82rem;">Billets ({{ $quantite }}) :</span><br>
+                                <span class="text-muted" style="font-size: 0.82rem;">{{ $textes['billet_pluriel'] }} ({{ $quantite }}) :</span><br>
                                 @foreach($groupTickets as $gt)
-                                    <span style="font-size: 0.78rem; display: block; margin-top: 2px;">Billet n&deg;{{ $loop->iteration }}</span>
+                                    <span style="font-size: 0.78rem; display: block; margin-top: 2px;">{{ $textes['billet'] }} n&deg;{{ $loop->iteration }}</span>
                                 @endforeach
                             </div>
                             @endif
@@ -73,12 +73,12 @@
                             @if($quantite > 1)
                                 @foreach($groupTickets as $gt)
                                     <a href="{{ route('tickets.telecharger', $gt->id) }}" class="btn btn-violet py-2" style="border-radius: 8px;">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger billet {{ $loop->iteration }}
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger {{ mb_strtolower($textes['billet']) }} {{ $loop->iteration }}
                                     </a>
                                 @endforeach
                             @else
                                 <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger le billet PDF
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger {{ mb_strtolower($textes['billet']) }} PDF
                                 </a>
                             @endif
                             <a href="{{ route('accueil') }}" class="btn btn-accent py-2" style="border-radius: 8px;">
@@ -91,7 +91,7 @@
 
                         <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
                             <i class="bi bi-info-circle me-1"></i>
-                            Presentez votre billet (impression ou ecran) a l'entrée de l'evenement
+                            Presentez votre {{ mb_strtolower($textes['billet']) }} (impression ou ecran) a l'entrée de l'evenement
                         </p>
                     </div>
                 </div>

@@ -49,6 +49,17 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="type_evenement" class="form-label fw-semibold">Type d'événement <span class="text-danger">*</span></label>
+                    <select class="form-select @error('type_evenement') is-invalid @enderror" id="type_evenement" name="type_evenement" required>
+                        <option value="spectacle" {{ old('type_evenement', 'spectacle') == 'spectacle' ? 'selected' : '' }}>Spectacle / Soirée</option>
+                        <option value="formation" {{ old('type_evenement') == 'formation' ? 'selected' : '' }}>Formation</option>
+                        <option value="conference" {{ old('type_evenement') == 'conference' ? 'selected' : '' }}>Conférence</option>
+                    </select>
+                    <div class="form-text">Les textes d'achat s'adaptent au type (acheter un billet / s'inscrire).</div>
+                    @error('type_evenement') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="mb-3">
                     <label for="categorie" class="form-label fw-semibold">Categorie <span class="text-danger">*</span></label>
                     <select class="form-select @error('categorie') is-invalid @enderror" id="categorie" name="categorie" required>
                         <option value="">Selectionner une categorie</option>

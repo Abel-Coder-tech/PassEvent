@@ -104,6 +104,11 @@
                         <span class="status-badge {{ $badgeClass }}">{{ ucfirst($evenement->statut) }}</span>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <strong>Type :</strong>
+                        @php $typeLabel = match($evenement->type_evenement) { 'formation' => 'Formation', 'conference' => 'Conférence', default => 'Spectacle / Soirée' }; @endphp
+                        <span class="badge" style="background: rgba(135,66,139,0.12); color: var(--violet);">{{ $typeLabel }}</span>
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <strong>Ventes :</strong>
                         @if($evenement->ventes_fermees)
                             <span class="badge bg-danger">Fermées</span>
