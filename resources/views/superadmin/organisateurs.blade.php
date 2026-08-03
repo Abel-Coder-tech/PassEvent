@@ -93,7 +93,7 @@
                     <td>{{ $org->evenements_count }}</td>
                     <td style="white-space:nowrap;">
                         <div class="d-flex flex-nowrap gap-1">
-                            <a href="{{ route('superadmin.organisateurs.voir', $org) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.78rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le détail">
+                            <a href="{{ route('superadmin.organisateurs.voir', $org) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le détail">
                                 <i class="bi bi-eye"></i>
                             </a>
                             @if(in_array($org->statut, ['en_attente', 'incomplet', 'corrections_demandees']))
@@ -159,27 +159,33 @@
     font-weight: 600;
     white-space: nowrap;
 }
+.sa-table td [class*="sa-btn"] {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.7rem;
+    line-height: 1;
+    white-space: nowrap;
+}
 .sa-badge-success { background: rgba(46,125,79,0.12); color: #2e7d4f; }
 .sa-badge-warning { background: rgba(237,173,8,0.12); color: #b8860b; }
 .sa-badge-danger { background: rgba(231,76,60,0.12); color: #e74c3c; }
 .sa-badge-secondary { background: rgba(152,145,155,0.15); color: #6c757d; }
 .sa-badge-info { background: rgba(13,110,253,0.12); color: #0a58ca; }
 .sa-btn-success {
-    background: #2e7d4f; border: none; color: #fff; padding: 0.3rem 0.6rem;
-    border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
-    transition: opacity 0.15s;
+    background: #2e7d4f; border: none; color: #fff; padding: 0.25rem 0.45rem;
+    border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s; line-height: 1;
 }
 .sa-btn-success:hover { opacity: 0.85; }
 .sa-btn-warning {
-    background: #e0a800; border: none; color: #fff; padding: 0.3rem 0.6rem;
-    border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
-    transition: opacity 0.15s;
+    background: #e0a800; border: none; color: #fff; padding: 0.25rem 0.45rem;
+    border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s; line-height: 1;
 }
 .sa-btn-warning:hover { opacity: 0.85; }
 .sa-btn-info {
-    background: #3b82f6; border: none; color: #fff; padding: 0.3rem 0.6rem;
-    border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
-    transition: opacity 0.15s;
+    background: #3b82f6; border: none; color: #fff; padding: 0.25rem 0.45rem;
+    border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s; line-height: 1;
 }
 .sa-btn-info:hover { opacity: 0.85; }
 .sa-btn-secondary {
