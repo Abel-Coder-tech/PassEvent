@@ -18,6 +18,7 @@ class Ticket extends Model
         'evenement_id',
         'tarif_id',
         'agent_vente_id',
+        'source',
         'code_unique',
         'qr_signature',
         'email_acheteur',

@@ -28,9 +28,10 @@ class VenteManuelleController extends Controller
     {
         $user = Auth::user();
 
-        // Événements éligibles (publiés ou brouillons)
+        // Événements éligibles (publiés ou brouillons, pas encore passés)
         $evenements = Evenement::where('user_id', $user->id)
             ->whereIn('statut', ['publié', 'brouillon'])
+            ->where(fn($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
             ->orderBy('date_event', 'asc')
             ->get();
 
@@ -38,7 +39,9 @@ class VenteManuelleController extends Controller
         $debutJour = now()->startOfDay()->utc();
         $finJour = now()->endOfDay()->utc();
         $ventesJour = Ticket::whereHas('evenement', fn($q) => $q->where('user_id', $user->id))
-            ->where('transaction_id', 'like', 'MANUEL-%') // Filtre les ventes manuelles
+            ->where(fn($q) => $q
+                ->where('source', 'vente_manuelle') // Ventes manuelles (espèces, gratuites, mobile confirmé)
+                ->orWhere('transaction_id', 'like', 'MANUEL-%')) // Compatibilité données historiques
             ->whereBetween('date_achat', [$debutJour, $finJour])
             ->with('evenement')
             ->latest('date_achat')
@@ -63,7 +66,17 @@ class VenteManuelleController extends Controller
     // Enregistre une vente manuelle (gratuite, espèces ou paiement mobile)
     public function store(Request $request)
     {
-        $evenement = Evenement::findOrFail($request->evenement_id);
+        $evenement = Evenement::where('id', $request->evenement_id)
+            ->where('user_id', Auth::id()) // Vérification de propriété
+            ->firstOrFail();
+
+        if ($evenement->date_event && $evenement->date_event->isPast()) {
+            return response()->json([
+                'errors' => [
+                    'evenement_id' => ['Cet événement est terminé. La vente manuelle est fermée.'],
+                ],
+            ], 422);
+        }
 
         $rules = [
             'evenement_id' => 'required|exists:evenement,id',
@@ -121,6 +134,16 @@ class VenteManuelleController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
+        // Vérification des places restantes (capacité de l'événement)
+        $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
+        if ($placesRestantes < $validated['quantite']) {
+            return response()->json([
+                'errors' => [
+                    'quantite' => ["Places restantes insuffisantes. Il ne reste que {$placesRestantes} place(s) disponible(s) pour cet événement."],
+                ],
+            ], 422);
+        }
+
         // --- Cas 1 : Événement gratuit ---
         if ($evenement->gratuit) {
             // Création de tickets gratuits
@@ -142,6 +165,7 @@ class VenteManuelleController extends Controller
                 $ticket = Ticket::create([
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $tarif->id,
+                    'source' => 'vente_manuelle',
                     'code_unique' => 'TMP',
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $validated['nom_acheteur'],
@@ -189,6 +213,16 @@ class VenteManuelleController extends Controller
 
         $tarif = Tarif::where('evenement_id', $evenement->id)->findOrFail($validated['tarif_id']);
 
+        // Vérification du stock restant du tarif
+        if ($tarif->quantite_disponible !== null && $tarif->quantite_disponible - $tarif->quantite_vendue < $validated['quantite']) {
+            $restantes = max(0, $tarif->quantite_disponible - $tarif->quantite_vendue);
+            return response()->json([
+                'errors' => [
+                    'quantite' => ["Quantité restante insuffisante pour ce tarif. Il n'en reste que {$restantes}."],
+                ],
+            ], 422);
+        }
+
         // --- Cas 2 : Paiement en espèces ---
         if ($validated['methode_paiement'] === 'especes') {
             $tickets = [];
@@ -196,6 +230,7 @@ class VenteManuelleController extends Controller
                 $ticket = Ticket::create([
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $tarif->id,
+                    'source' => 'vente_manuelle',
                     'code_unique' => 'TMP',
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $validated['nom_acheteur'],
@@ -253,6 +288,7 @@ class VenteManuelleController extends Controller
             $t = Ticket::create([
                 'evenement_id' => $evenement->id,
                 'tarif_id' => $tarif->id,
+                'source' => 'vente_manuelle',
                 'code_unique' => 'TMP',
                 'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                 'nom_acheteur' => $validated['nom_acheteur'],
