@@ -70,27 +70,66 @@ class SitePublicController extends Controller
     // Traite le formulaire de contact et notifie les super admins
     public function contactStore(Request $request)
     {
-        $validated = $request->validate([
+        $motifs = [
+            'ticket_non_recu' => 'Incident paiement : ticket non reçu',
+            'debit_sans_confirmation' => 'Incident paiement : débité sans confirmation',
+            'erreur_montant' => 'Incident paiement : erreur de montant',
+            'autre' => 'Autre question',
+        ];
+
+        $motif = $request->input('motif');
+        $isIncident = in_array($motif, ['ticket_non_recu', 'debit_sans_confirmation', 'erreur_montant'], true);
+
+        $rules = [
             'nom_complet' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
-            'objet' => 'required|string|min:5|max:255',
+            'motif' => 'required|string|in:' . implode(',', array_keys($motifs)),
+            'telephone' => 'nullable|string|max:30',
+            'email_achat' => $isIncident ? 'required|email|max:255' : 'nullable|email|max:255',
+            'transaction_id' => 'nullable|string|max:100',
             'message' => 'required|string|min:10|max:2000',
-        ], [
+        ];
+
+        if (!$isIncident) {
+            $rules['objet'] = 'required|string|min:5|max:255';
+        }
+
+        $messages = [
             'nom_complet.required' => 'Le nom et prenom est obligatoire.',
             'nom_complet.min' => 'Le nom doit contenir au moins 3 caracteres.',
             'nom_complet.max' => 'Le nom ne doit pas depasser 255 caracteres.',
             'email.required' => 'L\'email est obligatoire.',
             'email.email' => 'Le format de l\'email est invalide.',
             'email.max' => 'L\'email ne doit pas depasser 255 caracteres.',
+            'motif.required' => 'Veuillez choisir un motif.',
+            'motif.in' => 'Le motif sélectionné est invalide.',
+            'telephone.max' => 'Le téléphone ne doit pas dépasser 30 caracteres.',
+            'email_achat.required' => 'Indiquez l\'email utilisé lors de l\'achat : il nous permet de retrouver votre commande.',
+            'email_achat.email' => 'Le format de l\'email d\'achat est invalide.',
+            'email_achat.max' => 'L\'email d\'achat ne doit pas dépasser 255 caracteres.',
+            'transaction_id.max' => 'L\'ID de transaction ne doit pas dépasser 100 caracteres.',
             'objet.required' => 'L\'objet est obligatoire.',
             'objet.min' => 'L\'objet doit contenir au moins 5 caracteres.',
-            'objet.max' => 'L\'objet ne doit pas depasser 255 caracteres.',
+            'objet.max' => 'L\'objet ne doit pas dépasser 255 caracteres.',
             'message.required' => 'Le message est obligatoire.',
             'message.min' => 'Le message doit contenir au moins 10 caracteres.',
-            'message.max' => 'Le message ne doit pas depasser 2000 caracteres.',
-        ]);
+            'message.max' => 'Le message ne doit pas dépasser 2000 caracteres.',
+        ];
 
-        $message = Message::create($validated);
+        $validated = $request->validate($rules, $messages);
+
+        // L'objet est recomposé côté serveur : jamais de confiance aux valeurs client pour les incidents
+        $objet = $isIncident ? $motifs[$motif] : $validated['objet'];
+
+        $message = Message::create([
+            'nom_complet' => $validated['nom_complet'],
+            'email' => $validated['email'],
+            'telephone' => $validated['telephone'] ?? null,
+            'email_achat' => $validated['email_achat'] ?? null,
+            'objet' => $objet,
+            'transaction_id' => $validated['transaction_id'] ?? null,
+            'message' => $validated['message'],
+        ]);
 
         // Envoyer un email à tous les super admins
         $superAdmins = User::where('role', 'super_admin')->get();
@@ -98,13 +137,19 @@ class SitePublicController extends Controller
             Mail::raw(
                 "Nouveau message depuis le formulaire de contact :\n\n" .
                 "De : {$validated['nom_complet']} ({$validated['email']})\n" .
-                "Objet : {$validated['objet']}\n" .
+                ($validated['telephone'] ?? null ? "Téléphone : {$validated['telephone']}\n" : '') .
+                "Objet : {$objet}\n" .
+                ($validated['email_achat'] ?? null ? "Email d'achat : {$validated['email_achat']}\n" : '') .
+                ($validated['transaction_id'] ?? null ? "ID transaction FedaPay : {$validated['transaction_id']}\n" : '') .
                 "Message :\n{$validated['message']}\n\n" .
+                ($isIncident
+                    ? "INCIDENT PAIEMENT : ouvrez le Support technique du super dashboard pour vérifier et réconcilier la transaction.\n\n"
+                    : '') .
                 "Connectez-vous au super dashboard pour y repondre.",
-                function ($m) use ($sa, $validated) {
+                function ($m) use ($sa, $validated, $objet) {
                     $m->to($sa->email)
                       ->replyTo($validated['email'], $validated['nom_complet'])
-                      ->subject("[PaxEvent] Contact : {$validated['objet']}");
+                      ->subject("[PaxEvent] Contact : {$objet}");
                 }
             );
         }

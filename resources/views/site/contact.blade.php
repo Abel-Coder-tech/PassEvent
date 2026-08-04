@@ -62,11 +62,59 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="telephone" class="contact-label">Téléphone <span class="text-muted" style="font-weight:400;">(facultatif)</span></label>
+                            <div class="contact-input-wrap">
+                                <i class="bi bi-telephone"></i>
+                                <input type="text" class="contact-input @error('telephone') is-invalid @enderror" id="telephone" name="telephone" value="{{ old('telephone') }}" placeholder="Ex: +229 90 00 00 00">
+                            </div>
+                            @error('telephone')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motif" class="contact-label">Motif <span class="text-danger">*</span></label>
+                            <select class="contact-input @error('motif') is-invalid @enderror" id="motif" name="motif" required style="padding-left:1rem;background:#fafafa;">
+                                <option value="">— Choisissez un motif —</option>
+                                <option value="ticket_non_recu" @selected(old('motif') === 'ticket_non_recu')>Problème de paiement : je n'ai pas reçu mon ticket</option>
+                                <option value="debit_sans_confirmation" @selected(old('motif') === 'debit_sans_confirmation')>J'ai été débité mais sans confirmation</option>
+                                <option value="erreur_montant" @selected(old('motif') === 'erreur_montant')>Erreur de montant ou doublon de paiement</option>
+                                <option value="autre" @selected(old('motif') === 'autre')>Autre question</option>
+                            </select>
+                            @error('motif')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div id="incidentFields" style="display:none;">
+                            <div class="mb-3 p-3 rounded-3" style="background:rgba(231,76,60,0.05);border:1px solid rgba(231,76,60,0.15);">
+                                <div style="font-size:0.78rem;color:#e74c3c;margin-bottom:0.6rem;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Pour retrouver votre commande, renseignez les informations ci-dessous.
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email_achat" class="contact-label">Email utilisé lors de l'achat <span class="text-danger">*</span></label>
+                                    <div class="contact-input-wrap">
+                                        <i class="bi bi-bag-check"></i>
+                                        <input type="email" class="contact-input @error('email_achat') is-invalid @enderror" id="email_achat" name="email_achat" value="{{ old('email_achat') }}" placeholder="L'email de votre confirmation d'achat">
+                                    </div>
+                                    @error('email_achat')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
+                                </div>
+                                <div>
+                                    <label for="transaction_id" class="contact-label">ID de transaction FedaPay <span class="text-muted" style="font-weight:400;">(facultatif mais recommandé)</span></label>
+                                    <div class="contact-input-wrap">
+                                        <i class="bi bi-hash"></i>
+                                        <input type="text" class="contact-input @error('transaction_id') is-invalid @enderror" id="transaction_id" name="transaction_id" value="{{ old('transaction_id') }}" placeholder="ex : 2847331 (voir SMS/reçu FedaPay)">
+                                    </div>
+                                    <small class="text-muted">Il figure sur le SMS ou le reçu de paiement FedaPay.</small>
+                                    @error('transaction_id')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="objet" class="contact-label">Objet <span class="text-danger">*</span></label>
                             <div class="contact-input-wrap">
                                 <i class="bi bi-chat-dots"></i>
-                                <input type="text" class="contact-input @error('objet') is-invalid @enderror" id="objet" name="objet" value="{{ old('objet') }}" placeholder="Ex: Problème de paiement, Question sur un événement..." required>
+                                <input type="text" class="contact-input @error('objet') is-invalid @enderror" id="objet" name="objet" value="{{ old('objet') }}" placeholder="Ex: Question sur un événement..." required>
                             </div>
+                            <small class="text-muted">Pour les problèmes de paiement, l'objet est défini automatiquement.</small>
                             @error('objet')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
                         </div>
 
@@ -81,6 +129,36 @@
                             <i class="bi bi-send me-2"></i> Envoyer le message
                         </button>
                     </form>
+
+                    <script>
+                    (function() {
+                        const motifEl = document.getElementById('motif');
+                        const incidentFields = document.getElementById('incidentFields');
+                        const objetEl = document.getElementById('objet');
+                        const motifLabels = {
+                            'ticket_non_recu': 'Incident paiement : ticket non reçu',
+                            'debit_sans_confirmation': 'Incident paiement : débité sans confirmation',
+                            'erreur_montant': 'Incident paiement : erreur de montant'
+                        };
+
+                        function appliquerMotif() {
+                            const m = motifEl.value;
+                            const isIncident = m in motifLabels;
+                            incidentFields.style.display = isIncident ? 'block' : 'none';
+                            if (isIncident) {
+                                objetEl.value = motifLabels[m];
+                                objetEl.readOnly = true;
+                                objetEl.style.background = '#f2f2f2';
+                            } else {
+                                objetEl.readOnly = false;
+                                objetEl.style.background = '#fafafa';
+                            }
+                        }
+
+                        motifEl.addEventListener('change', appliquerMotif);
+                        appliquerMotif();
+                    })();
+                    </script>
                 </div>
             </div>
 

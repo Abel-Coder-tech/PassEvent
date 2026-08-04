@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('evenements:terminer')->hourly();
 Schedule::command('tickets:purger-en-attente')->hourly();
+Schedule::command('tickets:reconcilier')->hourly();

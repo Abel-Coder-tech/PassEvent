@@ -455,7 +455,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     transaction: {
                         amount: t.montant,
                         description: 'Ticket - ' + t.evenement_titre,
-                        external_id: String(t.id)
+                        external_id: String(t.id),
+                        custom_metadata: {
+                            ticket_id: String(t.id),
+                            group_transaction_id: t.transaction_id || ''
+                        }
                     },
                     customer: {
                         email: t.email_acheteur,

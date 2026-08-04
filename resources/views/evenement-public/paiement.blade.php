@@ -134,7 +134,11 @@ document.addEventListener('DOMContentLoaded', function() {
         transaction: {
             amount: {{ (int) $montantTotal }},
             description: 'Ticket - {{ $ticket->evenement->titre }}',
-            external_id: '{{ $ticket->id }}'
+            external_id: '{{ $ticket->id }}',
+            custom_metadata: {
+                ticket_id: '{{ $ticket->id }}',
+                group_transaction_id: '{{ $ticket->transaction_id }}'
+            }
         },
         customer: {
             email: '{{ $ticket->email_acheteur }}',

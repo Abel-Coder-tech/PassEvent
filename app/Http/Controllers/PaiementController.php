@@ -277,10 +277,17 @@ class PaiementController extends Controller
         $externalRef = $tx['external_id'] ?? $data['external_id'] ?? null;
         $metadata = $tx['custom_metadata'] ?? $data['custom_metadata'] ?? [];
         $metadataTicketId = $metadata['ticket_id'] ?? null;
+        $metadataGroup = $metadata['group_transaction_id'] ?? null;
 
         $ticket = null;
         if ($metadataTicketId) {
             $ticket = Ticket::with('evenement')->find($metadataTicketId);
+        }
+        if (!$ticket && $metadataGroup) {
+            // Groupe identifié par la référence de la commande groupée (robuste même si le 1er ticket a disparu)
+            $ticket = Ticket::where('transaction_id', $metadataGroup)
+                ->with('evenement')
+                ->first();
         }
         if (!$ticket && $externalRef) {
             $ticket = Ticket::with('evenement')->find($externalRef);
@@ -291,7 +298,54 @@ class PaiementController extends Controller
                 ->first();
         }
 
-        if (!$ticket || $ticket->statut_paiement === 'payé') {
+        // Dernier recours : recherche par email client + montant de la transaction (callback/webhook perdus)
+        $customer = $tx['customer'] ?? $data['customer'] ?? null;
+        $customerEmail = is_array($customer) || is_object($customer)
+            ? (data_get($customer, 'email') ?? null)
+            : $customer;
+        $montantTx = (float) ($tx['amount'] ?? $data['amount'] ?? 0);
+
+        if (!$ticket && $customerEmail) {
+            $candidats = Ticket::where('email_acheteur', $customerEmail)
+                ->where('statut_paiement', 'en_attente')
+                ->with('evenement', 'tarif')
+                ->get();
+
+            if ($montantTx > 0) {
+                foreach ($candidats->groupBy('transaction_id') as $groupe) {
+                    if (abs($groupe->sum('montant') - $montantTx) < 1) {
+                        $ticket = $groupe->first();
+                        break;
+                    }
+                }
+            }
+            if (!$ticket && $candidats->count() === 1) {
+                $ticket = $candidats->first();
+            }
+        }
+
+        if (!$ticket) {
+            // Paiement approuvé mais aucun billet retrouvé : incident journalisé pour le support
+            FacadesLog::warning('FedaPay webhook - paiement approuvé sans ticket trouvé', [
+                'transaction_id' => $transactionId,
+                'customer_email' => $customerEmail,
+                'amount' => $montantTx,
+            ]);
+            LogModel::create([
+                'type_operation' => 'reconciliation',
+                'ticket_id' => null,
+                'details' => [
+                    'action' => 'webhook_incident_ticket_non_trouve',
+                    'transaction_id' => $transactionId,
+                    'email' => $customerEmail ?? null,
+                    'montant' => $montantTx,
+                ],
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['status' => 'ok', 'warning' => 'ticket_not_found']);
+        }
+
+        if ($ticket->statut_paiement === 'payé') {
             return response()->json(['status' => 'ok']);
         }
 

@@ -313,6 +313,7 @@ class VenteManuelleController extends Controller
             'success' => true,
             'ticket' => [
                 'id' => $tickets[0]->id,
+                'transaction_id' => $groupTransactionId,
                 'montant' => (int) $montantTotal,
                 'nom_acheteur' => $tickets[0]->nom_acheteur,
                 'email_acheteur' => $tickets[0]->email_acheteur,

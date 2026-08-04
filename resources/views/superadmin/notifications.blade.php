@@ -16,9 +16,17 @@
             </thead>
             <tbody>
                 @foreach($messages as $msg)
+                @php
+                    $isIncident = !empty($msg->transaction_id) || str_starts_with($msg->objet, 'Incident paiement');
+                    $supportUrl = !empty($msg->transaction_id)
+                        ? route('superadmin.support', ['transaction_id' => $msg->transaction_id])
+                        : route('superadmin.support', ['email' => $msg->email_achat]);
+                @endphp
                 <tr style="{{ !$msg->lu ? 'background:rgba(107,63,160,0.03);' : '' }}">
                     <td>
-                        @if(str_starts_with($msg->objet, '[Remboursement]'))
+                        @if($isIncident)
+                            <span class="sa-badge" style="background:#e74c3c;color:#fff;">Incident paiement</span>
+                        @elseif(str_starts_with($msg->objet, '[Remboursement]'))
                             <span class="sa-badge" style="background:#f59e0b;color:#fff;">Remboursement</span>
                         @else
                             <span class="sa-badge sa-badge-primary">Contact</span>
@@ -36,6 +44,11 @@
                     </td>
                     <td style="font-size:0.75rem;">{{ $msg->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
                     <td style="white-space:nowrap;">
+                        @if($isIncident)
+                            <a href="{{ $supportUrl }}" target="_blank" class="sa-btn sa-btn-sm" style="background:#e74c3c;border:none;color:#fff;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Ouvrir le support technique">
+                                <i class="bi bi-tools"></i>
+                            </a>
+                        @endif
                         <button class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;"
                             onclick="voirNotification({{ $msg->id }})" title="Voir">
                             <i class="bi bi-eye"></i>
@@ -71,6 +84,18 @@
                 <span class="org-detail-label">Email</span>
                 <span class="org-detail-value" id="modalEmail"></span>
             </div>
+            <div class="org-detail-row" id="modalTelRow" style="display:none;">
+                <span class="org-detail-label">Téléphone</span>
+                <span class="org-detail-value" id="modalTel"></span>
+            </div>
+            <div class="org-detail-row" id="modalAchatRow" style="display:none;">
+                <span class="org-detail-label">Email d'achat</span>
+                <span class="org-detail-value" id="modalAchat"></span>
+            </div>
+            <div class="org-detail-row" id="modalTxRow" style="display:none;">
+                <span class="org-detail-label">ID transaction</span>
+                <span class="org-detail-value" id="modalTx"></span>
+            </div>
             <div class="org-detail-row">
                 <span class="org-detail-label">Objet</span>
                 <span class="org-detail-value" id="modalObjet"></span>
@@ -78,6 +103,14 @@
             <div class="org-detail-row" style="border-bottom:none;">
                 <span class="org-detail-label">Message</span>
                 <span class="org-detail-value" id="modalMessage" style="white-space:pre-wrap;"></span>
+            </div>
+            <div class="org-detail-row" id="modalSupportRow" style="border-top:1px solid #f5f5f5;padding-top:0.75rem;display:none;">
+                <span class="org-detail-label">Support</span>
+                <span class="org-detail-value">
+                    <a id="modalSupportLink" href="#" target="_blank" class="sa-btn sa-btn-sm" style="background:#e74c3c;border:none;color:#fff;text-decoration:none;padding:0.3rem 0.7rem;border-radius:6px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:0.35rem;">
+                        <i class="bi bi-tools"></i> Réconcilier dans le support
+                    </a>
+                </span>
             </div>
         </div>
         <div class="modal-footer">
@@ -114,6 +147,40 @@ function voirNotification(id) {
     document.getElementById('modalEmail').textContent = msg.email;
     document.getElementById('modalObjet').textContent = msg.objet;
     document.getElementById('modalMessage').textContent = msg.message;
+
+    const telRow = document.getElementById('modalTelRow');
+    const telEl = document.getElementById('modalTel');
+    const isIncident = msg.transaction_id || String(msg.objet || '').startsWith('Incident paiement');
+
+    if (msg.telephone) { telEl.textContent = msg.telephone; telRow.style.display = ''; }
+    else { telRow.style.display = 'none'; }
+
+    if (msg.email_achat) {
+        document.getElementById('modalAchat').textContent = msg.email_achat;
+        document.getElementById('modalAchatRow').style.display = '';
+    } else {
+        document.getElementById('modalAchatRow').style.display = 'none';
+    }
+
+    if (msg.transaction_id) {
+        document.getElementById('modalTx').textContent = msg.transaction_id;
+        document.getElementById('modalTxRow').style.display = '';
+    } else {
+        document.getElementById('modalTxRow').style.display = 'none';
+    }
+
+    const supportRow = document.getElementById('modalSupportRow');
+    const supportLink = document.getElementById('modalSupportLink');
+    if (isIncident) {
+        const params = new URLSearchParams();
+        if (msg.transaction_id) params.set('transaction_id', msg.transaction_id);
+        if (msg.email_achat) params.set('email', msg.email_achat);
+        supportLink.href = '{{ route('superadmin.support') }}' + '?' + params.toString();
+        supportRow.style.display = '';
+    } else {
+        supportRow.style.display = 'none';
+    }
+
     document.getElementById('notifModal').style.display = 'flex';
 
     if (!msg.lu) {
