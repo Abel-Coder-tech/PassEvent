@@ -38,8 +38,8 @@ class SuperAdminController extends Controller
         $evenementsActifs = Evenement::where('statut', 'publié')->where('date_event', '>=', $now)->count();
         $ticketsVendus = Ticket::where('statut_paiement', 'payé')->count();
         $recettesGlobales = Ticket::where('statut_paiement', 'payé')->sum('montant');
-        $scansAujourdhui = Ticket::where('utilise', true)->whereDate('updated_at', $today)->count();
-        
+        $scansAujourdhui = Log::where('type_operation', 'scan')->whereDate('created_at', $today)->count();
+
 
         // Ventes des 7 derniers jours pour graphique
         $ventes7Jours = collect();
@@ -91,7 +91,10 @@ class SuperAdminController extends Controller
             });
 
         // Alertes de sécurité
-        $scanInvalides = Log::where('type_operation', 'scan')->where('created_at', '>=', $today)->count();
+        $scanInvalides = Log::where('type_operation', 'scan')
+            ->where('details->resultat', '!=', 'valide')
+            ->where('created_at', '>=', $today)
+            ->count();
         $paiementsEchoues = Ticket::where('statut_paiement', 'échoué')->count();
         // Tickets suspects (>3 achats par même email/événement)
         $ticketsDupliques = Ticket::select('email_acheteur', 'evenement_id', DB::raw('count(*) as total'))
@@ -104,13 +107,17 @@ class SuperAdminController extends Controller
         $transactionsReussies = Ticket::where('statut_paiement', 'payé')->where('transaction_id', 'not like', 'GRATUIT-%')->count();
         $transactionsEchouees = Ticket::where('statut_paiement', 'échoué')->count();
         $montantsJournaliers = Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $today)->sum('montant');
-        $commissionPlateforme = round(Ticket::where('statut_paiement', 'payé')
-            ->get(['evenement_id', 'montant'])
+        $commissionParEvenement = Ticket::where('statut_paiement', 'payé')
+            ->select('evenement_id', DB::raw('SUM(montant) as total'))
             ->groupBy('evenement_id')
-            ->sum(function ($group) {
-                $evenement = Evenement::with('user')->find($group->first()->evenement_id);
-                return $group->sum('montant') * ($evenement?->commissionEffective() ?? 10) / 100;
-            }), 2); // Commission effective par événement
+            ->get();
+        $evenementsCommission = Evenement::with('user')
+            ->whereIn('id', $commissionParEvenement->pluck('evenement_id'))
+            ->get()
+            ->keyBy('id');
+        $commissionPlateforme = round($commissionParEvenement->sum(function ($groupe) use ($evenementsCommission) {
+            return $groupe->total * ($evenementsCommission->get($groupe->evenement_id)?->commissionEffective() ?? 10) / 100;
+        }), 2); // Commission effective par événement
         $commissionPct = $recettesGlobales > 0 ? round($commissionPlateforme / $recettesGlobales * 100, 1) : 10;
 
         $messagesNonLus = Message::where('lu', false)->whereNull('user_id')->count();

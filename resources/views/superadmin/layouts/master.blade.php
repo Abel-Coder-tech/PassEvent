@@ -215,7 +215,7 @@
         }
         .sa-topbar-date { font-size: 0.8rem; color: var(--sa-text-muted); }
 
-        .sa-content { padding: 1.5rem; }
+        .sa-content { padding: 2.5rem 2.5rem; }
 
         .sa-card {
             background: var(--sa-card-bg);
