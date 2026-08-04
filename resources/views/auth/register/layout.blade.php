@@ -124,16 +124,16 @@
     }
     .volet-steps {
         display: flex;
-        gap: 3px;
+        gap: 0;
+        border-radius: 3px;
+        overflow: hidden;
     }
     .volet-step {
         flex: 1;
         height: 5px;
-        border-radius: 3px;
-        background: #e8e8e8;
+        background: #542680;
         transition: background 0.3s;
     }
-    .volet-step.active { background: #542680; }
     .volet-step.done { background: #2e7d4f; }
 </style>
 @endsection
