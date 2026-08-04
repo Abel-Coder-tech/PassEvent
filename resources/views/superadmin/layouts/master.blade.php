@@ -195,9 +195,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: -webkit-sticky;
             position: sticky;
             top: 0;
-            z-index: 99;
+            z-index: 999;
+            flex-shrink: 0;
         }
         .sa-topbar-left { display: flex; align-items: center; gap: 1rem; }
         .sa-topbar-title { font-size: 1.1rem; font-weight: 700; color: var(--sa-text); }
