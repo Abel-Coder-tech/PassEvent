@@ -536,6 +536,11 @@
                 @php $pendingRemb = \App\Models\DemandeRemboursement::where('statut','en_attente')->count(); @endphp
                 @if($pendingRemb > 0)<span class="sa-nav-badge">{{ $pendingRemb }}</span>@endif
             </a>
+            <a href="{{ route('superadmin.support') }}" class="sa-nav-link {{ request()->routeIs('superadmin.support*') ? 'active' : '' }}">
+                <i class="bi bi-tools"></i> Support technique
+                @php $incidentsSupport = \App\Models\Ticket::where('statut_paiement','en_attente')->whereNotNull('fedapay_transaction_id')->count(); @endphp
+                @if($incidentsSupport > 0)<span class="sa-nav-badge" style="background:#e74c3c;">{{ $incidentsSupport }}</span>@endif
+            </a>
             <a href="{{ route('superadmin.transactions') }}" class="sa-nav-link {{ request()->routeIs('superadmin.transactions') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Transactions
             </a>
