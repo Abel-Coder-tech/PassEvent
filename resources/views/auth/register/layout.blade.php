@@ -124,27 +124,17 @@
     }
     .volet-steps {
         display: flex;
-        align-items: center;
-        gap: 0;
+        gap: 3px;
     }
     .volet-step {
         flex: 1;
-        text-align: center;
-        padding: 0.35rem 0.2rem;
-        font-size: 0.68rem;
-        font-weight: 600;
-        color: #c5c5c5;
+        height: 5px;
+        border-radius: 3px;
         background: #e8e8e8;
-        border-right: 2px solid #fff;
-        transition: all 0.3s;
-        position: relative;
+        transition: background 0.3s;
     }
-    .volet-step:first-child { border-radius: 8px 0 0 8px; }
-    .volet-step:last-child { border-radius: 0 8px 8px 0; border-right: none; }
-    .volet-step.active { background: #542680; color: #fff; }
-    .volet-step.done { background: #2e7d4f; color: #fff; }
-    .volet-step .step-label { display: block; }
-    .volet-step .step-icon { font-size: 0.8rem; }
+    .volet-step.active { background: #542680; }
+    .volet-step.done { background: #2e7d4f; }
 </style>
 @endsection
 
@@ -166,12 +156,7 @@
                         <div class="progress-volet-body">
                             <div class="volet-steps">
                                 @foreach($allSteps as $i => $label)
-                                <div class="volet-step {{ $i < $current ? 'done' : ($i === $current ? 'active' : '') }}">
-                                    <span class="step-icon">
-                                        {!! $i < $current ? '<i class="bi bi-check-circle-fill"></i>' : ($i === $current ? '<i class="bi bi-circle-fill"></i>' : '<i class="bi bi-circle"></i>') !!}
-                                    </span>
-                                    <span class="step-label">{{ $label }}</span>
-                                </div>
+                                <div class="volet-step {{ $i < $current ? 'done' : ($i === $current ? 'active' : '') }}"></div>
                                 @endforeach
                             </div>
                         </div>
