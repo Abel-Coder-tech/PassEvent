@@ -35,5 +35,5 @@
         </table>
     </div>
 </div>
-<div class="mt-3 d-flex justify-content-center">{{ $users->links() }}</div>
+<div class="mt-3">{{ $users->links('vendor.pagination.pass', ['label' => 'utilisateur(s)']) }}</div>
 @endsection

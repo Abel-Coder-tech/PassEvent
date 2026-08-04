@@ -149,7 +149,7 @@
         </table>
     </div>
 </div>
-<div class="mt-3 d-flex justify-content-center">{{ $organisateurs->links() }}</div>
+<div class="mt-3">{{ $organisateurs->links('vendor.pagination.pass', ['label' => 'organisateur(s)']) }}</div>
 
 <style>
 .sa-badge {
