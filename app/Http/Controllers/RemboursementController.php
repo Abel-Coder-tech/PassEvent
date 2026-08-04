@@ -46,9 +46,9 @@ class RemboursementController extends Controller
         }
 
         if ($statut === 'rembourse') {
-            $tickets = (clone $query)->where('statut_paiement', 'remboursé')->orderByDesc('updated_at')->paginate(20); // Affiche les remboursés
+            $tickets = (clone $query)->where('statut_paiement', 'remboursé')->orderByDesc('updated_at')->paginate(\App\Support\PerPage::resolve()); // Affiche les remboursés
         } else {
-            $tickets = (clone $query)->where('statut_paiement', 'payé')->orderByDesc('date_achat')->paginate(20); // Défaut : les payés
+            $tickets = (clone $query)->where('statut_paiement', 'payé')->orderByDesc('date_achat')->paginate(\App\Support\PerPage::resolve()); // Défaut : les payés
         }
 
         $stats = [

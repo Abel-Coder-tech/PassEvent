@@ -82,6 +82,7 @@
             </table>
         </div>
     </div>
+    <div class="mt-3">{{ $agents->links('vendor.pagination.pass', ['label' => 'agent(s) de scan']) }}</div>
     @endif
 </div>
 @endsection

@@ -49,7 +49,7 @@ class EvenementPublicController extends Controller
             });
         }
 
-        $evenements = $query->with('tarifs')->orderBy('date_event', 'asc')->paginate(12);
+        $evenements = $query->with('tarifs')->orderBy('date_event', 'asc')->paginate(\App\Support\PerPage::resolve());
 
         return view('evenement-public.index', compact('evenements', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
     }

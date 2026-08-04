@@ -27,7 +27,7 @@ class AgentVenteController extends Controller
         })
             ->with('evenement')
             ->latest()
-            ->get();
+            ->paginate(\App\Support\PerPage::resolve());
 
         return view('admin.agents-vente.index', compact('evenements', 'agents'));
     }
@@ -88,7 +88,7 @@ class AgentVenteController extends Controller
         $tickets = $agentVente->tickets()
             ->with('tarif')
             ->latest('date_achat')
-            ->paginate(50);
+            ->paginate(\App\Support\PerPage::resolve());
 
         $stats = [
             'total_tickets' => $agentVente->tickets_count,

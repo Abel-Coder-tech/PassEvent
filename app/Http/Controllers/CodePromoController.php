@@ -49,7 +49,7 @@ class CodePromoController extends Controller
             $query->where('actif', false);
         }
 
-        $codesPromos = $query->orderByDesc('created_at')->paginate(20);
+        $codesPromos = $query->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
 
         $stats = [
             'total' => (clone $query)->count(),

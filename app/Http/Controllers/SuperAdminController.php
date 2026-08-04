@@ -132,7 +132,7 @@ class SuperAdminController extends Controller
     // Liste de tous les utilisateurs
     public function utilisateurs()
     {
-        $users = User::withCount('evenements')->orderByDesc('created_at')->paginate(20);
+        $users = User::withCount('evenements')->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.utilisateurs', compact('users'));
     }
 
@@ -145,7 +145,7 @@ class SuperAdminController extends Controller
                 $q->where('statut', 'publié');
             }], 'quota_vendu')
             ->orderByDesc('created_at')
-            ->paginate(10);
+            ->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.organisateurs', compact('organisateurs'));
     }
 
@@ -156,7 +156,7 @@ class SuperAdminController extends Controller
             ->withCount(['tickets as tickets_vendus' => fn($q) => $q->where('statut_paiement', 'payé')])
             ->withSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.evenements', compact('evenements'));
     }
 
@@ -167,14 +167,14 @@ class SuperAdminController extends Controller
             ->where('transaction_id', 'not like', 'GRATUIT-%')
             ->with('evenement')
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.transactions', compact('transactions'));
     }
 
     // Liste de tous les tickets
     public function tickets()
     {
-        $allTickets = Ticket::with('evenement')->orderByDesc('created_at')->paginate(20);
+        $allTickets = Ticket::with('evenement')->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.tickets', compact('allTickets'));
     }
 
@@ -184,7 +184,7 @@ class SuperAdminController extends Controller
         $logs = Log::with('ticket.evenement')
             ->where('type_operation', 'scan')
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.scans', compact('logs'));
     }
 
@@ -212,7 +212,7 @@ class SuperAdminController extends Controller
     // Notifications non lues (messages système)
     public function notifications()
     {
-        $messages = Message::whereNull('user_id')->orderByDesc('created_at')->paginate(20);
+        $messages = Message::whereNull('user_id')->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.notifications', compact('messages'));
     }
 
@@ -297,14 +297,14 @@ class SuperAdminController extends Controller
     {
         $logs = Log::with('ticket.evenement')
             ->orderByDesc('created_at')
-            ->paginate(30);
+            ->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.logs', compact('logs'));
     }
 
     // Page de modération des événements annulés
     public function moderation()
     {
-        $evenementsSuspendus = Evenement::where('statut', 'annulé')->with('user')->paginate(20);
+        $evenementsSuspendus = Evenement::where('statut', 'annulé')->with('user')->paginate(\App\Support\PerPage::resolve());
         return view('superadmin.moderation', compact('evenementsSuspendus'));
     }
 
@@ -458,8 +458,9 @@ class SuperAdminController extends Controller
     }
 
     // Historique paginé des ajustements (et annulations) pour un événement ou un organisateur
-    protected function historiqueAjustements(string $niveau, int $id, int $perPage = 10)
+    protected function historiqueAjustements(string $niveau, int $id, ?int $perPage = null)
     {
+        $perPage = $perPage ?? \App\Support\PerPage::resolve();
         $logs = Log::where('ticket_id', null)
             ->whereIn('type_operation', ['ajustement', 'evenement_annule'])
             ->orderByDesc('created_at')
@@ -688,7 +689,7 @@ class SuperAdminController extends Controller
             ->with('evenement', 'tarif')
             ->where('statut_paiement', 'payé')
             ->latest('date_achat')
-            ->paginate(50);
+            ->paginate(\App\Support\PerPage::resolve());
 
         return view('superadmin.organisateur-show', compact(
             'user', 'evenements', 'totalTickets', 'totalRecettes',
@@ -706,7 +707,7 @@ class SuperAdminController extends Controller
         $retraits = Withdrawal::with('user')
             ->orderByRaw("FIELD(status, 'en_attente', 'en_cours', 'approuvé', 'payé', 'rejeté')")
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(\App\Support\PerPage::resolve());
 
         $stats = [
             'en_attente' => Withdrawal::where('status', 'en_attente')->count(),
@@ -796,7 +797,7 @@ class SuperAdminController extends Controller
         $demandes = DemandeRemboursement::with('organisateur', 'evenement', 'tickets')
             ->orderByRaw("FIELD(statut, 'en_attente', 'en_cours', 'rembourse', 'refuse')")
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(\App\Support\PerPage::resolve());
 
         $stats = [
             'en_attente' => DemandeRemboursement::where('statut', 'en_attente')->count(),
@@ -997,7 +998,7 @@ class SuperAdminController extends Controller
     // Liste de tous les abonnés newsletter
     public function newsletter()
     {
-        $abonnes = Newsletter::orderByDesc('created_at')->paginate(20);
+        $abonnes = Newsletter::orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
         $totalActifs = Newsletter::where('actif', true)->count();
         $totalInactifs = Newsletter::where('actif', false)->count();
 

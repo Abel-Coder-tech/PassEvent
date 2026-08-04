@@ -71,7 +71,7 @@ class RetraitController extends Controller
 
         $retraits = Withdrawal::where('user_id', $user->id)
             ->orderByDesc('created_at')
-            ->paginate(10);
+            ->paginate(\App\Support\PerPage::resolve());
 
         return view('admin.retraits.index', array_merge($data, [
             'retraits' => $retraits,

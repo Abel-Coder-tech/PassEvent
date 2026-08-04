@@ -16,7 +16,7 @@ class AgentController extends Controller
     // Liste tous les agents de scan appartenant à l'organisateur connecté
     public function index()
     {
-        $agents = Agent::with('evenement')->whereIn('evenement_id', auth()->user()->evenements->pluck('id'))->orderBy('created_at', 'desc')->get(); // Agents liés aux événements de l'utilisateur
+        $agents = Agent::with('evenement')->whereIn('evenement_id', auth()->user()->evenements->pluck('id'))->orderBy('created_at', 'desc')->paginate(\App\Support\PerPage::resolve()); // Agents liés aux événements de l'utilisateur
         return view('admin.agents.index', compact('agents'));
     }
 
@@ -104,7 +104,7 @@ class AgentController extends Controller
             'dernier_acces' => $agent->dernier_acces,
         ];
 
-        $logs = $agent->logs()->latest()->paginate(50);
+        $logs = $agent->logs()->latest()->paginate(\App\Support\PerPage::resolve());
 
         return view('admin.agents.show', compact('agent', 'stats', 'logs'));
     }

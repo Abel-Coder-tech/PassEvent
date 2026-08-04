@@ -1,15 +1,6 @@
 @php($label = $label ?? 'élément(s)')
 <style>
 .pass-pagination { width: 100%; }
-.pass-pagination-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    font-size: 0.78rem;
-    color: #8b8b98;
-    margin-bottom: 0.65rem;
-}
 .pass-pagination-row {
     display: flex;
     align-items: center;
@@ -17,46 +8,13 @@
     flex-wrap: wrap;
     gap: 0.75rem;
 }
-.pass-pagination-pages {
+.pass-pagination-meta {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.pass-page-item a,
-.pass-page-item > span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.9rem;
-    height: 1.9rem;
-    padding: 0 0.45rem;
-    border: 1px solid #e0dde3;
-    border-radius: 7px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #3b3b45;
-    background: #fff;
-    text-decoration: none;
-    transition: all 0.15s ease;
-}
-.pass-page-item a:hover {
-    border-color: var(--violet, #542680);
-    color: var(--violet, #542680);
-    background: #f8f6f9;
-}
-.pass-page-active > span {
-    background: var(--violet, #542680);
-    border-color: var(--violet, #542680);
-    color: #fff;
-}
-.pass-page-ellipsis > span {
-    border: none;
-    background: transparent;
-    color: #a0a0ac;
+    font-size: 0.78rem;
+    color: #8b8b98;
 }
 .pass-pagination-btns {
     display: flex;
@@ -87,39 +45,43 @@
     opacity: 0.45;
     pointer-events: none;
 }
+.pass-pagination-foot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.65rem;
+}
+.pass-per-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #8b8b98;
+    margin: 0;
+}
+.pass-per-page select {
+    padding: 0.3rem 0.55rem;
+    border: 1px solid #e0dde3;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #3b3b45;
+    background: #fff;
+    cursor: pointer;
+}
+.pass-per-page select:focus {
+    outline: none;
+    border-color: var(--violet, #542680);
+    box-shadow: 0 0 0 0.15rem rgba(84, 38, 128, 0.12);
+}
 </style>
 
 <div class="pass-pagination">
-    <div class="pass-pagination-meta">
-        <span>{{ $paginator->perPage() }} par page</span>
-        <span>·</span>
-        <span>Page {{ $paginator->currentPage() }} sur {{ $paginator->lastPage() }} — {{ $paginator->total() }} {{ $label }}</span>
-    </div>
+    <div class="pass-pagination-row">
+        <span class="pass-pagination-meta">
+            Page {{ $paginator->currentPage() }} sur {{ $paginator->lastPage() }} — {{ $paginator->total() }} {{ $label }}
+        </span>
 
-    @if ($paginator->hasPages())
-        <div class="pass-pagination-row">
-            {{-- Pages (à gauche) --}}
-            <ul class="pass-pagination-pages">
-                @if (isset($elements) && is_array($elements))
-                    @foreach ($elements as $element)
-                        @if (is_string($element))
-                            <li class="pass-page-item pass-page-ellipsis" aria-disabled="true"><span>…</span></li>
-                        @endif
-
-                        @if (is_array($element))
-                            @foreach ($element as $page => $url)
-                                @if ($page == $paginator->currentPage())
-                                    <li class="pass-page-item pass-page-active" aria-current="page"><span>{{ $page }}</span></li>
-                                @else
-                                    <li class="pass-page-item"><a href="{{ $url }}">{{ $page }}</a></li>
-                                @endif
-                            @endforeach
-                        @endif
-                    @endforeach
-                @endif
-            </ul>
-
-            {{-- Précédent / Suivant (à droite) --}}
+        @if ($paginator->hasPages())
             <div class="pass-pagination-btns">
                 @if ($paginator->onFirstPage())
                     <span class="pass-btn pass-btn-disabled">Précédent</span>
@@ -133,6 +95,28 @@
                     <span class="pass-btn pass-btn-disabled">Suivant</span>
                 @endif
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
+
+    <div class="pass-pagination-foot">
+        <form method="GET" action="{{ url()->current() }}" class="pass-per-page">
+            @foreach (request()->except(['page', 'per_page']) as $key => $value)
+                @if (is_array($value))
+                    @foreach ($value as $v)
+                        <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                    @endforeach
+                @else
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endif
+            @endforeach
+
+            <label for="per_page">Afficher</label>
+            <select id="per_page" name="per_page" onchange="this.form.submit()">
+                @foreach (\App\Support\PerPage::ALLOWED as $n)
+                    <option value="{{ $n }}" @selected($n === $paginator->perPage())>{{ $n }}</option>
+                @endforeach
+            </select>
+            <span>par page</span>
+        </form>
+    </div>
 </div>

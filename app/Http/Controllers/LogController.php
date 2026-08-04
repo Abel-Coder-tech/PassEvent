@@ -43,7 +43,7 @@ class LogController extends Controller
             });
         }
 
-        $logs = $query->orderByDesc('created_at')->paginate(20);
+        $logs = $query->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
 
         $stats = $this->computeStats($startDate);
 

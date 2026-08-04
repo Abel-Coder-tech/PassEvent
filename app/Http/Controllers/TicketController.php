@@ -32,7 +32,7 @@ class TicketController extends Controller
             });
         }
 
-        $tickets = $query->orderBy('date_achat', 'desc')->paginate(15);
+        $tickets = $query->orderBy('date_achat', 'desc')->paginate(\App\Support\PerPage::resolve());
 
         // Statistiques par catégorie de ticket
         $statsQuery = Ticket::whereIn('evenement_id', $evenementsIds);

@@ -13,7 +13,7 @@ class MessageController extends Controller
     public function index()
     {
         $messages = Message::where('user_id', auth()->id())
-            ->orderByDesc('created_at')->paginate(20);
+            ->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
         $nonLus = Message::where('user_id', auth()->id())->where('lu', false)->count();
 
         return view('admin.messages.index', compact('messages', 'nonLus'));

@@ -20,7 +20,7 @@ class EvenementController extends Controller
         $evenements = Evenement::where('user_id', $user->id)
             ->withCount(['tickets' => fn($q) => $q->where('statut_paiement', 'payé')])
             ->orderBy('date_event', 'asc')
-            ->paginate(10);
+            ->paginate(\App\Support\PerPage::resolve());
 
         $totalEvenements = Evenement::where('user_id', $user->id)->count();
         $enCours = Evenement::where('user_id', $user->id)->where('statut', 'publié')->count();
