@@ -16,6 +16,7 @@ use App\Models\Withdrawal;
 use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\DemandeRemboursement;
+use App\Services\ReconciliationService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,12 @@ use Illuminate\Support\Facades\Mail;
 
 class SuperAdminController extends Controller
 {
+    protected ReconciliationService $reconciliation;
+
+    public function __construct(ReconciliationService $reconciliation)
+    {
+        $this->reconciliation = $reconciliation;
+    }
     // Tableau de bord super admin avec statistiques globales de la plateforme
     public function dashboard()
     {
@@ -373,12 +380,19 @@ class SuperAdminController extends Controller
         $agentsScan = Agent::where('evenement_id', $evenement->id)->count();
         $agentsVente = AgentVente::where('evenement_id', $evenement->id)->count();
 
+        $ticketsEnAttente = Ticket::where('evenement_id', $evenement->id)->where('statut_paiement', 'en_attente')->count();
+        $incidentsSupport = Ticket::where('evenement_id', $evenement->id)
+            ->where('statut_paiement', 'en_attente')
+            ->whereNotNull('fedapay_transaction_id')
+            ->count();
+
         $historique = $this->historiqueAjustements('evenement', $evenement->id);
 
         return view('superadmin.evenement-show', compact(
             'evenement', 'mobileRecettes', 'cashRecettes',
             'commissionPct', 'commission', 'recettesNettes',
             'tickets', 'ticketsScannes', 'agentsScan', 'agentsVente',
+            'ticketsEnAttente', 'incidentsSupport',
             'historique'
         ));
     }
@@ -1050,5 +1064,245 @@ class SuperAdminController extends Controller
         ]);
 
         return back()->with('success', "Message envoyé à {$abonnesActifs->count()} abonné(s).");
+    }
+
+    // ============================================================
+    // Support technique : réconciliation des paiements FedaPay
+    // ============================================================
+
+    // Recherche un incident paiement par transaction, email, téléphone ou code
+    public function support(Request $request)
+    {
+        $transactionId = trim($request->input('transaction_id', ''));
+        $email = strtolower(trim($request->input('email', '')));
+        $telephone = trim($request->input('telephone', ''));
+        $code = trim($request->input('code', ''));
+        $evenementId = $request->integer('evenement_id') ?: null;
+
+        $tickets = collect();
+        $verification = $request->session()->get('verification');
+
+        if ($transactionId || $email || $telephone || $code || $evenementId) {
+            $tickets = $this->reconciliation->trouverTickets(
+                $transactionId ?: null,
+                $email ?: null,
+                $telephone ?: null,
+                $code ?: null,
+                $evenementId
+            );
+        }
+
+        $incidents = Ticket::where('statut_paiement', 'en_attente')
+            ->whereNotNull('fedapay_transaction_id')
+            ->with('evenement')
+            ->orderByDesc('date_achat')
+            ->limit(30)
+            ->get();
+
+        $stats = [
+            'en_attente' => Ticket::where('statut_paiement', 'en_attente')->count(),
+            'incidents' => Ticket::where('statut_paiement', 'en_attente')->whereNotNull('fedapay_transaction_id')->count(),
+            'rembourses_support' => DemandeRemboursement::where('origine', 'support_superadmin')->where('statut', 'rembourse')->sum('montant_total'),
+        ];
+
+        return view('superadmin.support.index', compact(
+            'tickets',
+            'verification',
+            'incidents',
+            'stats',
+            'transactionId',
+            'email',
+            'telephone',
+            'code',
+            'evenementId',
+        ));
+    }
+
+    // Vérifie une transaction FedaPay via l'API et affiche le résultat
+    public function supportVerifier(Request $request)
+    {
+        $validated = $request->validate([
+            'transaction_id' => 'required|string|max:100',
+        ]);
+
+        $verification = $this->reconciliation->verifier($validated['transaction_id']);
+
+        $tickets = $this->reconciliation->trouverTickets($validated['transaction_id']);
+
+        return back()
+            ->with('verification', $verification)
+            ->with('verification_tickets', $tickets)
+            ->withInput();
+    }
+
+    // Confirme des tickets en attente (paiement vérifié, sinon force = override tracé)
+    public function supportConfirmer(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_ids' => 'required|array|min:1',
+            'ticket_ids.*' => 'integer|exists:ticket,id',
+            'transaction_id' => 'nullable|string|max:100',
+            'force' => 'nullable',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $tickets = Ticket::whereIn('id', $validated['ticket_ids'])->get();
+        $transactionId = trim($validated['transaction_id'] ?? '');
+        if ($transactionId === '') {
+            $transactionId = $tickets->first()?->fedapay_transaction_id ?? '';
+        }
+        $force = $request->boolean('force') || $transactionId === '';
+
+        // Sauf force explicite, on vérifie toujours le paiement via l'API
+        if (!$force) {
+            $verification = $this->reconciliation->verifier($transactionId);
+            if (!$verification['ok'] || !$verification['approuve']) {
+                return back()
+                    ->withErrors(['transaction_id' => 'Paiement non vérifié via FedaPay (' . ($verification['statut'] ?? 'API injoignable') . '). Utilisez le forçage seulement après contrôle manuel.'])
+                    ->withInput();
+            }
+        }
+
+        $resultat = $this->reconciliation->confirmerTickets(
+            $tickets,
+            $transactionId !== '' ? $transactionId : null,
+            null,
+            null,
+            $force
+        );
+
+        if (!$resultat['success']) {
+            return back()->with('error', $resultat['message']);
+        }
+
+        Log::create([
+            'type_operation' => 'reconciliation',
+            'ticket_id' => null,
+            'details' => [
+                'action' => 'confirmation_support',
+                'tickets' => $tickets->pluck('id'),
+                'transaction_id' => $transactionId,
+                'force' => $force,
+                'notes' => $validated['notes'] ?? null,
+                'par' => auth('superadmin')->user()->email,
+            ],
+            'ip' => $request->ip(),
+        ]);
+
+        return back()->with('success', $resultat['message']);
+    }
+
+    // Recrée un ticket purgé ou manquant
+    public function supportRecreer(Request $request)
+    {
+        $validated = $request->validate([
+            'evenement_id' => 'required|exists:evenement,id',
+            'tarif_id' => 'nullable|exists:tarifs,id',
+            'nom_acheteur' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'telephone' => 'nullable|string|max:30',
+            'montant' => 'nullable|numeric|min:0',
+            'quantite' => 'required|integer|min:1|max:20',
+            'transaction_id' => 'nullable|string|max:100',
+            'fedapay_transaction_id' => 'nullable|string|max:100',
+            'methode_paiement' => 'nullable|string|max:50',
+        ]);
+
+        $resultat = $this->reconciliation->recreerTicket($validated);
+
+        if (!$resultat['success']) {
+            return back()->with('error', $resultat['message']);
+        }
+
+        Log::create([
+            'type_operation' => 'reconciliation',
+            'ticket_id' => null,
+            'details' => [
+                'action' => 'recreation_support',
+                'tickets' => $resultat['tickets']->pluck('id'),
+                'par' => auth('superadmin')->user()->email,
+            ],
+            'ip' => $request->ip(),
+        ]);
+
+        return back()->with('success', $resultat['message']);
+    }
+
+    // Supprime des tickets en attente abandonnés
+    public function supportSupprimer(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_ids' => 'required|array|min:1',
+            'ticket_ids.*' => 'integer|exists:ticket,id',
+            'motif' => 'nullable|string|max:1000',
+        ]);
+
+        $tickets = Ticket::whereIn('id', $validated['ticket_ids'])->get();
+        $resultat = $this->reconciliation->supprimerGroupe($tickets, $validated['motif'] ?? null);
+
+        Log::create([
+            'type_operation' => 'reconciliation',
+            'ticket_id' => null,
+            'details' => [
+                'action' => 'suppression_support',
+                'tickets' => $tickets->pluck('id'),
+                'par' => auth('superadmin')->user()->email,
+            ],
+            'ip' => $request->ip(),
+        ]);
+
+        return back()->with('success', $resultat['message']);
+    }
+
+    // Renvoie l'email d'un ticket
+    public function supportRenvoyerEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_id' => 'required|integer|exists:ticket,id',
+        ]);
+
+        $resultat = $this->reconciliation->renvoyerEmail(Ticket::findOrFail($validated['ticket_id']));
+
+        return back()->with(
+            $resultat['success'] ? 'success' : 'error',
+            $resultat['message']
+        );
+    }
+
+    // Remboursement direct superadmin (tickets payés, sans l'organisateur)
+    public function supportRembourser(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_ids' => 'required|array|min:1',
+            'ticket_ids.*' => 'integer|exists:ticket,id',
+            'motif' => 'required|string|max:1000',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $tickets = Ticket::whereIn('id', $validated['ticket_ids'])->get();
+
+        if ($tickets->where('statut_paiement', '!=', 'payé')->isNotEmpty()) {
+            return back()->with('error', 'Seuls les tickets payés peuvent être remboursés.');
+        }
+
+        $resultat = $this->reconciliation->rembourser($tickets, $validated['motif'], $validated['notes'] ?? null);
+
+        if (!$resultat['success']) {
+            return back()->with('error', $resultat['message']);
+        }
+
+        Log::create([
+            'type_operation' => 'reconciliation',
+            'ticket_id' => null,
+            'details' => [
+                'action' => 'remboursement_support',
+                'tickets' => $tickets->pluck('id'),
+                'montant' => $tickets->sum('montant'),
+                'par' => auth('superadmin')->user()->email,
+            ],
+            'ip' => $request->ip(),
+        ]);
+
+        return back()->with('success', $resultat['message']);
     }
 }

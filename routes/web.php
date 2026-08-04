@@ -145,6 +145,13 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/remboursements/{demande}/approuver', [SuperAdminController::class, 'approuverDemandeRemboursement'])->name('remboursements.approuver');
         Route::post('/remboursements/{demande}/confirmer', [SuperAdminController::class, 'confirmerRemboursement'])->name('remboursements.confirmer');
         Route::post('/remboursements/{demande}/refuser', [SuperAdminController::class, 'refuserDemandeRemboursement'])->name('remboursements.refuser');
+        Route::get('/support', [SuperAdminController::class, 'support'])->name('support');
+        Route::post('/support/verifier', [SuperAdminController::class, 'supportVerifier'])->name('support.verifier');
+        Route::post('/support/confirmer', [SuperAdminController::class, 'supportConfirmer'])->name('support.confirmer');
+        Route::post('/support/recreer', [SuperAdminController::class, 'supportRecreer'])->name('support.recreer');
+        Route::post('/support/supprimer', [SuperAdminController::class, 'supportSupprimer'])->name('support.supprimer');
+        Route::post('/support/renvoyer-email', [SuperAdminController::class, 'supportRenvoyerEmail'])->name('support.renvoyer-email');
+        Route::post('/support/rembourser', [SuperAdminController::class, 'supportRembourser'])->name('support.rembourser');
     });
 });
 // Routes globales Spatie Sitemap

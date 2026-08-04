@@ -153,6 +153,11 @@ class PaiementController extends Controller
                         'transaction_id' => $transactionId,
                         'api_status' => $status,
                     ]);
+
+                    // Conserve l'ID de transaction FedaPay pour permettre au support de vérifier/réconcilier plus tard
+                    foreach ($groupTickets as $t) {
+                        $t->update(['fedapay_transaction_id' => $transactionId]);
+                    }
                 }
             }
 
@@ -186,6 +191,7 @@ class PaiementController extends Controller
             $t->update([
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
+                'fedapay_transaction_id' => $transactionId,
                 'methode_paiement' => $paymentMethod,
                 'telephone_paiement' => $paymentPhone,
             ]);
@@ -320,6 +326,7 @@ class PaiementController extends Controller
             $t->update([
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
+                'fedapay_transaction_id' => $transactionId,
                 'methode_paiement' => $paymentMethod,
                 'telephone_paiement' => $tx['phone'] ?? $data['phone'] ?? $t->telephone_acheteur,
             ]);

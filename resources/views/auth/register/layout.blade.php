@@ -92,14 +92,10 @@
     .progress-volet {
         background: #f8f6f9;
         border-radius: 12px;
-        padding: 0.75rem 1rem 0.5rem;
+        padding: 0.75rem 1rem 1rem;
         margin-bottom: 1.25rem;
         border: 1px solid #eee;
-        cursor: pointer;
-        user-select: none;
-        transition: background 0.2s;
     }
-    .progress-volet:hover { background: #f5f0f9; }
     .progress-volet-header {
         display: flex;
         align-items: center;
@@ -109,19 +105,9 @@
         text-transform: uppercase;
         letter-spacing: 0.4px;
         color: #9972B0;
+        margin-bottom: 0.75rem;
     }
-    .progress-volet-header i { font-size: 0.7rem; transition: transform 0.3s; }
-    .progress-volet.open .progress-volet-header i { transform: rotate(180deg); }
-    .progress-volet-body {
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.35s ease, padding 0.3s ease;
-        padding-top: 0;
-    }
-    .progress-volet.open .progress-volet-body {
-        max-height: 200px;
-        padding-top: 0.75rem;
-    }
+    .progress-volet-body { padding-top: 0; }
     .volet-steps {
         display: flex;
         gap: 0;
@@ -148,10 +134,9 @@
                         $allSteps = [0 => 'Compte', 1 => 'Identité'];
                         $current = (int) $__env->yieldContent('step');
                     @endphp
-                    <div class="progress-volet open" id="progressVolet">
-                        <div class="progress-volet-header" onclick="document.getElementById('progressVolet').classList.toggle('open')">
+                    <div class="progress-volet">
+                        <div class="progress-volet-header">
                             <span><i class="bi bi-stack me-1"></i> Progression</span>
-                            <i class="bi bi-chevron-down"></i>
                         </div>
                         <div class="progress-volet-body">
                             <div class="volet-steps">

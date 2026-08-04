@@ -251,6 +251,42 @@
     </div>
 </div>
 
+<div class="sa-card mb-4">
+    <div class="sa-card-header">
+        <span><i class="bi bi-tools me-2" style="color:#e74c3c;"></i>Support technique</span>
+        <a href="{{ route('superadmin.support', ['evenement_id' => $evenement->id]) }}" class="sa-btn sa-btn-sm" style="background:var(--sa-primary);border:none;color:#fff;text-decoration:none;">
+            <i class="bi bi-search"></i> Réconcilier
+        </a>
+    </div>
+    <div class="sa-card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2" style="font-size:0.85rem;">
+                    <span class="sa-badge sa-badge-warning">{{ $ticketsEnAttente }}</span>
+                    <span>Tickets en attente de paiement</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2" style="font-size:0.85rem;">
+                    @if($incidentsSupport > 0)
+                        <span class="sa-badge sa-badge-danger">{{ $incidentsSupport }}</span>
+                        <span>Incidents paiement FedaPay à traiter</span>
+                    @else
+                        <span class="sa-badge sa-badge-success">0</span>
+                        <span>Aucun incident FedaPay en attente</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @if($incidentsSupport > 0)
+            <div class="mt-3" style="font-size:0.78rem;color:#e74c3c;background:rgba(231,76,60,0.06);padding:0.6rem 0.8rem;border-radius:8px;">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Des clients ont probablement été débités sans recevoir leur billet. Ouvrez le support technique pour vérifier et confirmer les tickets via FedaPay.
+            </div>
+        @endif
+    </div>
+</div>
+
 <div class="sa-card">
     <div class="sa-card-header">
         <span><i class="bi bi-arrow-repeat me-2" style="color: var(--sa-primary);"></i>Historique des modifications</span>

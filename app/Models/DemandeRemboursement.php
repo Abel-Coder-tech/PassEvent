@@ -13,6 +13,7 @@ class DemandeRemboursement extends Model
     protected $fillable = [
         'organisateur_id',
         'evenement_id',
+        'origine',
         'type',
         'montant_total',
         'motif',

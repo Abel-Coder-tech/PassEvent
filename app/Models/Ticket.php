@@ -31,6 +31,7 @@ class Ticket extends Model
         'quantite',
         'statut_paiement',
         'transaction_id',
+        'fedapay_transaction_id',
         'methode_paiement',
         'utilise',
         'date_achat',
