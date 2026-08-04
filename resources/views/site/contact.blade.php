@@ -71,9 +71,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="motif" class="contact-label">Motif <span class="text-danger">*</span></label>
-                            <select class="contact-input @error('motif') is-invalid @enderror" id="motif" name="motif" required style="padding-left:1rem;background:#fafafa;">
-                                <option value="">— Choisissez un motif —</option>
+                            <label for="motif" class="contact-label">Motif <span class="text-muted" style="font-weight:400;">(facultatif)</span></label>
+                            <select class="contact-input @error('motif') is-invalid @enderror" id="motif" name="motif" style="padding-left:1rem;background:#fafafa;">
+                                <option value="">— Choisissez un motif (facultatif) —</option>
                                 <option value="ticket_non_recu" @selected(old('motif') === 'ticket_non_recu')>Problème de paiement : je n'ai pas reçu mon ticket</option>
                                 <option value="debit_sans_confirmation" @selected(old('motif') === 'debit_sans_confirmation')>J'ai été débité mais sans confirmation</option>
                                 <option value="erreur_montant" @selected(old('motif') === 'erreur_montant')>Erreur de montant ou doublon de paiement</option>

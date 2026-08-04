@@ -186,8 +186,6 @@
             margin-left: 250px;
             flex: 1;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
         .sa-topbar {

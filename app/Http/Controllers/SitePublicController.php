@@ -83,7 +83,7 @@ class SitePublicController extends Controller
         $rules = [
             'nom_complet' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
-            'motif' => 'required|string|in:' . implode(',', array_keys($motifs)),
+            'motif' => 'nullable|string|in:' . implode(',', array_keys($motifs)),
             'telephone' => 'nullable|string|max:30',
             'email_achat' => $isIncident ? 'required|email|max:255' : 'nullable|email|max:255',
             'transaction_id' => 'nullable|string|max:100',
@@ -101,7 +101,6 @@ class SitePublicController extends Controller
             'email.required' => 'L\'email est obligatoire.',
             'email.email' => 'Le format de l\'email est invalide.',
             'email.max' => 'L\'email ne doit pas depasser 255 caracteres.',
-            'motif.required' => 'Veuillez choisir un motif.',
             'motif.in' => 'Le motif sélectionné est invalide.',
             'telephone.max' => 'Le téléphone ne doit pas dépasser 30 caracteres.',
             'email_achat.required' => 'Indiquez l\'email utilisé lors de l\'achat : il nous permet de retrouver votre commande.',
