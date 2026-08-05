@@ -15,6 +15,7 @@ use App\Models\Newsletter;
 use App\Models\Withdrawal;
 use App\Models\Agent;
 use App\Models\AgentVente;
+use App\Models\AttributionAgent;
 use App\Models\DemandeRemboursement;
 use App\Services\ReconciliationService;
 use Illuminate\Http\Request;
@@ -452,6 +453,47 @@ class SuperAdminController extends Controller
         return back()->with('success', "Contrôles de l'organisateur mis à jour.");
     }
 
+    // Attribue à un organisateur un nombre d'agents scan + vente (dashboard complet ou événement précis)
+    public function attribuerAgents(Request $request, User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'portee' => 'required|in:dashboard,evenement',
+            'evenement_id' => 'nullable|integer',
+            'nb_agents_scan' => 'required|integer|min:0',
+            'nb_agents_vente' => 'required|integer|min:0',
+        ]);
+
+        $evenementId = null;
+        if ($validated['portee'] === 'evenement') {
+            $evenement = Evenement::where('user_id', $user->id)->findOrFail($validated['evenement_id']);
+            $evenementId = $evenement->id;
+        }
+
+        AttributionAgent::updateOrCreate(
+            ['user_id' => $user->id, 'evenement_id' => $evenementId],
+            [
+                'nb_agents_scan' => (int) $validated['nb_agents_scan'],
+                'nb_agents_vente' => (int) $validated['nb_agents_vente'],
+            ]
+        );
+
+        $portee = $evenementId ? "sur l'événement « {$evenement->titre} »" : 'sur tout le dashboard';
+
+        return back()->with('success', "Attribution d'agents mise à jour ({$portee}).");
+    }
+
+    // Supprime une attribution d'agents
+    public function supprimerAttribution(AttributionAgent $attribution)
+    {
+        $attribution->delete();
+
+        return back()->with('success', 'Attribution supprimée.');
+    }
+
     // Convertit les valeurs du formulaire (champ vide = héritage / défaut)
     protected function normaliserControles(array $validated): array
     {
@@ -706,6 +748,22 @@ class SuperAdminController extends Controller
         $agentsScan = Agent::whereIn('evenement_id', $evenements->pluck('id'))->count();
         $agentsVente = AgentVente::whereIn('evenement_id', $evenements->pluck('id'))->count();
 
+        $attributions = AttributionAgent::with('evenement')
+            ->where('user_id', $user->id)
+            ->orderByRaw('evenement_id IS NULL')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($attributions as $attr) {
+            if ($attr->evenement_id) {
+                $attr->usage_scan = Agent::where('evenement_id', $attr->evenement_id)->where('actif', true)->count();
+                $attr->usage_vente = AgentVente::where('evenement_id', $attr->evenement_id)->where('actif', true)->count();
+            } else {
+                $attr->usage_scan = Agent::whereIn('evenement_id', $evenements->pluck('id'))->where('actif', true)->count();
+                $attr->usage_vente = AgentVente::whereIn('evenement_id', $evenements->pluck('id'))->where('actif', true)->count();
+            }
+        }
+
         $tickets = Ticket::whereIn('evenement_id', $evenements->pluck('id'))
             ->with('evenement', 'tarif')
             ->where('statut_paiement', 'payé')
@@ -715,7 +773,7 @@ class SuperAdminController extends Controller
         return view('superadmin.organisateur-show', compact(
             'user', 'evenements', 'totalTickets', 'totalRecettes',
             'aujourdhui', 'scansAujourdhui',
-            'agentsScan', 'agentsVente', 'tickets',
+            'agentsScan', 'agentsVente', 'attributions', 'tickets',
             'mobileRecettes', 'cashRecettes', 'commissionPct',
             'commission', 'recettesNettes', 'retirable',
             'historique'

@@ -121,6 +121,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/evenements/{evenement}', [SuperAdminController::class, 'voirEvenement'])->name('evenements.voir');
         Route::post('/evenements/{evenement}/controles', [SuperAdminController::class, 'updateControlesEvenement'])->name('evenements.controles');
         Route::post('/organisateurs/{user}/controles', [SuperAdminController::class, 'updateControlesOrganisateur'])->name('organisateurs.controles');
+        Route::post('/organisateurs/{user}/attribuer-agents', [SuperAdminController::class, 'attribuerAgents'])->name('organisateurs.attribuer-agents');
+        Route::delete('/organisateurs/attributions/{attribution}', [SuperAdminController::class, 'supprimerAttribution'])->name('organisateurs.attribution-supprimer');
         Route::get('/transactions', [SuperAdminController::class, 'transactions'])->name('transactions');
         Route::get('/tickets', [SuperAdminController::class, 'tickets'])->name('tickets');
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');

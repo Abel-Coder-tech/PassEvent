@@ -169,6 +169,91 @@
 
     <div class="sa-card mb-4">
         <div class="sa-card-header">
+            <span><i class="bi bi-people me-2" style="color: var(--sa-primary);"></i>Attributions d'agents (scan / vente)</span>
+            <span class="text-muted" style="font-size:0.8rem;">0 = illimité &mdash; spécifique événement &gt; dashboard &gt; défaut</span>
+        </div>
+        <div class="sa-card-body">
+            <form action="{{ route('superadmin.organisateurs.attribuer-agents', $user) }}" method="POST">
+                @csrf
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Portée</label>
+                        <select name="portee" id="porteeSelect" class="sa-form-control">
+                            <option value="dashboard">Tout le dashboard</option>
+                            <option value="evenement">Un événement précis</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-none" id="evenementField">
+                        <label class="form-label small fw-semibold mb-1">Événement <span class="text-danger">*</span></label>
+                        <select name="evenement_id" class="sa-form-control">
+                            <option value="">-- Choisir un événement --</option>
+                            @foreach($evenements as $ev)
+                                <option value="{{ $ev->id }}">{{ $ev->titre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">Agents scan</label>
+                        <input type="number" name="nb_agents_scan" class="sa-form-control" min="0" value="2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">Agents vente</label>
+                        <input type="number" name="nb_agents_vente" class="sa-form-control" min="0" value="2">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i></button>
+                    </div>
+                </div>
+            </form>
+
+            @if($attributions->isNotEmpty())
+            <div class="table-responsive mt-3">
+                <table class="sa-table">
+                    <thead>
+                        <tr><th>Portée</th><th>Agents scan</th><th>Agents vente</th><th>Utilisation</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach($attributions as $attr)
+                        <tr>
+                            <td>
+                                <strong>{{ $attr->evenement_id ? Str::limit($attr->evenement?->titre ?? 'Événement', 28) : 'Tout le dashboard' }}</strong>
+                                @if(!$attr->evenement_id)
+                                    <span class="sa-badge sa-badge-secondary ms-1">global</span>
+                                @endif
+                            </td>
+                            <td>{{ $attr->nbAgentsScan() ?? 'Illimité' }}</td>
+                            <td>{{ $attr->nbAgentsVente() ?? 'Illimité' }}</td>
+                            <td>
+                                @php
+                                    $okScan = $attr->nbAgentsScan() === null || $attr->usage_scan <= $attr->nbAgentsScan();
+                                    $okVente = $attr->nbAgentsVente() === null || $attr->usage_vente <= $attr->nbAgentsVente();
+                                @endphp
+                                <span class="sa-badge {{ $okScan ? 'sa-badge-success' : 'sa-badge-danger' }}">scan {{ $attr->usage_scan }}/{{ $attr->nbAgentsScan() ?? '∞' }}</span>
+                                <span class="sa-badge {{ $okVente ? 'sa-badge-success' : 'sa-badge-danger' }}">vente {{ $attr->usage_vente }}/{{ $attr->nbAgentsVente() ?? '∞' }}</span>
+                            </td>
+                            <td class="text-end">
+                                <form action="{{ route('superadmin.organisateurs.attribution-supprimer', $attr) }}" method="POST"
+                                    onsubmit="return confirm('Supprimer cette attribution ?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="sa-btn sa-btn-danger" title="Supprimer l'attribution"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <p class="text-muted small mb-0 mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Aucune attribution. Défauts appliqués : 2 agents de scan et 2 agents de vente par événement (ou la valeur du contrôle événement).
+            </p>
+            @endif
+        </div>
+    </div>
+
+    <div class="sa-card mb-4">
+        <div class="sa-card-header">
             <span><i class="bi bi-shield-exclamation me-2" style="color: var(--sa-danger);"></i>Actions</span>
             <span class="text-muted" style="font-size:0.8rem;">Modération et communication</span>
         </div>
@@ -456,4 +541,22 @@
 }
 .sa-btn-warning:hover { opacity: 0.85; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var porteeSelect = document.getElementById('porteeSelect');
+    var evenementField = document.getElementById('evenementField');
+    var evenementSelect = evenementField.querySelector('select[name="evenement_id"]');
+    if (!porteeSelect) return;
+
+    function toggleEvenementField() {
+        var isEvent = porteeSelect.value === 'evenement';
+        evenementField.classList.toggle('d-none', !isEvent);
+        evenementSelect.required = isEvent;
+    }
+
+    porteeSelect.addEventListener('change', toggleEvenementField);
+    toggleEvenementField();
+});
+</script>
 @endsection

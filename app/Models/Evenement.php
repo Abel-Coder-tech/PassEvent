@@ -182,11 +182,36 @@ class Evenement extends Model
     // Limite d'agents de vente : vide = 2 (défaut), 0 = illimité
     public function limiteAgentsVente(): ?int
     {
+        $attribution = $this->attributionAgents();
+        if ($attribution) {
+            return $attribution->nbAgentsVente();
+        }
+
         if ($this->max_agents_vente === 0) {
             return null; // illimité
         }
 
         return $this->max_agents_vente ?? 2;
+    }
+
+    // Limite d'agents de scan : attribution superadmin (0 = illimité) > défaut 2
+    public function limiteAgentsScan(): ?int
+    {
+        $attribution = $this->attributionAgents();
+        if ($attribution) {
+            return $attribution->nbAgentsScan();
+        }
+
+        return 2;
+    }
+
+    // Attribution superadmin (spécifique à l'événement sinon globale au dashboard de l'organisateur)
+    public function attributionAgents(): ?AttributionAgent
+    {
+        return AttributionAgent::where('user_id', $this->user_id)
+            ->where(fn($q) => $q->where('evenement_id', $this->id)->orWhereNull('evenement_id'))
+            ->orderByRaw('evenement_id IS NULL') // spécifique d'abord, dashboard ensuite
+            ->first();
     }
 
     // Nombre de tickets vendus en ligne (hors espèces) pour le suivi du seuil
