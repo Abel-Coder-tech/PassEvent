@@ -1397,6 +1397,10 @@ class SuperAdminController extends Controller
             'ip' => $request->ip(),
         ]);
 
+        foreach ($tickets as $ticket) {
+            $this->marquerNotificationsLues($ticket);
+        }
+
         return back()->with('success', $resultat['message']);
     }
 
@@ -1486,12 +1490,41 @@ class SuperAdminController extends Controller
             'ticket_id' => 'required|integer|exists:ticket,id',
         ]);
 
-        $resultat = $this->reconciliation->renvoyerEmail(Ticket::findOrFail($validated['ticket_id']));
+        $ticket = Ticket::findOrFail($validated['ticket_id']);
+        $resultat = $this->reconciliation->renvoyerEmail($ticket);
+
+        if ($resultat['success']) {
+            $this->marquerNotificationsLues($ticket);
+        }
 
         return back()->with(
             $resultat['success'] ? 'success' : 'error',
             $resultat['message']
         );
+    }
+
+    /**
+     * Marque comme lues les notifications (incidents) liées à un ticket :
+     * par ID de transaction FedaPay ou par email d'achat sur un incident paiement.
+     */
+    protected function marquerNotificationsLues(Ticket $ticket): void
+    {
+        Message::whereNull('user_id')
+            ->where('lu', false)
+            ->where(function ($q) use ($ticket) {
+                $q->where(function ($t) use ($ticket) {
+                    $t->whereNotNull('transaction_id')
+                        ->whereIn('transaction_id', array_filter([
+                            $ticket->fedapay_transaction_id,
+                            $ticket->transaction_id,
+                        ]));
+                })->orWhere(function ($e) use ($ticket) {
+                    $e->whereNotNull('email_achat')
+                        ->where('email_achat', $ticket->email_acheteur)
+                        ->where('objet', 'like', 'Incident paiement%');
+                });
+            })
+            ->update(['lu' => true]);
     }
 
     // Remboursement direct superadmin (tickets payés, sans l'organisateur)

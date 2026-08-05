@@ -22,7 +22,7 @@
                         ? route('superadmin.support', ['transaction_id' => $msg->transaction_id])
                         : route('superadmin.support', ['email' => $msg->email_achat]);
                 @endphp
-                <tr style="{{ !$msg->lu ? 'background:rgba(107,63,160,0.03);' : '' }}">
+                <tr id="row-{{ $msg->id }}" style="{{ !$msg->lu ? 'background:rgba(107,63,160,0.03);' : '' }}">
                     <td>
                         @if($isIncident)
                             <span class="sa-badge" style="background:#e74c3c;color:#fff;">Incident paiement</span>
@@ -35,7 +35,7 @@
                     <td><strong>{{ $msg->nom_complet }}</strong><br><small style="font-size:0.7rem;">{{ $msg->email }}</small></td>
                     <td>{{ $msg->objet }}</td>
                     <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $msg->message }}</td>
-                    <td>
+                    <td id="lu-{{ $msg->id }}">
                         @if($msg->lu)
                             <span class="sa-badge sa-badge-success">Lu</span>
                         @else
@@ -185,7 +185,20 @@ function voirNotification(id) {
 
     if (!msg.lu) {
         fetch('{{ url("/superadmin/notifications") }}/' + id + '/lire', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
-            .then(() => location.reload());
+            .then(() => {
+                const row = document.getElementById('row-' + id);
+                if (row) row.style.background = '';
+                const luCell = document.getElementById('lu-' + id);
+                if (luCell) luCell.innerHTML = '<span class="sa-badge sa-badge-success">Lu</span>';
+                const dot = document.querySelector('.sa-notif-dot');
+                if (dot) {
+                    const n = parseInt(dot.textContent, 10);
+                    if (n > 1) dot.textContent = n - 1;
+                    else dot.remove();
+                }
+                const m = notifs.find(x => x.id === id);
+                if (m) m.lu = true;
+            });
     }
 }
 </script>
