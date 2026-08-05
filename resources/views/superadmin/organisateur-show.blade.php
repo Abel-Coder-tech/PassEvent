@@ -425,8 +425,8 @@
                         @csrf
                         <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-pause-fill"></i> Suspendre</button>
                     </form>
-                @elseif($user->statut === 'bloque')
-                    <form action="{{ route('superadmin.organisateurs.reactiver', $user) }}" method="POST" onsubmit="return confirm('Réactiver {{ $user->nom }} ? Ses événements annulés seront republiés.')">
+                @elseif(in_array($user->statut, ['bloque', 'rejete']))
+                    <form action="{{ route('superadmin.organisateurs.reactiver', $user) }}" method="POST" onsubmit="return confirm('Réactiver {{ $user->nom }} ?{{ $user->statut === 'bloque' ? ' Ses événements annulés seront republiés.' : '' }}')">
                         @csrf
                         <button type="submit" class="sa-btn sa-btn-success"><i class="bi bi-play-fill"></i> Réactiver</button>
                     </form>
