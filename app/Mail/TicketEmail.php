@@ -4,7 +4,7 @@ namespace App\Mail;
 
 use App\Models\Ticket;
 use App\Services\QrCodeService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\TicketPdfService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -53,11 +53,8 @@ class TicketEmail extends Mailable implements ShouldQueue
             $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
             $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
 
-            $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-            $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
-
             $this->pdfs[] = [
-                'content' => $pdf->output(),
+                'content' => TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri)->output(),
                 'filename' => 'PaxEvent-' . $ticket->code_unique . '.pdf',
             ];
         }

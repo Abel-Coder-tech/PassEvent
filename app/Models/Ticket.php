@@ -151,6 +151,6 @@ class Ticket extends Model
         $px += 221; // qr-block
         $px += 46;  // note (8 margin-top + 16 padding + ~22 text)
         $px += 56;  // footer (28 padding + 28 content)
-        return $px * 0.75 + 40;
+        return $px * 0.75 + 70;
     }
 }

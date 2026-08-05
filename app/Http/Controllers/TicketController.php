@@ -7,8 +7,8 @@ use App\Models\Evenement;
 use App\Models\Ticket;
 use App\Models\Log;
 use App\Services\QrCodeService;
+use App\Services\TicketPdfService;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 
 class TicketController extends Controller
@@ -84,8 +84,7 @@ class TicketController extends Controller
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = Ticket::logoBlancDataUri();
 
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
+        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
         $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 
@@ -115,8 +114,7 @@ class TicketController extends Controller
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = Ticket::logoBlancDataUri();
 
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
+        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
         $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
 

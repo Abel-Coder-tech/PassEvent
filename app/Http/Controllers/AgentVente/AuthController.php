@@ -7,7 +7,7 @@ use App\Models\AgentVente;
 use App\Models\CodePromo;
 use App\Models\Ticket;
 use App\Services\QrCodeService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\TicketPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -238,8 +238,7 @@ class AuthController extends Controller
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
         $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
-        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-        $pdf->setPaper([0, 0, 287.43, $ticket->estimerHauteurPdf()], 'portrait');
+        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
         $filename = 'ticket-' . $ticket->code_unique . '.pdf';
 
         return $pdf->download($filename);
