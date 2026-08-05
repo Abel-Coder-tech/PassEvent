@@ -34,7 +34,7 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Cet email n\'est pas enregistre.'])->onlyInput('email');
         }
 
-        if (in_array($user->statut, ['bloque', 'rejete'])) { // Comptes bloqués ou rejetés
+        if ($user->statut === 'rejete') { // Comptes rejetés
             return back()->withErrors(['email' => 'Votre compte n\'est pas accessible. Contactez PaxEvent.'])->onlyInput('email');
         }
 

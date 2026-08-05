@@ -224,7 +224,7 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
 // ============================================================
 // Routes protégées (admin)
 // ============================================================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'compte_actif'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -248,7 +248,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/contrat-prestation', [EvenementController::class, 'contratPrestation'])->name('contrat-prestation');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'compte_actif'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('evenements', EvenementController::class);
 

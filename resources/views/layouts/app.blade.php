@@ -933,11 +933,21 @@
         </div>
         <div class="top-bar-right">
             @yield('topbar-actions')
+            @if(Auth::user()->statut !== 'bloque')
             <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm">
                 <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Créer un événement</span>
             </a>
+            @endif
         </div>
     </div>
+
+    @if(Auth::user()->statut === 'bloque')
+    <div style="background:#fdecea;border-bottom:1px solid #f5c6c2;color:#a93226;padding:0.7rem 2rem;font-size:0.88rem;display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+        <i class="bi bi-exclamation-octagon-fill" style="font-size:1.05rem;flex-shrink:0;"></i>
+        <strong>Compte temporairement désactivé</strong>
+        <span>— Vous ne pouvez effectuer aucune action pour le moment. Contactez PaxEvent (<a href="mailto:contact@paxevent.com" style="color:#a93226;font-weight:600;">contact@paxevent.com</a>) pour plus d'informations.</span>
+    </div>
+    @endif
 
     @if(session('success'))
         <script>document.addEventListener('DOMContentLoaded',function(){showToast('success',{!! Js::from(session('success')) !!});});</script>

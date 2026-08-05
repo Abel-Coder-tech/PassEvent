@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // Redirige vers page d'attente si le profil n'est pas validé
-        if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees') {
+        if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees' && $user->statut !== 'bloque') {
             $message = '';
             if ($user->statut === 'en_attente') {
                 $message = 'Votre profil est en cours de validation par notre équipe..';
@@ -26,8 +26,6 @@ class DashboardController extends Controller
                 $message = 'Votre profil nécessite des corrections. Veuillez le modifier et le soumettre à nouveau.';
             } elseif ($user->statut === 'rejete') {
                 $message = 'Votre inscription a été rejetée. Contactez PaxEvent pour plus d\'informations.';
-            } elseif ($user->statut === 'bloque') {
-                $message = 'Votre compte a été bloqué. Contactez PaxEvent pour plus d\'informations.';
             }
             return view('dashboard-pending', ['message' => $message, 'statut' => $user->statut]);
         }

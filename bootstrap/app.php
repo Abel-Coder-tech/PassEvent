@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'agent' => \App\Http\Middleware\CheckAgent::class,
             'agent_vente' => \App\Http\Middleware\CheckAgentVente::class,
             'profil_verifie' => \App\Http\Middleware\CheckProfilActif::class,
+            'compte_actif' => \App\Http\Middleware\CheckCompteActif::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
