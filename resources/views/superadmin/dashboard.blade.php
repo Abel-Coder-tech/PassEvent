@@ -149,9 +149,10 @@
 
 @push('styles')
 <style>
-    .col-xl { flex: 1 0 0%; min-width: 160px; }
+    @media (min-width: 1200px) {
+        .col-xl { flex: 1 0 0%; min-width: 140px; }
+    }
     @media (max-width: 575.98px) {
-        .col-xl { min-width: 140px; }
         .kpi-card { padding: 0.75rem; gap: 0.6rem; }
         .kpi-icon { width: 36px; height: 36px; font-size: 1rem; }
         .kpi-value { font-size: 1.1rem; }

@@ -373,6 +373,12 @@
             }
         }
 
+        @media (max-width: 575.98px) {
+            .sa-content { padding: 1.25rem 1rem; }
+            .sa-topbar { padding: 0.6rem 1rem; }
+            .sa-topbar-date { display: none; }
+        }
+
         .activity-pulse {
             width: 8px; height: 8px;
             background: var(--sa-success);
