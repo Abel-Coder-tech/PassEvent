@@ -57,9 +57,9 @@
     <div class="alert alert-warning" style="font-size:0.85rem;"><i class="bi bi-exclamation-triangle"></i> {{ $verification['message'] }}</div>
 @endif
 
-<div class="row g-3">
-    <div class="col-lg-5">
-        <div class="sa-card mb-3">
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="sa-card">
             <div class="sa-card-header">
                 <span><i class="bi bi-search me-2" style="color:var(--sa-primary);"></i>Rechercher un incident</span>
             </div>
@@ -97,7 +97,9 @@
                 </form>
             </div>
         </div>
+    </div>
 
+    <div class="col-lg-6">
         <div class="sa-card">
             <div class="sa-card-header">
                 <span><i class="bi bi-plus-circle me-2" style="color:var(--sa-primary);"></i>Recréer un ticket</span>
@@ -161,9 +163,11 @@
             </div>
         </div>
     </div>
+</div>
 
-    <div class="col-lg-7">
-        <div class="sa-card mb-3">
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="sa-card">
             <div class="sa-card-header">
                 <span><i class="bi bi-list-check me-2" style="color:var(--sa-primary);"></i>Résultats de la recherche</span>
                 <span class="text-muted" style="font-size:0.8rem;">{{ $tickets->count() }} ticket(s)</span>
@@ -176,7 +180,11 @@
                 @endif
             </div>
         </div>
+    </div>
+</div>
 
+<div class="row g-3">
+    <div class="col-12">
         <div class="sa-card">
             <div class="sa-card-header">
                 <span><i class="bi bi-exclamation-triangle me-2" style="color:#e74c3c;"></i>Incidents récents (en attente avec transaction FedaPay)</span>
