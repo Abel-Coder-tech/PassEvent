@@ -21,8 +21,8 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <span class="ev-hero-chip">{{ $scope === 'passes' ? 'Événements passés' : 'Tous les événements' }}</span>
-                <h1 class="ev-hero-title">{{ $scope === 'passes' ? 'Ils ont déjà eu lieu' : 'Retrouvez vos évènements préférés' }}</h1>
+                <span class="ev-hero-chip">Tous les événements</span>
+                <h1 class="ev-hero-title">Retrouvez vos évènements préférés</h1>
                 <p class="ev-hero-sub" style="color:var(--accent);">Festivals &mdash; Concerts &mdash; Chills &mdash; Galas &mdash; Conférences </p>
                 <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search">
                     <div class="ev-search-wrap">
@@ -31,10 +31,9 @@
                     </div>
                     @if($selectedCategorie)<input type="hidden" name="categorie" value="{{ $selectedCategorie }}">@endif
                     @if($selectedDate)<input type="hidden" name="date" value="{{ $selectedDate }}">@endif
-                    @if($scope === 'passes')<input type="hidden" name="scope" value="passes">@endif
                     <button type="submit" class="ev-search-btn"><i class="bi bi-search"></i></button>
                     @if($q || $selectedCategorie || $selectedDate)
-                        <a href="{{ route('evenements.public', ['scope' => $scope]) }}" class="ev-search-clear"><i class="bi bi-x-lg"></i></a>
+                        <a href="{{ route('evenements.public') }}" class="ev-search-clear"><i class="bi bi-x-lg"></i></a>
                     @endif
                 </form>
                 <div class="ev-hero-stats">
@@ -42,18 +41,6 @@
                     <span><strong>100%</strong> paiement sécurisé</span>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- ===== Onglets À venir / Passés ===== -->
-<section class="ev-tabs-section">
-    <div class="container">
-        <div class="ev-tabs">
-            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate, 'scope' => 'avenir'])) }}"
-               class="ev-tab {{ $scope !== 'passes' ? 'active' : '' }}"><i class="bi bi-calendar-event me-1"></i> À venir</a>
-            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate, 'scope' => 'passes'])) }}"
-               class="ev-tab {{ $scope === 'passes' ? 'active' : '' }}"><i class="bi bi-clock-history me-1"></i> Passés</a>
         </div>
     </div>
 </section>
@@ -70,6 +57,7 @@
                         $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
                         $prixDernier = $evenement->tarifs->min('prix');
                         $venteCloturee = $evenement->ventes_fermees;
+                        $estPasse = $evenement->date_event->isPast();
                         $textes = $evenement->getTextes();
                     @endphp
                     <div class="ev-grid-col">
@@ -83,7 +71,7 @@
                                 @if($evenement->categorie)
                                     <span class="ev-card-badge">{{ ucfirst($evenement->categorie) }}</span>
                                 @endif
-                                @if($scope === 'passes')
+                                @if($estPasse)
                                     <span class="ev-card-badge" style="right:10px;left:auto;background:#6c757d;color:#fff;">Terminé</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-card-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
@@ -105,7 +93,7 @@
                                 @elseif($prixDernier)
                                     <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
                                 @endif
-                                @if($scope === 'passes')
+                                @if($estPasse)
                                     <div class="ev-card-past"><i class="bi bi-clock-history me-1"></i> Événement passé</div>
                                 @else
                                 <div class="ev-card-gauge">
@@ -116,7 +104,7 @@
                                     <div class="gauge"><div class="gauge-fill" style="width:{{ min($remplissage,100) }}%"></div></div>
                                 </div>
                                 @endif
-                                @if($scope === 'passes')
+                                @if($estPasse)
                                     <span class="ev-card-btn disabled"><i class="bi bi-clock-history me-1"></i> Événement passé</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-card-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
@@ -143,23 +131,79 @@
         @else
             <div class="ev-empty">
                 <i class="bi bi-calendar-x"></i>
-                <h5>{{ $scope === 'passes' ? 'Aucun événement passé' : 'Aucun événement trouvé' }}</h5>
+                <h5>Aucun événement trouvé</h5>
                 <p>
                     @if($q || $selectedCategorie || $selectedDate)
                         Essayez une autre catégorie ou un autre terme de recherche.
-                    @elseif($scope === 'passes')
-                        Aucun événement passé à afficher pour le moment.
                     @else
                         Revenez plus tard pour découvrir nos prochains événements.
                     @endif
                 </p>
                 @if($q || $selectedCategorie || $selectedDate)
-                    <a href="{{ route('evenements.public', ['scope' => $scope]) }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous</a>
+                    <a href="{{ route('evenements.public') }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous</a>
                 @endif
             </div>
         @endif
     </div>
 </section>
+
+<!-- ===== Événements passés ===== -->
+@if($evenementsPasses->isNotEmpty())
+<section class="ev-past-section">
+    <div class="container">
+        <div class="ev-section-head">
+            <span class="ev-section-chip"><i class="bi bi-clock-history me-1"></i> Ils ont déjà eu lieu</span>
+            <h2 class="ev-section-title">Événements passés</h2>
+            <p class="ev-section-sub">Revivez les derniers événements organisés sur PaxEvent.</p>
+        </div>
+        <div class="ev-grid">
+            @foreach($evenementsPasses as $evenement)
+                @php
+                    $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
+                    $estComplet = $placesRestantes <= 0;
+                    $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
+                    $prixDernier = $evenement->tarifs->min('prix');
+                    $venteCloturee = $evenement->ventes_fermees;
+                    $estPasse = $evenement->date_event->isPast();
+                    $textes = $evenement->getTextes();
+                @endphp
+                <div class="ev-grid-col">
+                    <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">
+                        <div class="ev-card-img">
+                            @if($evenement->image)
+                                <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}">
+                            @else
+                                <div class="ev-card-placeholder"><i class="bi bi-calendar-event"></i></div>
+                            @endif
+                            @if($evenement->categorie)
+                                <span class="ev-card-badge">{{ ucfirst($evenement->categorie) }}</span>
+                            @endif
+                            <span class="ev-card-badge" style="right:10px;left:auto;background:#6c757d;color:#fff;">Terminé</span>
+                            <div class="ev-card-overlay">
+                                <span class="ev-card-overlay-btn">Voir les détails <i class="bi bi-arrow-right"></i></span>
+                            </div>
+                        </div>
+                        <div class="ev-card-body">
+                            <h5 class="ev-card-title">{{ $evenement->titre }}</h5>
+                            <p class="ev-card-meta">
+                                <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}<br>
+                                <i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}
+                            </p>
+                            @if($evenement->gratuit)
+                                <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
+                            @elseif($prixDernier)
+                                <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
+                            @endif
+                            <div class="ev-card-past"><i class="bi bi-clock-history me-1"></i> Événement passé</div>
+                            <span class="ev-card-btn disabled"><i class="bi bi-clock-history me-1"></i> Événement passé</span>
+                        </div>
+                    </a>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
 
 <!-- CTA Devenir organisateur -->
 <section class="ev-cta">
@@ -306,34 +350,38 @@
     font-weight: 700;
 }
 
-/* ===== Onglets À venir / Passés ===== */
-.ev-tabs-section {
-    background: #fff;
-    padding: 1.5rem 0 0;
+/* ===== Section Événements passés ===== */
+.ev-past-section {
+    padding: 3rem 0;
+    background: #f7f5f3;
 }
-.ev-tabs {
-    display: inline-flex;
-    gap: 0.5rem;
-    background: #f1eef3;
-    padding: 0.35rem;
-    border-radius: 12px;
+.ev-section-head {
+    text-align: center;
+    margin-bottom: 2rem;
 }
-.ev-tab {
+.ev-section-chip {
     display: inline-flex;
     align-items: center;
-    padding: 0.55rem 1.4rem;
-    border-radius: 9px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #6c757d;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-.ev-tab:hover { color: #542680; }
-.ev-tab.active {
-    background: #fff;
+    padding: 0.3rem 1rem;
+    background: rgba(123,63,160,0.08);
+    border: 1px solid rgba(123,63,160,0.15);
+    border-radius: 20px;
     color: #542680;
-    box-shadow: 0 2px 10px rgba(84,38,128,0.12);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.75rem;
+}
+.ev-section-title {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #211C31;
+    margin: 0 0 0.4rem;
+}
+.ev-section-sub {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0;
 }
 
 /* ===== Grille ===== */

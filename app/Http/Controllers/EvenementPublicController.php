@@ -15,14 +15,9 @@ class EvenementPublicController extends Controller
     // Liste publique des événements avec filtres par catégorie, date et recherche
     public function index(Request $request)
     {
-        $scope = in_array($request->input('scope'), ['avenir', 'passes'], true) ? $request->input('scope') : 'avenir';
-
-        // Récupère les catégories disponibles pour les événements du scope actif
-        $categories = Evenement::whereIn('statut', $scope === 'passes' ? ['publié', 'terminé'] : ['publié'])
-            ->when($scope === 'passes',
-                fn($q) => $q->where('date_event', '<', now()),
-                fn($q) => $q->where('date_event', '>=', now())
-            )
+        // Récupère les catégories disponibles pour les événements à venir
+        $categories = Evenement::where('statut', 'publié')
+            ->where('date_event', '>=', now())
             ->whereNotNull('categorie')
             ->distinct()
             ->orderBy('categorie')
@@ -32,17 +27,10 @@ class EvenementPublicController extends Controller
         $selectedDate = $request->input('date');
         $q = $request->input('q');
 
-        $query = Evenement::with('tarifs');
-
-        if ($scope === 'passes') {
-            $query->whereIn('statut', ['publié', 'terminé'])
-                ->where('date_event', '<', now())
-                ->orderBy('date_event', 'desc');
-        } else {
-            $query->where('statut', 'publié')
-                ->where('date_event', '>=', now())
-                ->orderBy('date_event', 'asc');
-        }
+        $query = Evenement::with('tarifs')
+            ->where('statut', 'publié')
+            ->where('date_event', '>=', now())
+            ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
             $query->where('categorie', $selectedCategorie);
@@ -65,7 +53,15 @@ class EvenementPublicController extends Controller
 
         $evenements = $query->paginate(\App\Support\PerPage::resolve());
 
-        return view('evenement-public.index', compact('evenements', 'categories', 'selectedCategorie', 'selectedDate', 'q', 'scope'));
+        // Événements passés (publiés ou terminés) affichés en bas de page
+        $evenementsPasses = Evenement::with('tarifs')
+            ->whereIn('statut', ['publié', 'terminé'])
+            ->where('date_event', '<', now())
+            ->orderBy('date_event', 'desc')
+            ->limit(9)
+            ->get();
+
+        return view('evenement-public.index', compact('evenements', 'evenementsPasses', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
     }
 
     // Affiche la page publique d'un événement avec tarifs et disponibilité
