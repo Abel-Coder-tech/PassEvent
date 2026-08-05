@@ -21,8 +21,8 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <span class="ev-hero-chip">Tous les événements</span>
-                <h1 class="ev-hero-title">Retrouvez vos évènements préférés</h1>
+                <span class="ev-hero-chip">{{ $scope === 'passes' ? 'Événements passés' : 'Tous les événements' }}</span>
+                <h1 class="ev-hero-title">{{ $scope === 'passes' ? 'Ils ont déjà eu lieu' : 'Retrouvez vos évènements préférés' }}</h1>
                 <p class="ev-hero-sub" style="color:var(--accent);">Festivals &mdash; Concerts &mdash; Chills &mdash; Galas &mdash; Conférences </p>
                 <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search">
                     <div class="ev-search-wrap">
@@ -31,9 +31,10 @@
                     </div>
                     @if($selectedCategorie)<input type="hidden" name="categorie" value="{{ $selectedCategorie }}">@endif
                     @if($selectedDate)<input type="hidden" name="date" value="{{ $selectedDate }}">@endif
+                    @if($scope === 'passes')<input type="hidden" name="scope" value="passes">@endif
                     <button type="submit" class="ev-search-btn"><i class="bi bi-search"></i></button>
                     @if($q || $selectedCategorie || $selectedDate)
-                        <a href="{{ route('evenements.public') }}" class="ev-search-clear"><i class="bi bi-x-lg"></i></a>
+                        <a href="{{ route('evenements.public', ['scope' => $scope]) }}" class="ev-search-clear"><i class="bi bi-x-lg"></i></a>
                     @endif
                 </form>
                 <div class="ev-hero-stats">
@@ -41,6 +42,18 @@
                     <span><strong>100%</strong> paiement sécurisé</span>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== Onglets À venir / Passés ===== -->
+<section class="ev-tabs-section">
+    <div class="container">
+        <div class="ev-tabs">
+            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate, 'scope' => 'avenir'])) }}"
+               class="ev-tab {{ $scope !== 'passes' ? 'active' : '' }}"><i class="bi bi-calendar-event me-1"></i> À venir</a>
+            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate, 'scope' => 'passes'])) }}"
+               class="ev-tab {{ $scope === 'passes' ? 'active' : '' }}"><i class="bi bi-clock-history me-1"></i> Passés</a>
         </div>
     </div>
 </section>
@@ -70,7 +83,9 @@
                                 @if($evenement->categorie)
                                     <span class="ev-card-badge">{{ ucfirst($evenement->categorie) }}</span>
                                 @endif
-                                @if($venteCloturee)
+                                @if($scope === 'passes')
+                                    <span class="ev-card-badge" style="right:10px;left:auto;background:#6c757d;color:#fff;">Terminé</span>
+                                @elseif($venteCloturee)
                                     <span class="ev-card-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
                                 @elseif($estComplet)
                                     <span class="ev-card-badge ev-card-badge-complet">Complet</span>
@@ -90,6 +105,9 @@
                                 @elseif($prixDernier)
                                     <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
                                 @endif
+                                @if($scope === 'passes')
+                                    <div class="ev-card-past"><i class="bi bi-clock-history me-1"></i> Événement passé</div>
+                                @else
                                 <div class="ev-card-gauge">
                                     <div class="d-flex justify-content-between" style="font-size:0.7rem;">
                                         <span>{{ $placesRestantes }} {{ $textes['places'] }}</span>
@@ -97,7 +115,10 @@
                                     </div>
                                     <div class="gauge"><div class="gauge-fill" style="width:{{ min($remplissage,100) }}%"></div></div>
                                 </div>
-                                @if($venteCloturee)
+                                @endif
+                                @if($scope === 'passes')
+                                    <span class="ev-card-btn disabled"><i class="bi bi-clock-history me-1"></i> Événement passé</span>
+                                @elseif($venteCloturee)
                                     <span class="ev-card-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
                                 @elseif($estComplet)
                                     <span class="ev-card-btn disabled"><i class="bi bi-slash-circle me-1"></i> Complet</span>
@@ -122,16 +143,18 @@
         @else
             <div class="ev-empty">
                 <i class="bi bi-calendar-x"></i>
-                <h5>Aucun événement trouvé</h5>
+                <h5>{{ $scope === 'passes' ? 'Aucun événement passé' : 'Aucun événement trouvé' }}</h5>
                 <p>
                     @if($q || $selectedCategorie || $selectedDate)
                         Essayez une autre catégorie ou un autre terme de recherche.
+                    @elseif($scope === 'passes')
+                        Aucun événement passé à afficher pour le moment.
                     @else
                         Revenez plus tard pour découvrir nos prochains événements.
                     @endif
                 </p>
                 @if($q || $selectedCategorie || $selectedDate)
-                    <a href="{{ route('evenements.public') }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous</a>
+                    <a href="{{ route('evenements.public', ['scope' => $scope]) }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous</a>
                 @endif
             </div>
         @endif
@@ -283,6 +306,36 @@
     font-weight: 700;
 }
 
+/* ===== Onglets À venir / Passés ===== */
+.ev-tabs-section {
+    background: #fff;
+    padding: 1.5rem 0 0;
+}
+.ev-tabs {
+    display: inline-flex;
+    gap: 0.5rem;
+    background: #f1eef3;
+    padding: 0.35rem;
+    border-radius: 12px;
+}
+.ev-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.4rem;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.ev-tab:hover { color: #542680; }
+.ev-tab.active {
+    background: #fff;
+    color: #542680;
+    box-shadow: 0 2px 10px rgba(84,38,128,0.12);
+}
+
 /* ===== Grille ===== */
 .ev-grid-section {
     padding: 3rem 0;
@@ -420,6 +473,12 @@
 .ev-card-price strong {
     font-size: 1rem;
     color: #542680;
+}
+.ev-card-past {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
 }
 .ev-card-gauge { margin-bottom: 0.6rem; }
 .gauge {
