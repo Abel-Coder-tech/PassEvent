@@ -177,7 +177,16 @@ function startCamera() {
     html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        {
+            fps: 15,
+            qrbox: function (viewfinderWidth, viewfinderHeight) {
+                return {
+                    width: Math.round(viewfinderWidth * 0.85),
+                    height: Math.round(viewfinderHeight * 0.6)
+                };
+            },
+            focusMode: 'continuous',
+        },
         onScanSuccess
     ).then(() => {
         isScanning = true;
