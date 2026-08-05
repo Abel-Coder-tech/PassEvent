@@ -292,6 +292,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/ventes-manuelles', [VenteManuelleController::class, 'create'])->name('ventes-manuelles.create');
     Route::post('/ventes-manuelles', [VenteManuelleController::class, 'store'])->name('ventes-manuelles.store');
     Route::post('/ventes-manuelles/tarifs', [VenteManuelleController::class, 'getTarifs'])->name('ventes-manuelles.tarifs');
+    Route::post('/ventes-manuelles/verifier-code-promo', [VenteManuelleController::class, 'verifierCodePromo'])->name('ventes-manuelles.verifier-code-promo');
     Route::get('/rappels', [RappelController::class, 'index'])->name('rappels.index');
     Route::post('/rappels/envoyer', [RappelController::class, 'envoyer'])->name('rappels.envoyer');
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TicketEmail;
+use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Tarif;
 use App\Models\Ticket;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Services\FedapayService;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 
 class VenteManuelleController extends Controller
@@ -84,6 +86,7 @@ class VenteManuelleController extends Controller
             'telephone' => 'required|string|max:30',
             'email' => 'nullable|email|max:255',
             'quantite' => 'required|integer|min:1|max:20',
+            'code_promo' => 'nullable|string|max:50',
         ];
         $messages = [
             'evenement_id.required' => 'Veuillez sélectionner un événement.',
@@ -213,6 +216,18 @@ class VenteManuelleController extends Controller
 
         $tarif = Tarif::where('evenement_id', $evenement->id)->findOrFail($validated['tarif_id']);
 
+        // Application du code promo (si fourni)
+        $codePromo = null;
+        $montantReduction = 0;
+        $prixUnitaire = $tarif->prix;
+
+        if (!empty($validated['code_promo'])) {
+            $codePromo = CodePromo::validerPour($validated['code_promo'], $evenement, $tarif);
+            $montantReduction = $codePromo->calculerReduction($tarif->prix);
+            $prixUnitaire = max(0, $tarif->prix - $montantReduction);
+            $codePromo->increment('nb_utilisations', 1);
+        }
+
         // Vérification du stock restant du tarif
         if ($tarif->quantite_disponible !== null && $tarif->quantite_disponible - $tarif->quantite_vendue < $validated['quantite']) {
             $restantes = max(0, $tarif->quantite_disponible - $tarif->quantite_vendue);
@@ -237,7 +252,9 @@ class VenteManuelleController extends Controller
                     'telephone_acheteur' => $validated['telephone'],
                     'email_acheteur' => $validated['email'] ?? null,
                     'nom_tarif' => $tarif->nom,
-                    'montant' => $tarif->prix,
+                    'montant' => $prixUnitaire,
+                    'montant_reduction' => $montantReduction,
+                    'code_promo_utilise' => $codePromo ? $codePromo->code : null,
                     'quantite' => 1,
                     'statut_paiement' => 'payé',
                     'methode_paiement' => 'especes',
@@ -267,7 +284,7 @@ class VenteManuelleController extends Controller
                 }
             }
 
-            $total = $tarif->prix * $validated['quantite'];
+            $total = $prixUnitaire * $validated['quantite'];
 
             return response()->json([
                 'success' => true,
@@ -279,7 +296,6 @@ class VenteManuelleController extends Controller
 
         // Digital payment: create N tickets as 'en_attente' with shared group ID
         // --- Cas 3 : Paiement mobile (FedaPay) ---
-        $prixUnitaire = $tarif->prix;
         $montantTotal = $prixUnitaire * $validated['quantite'];
         $groupTransactionId = 'GRP-' . strtoupper(Str::random(16));
         $tickets = [];
@@ -296,6 +312,8 @@ class VenteManuelleController extends Controller
                 'email_acheteur' => $validated['email'],
                 'nom_tarif' => $tarif->nom,
                 'montant' => $prixUnitaire,
+                'montant_reduction' => $montantReduction,
+                'code_promo_utilise' => $codePromo ? $codePromo->code : null,
                 'quantite' => 1,
                 'statut_paiement' => 'en_attente',
                 'methode_paiement' => 'mobile_money',
@@ -351,6 +369,40 @@ class VenteManuelleController extends Controller
             'especes_activees' => $evenement->ventesEspecesActivees(),
             'seuil' => $evenement->gratuit ? 0 : (int) ceil($evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100),
             'vendus_en_ligne' => $evenement->ticketsEnLigneCount(),
+        ]);
+    }
+
+    // Vérifie un code promo pour afficher la réduction dans le récapitulatif
+    public function verifierCodePromo(Request $request)
+    {
+        $request->validate([
+            'evenement_id' => 'required|exists:evenement,id',
+            'tarif_id' => 'required|exists:tarifs,id',
+            'code' => 'required|string|max:50',
+        ]);
+
+        $evenement = Evenement::where('id', $request->evenement_id)
+            ->where('user_id', Auth::id()) // Vérification de propriété
+            ->firstOrFail();
+
+        $tarif = Tarif::where('evenement_id', $evenement->id)->findOrFail($request->tarif_id);
+
+        try {
+            $codePromo = CodePromo::validerPour($request->code, $evenement, $tarif);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'valide' => false,
+                'erreur' => $e->validator->errors()->first('code_promo'),
+            ]);
+        }
+
+        $reduction = $codePromo->calculerReduction($tarif->prix);
+
+        return response()->json([
+            'valide' => true,
+            'code' => $codePromo->code,
+            'reduction' => $reduction,
+            'montant_unitaire' => max(0, $tarif->prix - $reduction),
         ]);
     }
 }

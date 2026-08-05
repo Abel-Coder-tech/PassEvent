@@ -101,6 +101,13 @@
                             </select>
                         </div>
                         <div class="mb-2">
+                            <label class="form-label small fw-medium">Code promo <span class="text-muted">(facultatif)</span></label>
+                            <input type="text" name="code_promo" class="form-control form-control-sm" maxlength="50" placeholder="Ex: BIENVENUE10">
+                            @error('code_promo')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-2">
                             <label class="form-label small fw-medium">Paiement</label>
                             @php $especesOk = $agent->evenement->ventesEspecesActivees(); @endphp
                             @if(!$agent->evenement->gratuit && !$especesOk)

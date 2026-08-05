@@ -46,22 +46,15 @@
                                     <span class="text-muted">Acheteur :</span><br>
                                     <strong>{{ $ticket->nom_acheteur }}</strong>
                                 </div>
-                                @if($ticket->code_promo_utilise)
-                                    <div class="col-12 mt-2">
-                                        <span class="badge" style="background: rgba(84,38,128,0.1); color: #542680; font-size: 0.75rem;">
-                                            <i class="bi bi-tag me-1"></i>Code promo: {{ $ticket->code_promo_utilise }}
-                                        </span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        @if($ticket->montant_reduction > 0)
-                            <div class="alert py-2 mb-3" style="background: rgba(46,125,79,0.06); border: 1px solid rgba(46,125,79,0.15); border-radius: 8px; font-size: 0.82rem;">
-                                <i class="bi bi-check-circle me-1" style="color: #542680;"></i>
-                                Reduction appliquee: <strong>-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} F</strong>
+                        @if($ticket->code_promo_utilise)
+                            <div class="col-12 mt-2">
+                                <span class="badge" style="background: rgba(84,38,128,0.1); color: #542680; font-size: 0.75rem;">
+                                    <i class="bi bi-tag me-1"></i>Code promo: {{ $ticket->code_promo_utilise }}
+                                </span>
                             </div>
                         @endif
+                    </div>
+                </div>
 
                         <div class="text-center" style="font-size: 0.82rem; color: #999;">
                             <i class="bi bi-clock me-1"></i>

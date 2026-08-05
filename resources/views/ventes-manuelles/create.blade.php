@@ -93,6 +93,16 @@
                                 <div id="alertEspeces" class="mt-2" style="display:none;"></div>
                             </div>
                         </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6" id="fieldPromo">
+                                <label for="code_promo" class="form-label fw-semibold">Code promo <span class="text-muted fw-normal">(facultatif)</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="code_promo" name="code_promo" placeholder="Ex: BIENVENUE10" maxlength="50">
+                                    <button type="button" class="btn btn-outline-secondary" id="btnVerifierPromo" style="border-radius:0 6px 6px 0;">Vérifier</button>
+                                </div>
+                                <div id="promoFeedback" class="mt-1" style="font-size:0.85rem;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -122,6 +132,10 @@
                             <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;">
                                 <span class="text-muted">Moyen de paiement</span>
                                 <span class="fw-semibold" id="recapPaiement">Espèces</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 d-none" id="recapPromoRow" style="border-bottom:1px solid #f5f5f5;">
+                                <span class="text-muted">Code promo</span>
+                                <span class="fw-semibold" id="recapPromo" style="color: var(--vert);">—</span>
                             </div>
                             <div class="d-flex justify-content-between py-3 mt-1" style="border-top:2px solid #f0f0f0;">
                                 <span class="fw-bold" style="font-size:1rem;" id="recapTotalLabel">Total à encaisser</span>
@@ -221,6 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let isFreeEvent = false;
     let eventType = 'spectacle';
     let especesActivees = true;
+    let promoReduction = 0;
+    let promoCodeApplique = '';
 
     function toggleFieldsPayants(hide) {
         document.getElementById('fieldStatut').style.display = (hide || !isUniversitaire) ? 'none' : '';
@@ -284,8 +300,18 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('recapTarif').textContent = tarifUnitaire > 0 ? numberFormat(tarifUnitaire) + ' FCFA' : '—';
         document.getElementById('recapPaiement').textContent = methodLabels[methodeSelect.value] || '—';
 
-        const total = tarifUnitaire * parseInt(quantiteInput.value || 0);
+        const unitaireFinal = Math.max(0, tarifUnitaire - promoReduction);
+        const total = unitaireFinal * parseInt(quantiteInput.value || 0);
         document.getElementById('recapTotal').textContent = numberFormat(total) + ' FCFA';
+
+        const promoRow = document.getElementById('recapPromoRow');
+        const promoEl = document.getElementById('recapPromo');
+        if (promoCodeApplique && promoReduction > 0) {
+            promoEl.textContent = promoCodeApplique + ' (' + numberFormat(promoReduction) + ' FCFA)';
+            promoRow.classList.remove('d-none');
+        } else {
+            promoRow.classList.add('d-none');
+        }
 
         const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
         const telOk = document.getElementById('telephone').value.trim() !== '';
@@ -297,8 +323,77 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Intl.NumberFormat('fr-FR').format(n);
     }
 
+    function resetPromo() {
+        promoReduction = 0;
+        promoCodeApplique = '';
+        const feedback = document.getElementById('promoFeedback');
+        feedback.className = 'mt-1';
+        feedback.style.color = '';
+        feedback.textContent = '';
+        document.getElementById('recapPromoRow').classList.add('d-none');
+        updateRecap();
+    }
+
+    function verifierPromo() {
+        const codeInput = document.getElementById('code_promo');
+        const code = codeInput.value.trim();
+        const feedback = document.getElementById('promoFeedback');
+
+        if (!code) {
+            resetPromo();
+            return;
+        }
+
+        const eventId = eventSelect.value;
+        const tarifId = tarifSelect.value;
+        if (!eventId || !tarifId || isFreeEvent) {
+            feedback.className = 'mt-1 text-danger';
+            feedback.style.color = '';
+            feedback.textContent = 'Sélectionnez d\'abord un événement et un tarif.';
+            return;
+        }
+
+        feedback.className = 'mt-1 text-muted';
+        feedback.style.color = '';
+        feedback.textContent = 'Vérification…';
+
+        fetch('{{ route('ventes-manuelles.verifier-code-promo') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ evenement_id: eventId, tarif_id: tarifId, code: code }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.valide) {
+                promoCodeApplique = data.code;
+                promoReduction = data.reduction;
+                codeInput.value = data.code;
+                feedback.className = 'mt-1';
+                feedback.style.color = 'var(--vert)';
+                feedback.textContent = 'Code promo appliqué : -' + numberFormat(data.reduction) + ' FCFA';
+                updateRecap();
+            } else {
+                resetPromo();
+                feedback.className = 'mt-1 text-danger';
+                feedback.style.color = '';
+                feedback.textContent = data.erreur || 'Code promo invalide.';
+            }
+        })
+        .catch(() => {
+            feedback.className = 'mt-1 text-danger';
+            feedback.style.color = '';
+            feedback.textContent = 'Erreur de vérification. Réessayez.';
+        });
+    }
+
     function loadTarifs() {
         const eventId = eventSelect.value;
+
+        resetPromo();
 
         tarifSelect.innerHTML = '<option value="">Chargement…</option>';
 
@@ -376,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tarifSelect.addEventListener('change', function() {
         const opt = this.options[this.selectedIndex];
         tarifUnitaire = parseFloat(opt.dataset.prix || 0);
-        updateRecap();
+        resetPromo();
     });
 
     document.getElementById('nom_acheteur').addEventListener('input', updateRecap);
@@ -386,6 +481,19 @@ document.addEventListener('DOMContentLoaded', function() {
     methodeSelect.addEventListener('change', function() {
         updateUI();
         updateRecap();
+    });
+
+    document.getElementById('btnVerifierPromo').addEventListener('click', verifierPromo);
+    document.getElementById('code_promo').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            verifierPromo();
+        }
+    });
+    document.getElementById('code_promo').addEventListener('input', function() {
+        if (promoCodeApplique && this.value.trim().toUpperCase() !== promoCodeApplique) {
+            resetPromo();
+        }
     });
 
     qtyMinus.addEventListener('click', function() {

@@ -142,10 +142,10 @@
                 <td class="il">Montant</td>
                 <td class="iv">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</td>
             </tr>
-            @if($ticket->montant_reduction > 0)
+            @if($ticket->code_promo_utilise)
             <tr>
-                <td class="il">Remise</td>
-                <td class="iv iv-green">&minus;{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA</td>
+                <td class="il">Code promo</td>
+                <td class="iv iv-green">{{ $ticket->code_promo_utilise }}</td>
             </tr>
             @endif
             @endif

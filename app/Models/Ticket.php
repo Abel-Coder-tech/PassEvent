@@ -142,7 +142,7 @@ class Ticket extends Model
         $px += 26;  // event-meta (~15 text + 6 pad-bottom + 5 margin-bottom)
         $rows = 2;
         if ($this->montant > 0) $rows += 1;
-        if ($this->montant_reduction > 0) $rows += 1;
+        if ($this->code_promo_utilise) $rows += 1;
         $px += $rows * 22; // info-table rows: padding(5+5) + line-height(~12)
         $px += 10;          // info-table margin-bottom
         if ($this->statut_paiement === 'payé') $px += 71; // code-pass: padding(8+8) + label(8+3) + value(24) + margin-bottom(10) + pad-top(8) collapsed

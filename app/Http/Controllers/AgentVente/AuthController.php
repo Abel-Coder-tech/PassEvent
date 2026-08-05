@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AgentVente;
 
 use App\Http\Controllers\Controller;
 use App\Models\AgentVente;
+use App\Models\CodePromo;
 use App\Models\Ticket;
 use App\Services\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -122,6 +123,7 @@ class AuthController extends Controller
             'telephone_acheteur' => 'required|string|max:20',
             'tarif_id' => 'required|exists:tarifs,id',
             'methode_paiement' => 'required|in:cash,mobile_money',
+            'code_promo' => 'nullable|string|max:50',
         ]);
 
         if ($agent->evenement->date_event < now()) {
@@ -129,6 +131,18 @@ class AuthController extends Controller
         }
 
         $tarif = $agent->evenement->tarifs()->findOrFail($validated['tarif_id']);
+
+        // Application du code promo (si fourni)
+        $codePromo = null;
+        $montantReduction = 0;
+        $prixUnitaire = $tarif->prix;
+
+        if (!empty($validated['code_promo'])) {
+            $codePromo = CodePromo::validerPour($validated['code_promo'], $agent->evenement, $tarif);
+            $montantReduction = $codePromo->calculerReduction($tarif->prix);
+            $prixUnitaire = max(0, $tarif->prix - $montantReduction);
+            $codePromo->increment('nb_utilisations', 1);
+        }
 
         // Blocage espèces si seuil mobile money non atteint ou si bloqué par le superadmin
         if ($validated['methode_paiement'] === 'cash' && !$agent->evenement->ventesEspecesActivees()) {
@@ -154,7 +168,9 @@ class AuthController extends Controller
             'telephone_acheteur' => $validated['telephone_acheteur'],
             'nom_acheteur' => $validated['nom_acheteur'],
             'nom_tarif' => $tarif->nom ?? 'Standard',
-            'montant' => $tarif->prix,
+            'montant' => $prixUnitaire,
+            'montant_reduction' => $montantReduction,
+            'code_promo_utilise' => $codePromo ? $codePromo->code : null,
             'quantite' => 1,
             'statut_paiement' => 'en_attente',
             'methode_paiement' => $validated['methode_paiement'],
@@ -167,7 +183,7 @@ class AuthController extends Controller
             $agent->evenement->increment('quota_vendu', 1);
             $tarif->increment('quantite_vendue', 1);
             $agent->increment('tickets_count');
-            $agent->increment('montant_total', $tarif->prix);
+            $agent->increment('montant_total', $prixUnitaire);
             session()->flash('ticket_created', $ticket->id); // Pour affichage du dernier ticket
             return redirect()->route('agent-vente.dashboard')
                 ->with('success', 'Ticket vendu avec succès !');
