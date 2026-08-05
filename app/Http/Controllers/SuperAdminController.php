@@ -494,6 +494,129 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Attribution supprimée.');
     }
 
+    // Politique de vente espèces avec portée (dashboard = tous les événements, evenement = événement précis)
+    public function definirVenteEspeces(Request $request, User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'portee' => 'required|in:dashboard,evenement',
+            'evenement_id' => 'nullable|integer',
+            'ventes_especes' => 'required|in:auto,toujours,jamais',
+        ]);
+
+        $valeur = $validated['ventes_especes'] === 'auto' ? null : $validated['ventes_especes'];
+
+        if ($validated['portee'] === 'evenement') {
+            $evenement = Evenement::where('user_id', $user->id)->findOrFail($validated['evenement_id']);
+            $ancien = $evenement->ventes_especes;
+            $evenement->update(['ventes_especes' => $valeur]);
+            $this->logAjustement('evenement', [
+                'evenement_id' => $evenement->id,
+                'evenement_titre' => $evenement->titre,
+                'ancien' => ['ventes_especes' => $ancien],
+                'nouveau' => ['ventes_especes' => $valeur],
+            ]);
+
+            return back()->with('success', "Ventes espèces mises à jour sur « {$evenement->titre} ».");
+        }
+
+        $ancien = $user->ventes_especes;
+        $user->update(['ventes_especes' => $valeur]);
+        $this->logAjustement('organisateur', [
+            'organisateur_id' => $user->id,
+            'organisateur_nom' => $user->nom,
+            'ancien' => ['ventes_especes' => $ancien],
+            'nouveau' => ['ventes_especes' => $valeur],
+        ]);
+
+        return back()->with('success', 'Ventes espèces mises à jour pour tout le dashboard.');
+    }
+
+    // Pourcentage de commission avec portée (dashboard = tous les événements, evenement = événement précis)
+    public function definirCommission(Request $request, User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'portee' => 'required|in:dashboard,evenement',
+            'evenement_id' => 'nullable|integer',
+            'commission_pourcentage' => 'nullable|numeric|min:0|max:10',
+        ]);
+
+        $valeur = (isset($validated['commission_pourcentage']) && $validated['commission_pourcentage'] !== '')
+            ? (float) $validated['commission_pourcentage']
+            : null;
+
+        if ($validated['portee'] === 'evenement') {
+            $evenement = Evenement::where('user_id', $user->id)->findOrFail($validated['evenement_id']);
+            $ancien = $evenement->commission_pourcentage;
+            $evenement->update(['commission_pourcentage' => $valeur]);
+            $this->logAjustement('evenement', [
+                'evenement_id' => $evenement->id,
+                'evenement_titre' => $evenement->titre,
+                'ancien' => ['commission_pourcentage' => $ancien],
+                'nouveau' => ['commission_pourcentage' => $valeur],
+            ]);
+
+            return back()->with('success', "Commission mise à jour sur « {$evenement->titre} ».");
+        }
+
+        $ancien = $user->commission_pourcentage;
+        $user->update(['commission_pourcentage' => $valeur]);
+        $this->logAjustement('organisateur', [
+            'organisateur_id' => $user->id,
+            'organisateur_nom' => $user->nom,
+            'ancien' => ['commission_pourcentage' => $ancien],
+            'nouveau' => ['commission_pourcentage' => $valeur],
+        ]);
+
+        return back()->with('success', 'Commission mise à jour pour tout le dashboard.');
+    }
+
+    // Réinitialise un contrôle (ventes espèces ou commission) pour le dashboard ou un événement
+    public function reinitialiserControle(Request $request, User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'champ' => 'required|in:ventes_especes,commission_pourcentage',
+            'niveau' => 'required|in:dashboard,evenement',
+            'evenement_id' => 'nullable|integer',
+        ]);
+
+        if ($validated['niveau'] === 'evenement') {
+            $evenement = Evenement::where('user_id', $user->id)->findOrFail($validated['evenement_id']);
+            $ancien = $evenement->{$validated['champ']};
+            $evenement->update([$validated['champ'] => null]);
+            $this->logAjustement('evenement', [
+                'evenement_id' => $evenement->id,
+                'evenement_titre' => $evenement->titre,
+                'ancien' => [$validated['champ'] => $ancien],
+                'nouveau' => [$validated['champ'] => null],
+            ]);
+
+            return back()->with('success', "Réinitialisé sur « {$evenement->titre} » (valeur par défaut).");
+        }
+
+        $ancien = $user->{$validated['champ']};
+        $user->update([$validated['champ'] => null]);
+        $this->logAjustement('organisateur', [
+            'organisateur_id' => $user->id,
+            'organisateur_nom' => $user->nom,
+            'ancien' => [$validated['champ'] => $ancien],
+            'nouveau' => [$validated['champ'] => null],
+        ]);
+
+        return back()->with('success', 'Réinitialisé pour tout le dashboard (valeur par défaut).');
+    }
+
     // Convertit les valeurs du formulaire (champ vide = héritage / défaut)
     protected function normaliserControles(array $validated): array
     {

@@ -156,6 +156,23 @@ let html5QrCode = null;
 let isScanning = false;
 let scanTimeout = null;
 
+const SCAN_CONFIG = {
+    fps: 15,
+    qrbox: function (viewfinderWidth, viewfinderHeight) {
+        return {
+            width: Math.round(viewfinderWidth * 0.85),
+            height: Math.round(viewfinderHeight * 0.6)
+        };
+    },
+    focusMode: 'continuous',
+};
+
+const CAMERA_ATTEMPTS = [
+    { facingMode: "environment" },
+    { facingMode: { exact: "environment" } },
+    { facingMode: "user" },
+];
+
 document.getElementById('btnToggleCamera')?.addEventListener('click', toggleCamera);
 
 function toggleCamera() {
@@ -174,28 +191,60 @@ function startCamera() {
     if (placeholder) placeholder.style.display = 'none';
     if (corners) corners.style.display = 'block';
 
-    html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
-        { facingMode: "environment" },
-        {
-            fps: 15,
-            qrbox: function (viewfinderWidth, viewfinderHeight) {
-                return {
-                    width: Math.round(viewfinderWidth * 0.85),
-                    height: Math.round(viewfinderHeight * 0.6)
-                };
-            },
-            focusMode: 'continuous',
-        },
-        onScanSuccess
-    ).then(() => {
-        isScanning = true;
-        if (btn) btn.innerHTML = '<i class="bi bi-stop-circle me-1"></i>Arrêter';
-    }).catch(() => {
-        if (placeholder) { placeholder.style.display = 'flex'; reader.style.display = 'none'; }
-        if (corners) corners.style.display = 'none';
-        alert('Impossible d\'accéder à la caméra.');
-    });
+    tryStartCamera(0);
+}
+
+function tryStartCamera(attemptIndex) {
+    if (attemptIndex < CAMERA_ATTEMPTS.length) {
+        const instance = new Html5Qrcode("reader");
+        html5QrCode = instance;
+        instance.start(
+            CAMERA_ATTEMPTS[attemptIndex],
+            SCAN_CONFIG,
+            onScanSuccess
+        ).then(() => {
+            onCameraStarted();
+        }).catch(() => {
+            instance.clear().catch(() => {});
+            tryStartCamera(attemptIndex + 1);
+        });
+        return;
+    }
+
+    Html5Qrcode.getCameras()
+        .then((cameras) => {
+            if (cameras && cameras.length > 0) {
+                const back = cameras.find(function (c) {
+                    return /back|rear|environment/i.test(c.label || '');
+                }) || cameras[0];
+                const instance = new Html5Qrcode("reader");
+                html5QrCode = instance;
+                instance.start(back.id, SCAN_CONFIG, onScanSuccess)
+                    .then(onCameraStarted)
+                    .catch(onCameraFailed);
+            } else {
+                onCameraFailed();
+            }
+        })
+        .catch(onCameraFailed);
+}
+
+function onCameraStarted() {
+    isScanning = true;
+    const btn = document.getElementById('btnToggleCamera');
+    if (btn) btn.innerHTML = '<i class="bi bi-stop-circle me-1"></i>Arrêter';
+}
+
+function onCameraFailed() {
+    const btn = document.getElementById('btnToggleCamera');
+    const placeholder = document.getElementById('cameraPlaceholder');
+    const corners = document.getElementById('scanCorners');
+    const reader = document.getElementById('reader');
+    if (placeholder) placeholder.style.display = 'flex';
+    if (reader) reader.style.display = 'none';
+    if (corners) corners.style.display = 'none';
+    if (btn) btn.innerHTML = '<i class="bi bi-camera me-1"></i>Activer';
+    alert("Impossible d'accéder à la caméra. Vérifiez que le site est en HTTPS et autorisez la caméra dans votre navigateur.");
 }
 
 function stopCamera() {

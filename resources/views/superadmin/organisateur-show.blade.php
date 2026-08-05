@@ -140,30 +140,179 @@
 
     <div class="sa-card mb-4">
         <div class="sa-card-header">
-            <span><i class="bi bi-sliders me-2" style="color: var(--sa-primary);"></i>Contrôles organisateur</span>
-            <span class="text-muted" style="font-size:0.8rem;">S'applique à tous ses événements, sauf surchargés</span>
+            <span><i class="bi bi-cash-coin me-2" style="color: var(--sa-primary);"></i>Ventes espèces</span>
+            <span class="text-muted" style="font-size:0.8rem;">Spécifique événement &gt; dashboard &gt; règle auto (15 %)</span>
         </div>
         <div class="sa-card-body">
-            <form action="{{ route('superadmin.organisateurs.controles', $user) }}" method="POST">
+            <form action="{{ route('superadmin.organisateurs.vente-especes', $user) }}" method="POST">
                 @csrf
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold mb-1">Ventes espèces</label>
-                        <select name="ventes_especes" class="sa-form-control">
-                            <option value="">Auto (règle 15 %)</option>
-                            <option value="toujours" @selected($user->ventes_especes === 'toujours')>Toujours autorisées</option>
-                            <option value="jamais" @selected($user->ventes_especes === 'jamais')>Jamais (bloquées)</option>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Portée</label>
+                        <select name="portee" class="sa-form-control" data-portee="especesEvenementField">
+                            <option value="dashboard">Tout le dashboard</option>
+                            <option value="evenement">Un événement précis</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold mb-1">Commission (%)</label>
-                        <input type="number" name="commission_pourcentage" class="sa-form-control" min="0" max="10" step="0.5" value="{{ $user->commission_pourcentage }}" placeholder="Défaut : 10 %">
+                    <div class="col-md-4 d-none" id="especesEvenementField">
+                        <label class="form-label small fw-semibold mb-1">Événement <span class="text-danger">*</span></label>
+                        <select name="evenement_id" class="sa-form-control">
+                            <option value="">-- Choisir un événement --</option>
+                            @foreach($evenements as $ev)
+                                <option value="{{ $ev->id }}">{{ $ev->titre }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-check-lg"></i> Enregistrer les contrôles</button>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Politique</label>
+                        <select name="ventes_especes" class="sa-form-control">
+                            <option value="auto">Auto (règle 15 %)</option>
+                            <option value="toujours">Toujours autorisées</option>
+                            <option value="jamais">Jamais (bloquées)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i></button>
                     </div>
                 </div>
             </form>
+
+            @php
+                $labelsEspeces = [null => 'Auto (règle 15 %)', '' => 'Auto (règle 15 %)', 'toujours' => 'Toujours', 'jamais' => 'Jamais'];
+                $especesParEvenement = $evenements->filter(fn($ev) => $ev->ventes_especes !== null);
+            @endphp
+            @if($user->ventes_especes !== null || $especesParEvenement->isNotEmpty())
+            <div class="table-responsive mt-3">
+                <table class="sa-table">
+                    <thead>
+                        <tr><th>Portée</th><th>Politique</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @if($user->ventes_especes !== null)
+                        <tr>
+                            <td><strong>Tout le dashboard</strong> <span class="sa-badge sa-badge-secondary ms-1">global</span></td>
+                            <td>{{ $labelsEspeces[$user->ventes_especes] ?? $user->ventes_especes }}</td>
+                            <td class="text-end">
+                                <form action="{{ route('superadmin.organisateurs.controle-reset', $user) }}" method="POST" onsubmit="return confirm('Réinitialiser la politique vente espèces du dashboard ?')">
+                                    @csrf
+                                    <input type="hidden" name="champ" value="ventes_especes">
+                                    <input type="hidden" name="niveau" value="dashboard">
+                                    <button type="submit" class="sa-btn sa-btn-secondary" title="Réinitialiser"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endif
+                        @foreach($especesParEvenement as $ev)
+                        <tr>
+                            <td><strong>{{ Str::limit($ev->titre, 30) }}</strong></td>
+                            <td>{{ $labelsEspeces[$ev->ventes_especes] ?? $ev->ventes_especes }}</td>
+                            <td class="text-end">
+                                <form action="{{ route('superadmin.organisateurs.controle-reset', $user) }}" method="POST" onsubmit="return confirm('Réinitialiser la politique vente espèces de cet événement ?')">
+                                    @csrf
+                                    <input type="hidden" name="champ" value="ventes_especes">
+                                    <input type="hidden" name="niveau" value="evenement">
+                                    <input type="hidden" name="evenement_id" value="{{ $ev->id }}">
+                                    <button type="submit" class="sa-btn sa-btn-secondary" title="Réinitialiser"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <p class="text-muted small mb-0 mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Aucun réglage : la règle auto (15 % de la capacité vendue en ligne) s'applique sur tous les événements.
+            </p>
+            @endif
+        </div>
+    </div>
+
+    <div class="sa-card mb-4">
+        <div class="sa-card-header">
+            <span><i class="bi bi-percent me-2" style="color: var(--sa-primary);"></i>Commission</span>
+            <span class="text-muted" style="font-size:0.8rem;">Spécifique événement &gt; dashboard &gt; défaut 10 %</span>
+        </div>
+        <div class="sa-card-body">
+            <form action="{{ route('superadmin.organisateurs.commission', $user) }}" method="POST">
+                @csrf
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Portée</label>
+                        <select name="portee" class="sa-form-control" data-portee="commissionEvenementField">
+                            <option value="dashboard">Tout le dashboard</option>
+                            <option value="evenement">Un événement précis</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-none" id="commissionEvenementField">
+                        <label class="form-label small fw-semibold mb-1">Événement <span class="text-danger">*</span></label>
+                        <select name="evenement_id" class="sa-form-control">
+                            <option value="">-- Choisir un événement --</option>
+                            @foreach($evenements as $ev)
+                                <option value="{{ $ev->id }}">{{ $ev->titre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Commission (%)</label>
+                        <input type="number" name="commission_pourcentage" class="sa-form-control" min="0" max="10" step="0.5" placeholder="Défaut : 10 %">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i></button>
+                    </div>
+                </div>
+            </form>
+
+            @php
+                $commissionsParEvenement = $evenements->filter(fn($ev) => $ev->commission_pourcentage !== null);
+                $labelCommission = fn($v) => $v === null || $v === '' ? 'Défaut (10 %)' : number_format((float) $v, 1, ',', ' ') . ' %';
+            @endphp
+            @if($user->commission_pourcentage !== null || $commissionsParEvenement->isNotEmpty())
+            <div class="table-responsive mt-3">
+                <table class="sa-table">
+                    <thead>
+                        <tr><th>Portée</th><th>Commission</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @if($user->commission_pourcentage !== null)
+                        <tr>
+                            <td><strong>Tout le dashboard</strong> <span class="sa-badge sa-badge-secondary ms-1">global</span></td>
+                            <td>{{ $labelCommission($user->commission_pourcentage) }}</td>
+                            <td class="text-end">
+                                <form action="{{ route('superadmin.organisateurs.controle-reset', $user) }}" method="POST" onsubmit="return confirm('Réinitialiser la commission du dashboard ?')">
+                                    @csrf
+                                    <input type="hidden" name="champ" value="commission_pourcentage">
+                                    <input type="hidden" name="niveau" value="dashboard">
+                                    <button type="submit" class="sa-btn sa-btn-secondary" title="Réinitialiser"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endif
+                        @foreach($commissionsParEvenement as $ev)
+                        <tr>
+                            <td><strong>{{ Str::limit($ev->titre, 30) }}</strong></td>
+                            <td>{{ $labelCommission($ev->commission_pourcentage) }}</td>
+                            <td class="text-end">
+                                <form action="{{ route('superadmin.organisateurs.controle-reset', $user) }}" method="POST" onsubmit="return confirm('Réinitialiser la commission de cet événement ?')">
+                                    @csrf
+                                    <input type="hidden" name="champ" value="commission_pourcentage">
+                                    <input type="hidden" name="niveau" value="evenement">
+                                    <input type="hidden" name="evenement_id" value="{{ $ev->id }}">
+                                    <button type="submit" class="sa-btn sa-btn-secondary" title="Réinitialiser"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <p class="text-muted small mb-0 mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Aucun réglage : la commission par défaut (10 %) s'applique sur tous les événements.
+            </p>
+            @endif
         </div>
     </div>
 
@@ -178,7 +327,7 @@
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold mb-1">Portée</label>
-                        <select name="portee" id="porteeSelect" class="sa-form-control">
+                        <select name="portee" class="sa-form-control" data-portee="evenementField">
                             <option value="dashboard">Tout le dashboard</option>
                             <option value="evenement">Un événement précis</option>
                         </select>
@@ -544,19 +693,21 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var porteeSelect = document.getElementById('porteeSelect');
-    var evenementField = document.getElementById('evenementField');
-    var evenementSelect = evenementField.querySelector('select[name="evenement_id"]');
-    if (!porteeSelect) return;
+    document.querySelectorAll('select[data-portee]').forEach(function (porteeSelect) {
+        var evenementField = document.getElementById(porteeSelect.dataset.portee);
+        if (!evenementField) return;
+        var evenementSelect = evenementField.querySelector('select[name="evenement_id"]');
+        if (!evenementSelect) return;
 
-    function toggleEvenementField() {
-        var isEvent = porteeSelect.value === 'evenement';
-        evenementField.classList.toggle('d-none', !isEvent);
-        evenementSelect.required = isEvent;
-    }
+        function toggleEvenementField() {
+            var isEvent = porteeSelect.value === 'evenement';
+            evenementField.classList.toggle('d-none', !isEvent);
+            evenementSelect.required = isEvent;
+        }
 
-    porteeSelect.addEventListener('change', toggleEvenementField);
-    toggleEvenementField();
+        porteeSelect.addEventListener('change', toggleEvenementField);
+        toggleEvenementField();
+    });
 });
 </script>
 @endsection

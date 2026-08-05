@@ -319,6 +319,23 @@
 let html5QrcodeScanner = null;
 let isCameraActive = false;
 
+const SCAN_CONFIG = {
+    fps: 15,
+    qrbox: function (viewfinderWidth, viewfinderHeight) {
+        return {
+            width: Math.round(viewfinderWidth * 0.85),
+            height: Math.round(viewfinderHeight * 0.6)
+        };
+    },
+    focusMode: 'continuous',
+};
+
+const CAMERA_ATTEMPTS = [
+    { facingMode: "environment" },
+    { facingMode: { exact: "environment" } },
+    { facingMode: "user" },
+];
+
 document.getElementById('btnToggleCamera').addEventListener('click', function() {
     if (isCameraActive) {
         stopCamera();
@@ -329,26 +346,54 @@ document.getElementById('btnToggleCamera').addEventListener('click', function() 
 
 function startCamera() {
     const status = document.getElementById('cameraStatus');
-    const placeholder = document.getElementById('cameraPlaceholder');
-    const scanLine = document.getElementById('scanLine');
-    const scanCorners = document.getElementById('scanCorners');
 
     status.textContent = 'Activation...';
 
-    html5QrcodeScanner = new Html5Qrcode("reader");
+    tryStartCamera(0);
+}
 
-    html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        {
-            fps: 15,
-            qrbox: function (viewfinderWidth, viewfinderHeight) {
-                return {
-                    width: Math.round(viewfinderWidth * 0.85),
-                    height: Math.round(viewfinderHeight * 0.6)
-                };
+function tryStartCamera(attemptIndex) {
+    if (attemptIndex < CAMERA_ATTEMPTS.length) {
+        const instance = new Html5Qrcode("reader");
+        html5QrcodeScanner = instance;
+        instance.start(
+            CAMERA_ATTEMPTS[attemptIndex],
+            SCAN_CONFIG,
+            (decodedText) => {
+                document.getElementById('codeInput').value = decodedText;
+                verifyCode(decodedText);
+                stopCamera();
             },
-            focusMode: 'continuous',
-        },
+            (errorMessage) => {}
+        ).then(() => {
+            onCameraStarted();
+        }).catch((err) => {
+            instance.clear().catch(() => {});
+            tryStartCamera(attemptIndex + 1);
+        });
+        return;
+    }
+
+    Html5Qrcode.getCameras()
+        .then((cameras) => {
+            if (cameras && cameras.length > 0) {
+                const back = cameras.find(function (c) {
+                    return /back|rear|environment/i.test(c.label || '');
+                }) || cameras[0];
+                startWithCameraId(back.id);
+            } else {
+                onCameraFailed();
+            }
+        })
+        .catch(() => onCameraFailed());
+}
+
+function startWithCameraId(cameraId) {
+    const instance = new Html5Qrcode("reader");
+    html5QrcodeScanner = instance;
+    instance.start(
+        cameraId,
+        SCAN_CONFIG,
         (decodedText) => {
             document.getElementById('codeInput').value = decodedText;
             verifyCode(decodedText);
@@ -356,18 +401,37 @@ function startCamera() {
         },
         (errorMessage) => {}
     ).then(() => {
-        isCameraActive = true;
-        status.textContent = 'Camera active';
-        status.style.color = 'var(--vert)';
-        placeholder.style.display = 'none';
-        scanLine.style.display = 'block';
-        scanCorners.style.display = 'block';
-        document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera-off me-1"></i> <span class="btn-text">Stop</span>';
-    }).catch((err) => {
-        status.textContent = 'Erreur camera';
-        status.style.color = 'var(--danger)';
-        alert('Impossible d\'activer la camera. Verifiez les permissions.');
+        onCameraStarted();
+    }).catch(() => {
+        onCameraFailed();
     });
+}
+
+function onCameraStarted() {
+    const status = document.getElementById('cameraStatus');
+    const placeholder = document.getElementById('cameraPlaceholder');
+    const scanLine = document.getElementById('scanLine');
+    const scanCorners = document.getElementById('scanCorners');
+
+    isCameraActive = true;
+    status.textContent = 'Camera active';
+    status.style.color = 'var(--vert)';
+    placeholder.style.display = 'none';
+    scanLine.style.display = 'block';
+    scanCorners.style.display = 'block';
+    document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera-off me-1"></i> <span class="btn-text">Stop</span>';
+}
+
+function onCameraFailed() {
+    const status = document.getElementById('cameraStatus');
+    const placeholder = document.getElementById('cameraPlaceholder');
+
+    isCameraActive = false;
+    status.textContent = 'Erreur camera';
+    status.style.color = 'var(--danger)';
+    placeholder.style.display = 'flex';
+    document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera me-1"></i> <span class="btn-text">Camera</span>';
+    alert("Impossible d'activer la camera. Verifiez que le site est en HTTPS et autorisez la camera dans votre navigateur.");
 }
 
 function stopCamera() {
