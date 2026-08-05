@@ -5,37 +5,37 @@
 
 @section('content')
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-4 col-lg-3 col-xl">
+    <div class="col-6 col-md-4">
         <div class="kpi-card">
             <div class="kpi-icon" style="background: rgba(107,63,160,0.1); color: var(--sa-primary);"><i class="bi bi-people-fill"></i></div>
             <div class="kpi-info"><div class="kpi-value">{{ $totalUsers }}</div><div class="kpi-label">Utilisateurs</div></div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-lg-3 col-xl">
+    <div class="col-6 col-md-4">
         <div class="kpi-card">
             <div class="kpi-icon" style="background: rgba(39,174,96,0.1); color: var(--sa-success);"><i class="bi bi-calendar-event-fill"></i></div>
             <div class="kpi-info"><div class="kpi-value">{{ $totalEvenements }}</div><div class="kpi-label">Evenements</div></div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-lg-3 col-xl">
+    <div class="col-6 col-md-4">
         <div class="kpi-card">
             <div class="kpi-icon" style="background: rgba(243,156,18,0.1); color: var(--sa-warning);"><i class="bi bi-ticket-perforated-fill"></i></div>
             <div class="kpi-info"><div class="kpi-value">{{ number_format($ticketsVendus, 0, ',', ' ') }}</div><div class="kpi-label">Tickets vendus</div></div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-lg-3 col-xl">
+    <div class="col-6 col-md-4">
         <div class="kpi-card">
             <div class="kpi-icon" style="background: rgba(39,174,96,0.1); color: var(--sa-success);"><i class="bi bi-cash-stack"></i></div>
             <div class="kpi-info"><div class="kpi-value">{{ number_format($recettesGlobales, 0, ',', ' ') }}</div><div class="kpi-label">Revenus (FCFA)</div></div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-lg-3 col-xl">
+    <div class="col-6 col-md-4">
         <div class="kpi-card">
             <div class="kpi-icon" style="background: rgba(107,63,160,0.1); color: var(--sa-primary);"><i class="bi bi-activity"></i></div>
             <div class="kpi-info"><div class="kpi-value">{{ $evenementsActifs }}</div><div class="kpi-label">Actifs</div></div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-lg-3 col-xl">
+    <div class="col-6 col-md-4">
         <div class="kpi-card">
             <div class="kpi-icon" style="background: rgba(52,152,219,0.1); color: #3498db;"><i class="bi bi-qr-code"></i></div>
             <div class="kpi-info"><div class="kpi-value">{{ $scansAujourdhui }}</div><div class="kpi-label">Scans aujourdhui</div></div>
@@ -151,9 +151,6 @@
 
 @push('styles')
 <style>
-    @media (min-width: 1200px) {
-        .col-xl { flex: 1 0 0%; min-width: 140px; }
-    }
     @media (max-width: 575.98px) {
         .kpi-card { padding: 0.75rem; gap: 0.6rem; }
         .kpi-icon { width: 36px; height: 36px; font-size: 1rem; }
