@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Ticket;
 use App\Services\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Address;
@@ -13,10 +14,15 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Support\Collection;
 
-class TicketEmail extends Mailable
+class TicketEmail extends Mailable implements ShouldQueue
 {
     public Collection $tickets;
-    public array $pdfs;
+
+    public array $pdfs = [];
+
+    private array $ticketIds = [];
+
+    private bool $loaded = false;
 
     public function __construct(Ticket|array|Collection $tickets)
     {
@@ -26,12 +32,24 @@ class TicketEmail extends Mailable
             $tickets = collect($tickets);
         }
 
-        $this->tickets = $tickets;
-        $this->pdfs = [];
+        $this->ticketIds = $tickets->pluck('id')->all();
+        $this->tickets = new Collection();
+    }
 
-        foreach ($tickets as $ticket) {
-            $ticket->load('evenement', 'tarif');
+    private function load(): void
+    {
+        if ($this->loaded) {
+            return;
+        }
 
+        $this->loaded = true;
+        $this->tickets = Ticket::with('evenement', 'tarif')->whereIn('id', $this->ticketIds)->get();
+
+        if ($this->tickets->isEmpty()) {
+            throw new \RuntimeException('Aucun ticket trouvé pour l\'envoi de l\'email.');
+        }
+
+        foreach ($this->tickets as $ticket) {
             $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
             $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
 
@@ -47,6 +65,7 @@ class TicketEmail extends Mailable
 
     public function envelope(): Envelope
     {
+        $this->load();
         $first = $this->tickets->first();
         $quantite = $this->tickets->count();
 
@@ -71,6 +90,8 @@ class TicketEmail extends Mailable
 
     public function content(): Content
     {
+        $this->load();
+
         return new Content(
             view: 'emails.ticket',
             with: ['tickets' => $this->tickets],
@@ -79,6 +100,8 @@ class TicketEmail extends Mailable
 
     public function attachments(): array
     {
+        $this->load();
+
         return array_map(fn($pdf) =>
             Attachment::fromData(fn() => $pdf['content'], $pdf['filename'])
                 ->withMime('application/pdf'),
