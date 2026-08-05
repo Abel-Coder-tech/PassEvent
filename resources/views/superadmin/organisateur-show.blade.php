@@ -425,6 +425,11 @@
                         @csrf
                         <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-pause-fill"></i> Suspendre</button>
                     </form>
+                @elseif($user->statut === 'bloque')
+                    <form action="{{ route('superadmin.organisateurs.reactiver', $user) }}" method="POST" onsubmit="return confirm('Réactiver {{ $user->nom }} ? Ses événements annulés seront republiés.')">
+                        @csrf
+                        <button type="submit" class="sa-btn sa-btn-success"><i class="bi bi-play-fill"></i> Réactiver</button>
+                    </form>
                 @endif
                 <form action="{{ route('superadmin.organisateurs.supprimer', $user) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $user->nom }} ? Cette action est irréversible.')">
                     @csrf
@@ -689,6 +694,12 @@
     transition: opacity 0.15s;
 }
 .sa-btn-warning:hover { opacity: 0.85; }
+.sa-btn-success {
+    background: #2e7d4f; border: none; color: #fff; padding: 0.4rem 0.9rem;
+    border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s;
+}
+.sa-btn-success:hover { opacity: 0.85; }
 </style>
 
 <script>

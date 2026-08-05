@@ -107,6 +107,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/organisateurs', [SuperAdminController::class, 'organisateurs'])->name('organisateurs');
         Route::post('/organisateurs/creer', [SuperAdminController::class, 'creerOrganisateur'])->name('organisateurs.creer');
         Route::post('/organisateurs/{user}/suspendre', [SuperAdminController::class, 'suspendreOrganisateur'])->name('organisateurs.suspendre');
+        Route::post('/organisateurs/{user}/reactiver', [SuperAdminController::class, 'reactiverOrganisateur'])->name('organisateurs.reactiver');
         Route::post('/organisateurs/{user}/approuver', [SuperAdminController::class, 'approuverOrganisateur'])->name('organisateurs.approuver');
         Route::post('/organisateurs/{user}/rejeter', [SuperAdminController::class, 'rejeterOrganisateur'])->name('organisateurs.rejeter');
         Route::post('/organisateurs/{user}/corrections', [SuperAdminController::class, 'demanderCorrectionsOrganisateur'])->name('organisateurs.corrections');

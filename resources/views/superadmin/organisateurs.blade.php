@@ -114,6 +114,15 @@
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                                 </form>
+                            @elseif($org->statut === 'bloque')
+                                <form action="{{ route('superadmin.organisateurs.reactiver', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Réactiver {{ $org->nom }} ? Ses événements annulés seront republiés.')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Réactiver"><i class="bi bi-play-fill"></i></button>
+                                </form>
+                                <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                </form>
                             @else
                                 <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
                                     @csrf

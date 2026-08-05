@@ -687,6 +687,26 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Organisateur suspendu et ses evenements annules.');
     }
 
+    // Réactive un organisateur bloqué et restaure ses événements annulés par la suspension
+    public function reactiverOrganisateur(User $user)
+    {
+        if ($user->role !== 'admin' || $user->statut !== 'bloque') {
+            return back()->with('error', 'Action non autorisée.');
+        }
+
+        $user->update(['statut' => 'actif']);
+        $evenements = $user->evenements()->where('statut', 'annulé')->update(['statut' => 'publié']);
+
+        Log::create([
+            'type_operation' => 'organisateur_reactive',
+            'ticket_id' => null,
+            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'evenements_restaures' => $evenements]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'Organisateur réactivé et ses événements annulés republiés.');
+    }
+
     // Crée un compte organisateur directement depuis le super admin
     public function creerOrganisateur(Request $request)
     {
