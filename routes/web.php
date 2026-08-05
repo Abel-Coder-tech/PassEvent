@@ -158,6 +158,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/support/supprimer', [SuperAdminController::class, 'supportSupprimer'])->name('support.supprimer');
         Route::post('/support/renvoyer-email', [SuperAdminController::class, 'supportRenvoyerEmail'])->name('support.renvoyer-email');
         Route::post('/support/rembourser', [SuperAdminController::class, 'supportRembourser'])->name('support.rembourser');
+        Route::post('/support/tarifs', [SuperAdminController::class, 'supportTarifs'])->name('support.tarifs');
     });
 });
 // Routes globales Spatie Sitemap

@@ -1400,6 +1400,23 @@ class SuperAdminController extends Controller
         return back()->with('success', $resultat['message']);
     }
 
+    // Récupère les tarifs d'un événement pour le formulaire « Recréer un ticket »
+    public function supportTarifs(Request $request)
+    {
+        $request->validate([
+            'evenement_id' => 'required|exists:evenement,id',
+        ]);
+
+        $tarifs = \App\Models\Tarif::where('evenement_id', $request->evenement_id)
+            ->orderBy('nom')
+            ->get(['id', 'nom', 'prix']);
+
+        return response()->json([
+            'tarifs' => $tarifs,
+            'gratuit' => Evenement::where('id', $request->evenement_id)->value('gratuit'),
+        ]);
+    }
+
     // Recrée un ticket purgé ou manquant
     public function supportRecreer(Request $request)
     {

@@ -110,7 +110,7 @@
                     @csrf
                     <div class="mb-2">
                         <label class="form-label fw-semibold" style="font-size:0.8rem;">Événement</label>
-                        <select name="evenement_id" class="form-select form-select-sm" required>
+                        <select name="evenement_id" id="evenement_id" class="form-select form-select-sm" required>
                             <option value="">— Sélectionner —</option>
                             @foreach(\App\Models\Evenement::orderByDesc('created_at')->limit(200)->get() as $ev)
                                 <option value="{{ $ev->id }}" {{ old('evenement_id') == $ev->id ? 'selected' : '' }}>{{ $ev->titre }} (#{{ $ev->id }})</option>
@@ -119,12 +119,10 @@
                     </div>
                     <div class="mb-2">
                         <label class="form-label fw-semibold" style="font-size:0.8rem;">Tarif</label>
-                        <select name="tarif_id" class="form-select form-select-sm">
+                        <select name="tarif_id" id="tarif_id" class="form-select form-select-sm">
                             <option value="">— Tarif par défaut —</option>
-                            @foreach(\App\Models\Tarif::orderBy('nom')->limit(300)->get() as $tarif)
-                                <option value="{{ $tarif->id }}" {{ old('tarif_id') == $tarif->id ? 'selected' : '' }}>{{ $tarif->nom }} ({{ number_format($tarif->prix, 0, ',', ' ') }} F)</option>
-                            @endforeach
                         </select>
+                        <div class="text-muted" style="font-size:0.72rem;" id="tarif_hint">Sélectionnez un événement pour afficher ses tarifs.</div>
                     </div>
                     <div class="mb-2">
                         <label class="form-label fw-semibold" style="font-size:0.8rem;">Nom de l'acheteur</label>
@@ -216,4 +214,61 @@
 .kpi-value { font-size: 1.2rem; font-weight: 800; line-height: 1.2; }
 .kpi-label { font-size: 0.72rem; color: #888; font-weight: 500; }
 </style>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const eventSelect = document.getElementById('evenement_id');
+    const tarifSelect = document.getElementById('tarif_id');
+    const tarifHint = document.getElementById('tarif_hint');
+    const csrf = document.querySelector('form input[name="_token"]')?.value || '';
+
+    const formatPrix = (prix) => Number(prix).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ');
+
+    function chargerTarifs(evenementId, tarifSelectionne) {
+        tarifSelect.innerHTML = '<option value="">— Tarif par défaut —</option>';
+        if (!evenementId) {
+            tarifHint.textContent = 'Sélectionnez un événement pour afficher ses tarifs.';
+            return;
+        }
+        tarifHint.textContent = 'Chargement des tarifs...';
+        const fd = new FormData();
+        fd.append('evenement_id', evenementId);
+
+        fetch('{{ route('superadmin.support.tarifs') }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf },
+            body: fd,
+        })
+        .then(r => r.json())
+        .then(data => {
+            tarifSelect.innerHTML = '<option value="">— Tarif par défaut —</option>';
+            data.tarifs.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.nom + ' (' + formatPrix(t.prix) + ' F)';
+                if (tarifSelectionne && String(t.id) === String(tarifSelectionne)) {
+                    opt.selected = true;
+                }
+                tarifSelect.appendChild(opt);
+            });
+            tarifHint.textContent = data.tarifs.length + ' tarif(s) pour cet événement.';
+        })
+        .catch(() => {
+            tarifSelect.innerHTML = '<option value="">— Tarif par défaut —</option>';
+            tarifHint.textContent = 'Erreur de chargement des tarifs.';
+        });
+    }
+
+    eventSelect.addEventListener('change', function () {
+        chargerTarifs(this.value, null);
+    });
+
+    const evenementSelectionne = eventSelect.value || '';
+    if (evenementSelectionne) {
+        chargerTarifs(evenementSelectionne, '{{ old('tarif_id') }}');
+    }
+});
+</script>
+@endpush
 @endsection
