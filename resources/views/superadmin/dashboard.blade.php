@@ -147,6 +147,8 @@
     </div>
 </div>
 
+@endsection
+
 @push('styles')
 <style>
     @media (min-width: 1200px) {
