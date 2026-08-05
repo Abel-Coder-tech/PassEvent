@@ -52,8 +52,8 @@ class TicketEmail extends Mailable
 
         return new Envelope(
             subject: $quantite > 1
-                ? "Vos {$quantite} billets PaxEvent pour {$first->evenement->titre}"
-                : "Votre billet PaxEvent pour {$first->evenement->titre}",
+                ? "Vos {$quantite} tickets PaxEvent pour {$first->evenement->titre}"
+                : "Votre ticket PaxEvent pour {$first->evenement->titre}",
             replyTo: [new Address('contact@paxevent.com', 'PaxEvent')],
         );
     }

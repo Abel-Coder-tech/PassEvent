@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votre billet PaxEvent</title>
+    <title>Votre ticket PaxEvent</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -192,7 +192,7 @@
             @php $first = $tickets->first(); $quantite = $tickets->count(); @endphp
             <p class="greeting">Bonjour <strong>{{ $first->nom_acheteur }}</strong>,</p>
             @php $textes = $first->evenement->getTextes(); @endphp
-            <p class="intro">Votre paiement a &eacute;t&eacute; confirm&eacute;. {{ $quantite > 1 ? "Vos {$quantite} " . mb_strtolower($textes['billet_pluriel']) . ' sont pr&ecirc;ts !' : 'Votre ' . mb_strtolower($textes['billet']) . ' est pr&ecirc;t !' }}</p>
+            <p class="intro">Votre paiement a été confirmé. {{ $quantite > 1 ? "Vos {$quantite} tickets sont prêts !" : 'Votre ticket est prêt !' }}</p>
 
             @foreach($tickets as $ticket)
             <div class="event-card">
@@ -229,7 +229,7 @@
             </div>
 
             <div class="btn-wrap">
-                <a href="{{ route('tickets.telecharger', $first->id) }}" class="btn">T&eacute;l&eacute;charger {{ mb_strtolower($textes['billet']) }}</a>
+                <a href="{{ route('tickets.telecharger', $first->id) }}" class="btn">Télécharger ticket</a>
             </div>
 
             <p class="help-text">
