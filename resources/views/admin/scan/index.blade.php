@@ -318,6 +318,7 @@
 <script>
 let html5QrcodeScanner = null;
 let isCameraActive = false;
+let scanInProgress = false;
 
 const SCAN_CONFIG = {
     fps: 15,
@@ -348,6 +349,7 @@ function startCamera() {
     const status = document.getElementById('cameraStatus');
 
     status.textContent = 'Activation...';
+    scanInProgress = false;
 
     tryStartCamera(0);
 }
@@ -360,9 +362,7 @@ function tryStartCamera(attemptIndex) {
             CAMERA_ATTEMPTS[attemptIndex],
             SCAN_CONFIG,
             (decodedText) => {
-                document.getElementById('codeInput').value = decodedText;
-                verifyCode(decodedText);
-                stopCamera();
+                onScanSuccess(decodedText);
             },
             (errorMessage) => {}
         ).then(() => {
@@ -395,9 +395,7 @@ function startWithCameraId(cameraId) {
         cameraId,
         SCAN_CONFIG,
         (decodedText) => {
-            document.getElementById('codeInput').value = decodedText;
-            verifyCode(decodedText);
-            stopCamera();
+            onScanSuccess(decodedText);
         },
         (errorMessage) => {}
     ).then(() => {
@@ -405,6 +403,15 @@ function startWithCameraId(cameraId) {
     }).catch(() => {
         onCameraFailed();
     });
+}
+
+function onScanSuccess(decodedText) {
+    if (scanInProgress) return;
+    scanInProgress = true;
+    document.getElementById('codeInput').value = decodedText;
+    verifyCode(decodedText);
+    stopCamera();
+    setTimeout(() => { scanInProgress = false; }, 3000);
 }
 
 function onCameraStarted() {
@@ -470,6 +477,7 @@ function verifyCode(code) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
         },
         body: JSON.stringify({ code: code }),
@@ -489,7 +497,6 @@ function verifyCode(code) {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-search me-1"></i> Vérifier le ticket';
         document.getElementById('codeInput').value = '';
-        document.getElementById('codeInput').focus();
     });
 }
 
@@ -502,6 +509,7 @@ function showResult(data) {
     const details = document.getElementById('resultDetails');
 
     container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     card.className = 'result-card';
 
     if (data.success) {

@@ -315,11 +315,13 @@ function submitScan(code) {
                 '</div>';
         }
         resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         setTimeout(() => { resultDiv.style.display = 'none'; }, 5000);
     })
     .catch(() => {
         resultDiv.innerHTML = '<div class="result-invalid"><p class="mb-0 text-danger">Erreur de connexion.</p></div>';
         resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 }
 </script>
