@@ -259,7 +259,7 @@
                         <input type="number" name="commission_pourcentage" class="sa-form-control" min="0" max="10" step="0.5" placeholder="Défaut : 10 %">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i></button>
+                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i>Mettre à jour</button>
                     </div>
                 </div>
             </form>
@@ -350,7 +350,7 @@
                         <input type="number" name="nb_agents_vente" class="sa-form-control" min="0" value="2">
                     </div>
                     <div class="col-md-1">
-                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i></button>
+                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i>Mettre à jour</button>
                     </div>
                 </div>
             </form>
@@ -384,7 +384,7 @@
                                 <form action="{{ route('superadmin.organisateurs.attribution-supprimer', $attr) }}" method="POST"
                                     onsubmit="return confirm('Supprimer cette attribution ?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="sa-btn sa-btn-danger" title="Supprimer l'attribution"><i class="bi bi-trash"></i></button>
+                                    <button type="submit" class="sa-btn sa-btn-danger" title="Supprimer l'attribution"><i class="bi bi-trash"></i>Mettre à jour</button>
                                 </form>
                             </td>
                         </tr>
