@@ -100,7 +100,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/login', [SuperAdminAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [SuperAdminAuthController::class, 'login'])->name('login.post');
 
-    Route::middleware('superadmin')->group(function () {
+    Route::middleware(['superadmin', 'no_cache'])->group(function () {
         Route::post('/logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
         Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/utilisateurs', [SuperAdminController::class, 'utilisateurs'])->name('utilisateurs');
@@ -159,6 +159,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/support/renvoyer-email', [SuperAdminController::class, 'supportRenvoyerEmail'])->name('support.renvoyer-email');
         Route::post('/support/rembourser', [SuperAdminController::class, 'supportRembourser'])->name('support.rembourser');
         Route::post('/support/tarifs', [SuperAdminController::class, 'supportTarifs'])->name('support.tarifs');
+        Route::post('/support/incident-message', [SuperAdminController::class, 'supportVoirIncident'])->name('support.incident-message');
     });
 });
 // Routes globales Spatie Sitemap
@@ -177,7 +178,7 @@ Route::get('/generate-sitemap', function () {
         ->add(Url::create(url('/affiliation')))
         ->add(Url::create(url('/contrat-prestation')));
 
-    \App\Models\Evenement::where('statut', '=', 'publié')->get()->each(function ($evenement) use ($sitemap) {
+    \App\Models\Evenement::where('statut', 'publié')->get()->each(function ($evenement) use ($sitemap) {
         $sitemap->add(Url::create(url('/evenements/' . $evenement->id)));
     });
 
@@ -193,7 +194,7 @@ Route::prefix('agent')->name('agent.')->group(function () {
     Route::get('/connexion', [AgentAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/connexion', [AgentAuthController::class, 'login'])->name('login.post');
 
-    Route::middleware('agent')->group(function () {
+    Route::middleware(['agent', 'no_cache'])->group(function () {
         Route::post('/deconnexion', [AgentAuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', [AgentAuthController::class, 'dashboard'])->name('dashboard');
 
@@ -212,7 +213,7 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
     Route::get('/connexion', [AgentVenteAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/connexion', [AgentVenteAuthController::class, 'login'])->name('login.post');
 
-    Route::middleware('agent_vente')->group(function () {
+    Route::middleware(['agent_vente', 'no_cache'])->group(function () {
         Route::post('/deconnexion', [AgentVenteAuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', [AgentVenteAuthController::class, 'dashboard'])->name('dashboard');
         Route::post('/vendre', [AgentVenteAuthController::class, 'vendre'])->name('vendre');
@@ -225,7 +226,7 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
 // ============================================================
 // Routes protégées (admin)
 // ============================================================
-Route::middleware(['auth', 'compte_actif'])->group(function () {
+Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -249,7 +250,7 @@ Route::middleware(['auth', 'compte_actif'])->group(function () {
     Route::get('/contrat-prestation', [EvenementController::class, 'contratPrestation'])->name('contrat-prestation');
 });
 
-Route::middleware(['auth', 'compte_actif'])->group(function () {
+Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('evenements', EvenementController::class);
 

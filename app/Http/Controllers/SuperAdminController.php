@@ -1527,6 +1527,52 @@ class SuperAdminController extends Controller
             ->update(['lu' => true]);
     }
 
+    // Affiche et marque comme lues les notifications (incidents) liées à un ticket
+    public function supportVoirIncident(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_id' => 'required|integer|exists:ticket,id',
+        ]);
+
+        $ticket = Ticket::findOrFail($validated['ticket_id']);
+
+        $messages = Message::whereNull('user_id')
+            ->where(function ($q) use ($ticket) {
+                $q->where(function ($t) use ($ticket) {
+                    $t->whereNotNull('transaction_id')
+                        ->whereIn('transaction_id', array_filter([
+                            $ticket->fedapay_transaction_id,
+                            $ticket->transaction_id,
+                        ]));
+                })->orWhere(function ($e) use ($ticket) {
+                    $e->whereNotNull('email_achat')
+                        ->where('email_achat', $ticket->email_acheteur)
+                        ->where('objet', 'like', 'Incident paiement%');
+                });
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        if ($messages->isNotEmpty()) {
+            Message::whereIn('id', $messages->pluck('id'))->update(['lu' => true]);
+        }
+
+        return response()->json([
+            'ticket_id' => $ticket->id,
+            'code_unique' => $ticket->code_unique,
+            'messages' => $messages->map(fn ($m) => [
+                'nom_complet' => $m->nom_complet,
+                'email' => $m->email,
+                'telephone' => $m->telephone,
+                'email_achat' => $m->email_achat,
+                'objet' => $m->objet,
+                'transaction_id' => $m->transaction_id,
+                'message' => $m->message,
+                'date' => $m->created_at?->format('d/m/Y H:i'),
+            ]),
+        ]);
+    }
+
     // Remboursement direct superadmin (tickets payés, sans l'organisateur)
     public function supportRembourser(Request $request)
     {
