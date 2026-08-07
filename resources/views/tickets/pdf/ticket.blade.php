@@ -29,7 +29,7 @@
         }
 
         .header-title { 
-            color: #fff; 
+            color: #542680; 
         }
 
         .header-title .pass { 
@@ -93,7 +93,7 @@
             padding: 8px 12px;
             margin: 8px 0 0;
         }
-        .note p { font-size: 8px; color: #666; margin: 0; line-height: 1.4; text-align: center; }
+        .note p { font-size: 8px; color: #ffe082; margin: 0; line-height: 1.4; text-align: center; }
 
         .footer { background: #542680; padding: 14px 20px; width: 100%; page-break-inside: avoid; }
         .footer-text { color: #fff; font-size: 9px; }
