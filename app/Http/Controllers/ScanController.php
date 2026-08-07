@@ -135,6 +135,71 @@ class ScanController extends Controller
         return redirect()->route('scan.index');
     }
 
+    // Rafraîchit les stats et les scans récents de l'événement (AJAX polling)
+    public function historiqueJson(Request $request)
+    {
+        $accessEvenementId = session('scan_access_evenement_id');
+
+        if (!$accessEvenementId) {
+            return response()->json([
+                'stats' => null,
+                'scans' => [],
+            ]);
+        }
+
+        $scanQuery = Log::where('type_operation', 'scan')
+            ->with(['ticket.evenement'])
+            ->whereHas('ticket', function ($q) use ($accessEvenementId) {
+                $q->where('evenement_id', '=', $accessEvenementId);
+            });
+
+        $scans = $scanQuery->orderByDesc('created_at')->limit(50)->get();
+
+        $stats = [
+            'total_scans' => Log::where('type_operation', '=', 'scan')
+                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
+                    return $t->where('evenement_id', '=', $accessEvenementId);
+                })
+                ->count(),
+            'scans_today' => Log::where('type_operation', '=', 'scan')
+                ->whereDate('created_at', '=', today())
+                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
+                    return $t->where('evenement_id', '=', $accessEvenementId);
+                })
+                ->count(),
+            'scans_valides' => Log::where('type_operation', '=', 'scan')
+                ->where('details->resultat', 'valide')
+                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
+                    return $t->where('evenement_id', '=', $accessEvenementId);
+                })
+                ->count(),
+            'scans_invalides' => Log::where('type_operation', '=', 'scan')
+                ->where('details->resultat', 'invalide')
+                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
+                    return $t->where('evenement_id', '=', $accessEvenementId);
+                })
+                ->count(),
+        ];
+
+        return response()->json([
+            'stats' => $stats,
+            'scans' => $scans->map(function ($scan) {
+                $details = is_array($scan->details) ? $scan->details : json_decode($scan->details, true);
+
+                return [
+                    'id' => $scan->id,
+                    'resultat' => $details['resultat'] ?? 'inconnu',
+                    'raison' => $details['raison'] ?? null,
+                    'nom' => $scan->ticket?->nom_acheteur,
+                    'evenement' => $scan->ticket?->evenement?->titre,
+                    'date' => $scan->created_at?->format('d/m/Y H:i'),
+                    'heure' => $scan->created_at?->format('H:i'),
+                    'jour' => $scan->created_at?->format('d/m/Y'),
+                ];
+            }),
+        ]);
+    }
+
     // Vérifie et valide un ticket par son code QR
     public function verifier(Request $request)
     {
@@ -158,7 +223,7 @@ class ScanController extends Controller
         }
 
         $ticket = Ticket::with('evenement', 'tarif')
-            ->where('code_unique', '=', $code)
+            ->where('code_unique', Ticket::normaliserCodeSaisi($code))
             ->first();
 
         if (!$ticket) {

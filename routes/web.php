@@ -202,6 +202,7 @@ Route::prefix('agent')->name('agent.')->group(function () {
         Route::post('/scan/pin', [AgentScanController::class, 'checkPin'])->name('scan.check-pin');
         Route::get('/scan', [AgentScanController::class, 'index'])->name('scan.index');
         Route::post('/scan/verifier', [AgentScanController::class, 'verifier'])->name('scan.verifier');
+        Route::get('/scan/historique', [AgentScanController::class, 'historiqueJson'])->name('scan.historique');
         Route::get('/scan/quitter', [AgentScanController::class, 'exitScan'])->name('scan.exit');
     });
 });
@@ -295,6 +296,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::post('/scan/verifier', [ScanController::class, 'verifier'])->name('scan.verifier');
     Route::post('/scan/access-code', [ScanController::class, 'verifierAccessCode'])->name('scan.access-code');
     Route::get('/scan/clear', [ScanController::class, 'clearAccess'])->name('scan.clear');
+    Route::get('/scan/historique', [ScanController::class, 'historiqueJson'])->name('scan.historique');
 
     Route::get('/statistiques', [StatistiqueController::class, 'index'])->name('statistiques.index');
     Route::get('/ventes-manuelles', [VenteManuelleController::class, 'create'])->name('ventes-manuelles.create');

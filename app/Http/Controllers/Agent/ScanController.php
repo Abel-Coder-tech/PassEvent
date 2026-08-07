@@ -108,7 +108,7 @@ class ScanController extends Controller
             return response()->json(['success' => false, 'message' => 'L\'événement est terminé.']);
         }
 
-        $ticket = Ticket::where('code_unique', $request->code)->first();
+        $ticket = Ticket::trouverParCodeSaisi($request->code);
 
         if (!$ticket) {
             $this->logScan($agent, $request->code, 'invalide', 'Ticket introuvable'); // Log tentative invalide
@@ -152,6 +152,34 @@ class ScanController extends Controller
     {
         session()->forget('agent_scan_ok');
         return redirect()->route('agent.dashboard');
+    }
+
+    // Rafraîchit les stats et les scans récents de l'agent (AJAX polling)
+    public function historiqueJson()
+    {
+        $agent = Auth::guard('agent')->user();
+        if (session('agent_scan_ok') !== $agent->id) {
+            return response()->json(['error' => 'Session de scan invalide.'], 403);
+        }
+
+        $stats = [
+            'total' => $agent->logs()->where('type_operation', 'scan')->count(),
+            'valides' => $agent->logs()->where('type_operation', 'scan')->where('details->resultat', 'valide')->count(),
+            'invalides' => $agent->logs()->where('type_operation', 'scan')->where('details->resultat', '!=', 'valide')->count(),
+        ];
+        $recent = $agent->logs()->where('type_operation', 'scan')->latest('created_at')->limit(20)->get();
+
+        return response()->json([
+            'stats' => $stats,
+            'recent' => $recent->map(function ($log) {
+                return [
+                    'heure' => $log->created_at->format('H:i:s'),
+                    'code' => $log->details['code'] ?? '',
+                    'resultat' => $log->details['resultat'] ?? 'invalide',
+                    'nom' => $log->ticket?->nom_acheteur,
+                ];
+            }),
+        ]);
     }
 
     // Enregistre un log de scan avec les détails de la tentative

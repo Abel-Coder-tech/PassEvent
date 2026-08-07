@@ -161,7 +161,7 @@
                         <i class="bi bi-qr-code-scan"></i>
                     </div>
                     <div class="metric-label">Total scans</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">{{ $stats['total_scans'] }}</div>
+                    <div class="metric-value" style="font-size: 1.5rem;" id="statTotal">{{ $stats['total_scans'] }}</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -170,7 +170,7 @@
                         <i class="bi bi-calendar-check"></i>
                     </div>
                     <div class="metric-label">Aujourd'hui</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">{{ $stats['scans_today'] }}</div>
+                    <div class="metric-value" style="font-size: 1.5rem;" id="statToday">{{ $stats['scans_today'] }}</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -179,7 +179,7 @@
                         <i class="bi bi-check-circle"></i>
                     </div>
                     <div class="metric-label">Validés</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">{{ $stats['scans_valides'] }}</div>
+                    <div class="metric-value" style="font-size: 1.5rem;" id="statValides">{{ $stats['scans_valides'] }}</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -188,7 +188,7 @@
                         <i class="bi bi-x-circle"></i>
                     </div>
                     <div class="metric-label">Invalides</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">{{ $stats['scans_invalides'] }}</div>
+                    <div class="metric-value" style="font-size: 1.5rem;" id="statInvalides">{{ $stats['scans_invalides'] }}</div>
                 </div>
             </div>
         </div>
@@ -238,7 +238,7 @@
 
                         <form id="manualScanForm">
                             <div class="mb-3">
-                                <input type="text" id="codeInput" name="code" class="form-control code-input py-3 text-center" placeholder="EX: PAX-ABC123" autocomplete="off" required>
+                                <input type="text" id="codeInput" name="code" class="form-control code-input py-3 text-center" value="PAX-" placeholder="Saisissez la suite du code (ex: GRH5S)" autocomplete="off" required>
                             </div>
                             <button type="submit" class="btn btn-vert w-100 py-3" id="btnVerify" style="border-radius: 8px;">
                                 <i class="bi bi-search me-1"></i> Vérifier le ticket
@@ -269,9 +269,9 @@
         <div class="panel-card">
             <div class="panel-card-header">
                 <h5><i class="bi bi-clock-history me-2" style="color: var(--sombre);"></i>Historique des scans</h5>
-                <span class="text-muted" style="font-size: 0.78rem;">{{ $scans->count() }} derniers scans</span>
+                <span class="text-muted" style="font-size: 0.78rem;" id="historyCount">{{ $scans->count() }} derniers scans</span>
             </div>
-            <div class="panel-card-body">
+            <div class="panel-card-body" id="historyList">
                 @if($scans->count() > 0)
                     @foreach($scans as $scan)
                         @php
@@ -496,7 +496,7 @@ function verifyCode(code) {
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-search me-1"></i> Vérifier le ticket';
-        document.getElementById('codeInput').value = '';
+        document.getElementById('codeInput').value = 'PAX-';
     });
 }
 
@@ -557,5 +557,66 @@ document.getElementById('codeInput').addEventListener('keydown', function(e) {
         document.getElementById('manualScanForm').dispatchEvent(new Event('submit'));
     }
 });
+
+function refreshHistory() {
+    fetch('{{ route('scan.historique') }}', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.stats) {
+            document.getElementById('statTotal').textContent = data.stats.total_scans;
+            document.getElementById('statToday').textContent = data.stats.scans_today;
+            document.getElementById('statValides').textContent = data.stats.scans_valides;
+            document.getElementById('statInvalides').textContent = data.stats.scans_invalides;
+        }
+        if (Array.isArray(data.scans)) {
+            renderHistory(data.scans);
+        }
+    })
+    .catch(() => {});
+}
+
+function renderHistory(scans) {
+    const list = document.getElementById('historyList');
+    document.getElementById('historyCount').textContent = scans.length + ' derniers scans';
+
+    if (scans.length === 0) {
+        list.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-qr-code-scan" style="font-size: 3rem; color: var(--gris); opacity: 0.3;"></i>
+                <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Aucun scan effectué pour le moment.</p>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = scans.map(s => {
+        const color = s.resultat === 'valide' ? 'var(--vert)' : (s.resultat === 'deja_utilise' ? '#f39c12' : 'var(--danger)');
+        const icon = s.resultat === 'valide' ? 'bi-check-circle' : (s.resultat === 'deja_utilise' ? 'bi-arrow-repeat' : 'bi-x-circle');
+        const raison = s.raison ? ' · ' + s.raison.split('_').join(' ') : '';
+        return `
+            <div class="scan-history-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <i class="bi ${icon}" style="color: ${color}; font-size: 1.1rem;"></i>
+                        <div class="min-w-0">
+                            <div class="fw-semibold" style="font-size: 0.82rem;">${s.nom ? escapeHtml(s.nom.substring(0, 25)) : 'Inconnu'}</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">
+                                ${s.evenement ? escapeHtml(s.evenement.substring(0, 30)) : ''}${raison ? escapeHtml(raison) : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                        <div style="font-size: 0.78rem;">${escapeHtml(s.heure)}</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">${escapeHtml(s.jour)}</div>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+refreshHistory();
+setInterval(refreshHistory, 10000);
 </script>
 @endsection

@@ -94,9 +94,23 @@ class Ticket extends Model
     public static function genererCodeSecurise(): string
     {
         do {
-            $code = 'PAX' . strtoupper(Str::random(10));
+            $code = 'PAX-' . strtoupper(Str::random(5));
         } while (self::where('code_unique', $code)->exists());
         return $code;
+    }
+
+    // Normalise la saisie d'un code (avec ou sans préfixe) vers le format PAX-XXXXX
+    public static function normaliserCodeSaisi(string $code): string
+    {
+        $code = strtoupper(trim($code));
+        $suffixe = preg_replace('/^PAX-?/', '', $code);
+        return 'PAX-' . $suffixe;
+    }
+
+    // Retrouve un ticket à partir d'un code saisi (préfixe optionnel)
+    public static function trouverParCodeSaisi(string $code): ?self
+    {
+        return self::where('code_unique', self::normaliserCodeSaisi($code))->first();
     }
 
     public static function logoBlancDataUri(): string

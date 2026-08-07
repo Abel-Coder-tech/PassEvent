@@ -162,7 +162,7 @@ class AuthController extends Controller
             'evenement_id' => $agent->evenement->id,
             'tarif_id' => $tarif->id,
             'agent_vente_id' => $agent->id,
-            'code_unique' => strtoupper(Str::random(12)),
+            'code_unique' => Ticket::genererCodeSecurise(),
             'qr_signature' => Str::uuid()->toString(),
             'email_acheteur' => $validated['email_acheteur'],
             'telephone_acheteur' => $validated['telephone_acheteur'],

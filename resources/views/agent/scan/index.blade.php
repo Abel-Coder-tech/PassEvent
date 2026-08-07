@@ -71,9 +71,9 @@
     </div>
 
     <div class="row g-2 mb-3">
-        <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value">{{ $stats['total'] }}</div><div class="label">Total</div></div></div>
-        <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" style="color:#28a745;">{{ $stats['valides'] }}</div><div class="label">Validés</div></div></div>
-        <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" style="color:#dc3545;">{{ $stats['invalides'] }}</div><div class="label">Invalides</div></div></div>
+        <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" id="statTotal">{{ $stats['total'] }}</div><div class="label">Total</div></div></div>
+        <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" id="statValides" style="color:#28a745;">{{ $stats['valides'] }}</div><div class="label">Validés</div></div></div>
+        <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" id="statInvalides" style="color:#dc3545;">{{ $stats['invalides'] }}</div><div class="label">Invalides</div></div></div>
     </div>
 
     <div class="row g-3">
@@ -108,7 +108,7 @@
                 <h6 class="fw-bold mb-3"><i class="bi bi-keyboard me-2" style="color:var(--violet);"></i>Saisie manuelle</h6>
                 <form id="manualScanForm">
                     <div class="mb-3">
-                        <input type="text" id="codeInput" name="code" class="form-control text-center py-2" placeholder="Code du ticket" autocomplete="off" required>
+                        <input type="text" id="codeInput" name="code" class="form-control text-center py-2" value="PAX-" placeholder="Saisissez la suite du code (ex: GRH5S)" autocomplete="off" style="text-transform:uppercase;" required>
                     </div>
                     <button type="submit" class="btn btn-violet w-100 py-2" id="btnVerify">
                         <i class="bi bi-search me-1"></i> Vérifier
@@ -118,15 +118,14 @@
 
             <div id="scanResult" style="display:none;" class="mt-3"></div>
 
-            @if($recent->isNotEmpty())
             <div class="card-agent p-0 mt-3">
                 <div class="p-2 border-bottom">
                     <small class="fw-bold"><i class="bi bi-clock-history me-1"></i>Derniers scans</small>
                 </div>
                 <div style="max-height:200px;overflow-y:auto;">
                     <table class="table table-sm mb-0">
-                        <tbody>
-                            @foreach($recent as $log)
+                        <tbody id="recentList">
+                            @forelse($recent as $log)
                             <tr>
                                 <td class="small">{{ $log->created_at->format('H:i:s') }}</td>
                                 <td><code style="font-size:0.7rem;">{{ Str::limit($log->details['code'] ?? '', 15) }}</code></td>
@@ -138,12 +137,15 @@
                                     @endif
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr id="recentEmpty">
+                                <td colspan="3" class="text-center text-muted small py-3">Aucun scan pour le moment.</td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-            @endif
         </div>
     </div>
 </div>
@@ -266,8 +268,9 @@ function stopCamera() {
 
 function onScanSuccess(decodedText) {
     if (scanTimeout) return;
-    scanTimeout = setTimeout(() => { scanTimeout = null; }, 2000);
+    scanTimeout = setTimeout(() => { scanTimeout = null; }, 4000);
     submitScan(decodedText);
+    stopCamera();
 }
 
 document.getElementById('manualScanForm')?.addEventListener('submit', function(e) {
@@ -316,7 +319,6 @@ function submitScan(code) {
         }
         resultDiv.style.display = 'block';
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(() => { resultDiv.style.display = 'none'; }, 5000);
     })
     .catch(() => {
         resultDiv.innerHTML = '<div class="result-invalid"><p class="mb-0 text-danger">Erreur de connexion.</p></div>';
@@ -324,5 +326,45 @@ function submitScan(code) {
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 }
+
+function refreshHistory() {
+    fetch('{{ route("agent.scan.historique") }}', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.stats) {
+            document.getElementById('statTotal').textContent = data.stats.total;
+            document.getElementById('statValides').textContent = data.stats.valides;
+            document.getElementById('statInvalides').textContent = data.stats.invalides;
+        }
+        if (Array.isArray(data.recent)) {
+            renderRecent(data.recent);
+        }
+    })
+    .catch(() => {});
+}
+
+function renderRecent(recent) {
+    const tbody = document.getElementById('recentList');
+    if (recent.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted small py-3">Aucun scan pour le moment.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = recent.map(s => {
+        const badge = s.resultat === 'valide'
+            ? '<span class="badge bg-success">OK</span>'
+            : '<span class="badge bg-danger">Non</span>';
+        return '<tr>' +
+            '<td class="small">' + escapeHtml(s.heure) + '</td>' +
+            '<td><code style="font-size:0.7rem;">' + escapeHtml(String(s.code).substring(0, 15)) + '</code></td>' +
+            '<td>' + badge + '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+refreshHistory();
+setInterval(refreshHistory, 10000);
 </script>
 @endpush
