@@ -24,7 +24,7 @@
         }
 
         .header { 
-            background: #542680; 
+            color: #542680; 
             padding: 14px 20px; 
         }
 
@@ -34,7 +34,7 @@
 
         .header-title .pass { 
             font-size: 18px; 
-            font-weight: 400; 
+            font-weight: 800; 
             letter-spacing: 2px; 
             opacity: 0.8; 
         }
@@ -88,8 +88,7 @@
         .qr-label { font-size: 7px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
 
         .note {
-            background: #fff8e1;
-            border: 1px solid #ffe082;
+            color: #ffe082;
             border-radius: 8px;
             padding: 8px 12px;
             margin: 8px 0 0;
@@ -115,6 +114,7 @@
             
         </div>
     </div>
+    <hr class="dashed">
 
     {{-- BODY --}}
     <div class="body">
@@ -175,7 +175,7 @@
         </div>
 
         <div class="note">
-            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Gardez-le et ne le partagez jamais.</p>
+            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Ne le partagez jamais.</p>
         </div>
 
     </div>
@@ -189,7 +189,7 @@
                 </div>
             </td>
             <td style="text-align:right;vertical-align:middle;">
-                <div class="footer-text">Billetterie simple et rapide pour vos événements</div>
+                <div class="footer-text">Billetterie en ligne 100% Bénin</div>
             </td>
         </tr>
     </table>
