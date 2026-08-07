@@ -11,9 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-
-class ReconciliationService
+use Illuminate\Support\Str;class ReconciliationService
 {
     protected FedapayService $fedapay;
 
@@ -111,6 +109,7 @@ class ReconciliationService
                     'transaction_id' => $transactionId ?? $ticket->transaction_id,
                     'fedapay_transaction_id' => $transactionId ?? $ticket->fedapay_transaction_id,
                     'methode_paiement' => $methodePaiement ?? $ticket->methode_paiement ?? 'mobile_money',
+                    'type_paiement' => PaiementMapper::moyenPaiement($methodePaiement ?? $ticket->methode_paiement ?? 'mobile_money'),
                     'telephone_paiement' => $telephonePaiement ?? $ticket->telephone_paiement,
                 ]);
 
@@ -191,6 +190,7 @@ class ReconciliationService
                     'quantite' => 1,
                     'statut_paiement' => 'payé',
                     'methode_paiement' => $data['methode_paiement'] ?? 'mobile_money',
+                    'type_paiement' => PaiementMapper::moyenPaiement($data['methode_paiement'] ?? 'mobile_money'),
                     'transaction_id' => $data['transaction_id'] ?? ('RECON-' . strtoupper(Str::random(8))),
                     'fedapay_transaction_id' => $data['fedapay_transaction_id'] ?? null,
                     'utilise' => false,

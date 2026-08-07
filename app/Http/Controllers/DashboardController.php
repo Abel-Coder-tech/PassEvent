@@ -187,10 +187,10 @@ class DashboardController extends Controller
             return $e->capacite > 0 ? ($e->quota_vendu / $e->capacite) * 100 : 0;
         });
 
-        // Statistiques par réseau de paiement mobile
-        $reseauxPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
+        // Statistiques par opérateur mobile (uniquement les paiements mobile money)
+        $operateursRaw = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
-            ->whereNotIn('methode_paiement', ['cash', 'especes'])
+            ->where('type_paiement', 'mobile_money')
             ->select('methode_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
             ->groupBy('methode_paiement')
             ->get()
@@ -200,7 +200,33 @@ class DashboardController extends Controller
             'mtn' => ['label' => 'MTN MoMo', 'icon' => 'bi-phone'],
             'moov' => ['label' => 'Moov Money', 'icon' => 'bi-phone'],
             'celtiis' => ['label' => 'Celtiis Cash', 'icon' => 'bi-phone'],
+            'autres' => ['label' => 'Autres / Indéterminé', 'icon' => 'bi-phone'],
         ];
+
+        $reseauxPaiement = collect();
+        foreach ($reseauxConfig as $key => $cfg) {
+            if ($key === 'autres') {
+                $autres = $operateursRaw->reject(fn ($data, $k) => in_array($k, ['mtn', 'moov', 'celtiis']));
+                $reseauxPaiement->put('autres', (object) [
+                    'total' => (int) $autres->sum('total'),
+                    'montant' => (int) $autres->sum('montant'),
+                ]);
+            } else {
+                $data = $operateursRaw->get($key);
+                $reseauxPaiement->put($key, (object) [
+                    'total' => $data ? (int) $data->total : 0,
+                    'montant' => $data ? (int) $data->montant : 0,
+                ]);
+            }
+        }
+
+        // Répartition par moyen de paiement (mobile money / carte bancaire / espèces)
+        $moyensPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->select('type_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
+            ->groupBy('type_paiement')
+            ->get()
+            ->keyBy('type_paiement');
 
         return view('dashboard', compact(
             'totalEvenements',
@@ -231,6 +257,7 @@ class DashboardController extends Controller
             'remplissageMoyen',
             'reseauxPaiement',
             'reseauxConfig',
+            'moyensPaiement',
         ));
     }
 }

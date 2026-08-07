@@ -143,13 +143,13 @@
         </div>
     </div>
 
-    {{-- Répartition par réseau mobile --}}
+    {{-- Répartition par opérateur mobile --}}
     @if($mobileRecettes > 0)
     <div class="row g-3 mb-4">
         <div class="col-12">
             <div class="panel-card">
                 <div class="panel-card-header">
-                    <h5><i class="bi bi-phone me-1" style="color:#3498db;"></i> Répartition par réseau mobile</h5>
+                    <h5><i class="bi bi-phone me-1" style="color:#3498db;"></i> Répartition par opérateur mobile</h5>
                 </div>
                 <div class="panel-card-body">
                     <div class="row g-2">
@@ -161,7 +161,7 @@
                                 $montant = $data ? (int) $data->montant : 0;
                                 $totalMobileTickets += $count;
                             @endphp
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="d-flex align-items-center p-3 rounded-3" style="background:#f8f6f9;">
                                     <div class="me-3">
                                         <div style="width:40px;height:40px;background:rgba(52,152,219,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
@@ -172,6 +172,54 @@
                                         <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);">{{ $cfg['label'] }}</div>
                                         <div style="font-size:0.78rem;color:var(--gris);">
                                             {{ $count }} ticket{{ $count > 1 ? 's' : '' }} · {{ number_format($montant, 0, ',', ' ') }} FCFA
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Répartition par moyen de paiement --}}
+    @if($ticketsVendus > 0)
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <h5><i class="bi bi-wallet2 me-1" style="color:#7B3FA0;"></i> Répartition par moyen de paiement</h5>
+                </div>
+                <div class="panel-card-body">
+                    <div class="row g-2">
+                        @php
+                            $moyensConfig = [
+                                'mobile_money' => ['label' => 'Mobile Money', 'icon' => 'bi-phone', 'color' => '#3498db'],
+                                'bancaire' => ['label' => 'Carte bancaire', 'icon' => 'bi-credit-card', 'color' => '#7B3FA0'],
+                                'especes' => ['label' => 'Espèces', 'icon' => 'bi-cash', 'color' => '#2e9e4f'],
+                            ];
+                            $totalMoyens = $moyensPaiement->sum('total');
+                        @endphp
+                        @foreach($moyensConfig as $mKey => $mCfg)
+                            @php
+                                $mData = $moyensPaiement->get($mKey);
+                                $mCount = $mData ? (int) $mData->total : 0;
+                                $mMontant = $mData ? (int) $mData->montant : 0;
+                                $mPct = $totalMoyens > 0 ? round(($mCount / $totalMoyens) * 100) : 0;
+                            @endphp
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center p-3 rounded-3" style="background:#f8f6f9;">
+                                    <div class="me-3">
+                                        <div style="width:40px;height:40px;background:{{ $mCfg['color'] }}22;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                                            <i class="bi {{ $mCfg['icon'] }}" style="color:{{ $mCfg['color'] }};"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);">{{ $mCfg['label'] }}</div>
+                                        <div style="font-size:0.78rem;color:var(--gris);">
+                                            {{ $mCount }} ticket{{ $mCount > 1 ? 's' : '' }} · {{ number_format($mMontant, 0, ',', ' ') }} FCFA · {{ $mPct }}%
                                         </div>
                                     </div>
                                 </div>

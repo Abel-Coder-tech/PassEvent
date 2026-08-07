@@ -184,7 +184,8 @@ class PaiementController extends Controller
             }
         }
 
-        $paymentMethod = self::extractPaymentMethod($paymentMethod);
+        $moyenPaiement = \App\Services\PaiementMapper::moyenPaiement($paymentMethod);
+        $operateur = \App\Services\PaiementMapper::operateur($paymentMethod);
 
         // Met à jour tous les tickets du groupe
         foreach ($groupTickets as $t) {
@@ -192,7 +193,8 @@ class PaiementController extends Controller
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
                 'fedapay_transaction_id' => $transactionId,
-                'methode_paiement' => $paymentMethod,
+                'methode_paiement' => $operateur ?? $paymentMethod,
+                'type_paiement' => $moyenPaiement,
                 'telephone_paiement' => $paymentPhone,
             ]);
 
@@ -369,11 +371,13 @@ class PaiementController extends Controller
             }
         }
 
-        $paymentMethod = self::extractPaymentMethod($paymentMethodRaw);
+        $moyenPaiement = \App\Services\PaiementMapper::moyenPaiement($paymentMethodRaw);
+        $operateur = \App\Services\PaiementMapper::operateur($paymentMethodRaw);
 
         FacadesLog::info('FedaPay webhook - payment_method normalisé', [
             'ticket_id' => $ticket->id,
-            'payment_method_final' => $paymentMethod,
+            'payment_method_final' => $operateur ?? $paymentMethodRaw,
+            'type_paiement' => $moyenPaiement,
         ]);
 
         foreach ($groupTickets as $t) {
@@ -381,7 +385,8 @@ class PaiementController extends Controller
                 'statut_paiement' => 'payé',
                 'transaction_id' => $transactionId,
                 'fedapay_transaction_id' => $transactionId,
-                'methode_paiement' => $paymentMethod,
+                'methode_paiement' => $operateur ?? $paymentMethodRaw,
+                'type_paiement' => $moyenPaiement,
                 'telephone_paiement' => $tx['phone'] ?? $data['phone'] ?? $t->telephone_acheteur,
             ]);
 
@@ -416,74 +421,5 @@ class PaiementController extends Controller
             ->get();
 
         return view('evenement-public.confirmation', compact('ticket', 'groupTickets'));
-    }
-
-    // Extrait et normalise le réseau depuis payment_method (string ou objet FedaPay)
-    protected static function extractPaymentMethod($paymentMethod): string
-    {
-        // Si c'est un objet avec clé "provider" ou "name"
-        if (is_array($paymentMethod) || is_object($paymentMethod)) {
-            $paymentMethod = (array) $paymentMethod;
-            $provider = strtolower(trim($paymentMethod['provider'] ?? ''));
-            $name = strtolower(trim($paymentMethod['name'] ?? ''));
-
-            // Priorité au provider, sinon le name
-            $raw = $provider ?: $name;
-            return self::normalizePaymentMethod($raw ?: 'mobile_money');
-        }
-
-        return self::normalizePaymentMethod((string) $paymentMethod);
-    }
-
-    // Normalise les valeurs vers nos clés standardisées
-    protected static function normalizePaymentMethod(?string $method): string
-    {
-        if (!$method) {
-            return 'mobile_money';
-        }
-
-        $lower = strtolower(trim($method));
-
-        // Espèces
-        if (in_array($lower, ['cash', 'especes', 'espèces'])) {
-            return 'especes';
-        }
-
-        // MTN
-        if (str_contains($lower, 'mtn')) {
-            return 'mtn';
-        }
-
-        // Moov
-        if (str_contains($lower, 'moov')) {
-            return 'moov';
-        }
-
-        // Celtiis
-        if (str_contains($lower, 'celtiis') || str_contains($lower, 'celti')) {
-            return 'celtiis';
-        }
-
-        // Orange
-        if (str_contains($lower, 'orange')) {
-            return 'orange';
-        }
-
-        // Togocel
-        if (str_contains($lower, 'togocel') || str_contains($lower, 'togo')) {
-            return 'togocel';
-        }
-
-        // Airtel
-        if (str_contains($lower, 'airtel')) {
-            return 'airtel';
-        }
-
-        // Free
-        if (str_contains($lower, 'free')) {
-            return 'free';
-        }
-
-        return $lower;
     }
 }

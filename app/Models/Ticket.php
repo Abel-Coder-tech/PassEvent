@@ -33,27 +33,33 @@ class Ticket extends Model
         'transaction_id',
         'fedapay_transaction_id',
         'methode_paiement',
+        'type_paiement',
         'utilise',
         'date_achat',
         'code_promo_utilise',
         'agent_vente_id',
     ];
 
-    public static function methodePaiementLabel(?string $methode): string
+    public static function methodePaiementLabel(?string $methode, ?string $type = null): string
     {
         return match ($methode) {
             'cash', 'especes' => 'Espèces',
             'mtn' => 'MTN MoMo',
             'moov' => 'Moov Money',
             'celtiis' => 'Celtiis Cash',
-            'mobile_money', null => 'Mobile',
+            'orange' => 'Orange Money',
+            'togocel' => 'Togocel',
+            'wave' => 'Wave',
+            'airtel' => 'Airtel Money',
+            'free' => 'Free Money',
+            'mobile_money', null => $type === 'bancaire' ? 'Carte bancaire' : 'Mobile Money',
             default => ucfirst($methode),
         };
     }
 
     public function getMethodePaiementLabelAttribute(): string
     {
-        return static::methodePaiementLabel($this->methode_paiement);
+        return static::methodePaiementLabel($this->methode_paiement, $this->type_paiement);
     }
 
     public function getLabel(): string

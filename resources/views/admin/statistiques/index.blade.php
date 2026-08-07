@@ -170,7 +170,7 @@
                                 <span class="text-muted" style="font-size: 0.78rem;">{{ $reseau['percentage'] }}% ({{ $reseau['count'] }})</span>
                             </div>
                             <div class="progress-bar-custom">
-                                <div class="progress-bar-fill" style="width: {{ $reseau['percentage'] }}%; background: {{ $key === 'mtn' ? '#ffcc00' : ($key === 'moov' ? '#0066cc' : '#cc0000') }};"></div>
+                                <div class="progress-bar-fill" style="width: {{ $reseau['percentage'] }}%; background: {{ $key === 'mtn' ? '#ffcc00' : ($key === 'moov' ? '#0066cc' : ($key === 'celtiis' ? '#cc0000' : '#888888')) }};"></div>
                             </div>
                         </div>
                     @endforeach

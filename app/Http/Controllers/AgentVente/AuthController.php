@@ -174,6 +174,7 @@ class AuthController extends Controller
             'quantite' => 1,
             'statut_paiement' => 'en_attente',
             'methode_paiement' => $validated['methode_paiement'],
+            'type_paiement' => \App\Services\PaiementMapper::moyenPaiement($validated['methode_paiement']),
             'utilise' => false,
             'date_achat' => now(),
         ]);
