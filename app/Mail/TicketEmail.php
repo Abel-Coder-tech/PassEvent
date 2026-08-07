@@ -5,7 +5,6 @@ namespace App\Mail;
 use App\Models\Ticket;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Address;
@@ -14,7 +13,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Support\Collection;
 
-class TicketEmail extends Mailable implements ShouldQueue
+class TicketEmail extends Mailable
 {
     public Collection $tickets;
 
