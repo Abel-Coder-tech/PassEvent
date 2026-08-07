@@ -189,8 +189,14 @@ const SCAN_CONFIG = {
             height: Math.round(viewfinderHeight * 0.6)
         };
     },
-    focusMode: 'continuous',
 };
+
+function createScannerInstance() {
+    // useBarCodeDetectorIfSupported=false force le decodeur ZXing (JS pur) :
+    // sur certains telephones (Samsung/Chrome notamment), l'API native
+    // BarcodeDetector est cassee et rend l'instance du scanner inutilisable.
+    return new Html5Qrcode("reader", { useBarCodeDetectorIfSupported: false });
+}
 
 const CAMERA_ATTEMPTS = [
     { facingMode: "environment" },
@@ -223,7 +229,7 @@ function startCamera() {
 
 function tryStartCamera(attemptIndex) {
     if (attemptIndex < CAMERA_ATTEMPTS.length) {
-        const instance = new Html5Qrcode("reader");
+        const instance = createScannerInstance();
         html5QrCode = instance;
         instance.start(
             CAMERA_ATTEMPTS[attemptIndex],
@@ -232,8 +238,12 @@ function tryStartCamera(attemptIndex) {
         ).then(() => {
             onCameraStarted();
         }).catch(() => {
-            instance.clear().catch(() => {});
-            tryStartCamera(attemptIndex + 1);
+            try { instance.clear(); } catch (e) {}
+            html5QrCode = null;
+            // Petit delai entre 2 tentatives : sur certains telephones la
+            // camera n'est pas encore liberee (NotReadableError) si on
+            // redemarre immediatement.
+            setTimeout(() => tryStartCamera(attemptIndex + 1), 400);
         });
         return;
     }
@@ -244,7 +254,7 @@ function tryStartCamera(attemptIndex) {
                 const back = cameras.find(function (c) {
                     return /back|rear|environment/i.test(c.label || '');
                 }) || cameras[0];
-                const instance = new Html5Qrcode("reader");
+                const instance = createScannerInstance();
                 html5QrCode = instance;
                 instance.start(back.id, SCAN_CONFIG, onScanSuccess)
                     .then(onCameraStarted)
@@ -256,13 +266,30 @@ function tryStartCamera(attemptIndex) {
         .catch(onCameraFailed);
 }
 
+function describeCameraError(err) {
+    const message = String((err && err.message) || (err && err.name) || err || '');
+    if (/NotAllowedError|Permission/i.test(message)) {
+        return "Acces camera refuse. Autorisez la camera dans les reglages du navigateur puis reessayez.";
+    }
+    if (/NotFoundError/i.test(message)) {
+        return "Aucune camera trouvee sur cet appareil.";
+    }
+    if (/NotReadableError|in use|busy/i.test(message)) {
+        return "La camera est deja utilisee par une autre application. Fermez-la puis reessayez.";
+    }
+    if (/NotSupportedError|secure context|https/i.test(message)) {
+        return "La camera necessite une connexion securisée (HTTPS).";
+    }
+    return "Impossible d'activer la camera. Verifiez que le site est en HTTPS et autorisez la camera dans votre navigateur.";
+}
+
 function onCameraStarted() {
     isScanning = true;
     const btn = document.getElementById('btnToggleCamera');
     if (btn) btn.innerHTML = '<i class="bi bi-stop-circle me-1"></i>Arrêter';
 }
 
-function onCameraFailed() {
+function onCameraFailed(err) {
     const btn = document.getElementById('btnToggleCamera');
     const placeholder = document.getElementById('cameraPlaceholder');
     const corners = document.getElementById('scanCorners');
@@ -273,7 +300,7 @@ function onCameraFailed() {
     if (corners) corners.style.display = 'none';
     if (frame) frame.style.display = 'none';
     if (btn) btn.innerHTML = '<i class="bi bi-camera me-1"></i>Activer';
-    alert("Impossible d'accéder à la caméra. Vérifiez que le site est en HTTPS et autorisez la caméra dans votre navigateur.");
+    alert(describeCameraError(err));
 }
 
 function stopCamera() {
@@ -340,7 +367,7 @@ function submitScan(code) {
     .then(data => {
         if (data.success) {
             let txn = data.ticket?.transaction_id
-                ? '<small class="d-block mt-1 text-muted">Transaction : <strong class="text-dark">' + escapeHtml(data.ticket.transaction_id) + '</strong></small>'
+                ? '<small class="d-block mt-1 text-muted"> <strong class="text-dark">' + escapeHtml(data.ticket.transaction_id) + '</strong></small>'
                 : '';
             resultDiv.innerHTML = '<div class="result-valid">' +
                 '<i class="bi bi-check-circle-fill" style="font-size:2.5rem;color:#28a745;"></i>' +

@@ -341,8 +341,14 @@ const SCAN_CONFIG = {
             height: Math.round(viewfinderHeight * 0.6)
         };
     },
-    focusMode: 'continuous',
 };
+
+function createScannerInstance() {
+    // useBarCodeDetectorIfSupported=false force le decodeur ZXing (JS pur) :
+    // sur certains telephones (Samsung/Chrome notamment), l'API native
+    // BarcodeDetector est cassee et rend l'instance du scanner inutilisable.
+    return new Html5Qrcode("reader", { useBarCodeDetectorIfSupported: false });
+}
 
 const CAMERA_ATTEMPTS = [
     { facingMode: "environment" },
@@ -369,7 +375,7 @@ function startCamera() {
 
 function tryStartCamera(attemptIndex) {
     if (attemptIndex < CAMERA_ATTEMPTS.length) {
-        const instance = new Html5Qrcode("reader");
+        const instance = createScannerInstance();
         html5QrcodeScanner = instance;
         instance.start(
             CAMERA_ATTEMPTS[attemptIndex],
@@ -381,8 +387,12 @@ function tryStartCamera(attemptIndex) {
         ).then(() => {
             onCameraStarted();
         }).catch((err) => {
-            instance.clear().catch(() => {});
-            tryStartCamera(attemptIndex + 1);
+            try { instance.clear(); } catch (e) {}
+            html5QrcodeScanner = null;
+            // Petit delai entre 2 tentatives : sur certains telephones la
+            // camera n'est pas encore liberee (NotReadableError) si on
+            // redemarre immediatement.
+            setTimeout(() => tryStartCamera(attemptIndex + 1), 400);
         });
         return;
     }
@@ -402,7 +412,7 @@ function tryStartCamera(attemptIndex) {
 }
 
 function startWithCameraId(cameraId) {
-    const instance = new Html5Qrcode("reader");
+    const instance = createScannerInstance();
     html5QrcodeScanner = instance;
     instance.start(
         cameraId,
@@ -413,9 +423,26 @@ function startWithCameraId(cameraId) {
         (errorMessage) => {}
     ).then(() => {
         onCameraStarted();
-    }).catch(() => {
-        onCameraFailed();
+    }).catch((err) => {
+        onCameraFailed(err);
     });
+}
+
+function describeCameraError(err) {
+    const message = String((err && err.message) || (err && err.name) || err || '');
+    if (/NotAllowedError|Permission/i.test(message)) {
+        return "Acces camera refuse. Autorisez la camera dans les reglages du navigateur puis reessayez.";
+    }
+    if (/NotFoundError/i.test(message)) {
+        return "Aucune camera trouvee sur cet appareil.";
+    }
+    if (/NotReadableError|in use|busy/i.test(message)) {
+        return "La camera est deja utilisee par une autre application. Fermez-la puis reessayez.";
+    }
+    if (/NotSupportedError|secure context|https/i.test(message)) {
+        return "La camera necessite une connexion securisee (HTTPS).";
+    }
+    return "Impossible d'activer la camera. Verifiez que le site est en HTTPS et autorisez la camera dans votre navigateur.";
 }
 
 function onScanSuccess(decodedText) {
@@ -454,7 +481,7 @@ function onCameraStarted() {
     document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera-off me-1"></i> <span class="btn-text">Stop</span>';
 }
 
-function onCameraFailed() {
+function onCameraFailed(err) {
     const status = document.getElementById('cameraStatus');
     const placeholder = document.getElementById('cameraPlaceholder');
 
@@ -463,7 +490,7 @@ function onCameraFailed() {
     status.style.color = 'var(--danger)';
     placeholder.style.display = 'flex';
     document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera me-1"></i> <span class="btn-text">Camera</span>';
-    alert("Impossible d'activer la camera. Verifiez que le site est en HTTPS et autorisez la camera dans votre navigateur.");
+    alert(describeCameraError(err));
 }
 
 function stopCamera() {
