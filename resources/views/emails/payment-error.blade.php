@@ -139,12 +139,12 @@
             <p class="intro">Lors de votre tentative d'achat pour l'événement <strong>{{ $titreEvenement }}</strong>, une perturbation sur le réseau de l'opérateur télécom a interrompu la finalisation de votre commande.</p>
 
             <div class="alert-box">
-                <h3>&#128683; Ne tentez pas un nouveau paiement imm&eacute;diatement</h3>
+                <h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#c0392b" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708"/></svg> Ne tentez pas un nouveau paiement imm&eacute;diatement</h3>
                 <p>Si votre compte Mobile Money a &eacute;t&eacute; d&eacute;bit&eacute;, pas d'inqui&eacute;tude. Notre &eacute;quipe technique v&eacute;rifie actuellement la transaction avec notre partenaire FedaPay.</p>
             </div>
 
             <div class="info-box">
-                <h3>&#128260; Ce que nous allons faire</h3>
+                <h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#7B3FA0" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z"/></svg> Ce que nous allons faire</h3>
                 <p>Si des places sont encore disponibles : nous allons forcer la g&eacute;n&eacute;ration et l'envoi de votre e-ticket manuellement dans les plus brefs d&eacute;lais.</p>
                 <p style="margin-top: 8px;">Si l'&eacute;v&eacute;nement est complet : la transaction sera rejet&eacute;e et vous serez int&eacute;gralement rembours&eacute; sur votre compte Mobile Money.</p>
             </div>

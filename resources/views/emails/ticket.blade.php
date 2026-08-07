@@ -185,7 +185,7 @@
 <body>
     <div class="container">
         <div class="header" style="text-align:center;">
-            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="display:inline-block;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
+            <img src="{{ asset('images/logo-ticket.png') }}" alt="PaxEvent" height="60" style="display:inline-block;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
         </div>
 
         <div class="content">
@@ -198,25 +198,25 @@
             <div class="event-card">
                 <div class="event-header">
                     <div class="event-icon">
-                        <span>&#127915;</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fff" viewBox="0 0 16 16"><path d="M4 4.85v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9z"/><path d="M1.5 3A1.5 1.5 0 0 0 0 4.5V6a.5.5 0 0 0 .5.5 1.5 1.5 0 1 1 0 3 .5.5 0 0 0-.5.5v1.5A1.5 1.5 0 0 0 1.5 13h13a1.5 1.5 0 0 0 1.5-1.5V10a.5.5 0 0 0-.5-.5 1.5 1.5 0 0 1 0-3A.5.5 0 0 0 16 6V4.5A1.5 1.5 0 0 0 14.5 3zM1 4.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1.05a2.5 2.5 0 0 0 0 4.9v1.05a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-1.05a2.5 2.5 0 0 0 0-4.9z"/></svg>
                     </div>
                     <h2>{{ $ticket->evenement->titre }}</h2>
                 </div>
                 <table cellpadding="0" cellspacing="0">
                     <tr>
-                        <td>&#128197; Date et heure</td>
+                        <td><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#888" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/></svg> Date et heure</td>
                         <td>{{ $ticket->evenement->date_event->format('d/m/Y \a H:i') }}</td>
                     </tr>
                     <tr>
-                        <td>&#128205; Lieu</td>
+                        <td><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#888" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A32 32 0 0 1 8 14.58a32 32 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10"/><path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4m0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/></svg> Lieu</td>
                         <td>{{ $ticket->evenement->lieu }}</td>
                     </tr>
                     <tr>
-                        <td>&#127915; {{ $textes['billet'] }}</td>
+                        <td><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#888" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M4 4.85v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9z"/><path d="M1.5 3A1.5 1.5 0 0 0 0 4.5V6a.5.5 0 0 0 .5.5 1.5 1.5 0 1 1 0 3 .5.5 0 0 0-.5.5v1.5A1.5 1.5 0 0 0 1.5 13h13a1.5 1.5 0 0 0 1.5-1.5V10a.5.5 0 0 0-.5-.5 1.5 1.5 0 0 1 0-3A.5.5 0 0 0 16 6V4.5A1.5 1.5 0 0 0 14.5 3zM1 4.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1.05a2.5 2.5 0 0 0 0 4.9v1.05a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-1.05a2.5 2.5 0 0 0 0-4.9z"/></svg> {{ $textes['billet'] }}</td>
                         <td>{{ $ticket->nom_tarif }}</td>
                     </tr>
                     <tr>
-                        <td>&#128178; Montant pay&eacute;</td>
+                        <td><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#888" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/></svg> Montant pay&eacute;</td>
                         <td class="price">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</td>
                     </tr>
                 </table>
@@ -224,7 +224,7 @@
             @endforeach
 
             <div class="info-box">
-                <h3>&#128230; {{ $quantite > 1 ? "{$quantite} " . mb_strtolower($textes['billet_pluriel']) . ' PDF joints' : $textes['billet'] . ' PDF joint' }}</h3>
+                <h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#7B3FA0" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464z"/></svg> {{ $quantite > 1 ? "{$quantite} " . mb_strtolower($textes['billet_pluriel']) . ' PDF joints' : $textes['billet'] . ' PDF joint' }}</h3>
                 <p>Imprimez-les ou pr&eacute;sentez-les sur votre t&eacute;l&eacute;phone le jour de l&rsquo;&eacute;v&eacute;nement. Le QR code sera scann&eacute; pour valider votre acc&egrave;s.</p>
             </div>
 
