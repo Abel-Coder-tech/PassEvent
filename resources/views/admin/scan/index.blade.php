@@ -29,29 +29,42 @@
         border-radius: 16px;
         overflow: hidden;
         position: relative;
+        height: min(58vh, 480px);
         min-height: 300px;
+        transition: box-shadow 0.3s ease;
     }
     #reader {
         width: 100%;
+        height: 100%;
     }
     #reader video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover;
         border-radius: 16px;
     }
-    .scan-line {
+    .scan-frame {
         position: absolute;
         top: 50%;
-        left: 10%;
-        right: 10%;
-        height: 2px;
-        background: var(--vert);
-        box-shadow: 0 0 10px var(--vert), 0 0 20px var(--vert);
-        animation: scanLine 2s ease-in-out infinite;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 85%;
+        height: 60%;
+        border: 2px dashed var(--vert);
+        border-radius: 20px;
         z-index: 10;
+        pointer-events: none;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
-    @keyframes scanLine {
-        0%, 100% { top: 30%; opacity: 0.5; }
-        50% { top: 70%; opacity: 1; }
+    .scanner-area.scan-ok .scan-frame {
+        border: 2px solid #28a745;
+        box-shadow: 0 0 0 3px rgba(40,167,69,0.35), 0 0 22px rgba(40,167,69,0.55);
     }
+    .scanner-area.scan-ok .scan-corners::before,
+    .scanner-area.scan-ok .scan-corners::after,
+    .scanner-area.scan-ok .scan-corners .corner-bl,
+    .scanner-area.scan-ok .scan-corners .corner-br { border-color: #28a745; }
+    .scan-region-highlight { opacity: 0; }
     .scan-corners {
         position: absolute;
         top: 50%;
@@ -204,7 +217,7 @@
                     <div class="panel-card-body p-0">
                         <div class="scanner-area" id="scannerContainer">
                             <div id="reader"></div>
-                            <div class="scan-line" id="scanLine" style="display: none;"></div>
+                            <div class="scan-frame" id="scanFrame" style="display: none;"></div>
                             <div class="scan-corners" id="scanCorners" style="display: none;">
                                 <div class="corner-bl"></div>
                                 <div class="corner-br"></div>
@@ -408,24 +421,36 @@ function startWithCameraId(cameraId) {
 function onScanSuccess(decodedText) {
     if (scanInProgress) return;
     scanInProgress = true;
+    flashScanOk();
     document.getElementById('codeInput').value = decodedText;
     verifyCode(decodedText);
     stopCamera();
     setTimeout(() => { scanInProgress = false; }, 3000);
 }
 
+function flashScanOk() {
+    const container = document.getElementById('scannerContainer');
+    if (container) container.classList.add('scan-ok');
+    setTimeout(() => { clearScanOk(); }, 700);
+}
+
+function clearScanOk() {
+    const container = document.getElementById('scannerContainer');
+    if (container) container.classList.remove('scan-ok');
+}
+
 function onCameraStarted() {
     const status = document.getElementById('cameraStatus');
     const placeholder = document.getElementById('cameraPlaceholder');
-    const scanLine = document.getElementById('scanLine');
+    const scanFrame = document.getElementById('scanFrame');
     const scanCorners = document.getElementById('scanCorners');
 
     isCameraActive = true;
     status.textContent = 'Camera active';
     status.style.color = 'var(--vert)';
     placeholder.style.display = 'none';
-    scanLine.style.display = 'block';
-    scanCorners.style.display = 'block';
+    if (scanFrame) scanFrame.style.display = 'block';
+    if (scanCorners) scanCorners.style.display = 'block';
     document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera-off me-1"></i> <span class="btn-text">Stop</span>';
 }
 
@@ -444,7 +469,7 @@ function onCameraFailed() {
 function stopCamera() {
     const status = document.getElementById('cameraStatus');
     const placeholder = document.getElementById('cameraPlaceholder');
-    const scanLine = document.getElementById('scanLine');
+    const scanFrame = document.getElementById('scanFrame');
     const scanCorners = document.getElementById('scanCorners');
 
     if (html5QrcodeScanner && isCameraActive) {
@@ -453,8 +478,8 @@ function stopCamera() {
             status.textContent = 'Camera inactive';
             status.style.color = '';
             placeholder.style.display = 'flex';
-            scanLine.style.display = 'none';
-            scanCorners.style.display = 'none';
+            if (scanFrame) scanFrame.style.display = 'none';
+            if (scanCorners) scanCorners.style.display = 'none';
             document.getElementById('btnToggleCamera').innerHTML = '<i class="bi bi-camera me-1"></i> <span class="btn-text">Camera</span>';
         }).catch(() => {});
     }

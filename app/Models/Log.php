@@ -12,6 +12,7 @@ class Log extends Model
 
     protected $fillable = [
         'ticket_id',
+        'agent_id',
         'type_operation',
         'details',
         'ip',

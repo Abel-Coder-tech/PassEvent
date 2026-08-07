@@ -9,10 +9,12 @@
         border-radius: 16px;
         overflow: hidden;
         position: relative;
+        height: min(58vh, 480px);
         min-height: 300px;
+        transition: box-shadow 0.3s ease;
     }
-    #reader { width: 100%; }
-    #reader video { border-radius: 16px; }
+    #reader { width: 100%; height: 100%; }
+    #reader video { width: 100% !important; height: 100% !important; object-fit: cover; border-radius: 16px; }
     .scan-corners {
         position: absolute;
         top: 50%; left: 50%;
@@ -32,6 +34,26 @@
     .scan-corners::after { top:0; right:0; border-width:3px 3px 0 0; }
     .scan-corners .corner-bl { bottom:0; left:0; border-width:0 0 3px 3px; }
     .scan-corners .corner-br { bottom:0; right:0; border-width:0 3px 3px 0; }
+    .scan-frame {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 85%; height: 60%;
+        border: 2px dashed var(--violet-clair);
+        border-radius: 20px;
+        z-index: 10;
+        pointer-events: none;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .scanner-area.scan-ok .scan-frame {
+        border: 2px solid #28a745;
+        box-shadow: 0 0 0 3px rgba(40,167,69,0.35), 0 0 22px rgba(40,167,69,0.55);
+    }
+    .scanner-area.scan-ok .scan-corners::before,
+    .scanner-area.scan-ok .scan-corners::after,
+    .scanner-area.scan-ok .scan-corners .corner-bl,
+    .scanner-area.scan-ok .scan-corners .corner-br { border-color: #28a745; }
+    .scan-region-highlight { opacity: 0; }
     .result-valid {
         background: #d4edda;
         border: 2px solid #28a745;
@@ -92,6 +114,7 @@
                             <div class="corner-bl"></div>
                             <div class="corner-br"></div>
                         </div>
+                        <div class="scan-frame" id="scanFrame" style="display:none;"></div>
                         <div class="d-flex align-items-center justify-content-center" style="height:300px;" id="cameraPlaceholder">
                             <div class="text-center text-muted">
                                 <i class="bi bi-camera" style="font-size:3rem;opacity:0.3;"></i>
@@ -117,35 +140,35 @@
             </div>
 
             <div id="scanResult" style="display:none;" class="mt-3"></div>
+        </div>
+    </div>
 
-            <div class="card-agent p-0 mt-3">
-                <div class="p-2 border-bottom">
-                    <small class="fw-bold"><i class="bi bi-clock-history me-1"></i>Derniers scans</small>
-                </div>
-                <div style="max-height:200px;overflow-y:auto;">
-                    <table class="table table-sm mb-0">
-                        <tbody id="recentList">
-                            @forelse($recent as $log)
-                            <tr>
-                                <td class="small">{{ $log->created_at->format('H:i:s') }}</td>
-                                <td><code style="font-size:0.7rem;">{{ Str::limit($log->details['code'] ?? '', 15) }}</code></td>
-                                <td>
-                                    @if(($log->details['resultat'] ?? '') === 'valide')
-                                        <span class="badge bg-success">OK</span>
-                                    @else
-                                        <span class="badge bg-danger">Non</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr id="recentEmpty">
-                                <td colspan="3" class="text-center text-muted small py-3">Aucun scan pour le moment.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="card-agent p-0 mt-4">
+        <div class="p-2 border-bottom">
+            <small class="fw-bold"><i class="bi bi-clock-history me-1"></i>Derniers scans</small>
+        </div>
+        <div style="max-height:260px;overflow-y:auto;">
+            <table class="table table-sm mb-0">
+                <tbody id="recentList">
+                    @forelse($recent as $log)
+                    <tr>
+                        <td class="small">{{ $log->created_at->format('H:i:s') }}</td>
+                        <td><code style="font-size:0.7rem;">{{ Str::limit($log->details['code'] ?? '', 15) }}</code></td>
+                        <td>
+                            @if(($log->details['resultat'] ?? '') === 'valide')
+                                <span class="badge bg-success">OK</span>
+                            @else
+                                <span class="badge bg-danger">Non</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr id="recentEmpty">
+                        <td colspan="3" class="text-center text-muted small py-3">Aucun scan pour le moment.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -186,12 +209,14 @@ function startCamera() {
     const btn = document.getElementById('btnToggleCamera');
     const placeholder = document.getElementById('cameraPlaceholder');
     const corners = document.getElementById('scanCorners');
+    const frame = document.getElementById('scanFrame');
     const reader = document.getElementById('reader');
     if (!reader) return;
 
     reader.style.display = 'block';
     if (placeholder) placeholder.style.display = 'none';
     if (corners) corners.style.display = 'block';
+    if (frame) frame.style.display = 'block';
 
     tryStartCamera(0);
 }
@@ -241,10 +266,12 @@ function onCameraFailed() {
     const btn = document.getElementById('btnToggleCamera');
     const placeholder = document.getElementById('cameraPlaceholder');
     const corners = document.getElementById('scanCorners');
+    const frame = document.getElementById('scanFrame');
     const reader = document.getElementById('reader');
     if (placeholder) placeholder.style.display = 'flex';
     if (reader) reader.style.display = 'none';
     if (corners) corners.style.display = 'none';
+    if (frame) frame.style.display = 'none';
     if (btn) btn.innerHTML = '<i class="bi bi-camera me-1"></i>Activer';
     alert("Impossible d'accéder à la caméra. Vérifiez que le site est en HTTPS et autorisez la caméra dans votre navigateur.");
 }
@@ -260,15 +287,30 @@ function stopCamera() {
     if (btn) btn.innerHTML = '<i class="bi bi-camera me-1"></i>Activer';
     const placeholder = document.getElementById('cameraPlaceholder');
     const corners = document.getElementById('scanCorners');
+    const frame = document.getElementById('scanFrame');
     const reader = document.getElementById('reader');
     if (placeholder) placeholder.style.display = 'flex';
     if (reader) reader.style.display = 'none';
     if (corners) corners.style.display = 'none';
+    if (frame) frame.style.display = 'none';
+    clearScanOk();
+}
+
+function flashScanOk() {
+    const container = document.getElementById('scannerContainer');
+    if (container) container.classList.add('scan-ok');
+    setTimeout(clearScanOk, 700);
+}
+
+function clearScanOk() {
+    const container = document.getElementById('scannerContainer');
+    if (container) container.classList.remove('scan-ok');
 }
 
 function onScanSuccess(decodedText) {
     if (scanTimeout) return;
     scanTimeout = setTimeout(() => { scanTimeout = null; }, 4000);
+    flashScanOk();
     submitScan(decodedText);
     stopCamera();
 }
@@ -297,11 +339,15 @@ function submitScan(code) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
+            let txn = data.ticket?.transaction_id
+                ? '<small class="d-block mt-1 text-muted">Transaction : <strong class="text-dark">' + escapeHtml(data.ticket.transaction_id) + '</strong></small>'
+                : '';
             resultDiv.innerHTML = '<div class="result-valid">' +
                 '<i class="bi bi-check-circle-fill" style="font-size:2.5rem;color:#28a745;"></i>' +
                 '<h5 class="mt-2 mb-1 text-success">Ticket validé !</h5>' +
                 '<p class="mb-1 fw-semibold">' + escapeHtml(data.ticket?.nom || '') + '</p>' +
                 '<small class="text-muted">' + escapeHtml(data.ticket?.nom_tarif || '') + ' | ' + escapeHtml(data.ticket?.montant || '') + '</small>' +
+                txn +
                 '</div>';
         } else {
             let extra = '';

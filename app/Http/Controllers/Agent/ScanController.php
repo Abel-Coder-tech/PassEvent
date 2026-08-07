@@ -143,6 +143,7 @@ class ScanController extends Controller
             'email' => $ticket->email_acheteur,
             'nom_tarif' => $ticket->nom_tarif,
             'montant' => number_format($ticket->montant, 0, ',', ' '),
+            'transaction_id' => $ticket->transaction_id,
             'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
         ]]);
     }
