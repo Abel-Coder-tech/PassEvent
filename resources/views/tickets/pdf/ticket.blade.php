@@ -7,7 +7,7 @@
         @page { margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'DejaVu Sans', sans-serif; }
         body {
-            margin: 0; padding: 0;
+            margin: 5px; padding: 0;
             color: #1d1d1f;
             font-size: 10px;
             line-height: 1.4;
@@ -18,8 +18,10 @@
         }
         .ticket {
             width: 100%;
+            height: 100%;
             margin: 0;
             background: #fff;
+            position: relative;
             page-break-inside: avoid;
         }
 
@@ -30,13 +32,15 @@
 
         .header-title { 
             color: #542680; 
+            text-transform: uppercase;
         }
 
         .header-title .pass { 
-            font-size: 14px; 
-            font-weight: 800; 
+            font-size: 20px; 
+            font-weight: 1000; 
             letter-spacing: 1.5px; 
             opacity: 0.8; 
+            text-transform: uppercase;
         }
 
         .header-title .event-name { 
@@ -46,7 +50,7 @@
         }
 
         .body { 
-            padding: 10px 20px 8px; 
+            padding: 10px 20px 58px; 
         }
 
         .event-meta {
@@ -55,11 +59,13 @@
             border-bottom: 1px solid #eee;
             margin-bottom: 3px;
             padding-bottom: 3px;
+            text-align: center;
         }
 
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         .info-table td { padding: 3px 0; vertical-align: middle; }
-        .info-table tr + tr { border-top: 1px dashed #e8e8e8; }
+        .row-solid td { border-bottom: 1px solid #eee; }
+        .row-dash td { border-bottom: 1px dashed #e8e8e8; }
         .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 100px; text-transform: uppercase; letter-spacing: 0.5px; }
         .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
         .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
@@ -73,6 +79,7 @@
             padding: 5px;
             background: #f8f6f9;
             border-radius: 8px;
+            text-transform: uppercase;
         }
         .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }
         .code-pass .value {
@@ -88,7 +95,7 @@
             border: 2px solid #542680; border-radius: 12px;
         }
         .qr-box img { width: 150px; height: 150px; display: block; }
-        .qr-label { font-size: 7px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+        .qr-label { font-size: 10px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
 
         .note {
             color: #ffe082;
@@ -96,9 +103,9 @@
             padding: 6px 10px;
             margin: 6px 0 0;
         }
-        .note p { font-size: 8px; color: #ffe082; margin: 0; line-height: 1.4; text-align: center; }
+        .note p { font-size: 8px; color: #9269b9; margin: 0; line-height: 1.4; text-align: center; }
 
-        .footer { background: #542680; padding: 10px 20px; width: 100%; page-break-inside: avoid; }
+        .footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; background: #542680; padding: 10px 20px; page-break-inside: avoid; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo img { display: block; }
 
@@ -132,8 +139,12 @@
             @endif
         </div>
 
+        @php
+            $idRow = $ticket->montant > 0;
+            $promoRow = (bool) $ticket->code_promo_utilise;
+        @endphp
         <table class="info-table" cellpadding="0" cellspacing="0">
-            <tr>
+            <tr class="{{ ($idRow || $promoRow) ? 'row-solid' : '' }}">
                 <td class="il-sm">{{ $textes['billet'] }}</td>
                 <td class="iv-sm">{{ $ticket->nom_tarif }}</td>
                 <td class="il-sm">{{ $ticket->montant > 0 ? 'Montant' : 'ID' }}</td>
@@ -145,12 +156,12 @@
                     @endif
                 </td>
             </tr>
-            @if($ticket->montant > 0)
-            <tr>
+            @if($idRow)
+            <tr class="{{ $promoRow ? 'row-dash' : '' }}">
                 <td colspan="4" class="il">ID transaction : <span class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</span></td>
             </tr>
             @endif
-            @if($ticket->code_promo_utilise)
+            @if($promoRow)
             <tr>
                 <td colspan="4" class="il">Code promo : <span class="iv iv-green">{{ $ticket->code_promo_utilise }}</span></td>
             </tr>
