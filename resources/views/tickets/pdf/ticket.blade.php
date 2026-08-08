@@ -24,7 +24,7 @@
 
         .header { 
             color: #542680; 
-            padding: 8px 20px 3px; 
+            padding: 14px 20px 12px; 
         }
 
         .header-title { 
@@ -32,7 +32,7 @@
         }
 
         .header-title .pass { 
-            font-size: 12px; 
+            font-size: 20px; 
             font-weight: 800; 
             letter-spacing: 1.5px; 
             opacity: 0.8; 
@@ -45,19 +45,19 @@
         }
 
         .body { 
-            padding: 8px 20px 52px; 
+            padding: 8px 20px 40px; 
         }
 
         .event-meta {
             font-size: 9px; 
             color: #888; 
             border-bottom: 1px solid #eee;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             padding-bottom: 3px;
         }
 
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-        .info-table td { padding: 3px 0; vertical-align: middle; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .info-table td { padding: 6px 10px; vertical-align: middle; }
         .row-solid td { border-bottom: 1px solid #eee; }
         .row-dash td { border-bottom: 1px dashed #e8e8e8; }
         .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 100px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -72,7 +72,7 @@
 
         .code-pass {
             text-align: center;
-            margin: 4px 0 5px;
+            margin: 4px 0 4px;
             padding: 4px;
             background: #f8f6f9;
             border-radius: 8px;
@@ -86,12 +86,12 @@
             letter-spacing: 2px;
         }
 
-        .qr-block { text-align: center; margin: 5px 0 3px; }
+        .qr-block { text-align: center; margin: 4px 0 2px; }
         .qr-box {
             display: inline-block; padding: 6px;
             border: 2px solid #542680; border-radius: 12px;
         }
-        .qr-box img { width: 170px; height: 170px; display: block; }
+        .qr-box img { width: 135px; height: 135px; display: block; }
         .qr-label { font-size: 9px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
 
         .note {
