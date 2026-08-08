@@ -55,7 +55,7 @@
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
                 <div class="hero-mockup">
-                    <img src="{{ asset('images/image_heros.jpeg') }}" alt="Illustration PaxEvent" class="hero-illustration">
+                    <img src="{{ asset('images/image_heros.jpeg?v=' . filemtime(public_path('images/image_heros.jpeg'))) }}" alt="Illustration PaxEvent" class="hero-illustration">
                     <div class="hero-float-card float-card-1">
                         <i class="bi bi-ticket-perforated"></i>
                         <span>Billet électronique</span>
