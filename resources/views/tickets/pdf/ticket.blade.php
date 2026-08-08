@@ -24,7 +24,7 @@
 
         .header { 
             color: #542680; 
-            padding: 5px 20px 3px; 
+            padding: 8px 20px 3px; 
         }
 
         .header-title { 
@@ -32,7 +32,7 @@
         }
 
         .header-title .pass { 
-            font-size: 14px; 
+            font-size: 20px; 
             font-weight: 800; 
             letter-spacing: 1.5px; 
             opacity: 0.8; 
@@ -64,7 +64,7 @@
         .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
         .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
         .info-table .iv-green { color: #2E7D4F; }
-        .info-table .il-sm { font-size: 8px; color: #888; font-weight: 600; width: 46px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-table .il-sm { font-size: 8px; color: #888; font-weight: 600; width: 46px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
         .info-table .iv-sm { font-size: 11px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
 
         .code-pass {
@@ -99,7 +99,7 @@
         }
         .note p { font-size: 8px; color: #9269b9; margin: 0; line-height: 1.4; text-align: center; }
 
-        .footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; background: #542680; padding: 8px 20px; border-radius: 20px 20px 0 0; }
+        .footer { position: absolute; bottom: 0; left: 0; right: 0; background: #542680; padding: 8px 20px; border-radius: 20px 20px 0 0; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo img { display: block; }
 
