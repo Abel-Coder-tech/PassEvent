@@ -24,7 +24,7 @@
 
         .header { 
             color: #542680; 
-            padding: 5px 16px 3px; 
+            padding: 14px 20px 12px; 
         }
 
         .header-title { 
@@ -45,7 +45,7 @@
         }
 
         .body { 
-            padding: 8px 16px 52px; 
+            padding: 8px 20px 40px; 
         }
 
         .event-meta {
@@ -69,7 +69,6 @@
         .info-table .pair { font-size: 9px; white-space: nowrap; }
         .info-table .pair .l { color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .info-table .pair .v { font-size: 11px; font-weight: 700; color: #1d1d1f; }
-        .info-table .pair-r { text-align: right; }
 
         .code-pass {
             text-align: center;
@@ -103,7 +102,7 @@
         }
         .note p { font-size: 8px; color: #9269b9; margin: 0; line-height: 1.4; text-align: center; }
 
-        .footer { position: absolute; bottom: 0; left: 0; right: 0; background: #542680; padding: 8px 16px; border-radius: 20px 20px 0 0; }
+        .footer { position: absolute; bottom: 0; left: 0; right: 0; background: #542680; padding: 8px 20px; border-radius: 20px 20px 0 0; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo img { display: block; }
 
@@ -144,7 +143,7 @@
         <table class="info-table" cellpadding="0" cellspacing="0">
             <tr class="{{ ($idRow || $promoRow) ? 'row-solid' : '' }}">
                 <td class="pair"><span class="l">{{ $textes['billet'] }}</span> : <span class="v">{{ $ticket->nom_tarif }}</span></td>
-                <td class="pair pair-r">
+                <td class="pair">
                     @if($ticket->montant > 0)
                         <span class="l">Montant</span> : <span class="v">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
                     @else
