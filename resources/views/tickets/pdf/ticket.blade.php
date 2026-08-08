@@ -7,7 +7,7 @@
         @page { margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'DejaVu Sans', sans-serif; }
         body {
-            margin: 5px; padding: 0;
+            margin: 0; padding: 0;
             color: #1d1d1f;
             font-size: 10px;
             line-height: 1.4;
@@ -20,25 +20,22 @@
             width: 100%;
             margin: 0;
             background: #fff;
-            page-break-inside: avoid;
         }
 
         .header { 
             color: #542680; 
-            padding: 6px 20px 4px; 
+            padding: 5px 20px 3px; 
         }
 
         .header-title { 
             color: #542680; 
-            text-transform: uppercase;
         }
 
         .header-title .pass { 
-            font-size: 20px; 
-            font-weight: 1000; 
+            font-size: 14px; 
+            font-weight: 800; 
             letter-spacing: 1.5px; 
             opacity: 0.8; 
-            text-transform: uppercase;
         }
 
         .header-title .event-name { 
@@ -48,7 +45,7 @@
         }
 
         .body { 
-            padding: 10px 20px 58px; 
+            padding: 8px 20px 52px; 
         }
 
         .event-meta {
@@ -57,7 +54,6 @@
             border-bottom: 1px solid #eee;
             margin-bottom: 3px;
             padding-bottom: 3px;
-            text-align: center;
         }
 
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
@@ -73,8 +69,8 @@
 
         .code-pass {
             text-align: center;
-            margin: 5px 0 6px;
-            padding: 5px;
+            margin: 4px 0 5px;
+            padding: 4px;
             background: #f8f6f9;
             border-radius: 8px;
             text-transform: uppercase;
@@ -87,23 +83,23 @@
             letter-spacing: 2px;
         }
 
-        .qr-block { text-align: center; margin: 6px 0 4px; }
+        .qr-block { text-align: center; margin: 5px 0 3px; }
         .qr-box {
             display: inline-block; padding: 6px;
             border: 2px solid #542680; border-radius: 12px;
         }
-        .qr-box img { width: 150px; height: 150px; display: block; }
-        .qr-label { font-size: 10px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+        .qr-box img { width: 170px; height: 170px; display: block; }
+        .qr-label { font-size: 9px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
 
         .note {
             color: #ffe082;
             border-radius: 8px;
-            padding: 6px 10px;
-            margin: 6px 0 0;
+            padding: 4px 10px;
+            margin: 4px 0 0;
         }
         .note p { font-size: 8px; color: #9269b9; margin: 0; line-height: 1.4; text-align: center; }
 
-        .footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; background: #542680; padding: 10px 20px; page-break-inside: avoid; }
+        .footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; background: #542680; padding: 8px 20px; border-radius: 20px 20px 0 0; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo img { display: block; }
 
@@ -167,7 +163,7 @@
         </table>
 
         @if($ticket->montant <= 0)
-        <div style="text-align:left;padding:3px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+        <div style="text-align:left;padding:2px 0;color:#542680;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;">
             Entrée gratuite
         </div>
         @endif
@@ -189,24 +185,26 @@
         </div>
 
         <div class="note">
-            <p><span style="font-size:12px;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Ne le partagez jamais.</p>
+            <p><span style="font-size:10px;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Ne le partagez jamais.</p>
         </div>
 
     </div>
 
     {{-- FOOTER violet --}}
-    <table class="footer" width="100%" cellpadding="0" cellspacing="0" style="border-radius: 20px 20px 0 0;">
-        <tr>
-            <td style="text-align:left;vertical-align:middle;width:36px;">
-                <div class="footer-logo">
-                    <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height: 28px; display: block;">
-                </div>
-            </td>
-            <td style="text-align:right;vertical-align:middle;">
-                <div class="footer-text">Billetterie en ligne 100% Bénin</div>
-            </td>
-        </tr>
-    </table>
+    <div class="footer">
+        <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="text-align:left;vertical-align:middle;width:36px;">
+                    <div class="footer-logo">
+                        <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height: 28px; display: block;">
+                    </div>
+                </td>
+                <td style="text-align:right;vertical-align:middle;">
+                    <div class="footer-text">Billetterie en ligne 100% Bénin</div>
+                </td>
+            </tr>
+        </table>
+    </div>
 
 </div>
 
