@@ -8,22 +8,16 @@ use Barryvdh\DomPDF\PDF as DomPdfWrapper;
 
 class TicketPdfService
 {
-    // Génère le PDF d'un ticket sur une seule page (agrandit la hauteur du papier si le contenu déborde)
+    // Génère le PDF du ticket à une taille fixe : 377.953 px × 529.1342 px (10 × 14 cm).
     public static function generer(Ticket $ticket, string $qrCodeDataUri, string $logoDataUri): DomPdfWrapper
     {
-        $hauteur = $ticket->estimerHauteurPdf();
+        // dompdf attend des points (1 px = 0.75 pt à 96 dpi)
+        $largeur = 377.953 * 0.75;   // 283.46475 pt
+        $hauteur = 529.1342 * 0.75;  // 396.85065 pt
 
-        for ($essai = 0; $essai < 10; $essai++) {
-            $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
-            $pdf->setPaper([0, 0, 287.43, $hauteur], 'portrait');
-            $pdf->render();
-
-            if ($pdf->getDomPDF()->getCanvas()->get_page_count() <= 1) {
-                break;
-            }
-
-            $hauteur += 30;
-        }
+        $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
+        $pdf->setPaper([0, 0, $largeur, $hauteur], 'portrait');
+        $pdf->render();
 
         return $pdf;
     }

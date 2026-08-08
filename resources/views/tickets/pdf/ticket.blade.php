@@ -63,6 +63,8 @@
         .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
         .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
         .info-table .iv-green { color: #2E7D4F; }
+        .info-table .il-sm { font-size: 8px; color: #888; font-weight: 600; width: 46px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-table .iv-sm { font-size: 11px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
 
         .code-pass {
             text-align: center;
@@ -131,24 +133,28 @@
 
         <table class="info-table" cellpadding="0" cellspacing="0">
             <tr>
-                <td class="il">{{ $textes['billet'] }}</td>
-                <td class="iv">{{ $ticket->nom_tarif }}</td>
+                <td class="il-sm">{{ $textes['billet'] }}</td>
+                <td class="iv-sm">{{ $ticket->nom_tarif }}</td>
+                <td class="il-sm">{{ $ticket->montant > 0 ? 'Montant' : 'ID' }}</td>
+                <td class="iv-sm">
+                    @if($ticket->montant > 0)
+                        {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                    @else
+                        {{ $ticket->transaction_id ?? '---' }}
+                    @endif
+                </td>
             </tr>
+            @if($ticket->montant > 0)
             <tr>
                 <td class="il">ID transaction</td>
                 <td class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</td>
             </tr>
-            @if($ticket->montant > 0)
-            <tr>
-                <td class="il">Montant</td>
-                <td class="iv">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</td>
-            </tr>
+            @endif
             @if($ticket->code_promo_utilise)
             <tr>
                 <td class="il">Code promo</td>
                 <td class="iv iv-green">{{ $ticket->code_promo_utilise }}</td>
             </tr>
-            @endif
             @endif
         </table>
 
@@ -181,7 +187,7 @@
     </div>
 
     {{-- FOOTER violet --}}
-    <table class="footer" width="100%" cellpadding="0" cellspacing="0">
+    <table class="footer" width="100%" cellpadding="0" cellspacing="0" style="border-radius: 10px 10px 0 0;">
         <tr>
             <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
