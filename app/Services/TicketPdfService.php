@@ -13,7 +13,7 @@ class TicketPdfService
     {
         // dompdf attend des points (1 px = 0.75 pt à 96 dpi)
         $largeur = 377.953 * 0.75;   // 283.46475 pt
-        $hauteur = 529.1342 * 0.75;  // 396.85065 pt
+        $hauteur = 520.1342 * 0.75;  // 396.85065 pt
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact('ticket', 'qrCodeDataUri', 'logoDataUri'));
         $pdf->setPaper([0, 0, $largeur, $hauteur], 'portrait');
