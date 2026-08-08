@@ -36,6 +36,14 @@
                         <a href="{{ route('evenements.public') }}" class="ev-search-clear"><i class="bi bi-x-lg"></i></a>
                     @endif
                 </form>
+                @if($categories->isNotEmpty())
+                    <div class="ev-cat-row">
+                        <a href="{{ route('evenements.public', array_filter(['q' => $q, 'date' => $selectedDate])) }}" class="ev-cat-chip {{ !$selectedCategorie ? 'active' : '' }}">Tous</a>
+                        @foreach($categories as $cat)
+                            <a href="{{ route('evenements.public', ['categorie' => $cat, 'q' => $q, 'date' => $selectedDate]) }}" class="ev-cat-chip {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ ucfirst($cat) }}</a>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="ev-hero-stats">
                     <span><strong>{{ $evenements->total() }}</strong> événements</span>
                     <span><strong>100%</strong> paiement sécurisé</span>
@@ -337,6 +345,40 @@
     transition: all 0.2s;
 }
 .ev-search-clear:hover { border-color: #dc3545; color: #dc3545; }
+
+.ev-cat-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0 auto 1.5rem;
+    max-width: 720px;
+}
+.ev-cat-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 1.1rem;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.65);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.ev-cat-chip:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-1px);
+}
+.ev-cat-chip.active {
+    background: linear-gradient(135deg, #542680, #9972B0);
+    border-color: #9972B0;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(123,63,160,0.4);
+}
 
 .ev-hero-stats {
     display: flex;
