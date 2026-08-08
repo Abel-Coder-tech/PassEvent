@@ -25,7 +25,7 @@
 
         .header { 
             color: #542680; 
-            padding: 14px 20px; 
+            padding: 6px 20px 4px; 
         }
 
         .header-title { 
@@ -33,9 +33,9 @@
         }
 
         .header-title .pass { 
-            font-size: 18px; 
+            font-size: 14px; 
             font-weight: 800; 
-            letter-spacing: 2px; 
+            letter-spacing: 1.5px; 
             opacity: 0.8; 
         }
 
@@ -46,19 +46,20 @@
         }
 
         .body { 
-            padding: 14px 20px 10px; 
+            padding: 10px 20px 8px; 
         }
 
         .event-meta {
-            font-size: 11px; 
+            font-size: 9px; 
             color: #888; 
             border-bottom: 1px solid #eee;
-            margin-bottom: 5px;
-            padding-bottom: 6px;
+            margin-bottom: 3px;
+            padding-bottom: 3px;
         }
 
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .info-table td { padding: 5px 0; vertical-align: middle; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        .info-table td { padding: 3px 0; vertical-align: middle; }
+        .info-table tr + tr { border-top: 1px dashed #e8e8e8; }
         .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 100px; text-transform: uppercase; letter-spacing: 0.5px; }
         .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
         .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
@@ -68,40 +69,40 @@
 
         .code-pass {
             text-align: center;
-            margin: 8px 0 10px;
-            padding: 8px;
+            margin: 5px 0 6px;
+            padding: 5px;
             background: #f8f6f9;
             border-radius: 8px;
         }
-        .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; }
+        .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }
         .code-pass .value {
-            font-size: 24px; 
+            font-size: 20px; 
             font-weight: 800;
             color: #542680;
             letter-spacing: 2px;
         }
 
-        .qr-block { text-align: center; margin: 10px 0 6px; }
+        .qr-block { text-align: center; margin: 6px 0 4px; }
         .qr-box {
-            display: inline-block; padding: 8px;
-            border: 3px solid #542680; border-radius: 12px;
+            display: inline-block; padding: 6px;
+            border: 2px solid #542680; border-radius: 12px;
         }
-        .qr-box img { width: 170px; height: 170px; display: block; }
-        .qr-label { font-size: 7px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+        .qr-box img { width: 150px; height: 150px; display: block; }
+        .qr-label { font-size: 7px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
 
         .note {
             color: #ffe082;
             border-radius: 8px;
-            padding: 8px 12px;
-            margin: 8px 0 0;
+            padding: 6px 10px;
+            margin: 6px 0 0;
         }
         .note p { font-size: 8px; color: #ffe082; margin: 0; line-height: 1.4; text-align: center; }
 
-        .footer { background: #542680; padding: 14px 20px; width: 100%; page-break-inside: avoid; }
+        .footer { background: #542680; padding: 10px 20px; width: 100%; page-break-inside: avoid; }
         .footer-text { color: #fff; font-size: 9px; }
         .footer-logo img { display: block; }
 
-        hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 8px 0; }
+        hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 5px 0; }
     </style>
 </head>
 <body>
@@ -146,20 +147,18 @@
             </tr>
             @if($ticket->montant > 0)
             <tr>
-                <td class="il">ID transaction</td>
-                <td class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</td>
+                <td colspan="4" class="il">ID transaction : <span class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</span></td>
             </tr>
             @endif
             @if($ticket->code_promo_utilise)
             <tr>
-                <td class="il">Code promo</td>
-                <td class="iv iv-green">{{ $ticket->code_promo_utilise }}</td>
+                <td colspan="4" class="il">Code promo : <span class="iv iv-green">{{ $ticket->code_promo_utilise }}</span></td>
             </tr>
             @endif
         </table>
 
         @if($ticket->montant <= 0)
-        <div style="text-align:center;padding:3px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+        <div style="text-align:left;padding:3px 0;color:#542680;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
             Entrée gratuite
         </div>
         @endif
@@ -187,7 +186,7 @@
     </div>
 
     {{-- FOOTER violet --}}
-    <table class="footer" width="100%" cellpadding="0" cellspacing="0" style="border-radius: 10px 10px 0 0;">
+    <table class="footer" width="100%" cellpadding="0" cellspacing="0" style="border-radius: 20px 20px 0 0;">
         <tr>
             <td style="text-align:left;vertical-align:middle;width:36px;">
                 <div class="footer-logo">
