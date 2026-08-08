@@ -32,7 +32,7 @@
         }
 
         .header-title .pass { 
-            font-size: 20px; 
+            font-size: 12px; 
             font-weight: 800; 
             letter-spacing: 1.5px; 
             opacity: 0.8; 
@@ -66,6 +66,9 @@
         .info-table .iv-green { color: #2E7D4F; }
         .info-table .il-sm { font-size: 8px; color: #888; font-weight: 600; width: 46px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
         .info-table .iv-sm { font-size: 11px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
+        .info-table .pair { font-size: 9px; white-space: nowrap; }
+        .info-table .pair .l { color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-table .pair .v { font-size: 11px; font-weight: 700; color: #1d1d1f; }
 
         .code-pass {
             text-align: center;
@@ -139,14 +142,12 @@
         @endphp
         <table class="info-table" cellpadding="0" cellspacing="0">
             <tr class="{{ ($idRow || $promoRow) ? 'row-solid' : '' }}">
-                <td class="il-sm">{{ $textes['billet'] }}</td>
-                <td class="iv-sm">{{ $ticket->nom_tarif }}</td>
-                <td class="il-sm">{{ $ticket->montant > 0 ? 'Montant' : 'ID' }}</td>
-                <td class="iv-sm">
+                <td class="pair"><span class="l">{{ $textes['billet'] }}</span> : <span class="v">{{ $ticket->nom_tarif }}</span></td>
+                <td class="pair">
                     @if($ticket->montant > 0)
-                        {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                        <span class="l">Montant</span> : <span class="v">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
                     @else
-                        {{ $ticket->transaction_id ?? '---' }}
+                        <span class="l">ID</span> : <span class="v">{{ $ticket->transaction_id ?? '---' }}</span>
                     @endif
                 </td>
             </tr>
