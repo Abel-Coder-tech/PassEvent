@@ -575,7 +575,7 @@
                 <div class="row align-items-center g-3">
                     <div class="col-lg-4">
                         <h6 class="mb-0" style="text-transform: none; letter-spacing: 0; font-size: 0.95rem;">
-                            <i class="bi bi-envelope-open me-2"></i>Restez informé (e)
+                            <i class="bi bi-envelope-open me-2"></i>Restez informés !
                         </h6>
                         <p class="mb-0" style="color: rgba(255,255,255,0.5); font-size: 0.82rem;">
                             Recevez les actualités et offres exclusives
