@@ -299,17 +299,17 @@
     }
     .float-card-1 {
         top: 10px;
-        left: 10px;
+        
         animation-delay: 0s;
     }
     .float-card-2 {
         bottom: 10px;
-        left: 10px;
+        
         animation-delay: 1.5s;
     }
     .float-card-3 {
         top: 10px;
-        right: 10px;
+        
         animation-delay: 0.75s;
     }
     @keyframes float {
