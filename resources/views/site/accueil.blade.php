@@ -328,15 +328,16 @@
         .hero-features { text-align: center; margin-left: auto; margin-right: auto; }
         .hero-categories { justify-content: center; }
         .hero-illustration {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
+            width: 100%;
+            max-width: 360px;
+            height: 288px;
+            border-radius: 10px;
             object-fit: cover;
             margin-top: 2rem;
         }
-        .float-card-1 { top: 12%; right: -10px; }
-        .float-card-2 { bottom: 20%; left: -10px; }
-        .float-card-3 { bottom: 50%; right: -10px; }
+        .float-card-1 { top: -10px; left: -10px; }
+        .float-card-2 { bottom: -10px; left: -10px; }
+        .float-card-3 { top: -10px; right: -10px; }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
@@ -348,17 +349,17 @@
         .hero-stats { gap: 1.5rem; }
         .hero-stat-value { font-size: 1.2rem; }
         .hero-illustration {
-            width: 240px;
+            width: 100%;
+            max-width: 300px;
             height: 240px;
-            border-radius: 50%;
+            border-radius: 10px;
             object-fit: cover;
-            max-width: 100%;
         }
         .hero-float-card { padding: 0.25rem 0.7rem; }
         .hero-float-card i { font-size: 0.85rem; }
-        .float-card-1 { top: 10px; right: -5px; font-size: 0.72rem; }
-        .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; }
-        .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; }
+        .float-card-1 { top: -10px; left: -10px; font-size: 0.72rem; }
+        .float-card-2 { bottom: -10px; left: -10px; font-size: 0.72rem; }
+        .float-card-3 { top: -10px; right: -10px; font-size: 0.72rem; }
     }
 </style>
 
