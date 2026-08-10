@@ -354,9 +354,11 @@
             object-fit: cover;
             max-width: 100%;
         }
-        .float-card-1 { top: 10px; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
-        .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
-        .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .hero-float-card { padding: 0.25rem 0.7rem; }
+        .hero-float-card i { font-size: 0.85rem; }
+        .float-card-1 { top: 10px; right: -5px; font-size: 0.72rem; }
+        .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; }
+        .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; }
     }
 </style>
 
