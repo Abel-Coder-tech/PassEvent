@@ -298,18 +298,18 @@
         color: #542680;
     }
     .float-card-1 {
-        top: -10px;
-        left: -10px;
+        top: 10px;
+        left: 10px;
         animation-delay: 0s;
     }
     .float-card-2 {
-        bottom: -10px;
-        left: -10px;
+        bottom: 10px;
+        left: 10px;
         animation-delay: 1.5s;
     }
     .float-card-3 {
-        top: -10px;
-        right: -10px;
+        top: 10px;
+        right: 10px;
         animation-delay: 0.75s;
     }
     @keyframes float {
@@ -335,9 +335,9 @@
             object-fit: cover;
             margin-top: 2rem;
         }
-        .float-card-1 { top: -10px; left: -10px; }
-        .float-card-2 { bottom: -10px; left: -10px; }
-        .float-card-3 { top: -10px; right: -10px; }
+        .float-card-1 { top: 10px; left: 10px; }
+        .float-card-2 { bottom: 10px; left: 10px; }
+        .float-card-3 { top: 10px; right: 10px; }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
@@ -357,9 +357,9 @@
         }
         .hero-float-card { padding: 0.25rem 0.7rem; }
         .hero-float-card i { font-size: 0.85rem; }
-        .float-card-1 { top: -10px; left: -10px; font-size: 0.72rem; }
-        .float-card-2 { bottom: -10px; left: -10px; font-size: 0.72rem; }
-        .float-card-3 { top: -10px; right: -10px; font-size: 0.72rem; }
+        .float-card-1 { top: 10px; left: 10px; font-size: 0.72rem; }
+        .float-card-2 { bottom: 10px; left: 10px; font-size: 0.72rem; }
+        .float-card-3 { top: 10px; right: 10px; font-size: 0.72rem; }
     }
 </style>
 
