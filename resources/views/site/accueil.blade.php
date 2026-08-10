@@ -298,18 +298,18 @@
         color: #542680;
     }
     .float-card-1 {
-        top: 20px;
-        left: -15px;
+        top: 15px;
+        left: -30px;
         animation-delay: 0s;
     }
     .float-card-2 {
         bottom: 20px;
-        left: -15px;
+        left: -30px;
         animation-delay: 1.5s;
     }
     .float-card-3 {
         top: 20px;
-        right: -15px;
+        right: -30px;
         animation-delay: 0.75s;
     }
     @keyframes float {
