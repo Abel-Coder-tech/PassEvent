@@ -298,18 +298,18 @@
         color: #542680;
     }
     .float-card-1 {
-        top: 10%;
-        center: -10px;
+        top: -20px;
+        left: 0;
         animation-delay: 0s;
     }
     .float-card-2 {
-        bottom: 15%;
-        left: -20px;
+        bottom: -20px;
+        left: 0;
         animation-delay: 1.5s;
     }
     .float-card-3 {
-        bottom: 50%;
-        right: -20px;
+        bottom: -20px;
+        right: 0;
         animation-delay: 0.75s;
     }
     @keyframes float {
@@ -334,9 +334,9 @@
             object-fit: cover;
             margin-top: 2rem;
         }
-        .float-card-1 { top: 5%; right: -10px; }
-        .float-card-2 { bottom: 20%; left: -10px; }
-        .float-card-3 { bottom: 50%; right: -10px; }
+        .float-card-1 { top: -14px; left: 0; }
+        .float-card-2 { bottom: -14px; left: 0; }
+        .float-card-3 { bottom: -14px; right: 0; }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
@@ -354,9 +354,9 @@
             object-fit: cover;
             max-width: 100%;
         }
-        .float-card-1 { top: 0; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
-        .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
-        .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-1 { top: -10px; left: 0; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-2 { bottom: -10px; left: 0; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-3 { bottom: -10px; right: 0; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
     }
 </style>
 
