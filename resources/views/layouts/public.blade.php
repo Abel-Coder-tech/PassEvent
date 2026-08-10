@@ -500,7 +500,7 @@
     <header class="public-header">
         <div class="container header-inner position-relative">
             <a href="{{ route('accueil') }}" class="brand">
-                <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="80">
+                <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="52">
                 <span style="font-size:0.6rem;font-weight:700;color:var(--violet);border:1.5px solid var(--violet);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:super;text-transform:uppercase;">BETA</span>
             </a>
 
@@ -600,7 +600,7 @@
                 {{-- Colonne 1 : Logo + Réseaux sociaux --}}
                 <div class="col-12 col-md-3">
                     <a href="{{ route('accueil') }}" class="brand" style="display:flex; align-items:center; gap:0.5rem;">
-                        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="90" style="filter:brightness(0) invert(1);">
+                        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" style="filter:brightness(0) invert(1);">
                     </a>
                     <div class="footer-social d-flex gap-2 mt-2">
                         <a href="https://facebook.com/paxevent" target="_blank" title="Facebook"><i class="bi bi-facebook"></i></a>

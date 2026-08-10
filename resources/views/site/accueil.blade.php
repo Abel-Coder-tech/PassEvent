@@ -298,18 +298,18 @@
         color: #542680;
     }
     .float-card-1 {
-        top: -20px;
-        left: 0;
+        top: -10px;
+        left: -10px;
         animation-delay: 0s;
     }
     .float-card-2 {
-        bottom: -20px;
-        left: 0;
+        bottom: -10px;
+        left: -10px;
         animation-delay: 1.5s;
     }
     .float-card-3 {
-        bottom: -20px;
-        right: 0;
+        top: -10px;
+        right: -10px;
         animation-delay: 0.75s;
     }
     @keyframes float {
@@ -334,7 +334,7 @@
             object-fit: cover;
             margin-top: 2rem;
         }
-        .float-card-1 { top: 5%; right: -10px; }
+        .float-card-1 { top: 12%; right: -10px; }
         .float-card-2 { bottom: 20%; left: -10px; }
         .float-card-3 { bottom: 50%; right: -10px; }
     }
@@ -354,7 +354,7 @@
             object-fit: cover;
             max-width: 100%;
         }
-        .float-card-1 { top: 0; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-1 { top: 10px; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
         .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
         .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
     }
