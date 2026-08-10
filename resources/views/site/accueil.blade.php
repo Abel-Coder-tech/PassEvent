@@ -55,7 +55,7 @@
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
                 <div class="hero-mockup">
-                    <img src="{{ asset('images/image_heros.jpeg?v=' . filemtime(public_path('images/image_heros.jpeg'))) }}" alt="Illustration PaxEvent" class="hero-illustration">
+                    <img src="{{ asset_v('images/image_heros.jpeg') }}" alt="Illustration PaxEvent" class="hero-illustration">
                     <div class="hero-float-card float-card-1">
                         <i class="bi bi-ticket-perforated"></i>
                         <span>Billet électronique</span>
@@ -334,9 +334,9 @@
             object-fit: cover;
             margin-top: 2rem;
         }
-        .float-card-1 { top: -14px; left: 0; }
-        .float-card-2 { bottom: -14px; left: 0; }
-        .float-card-3 { bottom: -14px; right: 0; }
+        .float-card-1 { top: 5%; right: -10px; }
+        .float-card-2 { bottom: 20%; left: -10px; }
+        .float-card-3 { bottom: 50%; right: -10px; }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
@@ -354,9 +354,9 @@
             object-fit: cover;
             max-width: 100%;
         }
-        .float-card-1 { top: -10px; left: 0; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
-        .float-card-2 { bottom: -10px; left: 0; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
-        .float-card-3 { bottom: -10px; right: 0; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-1 { top: 0; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-2 { bottom: 18%; left: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+        .float-card-3 { bottom: 48%; right: -5px; font-size: 0.72rem; padding: 0.4rem 0.7rem; }
     }
 </style>
 

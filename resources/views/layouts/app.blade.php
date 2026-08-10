@@ -5,7 +5,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset_v('images/logo_paxevent.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PaxEvent')</title>
@@ -832,7 +832,7 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="72" style="filter:brightness(0) invert(1);">
+            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="72" style="filter:brightness(0) invert(1);">
         </div>
 
         <nav class="sidebar-nav">

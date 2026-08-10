@@ -78,7 +78,7 @@
 <body>
     <header class="agent-header">
         <div class="container d-flex align-items-center justify-content-between">
-            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="50" style="filter: brightness(0) invert(1);">
+            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="50" style="filter: brightness(0) invert(1);">
             <div class="d-flex align-items-center gap-3">
                 @if(Auth::guard('agent')->check())
                     <span style="opacity:0.8;font-size:0.85rem;">

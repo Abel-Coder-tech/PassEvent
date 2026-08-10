@@ -5,7 +5,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset_v('images/logo_paxevent.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réinitialiser — PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
@@ -67,7 +67,7 @@
 <body>
     <div class="card">
         <div class="header">
-            <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="88" class="mb-2" style="filter:brightness(0) invert(1);">
+            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="88" class="mb-2" style="filter:brightness(0) invert(1);">
             <p>Nouveau mot de passe</p>
         </div>
         <div class="body">

@@ -35,7 +35,7 @@
 @section('content')
 <div class="login-container">
     <div class="card-login">
-        <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo">
+        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" class="logo">
         <h1>Espace Agent</h1>
         <p class="subtitle">Connectez-vous pour scanner les tickets</p>
 

@@ -5,7 +5,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo_paxevent.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset_v('images/logo_paxevent.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Super Admin - PaxEvent')</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
@@ -498,7 +498,7 @@
         <div class="sa-sidebar-brand">
             <div class="brand-icon"><i class="bi bi-shield-fill-check"></i></div>
             <div>
-                <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" class="mb-1">
+                <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" class="mb-1">
                 <div class="brand-sub">Super Admin</div>
             </div>
         </div>

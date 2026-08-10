@@ -5,7 +5,7 @@
 @section('content')
 <div class="container py-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <img src="{{ asset('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
+        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
         <div class="d-flex align-items-center gap-3">
             <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{ $agent->nom }}</span>
             <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
