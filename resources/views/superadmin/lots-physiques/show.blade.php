@@ -53,16 +53,18 @@
             <div class="sa-card-body" style="border-top:1px solid #f1f2f6;">
                 <div class="d-flex gap-2 flex-wrap">
                     @unless($lot->estTransmis)
-                        <form action="{{ route('superadmin.tickets-physiques.transmettre', $lot) }}" method="POST" onsubmit="return confirm('Transmettre ce lot a l\'organisateur ? Il pourra telecharger la planche de QR codes (email + notification).')">
-                            @csrf
-                            <button type="submit" class="sa-btn sa-btn-success"><i class="bi bi-send-fill"></i> Transmettre a l'organisateur</button>
-                        </form>
+                        <button type="button" class="sa-btn sa-btn-success" data-bs-toggle="modal" data-bs-target="#transmettreModal">
+                            <i class="bi bi-send-fill"></i> Transmettre a l'organisateur
+                        </button>
                         <form action="{{ route('superadmin.tickets-physiques.supprimer', $lot) }}" method="POST" onsubmit="return confirm('Supprimer ce lot et ses {{ $lot->quantite }} tickets ? Cette action est irreversible.')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-trash"></i> Supprimer le lot</button>
                         </form>
                     @endunless
+                    <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="sa-btn" style="background:#3b82f6;border:none;color:#fff;" title="Télécharger la planche PDF de ce lot">
+                        <i class="bi bi-file-earmark-pdf"></i> Planche PDF
+                    </a>
                 </div>
             </div>
         </div>
@@ -129,6 +131,42 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+{{-- Modal de transmission --}}
+<div class="modal fade" id="transmettreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('superadmin.tickets-physiques.transmettre', $lot) }}" method="POST">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header" style="background:#542680;color:#fff;border-radius:0;">
+                    <h5 class="modal-title"><i class="bi bi-send-fill me-2"></i>Transmettre le lot</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Organisateur</label>
+                        <input type="text" class="form-control" value="{{ $lot->user?->nom }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Adresse email de l'organisateur</label>
+                        <input type="email" name="email" class="form-control" value="{{ $lot->user?->email }}" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted">Note (facultative)</label>
+                        <textarea name="note" class="form-control" rows="3" placeholder="Un petit message pour l'organisateur..."></textarea>
+                    </div>
+                    <div class="small text-muted">
+                        Le lot sera transmis : l'organisateur recevra un email et une notification dans son espace. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn" style="background:#27ae60;color:#fff;font-weight:600;"><i class="bi bi-send-check"></i> Transmettre</button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

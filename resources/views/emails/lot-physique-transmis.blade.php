@@ -58,6 +58,15 @@
 
             <a href="{{ route('admin.lots-physiques.index') }}" class="btn">Télécharger la planche de QR codes</a>
 
+            @if(!empty($note))
+            <div class="detail-box">
+                <div class="detail-row">
+                    <span class="detail-label">Note du super admin</span>
+                </div>
+                <p style="font-size:13px;color:#211C31;margin:8px 0 0;white-space:pre-line;">{{ $note }}</p>
+            </div>
+            @endif
+
             <div class="info-box">
                 <h3>À savoir</h3>
                 <p>La planche de QR codes est téléchargeable dans votre espace organisateur, rubrique « Vente physique » (3 téléchargements maximum). Chaque ticket dispose d'un code unique scannable à l'entrée.</p>

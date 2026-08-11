@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evenement;
+use App\Models\Message;
 use App\Models\Ticket;
 use App\Models\CodePromo;
 use App\Models\Withdrawal;
@@ -182,6 +183,13 @@ class DashboardController extends Controller
 
         $activiteRecents = array_slice($activiteRecents, 0, 5);
 
+        // Notifications (messages du super admin, techniques : commission, tickets physiques, etc.)
+        $notifications = Message::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get();
+        $notificationsNonLues = Message::where('user_id', $user->id)->where('lu', false)->count();
+
         // Calcul du remplissage moyen de tous les événements
         $remplissageMoyen = $evenements->avg(function ($e) {
             return $e->capacite > 0 ? ($e->quota_vendu / $e->capacite) * 100 : 0;
@@ -258,6 +266,8 @@ class DashboardController extends Controller
             'reseauxPaiement',
             'reseauxConfig',
             'moyensPaiement',
+            'notifications',
+            'notificationsNonLues',
         ));
     }
 }

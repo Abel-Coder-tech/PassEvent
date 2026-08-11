@@ -161,6 +161,37 @@ class LotPhysiqueController extends Controller
             ->with('success', "Lot « {$lot->nom } » de {$lot->quantite} ticket(s) généré avec succès.");
     }
 
+    // Télécharge la planche PDF d'un lot (côté super admin, sans limite)
+    public function telechargerPlanche(LotPhysique $lot)
+    {
+        $tickets = $lot->tickets()->where('annule', false)->orderBy('code_unique')->get();
+
+        if ($tickets->isEmpty()) {
+            return back()->with('error', 'Aucun ticket valide à imprimer dans ce lot.');
+        }
+
+        $pdf = \App\Services\LotPhysiquePdfService::generer($lot, $tickets);
+
+        return $pdf->download('Planche-' . $lot->nom . '.pdf');
+    }
+
+    // Télécharge un PDF unique regroupant toutes les planches (côté super admin)
+    public function telechargerPlanches()
+    {
+        $lots = LotPhysique::with('evenement', 'tarif')
+            ->whereHas('tickets', fn ($q) => $q->where('annule', false))
+            ->orderByDesc('created_at')
+            ->get();
+
+        if ($lots->isEmpty()) {
+            return back()->with('error', 'Aucun lot avec des tickets valides à imprimer.');
+        }
+
+        $pdf = \App\Services\LotPhysiquePdfService::genererPlusieurs($lots);
+
+        return $pdf->download('Planches-tickets-physiques.pdf');
+    }
+
     // Détail d'un lot : tickets avec codes et QR
     public function show(LotPhysique $lot)
     {
@@ -175,24 +206,44 @@ class LotPhysiqueController extends Controller
         return view('superadmin.lots-physiques.show', compact('lot', 'tickets', 'qrs'));
     }
 
-    // Transmet le lot à l'organisateur (notification + email)
-    public function transmettre(LotPhysique $lot)
+    // Transmet le lot à l'organisateur (notification + email + note optionnelle)
+    public function transmettre(Request $request, LotPhysique $lot)
     {
         if ($lot->estTransmis) {
             return back()->with('error', 'Ce lot a déjà été transmis à l\'organisateur.');
+        }
+
+        $note = trim((string) $request->input('note'));
+        $emailDest = trim((string) $request->input('email'));
+        if ($emailDest !== '' && !filter_var($emailDest, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'L\'adresse email saisie n\'est pas valide.');
+        }
+        if ($emailDest === '') {
+            $emailDest = $lot->user?->email;
+        }
+
+        $corps = "Bonjour {$lot->user?->nom},\n\n"
+            . "Un lot de tickets physiques est disponible pour votre événement « {$lot->evenement?->titre} ».\n\n"
+            . "Lot : {$lot->nom} ({$lot->quantite} tickets)\n\n"
+            . "Connectez-vous à votre espace organisateur, rubrique « Vente physique », pour télécharger la planche de QR codes (3 téléchargements maximum).";
+        if ($note !== '') {
+            $corps .= "\n\nNote du super admin :\n{$note}";
         }
 
         $lot->update(['statut' => 'transmis', 'transmis_at' => now()]);
 
         Message::create([
             'user_id' => $lot->user_id,
+            'evenement_id' => $lot->evenement_id,
+            'nom_complet' => $lot->user?->nom,
+            'email' => $emailDest,
             'objet' => 'Tickets physiques disponibles',
-            'message' => "Bonjour {$lot->user?->nom},\n\nUn lot de tickets physiques est disponible pour votre événement « {$lot->evenement?->titre} ».\n\nLot : {$lot->nom} ({$lot->quantite} tickets)\n\nConnectez-vous à votre espace organisateur, rubrique « Vente physique », pour télécharger la planche de QR codes (3 téléchargements maximum).",
+            'message' => $corps,
             'lu' => false,
         ]);
 
         try {
-            Mail::to($lot->user->email)->send(new LotPhysiqueTransmis($lot));
+            Mail::to($emailDest)->send(new LotPhysiqueTransmis($lot, $note));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Lot physique - Erreur email transmission : ' . $e->getMessage());
         }

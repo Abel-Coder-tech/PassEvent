@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Headers;
 
 class LotPhysiqueTransmis extends Mailable
 {
-    public function __construct(public LotPhysique $lot)
+    public function __construct(public LotPhysique $lot, public ?string $note = null)
     {
         $this->lot->load('evenement', 'tarif', 'user');
     }
@@ -39,7 +39,7 @@ class LotPhysiqueTransmis extends Mailable
     {
         return new Content(
             view: 'emails.lot-physique-transmis',
-            with: ['lot' => $this->lot],
+            with: ['lot' => $this->lot, 'note' => $this->note],
         );
     }
 }

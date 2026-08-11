@@ -134,10 +134,12 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
         Route::get('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'index'])->name('tickets-physiques');
         Route::get('/tickets-physiques/creer', [SuperAdminLotPhysiqueController::class, 'create'])->name('tickets-physiques.creer');
+        Route::get('/tickets-physiques/planches', [SuperAdminLotPhysiqueController::class, 'telechargerPlanches'])->name('tickets-physiques.planches');
         Route::post('/tickets-physiques/evenements', [SuperAdminLotPhysiqueController::class, 'getEvenements'])->name('tickets-physiques.evenements');
         Route::post('/tickets-physiques/tarifs', [SuperAdminLotPhysiqueController::class, 'getTarifs'])->name('tickets-physiques.tarifs');
         Route::post('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'store'])->name('tickets-physiques.store');
         Route::get('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'show'])->name('tickets-physiques.voir');
+        Route::get('/tickets-physiques/{lot}/planche', [SuperAdminLotPhysiqueController::class, 'telechargerPlanche'])->name('tickets-physiques.planche');
         Route::post('/tickets-physiques/{lot}/transmettre', [SuperAdminLotPhysiqueController::class, 'transmettre'])->name('tickets-physiques.transmettre');
         Route::post('/tickets-physiques/{lot}/tickets/{ticket}/annuler', [SuperAdminLotPhysiqueController::class, 'annulerTicket'])->name('tickets-physiques.annuler');
         Route::delete('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'destroy'])->name('tickets-physiques.supprimer');

@@ -424,6 +424,9 @@ class SuperAdminController extends Controller
             'ancien' => $ancien,
             'nouveau' => $nouveau,
         ]);
+        if ($nouveau['commission_pourcentage'] !== $ancien['commission_pourcentage']) {
+            $this->notifierCommission($evenement->user, $evenement, $ancien['commission_pourcentage'], $nouveau['commission_pourcentage']);
+        }
 
         return back()->with('success', "Contrôles de l'événement mis à jour.");
     }
@@ -449,6 +452,9 @@ class SuperAdminController extends Controller
             'ancien' => $ancien,
             'nouveau' => $nouveau,
         ]);
+        if ($nouveau['commission_pourcentage'] !== $ancien['commission_pourcentage']) {
+            $this->notifierCommission($user, null, $ancien['commission_pourcentage'], $nouveau['commission_pourcentage']);
+        }
 
         return back()->with('success', "Contrôles de l'organisateur mis à jour.");
     }
@@ -562,6 +568,7 @@ class SuperAdminController extends Controller
                 'ancien' => ['commission_pourcentage' => $ancien],
                 'nouveau' => ['commission_pourcentage' => $valeur],
             ]);
+            $this->notifierCommission($user, $evenement, $ancien, $valeur);
 
             return back()->with('success', "Commission mise à jour sur « {$evenement->titre} ».");
         }
@@ -574,8 +581,25 @@ class SuperAdminController extends Controller
             'ancien' => ['commission_pourcentage' => $ancien],
             'nouveau' => ['commission_pourcentage' => $valeur],
         ]);
+        $this->notifierCommission($user, null, $ancien, $valeur);
 
         return back()->with('success', 'Commission mise à jour pour tout le dashboard.');
+    }
+
+    // Notifie l'organisateur d'un changement de commission (ou réduction)
+    protected function notifierCommission(User $user, ?Evenement $evenement, $ancien, $nouveau): void
+    {
+        $cible = $evenement ? " pour l'événement « {$evenement->titre} »" : ' pour tous vos événements';
+        $ancienVal = is_null($ancien) ? 'par défaut' : round((float) $ancien, 1) . ' %';
+        $nouveauVal = is_null($nouveau) ? 'valeur par défaut' : round((float) $nouveau, 1) . ' %';
+
+        $verbe = (is_null($nouveau) || is_null($ancien)) ? 'mise à jour' : ((float) $nouveau < (float) $ancien ? 'réduite' : 'mise à jour');
+        $objet = 'Votre commission a été ' . $verbe;
+        $message = "Bonjour {$user->nom},\n\n"
+            . "Votre commission a été modifiée{$cible} : elle passe de {$ancienVal} à {$nouveauVal}.\n\n"
+            . "Pour toute question, contactez le support PaxEvent.";
+
+        $this->notifierOrganisateur($user, $objet, $message, $evenement?->id);
     }
 
     // Réinitialise un contrôle (ventes espèces ou commission) pour le dashboard ou un événement
@@ -601,6 +625,9 @@ class SuperAdminController extends Controller
                 'ancien' => [$validated['champ'] => $ancien],
                 'nouveau' => [$validated['champ'] => null],
             ]);
+            if ($validated['champ'] === 'commission_pourcentage') {
+                $this->notifierCommission($user, $evenement, $ancien, null);
+            }
 
             return back()->with('success', "Réinitialisé sur « {$evenement->titre} » (valeur par défaut).");
         }
@@ -613,6 +640,9 @@ class SuperAdminController extends Controller
             'ancien' => [$validated['champ'] => $ancien],
             'nouveau' => [$validated['champ'] => null],
         ]);
+        if ($validated['champ'] === 'commission_pourcentage') {
+            $this->notifierCommission($user, null, $ancien, null);
+        }
 
         return back()->with('success', 'Réinitialisé pour tout le dashboard (valeur par défaut).');
     }
@@ -640,6 +670,20 @@ class SuperAdminController extends Controller
             ], $details),
             'ip' => request()->ip(),
             'user_agent' => request()->userAgent(),
+        ]);
+    }
+
+    // Notifie l'organisateur dans son espace (message affiché sur le dashboard)
+    protected function notifierOrganisateur(User $user, string $objet, string $message, ?int $evenementId = null): void
+    {
+        Message::create([
+            'user_id' => $user->id,
+            'evenement_id' => $evenementId,
+            'nom_complet' => $user->nom,
+            'email' => $user->email,
+            'objet' => $objet,
+            'message' => $message,
+            'lu' => false,
         ]);
     }
 
