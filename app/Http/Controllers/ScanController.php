@@ -299,6 +299,28 @@ class ScanController extends Controller
             ]);
         }
 
+        if ($ticket->annule) {
+            // Ticket annulé (erreur d'impression, billet physique invalidé) : log et retourne erreur
+            Log::create([
+                'ticket_id' => $ticket->id,
+                'type_operation' => 'scan',
+                'details' => json_encode([
+                    'code' => $code,
+                    'resultat' => 'invalide',
+                    'raison' => 'ticket_annule',
+                    'agent' => Auth::id(),
+                ]),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce ticket a été annulé et n\'est plus valide.',
+                'type' => 'cancelled',
+            ]);
+        }
+
         if ($ticket->utilise) {
             // Déjà utilisé : log et retourne erreur
             Log::create([

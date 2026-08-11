@@ -527,6 +527,9 @@
             <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements') ? 'active' : '' }}">
                 <i class="bi bi-calendar-event-fill"></i> Evenements
             </a>
+            <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.tickets-physiques*') ? 'active' : '' }}">
+                <i class="bi bi-ticket-perforated-fill"></i> Tickets physiques
+            </a>
             <a href="{{ route('superadmin.moderation') }}" class="sa-nav-link {{ request()->routeIs('superadmin.moderation') ? 'active' : '' }}">
                 <i class="bi bi-shield-exclamation"></i> Moderation
             </a>

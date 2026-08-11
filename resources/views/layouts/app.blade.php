@@ -872,6 +872,9 @@
             <a href="{{ route('admin.agents-vente.index') }}" class="nav-link {{ request()->routeIs('admin.agents-vente.*') ? 'active' : '' }}">
                 <i class="bi bi-cart-check"></i> Agents de vente
             </a>
+            <a href="{{ route('admin.lots-physiques.index') }}" class="nav-link {{ request()->routeIs('admin.lots-physiques.*') ? 'active' : '' }}">
+                <i class="bi bi-ticket-perforated-fill"></i> Vente physique
+            </a>
             <a href="{{ route('admin.codes-promos.index') }}" class="nav-link {{ request()->routeIs('admin.codes-promos.*') ? 'active' : '' }}">
                 <i class="bi bi-tag"></i> Codes promos
             </a>

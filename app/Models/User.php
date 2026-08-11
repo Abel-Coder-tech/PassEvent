@@ -75,6 +75,11 @@ class User extends Authenticatable
         return $this->hasMany(Withdrawal::class);
     }
 
+    public function lotsPhysiques(): HasMany
+    {
+        return $this->hasMany(LotPhysique::class, 'user_id');
+    }
+
     public function demandesRemboursement(): HasMany
     {
         return $this->hasMany(DemandeRemboursement::class, 'organisateur_id');
@@ -110,6 +115,13 @@ class User extends Authenticatable
         $evenements = Evenement::whereIn('id', $evenementsIds)->with('user')->get()->keyBy('id');
         $tickets = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
+            ->get(['evenement_id', 'montant', 'methode_paiement']);
+
+        // Tickets physiques (lots) : comptés à part, commission attendue séparée
+        $physiques = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->whereNotNull('lot_physique_id')
             ->get(['evenement_id', 'montant', 'methode_paiement']);
 
         $totalTickets = (float) $tickets->sum('montant');
@@ -130,6 +142,14 @@ class User extends Authenticatable
             $commissionCash += $evCash * $taux / 100;
         }
 
+        // Commission attendue sur les ventes physiques (recouvrée à part, hors balance)
+        $physiqueRecettes = (float) $physiques->sum('montant');
+        $commissionPhysique = 0.0;
+        foreach ($evenements as $evenement) {
+            $evPhysique = (float) $physiques->where('evenement_id', $evenement->id)->sum('montant');
+            $commissionPhysique += $evPhysique * $evenement->commissionEffective() / 100;
+        }
+
         return [
             'totalTickets' => round($totalTickets, 2),
             'mobileRecettes' => round($mobileRecettes, 2),
@@ -137,6 +157,8 @@ class User extends Authenticatable
             'commissionTotale' => round($commissionTotale, 2),
             'commissionMobile' => round($commissionMobile, 2),
             'commissionCash' => round($commissionCash, 2),
+            'physiqueRecettes' => round($physiqueRecettes, 2),
+            'commissionPhysique' => round($commissionPhysique, 2),
         ];
     }
 }

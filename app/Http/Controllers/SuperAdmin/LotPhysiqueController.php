@@ -1,0 +1,256 @@
+<?php
+
+namespace App\Http\Controllers\SuperAdmin;
+
+use App\Http\Controllers\Controller;
+use App\Mail\LotPhysiqueTransmis;
+use App\Models\Evenement;
+use App\Models\Log;
+use App\Models\LotPhysique;
+use App\Models\Message;
+use App\Models\Tarif;
+use App\Models\Ticket;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+
+class LotPhysiqueController extends Controller
+{
+    // Liste des lots de tickets physiques
+    public function index()
+    {
+        $lots = LotPhysique::with('evenement', 'user', 'tarif')
+            ->withCount(['tickets as nb_tickets'])
+            ->withCount(['tickets as nb_annules' => fn($q) => $q->where('annule', true)])
+            ->withCount(['tickets as nb_scannes' => fn($q) => $q->where('utilise', true)])
+            ->orderByDesc('created_at')
+            ->paginate(\App\Support\PerPage::resolve());
+
+        return view('superadmin.lots-physiques.index', compact('lots'));
+    }
+
+    // Formulaire de création d'un lot
+    public function create()
+    {
+        $organisateurs = User::where('role', 'admin')->orderBy('nom')->get();
+
+        return view('superadmin.lots-physiques.create', compact('organisateurs'));
+    }
+
+    // Événements d'un organisateur (sélecteur dynamique)
+    public function getEvenements(Request $request)
+    {
+        $request->validate(['user_id' => 'required|exists:users,id']);
+
+        $evenements = Evenement::where('user_id', $request->user_id)
+            ->where(fn($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->orderBy('date_event', 'asc')
+            ->get(['id', 'titre', 'date_event']);
+
+        return response()->json(['evenements' => $evenements]);
+    }
+
+    // Tarifs d'un événement (sélecteur dynamique)
+    public function getTarifs(Request $request)
+    {
+        $request->validate(['evenement_id' => 'required|exists:evenement,id']);
+
+        $evenement = Evenement::findOrFail($request->evenement_id);
+        $tarifs = $evenement->tarifs()->where('statut', 'actif')->get(['id', 'nom', 'prix']);
+
+        return response()->json(['tarifs' => $tarifs, 'gratuit' => (bool) $evenement->gratuit]);
+    }
+
+    // Génère un lot : lot + tickets physiques (PAX-XXXXX)
+    public function store(Request $request)
+    {
+        $rules = [
+            'user_id' => 'required|exists:users,id',
+            'evenement_id' => 'required|exists:evenement,id',
+            'nom' => 'required|string|max:100',
+            'quantite' => 'required|integer|min:1|max:500',
+        ];
+        $messages = [
+            'user_id.required' => 'Veuillez sélectionner un organisateur.',
+            'evenement_id.required' => 'Veuillez sélectionner un événement.',
+            'nom.required' => 'Le nom du lot est obligatoire.',
+            'quantite.required' => 'La quantité est obligatoire.',
+            'quantite.min' => 'La quantité doit être d\'au moins 1.',
+            'quantite.max' => 'La quantité ne doit pas dépasser 500.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
+
+        $evenement = Evenement::findOrFail($validated['evenement_id']);
+
+        if ($evenement->user_id !== (int) $validated['user_id']) {
+            return back()->withInput()->with('error', 'Cet événement n\'appartient pas à l\'organisateur sélectionné.');
+        }
+
+        if (!$evenement->gratuit) {
+            $request->validate(
+                ['tarif_id' => 'required|exists:tarifs,id'],
+                ['tarif_id.required' => 'Veuillez sélectionner un tarif.']
+            );
+            $tarif = Tarif::where('evenement_id', $evenement->id)->findOrFail($request->tarif_id);
+        } else {
+            $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
+        }
+
+        if (!$tarif) {
+            return back()->withInput()->with('error', 'Aucun tarif actif pour cet événement.');
+        }
+
+        $lot = DB::transaction(function () use ($validated, $evenement, $tarif) {
+            $lot = LotPhysique::create([
+                'user_id' => $validated['user_id'],
+                'evenement_id' => $evenement->id,
+                'tarif_id' => $tarif->id,
+                'nom' => $validated['nom'],
+                'quantite' => $validated['quantite'],
+                'statut' => 'genere',
+                'download_count' => 0,
+            ]);
+
+            for ($i = 0; $i < $validated['quantite']; $i++) {
+                $ticket = Ticket::create([
+                    'evenement_id' => $evenement->id,
+                    'tarif_id' => $tarif->id,
+                    'lot_physique_id' => $lot->id,
+                    'source' => 'physique',
+                    'code_unique' => 'TMP',
+                    'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
+                    'nom_tarif' => $tarif->nom,
+                    'montant' => (float) $tarif->prix,
+                    'quantite' => 1,
+                    'statut_paiement' => 'payé',
+                    'methode_paiement' => 'especes',
+                    'type_paiement' => 'especes',
+                    'transaction_id' => 'PHYS-' . strtoupper(Str::random(8)),
+                    'utilise' => false,
+                    'date_achat' => now(),
+                ]);
+                $ticket->update([
+                    'code_unique' => Ticket::genererCodeSecurise(),
+                ]);
+            }
+
+            Log::create([
+                'type_operation' => 'lot_physique',
+                'ticket_id' => null,
+                'details' => json_encode([
+                    'lot_id' => $lot->id,
+                    'user_id' => $validated['user_id'],
+                    'evenement_id' => $evenement->id,
+                    'quantite' => $validated['quantite'],
+                ]),
+                'ip' => request()->ip(),
+            ]);
+
+            return $lot;
+        });
+
+        return redirect()
+            ->route('superadmin.tickets-physiques.voir', $lot)
+            ->with('success', "Lot « {$lot->nom } » de {$lot->quantite} ticket(s) généré avec succès.");
+    }
+
+    // Détail d'un lot : tickets avec codes et QR
+    public function show(LotPhysique $lot)
+    {
+        $lot->load('evenement', 'user', 'tarif');
+
+        $tickets = $lot->tickets()->orderBy('code_unique')->get();
+
+        $qrs = $tickets->mapWithKeys(fn (Ticket $t) => [
+            $t->id => \App\Services\QrCodeService::generateDataUri($t->code_unique, 120),
+        ]);
+
+        return view('superadmin.lots-physiques.show', compact('lot', 'tickets', 'qrs'));
+    }
+
+    // Transmet le lot à l'organisateur (notification + email)
+    public function transmettre(LotPhysique $lot)
+    {
+        if ($lot->estTransmis) {
+            return back()->with('error', 'Ce lot a déjà été transmis à l\'organisateur.');
+        }
+
+        $lot->update(['statut' => 'transmis', 'transmis_at' => now()]);
+
+        Message::create([
+            'user_id' => $lot->user_id,
+            'objet' => 'Tickets physiques disponibles',
+            'message' => "Bonjour {$lot->user?->nom},\n\nUn lot de tickets physiques est disponible pour votre événement « {$lot->evenement?->titre} ».\n\nLot : {$lot->nom} ({$lot->quantite} tickets)\n\nConnectez-vous à votre espace organisateur, rubrique « Vente physique », pour télécharger la planche de QR codes (3 téléchargements maximum).",
+            'lu' => false,
+        ]);
+
+        try {
+            Mail::to($lot->user->email)->send(new LotPhysiqueTransmis($lot));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Lot physique - Erreur email transmission : ' . $e->getMessage());
+        }
+
+        Log::create([
+            'type_operation' => 'lot_physique_transmis',
+            'ticket_id' => null,
+            'details' => json_encode(['lot_id' => $lot->id, 'user_id' => $lot->user_id]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', "Le lot « {$lot->nom} » a été transmis à l'organisateur.");
+    }
+
+    // Annule un ticket du lot (erreur d'impression, billet perdu…)
+    public function annulerTicket(LotPhysique $lot, Ticket $ticket)
+    {
+        if ($ticket->lot_physique_id !== $lot->id) {
+            return back()->with('error', 'Ce ticket n\'appartient pas à ce lot.');
+        }
+
+        if ($ticket->annule) {
+            return back()->with('error', 'Ce ticket est déjà annulé.');
+        }
+
+        if ($ticket->utilise) {
+            return back()->with('error', 'Impossible d\'annuler un ticket déjà scanné.');
+        }
+
+        $ticket->update(['annule' => true]);
+
+        Log::create([
+            'type_operation' => 'lot_physique_annulation',
+            'ticket_id' => $ticket->id,
+            'details' => json_encode(['lot_id' => $lot->id, 'code' => $ticket->code_unique]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', "Le ticket {$ticket->code_unique} a été annulé et ne sera plus scannable.");
+    }
+
+    // Supprime un lot (seulement s'il n'a pas été transmis)
+    public function destroy(LotPhysique $lot)
+    {
+        if ($lot->estTransmis) {
+            return back()->with('error', 'Un lot transmis ne peut pas être supprimé.');
+        }
+
+        DB::transaction(function () use ($lot) {
+            $lot->tickets()->delete();
+            $lot->delete();
+        });
+
+        Log::create([
+            'type_operation' => 'lot_physique_supprime',
+            'ticket_id' => null,
+            'details' => json_encode(['lot_id' => $lot->id, 'evenement_id' => $lot->evenement_id]),
+            'ip' => request()->ip(),
+        ]);
+
+        return redirect()
+            ->route('superadmin.tickets-physiques')
+            ->with('success', 'Lot supprimé.');
+    }
+}

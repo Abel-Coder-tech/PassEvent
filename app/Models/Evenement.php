@@ -102,6 +102,11 @@ class Evenement extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function lotsPhysiques(): HasMany
+    {
+        return $this->hasMany(LotPhysique::class);
+    }
+
     public function scanAccessCodes(): HasMany
     {
         return $this->hasMany(ScanAccessCode::class);

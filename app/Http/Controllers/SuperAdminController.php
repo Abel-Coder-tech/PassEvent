@@ -876,8 +876,11 @@ class SuperAdminController extends Controller
         $cashRecettes = (clone $ticketsQuery)->whereIn('methode_paiement', ['cash', 'especes'])->sum('montant');
 
         $commissionPct = $user->commissionPourcentage();
-        $commission = $user->statsFinancieres()['commissionTotale'];
+        $statsFinancieres = $user->statsFinancieres();
+        $commission = $statsFinancieres['commissionTotale'];
         $recettesNettes = $totalRecettes - $commission;
+        $physiqueRecettes = $statsFinancieres['physiqueRecettes'];
+        $commissionPhysique = $statsFinancieres['commissionPhysique'];
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
@@ -926,6 +929,7 @@ class SuperAdminController extends Controller
             'agentsScan', 'agentsVente', 'attributions', 'tickets',
             'mobileRecettes', 'cashRecettes', 'commissionPct',
             'commission', 'recettesNettes', 'retirable',
+            'physiqueRecettes', 'commissionPhysique',
             'historique'
         ));
     }

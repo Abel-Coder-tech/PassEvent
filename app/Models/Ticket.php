@@ -38,6 +38,8 @@ class Ticket extends Model
         'date_achat',
         'code_promo_utilise',
         'agent_vente_id',
+        'lot_physique_id',
+        'annule',
     ];
 
     public static function methodePaiementLabel(?string $methode, ?string $type = null): string
@@ -71,6 +73,7 @@ class Ticket extends Model
     {
         return [
             'utilise' => 'boolean',
+            'annule' => 'boolean',
             'date_achat' => 'datetime',
             'montant' => 'decimal:2',
             'quantite' => 'integer',
@@ -90,6 +93,11 @@ class Ticket extends Model
     public function agentVente(): BelongsTo
     {
         return $this->belongsTo(AgentVente::class, 'agent_vente_id');
+    }
+
+    public function lotPhysique(): BelongsTo
+    {
+        return $this->belongsTo(LotPhysique::class, 'lot_physique_id');
     }
 
     public function notifications(): HasMany

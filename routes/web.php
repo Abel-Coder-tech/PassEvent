@@ -23,8 +23,10 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminAuthController;
+use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
 use App\Http\Controllers\Admin\AgentVenteController as AdminAgentVenteController;
+use App\Http\Controllers\Admin\LotPhysiqueController as AdminLotPhysiqueController;
 use App\Http\Controllers\Agent\AuthController as AgentAuthController;
 use App\Http\Controllers\Agent\ScanController as AgentScanController;
 use App\Http\Controllers\AgentVente\AuthController as AgentVenteAuthController;
@@ -130,6 +132,15 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/transactions', [SuperAdminController::class, 'transactions'])->name('transactions');
         Route::get('/tickets', [SuperAdminController::class, 'tickets'])->name('tickets');
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
+        Route::get('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'index'])->name('tickets-physiques');
+        Route::get('/tickets-physiques/creer', [SuperAdminLotPhysiqueController::class, 'create'])->name('tickets-physiques.creer');
+        Route::post('/tickets-physiques/evenements', [SuperAdminLotPhysiqueController::class, 'getEvenements'])->name('tickets-physiques.evenements');
+        Route::post('/tickets-physiques/tarifs', [SuperAdminLotPhysiqueController::class, 'getTarifs'])->name('tickets-physiques.tarifs');
+        Route::post('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'store'])->name('tickets-physiques.store');
+        Route::get('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'show'])->name('tickets-physiques.voir');
+        Route::post('/tickets-physiques/{lot}/transmettre', [SuperAdminLotPhysiqueController::class, 'transmettre'])->name('tickets-physiques.transmettre');
+        Route::post('/tickets-physiques/{lot}/tickets/{ticket}/annuler', [SuperAdminLotPhysiqueController::class, 'annulerTicket'])->name('tickets-physiques.annuler');
+        Route::delete('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'destroy'])->name('tickets-physiques.supprimer');
         Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
@@ -284,6 +295,11 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
             Route::post('/{agentVente}/toggle-actif', [AdminAgentVenteController::class, 'toggleActif'])->name('toggle-actif');
             Route::delete('/{agentVente}', [AdminAgentVenteController::class, 'destroy'])->name('destroy');
             Route::get('/stats/{evenement}', [AdminAgentVenteController::class, 'statsEvenement'])->name('stats-evenement');
+        });
+
+        Route::prefix('lots-physiques')->name('lots-physiques.')->group(function () {
+            Route::get('/', [AdminLotPhysiqueController::class, 'index'])->name('index');
+            Route::get('/{lot}/telecharger', [AdminLotPhysiqueController::class, 'download'])->name('download');
         });
     });
 

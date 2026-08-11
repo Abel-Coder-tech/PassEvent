@@ -1,0 +1,144 @@
+@extends('superadmin.layouts.master')
+
+@section('title', 'Lot ' . $lot->nom . ' - Super Admin')
+@section('page-title', 'Lot : ' . $lot->nom)
+
+@section('content')
+@if (session('success'))
+<div class="alert alert-success py-2 small">{{ session('success') }}</div>
+@endif
+@if (session('error'))
+<div class="alert alert-danger py-2 small">{{ session('error') }}</div>
+@endif
+
+<div class="row g-3 mb-3">
+    <div class="col-md-8">
+        <div class="sa-card">
+            <div class="sa-card-header">
+                <span><i class="bi bi-ticket-perforated-fill me-2" style="color: var(--sa-primary);"></i>{{ $lot->nom }}</span>
+                @if($lot->estTransmis)
+                    <span class="sa-badge sa-badge-success">Transmis le {{ $lot->transmis_at?->format('d/m/Y H:i') }}</span>
+                @else
+                    <span class="sa-badge sa-badge-warning">Genere</span>
+                @endif
+            </div>
+            <div class="sa-card-body">
+                <div class="row text-center">
+                    <div class="col-3">
+                        <div style="font-size:1.4rem;font-weight:800;color:var(--sa-primary);">{{ $lot->quantite }}</div>
+                        <div style="font-size:0.72rem;color:#888;">Tickets</div>
+                    </div>
+                    <div class="col-3">
+                        <div style="font-size:1.4rem;font-weight:800;color:#e74c3c;">{{ $lot->tickets->where('annule', true)->count() }}</div>
+                        <div style="font-size:0.72rem;color:#888;">Annues</div>
+                    </div>
+                    <div class="col-3">
+                        <div style="font-size:1.4rem;font-weight:800;color:#27ae60;">{{ $lot->tickets->where('utilise', true)->where('annule', false)->count() }}</div>
+                        <div style="font-size:0.72rem;color:#888;">Scannes</div>
+                    </div>
+                    <div class="col-3">
+                        <div style="font-size:1.4rem;font-weight:800;color:#7B3FA0;">{{ $lot->download_count }}/3</div>
+                        <div style="font-size:0.72rem;color:#888;">Telechargements</div>
+                    </div>
+                </div>
+                <hr>
+                <div style="font-size:0.85rem;line-height:1.8;">
+                    <div><strong>Organisateur :</strong> {{ $lot->user?->nom }}</div>
+                    <div><strong>Evenement :</strong> {{ $lot->evenement?->titre }}</div>
+                    @if($lot->evenement?->date_event)<div><strong>Date :</strong> {{ $lot->evenement->date_event->isoFormat('D MMM YYYY') }}</div>@endif
+                    <div><strong>Tarif :</strong> {{ $lot->tarif?->nom ?? '---' }} @if($lot->tarif?->prix) ({{ number_format($lot->tarif->prix, 0, ',', ' ') }} FCFA)@endif</div>
+                    <div><strong>Valeur du lot :</strong> {{ number_format($lot->quantite * ($lot->tarif?->prix ?? 0), 0, ',', ' ') }} FCFA</div>
+                </div>
+            </div>
+            <div class="sa-card-body" style="border-top:1px solid #f1f2f6;">
+                <div class="d-flex gap-2 flex-wrap">
+                    @unless($lot->estTransmis)
+                        <form action="{{ route('superadmin.tickets-physiques.transmettre', $lot) }}" method="POST" onsubmit="return confirm('Transmettre ce lot a l\'organisateur ? Il pourra telecharger la planche de QR codes (email + notification).')">
+                            @csrf
+                            <button type="submit" class="sa-btn sa-btn-success"><i class="bi bi-send-fill"></i> Transmettre a l'organisateur</button>
+                        </form>
+                        <form action="{{ route('superadmin.tickets-physiques.supprimer', $lot) }}" method="POST" onsubmit="return confirm('Supprimer ce lot et ses {{ $lot->quantite }} tickets ? Cette action est irreversible.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-trash"></i> Supprimer le lot</button>
+                        </form>
+                    @endunless
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sa-card">
+            <div class="sa-card-header">
+                <span><i class="bi bi-info-circle me-2" style="color: var(--sa-primary);"></i>Rappels</span>
+            </div>
+            <div class="sa-card-body" style="font-size:0.82rem;color:#555;line-height:1.6;">
+                <ul class="mb-0 ps-3">
+                    <li>Annulez un ticket uniquement en cas d'erreur d'impression ou de perte (il ne sera plus scannable).</li>
+                    <li>Les tickets annules sont retires de la commission attendue.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sa-card">
+    <div class="sa-card-header">
+        <span><i class="bi bi-upc-scan me-2" style="color: var(--sa-primary);"></i>Tickets du lot ({{ $lot->tickets->count() }})</span>
+        <button type="button" class="sa-btn sa-btn-sm" style="background:#f1f2f6;border:none;color:#666;" onclick="toggleAllQr()"><i class="bi bi-qr-code"></i> Afficher / masquer les QR</button>
+    </div>
+    <div class="sa-card-body p-0">
+        <div class="table-responsive">
+            <table class="sa-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th class="text-center">QR</th>
+                        <th class="text-end">Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($tickets as $ticket)
+                    <tr>
+                        <td><code style="font-size:0.9rem;">{{ $ticket->code_unique }}</code></td>
+                        <td class="text-center">
+                            <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width:44px;height:44px;" class="ticket-qr">
+                        </td>
+                        <td class="text-end">
+                            @if($ticket->annule)
+                                <span class="sa-badge sa-badge-danger">Annule</span>
+                            @elseif($ticket->utilise)
+                                <span class="sa-badge sa-badge-success">Scanne</span>
+                            @else
+                                <span class="sa-badge sa-badge-secondary">Valide</span>
+                            @endif
+                        </td>
+                        <td class="text-end">
+                            @if(!$ticket->annule && !$ticket->utilise)
+                                <form action="{{ route('superadmin.tickets-physiques.annuler', [$lot, $ticket]) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler le ticket {{ $ticket->code_unique }} ? Il ne sera plus scannable.')">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Annuler le ticket"><i class="bi bi-x-circle"></i> Annuler</button>
+                                </form>
+                            @else
+                                -
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function toggleAllQr() {
+    document.querySelectorAll('.ticket-qr').forEach(function (img) {
+        img.style.display = img.style.display === 'none' ? '' : 'none';
+    });
+}
+</script>
+@endpush

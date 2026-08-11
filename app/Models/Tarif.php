@@ -39,4 +39,9 @@ class Tarif extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
+    public function lotsPhysiques(): HasMany
+    {
+        return $this->hasMany(LotPhysique::class);
+    }
 }

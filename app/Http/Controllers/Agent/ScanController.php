@@ -125,6 +125,11 @@ class ScanController extends Controller
             return response()->json(['success' => false, 'message' => 'Ce ticket n\'a pas été payé.']);
         }
 
+        if ($ticket->annule) { // Ticket annulé (billet physique invalidé)
+            $this->logScan($agent, $request->code, 'invalide', 'Ticket annulé');
+            return response()->json(['success' => false, 'message' => 'Ce ticket a été annulé et n\'est plus valide.']);
+        }
+
         if ($ticket->utilise) { // Ticket déjà scanné
             $this->logScan($agent, $request->code, 'deja_utilise', 'Ticket déjà scanné');
             return response()->json(['success' => false, 'message' => 'Ce ticket a déjà été utilisé.', 'ticket' => [

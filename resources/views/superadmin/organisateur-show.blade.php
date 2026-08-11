@@ -138,6 +138,23 @@
         </div>
     </div>
 
+    @if($physiqueRecettes > 0 || $commissionPhysique > 0)
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
+                <div class="fw-bold" style="color:#7B3FA0;">{{ number_format($physiqueRecettes, 0, ',', ' ') }} F</div>
+                <small class="text-muted">Recettes tickets physiques (guichet)</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
+                <div class="fw-bold" style="color:#e67e22;">{{ number_format($commissionPhysique, 0, ',', ' ') }} F</div>
+                <small class="text-muted">Commission physique attendue</small>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="sa-card mb-4">
         <div class="sa-card-header">
             <span><i class="bi bi-cash-coin me-2" style="color: var(--sa-primary);"></i>Ventes espèces</span>
