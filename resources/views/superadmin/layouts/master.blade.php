@@ -234,6 +234,30 @@
             justify-content: space-between;
         }
 
+        .sa-info-box {
+            background: #f8f7fb;
+            border: 1px solid var(--sa-border);
+            border-radius: 10px;
+            padding: 0.6rem 0.75rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .sa-info-icon {
+            width: 34px; height: 34px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            background: rgba(107,63,160,0.1);
+            color: var(--sa-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+        .sa-info-label { font-size: 0.68rem; color: var(--sa-text-muted); font-weight: 500; }
+        .sa-info-value { font-size: 0.82rem; font-weight: 700; color: var(--sa-text); line-height: 1.25; overflow-wrap: anywhere; }
+
         .kpi-card {
             background: var(--sa-card-bg);
             border-radius: 12px;

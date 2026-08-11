@@ -42,12 +42,63 @@
                     </div>
                 </div>
                 <hr>
-                <div style="font-size:0.85rem;line-height:1.8;">
-                    <div><strong>Organisateur :</strong> {{ $lot->user?->nom }}</div>
-                    <div><strong>Evenement :</strong> {{ $lot->evenement?->titre }}</div>
-                    @if($lot->evenement?->date_event)<div><strong>Date :</strong> {{ $lot->evenement->date_event->isoFormat('D MMM YYYY') }}</div>@endif
-                    <div><strong>Tarif :</strong> {{ $lot->tarif?->nom ?? '---' }} @if($lot->tarif?->prix) ({{ number_format($lot->tarif->prix, 0, ',', ' ') }} FCFA)@endif</div>
-                    <div><strong>Valeur du lot :</strong> {{ number_format($lot->quantite * ($lot->tarif?->prix ?? 0), 0, ',', ' ') }} FCFA</div>
+                <div class="row g-2">
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-person"></i></div>
+                            <div>
+                                <div class="sa-info-label">Organisateur</div>
+                                <div class="sa-info-value">{{ $lot->user?->nom ?? '---' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-envelope"></i></div>
+                            <div>
+                                <div class="sa-info-label">Email</div>
+                                <div class="sa-info-value">{{ $lot->user?->email ?? '---' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-calendar-event"></i></div>
+                            <div>
+                                <div class="sa-info-label">Evenement</div>
+                                <div class="sa-info-value">{{ $lot->evenement?->titre ?? '---' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @if($lot->evenement?->date_event)
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-calendar"></i></div>
+                            <div>
+                                <div class="sa-info-label">Date</div>
+                                <div class="sa-info-value">{{ $lot->evenement->date_event->isoFormat('D MMM YYYY') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-ticket-perforated"></i></div>
+                            <div>
+                                <div class="sa-info-label">Tarif</div>
+                                <div class="sa-info-value">{{ $lot->tarif?->nom ?? '---' }} @if($lot->tarif?->prix)({{ number_format($lot->tarif->prix, 0, ',', ' ') }} FCFA)@endif</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-cash-stack"></i></div>
+                            <div>
+                                <div class="sa-info-label">Valeur du lot</div>
+                                <div class="sa-info-value">{{ number_format($lot->quantite * ($lot->tarif?->prix ?? 0), 0, ',', ' ') }} FCFA</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="sa-card-body" style="border-top:1px solid #f1f2f6;">
