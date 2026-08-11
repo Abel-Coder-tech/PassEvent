@@ -17,6 +17,13 @@
             page-break-inside: avoid;
         }
         .grille td img { width: 108px; height: 108px; }
+        .grille td .code {
+            font-size: 8.5px;
+            font-weight: 700;
+            color: #1d1d1f;
+            letter-spacing: 0.6px;
+            margin-top: 3px;
+        }
 
         .page-break { page-break-after: always; }
         .page-break:last-child { page-break-after: auto; }
@@ -36,6 +43,7 @@
                     @endif
                     <td>
                         <img src="{{ $qrs[$ticket->id] }}" alt="QR">
+                        <div class="code">{{ $ticket->code_unique }}</div>
                     </td>
                 @endforeach
             </tr>
