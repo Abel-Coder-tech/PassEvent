@@ -30,16 +30,19 @@ class LotPhysiqueController extends Controller
             ->whereNotNull('lot_physique_id')
             ->where('statut_paiement', 'payé');
 
+        // Tickets valides uniquement (les annulés n'ont pas de valeur : pas de recette ni de commission)
+        $ticketsPhysiquesValides = (clone $ticketsPhysiques)->where('annule', false);
+
         $nbTickets = (clone $ticketsPhysiques)->count();
         $nbAnnules = (clone $ticketsPhysiques)->where('annule', true)->count();
         $nbScannes = (clone $ticketsPhysiques)->where('utilise', true)->count();
-        $recettesPhysiques = (float) (clone $ticketsPhysiques)->sum('montant');
+        $recettesPhysiques = (float) (clone $ticketsPhysiquesValides)->sum('montant');
 
         // Commission attendue sur le physique (taux effectif par événement)
         $evenements = Evenement::whereIn('id', $evenementIds)->with('user')->get()->keyBy('id');
         $commissionPhysique = 0.0;
         foreach ($evenements as $evenement) {
-            $montant = (clone $ticketsPhysiques)->where('evenement_id', $evenement->id)->sum('montant');
+            $montant = (clone $ticketsPhysiquesValides)->where('evenement_id', $evenement->id)->sum('montant');
             $commissionPhysique += $montant * $evenement->commissionEffective() / 100;
         }
         $commissionPhysique = round($commissionPhysique, 2);

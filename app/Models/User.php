@@ -118,10 +118,11 @@ class User extends Authenticatable
             ->whereNull('lot_physique_id')
             ->get(['evenement_id', 'montant', 'methode_paiement']);
 
-        // Tickets physiques (lots) : comptés à part, commission attendue séparée
+        // Tickets physiques (lots) : comptés à part, commission attendue séparée (tickets annulés exclus)
         $physiques = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->whereNotNull('lot_physique_id')
+            ->where('annule', false)
             ->get(['evenement_id', 'montant', 'methode_paiement']);
 
         $totalTickets = (float) $tickets->sum('montant');
