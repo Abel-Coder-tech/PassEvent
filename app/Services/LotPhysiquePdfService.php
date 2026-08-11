@@ -10,8 +10,10 @@ use Illuminate\Support\Collection;
 
 class LotPhysiquePdfService
 {
-    // Génère le PDF d'une planche de tickets physiques (A4, plusieurs QR par page).
-    public static function generer(LotPhysique $lot, Collection $tickets, int $parPage = 12): DomPdfWrapper
+    public const PAR_PAGE = 36;
+
+    // Génère le PDF d'une planche de tickets physiques (A4 portrait, 6x6 QR de 2,5 cm).
+    public static function generer(LotPhysique $lot, Collection $tickets, int $parPage = self::PAR_PAGE): DomPdfWrapper
     {
         $pages = $tickets->chunk($parPage)->values();
 
@@ -29,7 +31,7 @@ class LotPhysiquePdfService
     }
 
     // Génère un PDF unique regroupant plusieurs lots (chaque lot commence sur une nouvelle page).
-    public static function genererPlusieurs(Collection $lots, int $parPage = 12): DomPdfWrapper
+    public static function genererPlusieurs(Collection $lots, int $parPage = self::PAR_PAGE): DomPdfWrapper
     {
         $groupes = collect();
         $qrsArray = [];
