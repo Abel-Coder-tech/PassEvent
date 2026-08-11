@@ -285,6 +285,70 @@ class LotPhysiqueController extends Controller
         return back()->with('success', "Le ticket {$ticket->code_unique} a été annulé et ne sera plus scannable.");
     }
 
+    // Action en masse sur plusieurs tickets du lot (annuler ou supprimer)
+    public function actionMasse(Request $request, LotPhysique $lot)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:annuler,supprimer',
+            'tickets' => 'required|array|min:1',
+            'tickets.*' => 'integer|exists:ticket,id',
+        ]);
+
+        $tickets = $lot->tickets()
+            ->whereIn('id', $validated['tickets'])
+            ->get();
+
+        if ($tickets->isEmpty()) {
+            return back()->with('error', 'Aucun ticket sélectionné.');
+        }
+
+        $traites = 0;
+        $ignores = 0;
+
+        DB::transaction(function () use ($tickets, $validated, &$traites, &$ignores, $lot) {
+            foreach ($tickets as $ticket) {
+                // Un ticket déjà scanné ne peut ni être annulé ni supprimé
+                if ($ticket->utilise) {
+                    $ignores++;
+                    continue;
+                }
+
+                if ($validated['action'] === 'annuler') {
+                    if ($ticket->annule) {
+                        $ignores++;
+                        continue;
+                    }
+                    $ticket->update(['annule' => true]);
+
+                    Log::create([
+                        'type_operation' => 'lot_physique_annulation',
+                        'ticket_id' => $ticket->id,
+                        'details' => json_encode(['lot_id' => $lot->id, 'code' => $ticket->code_unique, 'action' => $validated['action']]),
+                        'ip' => request()->ip(),
+                    ]);
+                } else {
+                    Log::create([
+                        'type_operation' => 'lot_physique_ticket_supprime',
+                        'ticket_id' => $ticket->id,
+                        'details' => json_encode(['lot_id' => $lot->id, 'code' => $ticket->code_unique, 'action' => $validated['action']]),
+                        'ip' => request()->ip(),
+                    ]);
+                    $ticket->delete();
+                }
+
+                $traites++;
+            }
+        });
+
+        $libelle = $validated['action'] === 'annuler' ? 'annulé' : 'supprimé';
+        $message = "{$traites} ticket(s) {$libelle}(s).";
+        if ($ignores > 0) {
+            $message .= " {$ignores} ticket(s) ignoré(s) (déjà scanné(s) ou déjà traité(s)).";
+        }
+
+        return back()->with($traites > 0 ? 'success' : 'error', $message);
+    }
+
     // Supprime un lot (seulement s'il n'a pas été transmis)
     public function destroy(LotPhysique $lot)
     {

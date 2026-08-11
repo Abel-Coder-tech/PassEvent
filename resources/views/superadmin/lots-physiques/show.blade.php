@@ -138,50 +138,76 @@
 <div class="sa-card">
     <div class="sa-card-header">
         <span><i class="bi bi-upc-scan me-2" style="color: var(--sa-primary);"></i>Tickets du lot ({{ $lot->tickets->count() }})</span>
-        <button type="button" class="sa-btn sa-btn-sm" style="background:#f1f2f6;border:none;color:#666;" onclick="toggleAllQr()"><i class="bi bi-qr-code"></i> Afficher / masquer les QR</button>
+        <div class="d-flex gap-2 align-items-center">
+            <button type="button" class="sa-btn sa-btn-sm" style="background:#f1f2f6;border:none;color:#666;" onclick="toggleAllQr()"><i class="bi bi-qr-code"></i> Afficher / masquer les QR</button>
+        </div>
     </div>
     <div class="sa-card-body p-0">
-        <div class="table-responsive">
-            <table class="sa-table">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th class="text-center">QR</th>
-                        <th class="text-end">Statut</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($tickets as $ticket)
-                    <tr>
-                        <td><code style="font-size:0.9rem;">{{ $ticket->code_unique }}</code></td>
-                        <td class="text-center">
-                            <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width:44px;height:44px;" class="ticket-qr">
-                        </td>
-                        <td class="text-end">
-                            @if($ticket->annule)
-                                <span class="sa-badge sa-badge-danger">Annule</span>
-                            @elseif($ticket->utilise)
-                                <span class="sa-badge sa-badge-success">Scanne</span>
-                            @else
-                                <span class="sa-badge sa-badge-secondary">Valide</span>
-                            @endif
-                        </td>
-                        <td class="text-end">
-                            @if(!$ticket->annule && !$ticket->utilise)
-                                <form action="{{ route('superadmin.tickets-physiques.annuler', [$lot, $ticket]) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler le ticket {{ $ticket->code_unique }} ? Il ne sera plus scannable.')">
-                                    @csrf
-                                    <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Annuler le ticket"><i class="bi bi-x-circle"></i> Annuler</button>
-                                </form>
-                            @else
-                                -
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        <form id="actionMasseForm" method="POST" action="{{ route('superadmin.tickets-physiques.action-masse', $lot) }}">
+            @csrf
+            <input type="hidden" name="action" id="actionMasseValue" value="">
+            <div class="d-flex flex-wrap gap-2 align-items-center px-3 py-2" style="background:#fafafa;border-bottom:1px solid #f1f2f6;">
+                <label class="sa-check-inline d-flex align-items-center gap-2 mb-0">
+                    <input type="checkbox" id="selectAll" class="form-check-input mt-0" style="width:16px;height:16px;">
+                    <span class="small">Tout cocher</span>
+                </label>
+                <span class="small text-muted" id="selectedCount">0 sélectionné(s)</span>
+                <div class="ms-auto d-flex gap-2">
+                    <button type="button" class="sa-btn sa-btn-sm sa-btn-danger" id="btnAnnulerMasse" disabled onclick="submitMasse('annuler')">
+                        <i class="bi bi-x-circle"></i> Annuler la sélection
+                    </button>
+                    <button type="button" class="sa-btn sa-btn-sm sa-btn-danger" id="btnSupprimerMasse" disabled onclick="submitMasse('supprimer')">
+                        <i class="bi bi-trash"></i> Supprimer la sélection
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="sa-table">
+                    <thead>
+                        <tr>
+                            <th style="width:32px;"></th>
+                            <th>Code</th>
+                            <th class="text-center">QR</th>
+                            <th class="text-end">Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($tickets as $ticket)
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="tickets[]" value="{{ $ticket->id }}" class="ticket-check form-check-input mt-0"
+                                    @if($ticket->utilise) disabled @endif>
+                            </td>
+                            <td><code style="font-size:0.9rem;">{{ $ticket->code_unique }}</code></td>
+                            <td class="text-center">
+                                <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width:44px;height:44px;" class="ticket-qr">
+                            </td>
+                            <td class="text-end">
+                                @if($ticket->annule)
+                                    <span class="sa-badge sa-badge-danger">Annule</span>
+                                @elseif($ticket->utilise)
+                                    <span class="sa-badge sa-badge-success">Scanne</span>
+                                @else
+                                    <span class="sa-badge sa-badge-secondary">Valide</span>
+                                @endif
+                            </td>
+                            <td class="text-end">
+                                @if(!$ticket->annule && !$ticket->utilise)
+                                    <form action="{{ route('superadmin.tickets-physiques.annuler', [$lot, $ticket]) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler le ticket {{ $ticket->code_unique }} ? Il ne sera plus scannable.')">
+                                        @csrf
+                                        <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Annuler le ticket"><i class="bi bi-x-circle"></i> Annuler</button>
+                                    </form>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -228,6 +254,41 @@ function toggleAllQr() {
     document.querySelectorAll('.ticket-qr').forEach(function (img) {
         img.style.display = img.style.display === 'none' ? '' : 'none';
     });
+}
+
+var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.ticket-check'));
+var selectAll = document.getElementById('selectAll');
+var countLabel = document.getElementById('selectedCount');
+var btnAnnuler = document.getElementById('btnAnnulerMasse');
+var btnSupprimer = document.getElementById('btnSupprimerMasse');
+
+function updateSelection() {
+    var checked = checkboxes.filter(function (c) { return c.checked; });
+    countLabel.textContent = checked.length + ' sélectionné(s)';
+    var has = checked.length > 0;
+    btnAnnuler.disabled = !has;
+    btnSupprimer.disabled = !has;
+    if (checkboxes.length > 0) {
+        selectAll.checked = checked.length === checkboxes.length;
+        selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+}
+
+selectAll.addEventListener('change', function () {
+    checkboxes.forEach(function (c) { c.checked = selectAll.checked; });
+    updateSelection();
+});
+
+checkboxes.forEach(function (c) { c.addEventListener('change', updateSelection); });
+updateSelection();
+
+function submitMasse(action) {
+    var checked = checkboxes.filter(function (c) { return c.checked; });
+    if (checked.length === 0) return;
+    var libelle = action === 'annuler' ? 'annuler' : 'supprimer';
+    if (!confirm('Voulez-vous vraiment ' + libelle + ' ' + checked.length + ' ticket(s) sélectionné(s) ?')) return;
+    document.getElementById('actionMasseValue').value = action;
+    document.getElementById('actionMasseForm').submit();
 }
 </script>
 @endpush

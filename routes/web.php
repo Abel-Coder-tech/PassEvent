@@ -142,6 +142,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/tickets-physiques/{lot}/planche', [SuperAdminLotPhysiqueController::class, 'telechargerPlanche'])->name('tickets-physiques.planche');
         Route::post('/tickets-physiques/{lot}/transmettre', [SuperAdminLotPhysiqueController::class, 'transmettre'])->name('tickets-physiques.transmettre');
         Route::post('/tickets-physiques/{lot}/tickets/{ticket}/annuler', [SuperAdminLotPhysiqueController::class, 'annulerTicket'])->name('tickets-physiques.annuler');
+        Route::post('/tickets-physiques/{lot}/action-masse', [SuperAdminLotPhysiqueController::class, 'actionMasse'])->name('tickets-physiques.action-masse');
         Route::delete('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'destroy'])->name('tickets-physiques.supprimer');
         Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
