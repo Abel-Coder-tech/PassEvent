@@ -85,7 +85,7 @@
             width: 100%;
             height: 4.16cm;
             background: #ffffff;
-            padding: 0.10cm 0.30cm 0.10cm 0.30cm;
+            padding: 0 0.30cm 0.10cm 0.30cm;
             overflow: hidden;
             z-index: 2;
             box-sizing: border-box;
@@ -95,26 +95,27 @@
         }
 
         /* =========================================================
-           TITRE : TICKET D'ENTRÉE - CORRIGÉ
+           TITRE : TICKET D'ENTRÉE - CORRIGÉ (collé sur les bords)
         ========================================================= */
 
         .ticket-title {
-            width: 100%;
-            height: auto;
-            margin: 0;
+            width: calc(100% + 0.60cm);
+            margin-left: -0.30cm;
+            margin-right: -0.30cm;
+            padding: 0.20cm 0.30cm 0.10cm 0.30cm;
             text-align: center;
-            line-height: 1.2;
-            padding: 0.20cm 0 0.10cm 0;
             font-size: 10pt;
             font-weight: 700;
             color: rgba(57, 59, 61, 0.56);
             letter-spacing: 0.02cm;
             text-transform: uppercase;
             background: rgba(96, 33, 131, 0.05);
+            line-height: 1.2;
+            box-sizing: border-box;
         }
 
         /* =========================================================
-           NOM DE L'ÉVÉNEMENT - CORRIGÉ
+           NOM DE L'ÉVÉNEMENT
         ========================================================= */
 
         .event-name {
