@@ -100,10 +100,7 @@
 
         .ticket-title {
             width: calc(100% + 0.60cm);
-            margin-left: -0.30cm;
-            margin-right: -0.30cm;
             padding: 0.15cm 0.30cm 0.10cm 0.30cm;
-            text-align: center;
             font-size: 10pt;
             font-weight: 700;
             color: rgba(57, 59, 61, 0.56);
@@ -113,8 +110,6 @@
             line-height: 1.2;
             box-sizing: border-box;
             display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         /* =========================================================
