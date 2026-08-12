@@ -17,7 +17,7 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             background: #542680;
             width: 8cm;
             height: 13cm;
@@ -55,7 +55,7 @@
 
         .event-name {
             font-size: 22px;
-            font-weight: 800;
+            font-weight: 700;
             color: #542680;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -83,14 +83,14 @@
         }
         .info-grid .val {
             font-size: 9px;
-            font-weight: 800;
+            font-weight: 700;
             color: #1a1a1a;
             display: block;
         }
 
         .gratuit {
             font-size: 10px;
-            font-weight: 800;
+            font-weight: 700;
             color: #e53935;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -152,7 +152,7 @@
         }
         .code-pass-value {
             font-size: 20px;
-            font-weight: 800;
+            font-weight: 700;
             color: #542680;
             letter-spacing: 3px;
             text-transform: uppercase;
@@ -239,7 +239,7 @@
         @if($ticket->montant > 0)
             <div style="margin-top:4px;">
                 <span class="lbl" style="font-size:7px;color:#aaaaaa;text-transform:uppercase;letter-spacing:0.8px;">Montant</span>
-                <span style="font-size:10px;font-weight:800;color:#1a1a1a;"> {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
+                <span style="font-size:10px;font-weight:700;color:#1a1a1a;"> {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
                 @if($ticket->montant_reduction > 0)
                     <span style="font-size:8px;color:#2E7D4F;font-weight:700;"> (-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA)</span>
                 @endif

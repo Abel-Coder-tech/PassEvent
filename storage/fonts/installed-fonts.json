@@ -1,0 +1,13 @@
+{
+    "montserrat": {
+        "normal": "montserrat_normal_e157b18a79e425eaffb061c56c3b7b7f",
+        "500": "montserrat_normal_e157b18a79e425eaffb061c56c3b7b7f",
+        "600": "montserrat_bold_62f64dba0fa7aebeafb54fb769b7f679",
+        "bold": "montserrat_bold_62f64dba0fa7aebeafb54fb769b7f679",
+        "700": "montserrat_bold_62f64dba0fa7aebeafb54fb769b7f679",
+        "800": "montserrat_bold_62f64dba0fa7aebeafb54fb769b7f679",
+        "900": "montserrat_bold_62f64dba0fa7aebeafb54fb769b7f679",
+        "italic": "montserrat_italic_9670f78513e64daa4ded0c87150d2d40",
+        "bold_italic": "montserrat_bold_italic_46fd3878b04c324c9fa38318c5b2d185"
+    }
+}
