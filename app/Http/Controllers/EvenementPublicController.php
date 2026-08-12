@@ -98,7 +98,7 @@ class EvenementPublicController extends Controller
             'nom_acheteur' => 'required|string|max:255',
             'email_acheteur' => 'required|email|max:255',
             'code_promo' => 'nullable|string|max:50',
-            'quantite' => 'nullable|integer|min:1|max:10',
+            'quantite' => 'nullable|integer|min:1',
         ];
 
         $messages = [
@@ -139,8 +139,8 @@ class EvenementPublicController extends Controller
                 ->firstOrFail();
         }
 
-        // Vérification de la disponibilité des places
-        $quantite = max(1, min(10, (int) ($validated['quantite'] ?? 1))); // Max 10 tickets par achat
+        // Quantité illimitée par personne (plafonnée uniquement par les places restantes)
+        $quantite = max(1, (int) ($validated['quantite'] ?? 1));
 
         $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
         if ($placesRestantes < $quantite) {

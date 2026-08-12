@@ -99,7 +99,7 @@
                                 <label class="show-label">Nombre de places</label>
                                 <div class="show-qty">
                                     <button type="button" id="qtyMinusG">-</button>
-                                    <input type="number" id="quantiteInputG" value="1" min="1" max="5" readonly>
+                                    <input type="number" id="quantiteInputG" value="1" min="1" max="{{ max(1, $placesRestantes) }}" readonly>
                                     <button type="button" id="qtyPlusG">+</button>
                                 </div>
                             </div>
@@ -142,7 +142,7 @@
                             <label class="show-label">Quantité</label>
                             <div class="show-qty">
                                 <button type="button" id="qtyMinus">-</button>
-                                <input type="number" id="quantiteInput" value="1" min="1" max="5" readonly>
+                                <input type="number" id="quantiteInput" value="1" min="1" max="{{ max(1, $placesRestantes) }}" readonly>
                                 <button type="button" id="qtyPlus">+</button>
                             </div>
                         </div>
@@ -721,7 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('qtyPlusG').addEventListener('click', function() {
         const v = parseInt(qty.value);
-        if (v < 5) qty.value = v + 1;
+        if (v < {{ max(1, $placesRestantes) }}) qty.value = v + 1;
     });
 });
 @else
@@ -758,7 +758,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('qtyPlus').addEventListener('click', function() {
         const v = parseInt(quantiteInput.value);
-        if (v < 5) { quantiteInput.value = v + 1; updateTotal(); }
+        if (v < {{ max(1, $placesRestantes) }}) { quantiteInput.value = v + 1; updateTotal(); }
     });
 
     document.querySelectorAll('input[name="tarif_id"]').forEach(radio => {
