@@ -412,15 +412,10 @@
    /* Footer */
     .footer-row {
         width: 100%;
-
         display: flex;
-
         align-items: center;
-
         gap: 2cm;
-
         margin-top: 0.24cm;
-
         padding: 0;
     }
 
