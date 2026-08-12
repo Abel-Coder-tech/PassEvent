@@ -75,7 +75,7 @@
         }
 
         /* =========================================================
-           ZONE HAUTE - CORRIGÉE
+           ZONE HAUTE
         ========================================================= */
 
         .zone-top {
@@ -95,16 +95,15 @@
         }
 
         /* =========================================================
-           TITRE : TICKET D'ENTRÉE - CORRIGÉ (collé sur les bords)
+           TITRE : TICKET D'ENTRÉE - COLLÉ SUR LES BORDS
         ========================================================= */
 
         .ticket-title {
             width: calc(100% + 0.60cm);
             margin-left: -0.30cm;
             margin-right: -0.30cm;
-            padding: 0.20cm 0.30cm 0.10cm 0.30cm;
+            padding: 0.15cm 0 0.10cm 0;
             text-align: center;
-            justify-content: center;
             font-size: 10pt;
             font-weight: 700;
             color: rgba(57, 59, 61, 0.56);
@@ -126,7 +125,7 @@
             color: #602183;
             text-transform: uppercase;
             letter-spacing: 0.015cm;
-            margin: 0.15cm 0 0.15cm 0;
+            margin: 0.12cm 0 0.10cm 0;
             line-height: 1.1;
             white-space: nowrap;
             overflow: hidden;
@@ -147,9 +146,21 @@
 
         .info-grid td {
             width: 50%;
-            padding: 0;
+            padding: 0.03cm 0.05cm;
             vertical-align: top;
             overflow: hidden;
+        }
+
+        /* Colonne de gauche : alignée à gauche */
+        .info-grid td:first-child {
+            text-align: left;
+            padding-right: 0.10cm;
+        }
+
+        /* Colonne de droite : alignée à droite */
+        .info-grid td:last-child {
+            text-align: right;
+            padding-left: 0.10cm;
         }
 
         /* =========================================================
@@ -163,7 +174,7 @@
             color: #767683;
             text-transform: uppercase;
             letter-spacing: 0.02cm;
-            margin-bottom: 0.12cm;
+            margin-bottom: 0.05cm;
             line-height: 1.1;
         }
 
@@ -193,7 +204,7 @@
             color: #e53935;
             text-transform: uppercase;
             letter-spacing: 0.035cm;
-            margin: 0.015cm 0;
+            margin: 0.02cm 0;
             line-height: 1.1;
         }
 
@@ -240,7 +251,6 @@
             pointer-events: none;
         }
 
-        /* Ligne en pointillés */
         .separator-line {
             position: absolute;
             top: 0;
@@ -250,7 +260,6 @@
             border-top: 2px dashed rgba(92, 57, 121, 0.8);
         }
 
-        /* Cercle gauche */
         .sep-circle-left {
             position: absolute;
             left: -0.14cm;
@@ -262,7 +271,6 @@
             border-radius: 50%;
         }
 
-        /* Cercle droit */
         .sep-circle-right {
             position: absolute;
             right: -0.14cm;
@@ -290,19 +298,15 @@
             z-index: 1;
         }
 
-        /* =========================================================
-            CONTENEUR CENTRE : CODE PASS + QR
-        ========================================================= */
-
         .zone-bottom-center {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.12cm;
+            gap: 0.10cm;
         }
 
         /* =========================================================
-            CODE UNIQUE / PAX-XXXXXX - CORRIGÉ
+           CODE UNIQUE / PAX-XXXXXX
         ========================================================= */
 
         .code-pass-wrap {
@@ -353,7 +357,7 @@
             color: #767683;
             letter-spacing: 0.02cm;
             text-transform: uppercase;
-            margin-top: 0.06cm;
+            margin-top: 0.04cm;
             line-height: 1.1;
         }
 
@@ -365,7 +369,7 @@
             position: relative;
             width: 6.23cm;
             height: 0.82cm;
-            margin: 0.12cm 0 0 0.30cm;
+            margin: 0.10cm 0 0 0.30cm;
             padding: 0;
         }
 
@@ -402,10 +406,6 @@
             page-break-inside: avoid;
             break-inside: avoid;
         }
-
-        /* =========================================================
-           IMPRESSION
-        ========================================================= */
 
         @media print {
             html,
@@ -445,11 +445,13 @@
 
             <table class="info-grid" cellpadding="0" cellspacing="0">
                 <tr>
-                    <td style="text-align: left;">
+                    <td>
                         <span class="lbl">Tarif</span>
                         <span class="val">{{ strtoupper($ticket->nom_tarif ?? '—') }}</span>
+                        <span class="lbl" style="margin-top:0.05cm;">ID</span>
+                        <span class="val" style="font-size:8px;">{{ $ticket->transaction_id ?? '---' }}</span>
                     </td>
-                    <td style="text-align: right;">
+                    <td>
                         <span class="lbl">Date et heure</span>
                         <span class="val">
                             {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
@@ -457,22 +459,14 @@
                                 - {{ $ticket->evenement->date_event->format('H\hi') }}
                             @endif
                         </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="text-align: left;">
-                        <span class="lbl">ID</span>
-                        <span class="val" style="font-size:8px;">{{ $ticket->transaction_id ?? '---' }}</span>
-                    </td>
-                    <td style="text-align: right;">
-                        <span class="lbl">Lieu</span>
+                        <span class="lbl" style="margin-top:0.05cm;">Lieu</span>
                         <span class="val">{{ $ticket->evenement?->lieu ?? '---' }}</span>
                     </td>
                 </tr>
             </table>
 
             @if($ticket->montant > 0)
-                <div style="margin-top:2px;">
+                <div style="margin-top:0.05cm;">
                     <span class="lbl" style="font-size:7px;color:#aaaaaa;text-transform:uppercase;letter-spacing:0.8px;">Montant</span>
                     <span style="font-size:10px;font-weight:800;color:#1a1a1a;"> {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
                     @if($ticket->montant_reduction > 0)
