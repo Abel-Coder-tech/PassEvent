@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>{{ $textes['billet'] ?? 'Billet' }} - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
 <style>
-   
+<style>
+    /* =========================================================
+       CONFIGURATION PDF
+    ========================================================= */
 
     @page {
         margin: 0;
@@ -39,37 +42,24 @@
 
         overflow: hidden;
     }
-
-
-    
-
+    /* =========================================================
+       TICKET GLOBAL
+    ========================================================= */
     .ticket {
         position: relative;
-
         width: 8cm;
         height: 13cm;
-
         margin: 0;
         padding: 0;
-
-        background: #ffffff;
-
+        background: #542680;
         overflow: hidden;
-
         page-break-inside: avoid;
         break-inside: avoid;
         page-break-after: avoid;
     }
-
-
     /* =========================================================
        CONTENEUR BLANC
-       
-       Format intérieur :
-       largeur  = 6.83 cm
-       hauteur  = 11.62 cm
     ========================================================= */
-
     .ticket-inner {
         position: absolute;
         top: 0.69cm;
@@ -78,64 +68,39 @@
         height: 11.62cm;
         background: #ffffff;
         border-radius: 0.5cm;
-
         overflow: hidden;
-
         margin: 0;
         padding: 0;
-
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
-
-    /* =========================================================
-       ZONE SUPÉRIEURE
-    ========================================================= */
-
     .zone-top {
         position: absolute;
-
         top: 0;
         left: 0;
-
         width: 100%;
         height: 4.16cm;
-
         background: #ffffff;
-
         padding: 0.20cm 0.30cm 0.10cm;
-
         overflow: hidden;
-
         z-index: 2;
     }
-
-
     /* =========================================================
        TITRE : TICKET D'ENTRÉE
     ========================================================= */
-
     .ticket-title {
         width: 100%;
-
         text-align: center;
-
         font-size: 0.25cm;
         font-weight: 700;
-
         color: #542680;
-
         letter-spacing: 0.08cm;
-
         text-transform: uppercase;
-
         padding: 0.12cm 0;
-
         background: #eeeeee;
+        line-height: 1.1;
     }
-
-
     /* =========================================================
        NOM DE L'ÉVÉNEMENT
     ========================================================= */
@@ -144,6 +109,7 @@
         width: 100%;
 
         font-size: 0.64cm;
+
         font-weight: 800;
 
         color: #542680;
@@ -157,7 +123,9 @@
         line-height: 1.02;
 
         white-space: nowrap;
+
         overflow: hidden;
+
         text-overflow: ellipsis;
     }
 
@@ -190,11 +158,6 @@
 
     /* =========================================================
        LABELS
-       
-       TARIF
-       DATE ET HEURE
-       ID
-       LIEU
     ========================================================= */
 
     .info-grid .lbl {
@@ -234,7 +197,9 @@
         max-width: 100%;
 
         overflow: hidden;
+
         text-overflow: ellipsis;
+
         white-space: nowrap;
     }
 
@@ -339,6 +304,7 @@
 
     .zone-bottom {
         position: absolute;
+
         top: 4.16cm;
         left: 0;
 
@@ -429,20 +395,21 @@
     ========================================================= */
 
     .qr-label {
-        font-size: 0.15cm;
+        font-size: 0.24cm;
+
         font-weight: 700;
+
         color: #7d7d7d;
-        letter-spacing: 0.045cm;
+
+        letter-spacing: 0.035cm;
+
         text-transform: uppercase;
-        margin-top: 0.08cm;
+
+        margin-top: 0.12cm;
+
         line-height: 1.1;
     }
-
-
-    /* =========================================================
-       FOOTER
-    ========================================================= */
-
+   /* Footer */
     .footer-row {
         width: 100%;
 
@@ -450,33 +417,29 @@
 
         align-items: center;
 
-        gap: 0.20cm;
+        gap: 2cm;
 
-        justify-content: flex-start;
-
-        margin-top: 0.16cm;
+        margin-top: 0.24cm;
 
         padding: 0;
     }
 
 
-    /* Logo */
-
-    .footer-row img {
-        height: 0.22cm;
-
-        width: auto;
-
-        display: block;
-    }
-
-
     /* =========================================================
-        TEXTE "MERCI D'UTILISER PAXEVENT"
+       LOGO
     ========================================================= */
 
+    .footer-row img {
+        height: 1cm;
+        width: auto;
+        display: block;
+        flex-shrink: 0;
+    }
+    /* =========================================================
+       TEXTE FOOTER
+    ========================================================= */
     .footer-merci {
-        font-size: 0.20cm;
+        font-size: 0.24cm;
 
         font-weight: 700;
 
@@ -487,11 +450,13 @@
         white-space: nowrap;
 
         line-height: 1.1;
+
+        flex: 1;
     }
 
 
     /* =========================================================
-       CAS OÙ LE BILLET EST PAYANT
+       MONTANT
     ========================================================= */
 
     .montant-block {
@@ -539,10 +504,17 @@
     .zone-bottom,
     .separator {
         page-break-inside: avoid;
+
         break-inside: avoid;
     }
 
+
+    /* =========================================================
+       IMPRESSION
+    ========================================================= */
+
     @media print {
+
         html,
         body {
             width: 8cm;
@@ -561,7 +533,9 @@
             height: 13cm;
 
             page-break-after: avoid;
+
             page-break-before: avoid;
+
             page-break-inside: avoid;
         }
     }
