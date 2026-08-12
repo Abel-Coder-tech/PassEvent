@@ -99,8 +99,11 @@
         ========================================================= */
 
         .ticket-title {
-            width: calc(100% + 0.60cm);
+            width: 7.43cm;           /* largeur de .zone-top (6.83cm intérieur ticket-inner) + 0.60cm de débordement */
+            margin-left: -0.30cm;
+            margin-right: -0.30cm;
             padding: 0.15cm 0.30cm 0.10cm 0.30cm;
+            text-align: center;
             font-size: 10pt;
             font-weight: 700;
             color: rgba(57, 59, 61, 0.56);
@@ -109,7 +112,6 @@
             background: rgba(96, 33, 131, 0.05);
             line-height: 1.2;
             box-sizing: border-box;
-            display: flex;
         }
 
         /* =========================================================
@@ -437,7 +439,7 @@
 
         {{-- ZONE HAUTE --}}
         <div class="zone-top">
-            <div class="ticket-title text-center">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
+            <div class="ticket-title">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
 
             <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
 
