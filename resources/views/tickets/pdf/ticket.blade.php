@@ -3,222 +3,599 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $textes['billet'] ?? 'Billet' }} - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
-    <style>
-        @page {
-            margin: 0;
-            padding: 0;
-            size: 8cm 13cm;
-        }
-        html, body {
-            width: 8cm;
-            height: 13cm;
-            margin: 0;
-            padding: 0;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+<style>
+    /* =========================================================
+       CONFIGURATION PDF
+    ========================================================= */
+
+    @page {
+        margin: 0;
+        padding: 0;
+        size: 8cm 13cm;
+    }
+
+    html,
+    body {
+        width: 8cm;
+        height: 13cm;
+        margin: 0;
+        padding: 0;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'DejaVu Sans', sans-serif;
+
+        width: 8cm;
+        height: 13cm;
+
+        margin: 0;
+        padding: 0;
+
+        background: #542680;
+
+        overflow: hidden;
+    }
+
+
+    /* =========================================================
+       TICKET GLOBAL
+    ========================================================= */
+
+    .ticket {
+        position: relative;
+
+        width: 8cm;
+        height: 13cm;
+
+        margin: 0;
+        padding: 0;
+
+        background: #542680;
+
+        overflow: hidden;
+
+        page-break-inside: avoid;
+        break-inside: avoid;
+        page-break-after: avoid;
+    }
+
+
+    /* =========================================================
+       CONTENEUR BLANC
+       
+       Format intérieur :
+       largeur  = 6.83 cm
+       hauteur  = 11.62 cm
+    ========================================================= */
+
+    .ticket-inner {
+        position: absolute;
+
+        top: 0.69cm;
+        left: 0.585cm;
+
+        width: 6.83cm;
+        height: 11.62cm;
+
+        background: #f2f2f2;
+
+        border-radius: 0.5cm;
+
+        overflow: hidden;
+
+        margin: 0;
+        padding: 0;
+
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+
+    /* =========================================================
+       ZONE SUPÉRIEURE
+    ========================================================= */
+
+    .zone-top {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 4.16cm;
+
+        background: #f2f2f2;
+
+        padding: 0.20cm 0.30cm 0.10cm;
+
+        overflow: hidden;
+
+        z-index: 2;
+    }
+
+
+    /* =========================================================
+       TITRE : TICKET D'ENTRÉE
+    ========================================================= */
+
+    .ticket-title {
+        width: 100%;
+
+        text-align: center;
+
+        font-size: 0.25cm;
+        font-weight: 700;
+
+        color: #999999;
+
+        letter-spacing: 0.08cm;
+
+        text-transform: uppercase;
+
+        padding-bottom: 0.10cm;
+
+        margin-bottom: 0.12cm;
+
+        border-bottom: 1px solid #e7e7e7;
+
+        line-height: 1.1;
+    }
+
+
+    /* =========================================================
+       NOM DE L'ÉVÉNEMENT
+    ========================================================= */
+
+    .event-name {
+        width: 100%;
+
+        font-size: 0.64cm;
+        font-weight: 800;
+
+        color: #542680;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.015cm;
+
+        margin-bottom: 0.12cm;
+
+        line-height: 1.02;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    /* =========================================================
+       GRILLE DES INFORMATIONS
+    ========================================================= */
+
+    .info-grid {
+        width: 100%;
+
+        border-collapse: collapse;
+
+        margin: 0;
+        padding: 0;
+
+        table-layout: fixed;
+    }
+
+    .info-grid td {
+        width: 50%;
+
+        padding: 0.02cm 0;
+
+        vertical-align: top;
+
+        overflow: hidden;
+    }
+
+
+    /* =========================================================
+       LABELS
+       
+       TARIF
+       DATE ET HEURE
+       ID
+       LIEU
+    ========================================================= */
+
+    .info-grid .lbl {
+        display: block;
+
+        font-size: 0.17cm;
+
+        font-weight: 600;
+
+        color: #858591;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.02cm;
+
+        margin-bottom: 0.03cm;
+
+        line-height: 1.1;
+    }
+
+
+    /* =========================================================
+       VALEURS
+    ========================================================= */
+
+    .info-grid .val {
+        display: block;
+
+        font-size: 0.20cm;
+
+        font-weight: 800;
+
+        color: #333333;
+
+        line-height: 1.15;
+
+        max-width: 100%;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       ENTRÉE GRATUITE
+    ========================================================= */
+
+    .gratuit {
+        font-size: 0.24cm;
+
+        font-weight: 800;
+
+        color: #e53935;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.035cm;
+
+        margin-top: 0.08cm;
+
+        line-height: 1.1;
+    }
+
+
+    /* =========================================================
+       SÉPARATEUR
+    ========================================================= */
+
+    .separator {
+        position: absolute;
+
+        top: 4.16cm;
+        left: 0;
+
+        width: 100%;
+        height: 0;
+
+        z-index: 20;
+
+        pointer-events: none;
+    }
+
+
+    /* Ligne en pointillés */
+
+    .separator-line {
+        position: absolute;
+
+        top: 0;
+
+        left: 0.22cm;
+        right: 0.22cm;
+
+        height: 0;
+
+        border-top: 2px dashed rgba(92, 57, 121, 0.8);
+    }
+
+
+    /* Cercle gauche */
+
+    .sep-circle-left {
+        position: absolute;
+
+        left: -0.14cm;
+        top: 0;
+
+        width: 0.28cm;
+        height: 0.28cm;
+
+        transform: translateY(-50%);
+
+        background: #542680;
+
+        border-radius: 50%;
+    }
+
+
+    /* Cercle droit */
+
+    .sep-circle-right {
+        position: absolute;
+
+        right: -0.14cm;
+        top: 0;
+
+        width: 0.28cm;
+        height: 0.28cm;
+
+        transform: translateY(-50%);
+
+        background: #542680;
+
+        border-radius: 50%;
+    }
+
+
+    /* =========================================================
+       ZONE INFÉRIEURE
+       
+       IMPORTANT :
+       On ne fait PAS de flex ici.
+       
+       La zone commence exactement à 4.16 cm.
+    ========================================================= */
+
+    .zone-bottom {
+        position: absolute;
+
+        top: 4.16cm;
+        left: 0;
+
+        width: 100%;
+        height: 7.46cm;
+
+        background: #f2f2f2;
+
+        padding: 0.18cm 0.30cm 0.12cm;
+
+        overflow: hidden;
+
+        z-index: 1;
+    }
+
+
+    /* =========================================================
+       CODE UNIQUE / PAX-XXXXXX
+    ========================================================= */
+
+    .code-pass-wrap {
+        width: 100%;
+
+        background: rgba(0, 0, 0, 0.04);
+
+        border-radius: 0.12cm;
+
+        padding: 0.08cm 0.22cm;
+
+        text-align: center;
+
+        margin: 0;
+    }
+
+
+    .code-pass-value {
+        font-size: 0.58cm;
+
+        font-weight: 800;
+
+        color: #542680;
+
+        letter-spacing: 0.07cm;
+
+        text-transform: uppercase;
+
+        line-height: 1.1;
+
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       BLOC QR CODE
+    ========================================================= */
+
+    .qr-block {
+        width: 100%;
+
+        text-align: center;
+
+        margin-top: 0.16cm;
+
+        padding: 0;
+    }
+
+
+    /* QR CODE */
+
+    .qr-block img {
+        display: block;
+
+        width: 3.70cm;
+        height: 3.70cm;
+
+        margin: 0 auto;
+
+        padding: 0;
+    }
+
+
+    /* =========================================================
+       TEXTE SOUS LE QR CODE
+    ========================================================= */
+
+    .qr-label {
+        font-size: 0.15cm;
+
+        font-weight: 700;
+
+        color: #7d7d7d;
+
+        letter-spacing: 0.045cm;
+
+        text-transform: uppercase;
+
+        margin-top: 0.08cm;
+
+        line-height: 1.1;
+    }
+
+
+    /* =========================================================
+       FOOTER
+    ========================================================= */
+
+    .footer-row {
+        width: 100%;
+
+        display: table;
+
+        table-layout: fixed;
+
+        margin-top: 0.16cm;
+
+        padding: 0;
+    }
+
+
+    .footer-row td {
+        vertical-align: middle;
+
+        padding: 0;
+    }
+
+
+    /* Cellule logo */
+
+    .footer-row td:first-child {
+        width: 36px;
+    }
+
+
+    /* Logo */
+
+    .footer-row img {
+        height: 22px;
+
+        width: auto;
+
+        display: block;
+    }
+
+
+    /* =========================================================
+       TEXTE "MERCI D'UTILISER PAXEVENT"
+    ========================================================= */
+
+    .footer-merci {
+        font-size: 0.20cm;
+
+        font-weight: 700;
+
+        color: #333333;
+
+        text-align: right;
+
+        white-space: nowrap;
+
+        line-height: 1.1;
+    }
+
+
+    /* =========================================================
+       CAS OÙ LE BILLET EST PAYANT
+    ========================================================= */
+
+    .montant-block {
+        margin-top: 0.08cm;
+    }
+
+    .montant-label {
+        display: inline-block;
+
+        font-size: 0.17cm;
+
+        font-weight: 600;
+
+        color: #aaaaaa;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.02cm;
+    }
+
+    .montant-value {
+        font-size: 0.22cm;
+
+        font-weight: 800;
+
+        color: #1a1a1a;
+    }
+
+    .montant-reduction {
+        font-size: 0.17cm;
+
+        color: #2E7D4F;
+
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+       COMPATIBILITÉ IMPRESSION / PDF
+    ========================================================= */
+
+    .ticket,
+    .ticket-inner,
+    .zone-top,
+    .zone-bottom,
+    .separator {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    @media print {
+        html,
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            background: #542680;
             width: 8cm;
             height: 13cm;
-            overflow: hidden;
+
             margin: 0;
             padding: 0;
         }
+
+        body {
+            overflow: hidden;
+        }
+
         .ticket {
             width: 8cm;
-            background: #542680;
-            box-sizing: border-box;
+            height: 13cm;
+
+            page-break-after: avoid;
+            page-break-before: avoid;
             page-break-inside: avoid;
-            break-inside: avoid;
         }
-        .ticket-inner {
-            width: calc(100% - 1.17cm);
-            height: calc(100% - 1.38cm);
-            margin: 0.69cm 0.585cm;
-            background: #f2f2f2;
-            border-radius: 0.5cm;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-
-        /* ===== ZONE HAUTE ===== */
-        .zone-top {
-            background: #f2f2f2;
-            padding: 0.2cm 0.3cm 0.12cm;
-            width: 100%;
-            height: 4.16cm;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        .ticket-title {
-            text-align: center;
-            font-size: 0.25cm; /* reduced */
-            font-weight: 700;
-            color: #b7b7b7;
-            letter-spacing: 0.08cm;
-            text-transform: uppercase;
-            padding-bottom: 0.1cm;
-            border-bottom: 1px solid #e7e7e7;
-            margin-bottom: 0.12cm;
-        }
-
-        .event-name {
-            font-size: 0.64cm; /* reduced */
-            font-weight: 800;
-            color: #542680;
-            text-transform: uppercase;
-            letter-spacing: 0.015cm;
-            margin-bottom: 0.12cm;
-            line-height: 1.02;
-        }
-
-        .info-grid {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 0.08cm;
-        }
-        .info-grid td {
-            padding: 0.02cm 0;
-            vertical-align: top;
-            width: 50%;
-        }
-        .info-grid .lbl {
-            font-size: 0.17cm;
-            color: #aaaaaa;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.02cm;
-            display: block;
-            margin-bottom: 0.03cm;
-        }
-        .info-grid .val {
-            font-size: 0.20cm; /* reduced */
-            font-weight: 800;
-            color: #1a1a1a;
-            display: block;
-            line-height: 1.15;
-        }
-
-        .gratuit {
-            font-size: 0.24cm; /* reduced */
-            font-weight: 800;
-            color: #e53935;
-            text-transform: uppercase;
-            letter-spacing: 0.035cm;
-            margin-top: 0.08cm;
-        }
-
-        /* ===== SÉPARATEUR ===== */
-        .separator {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 4.16cm;
-            /* ensure separator aligns with adjusted inner height */
-            height: 0;
-            display: block;
-            pointer-events: none;
-        }
-        .separator-line {
-            position: absolute;
-            left: 0.22cm;
-            right: 0.22cm;
-            top: 0;
-            border-top: 2px dashed rgba(92, 57, 121, 0.8);
-        }
-        .sep-circle-left {
-            position: absolute;
-            left: -0.14cm;
-            top: 0;
-            transform: translateY(-50%);
-            width: 0.28cm;
-            height: 0.28cm;
-            background: #542680;
-            border-radius: 50%;
-        }
-        .sep-circle-right {
-            position: absolute;
-            right: -0.14cm;
-            top: 0;
-            transform: translateY(-50%);
-            width: 0.28cm;
-            height: 0.28cm;
-            background: #542680;
-            border-radius: 50%;
-        }
-
-        /* ===== ZONE BASSE ===== */
-        .zone-bottom {
-            background: #f2f2f2;
-            padding: 0.18cm 0.3cm 0.12cm;
-            width: 100%;
-            /* bottom zone height = 11.62 - 4.16 = 7.46 */
-            height: 6.86cm;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .code-pass-wrap {
-            background: rgba(0,0,0,0.04);
-            border-radius: 0.12cm;
-            padding: 0.08cm 0.22cm;
-            text-align: center;
-            width: 100%;
-        }
-        .code-pass-value {
-            font-size: 0.58cm; /* reduced */
-            font-weight: 800;
-            color: #542680;
-            letter-spacing: 0.07cm;
-            text-transform: uppercase;
-        }
-
-        .qr-block {
-            text-align: center;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .qr-block img {
-            width: 2.6cm; /* reduced */
-            height: 2.6cm; /* reduced */
-            display: block;
-        }
-        .qr-label {
-            font-size: 0.15cm; /* reduced */
-            font-weight: 700;
-            color: #7d7d7d;
-            letter-spacing: 0.045cm;
-            text-transform: uppercase;
-            margin-top: 0.08cm;
-        }
-
-        .footer-row {
-            width: 100%;
-            display: table;
-            margin-top: 0.08cm;
-        }
-        .footer-row td {
-            vertical-align: middle;
-        }
-        .footer-merci {
-            font-size: 0.2cm;
-            font-weight: 700;
-            color: #1a1a1a;
-            text-align: right;
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
 
