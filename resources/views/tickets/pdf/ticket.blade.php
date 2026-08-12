@@ -40,15 +40,19 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         /* ===== ZONE HAUTE ===== */
         .zone-top {
             background: #f2f2f2;
             padding: 0.2cm 0.3cm 0.12cm;
-            flex: 0 0 4.16cm;
             width: 100%;
-            min-height: 4.16cm;
+            height: 4.16cm;
+            box-sizing: border-box;
+            position: relative;
         }
 
         .ticket-title {
@@ -111,22 +115,25 @@
 
         /* ===== SÉPARATEUR ===== */
         .separator {
-            position: relative;
-            height: 0.16cm;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            background: #f2f2f2;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 4.16cm;
+            height: 0;
+            display: block;
+            pointer-events: none;
         }
         .separator-line {
-            width: 100%;
+            position: absolute;
+            left: 0.22cm;
+            right: 0.22cm;
+            top: 0;
             border-top: 2px dashed rgba(92, 57, 121, 0.8);
-            margin: 0 0.16cm;
         }
         .sep-circle-left {
             position: absolute;
-            left: -0.1cm;
-            top: 50%;
+            left: -0.14cm;
+            top: 0;
             transform: translateY(-50%);
             width: 0.28cm;
             height: 0.28cm;
@@ -135,8 +142,8 @@
         }
         .sep-circle-right {
             position: absolute;
-            right: -0.1cm;
-            top: 50%;
+            right: -0.14cm;
+            top: 0;
             transform: translateY(-50%);
             width: 0.28cm;
             height: 0.28cm;
@@ -148,9 +155,9 @@
         .zone-bottom {
             background: #f2f2f2;
             padding: 0.18cm 0.3cm 0.12cm;
-            flex: 0 0 7.46cm;
             width: 100%;
-            min-height: 7.46cm;
+            height: 7.46cm;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
