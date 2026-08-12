@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <title>{{ $textes['billet'] ?? 'Billet' }} - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
 <style>
-    /* =========================================================
-       CONFIGURATION PDF
-    ========================================================= */
+   
 
     @page {
         margin: 0;
@@ -29,7 +27,7 @@
     }
 
     body {
-        font-family: 'DejaVu Sans', sans-serif;
+        font-family: 'Montserrat', sans-serif;
 
         width: 8cm;
         height: 13cm;
@@ -43,9 +41,7 @@
     }
 
 
-    /* =========================================================
-       TICKET GLOBAL
-    ========================================================= */
+    
 
     .ticket {
         position: relative;
@@ -56,7 +52,7 @@
         margin: 0;
         padding: 0;
 
-        background: #542680;
+        background: #ffffff;
 
         overflow: hidden;
 
@@ -76,15 +72,11 @@
 
     .ticket-inner {
         position: absolute;
-
         top: 0.69cm;
         left: 0.585cm;
-
         width: 6.83cm;
         height: 11.62cm;
-
-        background: #f2f2f2;
-
+        background: #ffffff;
         border-radius: 0.5cm;
 
         overflow: hidden;
@@ -110,7 +102,7 @@
         width: 100%;
         height: 4.16cm;
 
-        background: #f2f2f2;
+        background: #ffffff;
 
         padding: 0.20cm 0.30cm 0.10cm;
 
@@ -132,19 +124,15 @@
         font-size: 0.25cm;
         font-weight: 700;
 
-        color: #999999;
+        color: #542680;
 
         letter-spacing: 0.08cm;
 
         text-transform: uppercase;
 
-        padding-bottom: 0.10cm;
+        padding: 0.12cm 0;
 
-        margin-bottom: 0.12cm;
-
-        border-bottom: 1px solid #e7e7e7;
-
-        line-height: 1.1;
+        background: #eeeeee;
     }
 
 
@@ -347,23 +335,17 @@
 
     /* =========================================================
        ZONE INFÉRIEURE
-       
-       IMPORTANT :
-       On ne fait PAS de flex ici.
-       
-       La zone commence exactement à 4.16 cm.
     ========================================================= */
 
     .zone-bottom {
         position: absolute;
-
         top: 4.16cm;
         left: 0;
 
         width: 100%;
         height: 7.46cm;
 
-        background: #f2f2f2;
+        background: #ffffff;
 
         padding: 0.18cm 0.30cm 0.12cm;
 
@@ -378,17 +360,17 @@
     ========================================================= */
 
     .code-pass-wrap {
-        width: 100%;
+        width: 4.89cm;
 
-        background: rgba(0, 0, 0, 0.04);
+        background: #eeeeee;
 
         border-radius: 0.12cm;
 
-        padding: 0.08cm 0.22cm;
+        padding: 0.08cm 0;
 
         text-align: center;
 
-        margin: 0;
+        margin: 0 auto;
     }
 
 
@@ -406,6 +388,8 @@
         line-height: 1.1;
 
         white-space: nowrap;
+
+        padding: 0 0.22cm;
     }
 
 
@@ -421,6 +405,8 @@
         margin-top: 0.16cm;
 
         padding: 0;
+
+        background: #ffffff;
     }
 
 
@@ -429,8 +415,8 @@
     .qr-block img {
         display: block;
 
-        width: 3.70cm;
-        height: 3.70cm;
+        width: 4.89cm;
+        height: 4.89cm;
 
         margin: 0 auto;
 
@@ -444,17 +430,11 @@
 
     .qr-label {
         font-size: 0.15cm;
-
         font-weight: 700;
-
         color: #7d7d7d;
-
         letter-spacing: 0.045cm;
-
         text-transform: uppercase;
-
         margin-top: 0.08cm;
-
         line-height: 1.1;
     }
 
@@ -466,9 +446,13 @@
     .footer-row {
         width: 100%;
 
-        display: table;
+        display: flex;
 
-        table-layout: fixed;
+        align-items: center;
+
+        gap: 0.20cm;
+
+        justify-content: flex-start;
 
         margin-top: 0.16cm;
 
@@ -476,24 +460,10 @@
     }
 
 
-    .footer-row td {
-        vertical-align: middle;
-
-        padding: 0;
-    }
-
-
-    /* Cellule logo */
-
-    .footer-row td:first-child {
-        width: 36px;
-    }
-
-
     /* Logo */
 
     .footer-row img {
-        height: 22px;
+        height: 0.22cm;
 
         width: auto;
 
@@ -502,7 +472,7 @@
 
 
     /* =========================================================
-       TEXTE "MERCI D'UTILISER PAXEVENT"
+        TEXTE "MERCI D'UTILISER PAXEVENT"
     ========================================================= */
 
     .footer-merci {
@@ -512,7 +482,7 @@
 
         color: #333333;
 
-        text-align: right;
+        text-align: left;
 
         white-space: nowrap;
 
@@ -672,14 +642,10 @@
                 <div class="qr-label">Scannez à l'entrée</div>
             </div>
 
-            <table class="footer-row" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                    <td style="width:36px;">
-                        <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height:22px;display:block;">
-                    </td>
-                    <td class="footer-merci">Merci d'utiliser PaxEvent !</td>
-                </tr>
-            </table>
+            <div class="footer-row">
+                <img src="{{ $logoDataUri }}" alt="PaxEvent" class="footer-logo">
+                <span class="footer-merci">Merci d'utiliser PaxEvent !</span>
+            </div>
 
         </div>
     </div>
