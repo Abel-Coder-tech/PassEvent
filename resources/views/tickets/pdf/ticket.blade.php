@@ -104,6 +104,7 @@
             margin-right: -0.30cm;
             padding: 0.20cm 0.30cm 0.10cm 0.30cm;
             text-align: center;
+            justify-content: center;
             font-size: 10pt;
             font-weight: 700;
             color: rgba(57, 59, 61, 0.56);
@@ -444,11 +445,11 @@
 
             <table class="info-grid" cellpadding="0" cellspacing="0">
                 <tr>
-                    <td>
+                    <td style="text-align: left;">
                         <span class="lbl">Tarif</span>
                         <span class="val">{{ strtoupper($ticket->nom_tarif ?? '—') }}</span>
                     </td>
-                    <td>
+                    <td style="text-align: right;">
                         <span class="lbl">Date et heure</span>
                         <span class="val">
                             {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
@@ -459,11 +460,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>
+                    <td style="text-align: left;">
                         <span class="lbl">ID</span>
                         <span class="val" style="font-size:8px;">{{ $ticket->transaction_id ?? '---' }}</span>
                     </td>
-                    <td>
+                    <td style="text-align: right;">
                         <span class="lbl">Lieu</span>
                         <span class="val">{{ $ticket->evenement?->lieu ?? '---' }}</span>
                     </td>
