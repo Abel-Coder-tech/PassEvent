@@ -3,429 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $textes['billet'] ?? 'Billet' }} - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
-<style>
-<style>/* =========================================================
-   CONFIGURATION PDF
-========================================================= */
+    <style>
+        /* =========================================================
+           CONFIGURATION PDF
+        ========================================================= */
 
-@page {
-    margin: 0;
-    padding: 0;
-    size: 8cm 13cm;
-}
+        @page {
+            margin: 0;
+            padding: 0;
+            size: 8cm 13cm;
+        }
 
-html,
-body {
-    width: 8cm;
-    height: 13cm;
-    margin: 0;
-    padding: 0;
-}
+        html,
+        body {
+            width: 8cm;
+            height: 13cm;
+            margin: 0;
+            padding: 0;
+        }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-body {
-    font-family: 'Montserrat', sans-serif;
-    width: 8cm;
-    height: 13cm;
-    margin: 0;
-    padding: 0;
-    background: #602183;
-    overflow: hidden;
-}
+        body {
+            font-family: 'Montserrat', sans-serif;
+            width: 8cm;
+            height: 13cm;
+            margin: 0;
+            padding: 0;
+            background: #602183;
+            overflow: hidden;
+        }
 
-/* =========================================================
-    TICKET GLOBAL
-========================================================= */
+        /* =========================================================
+            TICKET GLOBAL
+        ========================================================= */
 
-.ticket {
-    position: relative;
-    width: 8cm;
-    height: 13cm;
-    margin: 0;
-    padding: 0;
-    background: #602183;
-    overflow: hidden;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    page-break-after: avoid;
-}
+        .ticket {
+            position: relative;
+            width: 8cm;
+            height: 13cm;
+            margin: 0;
+            padding: 0;
+            background: #602183;
+            overflow: hidden;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-after: avoid;
+        }
 
-/* =========================================================
-   CONTENEUR BLANC
-========================================================= */
+        /* =========================================================
+           CONTENEUR BLANC
+        ========================================================= */
 
-.ticket-inner {
-    position: absolute;
-    top: 0.69cm;
-    left: 0.585cm;
-    width: 6.83cm;
-    height: 11.62cm;
-    background: #ffffff;
-    border-radius: 0.5cm;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-    page-break-inside: avoid;
-    break-inside: avoid;
-}
+        .ticket-inner {
+            position: absolute;
+            top: 0.69cm;
+            left: 0.585cm;
+            width: 6.83cm;
+            height: 11.62cm;
+            background: #ffffff;
+            border-radius: 0.5cm;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
 
-/* =========================================================
-   ZONE HAUTE - CORRIGÉE
-========================================================= */
+        /* =========================================================
+           ZONE HAUTE - CORRIGÉE
+        ========================================================= */
 
-.zone-top {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4.16cm;
-    background: #ffffff;
-    padding: 0.10cm 0.30cm 0.10cm 0.30cm;
-    overflow: hidden;
-    z-index: 2;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
+        .zone-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4.16cm;
+            background: #ffffff;
+            padding: 0.10cm 0.30cm 0.10cm 0.30cm;
+            overflow: hidden;
+            z-index: 2;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
 
-/* =========================================================
-   TITRE : TICKET D'ENTRÉE - CORRIGÉ
-========================================================= */
+        /* =========================================================
+           TITRE : TICKET D'ENTRÉE - CORRIGÉ
+        ========================================================= */
 
-.ticket-title {
-    width: 100%;
-    height: auto;
-    margin: 0;
-    text-align: center;
-    line-height: 1.2;
-    padding: 0.20cm 0 0.10cm 0;
-    font-size: 10pt;
-    font-weight: 700;
-    color: rgba(57, 59, 61, 0.56);
-    letter-spacing: 0.02cm;
-    text-transform: uppercase;
-    background: rgba(96, 33, 131, 0.05);
-}
+        .ticket-title {
+            width: 100%;
+            height: auto;
+            margin: 0;
+            text-align: center;
+            line-height: 1.2;
+            padding: 0.20cm 0 0.10cm 0;
+            font-size: 10pt;
+            font-weight: 700;
+            color: rgba(57, 59, 61, 0.56);
+            letter-spacing: 0.02cm;
+            text-transform: uppercase;
+            background: rgba(96, 33, 131, 0.05);
+        }
 
-/* =========================================================
-   NOM DE L'ÉVÉNEMENT - CORRIGÉ
-========================================================= */
+        /* =========================================================
+           NOM DE L'ÉVÉNEMENT - CORRIGÉ
+        ========================================================= */
 
-.event-name {
-    width: 100%;
-    font-size: 11pt;
-    font-weight: 700;
-    color: #602183;
-    text-transform: uppercase;
-    letter-spacing: 0.015cm;
-    margin: 0.15cm 0 0.15cm 0;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+        .event-name {
+            width: 100%;
+            font-size: 11pt;
+            font-weight: 700;
+            color: #602183;
+            text-transform: uppercase;
+            letter-spacing: 0.015cm;
+            margin: 0.15cm 0 0.15cm 0;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-/* =========================================================
-   GRILLE DES INFORMATIONS
-========================================================= */
+        /* =========================================================
+           GRILLE DES INFORMATIONS
+        ========================================================= */
 
-.info-grid {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-    padding: 0;
-    table-layout: fixed;
-}
+        .info-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            padding: 0;
+            table-layout: fixed;
+        }
 
-.info-grid td {
-    width: 50%;
-    padding: 0;
-    vertical-align: top;
-    overflow: hidden;
-}
+        .info-grid td {
+            width: 50%;
+            padding: 0;
+            vertical-align: top;
+            overflow: hidden;
+        }
 
-/* =========================================================
-   LABELS
-========================================================= */
+        /* =========================================================
+           LABELS
+        ========================================================= */
 
-.info-grid .lbl {
-    display: block;
-    font-size: 5.6pt;
-    font-weight: 500;
-    color: #767683;
-    text-transform: uppercase;
-    letter-spacing: 0.02cm;
-    margin-bottom: 0.12cm;
-    line-height: 1.1;
-}
+        .info-grid .lbl {
+            display: block;
+            font-size: 5.6pt;
+            font-weight: 500;
+            color: #767683;
+            text-transform: uppercase;
+            letter-spacing: 0.02cm;
+            margin-bottom: 0.12cm;
+            line-height: 1.1;
+        }
 
-/* =========================================================
-   VALEURS
-========================================================= */
+        /* =========================================================
+           VALEURS
+        ========================================================= */
 
-.info-grid .val {
-    display: block;
-    font-size: 7pt;
-    font-weight: 600;
-    color: #393B3D;
-    line-height: 1.15;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+        .info-grid .val {
+            display: block;
+            font-size: 7pt;
+            font-weight: 600;
+            color: #393B3D;
+            line-height: 1.15;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-/* =========================================================
-   ENTRÉE GRATUITE
-========================================================= */
+        /* =========================================================
+           ENTRÉE GRATUITE
+        ========================================================= */
 
-.gratuit {
-    font-size: 8pt;
-    font-weight: 700;
-    color: #e53935;
-    text-transform: uppercase;
-    letter-spacing: 0.035cm;
-    margin: 0.015cm 0;
-    line-height: 1.1;
-}
+        .gratuit {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #e53935;
+            text-transform: uppercase;
+            letter-spacing: 0.035cm;
+            margin: 0.015cm 0;
+            line-height: 1.1;
+        }
 
-/* =========================================================
-   MONTANT
-========================================================= */
+        /* =========================================================
+           MONTANT
+        ========================================================= */
 
-.montant-block {
-    margin-top: 0.08cm;
-}
+        .montant-block {
+            margin-top: 0.08cm;
+        }
 
-.montant-label {
-    display: inline-block;
-    font-size: 0.17cm;
-    font-weight: 600;
-    color: #aaaaaa;
-    text-transform: uppercase;
-    letter-spacing: 0.02cm;
-}
+        .montant-label {
+            display: inline-block;
+            font-size: 0.17cm;
+            font-weight: 600;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            letter-spacing: 0.02cm;
+        }
 
-.montant-value {
-    font-size: 0.22cm;
-    font-weight: 800;
-    color: #1a1a1a;
-}
+        .montant-value {
+            font-size: 0.22cm;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
 
-.montant-reduction {
-    font-size: 0.17cm;
-    color: #2E7D4F;
-    font-weight: 700;
-}
+        .montant-reduction {
+            font-size: 0.17cm;
+            color: #2E7D4F;
+            font-weight: 700;
+        }
 
-/* =========================================================
-   SÉPARATEUR
-========================================================= */
+        /* =========================================================
+           SÉPARATEUR
+        ========================================================= */
 
-.separator {
-    position: absolute;
-    top: 4.16cm;
-    left: 0;
-    width: 100%;
-    height: 0;
-    z-index: 20;
-    pointer-events: none;
-}
+        .separator {
+            position: absolute;
+            top: 4.16cm;
+            left: 0;
+            width: 100%;
+            height: 0;
+            z-index: 20;
+            pointer-events: none;
+        }
 
-/* Ligne en pointillés */
-.separator-line {
-    position: absolute;
-    top: 0;
-    left: 0.22cm;
-    right: 0.22cm;
-    height: 0;
-    border-top: 2px dashed rgba(92, 57, 121, 0.8);
-}
+        /* Ligne en pointillés */
+        .separator-line {
+            position: absolute;
+            top: 0;
+            left: 0.22cm;
+            right: 0.22cm;
+            height: 0;
+            border-top: 2px dashed rgba(92, 57, 121, 0.8);
+        }
 
-/* Cercle gauche */
-.sep-circle-left {
-    position: absolute;
-    left: -0.14cm;
-    top: 0;
-    width: 0.28cm;
-    height: 0.28cm;
-    transform: translateY(-50%);
-    background: #602183;
-    border-radius: 50%;
-}
+        /* Cercle gauche */
+        .sep-circle-left {
+            position: absolute;
+            left: -0.14cm;
+            top: 0;
+            width: 0.28cm;
+            height: 0.28cm;
+            transform: translateY(-50%);
+            background: #602183;
+            border-radius: 50%;
+        }
 
-/* Cercle droit */
-.sep-circle-right {
-    position: absolute;
-    right: -0.14cm;
-    top: 0;
-    width: 0.28cm;
-    height: 0.28cm;
-    transform: translateY(-50%);
-    background: #602183;
-    border-radius: 50%;
-}
+        /* Cercle droit */
+        .sep-circle-right {
+            position: absolute;
+            right: -0.14cm;
+            top: 0;
+            width: 0.28cm;
+            height: 0.28cm;
+            transform: translateY(-50%);
+            background: #602183;
+            border-radius: 50%;
+        }
 
-/* =========================================================
-   ZONE INFÉRIEURE
-========================================================= */
+        /* =========================================================
+           ZONE INFÉRIEURE
+        ========================================================= */
 
-.zone-bottom {
-    position: absolute;
-    top: 4.16cm;
-    left: 0;
-    width: 100%;
-    height: 7.46cm;
-    background: #ffffff;
-    padding: 0.18cm 0 0.12cm;
-    overflow: hidden;
-    z-index: 1;
-}
+        .zone-bottom {
+            position: absolute;
+            top: 4.16cm;
+            left: 0;
+            width: 100%;
+            height: 7.46cm;
+            background: #ffffff;
+            padding: 0.18cm 0 0.12cm;
+            overflow: hidden;
+            z-index: 1;
+        }
 
-/* =========================================================
-    CONTENEUR CENTRE : CODE PASS + QR
-========================================================= */
+        /* =========================================================
+            CONTENEUR CENTRE : CODE PASS + QR
+        ========================================================= */
 
-.zone-bottom-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.12cm;
-}
+        .zone-bottom-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.12cm;
+        }
 
-/* =========================================================
-    CODE UNIQUE / PAX-XXXXXX
-========================================================= */
+        /* =========================================================
+            CODE UNIQUE / PAX-XXXXXX - CORRIGÉ
+        ========================================================= */
 
-.code-pass-wrap {
-    width: 4.14cm;
-    height: 0.90cm;
-    background: rgba(96, 33, 131, 0.05);
-    border-radius: 0.18cm;
-    margin: 0 auto;
-}
+        .code-pass-wrap {
+            width: 4.14cm;
+            height: 0.90cm;
+            background: rgba(96, 33, 131, 0.05);
+            border-radius: 0.18cm;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.code-pass-value {
-    font-size: 17pt;
-    font-weight: 600;
-    color: #552680;
-    letter-spacing: 0.05cm;
-    text-transform: uppercase;
-    line-height: 1;
-    text-align: center;
-    width: 100%;
-    padding-top: 0.15cm;
-    white-space: nowrap;
-}
+        .code-pass-value {
+            font-size: 17pt;
+            font-weight: 600;
+            color: #552680;
+            letter-spacing: 0.05cm;
+            text-transform: uppercase;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+        }
 
-/* =========================================================
-   BLOC QR CODE
-========================================================= */
+        /* =========================================================
+           BLOC QR CODE
+        ========================================================= */
 
-.qr-block {
-    width: 100%;
-    text-align: center;
-    margin-top: 0;
-    padding: 0;
-    background: #ffffff;
-}
+        .qr-block {
+            width: 100%;
+            text-align: center;
+            margin-top: 0;
+            padding: 0;
+            background: #ffffff;
+        }
 
-.qr-block img {
-    display: block;
-    width: 4.89cm;
-    height: 4.89cm;
-    margin: 0 auto;
-    padding: 0;
-}
+        .qr-block img {
+            display: block;
+            width: 4.89cm;
+            height: 4.89cm;
+            margin: 0 auto;
+            padding: 0;
+        }
 
-.qr-label {
-    font-size: 7pt;
-    font-weight: 500;
-    color: #767683;
-    letter-spacing: 0.02cm;
-    text-transform: uppercase;
-    margin-top: 0.06cm;
-    line-height: 1.1;
-}
+        .qr-label {
+            font-size: 7pt;
+            font-weight: 500;
+            color: #767683;
+            letter-spacing: 0.02cm;
+            text-transform: uppercase;
+            margin-top: 0.06cm;
+            line-height: 1.1;
+        }
 
-/* =========================================================
-   FOOTER
-========================================================= */
+        /* =========================================================
+           FOOTER
+        ========================================================= */
 
-.footer-row {
-    position: relative;
-    width: 6.23cm;
-    height: 0.82cm;
-    margin: 0.12cm 0 0 0.30cm;
-    padding: 0;
-}
+        .footer-row {
+            position: relative;
+            width: 6.23cm;
+            height: 0.82cm;
+            margin: 0.12cm 0 0 0.30cm;
+            padding: 0;
+        }
 
-.footer-row .footer-logo {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 2.07cm;
-    height: 0.82cm;
-    display: block;
-}
+        .footer-row .footer-logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2.07cm;
+            height: 0.82cm;
+            display: block;
+        }
 
-.footer-merci {
-    position: absolute;
-    right: 0;
-    top: 0.30cm;
-    font-size: 6pt;
-    font-weight: 600;
-    color: #393B3D;
-    text-align: right;
-    white-space: nowrap;
-    line-height: 1.1;
-}
+        .footer-merci {
+            position: absolute;
+            right: 0;
+            top: 0.30cm;
+            font-size: 6pt;
+            font-weight: 600;
+            color: #393B3D;
+            text-align: right;
+            white-space: nowrap;
+            line-height: 1.1;
+        }
 
-/* =========================================================
-   COMPATIBILITÉ IMPRESSION / PDF
-========================================================= */
+        /* =========================================================
+           COMPATIBILITÉ IMPRESSION / PDF
+        ========================================================= */
 
-.ticket,
-.ticket-inner,
-.zone-top,
-.zone-bottom,
-.separator {
-    page-break-inside: avoid;
-    break-inside: avoid;
-}
+        .ticket,
+        .ticket-inner,
+        .zone-top,
+        .zone-bottom,
+        .separator {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
 
-/* =========================================================
-   IMPRESSION
-========================================================= */
+        /* =========================================================
+           IMPRESSION
+        ========================================================= */
 
-@media print {
-    html,
-    body {
-        width: 8cm;
-        height: 13cm;
-        margin: 0;
-        padding: 0;
-    }
+        @media print {
+            html,
+            body {
+                width: 8cm;
+                height: 13cm;
+                margin: 0;
+                padding: 0;
+            }
 
-    body {
-        overflow: hidden;
-    }
+            body {
+                overflow: hidden;
+            }
 
-    .ticket {
-        width: 8cm;
-        height: 13cm;
-        page-break-after: avoid;
-        page-break-before: avoid;
-        page-break-inside: avoid;
-    }
-}
-</style>
+            .ticket {
+                width: 8cm;
+                height: 13cm;
+                page-break-after: avoid;
+                page-break-before: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
 </head>
 <body>
 
