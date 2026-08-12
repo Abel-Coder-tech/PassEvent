@@ -238,7 +238,7 @@ class AuthController extends Controller
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-        $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
+        $logoDataUri = \App\Models\Ticket::logoVioletDataUri();
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
         $filename = 'ticket-' . $ticket->code_unique . '.pdf';
 

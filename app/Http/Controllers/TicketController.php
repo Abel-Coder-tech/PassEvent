@@ -82,7 +82,7 @@ class TicketController extends Controller
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-        $logoDataUri = Ticket::logoBlancDataUri();
+        $logoDataUri = Ticket::logoVioletDataUri();
 
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
@@ -112,7 +112,7 @@ class TicketController extends Controller
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-        $logoDataUri = Ticket::logoBlancDataUri();
+        $logoDataUri = Ticket::logoVioletDataUri();
 
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 

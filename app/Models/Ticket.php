@@ -162,6 +162,41 @@ class Ticket extends Model
         return 'data:image/png;base64,' . base64_encode($data);
     }
 
+    public static function logoVioletDataUri(): string
+    {
+        $path = public_path('images/logo-ticket.png');
+        if (!file_exists($path)) {
+            return '';
+        }
+        $src = @imagecreatefrompng($path);
+        if (!$src) {
+            return 'data:image/png;base64,' . base64_encode(file_get_contents($path));
+        }
+        $w = imagesx($src);
+        $h = imagesy($src);
+        $dst = imagecreatetruecolor($w, $h);
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $trans = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefill($dst, 0, 0, $trans);
+        for ($x = 0; $x < $w; $x++) {
+            for ($y = 0; $y < $h; $y++) {
+                $rgba = imagecolorat($src, $x, $y);
+                $alpha = ($rgba >> 24) & 0x7F;
+                if ($alpha < 127) {
+                    $color = imagecolorallocatealpha($dst, 96, 33, 131, $alpha);
+                    imagesetpixel($dst, $x, $y, $color);
+                }
+            }
+        }
+        ob_start();
+        imagepng($dst);
+        $data = ob_get_clean();
+        imagedestroy($src);
+        imagedestroy($dst);
+        return 'data:image/png;base64,' . base64_encode($data);
+    }
+
     public function estimerHauteurPdf(): float
     {
         $px = 0;

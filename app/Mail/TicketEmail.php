@@ -50,7 +50,7 @@ class TicketEmail extends Mailable
 
         foreach ($this->tickets as $ticket) {
             $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-            $logoDataUri = \App\Models\Ticket::logoBlancDataUri();
+            $logoDataUri = \App\Models\Ticket::logoVioletDataUri();
 
             $this->pdfs[] = [
                 'content' => TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri)->output(),

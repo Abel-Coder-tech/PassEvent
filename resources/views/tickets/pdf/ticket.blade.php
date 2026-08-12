@@ -82,20 +82,32 @@
         width: 100%;
         height: 4.16cm;
         background: #ffffff;
-        padding: 0.20cm 0.30cm 0.10cm;
+        padding: 0.08cm 0 0.04cm;
         overflow: hidden;
         z-index: 2;
+    }
+
+    /* =========================================================
+        CONTENU ZONE HAUTE (inset horizontal 0.30cm)
+    ========================================================= */
+
+    .zone-top-content {
+        padding: 0 0.30cm;
     }
     /* =========================================================
        TITRE : TICKET D'ENTRÉE
     ========================================================= */
     .ticket-title {
         width: 6.83cm;
-        height: 1.05cm;
+        height: 0.72cm;
 
-        margin: 0 -0.30cm;
+        margin: 0;
 
         text-align: center;
+
+        line-height: 1;
+
+        padding-top: 0.33cm;
 
         font-size: 11pt;
         font-weight: 700;
@@ -105,8 +117,6 @@
         letter-spacing: 0.02cm;
 
         text-transform: uppercase;
-
-        line-height: 1.05cm;
 
         background: rgba(96, 33, 131, 0.05);
     }
@@ -156,7 +166,7 @@
     .info-grid td {
         width: 50%;
 
-        padding: 0.02cm 0;
+        padding: 0;
 
         vertical-align: top;
 
@@ -318,7 +328,7 @@
 
         background: #ffffff;
 
-        padding: 0.18cm 0.30cm 0.12cm;
+        padding: 0.18cm 0 0.12cm;
 
         overflow: hidden;
 
@@ -327,7 +337,19 @@
 
 
     /* =========================================================
-       CODE UNIQUE / PAX-XXXXXX
+        CONTENEUR CENTRE : CODE PASS + QR
+    ========================================================= */
+
+    .zone-bottom-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.12cm;
+    }
+
+
+    /* =========================================================
+        CODE UNIQUE / PAX-XXXXXX
     ========================================================= */
 
     .code-pass-wrap {
@@ -352,11 +374,13 @@
 
         text-transform: uppercase;
 
-        line-height: 0.90cm;
+        line-height: 1;
 
         text-align: center;
 
         width: 100%;
+
+        padding-top: 0.15cm;
 
         white-space: nowrap;
     }
@@ -369,7 +393,7 @@
     .qr-block {
         width: 100%;
         text-align: center;
-        margin-top: 0.10cm;
+        margin-top: 0;
         padding: 0;
         background: #ffffff;
     }
@@ -402,13 +426,13 @@
         position: relative;
         width: 6.23cm;
         height: 0.82cm;
-        margin-top: 0.16cm;
+        margin: 0.12cm 0 0 0.30cm;
         padding: 0;
     }
 
 
     /* =========================================================
-        LOGO (aligné à gauche)
+        LOGO (aligné à gauche) - couleur violette
     ========================================================= */
 
     .footer-row .footer-logo {
@@ -427,7 +451,7 @@
     .footer-merci {
         position: absolute;
         right: 0;
-        top: 0;
+        top: 0.30cm;
 
         font-size: 6pt;
         font-weight: 600;
@@ -570,7 +594,7 @@
             </table>
 
             @if($ticket->montant > 0)
-                <div style="margin-top:4px;">
+                <div style="margin-top:2px;">
                     <span class="lbl" style="font-size:7px;color:#aaaaaa;text-transform:uppercase;letter-spacing:0.8px;">Montant</span>
                     <span style="font-size:10px;font-weight:800;color:#1a1a1a;"> {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
                     @if($ticket->montant_reduction > 0)
@@ -592,15 +616,19 @@
         {{-- ZONE BASSE --}}
         <div class="zone-bottom">
 
-            @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
-            <div class="code-pass-wrap">
-                <div class="code-pass-value">{{ $ticket->code_unique }}</div>
-            </div>
-            @endif
+            <div class="zone-bottom-center">
 
-            <div class="qr-block">
-                <img src="{{ $qrCodeDataUri }}" alt="QR Code">
-                <div class="qr-label">Scannez à l'entrée</div>
+                @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
+                <div class="code-pass-wrap">
+                    <div class="code-pass-value">{{ $ticket->code_unique }}</div>
+                </div>
+                @endif
+
+                <div class="qr-block">
+                    <img src="{{ $qrCodeDataUri }}" alt="QR Code">
+                    <div class="qr-label">Scannez à l'entrée</div>
+                </div>
+
             </div>
 
             <div class="footer-row">
