@@ -95,14 +95,14 @@
         }
 
         /* =========================================================
-           TITRE : TICKET D'ENTRÉE - COLLÉ SUR LES BORDS
+           TITRE : TICKET D'ENTRÉE - CORRIGÉ (centré horizontalement)
         ========================================================= */
 
         .ticket-title {
             width: calc(100% + 0.60cm);
             margin-left: -0.30cm;
             margin-right: -0.30cm;
-            padding: 0.15cm 0 0.10cm 0;
+            padding: 0.15cm 0.30cm 0.10cm 0.30cm;
             text-align: center;
             font-size: 10pt;
             font-weight: 700;
@@ -112,6 +112,9 @@
             background: rgba(96, 33, 131, 0.05);
             line-height: 1.2;
             box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* =========================================================
@@ -133,7 +136,7 @@
         }
 
         /* =========================================================
-           GRILLE DES INFORMATIONS
+           GRILLE DES INFORMATIONS - CORRIGÉE
         ========================================================= */
 
         .info-grid {
@@ -146,7 +149,7 @@
 
         .info-grid td {
             width: 50%;
-            padding: 0.03cm 0.05cm;
+            padding: 0.03cm 0;
             vertical-align: top;
             overflow: hidden;
         }
@@ -157,9 +160,10 @@
             padding-right: 0.10cm;
         }
 
-        /* Colonne de droite : alignée à droite */
+        /* Colonne de droite : alignée à droite avec marge de 0.30cm */
         .info-grid td:last-child {
             text-align: right;
+            padding-right: 0.30cm;  /* AJOUTÉ : marge à droite de 0.30cm */
             padding-left: 0.10cm;
         }
 
