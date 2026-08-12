@@ -4,207 +4,281 @@
     <meta charset="UTF-8">
     <title>{{ $textes['billet'] ?? 'Billet' }} - {{ $ticket->evenement?->titre ?? 'Evenement' }}</title>
     <style>
-        @page { margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'DejaVu Sans', sans-serif; }
-        body {
-            margin: 0; padding: 0;
-            color: #1d1d1f;
-            font-size: 10px;
-            line-height: 1.4;
+        @page {
+            margin: 0;
+            padding: 0;
+            size: 8cm 13cm;
         }
-        * { margin: 0; padding: 0; }
-        .ticket, .ticket * {
+        html, body {
+            width: 8cm;
+            height: 13cm;
+            margin: 0;
+            padding: 0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
             font-family: 'DejaVu Sans', sans-serif;
+            background: #542680;
+            width: 8cm;
+            height: 13cm;
+            overflow: hidden;
         }
         .ticket {
-            width: 100%;
-            margin: 0;
-            background: #fff;
+            width: 8cm;
+            height: 13cm;
+            background: #542680;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
         }
 
-        .header { 
-            color: #542680; 
-            padding: 14px 20px 12px; 
+        /* ===== ZONE HAUTE ===== */
+        .zone-top {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 10px 12px 10px;
+            flex-shrink: 0;
         }
 
-        .header-title { 
-            color: #542680; 
-        }
-
-        .header-title .pass { 
-            font-size: 20px; 
-            font-weight: 800; 
-            letter-spacing: 1.5px; 
-            opacity: 0.8; 
-        }
-
-        .header-title .event-name { 
-            font-size: 14px; 
-            font-weight: 800; 
-            margin-top: 2px; 
-        }
-
-        .body { 
-            padding: 8px 20px 40px; 
-        }
-
-        .event-meta {
-            font-size: 9px; 
-            color: #888; 
-            border-bottom: 1px solid #eee;
-            margin-bottom: 2px;
-            padding-bottom: 3px;
-        }
-
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-        .info-table td { padding: 6px 10px; vertical-align: middle; }
-        .row-solid td { border-bottom: 1px solid #eee; }
-        .row-dash td { border-bottom: 1px dashed #e8e8e8; }
-        .info-table .il { font-size: 9px; color: #888; font-weight: 600; width: 100px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .info-table .iv { font-size: 12px; font-weight: 700; color: #1d1d1f; }
-        .info-table .iv-mono { font-size: 9px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
-        .info-table .iv-green { color: #2E7D4F; }
-        .info-table .il-sm { font-size: 8px; color: #888; font-weight: 600; width: 46px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-        .info-table .iv-sm { font-size: 11px; font-weight: 700; color: #1d1d1f; white-space: nowrap; }
-        .info-table .pair { font-size: 9px; white-space: nowrap; }
-        .info-table .pair .l { color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .info-table .pair .v { font-size: 11px; font-weight: 700; color: #1d1d1f; }
-
-        .code-pass {
+        .ticket-title {
             text-align: center;
-            margin: 4px 0 4px;
-            padding: 4px;
-            background: #f8f6f9;
-            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+            color: #aaaaaa;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
+            padding-bottom: 7px;
+            border-bottom: 1px solid #eeeeee;
+            margin-bottom: 8px;
         }
-        .code-pass .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }
-        .code-pass .value {
-            font-size: 20px; 
+
+        .event-name {
+            font-size: 22px;
             font-weight: 800;
             color: #542680;
-            letter-spacing: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
 
-        .qr-block { text-align: center; margin: 4px 0 2px; }
-        .qr-box {
-            display: inline-block; padding: 6px;
-            border: 2px solid #542680; border-radius: 12px;
+        .info-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
         }
-        .qr-box img { width: 135px; height: 135px; display: block; }
-        .qr-label { font-size: 9px; font-weight: 700; color: #542680; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+        .info-grid td {
+            padding: 2px 0;
+            vertical-align: top;
+            width: 50%;
+        }
+        .info-grid .lbl {
+            font-size: 7px;
+            color: #aaaaaa;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: block;
+            margin-bottom: 1px;
+        }
+        .info-grid .val {
+            font-size: 9px;
+            font-weight: 800;
+            color: #1a1a1a;
+            display: block;
+        }
 
-        .note {
-            color: #ffe082;
+        .gratuit {
+            font-size: 10px;
+            font-weight: 800;
+            color: #e53935;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* ===== SÉPARATEUR ===== */
+        .separator {
+            position: relative;
+            height: 18px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+        .separator-line {
+            width: 100%;
+            border-top: 2px dashed rgba(255,255,255,0.5);
+            margin: 0 14px;
+        }
+        .sep-circle-left {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background: #542680;
+            border-radius: 50%;
+        }
+        .sep-circle-right {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background: #542680;
+            border-radius: 50%;
+        }
+
+        /* ===== ZONE BASSE ===== */
+        .zone-bottom {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 10px 12px 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-pass-wrap {
+            background: #f0f0f0;
             border-radius: 8px;
-            padding: 4px 10px;
-            margin: 4px 0 0;
+            padding: 5px 14px;
+            text-align: center;
+            width: 100%;
         }
-        .note p { font-size: 8px; color: #9269b9; margin: 0; line-height: 1.4; text-align: center; }
+        .code-pass-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #542680;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
 
-        .footer { position: absolute; bottom: 0; left: 0; right: 0; background: #542680; padding: 8px 20px; border-radius: 20px 20px 0 0; }
-        .footer-text { color: #fff; font-size: 9px; }
-        .footer-logo img { display: block; }
+        .qr-block {
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-block img {
+            width: 120px;
+            height: 120px;
+            display: block;
+        }
+        .qr-label {
+            font-size: 7px;
+            font-weight: 700;
+            color: #aaaaaa;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
 
-        hr.dashed { border: none; border-top: 1px dashed #ddd; margin: 5px 0; }
+        .footer-row {
+            width: 100%;
+            display: table;
+            margin-top: 4px;
+        }
+        .footer-row td {
+            vertical-align: middle;
+        }
+        .footer-merci {
+            font-size: 8px;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
 
 @php $textes = $ticket->evenement?->getTextes() ?? ['billet' => 'Billet']; @endphp
+
 <div class="ticket">
 
-    {{-- HEADER violet (no logo) --}}
-    <div class="header" style="text-align: center; justify-content: center;">
-        <div class="header-title">
-            <div class="pass">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
-            
-        </div>
-    </div>
-    <hr class="dashed">
+    {{-- ZONE HAUTE --}}
+    <div class="zone-top">
+        <div class="ticket-title">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
 
-    {{-- BODY --}}
-    <div class="body">
+        <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
 
-        <div class="event-meta">
-            {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
-            @if($ticket->evenement?->date_event)
-                &ndash; {{ $ticket->evenement->date_event->format('H\hi') }}
-            @endif
-            @if($ticket->evenement?->lieu)
-                &ndash; {{ $ticket->evenement->lieu }}
-            @endif
-        </div>
-
-        @php
-            $idRow = $ticket->montant > 0;
-            $promoRow = (bool) $ticket->code_promo_utilise;
-        @endphp
-        <table class="info-table" cellpadding="0" cellspacing="0">
-            <tr class="{{ ($idRow || $promoRow) ? 'row-solid' : '' }}">
-                <td class="pair"><span class="l">{{ $textes['billet'] }}</span> : <span class="v">{{ $ticket->nom_tarif }}</span></td>
-                <td class="pair">
-                    @if($ticket->montant > 0)
-                        <span class="l">Montant</span> : <span class="v">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
-                    @else
-                        <span class="l">ID</span> : <span class="v">{{ $ticket->transaction_id ?? '---' }}</span>
-                    @endif
+        <table class="info-grid" cellpadding="0" cellspacing="0">
+            <tr>
+                <td>
+                    <span class="lbl">Tarif</span>
+                    <span class="val">{{ strtoupper($ticket->nom_tarif ?? '—') }}</span>
+                </td>
+                <td>
+                    <span class="lbl">Date et heure</span>
+                    <span class="val">
+                        {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
+                        @if($ticket->evenement?->date_event)
+                            - {{ $ticket->evenement->date_event->format('H\hi') }}
+                        @endif
+                    </span>
                 </td>
             </tr>
-            @if($idRow)
-            <tr class="{{ $promoRow ? 'row-dash' : '' }}">
-                <td colspan="4" class="il">ID transaction : <span class="iv-mono">{{ $ticket->transaction_id ?? '---' }}</span></td>
-            </tr>
-            @endif
-            @if($promoRow)
             <tr>
-                <td colspan="4" class="il">Code promo : <span class="iv iv-green">{{ $ticket->code_promo_utilise }}</span></td>
+                <td>
+                    <span class="lbl">ID</span>
+                    <span class="val" style="font-size:8px;">{{ $ticket->transaction_id ?? '---' }}</span>
+                </td>
+                <td>
+                    <span class="lbl">Lieu</span>
+                    <span class="val">{{ $ticket->evenement?->lieu ?? '---' }}</span>
+                </td>
             </tr>
-            @endif
         </table>
 
-        @if($ticket->montant <= 0)
-        <div style="text-align:left;padding:2px 0;color:#542680;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;">
-            Entrée gratuite
+        @if($ticket->montant > 0)
+            <div style="margin-top:4px;">
+                <span class="lbl" style="font-size:7px;color:#aaaaaa;text-transform:uppercase;letter-spacing:0.8px;">Montant</span>
+                <span style="font-size:10px;font-weight:800;color:#1a1a1a;"> {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
+                @if($ticket->montant_reduction > 0)
+                    <span style="font-size:8px;color:#2E7D4F;font-weight:700;"> (-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA)</span>
+                @endif
+            </div>
+        @else
+            <div class="gratuit">Entrée gratuite</div>
+        @endif
+    </div>
+
+    {{-- SÉPARATEUR --}}
+    <div class="separator">
+        <div class="sep-circle-left"></div>
+        <div class="separator-line"></div>
+        <div class="sep-circle-right"></div>
+    </div>
+
+    {{-- ZONE BASSE --}}
+    <div class="zone-bottom">
+
+        @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
+        <div class="code-pass-wrap">
+            <div class="code-pass-value">{{ $ticket->code_unique }}</div>
         </div>
         @endif
-
-        @if($ticket->statut_paiement === 'payé')
-        <div class="code-pass">
-            <div class="label">Code Pass</div>
-            <div class="value">{{ $ticket->code_unique }}</div>
-        </div>
-        @endif
-
-        <hr class="dashed">
 
         <div class="qr-block">
-            <div class="qr-box">
-                <img src="{{ $qrCodeDataUri }}" alt="QR Code">
-            </div>
-            <div class="qr-label">Scannez ce code à l'entrée</div>
+            <img src="{{ $qrCodeDataUri }}" alt="QR Code">
+            <div class="qr-label">Scannez à l'entrée</div>
         </div>
 
-        <div class="note">
-            <p><span style="font-size:10px;">&#9888;&#65039;</span> Ce ticket comporte un QR Code unique au porteur. Ne le partagez jamais.</p>
-        </div>
-
-    </div>
-
-    {{-- FOOTER violet --}}
-    <div class="footer">
-        <table width="100%" cellpadding="0" cellspacing="0">
+        <table class="footer-row" cellpadding="0" cellspacing="0" width="100%">
             <tr>
-                <td style="text-align:left;vertical-align:middle;width:36px;">
-                    <div class="footer-logo">
-                        <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height: 28px; display: block;">
-                    </div>
+                <td style="width:36px;">
+                    <img src="{{ $logoDataUri }}" alt="PaxEvent" style="height:22px;display:block;">
                 </td>
-                <td style="text-align:right;vertical-align:middle;">
-                    <div class="footer-text">Billetterie en ligne 100% Bénin</div>
-                </td>
+                <td class="footer-merci">Merci d'utiliser PaxEvent !</td>
             </tr>
         </table>
+
     </div>
 
 </div>
