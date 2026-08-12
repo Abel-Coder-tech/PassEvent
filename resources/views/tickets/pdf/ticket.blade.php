@@ -38,12 +38,12 @@
         margin: 0;
         padding: 0;
 
-        background: #542680;
+        background: #602183;
 
         overflow: hidden;
     }
     /* =========================================================
-       TICKET GLOBAL
+        TICKET GLOBAL
     ========================================================= */
     .ticket {
         position: relative;
@@ -51,7 +51,7 @@
         height: 13cm;
         margin: 0;
         padding: 0;
-        background: #542680;
+        background: #602183;
         overflow: hidden;
         page-break-inside: avoid;
         break-inside: avoid;
@@ -90,16 +90,25 @@
        TITRE : TICKET D'ENTRÉE
     ========================================================= */
     .ticket-title {
-        width: 100%;
+        width: 6.83cm;
+        height: 1.05cm;
+
+        margin: 0 -0.30cm;
+
         text-align: center;
-        font-size: 0.25cm;
+
+        font-size: 11pt;
         font-weight: 700;
-        color: #542680;
-        letter-spacing: 0.08cm;
+
+        color: rgba(57, 59, 61, 0.56);
+
+        letter-spacing: 0.02cm;
+
         text-transform: uppercase;
-        padding: 0.12cm 0;
-        background: #eeeeee;
-        line-height: 1.1;
+
+        line-height: 1.05cm;
+
+        background: rgba(96, 33, 131, 0.05);
     }
     /* =========================================================
        NOM DE L'ÉVÉNEMENT
@@ -108,17 +117,16 @@
     .event-name {
         width: 100%;
 
-        font-size: 0.64cm;
+        font-size: 11pt;
+        font-weight: 700;
 
-        font-weight: 800;
-
-        color: #542680;
+        color: #602183;
 
         text-transform: uppercase;
 
         letter-spacing: 0.015cm;
 
-        margin-bottom: 0.12cm;
+        margin: 0.29cm 0;
 
         line-height: 1.02;
 
@@ -163,17 +171,16 @@
     .info-grid .lbl {
         display: block;
 
-        font-size: 0.17cm;
+        font-size: 5.6pt;
+        font-weight: 500;
 
-        font-weight: 600;
-
-        color: #858591;
+        color: #767683;
 
         text-transform: uppercase;
 
         letter-spacing: 0.02cm;
 
-        margin-bottom: 0.03cm;
+        margin-bottom: 0.12cm;
 
         line-height: 1.1;
     }
@@ -186,11 +193,10 @@
     .info-grid .val {
         display: block;
 
-        font-size: 0.20cm;
+        font-size: 7pt;
+        font-weight: 600;
 
-        font-weight: 800;
-
-        color: #333333;
+        color: #393B3D;
 
         line-height: 1.15;
 
@@ -209,9 +215,8 @@
     ========================================================= */
 
     .gratuit {
-        font-size: 0.24cm;
-
-        font-weight: 800;
+        font-size: 8pt;
+        font-weight: 700;
 
         color: #e53935;
 
@@ -219,7 +224,7 @@
 
         letter-spacing: 0.035cm;
 
-        margin-top: 0.08cm;
+        margin: 0.015cm 0;
 
         line-height: 1.1;
     }
@@ -273,7 +278,7 @@
 
         transform: translateY(-50%);
 
-        background: #542680;
+        background: #602183;
 
         border-radius: 50%;
     }
@@ -292,7 +297,7 @@
 
         transform: translateY(-50%);
 
-        background: #542680;
+        background: #602183;
 
         border-radius: 50%;
     }
@@ -326,36 +331,34 @@
     ========================================================= */
 
     .code-pass-wrap {
-        width: 4.89cm;
+        width: 4.14cm;
+        height: 0.90cm;
 
-        background: #eeeeee;
+        background: rgba(96, 33, 131, 0.05);
 
-        border-radius: 0.12cm;
-
-        padding: 0.08cm 0;
-
-        text-align: center;
+        border-radius: 0.18cm;
 
         margin: 0 auto;
     }
 
 
     .code-pass-value {
-        font-size: 0.58cm;
+        font-size: 17pt;
+        font-weight: 600;
 
-        font-weight: 800;
+        color: #552680;
 
-        color: #542680;
-
-        letter-spacing: 0.07cm;
+        letter-spacing: 0.05cm;
 
         text-transform: uppercase;
 
-        line-height: 1.1;
+        line-height: 0.90cm;
+
+        text-align: center;
+
+        width: 100%;
 
         white-space: nowrap;
-
-        padding: 0 0.22cm;
     }
 
 
@@ -365,88 +368,77 @@
 
     .qr-block {
         width: 100%;
-
         text-align: center;
-
-        margin-top: 0.16cm;
-
+        margin-top: 0.10cm;
         padding: 0;
-
         background: #ffffff;
     }
-
-
     /* QR CODE */
 
     .qr-block img {
         display: block;
-
         width: 4.89cm;
         height: 4.89cm;
-
         margin: 0 auto;
-
         padding: 0;
     }
 
-
-    /* =========================================================
-       TEXTE SOUS LE QR CODE
-    ========================================================= */
-
     .qr-label {
-        font-size: 0.24cm;
+        font-size: 7pt;
+        font-weight: 500;
 
-        font-weight: 700;
+        color: #767683;
 
-        color: #7d7d7d;
-
-        letter-spacing: 0.035cm;
+        letter-spacing: 0.02cm;
 
         text-transform: uppercase;
 
-        margin-top: 0.12cm;
+        margin-top: 0.06cm;
 
         line-height: 1.1;
     }
-   /* Footer */
+    /* Footer */
     .footer-row {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 2cm;
-        margin-top: 0.24cm;
+        position: relative;
+        width: 6.23cm;
+        height: 0.82cm;
+        margin-top: 0.16cm;
         padding: 0;
     }
 
 
     /* =========================================================
-       LOGO
+        LOGO (aligné à gauche)
     ========================================================= */
 
-    .footer-row img {
-        height: 1cm;
-        width: auto;
+    .footer-row .footer-logo {
+        position: absolute;
+        left: 0;
+        top: 0;
+
+        width: 2.07cm;
+        height: 0.82cm;
+
         display: block;
-        flex-shrink: 0;
     }
     /* =========================================================
-       TEXTE FOOTER
+        TEXTE FOOTER (aligné à droite)
     ========================================================= */
     .footer-merci {
-        font-size: 0.24cm;
+        position: absolute;
+        right: 0;
+        top: 0;
 
-        font-weight: 700;
+        font-size: 6pt;
+        font-weight: 600;
 
-        color: #333333;
+        color: #393B3D;
 
-        text-align: left;
+        text-align: right;
 
         white-space: nowrap;
 
         line-height: 1.1;
-
-        flex: 1;
     }
 
 
