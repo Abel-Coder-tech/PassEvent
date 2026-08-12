@@ -163,8 +163,7 @@
         /* Colonne de droite : alignée à droite avec marge de 0.30cm */
         .info-grid td:last-child {
             text-align: right;
-            padding-right: 0.30cm;  /* AJOUTÉ : marge à droite de 0.30cm */
-            padding-left: 0.10cm;
+            padding-right: 1cm;  /* AJOUTÉ : marge à droite de 0.30cm */
         }
 
         /* =========================================================
