@@ -99,10 +99,10 @@
         ========================================================= */
 
         .ticket-title {
-            width: 7.43cm;           /* largeur de .zone-top (6.83cm intérieur ticket-inner) + 0.60cm de débordement */
+            width: 6.83cm;           /* largeur totale de la carte (6.83cm intérieur ticket-inner) */
             margin-left: -0.30cm;
             margin-right: -0.30cm;
-            padding: 0.15cm 0.30cm 0.10cm 0.30cm;
+            padding: 0.15cm 0 0.10cm 0;  /* PAS de padding horizontal : dompdf ignore box-sizing */
             text-align: center;
             font-size: 10pt;
             font-weight: 700;
