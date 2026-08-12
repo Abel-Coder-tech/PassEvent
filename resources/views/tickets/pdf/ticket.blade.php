@@ -163,7 +163,7 @@
         /* Colonne de droite : alignée à droite avec marge de 0.30cm */
         .info-grid td:last-child {
             text-align: right;
-            padding-right: 1cm;  /* AJOUTÉ : marge à droite de 0.30cm */
+            padding-right: 0.8cm;  /* AJOUTÉ : marge à droite de 0.30cm */
         }
 
         /* =========================================================
@@ -442,7 +442,7 @@
 
         {{-- ZONE HAUTE --}}
         <div class="zone-top">
-            <div class="ticket-title">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
+            <div class="ticket-title text-center">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
 
             <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
 
