@@ -27,14 +27,15 @@
         }
         .ticket {
             width: 8cm;
-            height: 13cm;
             background: #542680;
-            padding: 0.69cm 0.585cm;
             box-sizing: border-box;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         .ticket-inner {
-            width: 100%;
-            height: 11.62cm;
+            width: calc(100% - 1.17cm);
+            height: calc(100% - 1.38cm);
+            margin: 0.69cm 0.585cm;
             background: #f2f2f2;
             border-radius: 0.5cm;
             overflow: hidden;
@@ -57,24 +58,24 @@
 
         .ticket-title {
             text-align: center;
-            font-size: 0.28cm;
+            font-size: 0.25cm; /* reduced */
             font-weight: 700;
             color: #b7b7b7;
-            letter-spacing: 0.09cm;
+            letter-spacing: 0.08cm;
             text-transform: uppercase;
-            padding-bottom: 0.12cm;
+            padding-bottom: 0.1cm;
             border-bottom: 1px solid #e7e7e7;
-            margin-bottom: 0.18cm;
+            margin-bottom: 0.12cm;
         }
 
         .event-name {
-            font-size: 0.7cm;
+            font-size: 0.64cm; /* reduced */
             font-weight: 800;
             color: #542680;
             text-transform: uppercase;
-            letter-spacing: 0.02cm;
-            margin-bottom: 0.18cm;
-            line-height: 1.05;
+            letter-spacing: 0.015cm;
+            margin-bottom: 0.12cm;
+            line-height: 1.02;
         }
 
         .info-grid {
@@ -97,20 +98,20 @@
             margin-bottom: 0.03cm;
         }
         .info-grid .val {
-            font-size: 0.22cm;
+            font-size: 0.20cm; /* reduced */
             font-weight: 800;
             color: #1a1a1a;
             display: block;
-            line-height: 1.2;
+            line-height: 1.15;
         }
 
         .gratuit {
-            font-size: 0.28cm;
+            font-size: 0.24cm; /* reduced */
             font-weight: 800;
             color: #e53935;
             text-transform: uppercase;
-            letter-spacing: 0.04cm;
-            margin-top: 0.12cm;
+            letter-spacing: 0.035cm;
+            margin-top: 0.08cm;
         }
 
         /* ===== SÉPARATEUR ===== */
@@ -119,6 +120,7 @@
             left: 0;
             right: 0;
             top: 4.16cm;
+            /* ensure separator aligns with adjusted inner height */
             height: 0;
             display: block;
             pointer-events: none;
@@ -156,7 +158,8 @@
             background: #f2f2f2;
             padding: 0.18cm 0.3cm 0.12cm;
             width: 100%;
-            height: 7.46cm;
+            /* bottom zone height = 11.62 - 4.16 = 7.46 */
+            height: 6.86cm;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -172,10 +175,10 @@
             width: 100%;
         }
         .code-pass-value {
-            font-size: 0.65cm;
+            font-size: 0.58cm; /* reduced */
             font-weight: 800;
             color: #542680;
-            letter-spacing: 0.08cm;
+            letter-spacing: 0.07cm;
             text-transform: uppercase;
         }
 
@@ -188,17 +191,17 @@
             justify-content: center;
         }
         .qr-block img {
-            width: 2.9cm;
-            height: 2.9cm;
+            width: 2.6cm; /* reduced */
+            height: 2.6cm; /* reduced */
             display: block;
         }
         .qr-label {
-            font-size: 0.17cm;
+            font-size: 0.15cm; /* reduced */
             font-weight: 700;
             color: #7d7d7d;
-            letter-spacing: 0.05cm;
+            letter-spacing: 0.045cm;
             text-transform: uppercase;
-            margin-top: 0.12cm;
+            margin-top: 0.08cm;
         }
 
         .footer-row {
