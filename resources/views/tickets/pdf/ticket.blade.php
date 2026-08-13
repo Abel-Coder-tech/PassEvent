@@ -321,7 +321,7 @@
         }
 
         .code-pass-value {
-            font-size: 17pt;
+            font-size: 15pt;
             font-weight: 600;
             color: #552680;
             letter-spacing: 0.05cm;
