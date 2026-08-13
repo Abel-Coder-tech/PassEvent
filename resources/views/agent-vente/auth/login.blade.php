@@ -37,8 +37,13 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-medium">Mot de passe</label>
-                                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                                    required>
+                                <div class="position-relative">
+                                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
+                                        required style="padding-right: 2.6rem;">
+                                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 8px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                    </button>
+                                </div>
                             </div>
                             <button type="submit" class="btn w-100 text-white py-2 fw-medium" style="background: #7c3aed;">
                                 Se connecter
@@ -56,3 +61,18 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+});
+</script>
+@endpush

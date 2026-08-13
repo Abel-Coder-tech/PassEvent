@@ -34,7 +34,7 @@
             height: 13cm;
             margin: 0;
             padding: 0;
-            background: #602183;
+            background: #542680;
             overflow: hidden;
         }
 
@@ -48,7 +48,7 @@
             height: 13cm;
             margin: 0;
             padding: 0;
-            background: #602183;
+            background: #542680;
             overflow: hidden;
             page-break-inside: avoid;
             break-inside: avoid;
@@ -267,7 +267,7 @@
             width: 0.28cm;
             height: 0.28cm;
             transform: translateY(-50%);
-            background: #602183;
+            background: #542680;
             border-radius: 50%;
         }
 
@@ -278,7 +278,7 @@
             width: 0.28cm;
             height: 0.28cm;
             transform: translateY(-50%);
-            background: #602183;
+            background: #542680;
             border-radius: 50%;
         }
 

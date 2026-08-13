@@ -189,7 +189,7 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i></button>
+                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i>Mettre à jour</button>
                     </div>
                 </div>
             </form>
@@ -342,7 +342,7 @@
             <form action="{{ route('superadmin.organisateurs.attribuer-agents', $user) }}" method="POST">
                 @csrf
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label small fw-semibold mb-1">Portée</label>
                         <select name="portee" class="sa-form-control" data-portee="evenementField">
                             <option value="dashboard">Tout le dashboard</option>
@@ -366,7 +366,7 @@
                         <label class="form-label small fw-semibold mb-1">Agents vente</label>
                         <input type="number" name="nb_agents_vente" class="sa-form-control" min="0" value="2">
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i>Mettre à jour</button>
                     </div>
                 </div>
@@ -401,7 +401,7 @@
                                 <form action="{{ route('superadmin.organisateurs.attribution-supprimer', $attr) }}" method="POST"
                                     onsubmit="return confirm('Supprimer cette attribution ?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="sa-btn sa-btn-danger" title="Supprimer l'attribution"><i class="bi bi-trash"></i>Mettre à jour</button>
+                                    <button type="submit" class="sa-btn sa-btn-danger" title="Supprimer l'attribution"><i class="bi bi-trash"></i>Supprimer</button>
                                 </form>
                             </td>
                         </tr>

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Withdrawal;
 
 class User extends Authenticatable
 {
@@ -89,7 +88,6 @@ class User extends Authenticatable
     {
         $evenementsIds = $this->evenements()->pluck('id');
         $stats = $this->statsFinancieres();
-        $rembourse = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'remboursé')->sum('montant');
         $enCours = DemandeRemboursement::where('organisateur_id', $this->id)
             ->whereIn('statut', ['en_attente', 'en_cours'])
             ->sum('montant_total');
@@ -99,7 +97,8 @@ class User extends Authenticatable
         $retires = Withdrawal::where('user_id', $this->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
-        return max(0, $stats['totalTickets'] - $rembourse - $enCours - $commission - $retires);
+
+        return max(0, $stats['totalTickets'] - $enCours - $commission - $retires);
     }
 
     // Commission par défaut de l'organisateur (null = 10 % global)

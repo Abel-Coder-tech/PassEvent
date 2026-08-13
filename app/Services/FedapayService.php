@@ -18,6 +18,69 @@ class FedapayService
     }
 
     /**
+     * Récupère les opérateurs mobile money réellement utilisés sur le compte FedaPay
+     * en interrogeant les transactions récentes.
+     * Retourne un tableau associatif opérateur => nombre de transactions.
+     * Retourne [] si l'API est injoignable ou si aucune transaction mobile money.
+     */
+    public function getOperateursUtilises(int $limit = 100): array
+    {
+        $secretKey = config('services.fedapay.secret_key');
+
+        if (! $secretKey) {
+            Log::warning('FedapayService::getOperateursUtilises - Clé secrète manquante');
+
+            return [];
+        }
+
+        $baseUrl = $this->isSandbox()
+            ? 'https://sandbox-api.fedapay.com'
+            : 'https://api.fedapay.com';
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$secretKey,
+                'Accept' => 'application/json',
+            ])->timeout(8)->get("{$baseUrl}/v1/transactions/search", [
+                'page' => 1,
+                'per_page' => $limit,
+            ]);
+
+            if (! $response->successful()) {
+                Log::warning('FedapayService::getOperateursUtilises - Échec HTTP', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return [];
+            }
+
+            $data = $response->json();
+            $transactions = $data['v1/transactions'] ?? $data['transactions'] ?? $data;
+
+            $operateurs = [];
+            foreach ((array) $transactions as $tx) {
+                $method = $tx['mode'] ?? $tx['payment_method'] ?? null;
+                if (is_array($method)) {
+                    $method = $method['provider'] ?? $method['name'] ?? null;
+                }
+                $operateur = PaiementMapper::operateur($method);
+                if ($operateur) {
+                    $operateurs[$operateur] = ($operateurs[$operateur] ?? 0) + 1;
+                }
+            }
+
+            return $operateurs;
+        } catch (\Exception $e) {
+            Log::error('FedapayService::getOperateursUtilises - Exception', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
      * Récupère les détails d'une transaction FedaPay via l'API.
      * Retourne le tableau des données ou null en cas d'échec.
      */
@@ -25,8 +88,9 @@ class FedapayService
     {
         $secretKey = config('services.fedapay.secret_key');
 
-        if (!$secretKey) {
+        if (! $secretKey) {
             Log::warning('FedapayService::getTransaction - Clé secrète manquante');
+
             return null;
         }
 
@@ -36,7 +100,7 @@ class FedapayService
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $secretKey,
+                'Authorization' => 'Bearer '.$secretKey,
                 'Accept' => 'application/json',
             ])->get("{$baseUrl}/v1/transactions/{$transactionId}");
 
@@ -50,6 +114,7 @@ class FedapayService
                     'transaction_id' => $transactionId,
                     'payload' => $transaction,
                 ]);
+
                 return $transaction;
             }
 
@@ -58,12 +123,14 @@ class FedapayService
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
+
             return null;
         } catch (\Exception $e) {
             Log::error('FedapayService::getTransaction - Exception', [
                 'transaction_id' => $transactionId,
                 'message' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

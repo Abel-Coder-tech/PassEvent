@@ -36,7 +36,12 @@
 
                         <div class="mb-3">
                             <label class="form-label">Mot de passe</label>
-                            <input type="password" name="password" id="agent_password" class="form-control @error('password') is-invalid @enderror" required placeholder="Min. 8 caractères" minlength="8" oninput="checkPasswordStrengthAgent(this.value)">
+                            <div class="position-relative">
+                                <input type="password" name="password" id="agent_password" class="form-control @error('password') is-invalid @enderror" required placeholder="Min. 8 caractères" minlength="8" oninput="checkPasswordStrengthAgent(this.value)">
+                                <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
+                                    <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                </button>
+                            </div>
                             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <div id="passwordMeterAgent" class="mt-2" style="display:none;">
                                 <div style="height:3px;background:#e9ecef;border-radius:2px;overflow:hidden;">
@@ -79,6 +84,17 @@
 
 @section('scripts')
 <script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+});
+
 function checkPasswordStrengthAgent(pwd) {
     var meter = document.getElementById('passwordMeterAgent');
     var bar = document.getElementById('passwordBarAgent');

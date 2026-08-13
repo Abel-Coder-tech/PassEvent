@@ -2,17 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Message;
 use App\Models\Ticket;
-use App\Models\CodePromo;
 use App\Models\Withdrawal;
-use Illuminate\Http\Request;
+use App\Services\FedapayService;
+use App\Services\PaiementMapper;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    protected FedapayService $fedapay;
+
+    public function __construct(FedapayService $fedapay)
+    {
+        $this->fedapay = $fedapay;
+    }
+
     // Tableau de bord principal de l'organisateur avec toutes ses statistiques
     public function index()
     {
@@ -28,6 +37,7 @@ class DashboardController extends Controller
             } elseif ($user->statut === 'rejete') {
                 $message = 'Votre inscription a été rejetée. Contactez PaxEvent pour plus d\'informations.';
             }
+
             return view('dashboard-pending', ['message' => $message, 'statut' => $user->statut]);
         }
 
@@ -109,8 +119,8 @@ class DashboardController extends Controller
 
         $eventEnCours = Evenement::where('user_id', $user->id)
             ->where('statut', 'publié')
-            ->withCount(['tickets as tickets_payes' => fn($q) => $q->where('statut_paiement', 'payé')])
-            ->withCount(['tickets as tickets_utilises' => fn($q) => $q->where('utilise', true)])
+            ->withCount(['tickets as tickets_payes' => fn ($q) => $q->where('statut_paiement', 'payé')])
+            ->withCount(['tickets as tickets_utilises' => fn ($q) => $q->where('utilise', true)])
             ->orderBy('tickets_payes', 'desc')
             ->first();
 
@@ -168,7 +178,7 @@ class DashboardController extends Controller
         if ($eventAnnule) {
             $activiteRecents[] = [
                 'color' => '#e74c3c',
-                'text' => '<strong>' . $eventAnnule->titre . '</strong> annulé',
+                'text' => '<strong>'.$eventAnnule->titre.'</strong> annulé',
                 'time' => $eventAnnule->updated_at->diffForHumans(),
             ];
         }
@@ -204,17 +214,32 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('methode_paiement');
 
-        $reseauxConfig = [
-            'mtn' => ['label' => 'MTN MoMo', 'icon' => 'bi-phone'],
-            'moov' => ['label' => 'Moov Money', 'icon' => 'bi-phone'],
-            'celtiis' => ['label' => 'Celtiis Cash', 'icon' => 'bi-phone'],
-            'autres' => ['label' => 'Autres / Indéterminé', 'icon' => 'bi-phone'],
-        ];
+        // Opérateurs réellement utilisés selon l'API FedaPay, fusionnés avec ceux vus en base
+        $operateursApi = Cache::remember('fedapay_operateurs_utilises', now()->addMinutes(15), function () {
+            return $this->fedapay->getOperateursUtilises(50);
+        });
+
+        $reseauxConfig = [];
+        $operateursAffiches = [];
+        $operateursCandidats = array_merge(array_keys($operateursApi), $operateursRaw->keys()->all());
+        foreach ($operateursCandidats as $operateur) {
+            if (in_array($operateur, ['cash', 'especes', 'mobile_money', 'bancaire', 'autres'])) {
+                continue;
+            }
+            if (! in_array($operateur, $operateursAffiches)) {
+                $operateursAffiches[] = $operateur;
+                $reseauxConfig[$operateur] = [
+                    'label' => PaiementMapper::operateurLabel($operateur),
+                    'icon' => 'bi-phone',
+                ];
+            }
+        }
+        $reseauxConfig['autres'] = ['label' => 'Autres / Indéterminé', 'icon' => 'bi-phone'];
 
         $reseauxPaiement = collect();
         foreach ($reseauxConfig as $key => $cfg) {
             if ($key === 'autres') {
-                $autres = $operateursRaw->reject(fn ($data, $k) => in_array($k, ['mtn', 'moov', 'celtiis']));
+                $autres = $operateursRaw->reject(fn ($data, $k) => in_array($k, $operateursAffiches));
                 $reseauxPaiement->put('autres', (object) [
                     'total' => (int) $autres->sum('total'),
                     'montant' => (int) $autres->sum('montant'),

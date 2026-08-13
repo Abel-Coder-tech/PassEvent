@@ -63,12 +63,13 @@ class PaiementMapper
             return null;
         }
 
-        if (str_contains($lower, 'mtn')) {
-            return 'mtn';
+        // "sbin" est le mode FedaPay pour Celtiis Bénin
+        if ($lower === 'sbin' || str_contains($lower, 'celtiis') || str_contains($lower, 'celti')) {
+            return 'celtiis';
         }
 
-        if (str_contains($lower, 'celtiis') || str_contains($lower, 'celti')) {
-            return 'celtiis';
+        if (str_contains($lower, 'mtn')) {
+            return 'mtn';
         }
 
         if (str_contains($lower, 'togocel') || str_contains($lower, 'togo')) {
@@ -105,9 +106,10 @@ class PaiementMapper
 
     public static function operateurLabel(?string $operateur): string
     {
-        if (!$operateur) {
+        if (! $operateur) {
             return 'Indéterminé';
         }
+
         return self::OPERATEURS_LABELS[$operateur] ?? ucfirst($operateur);
     }
 }
