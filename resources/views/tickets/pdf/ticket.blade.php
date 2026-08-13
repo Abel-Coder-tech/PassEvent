@@ -107,7 +107,7 @@
             font-size: 10pt;
             font-weight: 700;
             color: rgba(57, 59, 61, 0.56);
-            letter-spacing: 0.02cm;
+            letter-spacing: 0;
             text-transform: uppercase;
             background: rgba(96, 33, 131, 0.05);
             line-height: 1.2;
