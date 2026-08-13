@@ -74,7 +74,7 @@
 
                             @if($isPaid)
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn btn-violet btn-sm" style="border-radius: 6px;">
+                                    <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $ticket->id]) }}" class="btn btn-violet btn-sm" style="border-radius: 6px;">
                                         <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger PDF
                                     </a>
                                 </div>

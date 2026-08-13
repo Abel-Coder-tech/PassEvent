@@ -72,12 +72,12 @@
                         <div class="d-grid gap-2">
                             @if($quantite > 1)
                                 @foreach($groupTickets as $gt)
-                                    <a href="{{ route('tickets.telecharger', $gt->id) }}" class="btn btn-violet py-2" style="border-radius: 8px;">
+                                    <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $gt->id]) }}" class="btn btn-violet py-2" style="border-radius: 8px;">
                                         <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger {{ mb_strtolower($textes['billet']) }} {{ $loop->iteration }}
                                     </a>
                                 @endforeach
                             @else
-                                <a href="{{ route('tickets.telecharger', $ticket->id) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
+                                <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $ticket->id]) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
                                     <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger {{ mb_strtolower($textes['billet']) }} PDF
                                 </a>
                             @endif

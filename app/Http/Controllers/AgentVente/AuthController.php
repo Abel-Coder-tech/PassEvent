@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\AgentVente;
 
 use App\Http\Controllers\Controller;
-use App\Models\AgentVente;
 use App\Models\CodePromo;
+use App\Models\Evenement;
 use App\Models\Ticket;
+use App\Services\FedapayService;
+use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
+use App\Support\PerPage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -33,13 +38,15 @@ class AuthController extends Controller
         if (Auth::guard('agent_vente')->attempt($credentials)) {
             $agent = Auth::guard('agent_vente')->user();
 
-            if (!$agent->actif) {
+            if (! $agent->actif) {
                 Auth::guard('agent_vente')->logout();
+
                 return back()->withErrors(['email' => 'Votre compte a été désactivé. Contactez l\'organisateur.']);
             }
 
             if ($agent->evenement->date_event < now()) {
                 Auth::guard('agent_vente')->logout();
+
                 return back()->withErrors(['email' => 'L\'événement est déjà terminé.']);
             }
 
@@ -80,7 +87,7 @@ class AuthController extends Controller
     }
 
     // Retourne l'historique des ventes en JSON pour rafraîchissement dynamique
-    public function historiqueJson(): \Illuminate\Http\JsonResponse
+    public function historiqueJson(): JsonResponse
     {
         $agent = Auth::guard('agent_vente')->user();
 
@@ -94,22 +101,57 @@ class AuthController extends Controller
                 'id' => $t->id,
                 'nom' => $t->nom_acheteur,
                 'tarif' => $t->tarif?->getLabel() ?? 'N/A',
-                'montant' => $t->montant > 0 ? number_format($t->montant, 0, ',', ' ') . ' F' : 'Gratuit',
+                'montant' => $t->montant > 0 ? number_format($t->montant, 0, ',', ' ').' F' : 'Gratuit',
                 'montant_val' => $t->montant,
                 'methode' => $t->methode_paiement,
-                'methode_label' => \App\Models\Ticket::methodePaiementLabel($t->methode_paiement),
+                'methode_label' => Ticket::methodePaiementLabel($t->methode_paiement),
                 'date' => $t->date_achat->format('H:i'),
             ]);
 
         return response()->json([
             'tickets' => $tickets,
             'total_tickets' => $agent->tickets_count,
-            'montant_total' => number_format($agent->montant_total, 0, ',', ' ') . ' F',
+            'montant_total' => number_format($agent->montant_total, 0, ',', ' ').' F',
             'aujourd_hui' => $agent->tickets()->where('statut_paiement', 'payé')->whereDate('date_achat', today())->count(),
             'montant_ajd' => number_format(
                 $agent->tickets()->where('statut_paiement', 'payé')->whereDate('date_achat', today())->sum('montant'), 0, ',', ' '
-            ) . ' F',
+            ).' F',
         ]);
+    }
+
+    // Historique complet des ventes de l'agent : paginé (10/page) et filtrable par période
+    public function historique(Request $request): View
+    {
+        $agent = Auth::guard('agent_vente')->user();
+
+        $validated = $request->validate([
+            'periode' => 'nullable|string|in:aujourdhui,hier,semaine,mois,tout',
+            'per_page' => 'nullable|integer',
+        ]);
+
+        $periode = $validated['periode'] ?? 'aujourdhui';
+        $start = match ($periode) {
+            'hier' => now()->subDay()->startOfDay(),
+            'semaine' => now()->startOfWeek(),
+            'mois' => now()->startOfMonth(),
+            'tout' => null,
+            default => now()->startOfDay(),
+        };
+
+        $query = $agent->tickets()
+            ->where('statut_paiement', 'payé')
+            ->with('tarif')
+            ->latest('date_achat');
+
+        if ($start) {
+            $query->where('date_achat', '>=', $start);
+        }
+
+        $tickets = $query->paginate(PerPage::resolve());
+
+        $montantFiltre = $tickets->sum('montant');
+
+        return view('agent-vente.historique', compact('agent', 'tickets', 'periode', 'montantFiltre'));
     }
 
     // Enregistre une vente de ticket avec gestion espèces ou paiement mobile
@@ -137,24 +179,25 @@ class AuthController extends Controller
         $montantReduction = 0;
         $prixUnitaire = $tarif->prix;
 
-        if (!empty($validated['code_promo'])) {
+        if (! empty($validated['code_promo'])) {
             $codePromo = CodePromo::validerPour($validated['code_promo'], $agent->evenement, $tarif);
             $montantReduction = $codePromo->calculerReduction($tarif->prix);
             $prixUnitaire = max(0, $tarif->prix - $montantReduction);
-            $codePromo->increment('nb_utilisations', 1);
+            // nb_utilisations incrémenté uniquement à la confirmation (cash ici, mobile via callback/webhook)
         }
 
         // Blocage espèces si seuil mobile money non atteint ou si bloqué par le superadmin
-        if ($validated['methode_paiement'] === 'cash' && !$agent->evenement->ventesEspecesActivees()) {
+        if ($validated['methode_paiement'] === 'cash' && ! $agent->evenement->ventesEspecesActivees()) {
             if ($agent->evenement->ventesEspecesBloqueesSuperadmin()) {
                 return back()->withErrors([
-                    'methode_paiement' => 'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.'
+                    'methode_paiement' => 'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.',
                 ]);
             }
-            $seuil = (int) ceil($agent->evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100);
+            $seuil = (int) ceil($agent->evenement->capacite * Evenement::SEUIL_ESPECES_PCT / 100);
             $vendus = $agent->evenement->ticketsEnLigneCount();
+
             return back()->withErrors([
-                'methode_paiement' => "Ventes espèces bloquées. Vendre d'abord {$seuil} ticket(s) en ligne. Progression : {$vendus}/{$seuil}."
+                'methode_paiement' => "Ventes espèces bloquées. Vendre d'abord {$seuil} ticket(s) en ligne. Progression : {$vendus}/{$seuil}.",
             ]);
         }
 
@@ -174,7 +217,7 @@ class AuthController extends Controller
             'quantite' => 1,
             'statut_paiement' => 'en_attente',
             'methode_paiement' => $validated['methode_paiement'],
-            'type_paiement' => \App\Services\PaiementMapper::moyenPaiement($validated['methode_paiement']),
+            'type_paiement' => PaiementMapper::moyenPaiement($validated['methode_paiement']),
             'utilise' => false,
             'date_achat' => now(),
         ]);
@@ -185,7 +228,12 @@ class AuthController extends Controller
             $tarif->increment('quantite_vendue', 1);
             $agent->increment('tickets_count');
             $agent->increment('montant_total', $prixUnitaire);
+            // Comptabilise le code promo une fois la vente espèces confirmée
+            if ($codePromo) {
+                $codePromo->increment('nb_utilisations', 1);
+            }
             session()->flash('ticket_created', $ticket->id); // Pour affichage du dernier ticket
+
             return redirect()->route('agent-vente.dashboard')
                 ->with('success', 'Ticket vendu avec succès !');
         }
@@ -206,7 +254,7 @@ class AuthController extends Controller
             return redirect()->route('agent-vente.dashboard');
         }
 
-        $fedapay = app(\App\Services\FedapayService::class);
+        $fedapay = app(FedapayService::class);
         $publicKey = $fedapay->getPublicKey();
         $sandbox = $fedapay->isSandbox();
 
@@ -214,7 +262,7 @@ class AuthController extends Controller
     }
 
     // Télécharge le PDF du ticket avec QR code (max 3 téléchargements)
-    public function downloadPdf(Ticket $ticket): \Illuminate\Http\Response
+    public function downloadPdf(Ticket $ticket): Response
     {
         $agent = Auth::guard('agent_vente')->user();
 
@@ -238,9 +286,9 @@ class AuthController extends Controller
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
-        $logoDataUri = \App\Models\Ticket::logoVioletDataUri();
+        $logoDataUri = Ticket::logoVioletDataUri();
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
-        $filename = 'ticket-' . $ticket->code_unique . '.pdf';
+        $filename = 'ticket-'.$ticket->code_unique.'.pdf';
 
         return $pdf->download($filename);
     }
@@ -249,6 +297,7 @@ class AuthController extends Controller
     public function logout(): RedirectResponse
     {
         Auth::guard('agent_vente')->logout();
+
         return redirect()->route('agent-vente.login');
     }
 }

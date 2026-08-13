@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TicketEmail;
+use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Message;
 use App\Models\Tarif;
-use App\Models\CodePromo;
 use App\Models\Ticket;
+use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class EvenementPublicController extends Controller
 {
@@ -40,7 +44,7 @@ class EvenementPublicController extends Controller
             $query->whereBetween('date_event', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]);
         } elseif ($selectedDate === 'mois') {
             $query->whereMonth('date_event', now()->month)
-                  ->whereYear('date_event', now()->year);
+                ->whereYear('date_event', now()->year);
         }
 
         if ($q) {
@@ -51,7 +55,7 @@ class EvenementPublicController extends Controller
             });
         }
 
-        $evenements = $query->paginate(\App\Support\PerPage::resolve());
+        $evenements = $query->paginate(PerPage::resolve());
 
         // Événements passés (publiés ou terminés) affichés en bas de page
         $evenementsPasses = Evenement::with('tarifs')
@@ -67,7 +71,7 @@ class EvenementPublicController extends Controller
     // Affiche la page publique d'un événement avec tarifs et disponibilité
     public function show(Evenement $evenement)
     {
-        if (!in_array($evenement->statut, ['publié', 'terminé'], true)) {
+        if (! in_array($evenement->statut, ['publié', 'terminé'], true)) {
             abort(404); // Seuls les événements publiés ou passés sont visibles
         }
 
@@ -121,7 +125,7 @@ class EvenementPublicController extends Controller
 
         if ($estGratuit) {
             $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
-            if (!$tarif) {
+            if (! $tarif) {
                 $tarif = Tarif::create([
                     'evenement_id' => $evenement->id,
                     'nom' => 'Gratuit',
@@ -145,6 +149,7 @@ class EvenementPublicController extends Controller
         $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
         if ($placesRestantes < $quantite) {
             $placesRestantes = max(0, $placesRestantes);
+
             return back()->with('error', "Il ne reste que {$placesRestantes} place(s) disponible(s) pour cet événement.")->withInput();
         }
 
@@ -153,16 +158,16 @@ class EvenementPublicController extends Controller
         $montantUnitaire = $tarif->prix;
 
         // Validation et application du code promo
-        if (!empty($validated['code_promo'])) {
+        if (! empty($validated['code_promo'])) {
             $codePromo = CodePromo::where('code', strtoupper($validated['code_promo']))
-                ->whereHas('tarif', fn($q) => $q->where('evenement_id', $evenement->id))
+                ->whereHas('tarif', fn ($q) => $q->where('evenement_id', $evenement->id))
                 ->first();
 
-            if (!$codePromo) {
+            if (! $codePromo) {
                 return back()->with('error', 'Ce code promo n\'est pas valide pour cet événement.')->withInput();
             }
 
-            if (!$codePromo->actif) {
+            if (! $codePromo->actif) {
                 return back()->with('error', 'Ce code promo a été désactivé.')->withInput();
             }
 
@@ -183,7 +188,7 @@ class EvenementPublicController extends Controller
             $montantUnitaire = $tarif->prix - $montantReduction;
         }
 
-        $groupTransactionId = 'GRP-' . strtoupper(\Illuminate\Support\Str::random(16)); // ID de transaction groupée
+        $groupTransactionId = 'GRP-'.strtoupper(Str::random(16)); // ID de transaction groupée
         $tickets = [];
 
         // Création de N tickets avec un ID de transaction partagé
@@ -191,7 +196,7 @@ class EvenementPublicController extends Controller
             $t = $evenement->tickets()->create([
                 'tarif_id' => $tarif->id,
                 'code_unique' => 'TMP',
-                'qr_signature' => hash_hmac('sha256', (string) \Illuminate\Support\Str::uuid(), config('app.key') ?? 'fallback'),
+                'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
                 'email_acheteur' => strtolower($validated['email_acheteur']),
                 'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
                 'nom_acheteur' => $validated['nom_acheteur'],
@@ -212,12 +217,14 @@ class EvenementPublicController extends Controller
             $tickets[] = $t;
         }
 
-        if ($codePromoUtilise) {
-            $codePromo->increment('nb_utilisations', 1);
-        }
-
         if ($evenement->gratuit) { // Traitement spécial pour les événements gratuits
-            $freeGroupId = 'GRATUIT-' . $tickets[0]->id;
+            // Le code promo n'est comptabilisé qu'une fois le paiement confirmé :
+            // pour un événement gratuit, la confirmation est immédiate ici.
+            if ($codePromoUtilise) {
+                $codePromo->increment('nb_utilisations', 1);
+            }
+
+            $freeGroupId = 'GRATUIT-'.$tickets[0]->id;
             foreach ($tickets as $t) {
                 $t->update([
                     'statut_paiement' => 'payé',
@@ -227,10 +234,11 @@ class EvenementPublicController extends Controller
             $evenement->increment('quota_vendu', $quantite);
             $tarif->increment('quantite_vendue', $quantite);
             try {
-                Mail::to($tickets[0]->email_acheteur)->send(new \App\Mail\TicketEmail($tickets));
+                Mail::to($tickets[0]->email_acheteur)->send(new TicketEmail($tickets));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Email gratuit non envoyé : ' . $e->getMessage());
+                Log::error('Email gratuit non envoyé : '.$e->getMessage());
             }
+
             return redirect()->route('confirmation.show', $tickets[0]->id)
                 ->with('success', $quantite > 1 ? "{$quantite} places réservées." : 'Votre place est réservée.');
         }
@@ -264,13 +272,13 @@ class EvenementPublicController extends Controller
         ]);
 
         Mail::raw(
-            "Message de {$validated['nom']} ({$validated['email']})\n\n" .
-            "Evenement : {$evenement->titre}\n\n" .
+            "Message de {$validated['nom']} ({$validated['email']})\n\n".
+            "Evenement : {$evenement->titre}\n\n".
             "Message :\n{$validated['message']}",
             function ($m) use ($organisateur, $validated, $evenement) {
                 $m->to($organisateur->email, $organisateur->nom)
-                  ->replyTo($validated['email'], $validated['nom'])
-                  ->subject("[PaxEvent] Question sur {$evenement->titre}");
+                    ->replyTo($validated['email'], $validated['nom'])
+                    ->subject("[PaxEvent] Question sur {$evenement->titre}");
             }
         );
 

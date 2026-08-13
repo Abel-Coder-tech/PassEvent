@@ -9,6 +9,7 @@ use App\Mail\RetraitRequested;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +72,7 @@ class RetraitController extends Controller
 
         $retraits = Withdrawal::where('user_id', $user->id)
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
 
         return view('admin.retraits.index', array_merge($data, [
             'retraits' => $retraits,
@@ -84,19 +85,22 @@ class RetraitController extends Controller
         $user = Auth::user();
         $isAjax = $request->ajax() || $request->expectsJson();
 
-        // Transaction atomique avec lock pour éviter les doubles retraits (race condition)
-        $retrait = DB::transaction(function () use ($user, $request, $isAjax) {
+        // Transaction atomique avec verrouillage de l'utilisateur pour éviter les doubles retraits (race condition)
+        $retrait = DB::transaction(function () use ($user, $request) {
+            // Verrou pessimiste sur la ligne utilisateur : sérialise les demandes simultanées
+            $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+
             $data = $this->getSoldeDisponible($user);
 
             $validated = $request->validate([
                 'reseau' => 'required|in:mtn,moov,celtiis',
-                'montant' => 'required|numeric|min:1000|max:' . $data['soldeDisponible'],
+                'montant' => 'required|numeric|min:1000|max:'.$data['soldeDisponible'],
                 'nom' => 'required|string|max:255',
                 'mobile' => 'required|string|max:50',
                 'password' => 'required|string',
             ]);
 
-            if (!Hash::check($validated['password'], $user->getAuthPassword())) {
+            if (! Hash::check($validated['password'], $user->getAuthPassword())) {
                 return ['error' => true, 'message' => 'Mot de passe incorrect.'];
             }
 
@@ -112,7 +116,10 @@ class RetraitController extends Controller
         });
 
         if (is_array($retrait) && isset($retrait['error'])) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => $retrait['message']], 422);
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => $retrait['message']], 422);
+            }
+
             return back()->withErrors(['password' => $retrait['message']])->withInput();
         }
 
@@ -124,7 +131,10 @@ class RetraitController extends Controller
         ], $label);
 
         $msg = "Demande de retrait de {$label} envoyée. L'équipe PaxEvent va la traiter sous 72h.";
-        if ($isAjax) return response()->json(['success' => true, 'message' => $msg]);
+        if ($isAjax) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+
         return back()->with('success', $msg);
     }
 
@@ -133,8 +143,8 @@ class RetraitController extends Controller
         Message::create([
             'nom_complet' => $user->nom,
             'email' => $user->email,
-            'objet' => 'Demande de retrait — ' . $user->nom,
-            'message' => "L'organisateur {$user->nom} ({$user->email}) a demandé un retrait de " . number_format($validated['montant'], 0, ',', ' ') . " FCFA sur {$label}.\nBénéficiaire : {$validated['nom']}\nMobile : {$validated['mobile']}",
+            'objet' => 'Demande de retrait — '.$user->nom,
+            'message' => "L'organisateur {$user->nom} ({$user->email}) a demandé un retrait de ".number_format($validated['montant'], 0, ',', ' ')." FCFA sur {$label}.\nBénéficiaire : {$validated['nom']}\nMobile : {$validated['mobile']}",
             'lu' => false,
         ]);
 
@@ -153,7 +163,7 @@ class RetraitController extends Controller
                 );
             }
         } catch (\Exception $e) {
-            Log::error('Email retrait non envoyé : ' . $e->getMessage());
+            Log::error('Email retrait non envoyé : '.$e->getMessage());
         }
     }
 
@@ -168,9 +178,9 @@ class RetraitController extends Controller
         $label = self::getLabelReseau($retrait->reseau);
 
         $messages = [
-            'en_cours' => "Votre retrait de " . number_format($retrait->montant, 0, ',', ' ') . " FCFA sur {$label} est en cours de traitement.",
-            'paye' => "Votre retrait de " . number_format($retrait->montant, 0, ',', ' ') . " FCFA sur {$label} a été effectué. Merci d'avoir utilisé PaxEvent !",
-            'rejete' => "Votre retrait de " . number_format($retrait->montant, 0, ',', ' ') . " FCFA sur {$label} a été rejeté. Raison : " . ($retrait->admin_notes ?? 'Non spécifiée'),
+            'en_cours' => 'Votre retrait de '.number_format($retrait->montant, 0, ',', ' ')." FCFA sur {$label} est en cours de traitement.",
+            'paye' => 'Votre retrait de '.number_format($retrait->montant, 0, ',', ' ')." FCFA sur {$label} a été effectué. Merci d'avoir utilisé PaxEvent !",
+            'rejete' => 'Votre retrait de '.number_format($retrait->montant, 0, ',', ' ')." FCFA sur {$label} a été rejeté. Raison : ".($retrait->admin_notes ?? 'Non spécifiée'),
         ];
 
         $objets = [
@@ -189,7 +199,7 @@ class RetraitController extends Controller
         ]);
 
         try {
-            $mailClass = match($type) {
+            $mailClass = match ($type) {
                 'en_cours' => new RetraitApproved($user->nom, $label, $retrait->montant),
                 'paye' => new RetraitConfirmed($user->nom, $label, $retrait->montant),
                 'rejete' => new RetraitRejected($user->nom, $label, $retrait->montant, $retrait->admin_notes ?? 'Non spécifiée'),
@@ -199,7 +209,7 @@ class RetraitController extends Controller
                 Mail::to($user->email)->send($mailClass);
             }
         } catch (\Exception $e) {
-            Log::error("Email retrait {$type} non envoyé : " . $e->getMessage());
+            Log::error("Email retrait {$type} non envoyé : ".$e->getMessage());
         }
     }
 }

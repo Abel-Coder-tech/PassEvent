@@ -2,25 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\RegistrationApproved;
-use App\Mail\RegistrationRejected;
-use App\Mail\RegistrationCorrections;
 use App\Mail\NewsletterMassEmail;
-use App\Models\User;
-use App\Models\Evenement;
-use App\Models\Ticket;
-use App\Models\Log;
-use App\Models\Message;
-use App\Models\Newsletter;
-use App\Models\Withdrawal;
+use App\Mail\RegistrationApproved;
+use App\Mail\RegistrationCorrections;
+use App\Mail\RegistrationRejected;
 use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\AttributionAgent;
 use App\Models\DemandeRemboursement;
+use App\Models\Evenement;
+use App\Models\Log;
+use App\Models\Message;
+use App\Models\Newsletter;
+use App\Models\Tarif;
+use App\Models\Ticket;
+use App\Models\User;
+use App\Models\Withdrawal;
 use App\Services\ReconciliationService;
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -32,6 +33,7 @@ class SuperAdminController extends Controller
     {
         $this->reconciliation = $reconciliation;
     }
+
     // Tableau de bord super admin avec statistiques globales de la plateforme
     public function dashboard()
     {
@@ -47,7 +49,6 @@ class SuperAdminController extends Controller
         $ticketsVendus = Ticket::where('statut_paiement', 'payé')->count();
         $recettesGlobales = Ticket::where('statut_paiement', 'payé')->sum('montant');
         $scansAujourdhui = Log::where('type_operation', 'scan')->whereDate('created_at', $today)->count();
-
 
         // Ventes des 7 derniers jours pour graphique
         $ventes7Jours = collect();
@@ -76,6 +77,7 @@ class SuperAdminController extends Controller
             ->get()
             ->map(function ($e) {
                 $remplissage = $e->capacite > 0 ? round(($e->tickets_vendus / $e->capacite) * 100) : 0;
+
                 return [
                     'titre' => $e->titre,
                     'tickets' => $e->tickets_vendus,
@@ -90,6 +92,7 @@ class SuperAdminController extends Controller
             ->get()
             ->map(function ($log) {
                 $evenement = $log->ticket?->evenement?->titre ?? 'N/A';
+
                 return [
                     'action' => $log->type_operation,
                     'evenement' => $evenement,
@@ -147,7 +150,8 @@ class SuperAdminController extends Controller
     // Liste de tous les utilisateurs
     public function utilisateurs()
     {
-        $users = User::withCount('evenements')->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
+        $users = User::withCount('evenements')->orderByDesc('created_at')->paginate(PerPage::resolve());
+
         return view('superadmin.utilisateurs', compact('users'));
     }
 
@@ -160,7 +164,8 @@ class SuperAdminController extends Controller
                 $q->where('statut', 'publié');
             }], 'quota_vendu')
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
+
         return view('superadmin.organisateurs', compact('organisateurs'));
     }
 
@@ -168,10 +173,11 @@ class SuperAdminController extends Controller
     public function evenements()
     {
         $evenements = Evenement::with('user')
-            ->withCount(['tickets as tickets_vendus' => fn($q) => $q->where('statut_paiement', 'payé')])
-            ->withSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant')
+            ->withCount(['tickets as tickets_vendus' => fn ($q) => $q->where('statut_paiement', 'payé')])
+            ->withSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
+
         return view('superadmin.evenements', compact('evenements'));
     }
 
@@ -182,14 +188,16 @@ class SuperAdminController extends Controller
             ->where('transaction_id', 'not like', 'GRATUIT-%')
             ->with('evenement')
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
+
         return view('superadmin.transactions', compact('transactions'));
     }
 
     // Liste de tous les tickets
     public function tickets()
     {
-        $allTickets = Ticket::with('evenement')->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
+        $allTickets = Ticket::with('evenement')->orderByDesc('created_at')->paginate(PerPage::resolve());
+
         return view('superadmin.tickets', compact('allTickets'));
     }
 
@@ -199,7 +207,8 @@ class SuperAdminController extends Controller
         $logs = Log::with('ticket.evenement')
             ->where('type_operation', 'scan')
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
+
         return view('superadmin.scans', compact('logs'));
     }
 
@@ -207,9 +216,10 @@ class SuperAdminController extends Controller
     public function statistiques()
     {
         $evenements = Evenement::select('id', 'titre', 'capacite', 'quota_vendu', 'date_event', 'statut')
-            ->withSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant')
+            ->withSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('date_event')
             ->get();
+
         return view('superadmin.statistiques', compact('evenements'));
     }
 
@@ -221,13 +231,15 @@ class SuperAdminController extends Controller
             ->orderByDesc('created_at')
             ->limit(50)
             ->get();
+
         return view('superadmin.securite', compact('logsSuspects'));
     }
 
     // Notifications non lues (messages système)
     public function notifications()
     {
-        $messages = Message::whereNull('user_id')->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
+        $messages = Message::whereNull('user_id')->orderByDesc('created_at')->paginate(PerPage::resolve());
+
         return view('superadmin.notifications', compact('messages'));
     }
 
@@ -238,6 +250,7 @@ class SuperAdminController extends Controller
             abort(403); // Notification système uniquement
         }
         $message->update(['lu' => true]);
+
         return response()->json(['success' => true]);
     }
 
@@ -248,24 +261,26 @@ class SuperAdminController extends Controller
             abort(403); // Notification système uniquement
         }
         $message->delete();
+
         return back()->with('success', 'Notification supprimée.');
     }
 
     // Page des paramètres super admin
     public function parametres()
     {
-        $user = Auth::user();
+        $user = auth('superadmin')->user();
+
         return view('superadmin.parametres', compact('user'));
     }
 
     // Mise à jour du profil super admin (nom, email, téléphone)
     public function updateParametresProfil(Request $request)
     {
-        $user = Auth::user();
+        $user = auth('superadmin')->user();
 
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'telephone' => 'nullable|string|max:20',
         ], [
             'nom.required' => 'Le nom est obligatoire.',
@@ -282,7 +297,7 @@ class SuperAdminController extends Controller
     // Mise à jour des réseaux sociaux du super admin
     public function updateParametresReseaux(Request $request)
     {
-        $user = Auth::user();
+        $user = auth('superadmin')->user();
 
         $validated = $request->validate([
             'facebook_url' => 'nullable|url|max:500',
@@ -312,14 +327,16 @@ class SuperAdminController extends Controller
     {
         $logs = Log::with('ticket.evenement')
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
+
         return view('superadmin.logs', compact('logs'));
     }
 
     // Page de modération des événements annulés
     public function moderation()
     {
-        $evenementsSuspendus = Evenement::where('statut', 'annulé')->with('user')->paginate(\App\Support\PerPage::resolve());
+        $evenementsSuspendus = Evenement::where('statut', 'annulé')->with('user')->paginate(PerPage::resolve());
+
         return view('superadmin.moderation', compact('evenementsSuspendus'));
     }
 
@@ -333,6 +350,7 @@ class SuperAdminController extends Controller
             'details' => json_encode(['evenement_id' => $evenement->id, 'titre' => $evenement->titre, 'par' => auth('superadmin')->user()->email]),
             'ip' => request()->ip(),
         ]);
+
         return back()->with('success', 'Evenement suspendu.');
     }
 
@@ -340,6 +358,7 @@ class SuperAdminController extends Controller
     public function masquerEvenement(Evenement $evenement)
     {
         $evenement->update(['statut' => 'brouillon']);
+
         return back()->with('success', 'Evenement masque.');
     }
 
@@ -347,6 +366,7 @@ class SuperAdminController extends Controller
     public function supprimerEvenement(Evenement $evenement)
     {
         $evenement->delete();
+
         return back()->with('success', 'Evenement supprime.');
     }
 
@@ -354,6 +374,7 @@ class SuperAdminController extends Controller
     public function mettreEnAvant(Evenement $evenement)
     {
         $evenement->update(['statut' => 'publié']);
+
         return back()->with('success', 'Evenement mis en avant.');
     }
 
@@ -361,8 +382,8 @@ class SuperAdminController extends Controller
     public function voirEvenement(Evenement $evenement)
     {
         $evenement->load('user', 'tarifs');
-        $evenement->loadCount(['tickets as tickets_vendus' => fn($q) => $q->where('statut_paiement', 'payé')]);
-        $evenement->loadSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant');
+        $evenement->loadCount(['tickets as tickets_vendus' => fn ($q) => $q->where('statut_paiement', 'payé')]);
+        $evenement->loadSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant');
 
         $ticketsQuery = Ticket::where('evenement_id', $evenement->id)->where('statut_paiement', 'payé');
         $mobileRecettes = (clone $ticketsQuery)->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
@@ -590,14 +611,14 @@ class SuperAdminController extends Controller
     protected function notifierCommission(User $user, ?Evenement $evenement, $ancien, $nouveau): void
     {
         $cible = $evenement ? " pour l'événement « {$evenement->titre} »" : ' pour tous vos événements';
-        $ancienVal = is_null($ancien) ? 'par défaut' : round((float) $ancien, 1) . ' %';
-        $nouveauVal = is_null($nouveau) ? 'valeur par défaut' : round((float) $nouveau, 1) . ' %';
+        $ancienVal = is_null($ancien) ? 'par défaut' : round((float) $ancien, 1).' %';
+        $nouveauVal = is_null($nouveau) ? 'valeur par défaut' : round((float) $nouveau, 1).' %';
 
         $verbe = (is_null($nouveau) || is_null($ancien)) ? 'mise à jour' : ((float) $nouveau < (float) $ancien ? 'réduite' : 'mise à jour');
-        $objet = 'Votre commission a été ' . $verbe;
+        $objet = 'Votre commission a été '.$verbe;
         $message = "Bonjour {$user->nom},\n\n"
-            . "Votre commission a été modifiée{$cible} : elle passe de {$ancienVal} à {$nouveauVal}.\n\n"
-            . "Pour toute question, contactez le support PaxEvent.";
+            ."Votre commission a été modifiée{$cible} : elle passe de {$ancienVal} à {$nouveauVal}.\n\n"
+            .'Pour toute question, contactez le support PaxEvent.';
 
         $this->notifierOrganisateur($user, $objet, $message, $evenement?->id);
     }
@@ -690,7 +711,7 @@ class SuperAdminController extends Controller
     // Historique paginé des ajustements (et annulations) pour un événement ou un organisateur
     protected function historiqueAjustements(string $niveau, int $id, ?int $perPage = null)
     {
-        $perPage = $perPage ?? \App\Support\PerPage::resolve();
+        $perPage = $perPage ?? PerPage::resolve();
         $logs = Log::where('ticket_id', null)
             ->whereIn('type_operation', ['ajustement', 'evenement_annule'])
             ->orderByDesc('created_at')
@@ -699,11 +720,12 @@ class SuperAdminController extends Controller
             ->filter(function ($log) use ($niveau, $id) {
                 $details = $log->details ?? [];
                 if (($details['niveau'] ?? null) === $niveau) {
-                    return (int) ($details[$niveau . '_id'] ?? 0) === $id;
+                    return (int) ($details[$niveau.'_id'] ?? 0) === $id;
                 }
                 if ($niveau === 'evenement' && $log->type_operation === 'evenement_annule') {
                     return (int) ($details['evenement_id'] ?? 0) === $id;
                 }
+
                 return false;
             })
             ->values();
@@ -728,13 +750,14 @@ class SuperAdminController extends Controller
             'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'evenements_annules' => $evenements]),
             'ip' => request()->ip(),
         ]);
+
         return back()->with('success', 'Organisateur suspendu et ses evenements annules.');
     }
 
     // Réactive un organisateur bloqué ou rejeté (restaure les événements annulés par la suspension)
     public function reactiverOrganisateur(User $user)
     {
-        if ($user->role !== 'admin' || !in_array($user->statut, ['bloque', 'rejete'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['bloque', 'rejete'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
@@ -773,13 +796,14 @@ class SuperAdminController extends Controller
         $data['role'] = 'admin';
         $data['statut'] = 'actif';
         User::create($data);
+
         return back()->with('success', 'Organisateur créé.');
     }
 
     // Approuve un organisateur et lui envoie un email de confirmation
     public function approuverOrganisateur(User $user)
     {
-        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet'])) {
             return back()->with('error', 'Action non autorisée.'); // Statut inapproprié
         }
 
@@ -800,7 +824,7 @@ class SuperAdminController extends Controller
     // Rejette un organisateur avec motif et notification
     public function rejeterOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
@@ -823,7 +847,7 @@ class SuperAdminController extends Controller
     // Demande des corrections sur le profil d'un organisateur
     public function demanderCorrectionsOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || !in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
@@ -906,8 +930,8 @@ class SuperAdminController extends Controller
         }
 
         $evenements = Evenement::where('user_id', $user->id)
-            ->withCount(['tickets as tickets_vendus' => fn($q) => $q->where('statut_paiement', 'payé')])
-            ->withSum(['tickets as recettes' => fn($q) => $q->where('statut_paiement', 'payé')], 'montant')
+            ->withCount(['tickets as tickets_vendus' => fn ($q) => $q->where('statut_paiement', 'payé')])
+            ->withSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('date_event')
             ->get();
 
@@ -939,7 +963,7 @@ class SuperAdminController extends Controller
 
         $scansAujourdhui = Log::where('type_operation', 'scan')
             ->whereDate('created_at', today())
-            ->whereHas('ticket', fn($q) => $q->whereIn('evenement_id', $evenements->pluck('id')))
+            ->whereHas('ticket', fn ($q) => $q->whereIn('evenement_id', $evenements->pluck('id')))
             ->count();
 
         $agentsScan = Agent::whereIn('evenement_id', $evenements->pluck('id'))->count();
@@ -965,7 +989,7 @@ class SuperAdminController extends Controller
             ->with('evenement', 'tarif')
             ->where('statut_paiement', 'payé')
             ->latest('date_achat')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
 
         return view('superadmin.organisateur-show', compact(
             'user', 'evenements', 'totalTickets', 'totalRecettes',
@@ -984,7 +1008,7 @@ class SuperAdminController extends Controller
         $retraits = Withdrawal::with('user')
             ->orderByRaw("FIELD(status, 'en_attente', 'en_cours', 'approuvé', 'payé', 'rejeté')")
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
 
         $stats = [
             'en_attente' => Withdrawal::where('status', 'en_attente')->count(),
@@ -1005,7 +1029,7 @@ class SuperAdminController extends Controller
             'processed_at' => now(),
         ]);
 
-        if (!$updated) {
+        if (! $updated) {
             return back()->with('error', 'Ce retrait a déjà été traité.');
         }
 
@@ -1024,7 +1048,7 @@ class SuperAdminController extends Controller
             'processed_at' => now(),
         ]);
 
-        if (!$updated) {
+        if (! $updated) {
             return back()->with('error', 'Ce retrait n\'est pas en cours de traitement.');
         }
 
@@ -1037,7 +1061,7 @@ class SuperAdminController extends Controller
     // Rejette une demande de retrait
     public function rejeterRetrait(Withdrawal $withdrawal, Request $request)
     {
-        if (!in_array($withdrawal->status, ['en_attente', 'en_cours'])) {
+        if (! in_array($withdrawal->status, ['en_attente', 'en_cours'])) {
             return back()->with('error', 'Ce retrait ne peut plus être rejeté.');
         }
 
@@ -1051,9 +1075,13 @@ class SuperAdminController extends Controller
             'numero_reseau' => 'Numéro ne correspond pas au réseau sélectionné',
         ];
         foreach ($motifs as $m) {
-            if (isset($labels[$m])) $raisons[] = $labels[$m];
+            if (isset($labels[$m])) {
+                $raisons[] = $labels[$m];
+            }
         }
-        if ($autreRaison !== '') $raisons[] = $autreRaison;
+        if ($autreRaison !== '') {
+            $raisons[] = $autreRaison;
+        }
 
         $notes = $raisons ? implode("\n", $raisons) : ($request->input('admin_notes') ?: 'Non spécifiée');
 
@@ -1074,7 +1102,7 @@ class SuperAdminController extends Controller
         $demandes = DemandeRemboursement::with('organisateur', 'evenement', 'tickets')
             ->orderByRaw("FIELD(statut, 'en_attente', 'en_cours', 'rembourse', 'refuse')")
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
 
         $stats = [
             'en_attente' => DemandeRemboursement::where('statut', 'en_attente')->count(),
@@ -1092,6 +1120,7 @@ class SuperAdminController extends Controller
     {
         $demande->load('organisateur', 'evenement', 'tickets.tarif', 'traiteePar');
         $soldeOrganisateur = $demande->organisateur->solde; // Solde actuel de l'organisateur
+
         return view('superadmin.remboursements.show', compact('demande', 'soldeOrganisateur'));
     }
 
@@ -1106,8 +1135,8 @@ class SuperAdminController extends Controller
         $solde = $demande->organisateur->solde;
         if ($solde < $demande->montant_total) {
             return back()->with('error', 'Solde insuffisant de l\'organisateur ('
-                . number_format($solde, 0, ',', ' ') . ' F) pour couvrir ce remboursement de '
-                . number_format($demande->montant_total, 0, ',', ' ') . ' F.');
+                .number_format($solde, 0, ',', ' ').' F) pour couvrir ce remboursement de '
+                .number_format($demande->montant_total, 0, ',', ' ').' F.');
         }
 
         $validated = $request->validate([
@@ -1146,9 +1175,22 @@ class SuperAdminController extends Controller
 
         DB::beginTransaction(); // Transaction pour atomicité
         try {
+            // Verrou pessimiste : évite la double confirmation simultanée
+            $lockedDemande = DemandeRemboursement::whereKey($demande->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedDemande->statut !== 'en_cours') {
+                DB::rollBack();
+
+                return back()->with('error', 'Cette demande doit d\'abord être en cours.'); // Statut requis
+            }
+
             // Rembourse chaque ticket individuellement
             foreach ($demande->tickets as $ticket) {
-                $ticket->update(['statut_paiement' => 'remboursé']);
+                $lockedTicket = Ticket::whereKey($ticket->id)->lockForUpdate()->first();
+                if (! $lockedTicket || $lockedTicket->statut_paiement === 'remboursé') {
+                    continue; // Déjà remboursé (double clic)
+                }
+                $lockedTicket->update(['statut_paiement' => 'remboursé']);
 
                 Log::create([
                     'ticket_id' => $ticket->id,
@@ -1172,6 +1214,7 @@ class SuperAdminController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with('error', 'Erreur lors de la confirmation du remboursement.');
         }
 
@@ -1182,31 +1225,31 @@ class SuperAdminController extends Controller
         foreach ($demande->tickets as $ticket) {
             try {
                 Mail::raw(
-                    "Votre ticket pour \"{$ticket->evenement->titre}\" a été remboursé.\n\n" .
-                    "Code ticket : {$ticket->code_unique}\n" .
-                    "Montant remboursé : " . number_format($ticket->montant, 0, ',', ' ') . " F\n" .
-                    "Motif : {$demande->motif}\n\n" .
+                    "Votre ticket pour \"{$ticket->evenement->titre}\" a été remboursé.\n\n".
+                    "Code ticket : {$ticket->code_unique}\n".
+                    'Montant remboursé : '.number_format($ticket->montant, 0, ',', ' ')." F\n".
+                    "Motif : {$demande->motif}\n\n".
                     "Si vous avez des questions, contactez l'organisateur.",
                     function ($m) use ($ticket) {
                         $m->to($ticket->email_acheteur)
-                          ->subject("[PaxEvent] Remboursement effectué - {$ticket->evenement->titre}");
+                            ->subject("[PaxEvent] Remboursement effectué - {$ticket->evenement->titre}");
                     }
                 );
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Email remboursement non envoyé à ' . $ticket->email_acheteur);
+                \Illuminate\Support\Facades\Log::error('Email remboursement non envoyé à '.$ticket->email_acheteur);
             }
         }
 
         try {
             Mail::raw(
-                "Bonjour {$demande->organisateur->nom},\n\n" .
-                "La demande de remboursement pour {$demande->evenement?->titre} a été confirmée.\n" .
-                "Tickets concernés : {$nomsTickets}\n" .
-                "Montant total : {$montant} F\n\n" .
-                "Le remboursement a été traité via FedaPay.",
+                "Bonjour {$demande->organisateur->nom},\n\n".
+                "La demande de remboursement pour {$demande->evenement?->titre} a été confirmée.\n".
+                "Tickets concernés : {$nomsTickets}\n".
+                "Montant total : {$montant} F\n\n".
+                'Le remboursement a été traité via FedaPay.',
                 function ($m) use ($demande) {
                     $m->to($demande->organisateur->email)
-                      ->subject("[PaxEvent] Remboursement confirmé - {$demande->evenement?->titre}");
+                        ->subject("[PaxEvent] Remboursement confirmé - {$demande->evenement?->titre}");
                 }
             );
         } catch (\Exception $e) {
@@ -1218,8 +1261,8 @@ class SuperAdminController extends Controller
             'evenement_id' => $demande->evenement_id,
             'nom_complet' => auth('superadmin')->user()->nom,
             'email' => auth('superadmin')->user()->email,
-            'objet' => 'Remboursement traité - ' . ($demande->evenement?->titre ?? ''),
-            'message' => "Remboursement de {$montant} F confirmé pour {$nb} ticket(s).\nTraitée par " . auth('superadmin')->user()->email,
+            'objet' => 'Remboursement traité - '.($demande->evenement?->titre ?? ''),
+            'message' => "Remboursement de {$montant} F confirmé pour {$nb} ticket(s).\nTraitée par ".auth('superadmin')->user()->email,
         ]);
 
         return redirect()->route('superadmin.remboursements.demandes')
@@ -1246,16 +1289,17 @@ class SuperAdminController extends Controller
 
         try {
             Mail::raw(
-                "Bonjour {$demande->organisateur->nom},\n\n" .
-                "Votre demande de remboursement pour {$demande->evenement?->titre} a été refusée.\n\n" .
-                "Motif : {$validated['motif_refus']}\n\n" .
+                "Bonjour {$demande->organisateur->nom},\n\n".
+                "Votre demande de remboursement pour {$demande->evenement?->titre} a été refusée.\n\n".
+                "Motif : {$validated['motif_refus']}\n\n".
                 "Contactez PaxEvent pour plus d'informations.",
                 function ($m) use ($demande) {
                     $m->to($demande->organisateur->email)
-                      ->subject("[PaxEvent] Demande de remboursement refusée");
+                        ->subject('[PaxEvent] Demande de remboursement refusée');
                 }
             );
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         Log::create([
             'type_operation' => 'remboursement',
@@ -1275,7 +1319,7 @@ class SuperAdminController extends Controller
     // Liste de tous les abonnés newsletter
     public function newsletter()
     {
-        $abonnes = Newsletter::orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
+        $abonnes = Newsletter::orderByDesc('created_at')->paginate(PerPage::resolve());
         $totalActifs = Newsletter::where('actif', true)->count();
         $totalInactifs = Newsletter::where('actif', false)->count();
 
@@ -1410,11 +1454,11 @@ class SuperAdminController extends Controller
         $force = $request->boolean('force') || $transactionId === '';
 
         // Sauf force explicite, on vérifie toujours le paiement via l'API
-        if (!$force) {
+        if (! $force) {
             $verification = $this->reconciliation->verifier($transactionId);
-            if (!$verification['ok'] || !$verification['approuve']) {
+            if (! $verification['ok'] || ! $verification['approuve']) {
                 return back()
-                    ->withErrors(['transaction_id' => 'Paiement non vérifié via FedaPay (' . ($verification['statut'] ?? 'API injoignable') . '). Utilisez le forçage seulement après contrôle manuel.'])
+                    ->withErrors(['transaction_id' => 'Paiement non vérifié via FedaPay ('.($verification['statut'] ?? 'API injoignable').'). Utilisez le forçage seulement après contrôle manuel.'])
                     ->withInput();
             }
         }
@@ -1427,7 +1471,7 @@ class SuperAdminController extends Controller
             $force
         );
 
-        if (!$resultat['success']) {
+        if (! $resultat['success']) {
             return back()->with('error', $resultat['message']);
         }
 
@@ -1459,7 +1503,7 @@ class SuperAdminController extends Controller
             'evenement_id' => 'required|exists:evenement,id',
         ]);
 
-        $tarifs = \App\Models\Tarif::where('evenement_id', $request->evenement_id)
+        $tarifs = Tarif::where('evenement_id', $request->evenement_id)
             ->orderBy('nom')
             ->get(['id', 'nom', 'prix']);
 
@@ -1487,7 +1531,7 @@ class SuperAdminController extends Controller
 
         $resultat = $this->reconciliation->recreerTicket($validated);
 
-        if (!$resultat['success']) {
+        if (! $resultat['success']) {
             return back()->with('error', $resultat['message']);
         }
 
@@ -1639,7 +1683,7 @@ class SuperAdminController extends Controller
 
         $resultat = $this->reconciliation->rembourser($tickets, $validated['motif'], $validated['notes'] ?? null);
 
-        if (!$resultat['success']) {
+        if (! $resultat['success']) {
             return back()->with('error', $resultat['message']);
         }
 

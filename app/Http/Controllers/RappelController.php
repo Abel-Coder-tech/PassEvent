@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TicketEmail;
 use App\Models\Evenement;
 use App\Models\Ticket;
-use App\Mail\TicketEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +18,7 @@ class RappelController extends Controller
             ->where('statut', 'publié')
             ->where('date_event', '>', now()) // Uniquement les événements futurs
             ->orderBy('date_event', 'asc')
-            ->withCount(['tickets' => fn($q) => $q->where('statut_paiement', 'payé')])
+            ->withCount(['tickets' => fn ($q) => $q->where('statut_paiement', 'payé')])
             ->get();
 
         return view('admin.rappels.index', compact('evenements'));

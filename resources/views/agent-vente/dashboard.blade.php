@@ -136,9 +136,14 @@
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white border-bottom-0 pt-3 px-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Ventes du jour</h6>
-                    <small class="text-muted">
-                        <i class="bi bi-arrow-repeat"></i> Actualisation automatique
-                    </small>
+                    <div class="d-flex align-items-center gap-2">
+                        <small class="text-muted">
+                            <i class="bi bi-arrow-repeat"></i> Actualisation automatique
+                        </small>
+                        <a href="{{ route('agent-vente.historique') }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
+                            <i class="bi bi-list-ul"></i> Historique
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body px-0">
                     <div class="table-responsive">

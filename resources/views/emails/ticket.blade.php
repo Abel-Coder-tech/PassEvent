@@ -226,7 +226,7 @@
             </div>
 
             <div class="btn-wrap">
-                <a href="{{ route('tickets.telecharger', $first->id) }}" class="btn">Télécharger ticket</a>
+                <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $first->id]) }}" class="btn">Télécharger ticket</a>
             </div>
 
             <p class="help-text">

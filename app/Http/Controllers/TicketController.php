@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Mail\TicketEmail;
 use App\Models\Evenement;
-use App\Models\Ticket;
 use App\Models\Log;
+use App\Models\Ticket;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -26,13 +27,13 @@ class TicketController extends Controller
         if ($search) {
             // Recherche par nom, téléphone ou code ticket
             $query->where(function ($sub) use ($search) {
-                $sub->where('nom_acheteur', 'like', '%' . $search . '%')
-                    ->orWhere('telephone_acheteur', 'like', '%' . $search . '%')
-                    ->orWhere('code_unique', 'like', '%' . $search . '%');
+                $sub->where('nom_acheteur', 'like', '%'.$search.'%')
+                    ->orWhere('telephone_acheteur', 'like', '%'.$search.'%')
+                    ->orWhere('code_unique', 'like', '%'.$search.'%');
             });
         }
 
-        $tickets = $query->orderBy('date_achat', 'desc')->paginate(\App\Support\PerPage::resolve());
+        $tickets = $query->orderBy('date_achat', 'desc')->paginate(PerPage::resolve());
 
         // Statistiques par catégorie de ticket
         $statsQuery = Ticket::whereIn('evenement_id', $evenementsIds);
@@ -40,9 +41,9 @@ class TicketController extends Controller
         if ($search) {
             // Applique le même filtre de recherche sur les stats
             $statsQuery->where(function ($sub) use ($search) {
-                $sub->where('nom_acheteur', 'like', '%' . $search . '%')
-                    ->orWhere('telephone_acheteur', 'like', '%' . $search . '%')
-                    ->orWhere('code_unique', 'like', '%' . $search . '%');
+                $sub->where('nom_acheteur', 'like', '%'.$search.'%')
+                    ->orWhere('telephone_acheteur', 'like', '%'.$search.'%')
+                    ->orWhere('code_unique', 'like', '%'.$search.'%');
             });
         }
 
@@ -59,6 +60,7 @@ class TicketController extends Controller
     public function show(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif', 'notifications')->findOrFail($id);
+        $this->authoriserOrganisateur($ticket); // Contrôle de propriété
         // use two-argument where to avoid argument mismatch
         $logs = Log::where('ticket_id', $id)->orderBy('created_at', 'desc')->get(); // Historique complet
 
@@ -69,6 +71,7 @@ class TicketController extends Controller
     public function downloadPdf(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
+        $this->authoriserOrganisateur($ticket); // Contrôle de propriété
 
         if ($ticket->download_count >= 3) {
             return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).'); // Anti-abus
@@ -86,7 +89,7 @@ class TicketController extends Controller
 
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
-        $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
+        $filename = 'PaxEvent-'.$ticket->code_unique.'.pdf';
 
         return $pdf->download($filename);
     }
@@ -116,7 +119,7 @@ class TicketController extends Controller
 
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
-        $filename = 'PaxEvent-' . $ticket->code_unique . '.pdf';
+        $filename = 'PaxEvent-'.$ticket->code_unique.'.pdf';
 
         return $pdf->download($filename);
     }
@@ -133,7 +136,7 @@ class TicketController extends Controller
         $request->validate([
             'transaction_id' => 'required|string|max:255',
             'email' => 'required|email',
-        ],[
+        ], [
             'transaction_id.required' => 'L\'ID de transaction est requis.',
             'transaction_id.string' => 'L\'ID de transaction doit être une chaîne de caractères.',
             'transaction_id.max' => 'L\'ID de transaction ne peut pas dépasser 255 caractères.',
@@ -158,11 +161,12 @@ class TicketController extends Controller
     public function renvoyer(int $id)
     {
         $ticket = Ticket::with('evenement')->findOrFail($id);
+        $this->authoriserOrganisateur($ticket); // Contrôle de propriété
 
         try {
             Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
         } catch (\Exception $e) {
-            return back()->with('error', 'Erreur lors de l\'envoi du ticket: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors de l\'envoi du ticket: '.$e->getMessage());
         }
 
         Log::create([
@@ -173,13 +177,14 @@ class TicketController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        return back()->with('success', 'Ticket renvoyé a ' . $ticket->email_acheteur);
+        return back()->with('success', 'Ticket renvoyé a '.$ticket->email_acheteur);
     }
 
     // Annule un ticket et restaure les quotas
     public function annuler(int $id)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
+        $this->authoriserOrganisateur($ticket); // Contrôle de propriété
 
         if ($ticket->statut_paiement !== 'payé' && $ticket->statut_paiement !== 'en_attente') {
             return back()->with('error', 'Ce ticket ne peut pas etre annulé.'); // Statut incompatible
@@ -213,8 +218,36 @@ class TicketController extends Controller
     {
         return view('tickets.index');
     }
-    public function store(Request $request) { return back(); }
-    public function edit(int $id) { return back(); }
-    public function update(Request $request, int $id) { return back(); }
-    public function destroy(int $id) { return back(); }
+
+    public function store(Request $request)
+    {
+        return back();
+    }
+
+    public function edit(int $id)
+    {
+        return back();
+    }
+
+    public function update(Request $request, int $id)
+    {
+        return back();
+    }
+
+    public function destroy(int $id)
+    {
+        return back();
+    }
+
+    // Vérifie que le ticket appartient à un événement de l'organisateur connecté
+    private function authoriserOrganisateur(Ticket $ticket): void
+    {
+        $user = auth()->user();
+        if (! $user || $user->role === 'super_admin') {
+            return; // Le super admin a accès à tout
+        }
+        if (! $ticket->evenement || $ticket->evenement->user_id !== $user->id) {
+            abort(403);
+        }
+    }
 }

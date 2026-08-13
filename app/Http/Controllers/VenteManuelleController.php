@@ -7,14 +7,13 @@ use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Tarif;
 use App\Models\Ticket;
+use App\Services\FedapayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Services\FedapayService;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-
 
 class VenteManuelleController extends Controller
 {
@@ -33,15 +32,15 @@ class VenteManuelleController extends Controller
         // Événements éligibles (publiés ou brouillons, pas encore passés)
         $evenements = Evenement::where('user_id', $user->id)
             ->whereIn('statut', ['publié', 'brouillon'])
-            ->where(fn($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
             ->orderBy('date_event', 'asc')
             ->get();
 
         // Ventes manuelles du jour courant
         $debutJour = now()->startOfDay()->utc();
         $finJour = now()->endOfDay()->utc();
-        $ventesJour = Ticket::whereHas('evenement', fn($q) => $q->where('user_id', $user->id))
-            ->where(fn($q) => $q
+        $ventesJour = Ticket::whereHas('evenement', fn ($q) => $q->where('user_id', $user->id))
+            ->where(fn ($q) => $q
                 ->where('source', 'vente_manuelle') // Ventes manuelles (espèces, gratuites, mobile confirmé)
                 ->orWhere('transaction_id', 'like', 'MANUEL-%')) // Compatibilité données historiques
             ->whereBetween('date_achat', [$debutJour, $finJour])
@@ -97,7 +96,7 @@ class VenteManuelleController extends Controller
             'quantite.max' => 'La quantité ne doit pas dépasser 20.',
         ];
 
-        if (!$evenement->gratuit) {
+        if (! $evenement->gratuit) {
             $rules['tarif_id'] = 'required|exists:tarifs,id'; // Tarif obligatoire pour événements payants
             $rules['methode_paiement'] = 'required|in:especes,mobile';
 
@@ -113,24 +112,25 @@ class VenteManuelleController extends Controller
             }
 
             // Blocage espèces si seuil mobile money non atteint ou si bloqué par le superadmin
-            if ($request->methode_paiement === 'especes' && !$evenement->ventesEspecesActivees()) {
+            if ($request->methode_paiement === 'especes' && ! $evenement->ventesEspecesActivees()) {
                 if ($evenement->ventesEspecesBloqueesSuperadmin()) {
                     return response()->json([
                         'errors' => [
                             'methode_paiement' => [
-                                'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.'
-                            ]
-                        ]
+                                'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.',
+                            ],
+                        ],
                     ], 422);
                 }
-                $seuil = (int) ceil($evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100);
+                $seuil = (int) ceil($evenement->capacite * Evenement::SEUIL_ESPECES_PCT / 100);
                 $vendus = $evenement->ticketsEnLigneCount();
+
                 return response()->json([
                     'errors' => [
                         'methode_paiement' => [
-                            "Ventes espèces bloquées. Vous devez vendre au moins {$seuil} ticket(s) par mobile money avant de pouvoir vendre en espèces. Progression : {$vendus}/{$seuil} tickets vendus en ligne."
-                        ]
-                    ]
+                            "Ventes espèces bloquées. Vous devez vendre au moins {$seuil} ticket(s) par mobile money avant de pouvoir vendre en espèces. Progression : {$vendus}/{$seuil} tickets vendus en ligne.",
+                        ],
+                    ],
                 ], 422);
             }
         }
@@ -151,7 +151,7 @@ class VenteManuelleController extends Controller
         if ($evenement->gratuit) {
             // Création de tickets gratuits
             $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
-            if (!$tarif) {
+            if (! $tarif) {
                 // Crée un tarif par défaut si aucun n'existe
                 $tarif = Tarif::create([
                     'evenement_id' => $evenement->id,
@@ -178,7 +178,7 @@ class VenteManuelleController extends Controller
                     'montant' => 0,
                     'statut_paiement' => 'payé',
                     'methode_paiement' => null,
-                    'transaction_id' => 'MANUEL-GRATUIT-' . strtoupper(Str::random(6)),
+                    'transaction_id' => 'MANUEL-GRATUIT-'.strtoupper(Str::random(6)),
                     'utilise' => false,
                     'date_achat' => now(),
                 ]);
@@ -197,9 +197,9 @@ class VenteManuelleController extends Controller
                     try {
                         $ticket->load('evenement', 'tarif');
                         Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
-                        Log::info('Vente manuelle gratuite - Email envoyé à ' . $ticket->email_acheteur);
+                        Log::info('Vente manuelle gratuite - Email envoyé à '.$ticket->email_acheteur);
                     } catch (\Exception $e) {
-                        Log::error('Vente manuelle gratuite - Erreur email : ' . $e->getMessage());
+                        Log::error('Vente manuelle gratuite - Erreur email : '.$e->getMessage());
                     }
                 }
             }
@@ -208,7 +208,7 @@ class VenteManuelleController extends Controller
                 'success' => true,
                 'message' => $validated['quantite'] > 1
                     ? "{$validated['quantite']} inscription(s) gratuite(s) enregistrée(s) avec succès."
-                    : "Inscription gratuite enregistrée avec succès.",
+                    : 'Inscription gratuite enregistrée avec succès.',
                 'tickets' => $tickets,
                 'total' => 0,
             ]);
@@ -221,16 +221,17 @@ class VenteManuelleController extends Controller
         $montantReduction = 0;
         $prixUnitaire = $tarif->prix;
 
-        if (!empty($validated['code_promo'])) {
+        if (! empty($validated['code_promo'])) {
             $codePromo = CodePromo::validerPour($validated['code_promo'], $evenement, $tarif);
             $montantReduction = $codePromo->calculerReduction($tarif->prix);
             $prixUnitaire = max(0, $tarif->prix - $montantReduction);
-            $codePromo->increment('nb_utilisations', 1);
+            // nb_utilisations incrémenté uniquement à la confirmation (espèces ici, mobile via callback/webhook)
         }
 
         // Vérification du stock restant du tarif
         if ($tarif->quantite_disponible !== null && $tarif->quantite_disponible - $tarif->quantite_vendue < $validated['quantite']) {
             $restantes = max(0, $tarif->quantite_disponible - $tarif->quantite_vendue);
+
             return response()->json([
                 'errors' => [
                     'quantite' => ["Quantité restante insuffisante pour ce tarif. Il n'en reste que {$restantes}."],
@@ -259,7 +260,7 @@ class VenteManuelleController extends Controller
                     'statut_paiement' => 'payé',
                     'methode_paiement' => 'especes',
                     'type_paiement' => 'especes',
-                    'transaction_id' => 'MANUEL-' . strtoupper(Str::random(6)),
+                    'transaction_id' => 'MANUEL-'.strtoupper(Str::random(6)),
                     'utilise' => false,
                     'date_achat' => now(),
                 ]);
@@ -273,14 +274,19 @@ class VenteManuelleController extends Controller
             $evenement->increment('quota_vendu', $validated['quantite']);
             $tarif->increment('quantite_vendue', $validated['quantite']);
 
+            // Comptabilise le code promo une fois la vente espèces confirmée
+            if ($codePromo) {
+                $codePromo->increment('nb_utilisations', 1);
+            }
+
             foreach ($tickets as $ticket) {
                 if ($ticket->email_acheteur) {
                     try {
                         $ticket->load('evenement', 'tarif');
                         Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
-                        Log::info('Vente manuelle - Email envoyé à ' . $ticket->email_acheteur);
+                        Log::info('Vente manuelle - Email envoyé à '.$ticket->email_acheteur);
                     } catch (\Exception $e) {
-                        Log::error('Vente manuelle - Erreur email : ' . $e->getMessage());
+                        Log::error('Vente manuelle - Erreur email : '.$e->getMessage());
                     }
                 }
             }
@@ -298,7 +304,7 @@ class VenteManuelleController extends Controller
         // Digital payment: create N tickets as 'en_attente' with shared group ID
         // --- Cas 3 : Paiement mobile (FedaPay) ---
         $montantTotal = $prixUnitaire * $validated['quantite'];
-        $groupTransactionId = 'GRP-' . strtoupper(Str::random(16));
+        $groupTransactionId = 'GRP-'.strtoupper(Str::random(16));
         $tickets = [];
 
         for ($i = 0; $i < $validated['quantite']; $i++) {
@@ -361,7 +367,7 @@ class VenteManuelleController extends Controller
 
         $tarifs = collect();
 
-        if (!$evenement->gratuit) {
+        if (! $evenement->gratuit) {
             $tarifs = Tarif::where('evenement_id', $evenement->id)->where('statut', 'actif')->get();
         }
 
@@ -369,7 +375,7 @@ class VenteManuelleController extends Controller
             'tarifs' => $tarifs,
             'gratuit' => $evenement->gratuit,
             'especes_activees' => $evenement->ventesEspecesActivees(),
-            'seuil' => $evenement->gratuit ? 0 : (int) ceil($evenement->capacite * \App\Models\Evenement::SEUIL_ESPECES_PCT / 100),
+            'seuil' => $evenement->gratuit ? 0 : (int) ceil($evenement->capacite * Evenement::SEUIL_ESPECES_PCT / 100),
             'vendus_en_ligne' => $evenement->ticketsEnLigneCount(),
         ]);
     }

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TicketEmail;
 use App\Models\Log;
 use App\Models\Ticket;
-use App\Mail\TicketEmail;
+use App\Support\PerPage;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class LogController extends Controller
@@ -25,7 +26,7 @@ class LogController extends Controller
 
         // Restreint aux événements de l'organisateur sauf pour le super admin
         if (auth()->user()->role !== 'super_admin') {
-            $query->whereHas('ticket.evenement', fn($q) => $q->where('user_id', auth()->id()));
+            $query->whereHas('ticket.evenement', fn ($q) => $q->where('user_id', auth()->id()));
         }
 
         if ($type) {
@@ -35,15 +36,15 @@ class LogController extends Controller
         if ($q) {
             $query->where(function ($sub) use ($q) {
                 $sub->whereHas('ticket', function ($t) use ($q) {
-                    $t->where('nom_acheteur', 'like', '%' . $q . '%')
-                        ->orWhere('email_acheteur', 'like', '%' . $q . '%')
-                        ->orWhere('code_unique', 'like', '%' . $q . '%');
+                    $t->where('nom_acheteur', 'like', '%'.$q.'%')
+                        ->orWhere('email_acheteur', 'like', '%'.$q.'%')
+                        ->orWhere('code_unique', 'like', '%'.$q.'%');
                 })
-                ->orWhere('ip', 'like', '%' . $q . '%');
+                    ->orWhere('ip', 'like', '%'.$q.'%');
             });
         }
 
-        $logs = $query->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
+        $logs = $query->orderByDesc('created_at')->paginate(PerPage::resolve());
 
         $stats = $this->computeStats($startDate);
 
@@ -67,7 +68,7 @@ class LogController extends Controller
 
         // Vérification de propriété (sauf super admin)
         if (auth()->user()->role !== 'super_admin') {
-            if (!$log->ticket || !$log->ticket->evenement || $log->ticket->evenement->user_id !== auth()->id()) {
+            if (! $log->ticket || ! $log->ticket->evenement || $log->ticket->evenement->user_id !== auth()->id()) {
                 abort(403);
             }
         }
@@ -96,13 +97,18 @@ class LogController extends Controller
             'email' => 'required|email',
         ]);
 
-        $ticket = Ticket::where('telephone_acheteur', $validated['telephone'])
+        $ticketQuery = Ticket::where('telephone_acheteur', $validated['telephone'])
             ->where('email_acheteur', $validated['email'])
-            ->where('statut_paiement', 'payé')
-            ->with('evenement')
-            ->first();
+            ->where('statut_paiement', 'payé');
 
-        if (!$ticket) {
+        // Restreint aux événements de l'organisateur connecté (sauf super admin)
+        if (auth()->user()->role !== 'super_admin') {
+            $ticketQuery->whereHas('evenement', fn ($q) => $q->where('user_id', auth()->id()));
+        }
+
+        $ticket = $ticketQuery->with('evenement')->first();
+
+        if (! $ticket) {
             return response()->json([
                 'success' => false,
                 'message' => 'Aucun ticket trouvé avec ces informations.',
@@ -142,7 +148,7 @@ class LogController extends Controller
     }
 
     // Calcule la date de début selon la période sélectionnée
-    private function getStartDate(string $periode): \Carbon\Carbon
+    private function getStartDate(string $periode): Carbon
     {
         return match ($periode) {
             '7' => now()->copy()->subDays(7),
@@ -154,15 +160,15 @@ class LogController extends Controller
     }
 
     // Calcule les statistiques agrégées des logs pour la période donnée
-    private function computeStats(\Carbon\Carbon $startDate): array
+    private function computeStats(Carbon $startDate): array
     {
         $baseQuery = Log::where('created_at', '>=', $startDate);
 
         if (auth()->user()->role !== 'super_admin') {
-            $baseQuery->whereHas('ticket.evenement', fn($q) => $q->where('user_id', auth()->id()));
+            $baseQuery->whereHas('ticket.evenement', fn ($q) => $q->where('user_id', auth()->id()));
         }
 
-        $clone = fn() => clone $baseQuery;
+        $clone = fn () => clone $baseQuery;
         $total = $clone()->count();
         $achats = $clone()->where('type_operation', 'achat')->count();
         $envois = $clone()->where('type_operation', 'envoi')->count();

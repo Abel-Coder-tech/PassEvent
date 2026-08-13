@@ -1,35 +1,39 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\EvenementController;
-use App\Http\Controllers\TarifController;
-use App\Http\Controllers\CodePromoController;
-use App\Http\Controllers\TicketController;
-use App\Http\Controllers\PaiementController;
-use App\Http\Controllers\ScanController;
-use App\Http\Controllers\EvenementPublicController;
-use App\Http\Controllers\SitePublicController;
-use App\Http\Controllers\LogController;
-use App\Http\Controllers\InscriptionController;
-use App\Http\Controllers\VenteManuelleController;
-use App\Http\Controllers\RappelController;
-use App\Http\Controllers\Admin\MessageController;
-use App\Http\Controllers\StatistiqueController;
-use App\Http\Controllers\ParametresController;
-use App\Http\Controllers\RemboursementController;
-use App\Http\Controllers\NewsletterController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\SuperAdminController;
-use App\Http\Controllers\SuperAdminAuthController;
-use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
 use App\Http\Controllers\Admin\AgentVenteController as AdminAgentVenteController;
 use App\Http\Controllers\Admin\LotPhysiqueController as AdminLotPhysiqueController;
+use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Agent\AuthController as AgentAuthController;
 use App\Http\Controllers\Agent\ScanController as AgentScanController;
 use App\Http\Controllers\AgentVente\AuthController as AgentVenteAuthController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CodePromoController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EvenementController;
+use App\Http\Controllers\EvenementPublicController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\InscriptionController;
+use App\Http\Controllers\LogController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\ParametresController;
+use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\RappelController;
+use App\Http\Controllers\RemboursementController;
+use App\Http\Controllers\RetraitController;
+use App\Http\Controllers\ScanController;
+use App\Http\Controllers\SitePublicController;
+use App\Http\Controllers\StatistiqueController;
+use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
+use App\Http\Controllers\SuperAdminAuthController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\TarifController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\VenteManuelleController;
+use App\Models\Evenement;
+use Illuminate\Support\Facades\Route;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 
@@ -39,8 +43,8 @@ use Spatie\Sitemap\Tags\Url;
 Route::get('/', [SitePublicController::class, 'accueil'])->name('accueil');
 Route::get('/evenements', [EvenementPublicController::class, 'index'])->name('evenements.public');
 Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show'])->name('evenements.public.show');
-Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat');
-Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur');
+Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat')->middleware('throttle:5,1');
+Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur')->middleware('throttle:5,10');
 
 Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
 Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
@@ -50,7 +54,7 @@ Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation']
 
 Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
 Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher');
-Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTicket'])->name('tickets.telecharger');
+Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTicket'])->name('tickets.telecharger')->middleware('signed');
 
 Route::get('/aide', [SitePublicController::class, 'aide'])->name('aide');
 Route::get('/contact', [SitePublicController::class, 'contact'])->name('contact');
@@ -62,16 +66,13 @@ Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueR
 Route::get('/conditions-generales-de-vente', [SitePublicController::class, 'cgv'])->name('cgv');
 Route::get('/affiliation', [SitePublicController::class, 'affiliation'])->name('affiliation');
 
-
-
 // Newsletter
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
-
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe')->middleware('throttle:3,10');
+Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe')->middleware('throttle:5,10');
 
 // Google OAuth
-Route::get('/auth/google', [\App\Http\Controllers\GoogleAuthController::class, 'redirect'])->name('google.redirect');
-Route::get('/auth/google/callback', [\App\Http\Controllers\GoogleAuthController::class, 'callback'])->name('google.callback');
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 
 // ============================================================
 // Routes de connexion & inscription
@@ -100,7 +101,7 @@ Route::post('/reinitialiser', [ForgotPasswordController::class, 'reset'])->name(
 // ============================================================
 Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/login', [SuperAdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [SuperAdminAuthController::class, 'login'])->name('login.post');
+    Route::post('/login', [SuperAdminAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 
     Route::middleware(['superadmin', 'no_cache'])->group(function () {
         Route::post('/logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
@@ -177,7 +178,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     });
 });
 // Routes globales Spatie Sitemap
-Route::get('/generate-sitemap', function () {
+Route::middleware('auth')->get('/generate-sitemap', function () {
     $sitemap = Sitemap::create()
         ->add(Url::create(url('/')))
         ->add(Url::create(url('/evenements')))
@@ -192,8 +193,8 @@ Route::get('/generate-sitemap', function () {
         ->add(Url::create(url('/affiliation')))
         ->add(Url::create(url('/contrat-prestation')));
 
-    \App\Models\Evenement::where('statut', 'publié')->get()->each(function ($evenement) use ($sitemap) {
-        $sitemap->add(Url::create(url('/evenements/' . $evenement->id)));
+    Evenement::where('statut', 'publié')->get()->each(function ($evenement) use ($sitemap) {
+        $sitemap->add(Url::create(url('/evenements/'.$evenement->id)));
     });
 
     $sitemap->writeToFile(public_path('sitemap.xml'));
@@ -206,7 +207,7 @@ Route::get('/generate-sitemap', function () {
 // ============================================================
 Route::prefix('agent')->name('agent.')->group(function () {
     Route::get('/connexion', [AgentAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/connexion', [AgentAuthController::class, 'login'])->name('login.post');
+    Route::post('/connexion', [AgentAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 
     Route::middleware(['agent', 'no_cache'])->group(function () {
         Route::post('/deconnexion', [AgentAuthController::class, 'logout'])->name('logout');
@@ -226,7 +227,7 @@ Route::prefix('agent')->name('agent.')->group(function () {
 // ============================================================
 Route::prefix('vente')->name('agent-vente.')->group(function () {
     Route::get('/connexion', [AgentVenteAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/connexion', [AgentVenteAuthController::class, 'login'])->name('login.post');
+    Route::post('/connexion', [AgentVenteAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 
     Route::middleware(['agent_vente', 'no_cache'])->group(function () {
         Route::post('/deconnexion', [AgentVenteAuthController::class, 'logout'])->name('logout');
@@ -234,6 +235,7 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
         Route::post('/vendre', [AgentVenteAuthController::class, 'vendre'])->name('vendre');
         Route::get('/paiement/{ticket}', [AgentVenteAuthController::class, 'payer'])->name('paiement');
         Route::get('/historique', [AgentVenteAuthController::class, 'historiqueJson'])->name('historique.json');
+        Route::get('/historique/ventes', [AgentVenteAuthController::class, 'historique'])->name('historique');
         Route::get('/tickets/{ticket}/pdf', [AgentVenteAuthController::class, 'downloadPdf'])->name('ticket.pdf');
     });
 });
@@ -246,10 +248,10 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::prefix('profil')->name('profil.')->group(function () {
-        Route::get('/type', [\App\Http\Controllers\ProfilController::class, 'step2'])->name('step2');
-        Route::post('/type', [\App\Http\Controllers\ProfilController::class, 'postStep2'])->name('post-step2');
-        Route::get('/recapitulatif', [\App\Http\Controllers\ProfilController::class, 'recap'])->name('recap');
-        Route::post('/soumettre', [\App\Http\Controllers\ProfilController::class, 'submit'])->name('submit');
+        Route::get('/type', [ProfilController::class, 'step2'])->name('step2');
+        Route::post('/type', [ProfilController::class, 'postStep2'])->name('post-step2');
+        Route::get('/recapitulatif', [ProfilController::class, 'recap'])->name('recap');
+        Route::post('/soumettre', [ProfilController::class, 'submit'])->name('submit');
     });
 
     Route::prefix('parametres')->name('parametres.')->group(function () {
@@ -336,8 +338,8 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::get('/admin/logs/{id}/detail', [LogController::class, 'detail'])->name('logs.detail');
     Route::post('/admin/logs/recuperer', [LogController::class, 'recuperer'])->name('logs.recuperer');
 
-    Route::get('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'index'])->name('admin.retraits.index');
-    Route::post('/admin/retraits', [\App\Http\Controllers\RetraitController::class, 'store'])->middleware('throttle:5,1')->name('admin.retraits.store');
+    Route::get('/admin/retraits', [RetraitController::class, 'index'])->name('admin.retraits.index');
+    Route::post('/admin/retraits', [RetraitController::class, 'store'])->middleware('throttle:5,1')->name('admin.retraits.store');
 
     Route::prefix('admin/remboursements')->name('admin.remboursements.')->group(function () {
         Route::get('/', [RemboursementController::class, 'index'])->name('index');
