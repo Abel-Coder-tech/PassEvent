@@ -217,6 +217,11 @@ class EvenementPublicController extends Controller
             $tickets[] = $t;
         }
 
+        // Sécurité anti-IDOR : mémorise les tickets de la commande courante en session.
+        // Les pages paiement.show / confirmation.show ne sont accessibles que pour ces tickets.
+        $sessionTickets = session('paiement_tickets', []);
+        session(['paiement_tickets' => array_values(array_unique(array_merge($sessionTickets, collect($tickets)->pluck('id')->all())))]);
+
         if ($evenement->gratuit) { // Traitement spécial pour les événements gratuits
             // Le code promo n'est comptabilisé qu'une fois le paiement confirmé :
             // pour un événement gratuit, la confirmation est immédiate ici.

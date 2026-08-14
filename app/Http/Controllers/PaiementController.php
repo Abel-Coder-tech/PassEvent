@@ -24,10 +24,22 @@ class PaiementController extends Controller
         $this->fedapay = $fedapay;
     }
 
+    // Vérifie que le ticket appartient à la commande en cours (session) pour prévenir l'IDOR
+    private function verifierAccesAcheteur(Ticket $ticket): void
+    {
+        $autorises = session('paiement_tickets', []);
+
+        if (! in_array($ticket->id, $autorises, true)) {
+            abort(403, 'Accès non autorisé à ce billet.');
+        }
+    }
+
     // Affiche la page de paiement FedaPay pour un ticket
     public function show($ticketId)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+
+        $this->verifierAccesAcheteur($ticket);
 
         if ($ticket->statut_paiement === 'payé') {
             return redirect()->route('confirmation.show', $ticket->id); // Déjà payé, redirige
@@ -510,6 +522,8 @@ class PaiementController extends Controller
     public function confirmation($ticketId)
     {
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+
+        $this->verifierAccesAcheteur($ticket);
 
         if ($ticket->statut_paiement !== 'payé') {
             return redirect()->route('paiement.show', $ticket->id); // Paiement non confirmé
