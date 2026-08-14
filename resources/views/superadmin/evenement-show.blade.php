@@ -153,6 +153,24 @@
                             @csrf
                             <button type="submit" class="sa-btn" style="background:var(--sa-success);color:#fff;border:none;"><i class="bi bi-check-lg"></i> Publier</button>
                         </form>
+                    @else
+                        <form action="{{ route('superadmin.evenements.a-la-une', $evenement) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="sa-btn {{ $evenement->a_la_une ? 'sa-btn-danger' : 'sa-btn-outline' }}">
+                                <i class="bi bi-{{ $evenement->a_la_une ? 'star-fill' : 'star' }}"></i>
+                                {{ $evenement->a_la_une ? 'Retirer de la une' : 'Mettre à la une' }}
+                            </button>
+                        </form>
+                        @if($evenement->a_la_une)
+                            <form action="{{ route('superadmin.evenements.a-la-une.ordre', [$evenement, 'haut']) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-outline" title="Monter dans la une"><i class="bi bi-arrow-up"></i></button>
+                            </form>
+                            <form action="{{ route('superadmin.evenements.a-la-une.ordre', [$evenement, 'bas']) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="sa-btn sa-btn-sm sa-btn-outline" title="Descendre dans la une"><i class="bi bi-arrow-down"></i></button>
+                            </form>
+                        @endif
                     @endif
                     <form action="{{ route('superadmin.evenements.supprimer', $evenement) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $evenement->titre }} ? Cette action est irréversible.')">
                         @csrf @method('DELETE')

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Evenement;
 use App\Models\Message;
-use App\Models\Tarif;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -39,20 +38,28 @@ class SitePublicController extends Controller
             $query->whereBetween('date_event', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]);
         } elseif ($selectedDate === 'mois') {
             $query->whereMonth('date_event', now()->month)
-                  ->whereYear('date_event', now()->year);
+                ->whereYear('date_event', now()->year);
         }
 
         if ($q) {
             $query->where(function ($sub) use ($q) {
-                $sub->where('titre', 'like', '%' . $q . '%')
-                    ->orWhere('categorie', 'like', '%' . $q . '%')
-                    ->orWhere('lieu', 'like', '%' . $q . '%');
+                $sub->where('titre', 'like', '%'.$q.'%')
+                    ->orWhere('categorie', 'like', '%'.$q.'%')
+                    ->orWhere('lieu', 'like', '%'.$q.'%');
             });
         }
 
         $evenementsVedettes = $query->limit(12)->get();
 
-        return view('site.accueil', compact('evenementsVedettes', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
+        // Événements "à la une" : sélection superadmin, défilement dans le carrousel
+        $evenementsUne = Evenement::ALaUne()
+            ->where('statut', 'publié')
+            ->where('date_event', '>=', now())
+            ->with('tarifs')
+            ->limit(6)
+            ->get();
+
+        return view('site.accueil', compact('evenementsVedettes', 'evenementsUne', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
     }
 
     // Page d'aide / FAQ
@@ -83,14 +90,14 @@ class SitePublicController extends Controller
         $rules = [
             'nom_complet' => 'required|string|min:3|max:255',
             'email' => 'required|email|max:255',
-            'motif' => 'nullable|string|in:' . implode(',', array_keys($motifs)),
+            'motif' => 'nullable|string|in:'.implode(',', array_keys($motifs)),
             'telephone' => 'nullable|string|max:30',
             'email_achat' => $isIncident ? 'required|email|max:255' : 'nullable|email|max:255',
             'transaction_id' => 'nullable|string|max:100',
             'message' => 'required|string|min:10|max:2000',
         ];
 
-        if (!$isIncident) {
+        if (! $isIncident) {
             $rules['objet'] = 'required|string|min:5|max:255';
         }
 
@@ -134,21 +141,21 @@ class SitePublicController extends Controller
         $superAdmins = User::where('role', 'super_admin')->get();
         foreach ($superAdmins as $sa) {
             Mail::raw(
-                "Nouveau message depuis le formulaire de contact :\n\n" .
-                "De : {$validated['nom_complet']} ({$validated['email']})\n" .
-                ($validated['telephone'] ?? null ? "Téléphone : {$validated['telephone']}\n" : '') .
-                "Objet : {$objet}\n" .
-                ($validated['email_achat'] ?? null ? "Email d'achat : {$validated['email_achat']}\n" : '') .
-                ($validated['transaction_id'] ?? null ? "ID transaction FedaPay : {$validated['transaction_id']}\n" : '') .
-                "Message :\n{$validated['message']}\n\n" .
+                "Nouveau message depuis le formulaire de contact :\n\n".
+                "De : {$validated['nom_complet']} ({$validated['email']})\n".
+                ($validated['telephone'] ?? null ? "Téléphone : {$validated['telephone']}\n" : '').
+                "Objet : {$objet}\n".
+                ($validated['email_achat'] ?? null ? "Email d'achat : {$validated['email_achat']}\n" : '').
+                ($validated['transaction_id'] ?? null ? "ID transaction FedaPay : {$validated['transaction_id']}\n" : '').
+                "Message :\n{$validated['message']}\n\n".
                 ($isIncident
                     ? "INCIDENT PAIEMENT : ouvrez le Support technique du super dashboard pour vérifier et réconcilier la transaction.\n\n"
-                    : '') .
-                "Connectez-vous au super dashboard pour y repondre.",
+                    : '').
+                'Connectez-vous au super dashboard pour y repondre.',
                 function ($m) use ($sa, $validated, $objet) {
                     $m->to($sa->email)
-                      ->replyTo($validated['email'], $validated['nom_complet'])
-                      ->subject("[PaxEvent] Contact : {$objet}");
+                        ->replyTo($validated['email'], $validated['nom_complet'])
+                        ->subject("[PaxEvent] Contact : {$objet}");
                 }
             );
         }
@@ -233,5 +240,4 @@ class SitePublicController extends Controller
 
         return view('site.contrat-prestation', compact('derniereMiseAJour'));
     }
-
 }

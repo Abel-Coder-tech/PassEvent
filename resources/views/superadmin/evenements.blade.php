@@ -59,6 +59,14 @@
                                     <button type="submit" class="sa-btn sa-btn-sm" style="background:var(--sa-success);color:#fff;border:none;" title="Publier"><i class="bi bi-check-lg"></i></button>
                                 </form>
                             @endif
+                            @if($ev->statut === 'publié' && $ev->date_event >= now())
+                                <form action="{{ route('superadmin.evenements.a-la-une', $ev) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm {{ $ev->a_la_une ? 'sa-btn-danger' : 'sa-btn-outline' }}" title="{{ $ev->a_la_une ? 'Retirer de la une' : 'Mettre à la une' }}">
+                                        <i class="bi bi-{{ $ev->a_la_une ? 'star-fill' : 'star' }}"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

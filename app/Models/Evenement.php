@@ -30,6 +30,8 @@ class Evenement extends Model
         'ventes_especes',
         'commission_pourcentage',
         'max_agents_vente',
+        'a_la_une',
+        'a_la_une_ordre',
     ];
 
     protected function casts(): array
@@ -40,7 +42,17 @@ class Evenement extends Model
             'ventes_fermees' => 'boolean',
             'commission_pourcentage' => 'float',
             'max_agents_vente' => 'integer',
+            'a_la_une' => 'boolean',
+            'a_la_une_ordre' => 'integer',
         ];
+    }
+
+    // Scope : événements mis à la une, triés par ordre
+    public function scopeALaUne($query)
+    {
+        return $query->where('a_la_une', true)
+            ->orderBy('a_la_une_ordre')
+            ->orderBy('date_event');
     }
 
     public function getTextes(): array
@@ -214,7 +226,7 @@ class Evenement extends Model
     public function attributionAgents(): ?AttributionAgent
     {
         return AttributionAgent::where('user_id', $this->user_id)
-            ->where(fn($q) => $q->where('evenement_id', $this->id)->orWhereNull('evenement_id'))
+            ->where(fn ($q) => $q->where('evenement_id', $this->id)->orWhereNull('evenement_id'))
             ->orderByRaw('evenement_id IS NULL') // spécifique d'abord, dashboard ensuite
             ->first();
     }

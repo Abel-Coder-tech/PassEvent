@@ -122,6 +122,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');
         Route::delete('/evenements/{evenement}', [SuperAdminController::class, 'supprimerEvenement'])->name('evenements.supprimer');
         Route::post('/evenements/{evenement}/mettre-en-avant', [SuperAdminController::class, 'mettreEnAvant'])->name('evenements.mettre-en-avant');
+        Route::post('/evenements/{evenement}/a-la-une', [SuperAdminController::class, 'toggleALaUne'])->name('evenements.a-la-une');
+        Route::post('/evenements/{evenement}/a-la-une/ordre/{direction}', [SuperAdminController::class, 'ordreALaUne'])->name('evenements.a-la-une.ordre');
         Route::get('/evenements/{evenement}', [SuperAdminController::class, 'voirEvenement'])->name('evenements.voir');
         Route::post('/evenements/{evenement}/controles', [SuperAdminController::class, 'updateControlesEvenement'])->name('evenements.controles');
         Route::post('/organisateurs/{user}/controles', [SuperAdminController::class, 'updateControlesOrganisateur'])->name('organisateurs.controles');

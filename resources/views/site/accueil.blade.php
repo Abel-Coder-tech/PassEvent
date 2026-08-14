@@ -363,6 +363,233 @@
     }
 </style>
 
+<!-- Evenements a la une (carrousel) -->
+@if($evenementsUne->isNotEmpty())
+<section class="section-une">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">À la une</span>
+            <h2>Nos événements phares</h2>
+            <p>Découvrez les événements mis en avant par PaxEvent</p>
+        </div>
+        <div id="carouselALaUne" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="carousel-inner">
+                @foreach($evenementsUne as $index => $evenement)
+                    @php
+                        $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
+                        $estComplet = $placesRestantes <= 0;
+                        $prixDernier = $evenement->tarifs->min('prix');
+                        $textes = $evenement->getTextes();
+                        $venteCloturee = $evenement->ventes_fermees;
+                    @endphp
+                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                        <a href="{{ route('evenements.public.show', $evenement->id) }}" class="une-slide">
+                            <div class="une-img">
+                                @if($evenement->image)
+                                    <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=une-placeholder><i class=bi bi-calendar-event></i></div>'">
+                                @else
+                                    <div class="une-placeholder">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </div>
+                                @endif
+                                <div class="une-overlay"></div>
+                                <div class="une-badges">
+                                    @if($evenement->categorie)
+                                        <span class="une-badge">{{ ucfirst($evenement->categorie) }}</span>
+                                    @endif
+                                    @if($venteCloturee)
+                                        <span class="une-badge une-badge-danger">{{ $textes['cloturee'] }}</span>
+                                    @elseif($estComplet)
+                                        <span class="une-badge une-badge-danger">Complet</span>
+                                    @endif
+                                </div>
+                                <div class="une-content">
+                                    <h3 class="une-title">{{ $evenement->titre }}</h3>
+                                    <p class="une-meta">
+                                        <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('dddd D MMMM YYYY à HH:mm') }}
+                                        <span class="une-sep">•</span>
+                                        <i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}
+                                    </p>
+                                    <div class="une-cta-row">
+                                        @if($evenement->gratuit)
+                                            <span class="une-price">Entrée <strong>Gratuit</strong></span>
+                                        @elseif($prixDernier)
+                                            <span class="une-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></span>
+                                        @else
+                                            <span class="une-price text-muted">Tarifs non configurés</span>
+                                        @endif
+                                        @if(!$venteCloturee && !$estComplet)
+                                            <span class="une-cta">
+                                                <i class="bi bi-{{ $evenement->gratuit ? 'check-circle' : 'ticket-perforated' }} me-1"></i>
+                                                {{ $evenement->gratuit ? $textes['participer_gratuit'] : $textes['acheter'] }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+            @if($evenementsUne->count() > 1)
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselALaUne" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Précédent</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselALaUne" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Suivant</span>
+                </button>
+                <div class="carousel-indicators">
+                    @foreach($evenementsUne as $index => $evenement)
+                        <button type="button" data-bs-target="#carouselALaUne" data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}" aria-current="{{ $index === 0 ? 'true' : 'false' }}"></button>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+</section>
+
+<style>
+.section-une {
+    padding: 3.5rem 0;
+    background: linear-gradient(180deg, #f7f5f3 0%, #fff 100%);
+}
+.une-slide {
+    display: block;
+    border-radius: 20px;
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: 0 10px 40px rgba(33,28,49,0.12);
+    transition: box-shadow 0.35s ease, transform 0.35s ease;
+}
+.une-slide:hover {
+    box-shadow: 0 16px 50px rgba(84,38,128,0.22);
+    transform: translateY(-4px);
+}
+.une-img {
+    position: relative;
+    height: 340px;
+    overflow: hidden;
+}
+.une-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.une-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #542680, #9972B0);
+    color: #fff;
+    font-size: 4rem;
+}
+.une-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(33,28,49,0) 30%, rgba(33,28,49,0.85) 100%);
+}
+.une-badges {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 2;
+}
+.une-badge {
+    padding: 0.3rem 0.9rem;
+    background: rgba(255,255,255,0.95);
+    color: #542680;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.une-badge-danger {
+    background: #dc3545;
+    color: #fff;
+}
+.une-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.5rem 2rem;
+    z-index: 2;
+    color: #fff;
+}
+.une-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 0.35rem;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.une-meta {
+    font-size: 0.9rem;
+    margin: 0 0 0.9rem;
+    opacity: 0.92;
+}
+.une-meta i { margin-right: 0.3rem; }
+.une-sep { margin: 0 0.6rem; opacity: 0.6; }
+.une-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+.une-price {
+    font-size: 0.95rem;
+}
+.une-price strong {
+    font-size: 1.2rem;
+    color: #FED514;
+}
+.une-cta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.4rem;
+    background: linear-gradient(135deg, #FED514, #f0c40f);
+    color: #211C31;
+    font-weight: 800;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(254,213,20,0.35);
+    transition: transform 0.2s;
+}
+.une-slide:hover .une-cta {
+    transform: translateY(-2px);
+}
+.carousel-indicators [data-bs-target] {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #542680;
+    opacity: 0.35;
+}
+.carousel-indicators .active {
+    opacity: 1;
+}
+.carousel-control-prev,
+.carousel-control-next {
+    width: 8%;
+}
+@media (max-width: 767.98px) {
+    .une-img { height: 300px; }
+    .une-content { padding: 1.1rem 1.2rem; }
+    .une-title { font-size: 1.25rem; }
+    .une-meta { font-size: 0.8rem; }
+    .une-cta-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .section-une { padding: 2.5rem 0; }
+}
+</style>
+
 <!-- Evenements a venir -->
 <section class="section-events">
     <div class="container">

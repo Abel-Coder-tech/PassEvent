@@ -378,6 +378,56 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Evenement mis en avant.');
     }
 
+    // Bascule un événement dans la zone "à la une" du site public
+    public function toggleALaUne(Evenement $evenement)
+    {
+        $aLaUne = ! $evenement->a_la_une;
+
+        $update = ['a_la_une' => $aLaUne];
+
+        if ($aLaUne && $evenement->a_la_une_ordre === 0) {
+            $update['a_la_une_ordre'] = (int) Evenement::where('a_la_une', true)->max('a_la_une_ordre') + 1;
+        }
+
+        $evenement->update($update);
+
+        return back()->with('success', $aLaUne
+            ? "{$evenement->titre} est maintenant à la une."
+            : "{$evenement->titre} a été retiré de la une.");
+    }
+
+    // Déplace un événement à la une dans l'ordre d'affichage (haut/bas)
+    public function ordreALaUne(Evenement $evenement, string $direction)
+    {
+        $direction = $direction === 'haut' ? 'haut' : 'bas';
+
+        $liste = Evenement::where('a_la_une', true)
+            ->orderBy('a_la_une_ordre')
+            ->orderBy('id')
+            ->get();
+
+        $index = $liste->search(fn ($e) => $e->id === $evenement->id);
+        if ($index === false) {
+            return back();
+        }
+
+        $swap = $direction === 'haut' ? $index - 1 : $index + 1;
+        if (! isset($liste[$swap])) {
+            return back(); // Déjà en premier/dernier
+        }
+
+        $courant = $liste[$index];
+        $voisin = $liste[$swap];
+
+        $ordreCourant = $courant->a_la_une_ordre;
+        $ordreVoisin = $voisin->a_la_une_ordre;
+
+        $courant->update(['a_la_une_ordre' => $ordreVoisin]);
+        $voisin->update(['a_la_une_ordre' => $ordreCourant]);
+
+        return back()->with('success', 'Ordre de la une mis à jour.');
+    }
+
     // Page événement : regroupe les contrôles, les infos et les actions
     public function voirEvenement(Evenement $evenement)
     {
