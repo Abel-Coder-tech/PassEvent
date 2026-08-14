@@ -589,6 +589,7 @@
     .section-une { padding: 2.5rem 0; }
 }
 </style>
+@endif
 
 <!-- Evenements a venir -->
 <section class="section-events">
