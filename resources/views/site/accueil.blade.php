@@ -372,7 +372,7 @@
             <h2>Nos événements phares</h2>
             <p>Découvrez les événements mis en avant par PaxEvent</p>
         </div>
-        <div id="carouselALaUne" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
+        <div id="carouselALaUne" class="carousel slide carousel-fade" data-bs-ride="true" data-bs-interval="5000">
             <div class="carousel-inner">
                 @foreach($evenementsUne as $index => $evenement)
                     @php
