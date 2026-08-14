@@ -28,6 +28,8 @@
                             <span class="sa-badge" style="background:#e74c3c;color:#fff;">Incident paiement</span>
                         @elseif(str_starts_with($msg->objet, '[Remboursement]'))
                             <span class="sa-badge" style="background:#f59e0b;color:#fff;">Remboursement</span>
+                        @elseif(str_starts_with($msg->objet, '[Demande]'))
+                            <span class="sa-badge" style="background:#7B3FA0;color:#fff;">Demande</span>
                         @else
                             <span class="sa-badge sa-badge-primary">Contact</span>
                         @endif
@@ -92,6 +94,10 @@
                 <span class="org-detail-label">Email d'achat</span>
                 <span class="org-detail-value" id="modalAchat"></span>
             </div>
+            <div class="org-detail-row" id="modalEvenementRow" style="display:none;">
+                <span class="org-detail-label">Événement</span>
+                <span class="org-detail-value" id="modalEvenement"></span>
+            </div>
             <div class="org-detail-row" id="modalTxRow" style="display:none;">
                 <span class="org-detail-label">ID transaction</span>
                 <span class="org-detail-value" id="modalTx"></span>
@@ -154,6 +160,15 @@ function voirNotification(id) {
 
     if (msg.telephone) { telEl.textContent = msg.telephone; telRow.style.display = ''; }
     else { telRow.style.display = 'none'; }
+
+    const evenementRow = document.getElementById('modalEvenementRow');
+    const evenementEl = document.getElementById('modalEvenement');
+    if (msg.evenement && msg.evenement.titre) {
+        evenementEl.textContent = msg.evenement.titre;
+        evenementRow.style.display = '';
+    } else {
+        evenementRow.style.display = 'none';
+    }
 
     if (msg.email_achat) {
         document.getElementById('modalAchat').textContent = msg.email_achat;

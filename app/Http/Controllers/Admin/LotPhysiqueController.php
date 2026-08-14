@@ -7,7 +7,7 @@ use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Ticket;
 use App\Services\LotPhysiquePdfService;
-use Illuminate\Http\Request;
+use App\Support\PerPage;
 use Illuminate\Support\Facades\Auth;
 
 class LotPhysiqueController extends Controller
@@ -20,11 +20,11 @@ class LotPhysiqueController extends Controller
 
         $lots = LotPhysique::with('evenement', 'tarif')
             ->withCount(['tickets as nb_tickets'])
-            ->withCount(['tickets as nb_annules' => fn($q) => $q->where('annule', true)])
-            ->withCount(['tickets as nb_scannes' => fn($q) => $q->where('utilise', true)])
+            ->withCount(['tickets as nb_annules' => fn ($q) => $q->where('annule', true)])
+            ->withCount(['tickets as nb_scannes' => fn ($q) => $q->where('utilise', true)])
             ->where('user_id', $user->id)
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
 
         $ticketsPhysiques = Ticket::whereIn('evenement_id', $evenementIds)
             ->whereNotNull('lot_physique_id')
@@ -38,12 +38,14 @@ class LotPhysiqueController extends Controller
         $nbScannes = (clone $ticketsPhysiques)->where('utilise', true)->count();
         $recettesPhysiques = (float) (clone $ticketsPhysiquesValides)->sum('montant');
 
-        // Commission attendue sur le physique (taux effectif par événement)
-        $evenements = Evenement::whereIn('id', $evenementIds)->with('user')->get()->keyBy('id');
+        // Commission attendue sur le physique : taux par lot si défini, sinon taux effectif de l'événement
+        $lotsCharges = LotPhysique::where('user_id', $user->id)->get()->keyBy('id');
+        $evenements = Evenement::whereIn('id', $evenementIds)->get()->keyBy('id');
         $commissionPhysique = 0.0;
-        foreach ($evenements as $evenement) {
-            $montant = (clone $ticketsPhysiquesValides)->where('evenement_id', $evenement->id)->sum('montant');
-            $commissionPhysique += $montant * $evenement->commissionEffective() / 100;
+        foreach ($ticketsPhysiquesValides->get() as $ticket) {
+            $lot = $ticket->lot_physique_id ? $lotsCharges->get($ticket->lot_physique_id) : null;
+            $taux = $lot?->commissionEffective() ?? $evenements->get($ticket->evenement_id)?->commissionEffective() ?? 10;
+            $commissionPhysique += (float) $ticket->montant * $taux / 100;
         }
         $commissionPhysique = round($commissionPhysique, 2);
 
@@ -60,7 +62,7 @@ class LotPhysiqueController extends Controller
             abort(403);
         }
 
-        if (!$lot->estTransmis) {
+        if (! $lot->estTransmis) {
             return back()->with('error', 'Ce lot n\'a pas encore été transmis par le super admin.');
         }
 
@@ -78,6 +80,6 @@ class LotPhysiqueController extends Controller
 
         $pdf = LotPhysiquePdfService::generer($lot, $tickets);
 
-        return $pdf->download('Planche-' . $lot->nom . '-' . $lot->evenement?->titre . '.pdf');
+        return $pdf->download('Planche-'.$lot->nom.'-'.$lot->evenement?->titre.'.pdf');
     }
 }

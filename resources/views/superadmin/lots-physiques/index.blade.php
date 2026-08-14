@@ -55,7 +55,11 @@
                     <td><strong>{{ $lot->nom }}</strong></td>
                     <td>{{ $lot->user?->nom ?? '---' }}</td>
                     <td>{{ $lot->evenement?->titre ?? '---' }}</td>
-                    <td>{{ $lot->tarif?->nom ?? '---' }}</td>
+                    <td>{{ $lot->tarif?->nom ?? '---' }}
+                        @if($lot->commission_pourcentage !== null && $lot->commission_pourcentage !== '')
+                            <br><small style="font-size:0.7rem;color:#888;">comm. {{ number_format($lot->commission_pourcentage, 2, ',', ' ') }}%</small>
+                        @endif
+                    </td>
                     <td class="text-center">{{ $lot->nb_tickets }}</td>
                     <td class="text-center">@if($lot->nb_annules > 0)<span class="sa-badge sa-badge-danger">{{ $lot->nb_annules }}</span>@else 0 @endif</td>
                     <td class="text-center">@if($lot->nb_scannes > 0)<span class="sa-badge sa-badge-success">{{ $lot->nb_scannes }}</span>@else 0 @endif</td>

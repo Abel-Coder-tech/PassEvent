@@ -238,7 +238,7 @@ class SuperAdminController extends Controller
     // Notifications non lues (messages système)
     public function notifications()
     {
-        $messages = Message::whereNull('user_id')->orderByDesc('created_at')->paginate(PerPage::resolve());
+        $messages = Message::with('evenement')->whereNull('user_id')->orderByDesc('created_at')->paginate(PerPage::resolve());
 
         return view('superadmin.notifications', compact('messages'));
     }

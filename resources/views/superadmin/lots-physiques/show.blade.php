@@ -92,6 +92,15 @@
                     </div>
                     <div class="col-6 col-md-4">
                         <div class="sa-info-box">
+                            <div class="sa-info-icon"><i class="bi bi-percent"></i></div>
+                            <div>
+                                <div class="sa-info-label">Commission</div>
+                                <div class="sa-info-value">{{ number_format($lot->commission_pourcentage !== null && $lot->commission_pourcentage !== '' ? $lot->commission_pourcentage : $lot->evenement?->commissionEffective(), 2, ',', ' ') }} %</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="sa-info-box">
                             <div class="sa-info-icon"><i class="bi bi-cash-stack"></i></div>
                             <div>
                                 <div class="sa-info-label">Valeur du lot</div>

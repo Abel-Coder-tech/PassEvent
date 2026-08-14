@@ -14,6 +14,7 @@ class LotPhysique extends Model
         'user_id',
         'evenement_id',
         'tarif_id',
+        'commission_pourcentage',
         'nom',
         'quantite',
         'statut',
@@ -26,8 +27,19 @@ class LotPhysique extends Model
         return [
             'quantite' => 'integer',
             'download_count' => 'integer',
+            'commission_pourcentage' => 'decimal:2',
             'transmis_at' => 'datetime',
         ];
+    }
+
+    // Commission effective du lot : spécifique (lot) > événement > organisateur > global 10 %
+    public function commissionEffective(): float
+    {
+        if ($this->commission_pourcentage !== null && $this->commission_pourcentage !== '') {
+            return (float) $this->commission_pourcentage;
+        }
+
+        return $this->evenement?->commissionEffective() ?? 10;
     }
 
     public function user(): BelongsTo

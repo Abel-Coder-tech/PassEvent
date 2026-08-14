@@ -45,6 +45,12 @@ class DashboardController extends Controller
         $totalEvenements = $evenements->count();
         $evenementsActifs = $evenements->where('statut', 'publié')->count();
 
+        // Événements + tarifs actifs pour le formulaire de demande vers le super admin
+        $evenementsPourDemande = Evenement::where('user_id', $user->id)
+            ->with(['tarifs' => fn ($q) => $q->where('statut', 'actif')->orderBy('prix')])
+            ->orderBy('date_event')
+            ->get();
+
         $evenementsIds = $evenements->pluck('id');
 
         // Tickets vendus et payés uniquement
@@ -293,6 +299,7 @@ class DashboardController extends Controller
             'moyensPaiement',
             'notifications',
             'notificationsNonLues',
+            'evenementsPourDemande',
         ));
     }
 }

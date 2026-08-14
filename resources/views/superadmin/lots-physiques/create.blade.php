@@ -48,6 +48,12 @@
                             @error('tarif_id')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.8rem;font-weight:600;">Commission (en %)</label>
+                            <input type="number" name="commission_pourcentage" id="inp_commission" class="sa-form-control" min="0" max="100" step="0.01" value="{{ old('commission_pourcentage') }}" placeholder="Defaut : commission evenement">
+                            @error('commission_pourcentage')<small class="text-danger">{{ $message }}</small>@enderror
+                            <small class="text-muted">Laissez vide pour reprendre le taux de l'evenement. Le prix du ticket est celui du tarif choisi.</small>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label" style="font-size:0.8rem;font-weight:600;">Quantite</label>
                             <input type="number" name="quantite" id="inp_quantite" class="sa-form-control" min="1" max="500" value="{{ old('quantite') }}" placeholder="Nombre de tickets" required>
                             @error('quantite')<small class="text-danger">{{ $message }}</small>@enderror
@@ -85,6 +91,7 @@
     const selOrg = document.getElementById('sel_organisateur');
     const selEvt = document.getElementById('sel_evenement');
     const selTar = document.getElementById('sel_tarif');
+    const inpCommission = document.getElementById('inp_commission');
 
     function reset(select, placeholder) {
         select.innerHTML = '<option value="">' + placeholder + '</option>';
@@ -94,6 +101,7 @@
     selOrg.addEventListener('change', function () {
         reset(selEvt, '-- Aucun evenement --');
         reset(selTar, '-- Choisir un evenement --');
+        inpCommission.value = '';
         if (!this.value) return;
 
         fetch('{{ route("superadmin.tickets-physiques.evenements") }}', {
@@ -133,18 +141,22 @@
         })
         .then(r => r.json())
         .then(data => {
+            inpCommission.value = '';
             if (data.gratuit) {
                 selTar.innerHTML = '<option value="">Evenement gratuit (tarif auto)</option>';
+                if (data.commission) inpCommission.value = data.commission;
                 return;
             }
             if (!data.tarifs.length) {
                 selTar.innerHTML = '<option value="">-- Aucun tarif actif --</option>';
+                if (data.commission) inpCommission.value = data.commission;
                 return;
             }
             selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + data.tarifs.map(t =>
                 '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA</option>'
             ).join('');
             selTar.disabled = false;
+            if (data.commission) inpCommission.value = data.commission;
         });
     });
 })();

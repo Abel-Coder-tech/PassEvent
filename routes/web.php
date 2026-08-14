@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
 use App\Http\Controllers\Admin\AgentVenteController as AdminAgentVenteController;
+use App\Http\Controllers\Admin\DemandeSuperAdminController;
 use App\Http\Controllers\Admin\LotPhysiqueController as AdminLotPhysiqueController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Agent\AuthController as AgentAuthController;
@@ -335,6 +336,10 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::post('/{message}/repondre', [MessageController::class, 'repondre'])->name('repondre');
         Route::delete('/{message}', [MessageController::class, 'destroy'])->name('destroy');
     });
+
+    Route::post('/admin/demande-superadmin', [DemandeSuperAdminController::class, 'store'])
+        ->name('demande-superadmin.store')
+        ->middleware('throttle:5,10');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
     Route::get('/admin/logs/{id}/detail', [LogController::class, 'detail'])->name('logs.detail');

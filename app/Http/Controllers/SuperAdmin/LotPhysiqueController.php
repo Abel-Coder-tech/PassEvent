@@ -11,6 +11,9 @@ use App\Models\Message;
 use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\LotPhysiquePdfService;
+use App\Services\QrCodeService;
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -23,10 +26,10 @@ class LotPhysiqueController extends Controller
     {
         $lots = LotPhysique::with('evenement', 'user', 'tarif')
             ->withCount(['tickets as nb_tickets'])
-            ->withCount(['tickets as nb_annules' => fn($q) => $q->where('annule', true)])
-            ->withCount(['tickets as nb_scannes' => fn($q) => $q->where('utilise', true)])
+            ->withCount(['tickets as nb_annules' => fn ($q) => $q->where('annule', true)])
+            ->withCount(['tickets as nb_scannes' => fn ($q) => $q->where('utilise', true)])
             ->orderByDesc('created_at')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(PerPage::resolve());
 
         return view('superadmin.lots-physiques.index', compact('lots'));
     }
@@ -45,7 +48,7 @@ class LotPhysiqueController extends Controller
         $request->validate(['user_id' => 'required|exists:users,id']);
 
         $evenements = Evenement::where('user_id', $request->user_id)
-            ->where(fn($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
             ->orderBy('date_event', 'asc')
             ->get(['id', 'titre', 'date_event']);
 
@@ -60,7 +63,11 @@ class LotPhysiqueController extends Controller
         $evenement = Evenement::findOrFail($request->evenement_id);
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get(['id', 'nom', 'prix']);
 
-        return response()->json(['tarifs' => $tarifs, 'gratuit' => (bool) $evenement->gratuit]);
+        return response()->json([
+            'tarifs' => $tarifs,
+            'gratuit' => (bool) $evenement->gratuit,
+            'commission' => $evenement->commissionEffective(),
+        ]);
     }
 
     // Génère un lot : lot + tickets physiques (PAX-XXXXX)
@@ -71,6 +78,7 @@ class LotPhysiqueController extends Controller
             'evenement_id' => 'required|exists:evenement,id',
             'nom' => 'required|string|max:100',
             'quantite' => 'required|integer|min:1|max:500',
+            'commission_pourcentage' => 'nullable|numeric|min:0|max:100',
         ];
         $messages = [
             'user_id.required' => 'Veuillez sélectionner un organisateur.',
@@ -89,7 +97,7 @@ class LotPhysiqueController extends Controller
             return back()->withInput()->with('error', 'Cet événement n\'appartient pas à l\'organisateur sélectionné.');
         }
 
-        if (!$evenement->gratuit) {
+        if (! $evenement->gratuit) {
             $request->validate(
                 ['tarif_id' => 'required|exists:tarifs,id'],
                 ['tarif_id.required' => 'Veuillez sélectionner un tarif.']
@@ -99,15 +107,21 @@ class LotPhysiqueController extends Controller
             $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
         }
 
-        if (!$tarif) {
+        if (! $tarif) {
             return back()->withInput()->with('error', 'Aucun tarif actif pour cet événement.');
         }
 
-        $lot = DB::transaction(function () use ($validated, $evenement, $tarif) {
+        // Prix du ticket physique = prix du tarif choisi ; commission % facultative (sinon taux événement)
+        $commission = $validated['commission_pourcentage'] !== null && $validated['commission_pourcentage'] !== ''
+            ? (float) $validated['commission_pourcentage']
+            : null;
+
+        $lot = DB::transaction(function () use ($validated, $evenement, $tarif, $commission) {
             $lot = LotPhysique::create([
                 'user_id' => $validated['user_id'],
                 'evenement_id' => $evenement->id,
                 'tarif_id' => $tarif->id,
+                'commission_pourcentage' => $commission,
                 'nom' => $validated['nom'],
                 'quantite' => $validated['quantite'],
                 'statut' => 'genere',
@@ -132,7 +146,7 @@ class LotPhysiqueController extends Controller
                     'statut_paiement' => 'payé',
                     'methode_paiement' => 'especes',
                     'type_paiement' => 'especes',
-                    'transaction_id' => 'PHYS-' . strtoupper(Str::random(8)),
+                    'transaction_id' => 'PHYS-'.strtoupper(Str::random(8)),
                     'utilise' => false,
                     'date_achat' => now(),
                 ]);
@@ -149,6 +163,7 @@ class LotPhysiqueController extends Controller
                     'user_id' => $validated['user_id'],
                     'evenement_id' => $evenement->id,
                     'quantite' => $validated['quantite'],
+                    'commission_pourcentage' => $commission,
                 ]),
                 'ip' => request()->ip(),
             ]);
@@ -170,9 +185,9 @@ class LotPhysiqueController extends Controller
             return back()->with('error', 'Aucun ticket valide à imprimer dans ce lot.');
         }
 
-        $pdf = \App\Services\LotPhysiquePdfService::generer($lot, $tickets);
+        $pdf = LotPhysiquePdfService::generer($lot, $tickets);
 
-        return $pdf->download('Planche-' . $lot->nom . '.pdf');
+        return $pdf->download('Planche-'.$lot->nom.'.pdf');
     }
 
     // Télécharge un PDF unique regroupant toutes les planches (côté super admin)
@@ -187,7 +202,7 @@ class LotPhysiqueController extends Controller
             return back()->with('error', 'Aucun lot avec des tickets valides à imprimer.');
         }
 
-        $pdf = \App\Services\LotPhysiquePdfService::genererPlusieurs($lots);
+        $pdf = LotPhysiquePdfService::genererPlusieurs($lots);
 
         return $pdf->download('Planches-tickets-physiques.pdf');
     }
@@ -200,7 +215,7 @@ class LotPhysiqueController extends Controller
         $tickets = $lot->tickets()->orderBy('code_unique')->get();
 
         $qrs = $tickets->mapWithKeys(fn (Ticket $t) => [
-            $t->id => \App\Services\QrCodeService::generateDataUri($t->code_unique, 120),
+            $t->id => QrCodeService::generateDataUri($t->code_unique, 120),
         ]);
 
         return view('superadmin.lots-physiques.show', compact('lot', 'tickets', 'qrs'));
@@ -215,7 +230,7 @@ class LotPhysiqueController extends Controller
 
         $note = trim((string) $request->input('note'));
         $emailDest = trim((string) $request->input('email'));
-        if ($emailDest !== '' && !filter_var($emailDest, FILTER_VALIDATE_EMAIL)) {
+        if ($emailDest !== '' && ! filter_var($emailDest, FILTER_VALIDATE_EMAIL)) {
             return back()->with('error', 'L\'adresse email saisie n\'est pas valide.');
         }
         if ($emailDest === '') {
@@ -223,9 +238,9 @@ class LotPhysiqueController extends Controller
         }
 
         $corps = "Bonjour {$lot->user?->nom},\n\n"
-            . "Un lot de tickets physiques est disponible pour votre événement « {$lot->evenement?->titre} ».\n\n"
-            . "Lot : {$lot->nom} ({$lot->quantite} tickets)\n\n"
-            . "Connectez-vous à votre espace organisateur, rubrique « Vente physique », pour télécharger la planche de QR codes (3 téléchargements maximum).";
+            ."Un lot de tickets physiques est disponible pour votre événement « {$lot->evenement?->titre} ».\n\n"
+            ."Lot : {$lot->nom} ({$lot->quantite} tickets)\n\n"
+            .'Connectez-vous à votre espace organisateur, rubrique « Vente physique », pour télécharger la planche de QR codes (3 téléchargements maximum).';
         if ($note !== '') {
             $corps .= "\n\nNote du super admin :\n{$note}";
         }
@@ -245,7 +260,7 @@ class LotPhysiqueController extends Controller
         try {
             Mail::to($emailDest)->send(new LotPhysiqueTransmis($lot, $note));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Lot physique - Erreur email transmission : ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Lot physique - Erreur email transmission : '.$e->getMessage());
         }
 
         Log::create([
@@ -310,12 +325,14 @@ class LotPhysiqueController extends Controller
                 // Un ticket déjà scanné ne peut ni être annulé ni supprimé
                 if ($ticket->utilise) {
                     $ignores++;
+
                     continue;
                 }
 
                 if ($validated['action'] === 'annuler') {
                     if ($ticket->annule) {
                         $ignores++;
+
                         continue;
                     }
                     $ticket->update(['annule' => true]);
