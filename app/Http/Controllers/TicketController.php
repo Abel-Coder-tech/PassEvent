@@ -6,9 +6,11 @@ use App\Mail\TicketEmail;
 use App\Models\Evenement;
 use App\Models\Log;
 use App\Models\Ticket;
+use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
 use App\Support\PerPage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -17,35 +19,17 @@ class TicketController extends Controller
     // Liste les tickets de l'organisateur avec filtres et statistiques
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $evenementsIds = Evenement::where('user_id', $user->id)->pluck('id'); // Événements de l'utilisateur
-
-        $search = $request->input('q');
+        $filtres = $this->filtres($request);
+        $evenementsIds = $filtres['evenementsIds'];
 
         $query = Ticket::with('evenement', 'tarif')->whereIn('evenement_id', $evenementsIds);
-
-        if ($search) {
-            // Recherche par nom, téléphone ou code ticket
-            $query->where(function ($sub) use ($search) {
-                $sub->where('nom_acheteur', 'like', '%'.$search.'%')
-                    ->orWhere('telephone_acheteur', 'like', '%'.$search.'%')
-                    ->orWhere('code_unique', 'like', '%'.$search.'%');
-            });
-        }
+        $this->appliquerFiltres($query, $filtres);
 
         $tickets = $query->orderBy('date_achat', 'desc')->paginate(PerPage::resolve());
 
-        // Statistiques par catégorie de ticket
+        // Statistiques par catégorie de ticket (mêmes filtres)
         $statsQuery = Ticket::whereIn('evenement_id', $evenementsIds);
-
-        if ($search) {
-            // Applique le même filtre de recherche sur les stats
-            $statsQuery->where(function ($sub) use ($search) {
-                $sub->where('nom_acheteur', 'like', '%'.$search.'%')
-                    ->orWhere('telephone_acheteur', 'like', '%'.$search.'%')
-                    ->orWhere('code_unique', 'like', '%'.$search.'%');
-            });
-        }
+        $this->appliquerFiltres($statsQuery, $filtres);
 
         $totalTickets = $statsQuery->count();
         $valides = (clone $statsQuery)->where('statut_paiement', 'payé')->where('utilise', false)->count();
@@ -53,7 +37,179 @@ class TicketController extends Controller
         $etudiants = (clone $statsQuery)->where('nom_tarif', 'like', '%tudiant%')->count();
         $annules = (clone $statsQuery)->whereIn('statut_paiement', ['annulé', 'remboursé'])->count();
 
-        return view('tickets.index', compact('tickets', 'totalTickets', 'valides', 'scannes', 'etudiants', 'annules', 'search'));
+        // Taux de réussite des transactions FedaPay (hors ventes manuelles et tickets gratuits)
+        $transactionsReussies = (clone $statsQuery)->where('statut_paiement', 'payé')
+            ->where('transaction_id', 'not like', 'MANUEL-%')
+            ->where('transaction_id', 'not like', 'GRATUIT-%')
+            ->count();
+        $transactionsEchouees = (clone $statsQuery)->where('statut_paiement', 'échoué')->count();
+        $transactionsTentees = $transactionsReussies + $transactionsEchouees;
+        $tauxReussite = $transactionsTentees > 0 ? round($transactionsReussies / $transactionsTentees * 100, 1) : 0;
+
+        // Alertes : transactions bloquées ou anormales
+        $alertes = $this->detecterAlertes($evenementsIds);
+
+        return view('tickets.index', compact(
+            'tickets', 'totalTickets', 'valides', 'scannes', 'etudiants', 'annules',
+            'transactionsReussies', 'transactionsEchouees', 'tauxReussite', 'alertes', 'filtres'
+        ));
+    }
+
+    // Exporte les tickets filtrés en CSV
+    public function exportCsv(Request $request)
+    {
+        $filtres = $this->filtres($request);
+        $evenementsIds = $filtres['evenementsIds'];
+
+        $query = Ticket::with('evenement')->whereIn('evenement_id', $evenementsIds);
+        $this->appliquerFiltres($query, $filtres);
+
+        $tickets = $query->orderBy('date_achat', 'desc')->get();
+
+        $filename = 'tickets-'.date('Y-m-d-Hi').'.csv';
+
+        return response()->streamDownload(function () use ($tickets) {
+            $out = fopen('php://output', 'w');
+
+            // BOM UTF-8 pour Excel
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'Reference', 'Participant', 'Telephone', 'Email', 'Evenement',
+                'Tarif', 'Montant (FCFA)', 'Statut', 'Moyen de paiement',
+                'Operateur', 'Transaction ID', 'Date achat',
+            ], ';');
+
+            foreach ($tickets as $ticket) {
+                fputcsv($out, [
+                    $ticket->code_unique,
+                    $ticket->nom_acheteur,
+                    $ticket->telephone_acheteur,
+                    $ticket->email_acheteur,
+                    $ticket->evenement?->titre ?? '-',
+                    $ticket->nom_tarif ?? '-',
+                    number_format((float) $ticket->montant, 0, ',', ' '),
+                    $ticket->statut_paiement,
+                    PaiementMapper::moyenLabel(PaiementMapper::moyenPaiement($ticket->methode_paiement)),
+                    PaiementMapper::operateurLabel(PaiementMapper::operateur($ticket->methode_paiement)),
+                    $ticket->transaction_id,
+                    $ticket->date_achat?->format('d/m/Y H:i'),
+                ], ';');
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    // Extrait les paramètres de filtre communs (recherche, période, opérateur, statut)
+    private function filtres(Request $request): array
+    {
+        $user = auth()->user();
+        $evenementsIds = Evenement::where('user_id', $user->id)->pluck('id');
+
+        $search = trim((string) $request->input('q'));
+        $periode = in_array($request->input('periode'), ['7', '30', '90', 'annee', 'tout'], true)
+            ? $request->input('periode')
+            : 'tout';
+        $operateur = $request->input('operateur');
+        $statut = $request->input('statut');
+
+        return compact('evenementsIds', 'search', 'periode', 'operateur', 'statut');
+    }
+
+    // Applique les filtres sur une requête (liste ou stats)
+    private function appliquerFiltres(Builder $query, array $filtres): void
+    {
+        if ($filtres['search'] !== '') {
+            $s = $filtres['search'];
+            $query->where(function (Builder $sub) use ($s) {
+                $sub->where('nom_acheteur', 'like', '%'.$s.'%')
+                    ->orWhere('telephone_acheteur', 'like', '%'.$s.'%')
+                    ->orWhere('email_acheteur', 'like', '%'.$s.'%')
+                    ->orWhere('code_unique', 'like', '%'.$s.'%');
+            });
+        }
+
+        if ($filtres['periode'] !== 'tout') {
+            $query->where('date_achat', '>=', match ($filtres['periode']) {
+                '7' => now()->subDays(7),
+                '30' => now()->subDays(30),
+                '90' => now()->subDays(90),
+                'annee' => now()->subYear(),
+            });
+        }
+
+        if ($filtres['operateur']) {
+            $query->where(function (Builder $sub) use ($filtres) {
+                // Groupe générique mobile money (tout sauf espèces/carte)
+                if ($filtres['operateur'] === 'mobile_money') {
+                    $sub->where('type_paiement', 'mobile_money');
+                } elseif ($filtres['operateur'] === 'especes') {
+                    $sub->whereIn('methode_paiement', ['cash', 'especes']);
+                } elseif ($filtres['operateur'] === 'bancaire') {
+                    $sub->where('type_paiement', 'bancaire');
+                } else {
+                    $sub->where('methode_paiement', $filtres['operateur'])
+                        ->orWhere('methode_paiement', 'like', '%'.$filtres['operateur'].'%');
+                }
+            });
+        }
+
+        if ($filtres['statut']) {
+            $query->where('statut_paiement', $filtres['statut']);
+        }
+    }
+
+    // Détecte les transactions bloquées ou anormales pour l'organisateur
+    private function detecterAlertes(iterable $evenementsIds): array
+    {
+        $alertes = [];
+
+        // 1. Transactions en attente depuis trop longtemps (bloquées)
+        $enAttente = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'en_attente')
+            ->where('date_achat', '<', now()->subMinutes(30))
+            ->count();
+        if ($enAttente > 0) {
+            $alertes[] = [
+                'type' => 'warning',
+                'titre' => $enAttente.' transaction(s) en attente depuis plus de 30 min',
+                'message' => 'Certains paiements FedaPay semblent bloqués. Vérifiez qu\'ils ont bien été confirmés, ou réessayez avec le client.',
+            ];
+        }
+
+        // 2. Tickets payés sans référence de transaction FedaPay (ventes manuelles exceptées)
+        $sansTransaction = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->whereNull('transaction_id')
+            ->count();
+        if ($sansTransaction > 0) {
+            $alertes[] = [
+                'type' => 'danger',
+                'titre' => $sansTransaction.' ticket(s) payé(s) sans référence de transaction',
+                'message' => 'Ces tickets sont payés mais ne sont rattachés à aucune transaction FedaPay. Ils pourraient résulter d\'une vente manuelle non tracée.',
+            ];
+        }
+
+        // 3. Forte proportion d'échecs récents (7 derniers jours)
+        $reussies = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'payé')
+            ->where('date_achat', '>=', now()->subDays(7))
+            ->count();
+        $echouees = Ticket::whereIn('evenement_id', $evenementsIds)
+            ->where('statut_paiement', 'échoué')
+            ->where('date_achat', '>=', now()->subDays(7))
+            ->count();
+        $total = $reussies + $echouees;
+        if ($total >= 5 && $echouees / $total > 0.4) {
+            $alertes[] = [
+                'type' => 'warning',
+                'titre' => 'Taux d\'échec élevé sur les 7 derniers jours ('.round($echouees / $total * 100).' %)',
+                'message' => 'Plus de 40 % des paiements récents ont échoué. Un opérateur est peut-être en panne : contactez le support ou vérifiez FedaPay.',
+            ];
+        }
+
+        return $alertes;
     }
 
     // Détails d'un ticket avec historique de logs

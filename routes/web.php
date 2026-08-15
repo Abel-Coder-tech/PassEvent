@@ -316,6 +316,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::post('/tickets/{ticket}/renvoyer', [TicketController::class, 'renvoyer'])->name('tickets.renvoyer');
     Route::post('/tickets/{ticket}/annuler', [TicketController::class, 'annuler'])->name('tickets.annuler');
     Route::get('/tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
+    Route::get('/tickets/export/csv', [TicketController::class, 'exportCsv'])->name('tickets.export-csv');
 
     Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
     Route::post('/scan/verifier', [ScanController::class, 'verifier'])->name('scan.verifier');

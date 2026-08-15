@@ -16,6 +16,25 @@
         {{ $totalTickets }} ticket{{ $totalTickets > 1 ? 's' : '' }} genere{{ $totalTickets > 1 ? 's' : '' }} &middot; Tous evenements confondus &middot; Prestataire <strong>FedaPay</strong>
     </p>
 
+    @if(session('success'))
+    <div class="alert alert-success py-2 small">{{ session('success') }}</div>
+    @endif
+
+    <!-- Alertes transactions bloquées / anormales -->
+    @if(!empty($alertes))
+        <div class="mb-4">
+            @foreach($alertes as $alerte)
+                <div class="alert alert-{{ $alerte['type'] === 'danger' ? 'danger' : 'warning' }} d-flex align-items-start gap-2 py-2 small mb-2">
+                    <i class="bi {{ $alerte['type'] === 'danger' ? 'bi-exclamation-octagon' : 'bi-exclamation-triangle' }} mt-1"></i>
+                    <div>
+                        <strong>{{ $alerte['titre'] }}</strong>
+                        <div class="text-muted">{{ $alerte['message'] }}</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     <!-- Stat Cards -->
     <div class="row g-2 mt-3 mb-4">
         <div class="col-6 col-md">
@@ -68,29 +87,78 @@
                 <div class="metric-subtitle">rembourses</div>
             </div>
         </div>
+        <div class="col-6 col-md">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(135,66,139,0.08); color: var(--violet);">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="metric-label">Taux de reussite</div>
+                <div class="metric-value" style="color: var(--violet);">{{ $tauxReussite }}%</div>
+                <div class="metric-subtitle">{{ $transactionsReussies }} reussies / {{ $transactionsEchouees }} echouees</div>
+            </div>
+        </div>
     </div>
 
     <!-- Search Bar -->
     <div class="panel-card mb-4">
         <div class="panel-card-body py-3">
             <form action="{{ route('tickets.index') }}" method="GET">
-                <div class="row g-2 align-items-center">
-                    <div class="col-md-8">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
                         <div class="position-relative">
                             <i class="bi bi-search position-absolute" style="left: 14px; top: 50%; transform: translateY(-50%); color: var(--gris); font-size: 0.95rem;"></i>
-                            <input type="text" name="q" class="form-control ps-5 py-2" placeholder="Rechercher par nom, telephone, QR code..." value="{{ $search ?? '' }}">
+                            <input type="text" name="q" class="form-control ps-5 py-2" placeholder="Rechercher par nom, telephone, email, QR code..." value="{{ $filtres['search'] }}">
                         </div>
                     </div>
-                    <div class="col-md-4 d-flex gap-2">
-                        <button type="submit" class="btn btn-vert px-3" style="border-radius: 8px;">
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Periode</label>
+                        <select name="periode" class="form-select py-2">
+                            <option value="tout" {{ $filtres['periode'] === 'tout' ? 'selected' : '' }}>Tout</option>
+                            <option value="7" {{ $filtres['periode'] === '7' ? 'selected' : '' }}>7 derniers jours</option>
+                            <option value="30" {{ $filtres['periode'] === '30' ? 'selected' : '' }}>30 derniers jours</option>
+                            <option value="90" {{ $filtres['periode'] === '90' ? 'selected' : '' }}>3 derniers mois</option>
+                            <option value="annee" {{ $filtres['periode'] === 'annee' ? 'selected' : '' }}>Cette annee</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Operateur</label>
+                        <select name="operateur" class="form-select py-2">
+                            <option value="">Tous</option>
+                            <option value="mobile_money" {{ $filtres['operateur'] === 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
+                            <option value="mtn" {{ $filtres['operateur'] === 'mtn' ? 'selected' : '' }}>MTN MoMo</option>
+                            <option value="moov" {{ $filtres['operateur'] === 'moov' ? 'selected' : '' }}>Moov Money</option>
+                            <option value="celtiis" {{ $filtres['operateur'] === 'celtiis' ? 'selected' : '' }}>Celtiis Cash</option>
+                            <option value="orange" {{ $filtres['operateur'] === 'orange' ? 'selected' : '' }}>Orange Money</option>
+                            <option value="wave" {{ $filtres['operateur'] === 'wave' ? 'selected' : '' }}>Wave</option>
+                            <option value="bancaire" {{ $filtres['operateur'] === 'bancaire' ? 'selected' : '' }}>Carte bancaire</option>
+                            <option value="especes" {{ $filtres['operateur'] === 'especes' ? 'selected' : '' }}>Especes</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Statut</label>
+                        <select name="statut" class="form-select py-2">
+                            <option value="">Tous</option>
+                            <option value="payé" {{ $filtres['statut'] === 'payé' ? 'selected' : '' }}>Paye</option>
+                            <option value="en_attente" {{ $filtres['statut'] === 'en_attente' ? 'selected' : '' }}>En attente</option>
+                            <option value="échoué" {{ $filtres['statut'] === 'échoué' ? 'selected' : '' }}>Echoue</option>
+                            <option value="remboursé" {{ $filtres['statut'] === 'remboursé' ? 'selected' : '' }}>Rembourse</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-vert px-3 flex-grow-1" style="border-radius: 8px;">
                             <i class="bi bi-funnel me-1"></i> Filtrer
                         </button>
-                        @if($search)
-                            <a href="{{ route('tickets.index') }}" class="btn btn-outline-secondary px-3" style="border-radius: 8px;">
-                                <i class="bi bi-x-lg me-1"></i> Effacer
+                        @if($filtres['search'] !== '' || $filtres['periode'] !== 'tout' || $filtres['operateur'] || $filtres['statut'])
+                            <a href="{{ route('tickets.index') }}" class="btn btn-outline-secondary px-3" style="border-radius: 8px;" title="Effacer tous les filtres">
+                                <i class="bi bi-x-lg"></i>
                             </a>
                         @endif
                     </div>
+                </div>
+                <div class="mt-3 d-flex justify-content-end">
+                    <a href="{{ route('tickets.export-csv', $filtres) }}" class="btn btn-sm btn-outline-secondary px-3" style="border-radius: 8px;">
+                        <i class="bi bi-filetype-csv me-1"></i> Exporter en CSV
+                    </a>
                 </div>
             </form>
         </div>
@@ -100,9 +168,9 @@
     <div class="panel-card">
         <div class="panel-card-header">
             <h5><i class="bi bi-list-ul me-2"></i>Liste des tickets</h5>
-            @if($search)
+            @if($filtres['search'] !== '')
                 <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet);">
-                    <i class="bi bi-search me-1"></i> "{{ $search }}"
+                    <i class="bi bi-search me-1"></i> "{{ $filtres['search'] }}"
                 </span>
             @endif
         </div>
@@ -227,13 +295,13 @@
                     <i class="bi bi-ticket-perforated d-block mb-3" style="font-size: 3rem; color: var(--gris);"></i>
                     <h5 class="text-muted">Aucun ticket trouve</h5>
                     <p class="text-muted">
-                        @if($search)
-                            Aucun resultat pour "{{ $search }}". Essayez un autre terme.
+                        @if($filtres['search'] !== '')
+                            Aucun resultat pour "{{ $filtres['search'] }}". Essayez un autre terme.
                         @else
                             Les tickets generes apparaîtront ici.
                         @endif
                     </p>
-                    @if($search)
+                    @if($filtres['search'] !== '')
                         <a href="{{ route('tickets.index') }}" class="btn btn-violet btn-sm" style="border-radius: 8px;">
                             <i class="bi bi-arrow-left me-1"></i> Voir tous les tickets
                         </a>
