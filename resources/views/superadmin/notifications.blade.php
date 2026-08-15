@@ -118,9 +118,18 @@
                     </a>
                 </span>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button class="sa-btn sa-btn-secondary" onclick="document.getElementById('notifModal').style.display='none'">Fermer</button>
+
+            <form id="repondreNotifForm" action="" method="POST" style="margin-top:1rem;border-top:1px solid #f5f5f5;padding-top:1rem;">
+                @csrf
+                <label class="org-detail-label" style="display:block;margin-bottom:0.4rem;">Envoyer une note</label>
+                <textarea name="note" id="modalNote" class="form-control" rows="3" style="font-size:0.85rem;width:100%;border:1px solid #ddd;border-radius:8px;padding:0.5rem 0.7rem;resize:vertical;"></textarea>
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.6rem;">
+                    <button type="button" class="sa-btn sa-btn-secondary" onclick="document.getElementById('notifModal').style.display='none'">Fermer</button>
+                    <button type="submit" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-send me-1"></i> Envoyer la note
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -195,6 +204,9 @@ function voirNotification(id) {
     } else {
         supportRow.style.display = 'none';
     }
+
+    document.getElementById('repondreNotifForm').action = '{{ url("/superadmin/notifications") }}/' + id + '/repondre';
+    document.getElementById('modalNote').value = "Bonjour " + (msg.nom_complet || 'cher organisateur') + ",\n\nNous avons bien reçu votre demande et nous vous répondons dans les plus brefs délais.\n\nCordialement,\nL'équipe PaxEvent";
 
     document.getElementById('notifModal').style.display = 'flex';
 

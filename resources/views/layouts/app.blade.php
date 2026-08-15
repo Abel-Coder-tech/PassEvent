@@ -188,6 +188,28 @@
             font-size: 0.7rem;
         }
 
+        .sidebar-contact {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.6rem 1rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fff;
+            background: #dc3545;
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .sidebar-contact:hover {
+            background: #b02a37;
+        }
+
         /* Sidebar overlay for mobile */
         .sidebar-overlay {
             display: none;
@@ -918,6 +940,12 @@
                 <div class="sidebar-user-role">{{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Organisateur' }}</div>
             </div>
         </div>
+
+        @if(auth()->user()->role !== 'super_admin')
+        <button type="button" class="sidebar-contact" data-bs-toggle="modal" data-bs-target="#demandeSuperadminModal">
+            <i class="bi bi-headset"></i> Contacter PaxEvent
+        </button>
+        @endif
     </div>
 @endauth
 
@@ -1021,5 +1049,9 @@ function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.
 function showToast(type,message){var c=document.getElementById('toast-container');if(!c||!message)return;var i=type==='success'?'bi-check-circle-fill':'bi-x-circle-fill';var cl=type==='success'?'#27ae60':'#e74c3c';var t=document.createElement('div');t.className='toast-item toast-'+type;var msg=document.createElement('span');msg.className='toast-msg';msg.textContent=message;t.innerHTML='<i class="bi '+i+'" style="color:'+cl+';font-size:1.3rem"></i>';t.appendChild(msg);if(type==='error'){var a=document.createElement('div');a.className='toast-actions';a.innerHTML='<button class="toast-btn toast-btn-retry" onclick="location.reload()">Réessayer</button><button class="toast-btn toast-btn-cancel" onclick="this.closest(\'.toast-item\').remove()">Annuler</button>';t.appendChild(a)}else{var b=document.createElement('button');b.className='toast-close';b.innerHTML='&times;';b.onclick=function(){t.remove()};t.appendChild(b)}c.appendChild(t);if(type!=='error'){setTimeout(function(){t.style.animation='toastOut 0.3s ease forwards';setTimeout(function(){t.remove()},300)},4000)}}
 </script>
 @yield('scripts')
+
+@auth
+    @include('partials.demande-superadmin-modal')
+@endauth
 </body>
 </html>

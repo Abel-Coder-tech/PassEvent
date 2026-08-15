@@ -152,6 +152,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
         Route::post('/notifications/{message}/lire', [SuperAdminController::class, 'lireNotification'])->name('notifications.lire');
+        Route::post('/notifications/{message}/repondre', [SuperAdminController::class, 'repondreNotification'])->name('notifications.repondre');
         Route::delete('/notifications/{message}', [SuperAdminController::class, 'supprimerNotification'])->name('notifications.supprimer');
         Route::get('/parametres', [SuperAdminController::class, 'parametres'])->name('parametres');
         Route::put('/parametres/profil', [SuperAdminController::class, 'updateParametresProfil'])->name('parametres.profil.update');

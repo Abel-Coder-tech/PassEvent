@@ -265,6 +265,54 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Notification supprimée.');
     }
 
+    // Répond à une notification système (demande d'organisateur) : envoie une note par email à l'expéditeur
+    public function repondreNotification(Request $request, Message $message)
+    {
+        if ($message->user_id !== null) {
+            abort(403); // Notification système uniquement
+        }
+
+        $validated = $request->validate([
+            'note' => 'required|string|max:5000',
+        ]);
+
+        $note = trim($validated['note']);
+        $expediteurEmail = $message->email ?: $message->email_achat;
+
+        if (! $expediteurEmail) {
+            return back()->with('error', 'Aucun email associé à cette notification.');
+        }
+
+        $destinataire = $message->nom_complet ?: 'cher organisateur';
+
+        Mail::raw($note, function ($mail) use ($request, $expediteurEmail, $message) {
+            $mail->to($expediteurEmail)
+                ->subject('Réponse PaxEvent — '.($message->objet ?: 'Votre demande'))
+                ->replyTo(auth('superadmin')->user()->email);
+        });
+
+        $message->update([
+            'lu' => true,
+            'reponse_admin' => $note,
+            'date_reponse' => now(),
+        ]);
+
+        Log::create([
+            'type_operation' => 'notification_repondue',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'message_id' => $message->id,
+                'email' => $expediteurEmail,
+                'sujet' => $message->objet,
+                'envoye_par' => auth('superadmin')->user()->email,
+            ]),
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        return back()->with('success', "Note envoyée par email à {$expediteurEmail}.");
+    }
+
     // Page des paramètres super admin
     public function parametres()
     {
