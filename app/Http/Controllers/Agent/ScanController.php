@@ -104,10 +104,6 @@ class ScanController extends Controller
             'code' => 'required|string|max:50',
         ]);
 
-        if ($agent->evenement->date_event < now()) {
-            return response()->json(['success' => false, 'message' => 'L\'événement est terminé.']);
-        }
-
         $ticket = Ticket::trouverParCodeSaisi($request->code);
 
         if (!$ticket) {
@@ -130,16 +126,34 @@ class ScanController extends Controller
             return response()->json(['success' => false, 'message' => 'Ce ticket a été annulé et n\'est plus valide.']);
         }
 
-        if ($ticket->utilise) { // Ticket déjà scanné
-            $this->logScan($agent, $request->code, 'deja_utilise', 'Ticket déjà scanné');
-            return response()->json(['success' => false, 'message' => 'Ce ticket a déjà été utilisé.', 'ticket' => [
-                'nom' => $ticket->nom_acheteur,
-                'nom_tarif' => $ticket->nom_tarif,
-                'date' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
-            ]]);
+        // Vérification du jour : l'événement doit avoir une session aujourd'hui
+        $jourScan = $agent->evenement->jourScanActuel();
+
+        if (! $jourScan) {
+            $this->logScan($agent, $request->code, 'invalide', 'Pas de session aujourd\'hui');
+            return response()->json(['success' => false, 'message' => 'L\'événement n\'a pas de session prévue aujourd\'hui.']);
         }
 
-        $ticket->update(['utilise' => true]); // Marque le ticket comme utilisé
+        // Vérification de l'heure : scan autorisé entre l'heure de début et +6h (tolérance)
+        $maintenant = now();
+        if ($maintenant->lt($jourScan->date_debut)) {
+            $this->logScan($agent, $request->code, 'invalide', 'Session pas commencée');
+            return response()->json(['success' => false, 'message' => 'La session d\'aujourd\'hui commence à '.$jourScan->date_debut->format('H:i').'. Revenez à cette heure.']);
+        }
+
+        if ($maintenant->gt($jourScan->finFenetreScan())) {
+            $this->logScan($agent, $request->code, 'invalide', 'Session terminée');
+            return response()->json(['success' => false, 'message' => 'La session d\'aujourd\'hui est terminée. Revenez un autre jour de l\'événement.']);
+        }
+
+        // 1 scan par jour civil : déjà scanné avec succès aujourd'hui ?
+        if ($ticket->dejaScanneAujourdhui()) {
+            $this->logScan($agent, $request->code, 'deja_utilise', 'Déjà scanné aujourd\'hui', $ticket->id);
+            return response()->json(['success' => false, 'message' => 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours.', 'ticket' => [
+                'nom' => $ticket->nom_acheteur,
+                'nom_tarif' => $ticket->nom_tarif,
+            ]]);
+        }
 
         $this->logScan($agent, $request->code, 'valide', 'Scan réussi', $ticket->id); // Log scan réussi
 

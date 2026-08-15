@@ -13,6 +13,9 @@ class Evenement extends Model
 
     protected $table = 'evenement';
 
+    // Intervalle (en heures) après l'heure de début pendant lequel le scan reste valide
+    public const DUREE_SCAN_HEURES = 6;
+
     protected $fillable = [
         'user_id',
         'titre',
@@ -124,6 +127,29 @@ class Evenement extends Model
         return $this->hasMany(ScanAccessCode::class);
     }
 
+    // Sessions/jours de l'événement (multi-jours), triées par ordre
+    public function dates(): HasMany
+    {
+        return $this->hasMany(EvenementDate::class, 'evenement_id')->orderBy('ordre')->orderBy('date_debut');
+    }
+
+    // Dernière session de l'événement (pour expiration des ventes et scans)
+    public function derniereDate(): ?EvenementDate
+    {
+        return $this->dates()->orderByDesc('date_debut')->first();
+    }
+
+    // Session (jour) en cours si aujourd'hui est un jour d'événement, dans l'intervalle de scan
+    public function jourScanActuel(): ?EvenementDate
+    {
+        $debutJour = now()->startOfDay();
+        $finJour = now()->copy()->endOfDay();
+
+        return $this->dates()
+            ->whereBetween('date_debut', [$debutJour, $finJour])
+            ->first();
+    }
+
     public function agents(): HasMany
     {
         return $this->hasMany(Agent::class);
@@ -186,10 +212,11 @@ class Evenement extends Model
         return ($this->ventes_especes ?? $this->user?->ventes_especes) === 'jamais';
     }
 
-    // Statut effectif pour l'affichage superadmin : événement passé (date dépassée), sauf annulé
+    // Statut effectif pour l'affichage superadmin : événement passé (dernière date dépassée), sauf annulé
     public function statutEffectif(): string
     {
-        if ($this->date_event && $this->date_event->isPast() && $this->statut !== 'annulé') {
+        $derniereDate = $this->derniereDate();
+        if ($derniereDate && $derniereDate->date_debut->isPast() && $this->statut !== 'annulé') {
             return 'passé';
         }
 

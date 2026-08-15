@@ -32,8 +32,12 @@
                     @endif
                     <h1 class="show-title">{{ $evenement->titre }}</h1>
                     <div class="show-meta">
-                        <span><i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}</span>
-                        <span><i class="bi bi-clock"></i> {{ $evenement->date_event->format('H:i') }}</span>
+                        @if($evenement->dates && $evenement->dates->count() > 1)
+                            <span><i class="bi bi-calendar3"></i> {{ $evenement->dates->map(fn($d) => $d->date_debut->isoFormat('D MMM') . ' à ' . $d->date_debut->format('H:i'))->implode(' · ') }}</span>
+                        @else
+                            <span><i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}</span>
+                            <span><i class="bi bi-clock"></i> {{ $evenement->date_event->format('H:i') }}</span>
+                        @endif
                         <span><i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}</span>
                         @if(!$estComplet)
                             <span><i class="bi bi-people"></i> {{ number_format($placesRestantes, 0, ',', ' ') }} places</span>

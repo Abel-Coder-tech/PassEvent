@@ -321,44 +321,18 @@ class ScanController extends Controller
             ]);
         }
 
-        if ($ticket->utilise) {
-            // Déjà utilisé : log et retourne erreur
-            Log::create([
-                'ticket_id' => $ticket->id,
-                'type_operation' => 'scan',
-                'details' => json_encode([
-                    'code' => $code,
-                    'resultat' => 'deja_utilise',
-                    'raison' => 'ticket_deja_scanne',
-                    'agent' => Auth::id(),
-                ]),
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+        // Vérification du jour : l'événement doit avoir une session aujourd'hui
+        $jourScan = $ticket->evenement->jourScanActuel();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Ticket déjà utilisé ! Ce billet a déjà été scanné.',
-                'type' => 'already_used',
-                'ticket' => [
-                    'code' => $ticket->code_unique,
-                    'nom' => $ticket->nom_acheteur,
-                    'evenement' => $ticket->evenement->titre,
-                    'nom_tarif' => $ticket->nom_tarif,
-                    'date_scan' => $ticket->updated_at->format('d/m/Y H:i'),
-                ],
-            ]);
-        }
-
-        if ($ticket->evenement->date_event->isPast()) {
-            // Événement passé : log et retourne erreur
+        if (! $jourScan) {
+            // Aucune session prévue aujourd'hui
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
                 'details' => json_encode([
                     'code' => $code,
                     'resultat' => 'invalide',
-                    'raison' => 'evenement_passe',
+                    'raison' => 'pas_de_session_aujourdhui',
                     'agent' => Auth::id(),
                 ]),
                 'ip' => $request->ip(),
@@ -367,18 +341,83 @@ class ScanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Événement terminé. Ce ticket n\'est plus valide.',
-                'type' => 'expired',
+                'message' => 'L\'événement n\'a pas de session prévue aujourd\'hui. Consultez les dates de l\'événement.',
+                'type' => 'no_session',
+            ]);
+        }
+
+        // Vérification de l'heure : scan autorisé entre l'heure de début et +6h (tolérance)
+        $maintenant = now();
+        if ($maintenant->lt($jourScan->date_debut)) {
+            Log::create([
+                'ticket_id' => $ticket->id,
+                'type_operation' => 'scan',
+                'details' => json_encode([
+                    'code' => $code,
+                    'resultat' => 'invalide',
+                    'raison' => 'session_pas_commencee',
+                    'agent' => Auth::id(),
+                    'debut' => $jourScan->date_debut->toDateTimeString(),
+                ]),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'La session d\'aujourd\'hui commence à '.$jourScan->date_debut->format('H:i').'. Revenez à cette heure.',
+                'type' => 'not_started',
+            ]);
+        }
+
+        if ($maintenant->gt($jourScan->finFenetreScan())) {
+            Log::create([
+                'ticket_id' => $ticket->id,
+                'type_operation' => 'scan',
+                'details' => json_encode([
+                    'code' => $code,
+                    'resultat' => 'invalide',
+                    'raison' => 'session_terminee',
+                    'agent' => Auth::id(),
+                ]),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'La session d\'aujourd\'hui est terminée. Revenez un autre jour de l\'événement.',
+                'type' => 'session_ended',
+            ]);
+        }
+
+        // 1 scan par jour civil : déjà scanné avec succès aujourd'hui ?
+        if ($ticket->dejaScanneAujourdhui()) {
+            Log::create([
+                'ticket_id' => $ticket->id,
+                'type_operation' => 'scan',
+                'details' => json_encode([
+                    'code' => $code,
+                    'resultat' => 'deja_utilise',
+                    'raison' => 'ticket_deja_scanne_aujourdhui',
+                    'agent' => Auth::id(),
+                ]),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours de l\'événement.',
+                'type' => 'already_used_today',
                 'ticket' => [
                     'code' => $ticket->code_unique,
                     'nom' => $ticket->nom_acheteur,
                     'evenement' => $ticket->evenement->titre,
-                    'date_event' => $ticket->evenement->date_event->format('d/m/Y'),
+                    'nom_tarif' => $ticket->nom_tarif,
                 ],
             ]);
         }
-
-        $ticket->update(['utilise' => true]); // Marque le ticket comme utilisé
 
         Log::create([ // Log du scan réussi
             'ticket_id' => $ticket->id,

@@ -50,6 +50,32 @@
                 </div>
 
                 <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <label class="form-label fw-semibold mb-0">Jours supplémentaires (événement multi-jours)</label>
+                        <small class="text-muted">Optionnel</small>
+                    </div>
+                    <small class="text-muted d-block mb-2">
+                        Si votre événement dure plusieurs jours, ajoutez la date et l'heure de début de chaque jour. Le QR code restera valable pour tous les jours (1 scan par jour).
+                    </small>
+                    <div id="dates-supplementaires-container">
+                        @php
+                            $datesExistantes = $evenement->dates()->where('date_debut', '!=', $evenement->date_event)->get();
+                        @endphp
+                        @foreach(old('dates_supplementaires', $datesExistantes->pluck('date_debut')->map(fn($d) => $d->format('Y-m-d\TH:i'))->all()) as $i => $dateSupp)
+                            <div class="date-supp-row mb-2 d-flex gap-2 align-items-center" id="date-supp-row-{{ $i + 1 }}">
+                                <input type="datetime-local" class="form-control" name="dates_supplementaires[]" value="{{ $dateSupp }}">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDateSupp(this)" style="flex-shrink:0;">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="addDateSuppBtn" onclick="addDateSupp()">
+                        <i class="bi bi-plus-lg me-1"></i> Ajouter un jour
+                    </button>
+                </div>
+
+                <div class="mb-3">
                     <label for="type_evenement" class="form-label fw-semibold">Type d'événement <span class="text-danger">*</span></label>
                     <select class="form-select @error('type_evenement') is-invalid @enderror" id="type_evenement" name="type_evenement" required>
                         @php $typeActuel = old('type_evenement', $evenement->type_evenement ?? 'spectacle'); @endphp
@@ -199,6 +225,33 @@ document.getElementById('categorie')?.addEventListener('change', function() {
 });
 if (document.getElementById('categorie')?.value === 'Autre') {
     document.getElementById('autre-categorie-wrapper').style.display = 'block';
+}
+
+let dateSuppCount = document.querySelectorAll('#dates-supplementaires-container .date-supp-row').length || 0;
+const maxDatesSupp = 6;
+
+function addDateSupp() {
+    if (dateSuppCount >= maxDatesSupp) return;
+    dateSuppCount++;
+    const html = `
+        <div class="date-supp-row mb-2 d-flex gap-2 align-items-center" id="date-supp-row-${dateSuppCount}">
+            <input type="datetime-local" class="form-control" name="dates_supplementaires[]">
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDateSupp(this)" style="flex-shrink:0;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    `;
+    document.getElementById('dates-supplementaires-container').insertAdjacentHTML('beforeend', html);
+    if (dateSuppCount >= maxDatesSupp) {
+        document.getElementById('addDateSuppBtn').style.display = 'none';
+    }
+}
+
+function removeDateSupp(btn) {
+    const row = btn.closest('.date-supp-row');
+    if (row) row.remove();
+    dateSuppCount--;
+    document.getElementById('addDateSuppBtn').style.display = dateSuppCount >= maxDatesSupp ? 'none' : 'inline-flex';
 }
 </script>
 @endsection

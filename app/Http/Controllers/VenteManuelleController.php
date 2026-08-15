@@ -71,7 +71,8 @@ class VenteManuelleController extends Controller
             ->where('user_id', Auth::id()) // Vérification de propriété
             ->firstOrFail();
 
-        if ($evenement->date_event && $evenement->date_event->isPast()) {
+        $derniereDate = $evenement->derniereDate();
+        if ($derniereDate && $derniereDate->date_debut->isPast()) {
             return response()->json([
                 'errors' => [
                     'evenement_id' => ['Cet événement est terminé. La vente manuelle est fermée.'],

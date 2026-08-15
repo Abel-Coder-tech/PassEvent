@@ -105,6 +105,26 @@ class Ticket extends Model
         return $this->hasMany(Notification::class);
     }
 
+    // Détermine si le ticket a déjà été scanné avec succès aujourd'hui (1 scan par jour civil)
+    public function dejaScanneAujourdhui(): bool
+    {
+        return \App\Models\Log::where('ticket_id', $this->id)
+            ->where('type_operation', 'scan')
+            ->where('details->resultat', 'valide')
+            ->whereDate('created_at', today())
+            ->exists();
+    }
+
+    // Compte le nombre de jours où le ticket a été scanné avec succès (chaque jour ne compte qu'une fois)
+    public function nombreJoursScannes(): int
+    {
+        return \App\Models\Log::where('ticket_id', $this->id)
+            ->where('type_operation', 'scan')
+            ->where('details->resultat', 'valide')
+            ->distinct()
+            ->count(\Illuminate\Support\Facades\DB::raw('DATE(created_at)'));
+    }
+
     public static function genererCodeSecurise(): string
     {
         do {

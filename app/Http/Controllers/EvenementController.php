@@ -114,6 +114,9 @@ class EvenementController extends Controller
             $validated['image'] = $request->file('image')->store('evenements', 'public');
         }
 
+        // Extraire les données de dates supplémentaires (multi-jours) avant création
+        $datesData = $this->extraireDatesSupplementaires($request, $validated['date_event']);
+
         // Extraire les données de tarifs avant de créer l'événement
         $tarifsData = [];
         if ($gratuit) {
@@ -153,6 +156,9 @@ class EvenementController extends Controller
         unset($validated['generer_vip']);
 
         $evenement = Evenement::create($validated);
+
+        // Enregistre les sessions (jours) de l'événement, la première étant date_event
+        $this->enregistrerDates($evenement, $validated['date_event'], $datesData);
 
         // Créer les tarifs
         foreach ($tarifsData as $t) {
@@ -300,7 +306,12 @@ class EvenementController extends Controller
             $validated['image'] = $request->file('image')->store('evenements', 'public');
         }
 
+        $datesData = $this->extraireDatesSupplementaires($request, $validated['date_event']);
+
         $evenement->update($validated);
+
+        // Remplace les sessions de l'événement par celles saisies (la première étant date_event)
+        $this->enregistrerDates($evenement, $validated['date_event'], $datesData);
 
         if ($validated['gratuit']) {
             $evenement->tarifs()->update(['prix' => 0]);
@@ -336,5 +347,54 @@ class EvenementController extends Controller
 
         return redirect()->route('admin.evenements.index')
             ->with('success', 'Événement supprimé avec succès.');
+    }
+
+    // Collecte les dates supplémentaires saisies dans le formulaire (dates_supplementaires[])
+    private function extraireDatesSupplementaires(Request $request, string $premiereDate): array
+    {
+        $dates = [];
+        foreach ((array) $request->input('dates_supplementaires', []) as $dateBrute) {
+            $dateBrute = trim((string) $dateBrute);
+            if ($dateBrute === '') {
+                continue;
+            }
+
+            try {
+                $date = \Carbon\Carbon::parse($dateBrute);
+            } catch (\Exception $e) {
+                continue;
+            }
+
+            // Évite les doublons et les dates identiques à la première session
+            if ($date->equalTo(\Carbon\Carbon::parse($premiereDate))) {
+                continue;
+            }
+            if (in_array($date->toDateTimeString(), $dates, true)) {
+                continue;
+            }
+
+            $dates[] = $date->toDateTimeString();
+        }
+
+        sort($dates);
+
+        return $dates;
+    }
+
+    // Synchronise les sessions de l'événement : la première = date_event, puis les dates supplémentaires
+    private function enregistrerDates(Evenement $evenement, string $premiereDate, array $datesSupplementaires): void
+    {
+        $toutes = array_merge([\Carbon\Carbon::parse($premiereDate)->toDateTimeString()], $datesSupplementaires);
+        $toutes = array_values(array_unique($toutes));
+
+        // Préserve les evenement_dates existants qui correspondent (id stable) mais reconstruit l'ordre
+        $evenement->dates()->delete();
+
+        foreach (array_values($toutes) as $i => $date) {
+            $evenement->dates()->create([
+                'date_debut' => $date,
+                'ordre' => $i,
+            ]);
+        }
     }
 }

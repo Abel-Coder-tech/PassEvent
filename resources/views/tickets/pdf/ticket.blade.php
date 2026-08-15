@@ -454,9 +454,18 @@
                     <td>
                         <span class="lbl">Date et heure</span>
                         <span class="val">
-                            {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
-                            @if($ticket->evenement?->date_event)
-                                - {{ $ticket->evenement->date_event->format('H\hi') }}
+                            @php
+                                $datesTicket = $ticket->evenement?->dates ?? collect();
+                            @endphp
+                            @if($datesTicket->count() > 1)
+                                @foreach($datesTicket as $d)
+                                    {{ $d->date_debut->isoFormat('D MMM') }} - {{ $d->date_debut->format('H\hi') }}{{ !$loop->last ? ', ' : '' }}
+                                @endforeach
+                            @else
+                                {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
+                                @if($ticket->evenement?->date_event)
+                                    - {{ $ticket->evenement->date_event->format('H\hi') }}
+                                @endif
                             @endif
                         </span>
                         <span class="lbl" style="margin-top:0.05cm;">Lieu</span>

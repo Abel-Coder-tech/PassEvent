@@ -21,7 +21,7 @@ class EvenementPublicController extends Controller
     {
         // Récupère les catégories disponibles pour les événements à venir
         $categories = Evenement::where('statut', 'publié')
-            ->where('date_event', '>=', now())
+            ->whereHas('dates', fn ($q) => $q->where('date_debut', '>=', now()))
             ->whereNotNull('categorie')
             ->distinct()
             ->orderBy('categorie')
@@ -31,9 +31,9 @@ class EvenementPublicController extends Controller
         $selectedDate = $request->input('date');
         $q = $request->input('q');
 
-        $query = Evenement::with('tarifs')
+        $query = Evenement::with('tarifs', 'dates')
             ->where('statut', 'publié')
-            ->where('date_event', '>=', now())
+            ->whereHas('dates', fn ($q) => $q->where('date_debut', '>=', now()))
             ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
@@ -41,10 +41,9 @@ class EvenementPublicController extends Controller
         }
 
         if ($selectedDate === 'weekend') {
-            $query->whereBetween('date_event', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]);
+            $query->whereHas('dates', fn ($q) => $q->whereBetween('date_debut', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]));
         } elseif ($selectedDate === 'mois') {
-            $query->whereMonth('date_event', now()->month)
-                ->whereYear('date_event', now()->year);
+            $query->whereHas('dates', fn ($q) => $q->whereMonth('date_debut', now()->month)->whereYear('date_debut', now()->year));
         }
 
         if ($q) {
@@ -58,9 +57,9 @@ class EvenementPublicController extends Controller
         $evenements = $query->paginate(PerPage::resolve());
 
         // Événements passés (publiés ou terminés) affichés en bas de page
-        $evenementsPasses = Evenement::with('tarifs')
+        $evenementsPasses = Evenement::with('tarifs', 'dates')
             ->whereIn('statut', ['publié', 'terminé'])
-            ->where('date_event', '<', now())
+            ->whereDoesntHave('dates', fn ($q) => $q->where('date_debut', '>=', now()))
             ->orderBy('date_event', 'desc')
             ->limit(9)
             ->get();
@@ -75,12 +74,13 @@ class EvenementPublicController extends Controller
             abort(404); // Seuls les événements publiés ou passés sont visibles
         }
 
-        $evenement->load('user');
+        $evenement->load('user', 'dates');
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
         $estComplet = $placesRestantes <= 0; // Vérifie la disponibilité
         $venteCloturee = $evenement->ventes_fermees; // Fermeture manuelle par l'organisateur
-        $evenementPasse = $evenement->date_event->isPast();
+        $derniereDate = $evenement->derniereDate();
+        $evenementPasse = $derniereDate && $derniereDate->date_debut->lt(now());
 
         return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse'));
     }
@@ -92,7 +92,8 @@ class EvenementPublicController extends Controller
             abort(404);
         }
 
-        if ($evenement->ventes_fermees || $evenement->date_event->isPast()) {
+        $derniereDate = $evenement->derniereDate();
+        if ($evenement->ventes_fermees || ($derniereDate && $derniereDate->date_debut->isPast())) {
             return back()->with('error', 'La vente est clôturée pour cet événement.'); // Vente expirée
         }
 

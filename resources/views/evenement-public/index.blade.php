@@ -65,7 +65,7 @@
                         $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
                         $prixDernier = $evenement->tarifs->min('prix');
                         $venteCloturee = $evenement->ventes_fermees;
-                        $estPasse = $evenement->date_event->isPast();
+                        $estPasse = $evenement->dates->max(fn ($d) => $d->date_debut) ? $evenement->dates->max(fn ($d) => $d->date_debut)->lt(now()) : $evenement->date_event->isPast();
                         $textes = $evenement->getTextes();
                     @endphp
                     <div class="ev-grid-col">
