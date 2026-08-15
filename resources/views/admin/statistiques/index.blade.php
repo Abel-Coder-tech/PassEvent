@@ -172,11 +172,14 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="fw-semibold" style="font-size: 0.82rem;">{{ $reseau['label'] }}</span>
-                                <span class="text-muted" style="font-size: 0.78rem;">{{ $reseau['percentage'] }}% ({{ $reseau['count'] }})</span>
+                                <span class="text-muted" style="font-size: 0.78rem;">
+                                    {{ $reseau['count'] }} ticket{{ $reseau['count'] > 1 ? 's' : '' }} &middot; {{ number_format($reseau['montant'], 0, ',', ' ') }} F
+                                </span>
                             </div>
                             <div class="progress-bar-custom">
                                 <div class="progress-bar-fill" style="width: {{ $reseau['percentage'] }}%; background: {{ $key === 'mtn' ? '#ffcc00' : ($key === 'moov' ? '#0066cc' : ($key === 'celtiis' ? '#cc0000' : '#888888')) }};"></div>
                             </div>
+                            <span class="text-muted" style="font-size: 0.72rem;">{{ $reseau['percentage'] }}% des paiements</span>
                         </div>
                     @endforeach
                     <div class="mt-3 pt-3" style="border-top: 1px solid #f0f0f0;">

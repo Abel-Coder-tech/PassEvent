@@ -7,21 +7,12 @@ use App\Models\Evenement;
 use App\Models\Message;
 use App\Models\Ticket;
 use App\Models\Withdrawal;
-use App\Services\FedapayService;
 use App\Services\PaiementMapper;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    protected FedapayService $fedapay;
-
-    public function __construct(FedapayService $fedapay)
-    {
-        $this->fedapay = $fedapay;
-    }
-
     // Tableau de bord principal de l'organisateur avec toutes ses statistiques
     public function index()
     {
@@ -214,25 +205,15 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('methode_paiement');
 
-        // Opérateurs réellement utilisés selon l'API FedaPay, fusionnés avec ceux vus en base
-        $operateursApi = Cache::remember('fedapay_operateurs_utilises', now()->addMinutes(15), function () {
-            return $this->fedapay->getOperateursUtilises(50);
-        });
-
+        // Répartition par opérateur mobile : seuls MTN, Moov et Celtiis sont affichés,
+        // tout autre réseau détecté (Orange, Wave, etc.) est regroupé dans « Autres / Indéterminé »
         $reseauxConfig = [];
-        $operateursAffiches = [];
-        $operateursCandidats = array_merge(array_keys($operateursApi), $operateursRaw->keys()->all());
-        foreach ($operateursCandidats as $operateur) {
-            if (in_array($operateur, ['cash', 'especes', 'mobile_money', 'bancaire', 'autres'])) {
-                continue;
-            }
-            if (! in_array($operateur, $operateursAffiches)) {
-                $operateursAffiches[] = $operateur;
-                $reseauxConfig[$operateur] = [
-                    'label' => PaiementMapper::operateurLabel($operateur),
-                    'icon' => 'bi-phone',
-                ];
-            }
+        $operateursAffiches = ['mtn', 'moov', 'celtiis'];
+        foreach ($operateursAffiches as $operateur) {
+            $reseauxConfig[$operateur] = [
+                'label' => PaiementMapper::operateurLabel($operateur),
+                'icon' => 'bi-phone',
+            ];
         }
         $reseauxConfig['autres'] = ['label' => 'Autres / Indéterminé', 'icon' => 'bi-phone'];
 

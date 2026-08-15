@@ -172,29 +172,34 @@ class StatistiqueController extends Controller
 
         $reseau = (clone $base)
             ->where('type_paiement', 'mobile_money')
-            ->select('methode_paiement', DB::raw('COUNT(*) as total'))
+            ->select('methode_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
             ->groupBy('methode_paiement')
-            ->pluck('total', 'methode_paiement');
+            ->get()
+            ->keyBy('methode_paiement');
 
         $reseaux = [
             'mtn' => [
                 'label' => 'MTN MoMo',
-                'count' => (int) $reseau->get('mtn', 0),
+                'count' => (int) ($reseau->get('mtn')->total ?? 0),
+                'montant' => (int) ($reseau->get('mtn')->montant ?? 0),
                 'percentage' => 0,
             ],
             'moov' => [
                 'label' => 'Moov Money',
-                'count' => (int) $reseau->get('moov', 0),
+                'count' => (int) ($reseau->get('moov')->total ?? 0),
+                'montant' => (int) ($reseau->get('moov')->montant ?? 0),
                 'percentage' => 0,
             ],
             'celtiis' => [
                 'label' => 'Celtiis',
-                'count' => (int) $reseau->get('celtiis', 0),
+                'count' => (int) ($reseau->get('celtiis')->total ?? 0),
+                'montant' => (int) ($reseau->get('celtiis')->montant ?? 0),
                 'percentage' => 0,
             ],
             'autres' => [
                 'label' => 'Autres / Indéterminé',
-                'count' => (int) $reseau->reject(fn ($count, $key) => in_array($key, ['mtn', 'moov', 'celtiis']))->sum(),
+                'count' => (int) $reseau->reject(fn ($data, $key) => in_array($key, ['mtn', 'moov', 'celtiis']))->sum('total'),
+                'montant' => (int) $reseau->reject(fn ($data, $key) => in_array($key, ['mtn', 'moov', 'celtiis']))->sum('montant'),
                 'percentage' => 0,
             ],
         ];
