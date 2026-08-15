@@ -443,14 +443,37 @@
                         </div>
                     </div>
 
-                    <div class="aide-accordion-item" style="border-left:3px solid var(--violet);">
+                    <div class="aide-accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq7">
+                                <i class="bi bi-qr-code me-2" style="color: #9972B0;"></i>
+                                Comment vendre des tickets physiques ?
+                            </button>
+                        </h2>
+                        <div id="orgFaq7" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                            <div class="accordion-body">
+                                <ol style="padding-left:1.2rem;margin:0 0 0.75rem;">
+                                    <li>Rendez-vous dans la section <strong>"Vente physique"</strong> de votre tableau de bord et cliquez sur <strong>"Demander des QR codes"</strong>. L'équipe PaxEvent génère alors un lot de tickets physiques (codes uniques <strong>PAX-XXXXX</strong>).</li>
+                                    <li>Dès que le lot est transmis, vous recevez un <strong>e-mail</strong> et une <strong>notification</strong> dans votre espace.</li>
+                                    <li>Téléchargez la <strong>planche PDF des QR codes</strong> depuis la section "Vente physique" (téléchargement limité à 3 fois).</li>
+                                    <li>Imprimez et découpez les tickets, puis vendez-les au guichet le jour de l'événement.</li>
+                                    <li>Le jour J, scannez le QR code de chaque ticket à l'entrée comme un ticket en ligne.</li>
+                                </ol>
+                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Les tickets physiques ne comptent pas dans la capacité de votre événement. Un ticket annulé (erreur d'impression) est bloqué au scan. La commission y afférente est suivie séparément.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aide-accordion-item" style="border-left:3px solid var(--violet);">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orgFaq8">
                                 <i class="bi bi-currency-dollar me-2" style="color: #542680;"></i>
                                 <strong>Paiements et commissions</strong>
                             </button>
                         </h2>
-                        <div id="orgFaq7" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
+                        <div id="orgFaq8" class="accordion-collapse collapse" data-bs-parent="#orgFaqAccordion">
                             <div class="accordion-body">
                                 <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quels sont les tarifs de PaxEvent ?</h6>
                                 <ul style="padding-left:1.2rem;margin:0 0 1rem;">
