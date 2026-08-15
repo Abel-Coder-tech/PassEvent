@@ -384,7 +384,7 @@
     <div class="modal fade" id="demandeSuperadminModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:14px;border:none;">
-                <form action="{{ route('admin.demande-superadmin.store') }}" method="POST" id="demandeSuperadminForm">
+                <form action="{{ route('demande-superadmin.store') }}" method="POST" id="demandeSuperadminForm">
                     @csrf
                     <div class="modal-header" style="border-bottom:1px solid #f0eef2;padding:1rem 1.25rem;">
                         <h5 class="modal-title" style="font-size:1rem;font-weight:700;color:var(--sombre);">
