@@ -6,9 +6,14 @@
 <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="fw-bold mb-0"><i class="bi bi-people"></i> Agents de scan</h5>
-        <a href="{{ route('admin.agents.create') }}" class="btn btn-sm text-white" style="background: #7c3aed;">
-            <i class="bi bi-plus-lg"></i> Nouvel agent
-        </a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm text-white" style="background: #7B3FA0;" onclick="openDemande('augmentation_agents')">
+                <i class="bi bi-plus-circle"></i> Demander plus d'agents
+            </button>
+            <a href="{{ route('admin.agents.create') }}" class="btn btn-sm text-white" style="background: #7c3aed;">
+                <i class="bi bi-plus-lg"></i> Nouvel agent
+            </a>
+        </div>
     </div>
 
     @if (session('success'))

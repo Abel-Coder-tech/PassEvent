@@ -57,11 +57,17 @@
         <i class="bi bi-ticket-perforated" style="font-size:3rem;"></i>
         <p class="mt-2">Aucun lot de tickets physiques pour le moment.</p>
         <p style="font-size:0.85rem;">Les lots sont generes par l'equipe PaxEvent. Vous serez notifie des qu'un lot vous est transmis.</p>
+        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
+            <i class="bi bi-qr-code me-1"></i> Demander des QR codes
+        </button>
     </div>
     @else
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <strong><i class="bi bi-stack me-1"></i> Mes lots de tickets physiques</strong>
+            <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
+                <i class="bi bi-qr-code me-1"></i> Demander des QR codes
+            </button>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 small">

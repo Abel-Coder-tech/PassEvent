@@ -142,5 +142,14 @@ document.addEventListener('DOMContentLoaded', function () {
             msg.required = true;
         });
     }
+
+    // Ouvre le modal avec un objet pré-sélectionné (boutons contextuels des pages)
+    window.openDemande = function (objet) {
+        if (!OBJET_EVENEMENT.includes(objet) && objet !== 'probleme_technique') return;
+        demandeObjet.value = objet;
+        demandeObjet.dispatchEvent(new Event('change'));
+        const instance = bootstrap.Modal.getOrCreateInstance(modal);
+        instance.show();
+    };
 });
 </script>

@@ -14,6 +14,9 @@
     <!-- Subtitle -->
     <p class="text-muted mb-4" style="font-size: 0.9rem; margin-top: -0.5rem;">
         {{ $totalEvenements }} événement{{ $totalEvenements > 1 ? 's' : '' }} · {{ number_format($totalBilletsVendus, 0, ',', ' ') }} billet{{ $totalBilletsVendus > 1 ? 's' : '' }} vendu{{ $totalBilletsVendus > 1 ? 's' : '' }}
+        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('evenement_a_la_une')">
+            <i class="bi bi-star me-1"></i> Mettre un événement à la une
+        </button>
     </p>
 
     <!-- Stat Cards -->

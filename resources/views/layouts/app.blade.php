@@ -191,23 +191,32 @@
         .sidebar-contact {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 0.5rem;
             width: 100%;
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 1rem;
             font-size: 0.82rem;
-            font-weight: 700;
-            color: #fff;
-            background: #dc3545;
+            font-weight: 600;
+            color: #e74c3c;
+            background: transparent;
             border: none;
             border-top: 1px solid rgba(255,255,255,0.12);
+            border-left: 2px solid transparent;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             flex-shrink: 0;
         }
 
+        .sidebar-contact i {
+            width: 14px;
+            font-size: 0.82rem;
+            text-align: center;
+        }
+
         .sidebar-contact:hover {
-            background: #b02a37;
+            color: #fff;
+            background: rgba(231, 76, 60, 0.15);
+            border-left-color: #e74c3c;
         }
 
         /* Sidebar overlay for mobile */
