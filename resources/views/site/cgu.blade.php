@@ -81,9 +81,9 @@
                             <h6 class="fw-bold mt-4 mb-2">8. Conditions applicables aux acheteurs</h6>
                             <p><strong>8.1. Processus d'achat et limites</strong></p>
                             <ul>
-                                <li>L'acheteur sélectionne l'événement, choisit son tarif (Gratuit, Standard, VIP), saisit ses coordonnées (avec option code promo unique), et procède au paiement sécurisé par Mobile Money (MTN MoMo, Moov Money, Celtiis Cash) ou Carte Bancaire (Visa/Mastercard).</li>
+                                <li>L'acheteur sélectionne l'événement, choisit le tarif de son choix, saisit ses coordonnées (avec option code promo unique), et procède au paiement sécurisé par Mobile Money (MTN MoMo, Moov Money, Celtiis Cash) ou Carte Bancaire (Visa/Mastercard).</li>
                                 <li>Les codes de réduction fournis par les organisateurs sont uniques, à usage unique et valables sur un seul tarif spécifié.</li>
-                                <li>L'achat est limité à un maximum de 05 tickets par personne pour un même événement.</li>
+                                <li>L'achat est limité au nombre de places restantes de l'événement.</li>
                                 <li>Après validation, le e-ticket contenant un QR code unique accompagné d'un code pax est délivré en PDF instantanément par email et également téléchargeable directement sur la page de confirmation d'achat. Vous pourriez aussi recevoir le code Pax via SMS ou WhatsApp.</li>
                             </ul>
                             <p><strong>8.2. Récupération des tickets</strong></p>

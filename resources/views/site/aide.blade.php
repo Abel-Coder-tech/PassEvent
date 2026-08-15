@@ -50,7 +50,7 @@
                         <i class="bi bi-pencil-square" style="color: var(--violet);"></i>
                     </div>
                     <h5 class="aide-card-title">Saisir vos informations</h5>
-                    <p class="aide-card-text">Sélectionnez le tarif (Gratuit, Standard ou VIP), la quantité de tickets, renseignez vos coordonnées et appliquez un éventuel code promo.</p>
+                    <p class="aide-card-text">Sélectionnez le tarif de votre choix, la quantité de tickets souhaitée, renseignez vos coordonnées et appliquez un éventuel code promo.</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
@@ -60,7 +60,7 @@
                         <i class="bi bi-shield-check" style="color: var(--violet);"></i>
                     </div>
                     <h5 class="aide-card-title">Payer en sécurité</h5>
-                    <p class="aide-card-text">Réglez par Mobile Money ou carte bancaire via des passerelles sécurisées (KKiaPay, Fedapay, FexPay).</p>
+                    <p class="aide-card-text">Réglez par Mobile Money ou carte bancaire via des passerelles sécurisées (FedaPay, KkiaPay).</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
@@ -112,7 +112,7 @@
                                     <li>Recevez instantanément votre e-ticket.</li>
                                 </ol>
                                 <div style="margin-top:0.5rem;font-size:0.82rem;color:#856404;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:0.4rem 0.7rem;">
-                                    <i class="bi bi-info-circle me-1"></i> NB : une personne peut acheter au maximum 05 tickets
+                                    <i class="bi bi-info-circle me-1"></i> NB : le nombre de tickets est limité aux places restantes de l'événement
                                 </div>
                             </div>
                         </div>
@@ -178,7 +178,7 @@
                         </h2>
                         <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Non, les tickets ne sont pas remboursables, sauf dans le cas exceptionnel où l'événement est annulé par l'organisateur. Selon le cas d'annulation qui se présente, les remboursements seront effectués soit directement par PaxEvent ou par l'organisateur à hauteur de 90% à 100% du montant du ticket, aux acheteurs. Pour toute réclamation ou problème rencontré, vous pouvez contacter le service client de PaxEvent ou vous adresser directement à l'organisateur de l'événement.
+                                Non, les tickets ne sont pas remboursables, sauf dans le cas exceptionnel où l'événement est annulé par l'organisateur. Selon le cas d'annulation qui se présente, les remboursements seront effectués soit directement par PaxEvent ou par l'organisateur à hauteur de 90% du montant du ticket, aux acheteurs. Pour toute réclamation ou problème rencontré, vous pouvez contacter le service client de PaxEvent ou vous adresser directement à l'organisateur de l'événement.
                             </div>
                         </div>
                     </div>
