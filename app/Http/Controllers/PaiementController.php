@@ -215,14 +215,15 @@ class PaiementController extends Controller
                 ->with('error', 'Le montant de la transaction ne correspond pas à votre commande.');
         }
 
-        // Normalise l'opérateur depuis les données API
-        if (isset($txData['payment_method'])) {
+        // Normalise l'opérateur depuis les données API (mode FedaPay en priorité, puis payment_method)
+        $apiMethod = $txData['mode'] ?? null;
+        if (! $apiMethod && isset($txData['payment_method'])) {
             $apiMethod = is_array($txData['payment_method'])
                 ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
                 : $txData['payment_method'];
-            if ($apiMethod && $apiMethod !== 'mobile_money') {
-                $paymentMethod = $apiMethod;
-            }
+        }
+        if ($apiMethod && $apiMethod !== 'mobile_money') {
+            $paymentMethod = $apiMethod;
         }
 
         $moyenPaiement = PaiementMapper::moyenPaiement($paymentMethod);
@@ -379,17 +380,18 @@ class PaiementController extends Controller
                 ->get();
         }
 
-        // Extraction du réseau depuis payment_method (string ou objet)
-        $paymentMethodRaw = $tx['payment_method'] ?? $data['payment_method'] ?? 'mobile_money';
+        // Extraction du réseau depuis mode FedaPay (prioritaire) puis payment_method (string ou objet)
+        $paymentMethodRaw = $tx['mode'] ?? $data['mode'] ?? $tx['payment_method'] ?? $data['payment_method'] ?? 'mobile_money';
 
-        // Normalise depuis les données API
-        if (isset($txData['payment_method'])) {
+        // Normalise depuis les données API (mode en priorité)
+        $apiMethod = $txData['mode'] ?? null;
+        if (! $apiMethod && isset($txData['payment_method'])) {
             $apiMethod = is_array($txData['payment_method'])
                 ? ($txData['payment_method']['provider'] ?? $txData['payment_method']['name'] ?? null)
                 : $txData['payment_method'];
-            if ($apiMethod && $apiMethod !== 'mobile_money') {
-                $paymentMethodRaw = $apiMethod;
-            }
+        }
+        if ($apiMethod && $apiMethod !== 'mobile_money') {
+            $paymentMethodRaw = $apiMethod;
         }
 
         $moyenPaiement = PaiementMapper::moyenPaiement($paymentMethodRaw);
@@ -458,7 +460,7 @@ class PaiementController extends Controller
                     'statut_paiement' => 'payé',
                     'transaction_id' => $transactionId,
                     'fedapay_transaction_id' => $transactionId,
-                    'methode_paiement' => $operateur ?? $locked->methode_paiement ?? $locked->montant > 0 ? 'mobile_money' : 'especes',
+                    'methode_paiement' => $operateur ?? ($locked->methode_paiement ?? ($locked->montant > 0 ? 'mobile_money' : 'especes')),
                     'type_paiement' => $moyenPaiement,
                     'telephone_paiement' => $telephonePaiement,
                 ]);

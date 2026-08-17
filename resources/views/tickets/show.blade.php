@@ -109,7 +109,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Methode de paiement</label>
-                            <div class="fw-semibold">{{ ucfirst($ticket->methode_paiement ?? '—') }}</div>
+                            <div class="fw-semibold">{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement, $ticket->type_paiement) }}</div>
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Transaction ID</label>

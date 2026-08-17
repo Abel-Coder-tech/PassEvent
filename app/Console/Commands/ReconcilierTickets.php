@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Ticket;
+use App\Services\PaiementMapper;
 use App\Services\ReconciliationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -38,7 +39,10 @@ class ReconcilierTickets extends Command
 
             if ($verification['ok'] && $verification['approuve']) {
                 // Paiement abouti : confirmation automatique (auto-réparation)
-                $res = $this->reconciliation->confirmerTickets($groupe, $txId, null, null, false);
+                $raw = $verification['raw'] ?? [];
+                $mode = $raw['mode'] ?? $raw['payment_method'] ?? null;
+                $mode = is_array($mode) ? ($mode['provider'] ?? $mode['name'] ?? null) : $mode;
+                $res = $this->reconciliation->confirmerTickets($groupe, $txId, PaiementMapper::operateur($mode), null, false);
                 $confirmees += $res['confirmes'] ?? 0;
             } elseif ($verification['ok'] && in_array(
                 $verification['statut'],
