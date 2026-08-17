@@ -4,6 +4,15 @@
 
 @section('page-title', 'Statistiques')
 
+@section('styles')
+<style>
+    @media (max-width: 575.98px) {
+        .top-bar-right .btn-reduire-commission .btn-text { display: inline; }
+        .top-bar-right .btn-reduire-commission { white-space: nowrap; }
+    }
+</style>
+@endsection
+
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Statistiques</li>
@@ -18,7 +27,7 @@
             <a href="{{ route('statistiques.index', ['periode' => 'annee']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === 'annee' ? 'active' : '' }}" style="border-radius: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">Cette annee</a>
             <a href="{{ route('statistiques.index', ['periode' => 'tout']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === 'tout' ? 'active' : '' }}" style="border-radius: 0 6px 6px 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">Tout</a>
         </div>
-        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('reduction_commission')">
+        <button type="button" class="btn btn-sm btn-reduire-commission" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('reduction_commission')">
             <i class="bi bi-percent me-1"></i> <span class="btn-text">Réduire ma commission</span>
         </button>
     </div>
