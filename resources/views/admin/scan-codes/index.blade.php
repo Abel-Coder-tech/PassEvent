@@ -56,7 +56,7 @@
                         <td class="text-end pe-3">
                             <form action="{{ route('admin.evenements.scan-codes.generate', $evenement->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-sm btn-outline-success py-1 px-2">
+                                <button type="submit" class="btn btn-sm py-1 px-2" style="background:#7B3FA0;color:#fff;border-radius:6px;">
                                     <i class="bi bi-plus-lg"></i> Générer
                                 </button>
                             </form>

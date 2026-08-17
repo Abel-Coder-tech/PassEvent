@@ -15,7 +15,7 @@
 
 @section('topbar-actions')
 <a href="{{ route('admin.evenements.show', $evenement->id) }}" class="btn btn-secondary-custom">
-    <i class="bi bi-arrow-left me-1"></i> Retour
+    <i class="bi bi-arrow-left me-1"></i> <span class="btn-text">Retour</span>
 </a>
 @endsection
 
@@ -79,7 +79,7 @@
                         @forelse($codesPromos as $code)
                             <tr class="code-row" data-code="{{ strtolower($code->code) }}">
                                 <td>
-                                    <code class="fw-semibold" style="color: var(--violet); font-size: 0.95rem;">{{ $code->code }}</code>
+                                    <code class="fw-semibold" style="color: var(--violet); font-size: 0.95rem; word-break: break-all;">{{ $code->code }}</code>
                                 </td>
                                 <td>
                                     @if($code->nb_utilisations > 0)

@@ -11,7 +11,7 @@
 
 @section('topbar-actions')
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="btn-group" role="group">
+        <div class="btn-group d-none d-md-inline-flex" role="group">
             <a href="{{ route('statistiques.index', ['periode' => '7']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '7' ? 'active' : '' }}" style="border-radius: 6px 0 0 6px; padding: 0.3rem 0.75rem; font-size: 0.78rem;">7 jours</a>
             <a href="{{ route('statistiques.index', ['periode' => '30']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '30' ? 'active' : '' }}" style="border-radius: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">30 jours</a>
             <a href="{{ route('statistiques.index', ['periode' => '90']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '90' ? 'active' : '' }}" style="border-radius: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">3 mois</a>
@@ -26,6 +26,16 @@
 
 @section('content')
 <div class="page-content">
+    <div class="d-md-none mb-3">
+        <label class="form-label fw-semibold" style="font-size: 0.78rem;">Période</label>
+        <select class="form-select" onchange="if(this.value){window.location.href=this.value;}">
+            <option value="{{ route('statistiques.index', ['periode' => '7']) }}" {{ $periode === '7' ? 'selected' : '' }}>7 jours</option>
+            <option value="{{ route('statistiques.index', ['periode' => '30']) }}" {{ $periode === '30' ? 'selected' : '' }}>30 jours</option>
+            <option value="{{ route('statistiques.index', ['periode' => '90']) }}" {{ $periode === '90' ? 'selected' : '' }}>3 mois</option>
+            <option value="{{ route('statistiques.index', ['periode' => 'annee']) }}" {{ $periode === 'annee' ? 'selected' : '' }}>Cette année</option>
+            <option value="{{ route('statistiques.index', ['periode' => 'tout']) }}" {{ $periode === 'tout' ? 'selected' : '' }}>Tout</option>
+        </select>
+    </div>
     <p class="text-muted mb-4" style="font-size: 0.9rem;">
         <i class="bi bi-calendar3 me-1"></i>
         Periode selectionnee : <strong>{{ $stats['periode_label'] }}</strong>
@@ -259,9 +269,9 @@
                 </div>
                 <div class="panel-card-body">
                     <div class="p-3 rounded" style="background: var(--blanc-casse);">
-                        <p class="mb-2 fw-semibold" style="font-size: 0.9rem;">Prochain recrutement</p>
+                        <p class="mb-2 fw-semibold" style="font-size: 0.9rem;">Retrait normal</p>
                         <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                            J+5 apres cloture : via FedaPay. Les fonds sont transferés automatiquement apres verification des transactions.
+                            J+5 après cloture : via FedaPay. Les fonds sont transferés automatiquement après verification des transactions.
                         </p>
                     </div>
 

@@ -12,9 +12,9 @@
 @section('topbar-actions')
     <div class="d-flex gap-2">
         <a href="{{ route('admin.codes-promos.export', ['evenement_id' => $selectedEvent]) }}" class="btn btn-secondary-custom btn-sm" style="border-radius: 6px;">
-            <i class="bi bi-download me-1"></i> Exporter
+            <i class="bi bi-download me-1"></i> <span class="btn-text">Exporter</span>
         </a>
-        <button type="button" class="btn btn-vert btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreate" onclick="updateTarifs()">
+        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:6px;" data-bs-toggle="modal" data-bs-target="#modalCreate" onclick="updateTarifs()">
             <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Générer</span>
         </button>
     </div>
@@ -133,7 +133,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
-                                            <code class="fw-bold" style="font-size: 0.85rem;">{{ $code->code }}</code>
+                                            <code class="fw-bold" style="font-size: 0.85rem; word-break: break-all;">{{ $code->code }}</code>
                                             <button type="button" class="btn btn-sm p-0 border-0 bg-transparent" onclick="copyToClipboard('{{ $code->code }}')" title="Copier">
                                                 <i class="bi bi-clipboard" style="font-size: 0.85rem; color: var(--gris);"></i>
                                             </button>
@@ -212,7 +212,7 @@
                 <div class="text-center py-5">
                     <i class="bi bi-tags" style="font-size: 3rem; color: var(--gris); opacity: 0.3;"></i>
                     <p class="text-muted mt-3 mb-0">Aucun code promo trouvé.</p>
-                    <button type="button" class="btn btn-vert btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalCreate">
+                    <button type="button" class="btn btn-sm mt-2" style="background:#7B3FA0;color:#fff;border-radius:8px;" data-bs-toggle="modal" data-bs-target="#modalCreate">
                         <i class="bi bi-plus-lg me-1"></i> Générer votre premier code
                     </button>
                 </div>
