@@ -285,10 +285,10 @@ class SuperAdminController extends Controller
 
         $destinataire = $message->nom_complet ?: 'cher organisateur';
 
-        Mail::raw($note, function ($mail) use ($request, $expediteurEmail, $message) {
-            $mail->to($expediteurEmail)
-                ->subject('Réponse PaxEvent — '.($message->objet ?: 'Votre demande'))
-                ->replyTo(auth('superadmin')->user()->email);
+        Mail::mailer('support')->raw($note, function ($mail) use ($expediteurEmail, $message) {
+            $mail->from(config('mail.support_address'), 'Support PaxEvent')
+                ->to($expediteurEmail)
+                ->subject('Réponse PaxEvent — '.($message->objet ?: 'Votre demande'));
         });
 
         $message->update([

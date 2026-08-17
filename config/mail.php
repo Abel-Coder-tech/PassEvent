@@ -49,6 +49,18 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'support' => [
+            'transport' => 'smtp',
+            'scheme' => env('SUPPORT_MAIL_SCHEME'),
+            'url' => env('SUPPORT_MAIL_URL'),
+            'host' => env('SUPPORT_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('SUPPORT_MAIL_PORT', 465),
+            'username' => env('SUPPORT_MAIL_USERNAME'),
+            'password' => env('SUPPORT_MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('SUPPORT_MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -114,5 +126,18 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'contact@paxevent.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Support Mailbox
+    |--------------------------------------------------------------------------
+    |
+    | This is the mailbox used for messages between organisers and the
+    | technical support. Notifications of organiser requests are sent to
+    | this address, and replies from the super admin are sent from it.
+    |
+    */
+
+    'support_address' => env('SUPPORT_MAIL_FROM_ADDRESS'),
 
 ];

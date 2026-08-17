@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Evenement;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class DemandeSuperAdminController extends Controller
 {
@@ -54,7 +55,34 @@ class DemandeSuperAdminController extends Controller
             'lu' => false,
         ]);
 
+        // Notifie la boîte support technique par email
+        $this->notifierSupport($user, $objet, $message, $evenement);
+
         return back()->with('success', 'Votre demande a été envoyée à l\'équipe PaxEvent. Vous serez notifié(e) de la suite.');
+    }
+
+    // Envoie un email de notification à la boîte support technique
+    protected function notifierSupport($user, string $objet, string $message, ?Evenement $evenement): void
+    {
+        $supportEmail = config('mail.support_address');
+
+        if (! $supportEmail) {
+            return;
+        }
+
+        Mail::mailer('support')->raw(
+            "Nouvelle demande depuis le tableau de bord organisateur :\n\n".
+            "De : {$user->nom} ({$user->email})\n".
+            ($user->telephone ? "Téléphone : {$user->telephone}\n" : '').
+            ($evenement ? "Événement : {$evenement->titre}\n" : '').
+            "Objet : {$objet}\n\n".
+            "Message :\n{$message}\n\n".
+            'Connectez-vous au super dashboard pour y répondre.',
+            function ($mail) use ($supportEmail, $objet) {
+                $mail->to($supportEmail)
+                    ->subject($objet);
+            }
+        );
     }
 
     // Préfixe le message avec le détail structuré de la demande (quantités par tarif, commission)
