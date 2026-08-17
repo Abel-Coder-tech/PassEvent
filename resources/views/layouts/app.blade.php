@@ -1036,7 +1036,7 @@
         <div class="top-bar-right">
             @yield('topbar-actions')
             @if(Auth::user()->statut !== 'bloque')
-            <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm {{ request()->routeIs('admin.evenements.create', 'admin.evenements.edit', 'admin.evenements.show', 'statistiques.index') ? 'd-none d-sm-inline-flex' : '' }}">
+            <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm {{ request()->routeIs('admin.evenements.create', 'admin.evenements.edit', 'admin.evenements.show', 'statistiques.index', 'admin.codes-promos.*') ? 'd-none d-sm-inline-flex' : '' }}">
                 <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Créer un événement</span>
             </a>
             @endif

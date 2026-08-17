@@ -4,6 +4,15 @@
 
 @section('page-title', 'Codes Promo')
 
+@section('styles')
+<style>
+    @media (max-width: 575.98px) {
+        .top-bar-right .btn-generer-promo .btn-text { display: inline; }
+        .top-bar-right .btn-generer-promo { white-space: nowrap; }
+    }
+</style>
+@endsection
+
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
     <li class="breadcrumb-item active" aria-current="page">Codes Promo</li>
@@ -14,8 +23,8 @@
         <a href="{{ route('admin.codes-promos.export', ['evenement_id' => $selectedEvent]) }}" class="btn btn-secondary-custom btn-sm" style="border-radius: 6px;">
             <i class="bi bi-download me-1"></i> <span class="btn-text">Exporter</span>
         </a>
-        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:6px;" data-bs-toggle="modal" data-bs-target="#modalCreate" onclick="updateTarifs()">
-            <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Générer</span>
+        <button type="button" class="btn btn-sm btn-generer-promo" style="background:#7B3FA0;color:#fff;border-radius:6px;" data-bs-toggle="modal" data-bs-target="#modalCreate" onclick="updateTarifs()">
+            <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Générer code promo</span>
         </button>
     </div>
 @endsection

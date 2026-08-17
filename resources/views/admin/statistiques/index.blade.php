@@ -49,8 +49,8 @@
                     <div class="metric-icon" style="background: rgba(18,151,110,0.1); color: var(--vert);">
                         <i class="bi bi-ticket-perforated"></i>
                     </div>
-                    <span class="badge {{ $stats['tickets_vendus_evolution'] >= 0 ? 'bg-success' : 'bg-danger' }}" style="font-size: 0.7rem;">
-                        {{ $stats['tickets_vendus_evolution'] >= 0 ? '+' : '' }}{{ $stats['tickets_vendus_evolution'] }}%
+                    <span class="badge {{ $stats['tickets_vendus_evolution'] >= 0 ? 'bg-success' : 'bg-danger' }}" style="font-size: 0.7rem; white-space: nowrap;">
+                        {{ $stats['tickets_vendus_evolution'] >= 0 ? '+' : '-' }}{{ abs($stats['tickets_vendus_evolution']) }}%
                     </span>
                 </div>
                 <div class="metric-label">Tickets vendus</div>
@@ -65,8 +65,8 @@
                     <div class="metric-icon" style="background: rgba(135,66,139,0.1); color: var(--violet);">
                         <i class="bi bi-currency-exchange"></i>
                     </div>
-                    <span class="badge {{ $stats['revenus_evolution'] >= 0 ? 'bg-success' : 'bg-danger' }}" style="font-size: 0.7rem;">
-                        {{ $stats['revenus_evolution'] >= 0 ? '+' : '' }}{{ $stats['revenus_evolution'] }}%
+                    <span class="badge {{ $stats['revenus_evolution'] >= 0 ? 'bg-success' : 'bg-danger' }}" style="font-size: 0.7rem; white-space: nowrap;">
+                        {{ $stats['revenus_evolution'] >= 0 ? '+' : '-' }}{{ abs($stats['revenus_evolution']) }}%
                     </span>
                 </div>
                 <div class="metric-label">Revenus FedaPay</div>
