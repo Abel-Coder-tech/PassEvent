@@ -61,7 +61,7 @@
                                 {{ \Illuminate\Support\Str::limit(strip_tags($notification->message), 90) }}
                             </div>
                         </a>
-                        <span style="font-size:0.65rem;color:var(--gris);white-space:nowrap;">{{ $notification->created_at->diffForHumans() }}</span>
+                        <span style="font-size:0.65rem;color:var(--gris);white-space:nowrap;flex-shrink:0;">{{ $notification->created_at->diffForHumans() }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -78,13 +78,13 @@
             </span>
         </div>
         <div class="col-md-6 d-flex justify-content-md-end gap-2 flex-wrap">
-            <a href="{{ route('admin.evenements.create') }}" class="btn btn-sm" style="background:var(--vert);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;">
+            <a href="{{ route('admin.evenements.create') }}" class="btn btn-sm flex-sm-fill flex-md-grow-0" style="background:var(--vert);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;">
                 <i class="bi bi-plus-lg me-1"></i> Nouvel événement
             </a>
-            <a href="{{ route('admin.evenements.index') }}" class="btn btn-sm" style="border:1px solid #e0dde3;border-radius:8px;font-weight:600;font-size:0.78rem;">
+            <a href="{{ route('admin.evenements.index') }}" class="btn btn-sm flex-sm-fill flex-md-grow-0" style="border:1px solid #e0dde3;border-radius:8px;font-weight:600;font-size:0.78rem;">
                 <i class="bi bi-calendar-week me-1"></i> Mes événements
             </a>
-            <a href="{{ route('scan.index') }}" class="btn btn-sm" style="border:1px solid #e0dde3;border-radius:8px;font-weight:600;font-size:0.78rem;">
+            <a href="{{ route('scan.index') }}" class="btn btn-sm flex-sm-fill flex-md-grow-0" style="border:1px solid #e0dde3;border-radius:8px;font-weight:600;font-size:0.78rem;">
                 <i class="bi bi-qr-code-scan me-1"></i> Scanner
             </a>
         </div>
@@ -278,7 +278,9 @@
                     <h5><i class="bi bi-graph-up me-1" style="color:var(--vert);"></i> Ventes (7 derniers jours)</h5>
                 </div>
                 <div class="panel-card-body">
-                    <canvas id="ventesChart" height="120"></canvas>
+                    <div style="position:relative;height:200px;">
+                        <canvas id="ventesChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -361,7 +363,7 @@
                                         {{ $ticket->evenement->titre ?? '—' }} · {{ $ticket->date_achat?->format('d/m H:i') }}
                                     </div>
                                 </div>
-                                <div style="font-size:0.85rem;font-weight:700;color:var(--vert);white-space:nowrap;">
+                                <div style="font-size:0.85rem;font-weight:700;color:var(--vert);white-space:nowrap;flex-shrink:0;">
                                     {{ number_format($ticket->montant, 0, ',', ' ') }} F
                                 </div>
                             </div>
@@ -402,6 +404,7 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
                 tooltip: {

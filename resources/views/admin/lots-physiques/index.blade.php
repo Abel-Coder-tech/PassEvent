@@ -63,7 +63,7 @@
     </div>
     @else
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="bi bi-stack me-1"></i> Mes lots de tickets physiques</strong>
             <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
                 <i class="bi bi-qr-code me-1"></i> Demander des QR codes

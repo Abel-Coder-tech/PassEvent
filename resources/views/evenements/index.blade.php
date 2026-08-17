@@ -114,8 +114,8 @@
             <div class="panel-card event-card" data-filter="{{ $filterKey }}" data-title="{{ strtolower($evenement->titre . ' ' . ($evenement->categorie ?? '')) }}">
                 <div class="panel-card-body py-3">
                     <!-- Top row: Title + Badge -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="fw-bold mb-0" style="font-size: 1.05rem;">{{ $evenement->titre }}</h5>
+                    <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
+                        <h5 class="fw-bold mb-0 me-2" style="font-size: 1.05rem; flex:1; min-width:0;">{{ $evenement->titre }}</h5>
                         <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
                             <span class="badge ms-2" style="font-size:0.7rem; {{ $evenement->ventes_fermees ? 'background:var(--danger);' : 'background:var(--vert);' }}">{{ $evenement->ventes_fermees ? 'Ventes fermées' : 'Ventes ouvertes' }}</span>

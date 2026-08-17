@@ -49,7 +49,7 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Code unique</label>
-                            <div class="fw-bold" style="font-size: 1.1rem; color: var(--violet); font-family: monospace;">{{ $ticket->code_unique }}</div>
+                            <div class="fw-bold" style="font-size: 1.1rem; color: var(--violet); font-family: monospace; word-break: break-all;">{{ $ticket->code_unique }}</div>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Date d'achat</label>
@@ -222,7 +222,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="text-end" style="min-width: 100px;">
+                                <div class="text-end" style="min-width: 100px; flex-shrink: 0;">
                                     <small class="text-muted">{{ $log->created_at?->isoFormat('D MMM YYYY HH:mm') ?? '—' }}</small>
                                 </div>
                             </div>

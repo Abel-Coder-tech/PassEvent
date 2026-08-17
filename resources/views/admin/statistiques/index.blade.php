@@ -19,7 +19,7 @@
             <a href="{{ route('statistiques.index', ['periode' => 'tout']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === 'tout' ? 'active' : '' }}" style="border-radius: 0 6px 6px 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">Tout</a>
         </div>
         <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('reduction_commission')">
-            <i class="bi bi-percent me-1"></i> Réduire ma commission
+            <i class="bi bi-percent me-1"></i> <span class="btn-text">Réduire ma commission</span>
         </button>
     </div>
 @endsection
@@ -224,27 +224,27 @@
                     <h5><i class="bi bi-calculator me-2" style="color: var(--violet);"></i>Resume financier</h5>
                 </div>
                 <div class="panel-card-body">
-                    <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span class="text-muted">Revenus bruts</span>
                         <span class="fw-bold">{{ number_format($resumeFinancier['revenus_bruts'], 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span class="text-muted">Tickets gratuits (seuil &lt; 100)</span>
                         <span class="fw-bold">{{ $resumeFinancier['gratuits'] }}</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span class="text-muted">Commission PaxEvent : {{ $commissionPct }}%</span>
                         <span class="fw-bold" style="color: var(--vert);">{{ number_format($resumeFinancier['commission'], 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span class="text-muted">Frais FedaPay : 3.5%</span>
                         <span class="fw-bold">{{ number_format($resumeFinancier['frais_fedapay'], 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span class="text-muted">Remboursements</span>
                         <span class="fw-bold" style="color: var(--danger);">-{{ number_format($resumeFinancier['remboursements'], 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="d-flex justify-content-between py-3 px-3 rounded" style="background: rgba(18,151,110,0.08);">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-3 rounded" style="background: rgba(18,151,110,0.08);">
                         <span class="fw-bold" style="font-size: 1rem; color: var(--vert);">Net a reverser</span>
                         <span class="fw-bold" style="font-size: 1.25rem; color: var(--vert);">{{ number_format($resumeFinancier['net_reverser'], 0, ',', ' ') }} FCFA</span>
                     </div>

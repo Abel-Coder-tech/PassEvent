@@ -12,13 +12,13 @@
 
 @section('topbar-actions')
 <a href="{{ route('admin.tarifs.index', $evenement->id) }}" class="btn btn-secondary-custom me-2">
-    <i class="bi bi-tag me-1"></i> Gérer les tarifs
+    <i class="bi bi-tag me-1"></i> <span class="btn-text">Gérer les tarifs</span>
 </a>
 <a href="{{ route('admin.evenements.edit', $evenement->id) }}" class="btn btn-secondary-custom me-2">
-    <i class="bi bi-pencil me-1"></i> Modifier
+    <i class="bi bi-pencil me-1"></i> <span class="btn-text">Modifier</span>
 </a>
 <a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom">
-    <i class="bi bi-arrow-left me-1"></i> Retour
+    <i class="bi bi-arrow-left me-1"></i> <span class="btn-text">Retour</span>
 </a>
 @endsection
 
@@ -133,26 +133,28 @@
                 <h5><i class="bi bi-tag me-2" style="color: var(--violet);"></i>Tarifs</h5>
             </div>
             <div class="panel-card-body p-0">
-                <table class="table custom-table mb-0">
-                    <thead>
-                        <tr>
-                            <th style="font-size: 0.75rem;">Catégorie</th>
-                            <th style="font-size: 0.75rem;">Prix</th>
-                            <th style="font-size: 0.75rem;">Dispo.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($tarifs as $tarif)
+                <div class="table-responsive">
+                    <table class="table custom-table mb-0">
+                        <thead>
                             <tr>
-                                <td style="font-size: 0.82rem;">
-                                    {{ $tarif->nom }}
-                                </td>
-                                <td style="font-size: 0.82rem;">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
-                                <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible - $tarif->quantite_vendue }}</td>
+                                <th style="font-size: 0.75rem;">Catégorie</th>
+                                <th style="font-size: 0.75rem;">Prix</th>
+                                <th style="font-size: 0.75rem;">Dispo.</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($tarifs as $tarif)
+                                <tr>
+                                    <td style="font-size: 0.82rem;">
+                                        {{ $tarif->nom }}
+                                    </td>
+                                    <td style="font-size: 0.82rem;">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
+                                    <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible - $tarif->quantite_vendue }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

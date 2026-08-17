@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="fw-bold mb-0"><i class="bi bi-people"></i> Agents de vente</h5>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <button type="button" class="btn btn-sm text-white" style="background: #7B3FA0;" onclick="openDemande('augmentation_agents')">
                 <i class="bi bi-plus-circle"></i> Demander plus d'agents
             </button>

@@ -661,6 +661,21 @@
         /* Page content area */
         .page-content {
             padding: 1.5rem 2rem 2rem;
+            min-width: 0;
+        }
+
+        .breadcrumb-bar {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        /* Anti-débordement : flex enfants rétrécissables */
+        .d-flex > *, .row > * { min-width: 0; }
+
+        .metric-value { word-break: break-word; }
+
+        @media (min-width: 768px) {
+            .w-md-auto { width: auto !important; }
         }
 
         /* Alerts */
@@ -715,6 +730,12 @@
 
             .top-bar {
                 padding: 0.75rem 1rem;
+                flex-wrap: wrap;
+            }
+
+            .top-bar-right {
+                flex: 1;
+                justify-content: flex-end;
             }
 
             .top-bar-left h2 {
@@ -746,6 +767,13 @@
             }
         }
 
+        @media (max-width: 991.98px) {
+            .breadcrumb-bar {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
         @media (max-width: 575.98px) {
             .top-bar-right .btn span,
             .top-bar-right .btn-text {
@@ -755,6 +783,25 @@
             .top-bar-right .btn-sm {
                 padding: 0.35rem 0.5rem;
                 font-size: 0.75rem;
+            }
+
+            .top-bar-left p {
+                display: none;
+            }
+
+            .top-bar-right .btn {
+                white-space: nowrap;
+            }
+
+            .top-bar-right .btn:last-child {
+                margin-right: 0;
+            }
+
+            .top-bar-right .btn-group {
+                flex-wrap: nowrap;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .event-card .panel-card-body {
@@ -797,11 +844,13 @@
             position: fixed;
             top: 20px;
             right: 20px;
+            left: auto;
             z-index: 10000;
             display: flex;
             flex-direction: column;
             gap: 10px;
             pointer-events: none;
+            max-width: calc(100vw - 40px);
         }
         .toast-item {
             pointer-events: auto;
@@ -817,6 +866,18 @@
             animation: toastIn 0.3s ease;
             font-size: 14px;
             border-left: 4px solid #ddd;
+        }
+        @media (max-width: 575.98px) {
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            .toast-item {
+                min-width: 0;
+                width: 100%;
+            }
         }
         .toast-item.toast-success { border-left-color: #27ae60; }
         .toast-item.toast-error { border-left-color: #e74c3c; }
@@ -975,7 +1036,7 @@
         <div class="top-bar-right">
             @yield('topbar-actions')
             @if(Auth::user()->statut !== 'bloque')
-            <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm">
+            <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm {{ request()->routeIs('admin.evenements.create', 'admin.evenements.edit', 'admin.evenements.show', 'statistiques.index') ? 'd-none d-sm-inline-flex' : '' }}">
                 <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Créer un événement</span>
             </a>
             @endif
@@ -1001,7 +1062,7 @@
 
     @auth
         @hasSection('breadcrumb')
-            <div style="padding: 0.6rem 2rem; background: var(--blanc); border-bottom: 1px solid #e5e5e5; font-size: 0.82rem;">
+            <div class="breadcrumb-bar" style="padding: 0.6rem 2rem; background: var(--blanc); border-bottom: 1px solid #e5e5e5; font-size: 0.82rem;">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0" style="background: transparent; padding: 0;">
                         @yield('breadcrumb')

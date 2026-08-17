@@ -40,7 +40,7 @@
         </div>
         <div class="col-6 col-lg-3 d-flex align-items-center justify-content-center">
             @if($soldeDisponible > 0)
-                <button type="button" class="btn" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; padding: 0.85rem 1.5rem; border-radius: 12px; border: none; width: 100%; box-shadow: 0 4px 16px rgba(123,63,160,0.3);" data-bs-toggle="modal" data-bs-target="#retraitModal">
+                <button type="button" class="btn" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight: 700; padding: 0.85rem 1rem; border-radius: 12px; border: none; width: 100%; box-shadow: 0 4px 16px rgba(123,63,160,0.3); font-size: 0.82rem; white-space: normal;" data-bs-toggle="modal" data-bs-target="#retraitModal">
                     <i class="bi bi-send me-1"></i> Demander un retrait
                 </button>
             @else
