@@ -122,7 +122,7 @@
                             <h6 class="fw-bold mt-4 mb-2">10. Délégué à la Protection des Données (DPO)</h6>
                             <p>Pour toute question relative à vos données personnelles ou pour exercer vos droits, vous pouvez contacter notre Délégué à la Protection des Données (DPO) :</p>
                             <ul>
-                                <li><strong>Email :</strong> <a href="mailto:dpo@paxevent.com">dpo@paxevent.com</a></li>
+                                <li><strong>Email :</strong> <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
                                 <li><strong>Adresse :</strong> PaxEvent – DPO, C/12 M/MARTIN, Oganla Atakpame, Porto-Novo, Bénin</li>
                             </ul>
 
