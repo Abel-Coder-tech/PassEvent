@@ -167,31 +167,33 @@ class CodePromoController extends Controller
         $codes = $query->get();
 
         $filename = "codes_promos_" . date('Y-m-d_His') . ".csv";
-        $handle = fopen("php://output", 'w');
-        
-        header('Content-Type: text/csv');
-        header("Content-Disposition: attachment; filename=$filename");
 
-        fputcsv($handle, ['Code', 'Événement', 'Tarif', 'Réduction', 'Max utilisations', 'Utilisations', 'Expiration', 'Statut']);
+        return response()->streamDownload(function () use ($codes) {
+            $out = fopen('php://output', 'w');
 
-        foreach ($codes as $code) {
-            $reduction = $code->type_reduction === 'pourcentage' 
-                ? $code->valeur_reduction . '%' 
-                : number_format($code->valeur_reduction, 0, ',', ' ') . ' F';
+            // BOM UTF-8 pour Excel
+            fwrite($out, "\xEF\xBB\xBF");
 
-            fputcsv($handle, [
-                $code->code,
-                $code->evenement->titre,
-                $code->tarif?->getLabel() ?? '—',
-                $reduction,
-                $code->max_utilisations ?? 'Illimité',
-                $code->nb_utilisations,
-                $code->date_expiration?->format('d/m/Y') ?? 'Pas d\'expiration',
-                $code->nb_utilisations > 0 ? 'Utilisé' : ($code->actif ? 'Disponible' : 'Inactif'),
-            ]);
-        }
+            fputcsv($out, ['Code', 'Événement', 'Tarif', 'Réduction', 'Max utilisations', 'Utilisations', 'Expiration', 'Statut'], ';');
 
-        fclose($handle);
-        exit;
+            foreach ($codes as $code) {
+                $reduction = $code->type_reduction === 'pourcentage'
+                    ? $code->valeur_reduction . '%'
+                    : number_format($code->valeur_reduction, 0, ',', ' ') . ' F';
+
+                fputcsv($out, [
+                    $code->code,
+                    $code->evenement?->titre ?? '-',
+                    $code->tarif?->getLabel() ?? '-',
+                    $reduction,
+                    $code->max_utilisations ?? 'Illimité',
+                    $code->nb_utilisations,
+                    $code->date_expiration?->format('d/m/Y') ?? 'Pas d\'expiration',
+                    $code->nb_utilisations > 0 ? 'Utilisé' : ($code->actif ? 'Disponible' : 'Inactif'),
+                ], ';');
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

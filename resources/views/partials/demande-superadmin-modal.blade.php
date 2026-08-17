@@ -1,6 +1,7 @@
 @php
     $evenementsPourDemande = Auth::user()->evenements()
         ->with(['tarifs' => fn ($q) => $q->where('statut', 'actif')->orderBy('prix')])
+        ->where('date_event', '>=', now())
         ->orderBy('date_event')
         ->get();
 @endphp
@@ -56,6 +57,14 @@
                         <label class="form-label fw-semibold" style="font-size:0.82rem;">Message</label>
                         <textarea name="message" id="demande_message" class="form-control form-control-sm" rows="3" maxlength="2000" placeholder="Décrivez votre demande..." required></textarea>
                     </div>
+
+                    {{-- Info commission tickets physiques (QR Code) --}}
+                    <div id="demande_info_commission" class="mt-2" style="display:none;">
+                        <div class="alert alert-info py-2 px-3 mb-0" style="border-radius:8px;font-size:0.78rem;background:#f0f7ff;border:1px solid #d6e6ff;color:#1c5ba8;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Le pourcentage de commission sur les tickets physiques (QR Code) est de <strong>5 %</strong>.
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid #f0eef2;padding:0.75rem 1.25rem;">
                     <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="border:1px solid #e0dde3;border-radius:8px;">Annuler</button>
@@ -76,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const demandeQuantitesGroup = document.getElementById('demande_quantites_group');
     const demandeQuantites = document.getElementById('demande_quantites');
     const demandeCommissionGroup = document.getElementById('demande_commission_group');
+    const demandeInfoCommission = document.getElementById('demande_info_commission');
 
     if (!demandeObjet) return;
 
@@ -85,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
         demandeEvenementGroup.style.display = 'none';
         demandeQuantitesGroup.style.display = 'none';
         demandeCommissionGroup.style.display = 'none';
+        demandeInfoCommission.style.display = 'none';
         demandeEvenement.value = '';
         demandeQuantites.innerHTML = '';
     }
@@ -103,6 +114,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (objet === 'reduction_commission') {
             demandeCommissionGroup.style.display = '';
+        }
+
+        if (objet === 'ticket_physique') {
+            demandeInfoCommission.style.display = '';
         }
     });
 
