@@ -62,25 +62,25 @@
 
     <div class="col-md-8">
         <div class="row g-2">
-            <div class="col-3">
+            <div class="col-6 col-md-3">
                 <div class="sa-card text-center py-3">
                     <div class="fw-bold fs-4" style="color: var(--sa-primary);">{{ $evenements->count() }}</div>
                     <small class="text-muted">Événements</small>
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-6 col-md-3">
                 <div class="sa-card text-center py-3">
                     <div class="fw-bold fs-4" style="color: var(--sa-success);">{{ number_format($totalTickets, 0, ',', ' ') }}</div>
                     <small class="text-muted">Tickets vendus</small>
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-6 col-md-3">
                 <div class="sa-card text-center py-3">
                     <div class="fw-bold fs-4" style="color: #3498db;">{{ number_format($totalRecettes, 0, ',', ' ') }} F</div>
                     <small class="text-muted">Revenus totaux</small>
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-6 col-md-3">
                 <div class="sa-card text-center py-3">
                     <div class="fw-bold fs-4" style="color: #f39c12;">{{ $aujourdhui }}</div>
                     <small class="text-muted">Aujourd'hui</small>
@@ -89,19 +89,19 @@
         </div>
 
         <div class="row g-2 mt-2">
-            <div class="col-4">
+            <div class="col-6 col-md-4">
                 <div class="sa-card text-center py-2">
                     <div class="fw-bold" style="color: var(--sa-primary);">{{ $agentsScan }}</div>
                     <small class="text-muted">Agents scan</small>
                 </div>
             </div>
-            <div class="col-4">
+            <div class="col-6 col-md-4">
                 <div class="sa-card text-center py-2">
                     <div class="fw-bold" style="color: var(--sa-success);">{{ $agentsVente }}</div>
                     <small class="text-muted">Agents vente</small>
                 </div>
             </div>
-            <div class="col-4">
+            <div class="col-6 col-md-4">
                 <div class="sa-card text-center py-2">
                     <div class="fw-bold" style="color: #3498db;">{{ $scansAujourdhui }}</div>
                     <small class="text-muted">Scans aujourd'hui</small>
@@ -112,25 +112,25 @@
 </div>
 
 <div class="row g-2 mb-3">
-        <div class="col-3">
+        <div class="col-6 col-md-3">
             <div class="sa-card text-center py-2">
                 <div class="fw-bold" style="color:#3498db;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
                 <small class="text-muted">Mobile (FedaPay)</small>
             </div>
         </div>
-        <div class="col-3">
+        <div class="col-6 col-md-3">
             <div class="sa-card text-center py-2">
                 <div class="fw-bold" style="color:#f39c12;">{{ number_format($cashRecettes, 0, ',', ' ') }} F</div>
                 <small class="text-muted">Espèces</small>
             </div>
         </div>
-        <div class="col-3">
+        <div class="col-6 col-md-3">
             <div class="sa-card text-center py-2">
                 <div class="fw-bold" style="color:var(--sa-danger);">{{ number_format($commission, 0, ',', ' ') }} F</div>
                 <small class="text-muted">Commission ({{ $commissionPct }}%)</small>
             </div>
         </div>
-        <div class="col-3">
+        <div class="col-6 col-md-3">
             <div class="sa-card text-center py-2">
                 <div class="fw-bold" style="color:var(--sa-success);">{{ number_format($retirable, 0, ',', ' ') }} F</div>
                 <small class="text-muted">Retirable</small>

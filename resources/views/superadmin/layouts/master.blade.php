@@ -186,6 +186,7 @@
             margin-left: 250px;
             flex: 1;
             min-height: 100vh;
+            min-width: 0;
         }
 
         .sa-topbar {
@@ -201,9 +202,9 @@
             z-index: 999;
             flex-shrink: 0;
         }
-        .sa-topbar-left { display: flex; align-items: center; gap: 1rem; }
-        .sa-topbar-title { font-size: 1.1rem; font-weight: 700; color: var(--sa-text); }
-        .sa-topbar-right { display: flex; align-items: center; gap: 1rem; }
+        .sa-topbar-left { display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; }
+        .sa-topbar-title { font-size: 1.1rem; font-weight: 700; color: var(--sa-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sa-topbar-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
         .sa-topbar-badge {
             display: inline-flex; align-items: center; gap: 0.35rem;
             padding: 0.3rem 0.75rem;
@@ -216,6 +217,12 @@
         .sa-topbar-date { font-size: 0.8rem; color: var(--sa-text-muted); }
 
         .sa-content { padding: 2.5rem 2.5rem; }
+
+        .sa-card-body.p-0 { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        .d-flex > *, .row > * { min-width: 0; }
+        .kpi-value, .sa-info-value { overflow-wrap: anywhere; word-break: break-word; }
+        .sa-card-header { flex-wrap: wrap; gap: 0.5rem; }
 
         .sa-card {
             background: var(--sa-card-bg);
@@ -366,6 +373,10 @@
         .chart-container { position: relative; height: 280px; min-height: 0; width: 100%; }
         .chart-container canvas { display: block; max-width: 100%; }
 
+        @media (max-width: 575.98px) {
+            .chart-container { height: 220px; }
+        }
+
         .toggle-sidebar {
             display: none;
             background: none;
@@ -397,10 +408,20 @@
             }
         }
 
+        @media (max-width: 767.98px) {
+            .sa-card-body.p-0 .sa-table { min-width: 640px; white-space: nowrap; }
+            .sa-topbar-badge { padding: 0.25rem 0.6rem; font-size: 0.68rem; }
+        }
+
         @media (max-width: 575.98px) {
             .sa-content { padding: 1.25rem 1rem; }
-            .sa-topbar { padding: 0.6rem 1rem; }
+            .sa-topbar { padding: 0.6rem 1rem; gap: 0.5rem; }
             .sa-topbar-date { display: none; }
+            .sa-topbar-badge { font-size: 0.65rem; padding: 0.2rem 0.5rem; white-space: nowrap; }
+            .sa-card-body.p-0 .sa-table { min-width: 560px; }
+            .sa-sidebar-brand img { height: 48px; }
+            .toast-container { top: 10px; right: 10px; left: 10px; }
+            .toast-item { min-width: 0; width: 100%; max-width: none; }
         }
 
         .activity-pulse {

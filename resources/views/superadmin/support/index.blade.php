@@ -139,15 +139,15 @@
                         </div>
                     </div>
                     <div class="row g-2 mb-2">
-                        <div class="col-4">
+                        <div class="col-6 col-md-4">
                             <label class="form-label fw-semibold" style="font-size:0.8rem;">Montant (F)</label>
                             <input type="number" name="montant" value="{{ old('montant') }}" class="form-control form-control-sm" min="0" step="1">
                         </div>
-                        <div class="col-4">
+                        <div class="col-6 col-md-4">
                             <label class="form-label fw-semibold" style="font-size:0.8rem;">Quantité</label>
                             <input type="number" name="quantite" value="{{ old('quantite', 1) }}" class="form-control form-control-sm" min="1" max="20" required>
                         </div>
-                        <div class="col-4">
+                        <div class="col-6 col-md-4">
                             <label class="form-label fw-semibold" style="font-size:0.8rem;">Méthode</label>
                             <input type="text" name="methode_paiement" value="{{ old('methode_paiement', 'mobile_money') }}" class="form-control form-control-sm">
                         </div>

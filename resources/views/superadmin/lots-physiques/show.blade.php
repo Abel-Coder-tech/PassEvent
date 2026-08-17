@@ -24,19 +24,19 @@
             </div>
             <div class="sa-card-body">
                 <div class="row text-center">
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <div style="font-size:1.4rem;font-weight:800;color:var(--sa-primary);">{{ $lot->quantite }}</div>
                         <div style="font-size:0.72rem;color:#888;">Tickets</div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <div style="font-size:1.4rem;font-weight:800;color:#e74c3c;">{{ $lot->tickets->where('annule', true)->count() }}</div>
                         <div style="font-size:0.72rem;color:#888;">Annues</div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <div style="font-size:1.4rem;font-weight:800;color:#27ae60;">{{ $lot->tickets->where('utilise', true)->where('annule', false)->count() }}</div>
                         <div style="font-size:0.72rem;color:#888;">Scannes</div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <div style="font-size:1.4rem;font-weight:800;color:#7B3FA0;">{{ $lot->download_count }}/3</div>
                         <div style="font-size:0.72rem;color:#888;">Telechargements</div>
                     </div>

@@ -11,7 +11,7 @@
 <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
     <p class="text-muted mb-0" style="font-size:0.85rem;">Lots de tickets physiques générés pour les organisateurs (vente au guichet).</p>
     <div class="d-flex gap-2">
         <a href="{{ route('superadmin.tickets-physiques.planches') }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;">

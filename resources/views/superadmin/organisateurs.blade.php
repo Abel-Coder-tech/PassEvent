@@ -28,9 +28,9 @@
         <div id="passwordLabelOrg" class="mt-1" style="font-size:0.75rem;font-weight:600;"></div>
     </div>
 </div>
-                        <div class="col-3"><input type="text" name="telephone" class="sa-form-control" placeholder="Telephone"></div>
-                        <div class="col-3"><input type="text" name="organisation" class="sa-form-control" placeholder="Organisation"></div>
-                        <div class="col-4">
+                        <div class="col-6 col-md-3"><input type="text" name="telephone" class="sa-form-control" placeholder="Telephone"></div>
+                        <div class="col-6 col-md-3"><input type="text" name="organisation" class="sa-form-control" placeholder="Organisation"></div>
+                        <div class="col-6 col-md-4">
                             <select name="type" class="sa-form-control">
                                 <option value="">Type</option>
                                 <option value="universitaire">Universitaire</option>
