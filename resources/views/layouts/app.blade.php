@@ -188,37 +188,6 @@
             font-size: 0.7rem;
         }
 
-        .sidebar-contact {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 0.5rem;
-            width: 100%;
-            padding: 0.5rem 1rem;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #e74c3c;
-            background: transparent;
-            border: none;
-            border-top: 1px solid rgba(255,255,255,0.12);
-            border-left: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .sidebar-contact i {
-            width: 14px;
-            font-size: 0.82rem;
-            text-align: center;
-        }
-
-        .sidebar-contact:hover {
-            color: #fff;
-            background: rgba(231, 76, 60, 0.15);
-            border-left-color: #e74c3c;
-        }
-
         /* Sidebar overlay for mobile */
         .sidebar-overlay {
             display: none;
@@ -240,6 +209,43 @@
             margin-left: 220px;
             min-height: 100vh;
             transition: margin-left 0.3s ease;
+        }
+
+        /* Bouton flottant "Contacter PaxEvent" (coin bas droit, fixe) */
+        .contact-fab {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 1045;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #542680, #7B3FA0);
+            color: #fff;
+            font-size: 1.4rem;
+            box-shadow: 0 6px 20px rgba(84, 38, 128, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .contact-fab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 26px rgba(84, 38, 128, 0.5);
+        }
+        .contact-fab:focus {
+            outline: none;
+        }
+        @media (max-width: 575.98px) {
+            .contact-fab {
+                width: 48px;
+                height: 48px;
+                font-size: 1.2rem;
+                bottom: 16px;
+                right: 16px;
+            }
         }
 
         /* Top Bar */
@@ -950,11 +956,6 @@
             </div>
         </div>
 
-        @if(auth()->user()->role !== 'super_admin')
-        <button type="button" class="sidebar-contact" data-bs-toggle="modal" data-bs-target="#demandeSuperadminModal">
-            <i class="bi bi-headset"></i> Contacter PaxEvent
-        </button>
-        @endif
     </div>
 @endauth
 
@@ -1060,6 +1061,11 @@ function showToast(type,message){var c=document.getElementById('toast-container'
 @yield('scripts')
 
 @auth
+    @if(auth()->user()->role !== 'super_admin')
+    <button type="button" class="contact-fab" data-bs-toggle="modal" data-bs-target="#demandeSuperadminModal" title="Contacter PaxEvent" aria-label="Contacter PaxEvent">
+        <i class="bi bi-headset"></i>
+    </button>
+    @endif
     @include('partials.demande-superadmin-modal')
 @endauth
 </body>
