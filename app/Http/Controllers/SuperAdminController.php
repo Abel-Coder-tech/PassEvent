@@ -1288,7 +1288,7 @@ class SuperAdminController extends Controller
     // Approuve un organisateur et lui envoie un email de confirmation
     public function approuverOrganisateur(User $user)
     {
-        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_apportees'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees'])) {
             return back()->with('error', 'Action non autorisée.'); // Statut inapproprié
         }
 
