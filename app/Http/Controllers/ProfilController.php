@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\RegistrationAdminNotification;
 use App\Mail\RegistrationPending;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -134,11 +135,14 @@ class ProfilController extends Controller
             return redirect()->route('profil.step2');
         }
 
+        // Si l'organisateur resoumet après des corrections demandées -> corrections_apportees
+        $etaitEnCorrections = $user->statut === 'corrections_demandees';
+
         $updateData = [
             'type' => $data['type'],
             'document_justificatif' => $data['document_justificatif'],
             'signature' => $data['signature'],
-            'statut' => 'en_attente',
+            'statut' => $etaitEnCorrections ? 'corrections_apportees' : 'en_attente',
         ];
 
         if ($data['type'] === 'universitaire' || $data['type'] === 'organisation') {
@@ -162,8 +166,22 @@ class ProfilController extends Controller
         $superAdmins = User::where('role', 'super_admin')->get();
         foreach ($superAdmins as $sa) {
             Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
+            if ($etaitEnCorrections) {
+                Message::create([
+                    'user_id' => null,
+                    'nom_complet' => $user->nom,
+                    'email' => $user->email,
+                    'objet' => 'Corrections apportées - ' . ($user->nom ?? 'organisateur'),
+                    'message' => "{$user->nom} a apporté les corrections demandées à son profil et attend une nouvelle validation.\n\nConnectez-vous pour valider son compte.",
+                    'lu' => false,
+                ]);
+            }
         }
 
-        return redirect()->route('dashboard')->with('success', 'Votre profil a été soumis pour validation.');
+        $message = $etaitEnCorrections
+            ? 'Vos corrections ont bien été enregistrées. Elles sont en cours de validation par notre équipe.'
+            : 'Votre profil a été soumis pour validation.';
+
+        return redirect()->route('dashboard')->with('success', $message);
     }
 }

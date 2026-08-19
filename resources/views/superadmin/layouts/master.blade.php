@@ -566,7 +566,7 @@
             </a>
             <a href="{{ route('superadmin.organisateurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.organisateurs') ? 'active' : '' }}">
                 <i class="bi bi-person-badge-fill"></i> Organisateurs
-                @php $pendingOrgs = \App\Models\User::where('role','admin')->where('statut','en_attente')->count(); @endphp
+                @php $pendingOrgs = \App\Models\User::where('role','admin')->whereIn('statut', ['en_attente', 'corrections_apportees'])->count(); @endphp
                 @if($pendingOrgs > 0)<span class="sa-nav-badge amber">{{ $pendingOrgs }}</span>@endif
             </a>
             <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements') ? 'active' : '' }}">

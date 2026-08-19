@@ -82,6 +82,8 @@
                             <span class="sa-badge sa-badge-secondary">Incomplet</span>
                         @elseif($st === 'corrections_demandees')
                             <span class="sa-badge sa-badge-warning" style="background:rgba(237,173,8,0.12);color:#8b6914;">Corrections demandées</span>
+                        @elseif($st === 'corrections_apportees')
+                            <span class="sa-badge sa-badge-info" style="background:rgba(13,110,253,0.12);color:#0a58ca;">Corrections apportées</span>
                         @elseif($st === 'rejete')
                             <span class="sa-badge sa-badge-danger">Rejeté</span>
                         @elseif($st === 'bloque')
@@ -96,7 +98,7 @@
                             <a href="{{ route('superadmin.organisateurs.voir', $org) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le détail">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            @if(in_array($org->statut, ['en_attente', 'incomplet', 'corrections_demandees']))
+                            @if(in_array($org->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees']))
                                 <form action="{{ route('superadmin.organisateurs.approuver', $org) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>

@@ -27,6 +27,10 @@ class CheckProfilActif
             return redirect()->route('dashboard')->with('error', 'Des corrections sont requises. Veuillez d\'abord ' . $link . ' avant de créer.');
         }
 
+        if ($user->statut === 'corrections_apportees') {
+            return redirect()->route('dashboard')->with('error', 'Vos corrections sont en cours de validation. Vous pourrez créer un événement dès validation de votre compte.');
+        }
+
         return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant d\'utiliser cette fonctionnalité.');
     }
 }

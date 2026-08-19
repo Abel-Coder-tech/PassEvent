@@ -115,16 +115,28 @@ class SuperAdminController extends Controller
         $usersEvolution = $this->evolution($prevUsers, $totalUsers);
         $evenementsEvolution = $this->evolution($prevEvenements, $totalEvenements);
 
-        // ---- Séries quotidiennes (piste 2) ----
-        $series = $this->construireSeries($start, $end, $operateur, $typeEvenement);
-        $ventesParJour = $series['ventes'];
-        $revenusCumules = $series['revenus_cumules'];
-        $nouveauxUtilisateursParJour = $series['utilisateurs'];
-        $scansParJour = $series['scans'];
-        $tauxReussiteParJour = $series['taux_reussite'];
+        // ---- Périodes par graphe (chaque graphe a la sienne) ----
+        $periodeVentes = $request->input('periode_ventes', '30');
+        $periodeReseaux = $request->input('periode_reseaux', '30');
+        $periodeCumules = $request->input('periode_cumules', '30');
+        $periodeTaux = $request->input('periode_taux', '30');
+        $periodeActivite = $request->input('periode_activite', '30');
+        $periodeTop = $request->input('periode_top', '30');
 
-        // ---- Répartition par réseau (piste 3) ----
-        $repartitionReseaux = $this->getRepartitionReseaux($start, $end, $operateur, $typeEvenement);
+        $periodeVentesLabel = $this->periodeLabel($periodeVentes);
+        $periodeReseauxLabel = $this->periodeLabel($periodeReseaux);
+        $periodeCumulesLabel = $this->periodeLabel($periodeCumules);
+        $periodeTauxLabel = $this->periodeLabel($periodeTaux);
+        $periodeActiviteLabel = $this->periodeLabel($periodeActivite);
+        $periodeTopLabel = $this->periodeLabel($periodeTop);
+
+        $ventesParJour = $this->getVentesParJour($periodeVentes, $dateDebut, $dateFin, $operateur, $typeEvenement);
+        $repartitionReseaux = $this->getRepartitionReseaux($periodeReseaux, $dateDebut, $dateFin, $operateur, $typeEvenement);
+        $revenusCumules = $this->getRevenusCumulesParJour($periodeCumules, $dateDebut, $dateFin, $operateur, $typeEvenement);
+        $tauxReussiteParJour = $this->getTauxReussiteParJour($periodeTaux, $dateDebut, $dateFin, $operateur, $typeEvenement);
+        $nouveauxUtilisateursParJour = $this->getUtilisateursParJour($periodeActivite, $dateDebut, $dateFin);
+        $scansParJour = $this->getScansParJour($periodeActivite, $dateDebut, $dateFin);
+        $topEvenements = $this->getTopEvenements($periodeTop, $dateDebut, $dateFin, $operateur, $typeEvenement);
 
         // ---- Ventes des 7 derniers jours pour graphique (défaut) ----
         $ventes7Jours = collect();
@@ -142,24 +154,6 @@ class SuperAdminController extends Controller
             'externes' => Ticket::where('nom_tarif', 'not like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
             'admins' => User::whereIn('role', ['admin', 'super_admin'])->count(),
         ];
-
-        // Top événements par ventes
-        $topEvenements = Evenement::withCount(['tickets as tickets_vendus' => function ($q) {
-            $q->where('statut_paiement', 'payé');
-        }])
-            ->where('statut', 'publié')
-            ->orderByDesc('tickets_vendus')
-            ->limit(10)
-            ->get()
-            ->map(function ($e) {
-                $remplissage = $e->capacite > 0 ? round(($e->tickets_vendus / $e->capacite) * 100) : 0;
-
-                return [
-                    'titre' => $e->titre,
-                    'tickets' => $e->tickets_vendus,
-                    'remplissage' => $remplissage,
-                ];
-            });
 
         // Activité en direct
         $activiteEnDirect = Log::with(['ticket.evenement'])
@@ -218,6 +212,8 @@ class SuperAdminController extends Controller
             'scansParJour', 'tauxReussiteParJour', 'repartitionReseaux',
             'periode', 'operateur', 'typeEvenement', 'dateDebut', 'dateFin',
             'periodeLabel', 'typeEvenements', 'operateurs',
+            'periodeVentes', 'periodeReseaux', 'periodeCumules', 'periodeTaux', 'periodeActivite', 'periodeTop',
+            'periodeVentesLabel', 'periodeReseauxLabel', 'periodeCumulesLabel', 'periodeTauxLabel', 'periodeActiviteLabel', 'periodeTopLabel',
             'ventes7Jours',
             'usersParRole', 'topEvenements', 'activiteEnDirect',
             'scanInvalides', 'paiementsEchoues', 'ticketsDupliques',
@@ -272,31 +268,189 @@ class SuperAdminController extends Controller
         };
     }
 
-    // Construit les séries quotidiennes : ventes, revenus cumulés, utilisateurs, scans, taux de réussite
-    private function construireSeries(Carbon $start, Carbon $end, ?string $operateur, ?string $typeEvenement): array
+    // Libellé d'une période (pour afficher la période active d'un graphe)
+    private function periodeLabel(string $periode): string
     {
-        $jours = collect();
+        return match ($periode) {
+            '7' => '7 jours',
+            '90' => '90 jours',
+            'mois' => 'Ce mois-ci',
+            'perso' => 'Personnalisée',
+            default => '30 jours',
+        };
+    }
 
-        // Journalier si <= 31 jours, sinon par semaine
+    // Résout une période (start/end) pour un graphe donné
+    private function periodeRange(string $periode, ?string $dateDebut, ?string $dateFin): array
+    {
+        $now = now();
+
+        return match ($periode) {
+            '7' => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()],
+            '90' => [$now->copy()->subDays(89)->startOfDay(), $now->copy()->endOfDay()],
+            'mois' => [$now->copy()->startOfMonth(), $now->copy()->endOfDay()],
+            'perso' => [
+                $dateDebut ? Carbon::parse($dateDebut)->startOfDay() : $now->copy()->subDays(29)->startOfDay(),
+                $dateFin ? Carbon::parse($dateFin)->endOfDay() : $now->copy()->endOfDay(),
+            ],
+            default => [$now->copy()->subDays(29)->startOfDay(), $now->copy()->endOfDay()],
+        };
+    }
+
+    // Génère la liste des points (jours ou semaines) entre start et end
+    private function genererPoints(Carbon $start, Carbon $end): \Illuminate\Support\Collection
+    {
+        $points = collect();
         $pas = $start->diffInDays($end) <= 31 ? 'day' : 'week';
 
         if ($pas === 'day') {
             $cursor = $start->copy();
             while ($cursor <= $end) {
-                $jours->push($cursor->copy());
+                $points->push($cursor->copy());
                 $cursor->addDay();
             }
         } else {
             $cursor = $start->copy()->startOfWeek();
             while ($cursor <= $end) {
-                $jours->push($cursor->copy());
+                $points->push($cursor->copy());
                 $cursor->addWeek();
             }
         }
 
-        $filtrerTickets = function ($query) use ($operateur, $typeEvenement) {
+        return $points;
+    }
+
+    // Filtre une requête tickets par opérateur et type d'événement
+    private function filtrerTickets($query, ?string $operateur, ?string $typeEvenement)
+    {
+        if ($operateur) {
+            $query->where(function ($sub) use ($operateur) {
+                if ($operateur === 'especes') {
+                    $sub->whereIn('methode_paiement', ['cash', 'especes']);
+                } elseif ($operateur === 'bancaire') {
+                    $sub->where('type_paiement', 'bancaire');
+                } elseif ($operateur === 'mobile_money') {
+                    $sub->where('type_paiement', 'mobile_money');
+                } else {
+                    $sub->where('methode_paiement', $operateur);
+                }
+            });
+        }
+        if ($typeEvenement) {
+            $query->whereHas('evenement', fn ($q) => $q->where('type_evenement', $typeEvenement));
+        }
+    }
+
+    // Ventes (tickets + montant) par jour/semaine
+    private function getVentesParJour(string $periode, ?string $dateDebut, ?string $dateFin, ?string $operateur, ?string $typeEvenement): array
+    {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
+        $tickets = Ticket::where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
+        $this->filtrerTickets($tickets, $operateur, $typeEvenement);
+
+        $ticketsParJour = (clone $tickets)
+            ->selectRaw('DATE(date_achat) as jour, COUNT(*) as nb, SUM(montant) as montant')
+            ->groupBy('jour')
+            ->pluck('nb', 'jour');
+        $montantsParJour = (clone $tickets)
+            ->selectRaw('DATE(date_achat) as jour, SUM(montant) as montant')
+            ->groupBy('jour')
+            ->pluck('montant', 'jour');
+
+        return $this->genererPoints($start, $end)->map(fn ($jour) => [
+            'date' => $jour->isoFormat('D MMM'),
+            'tickets' => (int) ($ticketsParJour[$jour->format('Y-m-d')] ?? 0),
+            'montant' => (float) ($montantsParJour[$jour->format('Y-m-d')] ?? 0),
+        ])->values()->all();
+    }
+
+    // Revenus cumulés par jour/semaine
+    private function getRevenusCumulesParJour(string $periode, ?string $dateDebut, ?string $dateFin, ?string $operateur, ?string $typeEvenement): array
+    {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
+        $tickets = Ticket::where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
+        $this->filtrerTickets($tickets, $operateur, $typeEvenement);
+
+        $montantsParJour = (clone $tickets)
+            ->selectRaw('DATE(date_achat) as jour, SUM(montant) as montant')
+            ->groupBy('jour')
+            ->pluck('montant', 'jour');
+
+        $cumul = 0.0;
+        return $this->genererPoints($start, $end)->map(function ($jour) use (&$cumul, $montantsParJour) {
+            $cumul += (float) ($montantsParJour[$jour->format('Y-m-d')] ?? 0);
+            return ['date' => $jour->isoFormat('D MMM'), 'montant' => round($cumul, 2)];
+        })->values()->all();
+    }
+
+    // Taux de réussite des paiements par jour/semaine
+    private function getTauxReussiteParJour(string $periode, ?string $dateDebut, ?string $dateFin, ?string $operateur, ?string $typeEvenement): array
+    {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
+        $paiements = Ticket::whereIn('statut_paiement', ['payé', 'échoué'])
+            ->whereBetween('date_achat', [$start, $end]);
+        $this->filtrerTickets($paiements, $operateur, $typeEvenement);
+
+        $paiementsParJour = (clone $paiements)
+            ->selectRaw('DATE(date_achat) as jour, COUNT(*) as nb, SUM(CASE WHEN statut_paiement = "payé" THEN 1 ELSE 0 END) as ok')
+            ->groupBy('jour')
+            ->get()
+            ->keyBy('jour');
+
+        return $this->genererPoints($start, $end)->map(function ($jour) use ($paiementsParJour) {
+            $key = $jour->format('Y-m-d');
+            $row = $paiementsParJour->get($key);
+            $nb = (int) ($row->nb ?? 0);
+            $ok = (int) ($row->ok ?? 0);
+            return ['date' => $jour->isoFormat('D MMM'), 'taux' => $nb > 0 ? round(($ok / $nb) * 100, 1) : 100.0];
+        })->values()->all();
+    }
+
+    // Nouveaux utilisateurs par jour/semaine
+    private function getUtilisateursParJour(string $periode, ?string $dateDebut, ?string $dateFin): array
+    {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
+        $parJour = User::whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as jour, COUNT(*) as nb')
+            ->groupBy('jour')
+            ->pluck('nb', 'jour');
+
+        return $this->genererPoints($start, $end)->map(fn ($jour) => [
+            'date' => $jour->isoFormat('D MMM'),
+            'nb' => (int) ($parJour[$jour->format('Y-m-d')] ?? 0),
+        ])->values()->all();
+    }
+
+    // Scans par jour/semaine
+    private function getScansParJour(string $periode, ?string $dateDebut, ?string $dateFin): array
+    {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
+        $parJour = Log::where('type_operation', 'scan')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as jour, COUNT(*) as nb')
+            ->groupBy('jour')
+            ->pluck('nb', 'jour');
+
+        return $this->genererPoints($start, $end)->map(fn ($jour) => [
+            'date' => $jour->isoFormat('D MMM'),
+            'nb' => (int) ($parJour[$jour->format('Y-m-d')] ?? 0),
+        ])->values()->all();
+    }
+
+    // Top événements par ventes sur une période
+    private function getTopEvenements(string $periode, ?string $dateDebut, ?string $dateFin, ?string $operateur, ?string $typeEvenement): \Illuminate\Support\Collection
+    {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
+        $query = Evenement::withCount(['tickets as tickets_vendus' => function ($q) use ($start, $end, $operateur, $typeEvenement) {
+            $q->where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
             if ($operateur) {
-                $query->where(function ($sub) use ($operateur) {
+                $q->where(function ($sub) use ($operateur) {
                     if ($operateur === 'especes') {
                         $sub->whereIn('methode_paiement', ['cash', 'especes']);
                     } elseif ($operateur === 'bancaire') {
@@ -308,76 +462,27 @@ class SuperAdminController extends Controller
                     }
                 });
             }
-            if ($typeEvenement) {
-                $query->whereHas('evenement', fn ($q) => $q->where('type_evenement', $typeEvenement));
-            }
-        };
+        }])
+            ->where('statut', 'publié')
+            ->orderByDesc('tickets_vendus')
+            ->limit(10)
+            ->get();
 
-        // Requêtes agrégées par période
-        $tickets = Ticket::where('statut_paiement', 'payé')
-            ->whereBetween('date_achat', [$start, $end]);
-        $filtrerTickets($tickets);
-        $ticketsParJour = (clone $tickets)
-            ->selectRaw('DATE(date_achat) as jour, COUNT(*) as nb, SUM(montant) as montant')
-            ->groupBy('jour')
-            ->pluck('nb', 'jour');
-
-        $montantsParJour = (clone $tickets)
-            ->selectRaw('DATE(date_achat) as jour, SUM(montant) as montant')
-            ->groupBy('jour')
-            ->pluck('montant', 'jour');
-
-        $utilisateursParJour = User::whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as jour, COUNT(*) as nb')
-            ->groupBy('jour')
-            ->pluck('nb', 'jour');
-
-        $scansParJour = Log::where('type_operation', 'scan')
-            ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as jour, COUNT(*) as nb')
-            ->groupBy('jour')
-            ->pluck('nb', 'jour');
-
-        // Taux de réussite : payé / (payé + échoué) par jour
-        $paiementsParJour = Ticket::whereIn('statut_paiement', ['payé', 'échoué'])
-            ->whereBetween('date_achat', [$start, $end])
-            ->selectRaw('DATE(date_achat) as jour, COUNT(*) as nb, SUM(CASE WHEN statut_paiement = "payé" THEN 1 ELSE 0 END) as ok')
-            ->groupBy('jour')
-            ->get()
-            ->keyBy('jour');
-
-        $ventes = [];
-        $revenusCumules = [];
-        $utilisateurs = [];
-        $scans = [];
-        $tauxReussite = [];
-        $cumul = 0.0;
-
-        foreach ($jours as $jour) {
-            $key = $jour->format('Y-m-d');
-            $ventes[] = ['date' => $jour->isoFormat('D MMM'), 'tickets' => (int) ($ticketsParJour[$key] ?? 0), 'montant' => (float) ($montantsParJour[$key] ?? 0)];
-            $cumul += (float) ($montantsParJour[$key] ?? 0);
-            $revenusCumules[] = ['date' => $jour->isoFormat('D MMM'), 'montant' => round($cumul, 2)];
-            $utilisateurs[] = ['date' => $jour->isoFormat('D MMM'), 'nb' => (int) ($utilisateursParJour[$key] ?? 0)];
-            $scans[] = ['date' => $jour->isoFormat('D MMM'), 'nb' => (int) ($scansParJour[$key] ?? 0)];
-            $row = $paiementsParJour->get($key);
-            $nb = (int) ($row->nb ?? 0);
-            $ok = (int) ($row->ok ?? 0);
-            $tauxReussite[] = ['date' => $jour->isoFormat('D MMM'), 'taux' => $nb > 0 ? round(($ok / $nb) * 100, 1) : 100.0];
-        }
-
-        return [
-            'ventes' => $ventes,
-            'revenus_cumules' => $revenusCumules,
-            'utilisateurs' => $utilisateurs,
-            'scans' => $scans,
-            'taux_reussite' => $tauxReussite,
-        ];
+        return $query->map(function ($e) {
+            $remplissage = $e->capacite > 0 ? round(($e->tickets_vendus / $e->capacite) * 100) : 0;
+            return [
+                'titre' => $e->titre,
+                'tickets' => $e->tickets_vendus,
+                'remplissage' => $remplissage,
+            ];
+        });
     }
 
     // Répartition des paiements mobiles par opérateur (MTN / Moov / Celtiis / Autres)
-    private function getRepartitionReseaux(Carbon $start, Carbon $end, ?string $operateur, ?string $typeEvenement): array
+    private function getRepartitionReseaux(string $periode, ?string $dateDebut, ?string $dateFin, ?string $operateur, ?string $typeEvenement): array
     {
+        [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
+
         $base = Ticket::where('statut_paiement', 'payé')
             ->whereBetween('date_achat', [$start, $end]);
 
@@ -1183,7 +1288,7 @@ class SuperAdminController extends Controller
     // Approuve un organisateur et lui envoie un email de confirmation
     public function approuverOrganisateur(User $user)
     {
-        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_apportees'])) {
             return back()->with('error', 'Action non autorisée.'); // Statut inapproprié
         }
 
@@ -1204,7 +1309,7 @@ class SuperAdminController extends Controller
     // Rejette un organisateur avec motif et notification
     public function rejeterOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 
@@ -1227,7 +1332,7 @@ class SuperAdminController extends Controller
     // Demande des corrections sur le profil d'un organisateur
     public function demanderCorrectionsOrganisateur(Request $request, User $user)
     {
-        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees'])) {
+        if ($user->role !== 'admin' || ! in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees'])) {
             return back()->with('error', 'Action non autorisée.');
         }
 

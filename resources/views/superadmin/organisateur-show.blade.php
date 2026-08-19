@@ -21,8 +21,8 @@
                 <h5 class="fw-bold">{{ $user->nom }}</h5>
                 <p class="text-muted small mb-2">{{ $user->email }}</p>
                 @php
-                    $badgeMap = ['actif' => 'success', 'bloque' => 'danger', 'rejete' => 'danger', 'en_attente' => 'warning', 'corrections_demandees' => 'warning', 'incomplet' => 'secondary'];
-                    $labelMap = ['actif' => 'Actif', 'bloque' => 'Bloqué', 'rejete' => 'Rejeté', 'en_attente' => 'En attente', 'corrections_demandees' => 'Corrections demandées', 'incomplet' => 'Incomplet'];
+                    $badgeMap = ['actif' => 'success', 'bloque' => 'danger', 'rejete' => 'danger', 'en_attente' => 'warning', 'corrections_demandees' => 'warning', 'corrections_apportees' => 'info', 'incomplet' => 'secondary'];
+                    $labelMap = ['actif' => 'Actif', 'bloque' => 'Bloqué', 'rejete' => 'Rejeté', 'en_attente' => 'En attente', 'corrections_demandees' => 'Corrections demandées', 'corrections_apportees' => 'Corrections apportées', 'incomplet' => 'Incomplet'];
                 @endphp
                 <span class="sa-badge sa-badge-{{ $badgeMap[$user->statut] ?? 'secondary' }} mb-2">
                     {{ $labelMap[$user->statut] ?? ucfirst($user->statut) }}
@@ -425,7 +425,7 @@
         </div>
         <div class="sa-card-body">
             <div class="d-flex flex-wrap gap-2 mb-3">
-                @if(in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees']))
+                @if(in_array($user->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees']))
                     <form action="{{ route('superadmin.organisateurs.approuver', $user) }}" method="POST" onsubmit="return confirm('Approuver {{ $user->nom }} ?')">
                         @csrf
                         <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-check-lg"></i> Approuver</button>

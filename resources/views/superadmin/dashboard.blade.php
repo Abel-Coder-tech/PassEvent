@@ -9,7 +9,7 @@
     <div class="col-12">
         <div class="sa-card">
             <div class="sa-card-body py-3">
-                <form action="{{ route('superadmin.dashboard') }}" method="GET" class="row g-2 align-items-end">
+                <form id="sa_filter_form" action="{{ route('superadmin.dashboard') }}" method="GET" class="row g-2 align-items-end">
                     <div class="col-6 col-md-3 col-lg-2">
                         <label class="sa-label">Période</label>
                         <select name="periode" class="sa-form-control sa-form-control-sm" id="sa_periode" onchange="togglePerso(this.value)">
@@ -133,8 +133,18 @@
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
         <div class="sa-card">
-            <div class="sa-card-header">
-                <span><i class="bi bi-graph-up me-2" style="color: var(--sa-primary);"></i>Ventes et revenus ({{ $periodeLabel }})</span>
+            <div class="sa-card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                <span><i class="bi bi-graph-up me-2" style="color: var(--sa-primary);"></i>Ventes et revenus</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.72rem;">Période</span>
+                    <select name="periode_ventes" form="sa_filter_form" class="sa-form-control sa-form-control-sm" style="width:auto;min-width:110px;" onchange="this.form.submit()">
+                        <option value="7" {{ $periodeVentes === '7' ? 'selected' : '' }}>7 jours</option>
+                        <option value="30" {{ $periodeVentes === '30' || $periodeVentes === '' ? 'selected' : '' }}>30 jours</option>
+                        <option value="90" {{ $periodeVentes === '90' ? 'selected' : '' }}>90 jours</option>
+                        <option value="mois" {{ $periodeVentes === 'mois' ? 'selected' : '' }}>Ce mois-ci</option>
+                        <option value="perso" {{ $periodeVentes === 'perso' ? 'selected' : '' }}>Personnalisée</option>
+                    </select>
+                </div>
             </div>
             <div class="sa-card-body">
                 <div class="chart-container"><canvas id="ventesChart"></canvas></div>
@@ -143,8 +153,18 @@
     </div>
     <div class="col-lg-4">
         <div class="sa-card">
-            <div class="sa-card-header">
+            <div class="sa-card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <span><i class="bi bi-pie-chart-fill me-2" style="color: var(--sa-primary);"></i>Répartition par réseau</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.72rem;">Période</span>
+                    <select name="periode_reseaux" form="sa_filter_form" class="sa-form-control sa-form-control-sm" style="width:auto;min-width:110px;" onchange="this.form.submit()">
+                        <option value="7" {{ $periodeReseaux === '7' ? 'selected' : '' }}>7 jours</option>
+                        <option value="30" {{ $periodeReseaux === '30' || $periodeReseaux === '' ? 'selected' : '' }}>30 jours</option>
+                        <option value="90" {{ $periodeReseaux === '90' ? 'selected' : '' }}>90 jours</option>
+                        <option value="mois" {{ $periodeReseaux === 'mois' ? 'selected' : '' }}>Ce mois-ci</option>
+                        <option value="perso" {{ $periodeReseaux === 'perso' ? 'selected' : '' }}>Personnalisée</option>
+                    </select>
+                </div>
             </div>
             <div class="sa-card-body">
                 <div class="chart-container"><canvas id="reseauxChart"></canvas></div>
@@ -164,8 +184,18 @@
 <div class="row g-3 mb-4">
     <div class="col-lg-6">
         <div class="sa-card">
-            <div class="sa-card-header">
-                <span><i class="bi bi-cash-coin me-2" style="color: var(--sa-success);"></i>Revenus cumulés ({{ $periodeLabel }})</span>
+            <div class="sa-card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                <span><i class="bi bi-cash-coin me-2" style="color: var(--sa-success);"></i>Revenus cumulés</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.72rem;">Période</span>
+                    <select name="periode_cumules" form="sa_filter_form" class="sa-form-control sa-form-control-sm" style="width:auto;min-width:110px;" onchange="this.form.submit()">
+                        <option value="7" {{ $periodeCumules === '7' ? 'selected' : '' }}>7 jours</option>
+                        <option value="30" {{ $periodeCumules === '30' || $periodeCumules === '' ? 'selected' : '' }}>30 jours</option>
+                        <option value="90" {{ $periodeCumules === '90' ? 'selected' : '' }}>90 jours</option>
+                        <option value="mois" {{ $periodeCumules === 'mois' ? 'selected' : '' }}>Ce mois-ci</option>
+                        <option value="perso" {{ $periodeCumules === 'perso' ? 'selected' : '' }}>Personnalisée</option>
+                    </select>
+                </div>
             </div>
             <div class="sa-card-body">
                 <div class="chart-container"><canvas id="revenusCumulesChart"></canvas></div>
@@ -174,8 +204,18 @@
     </div>
     <div class="col-lg-6">
         <div class="sa-card">
-            <div class="sa-card-header">
-                <span><i class="bi bi-check-circle me-2" style="color: #27ae60;"></i>Taux de réussite des paiements ({{ $periodeLabel }})</span>
+            <div class="sa-card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                <span><i class="bi bi-check-circle me-2" style="color: #27ae60;"></i>Taux de réussite des paiements</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.72rem;">Période</span>
+                    <select name="periode_taux" form="sa_filter_form" class="sa-form-control sa-form-control-sm" style="width:auto;min-width:110px;" onchange="this.form.submit()">
+                        <option value="7" {{ $periodeTaux === '7' ? 'selected' : '' }}>7 jours</option>
+                        <option value="30" {{ $periodeTaux === '30' || $periodeTaux === '' ? 'selected' : '' }}>30 jours</option>
+                        <option value="90" {{ $periodeTaux === '90' ? 'selected' : '' }}>90 jours</option>
+                        <option value="mois" {{ $periodeTaux === 'mois' ? 'selected' : '' }}>Ce mois-ci</option>
+                        <option value="perso" {{ $periodeTaux === 'perso' ? 'selected' : '' }}>Personnalisée</option>
+                    </select>
+                </div>
             </div>
             <div class="sa-card-body">
                 <div class="chart-container"><canvas id="tauxReussiteChart"></canvas></div>
@@ -187,8 +227,18 @@
 <div class="row g-3 mb-4">
     <div class="col-lg-6">
         <div class="sa-card">
-            <div class="sa-card-header">
-                <span><i class="bi bi-person-plus-fill me-2" style="color: var(--sa-primary);"></i>Nouveaux utilisateurs / scans par jour</span>
+            <div class="sa-card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                <span><i class="bi bi-person-plus-fill me-2" style="color: var(--sa-primary);"></i>Nouveaux utilisateurs / scans</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.72rem;">Période</span>
+                    <select name="periode_activite" form="sa_filter_form" class="sa-form-control sa-form-control-sm" style="width:auto;min-width:110px;" onchange="this.form.submit()">
+                        <option value="7" {{ $periodeActivite === '7' ? 'selected' : '' }}>7 jours</option>
+                        <option value="30" {{ $periodeActivite === '30' || $periodeActivite === '' ? 'selected' : '' }}>30 jours</option>
+                        <option value="90" {{ $periodeActivite === '90' ? 'selected' : '' }}>90 jours</option>
+                        <option value="mois" {{ $periodeActivite === 'mois' ? 'selected' : '' }}>Ce mois-ci</option>
+                        <option value="perso" {{ $periodeActivite === 'perso' ? 'selected' : '' }}>Personnalisée</option>
+                    </select>
+                </div>
             </div>
             <div class="sa-card-body">
                 <div class="chart-container"><canvas id="activiteChart"></canvas></div>
@@ -197,8 +247,18 @@
     </div>
     <div class="col-lg-6">
         <div class="sa-card">
-            <div class="sa-card-header">
+            <div class="sa-card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <span><i class="bi bi-trophy-fill me-2" style="color: var(--sa-warning);"></i>Top événements</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size:0.72rem;">Période</span>
+                    <select name="periode_top" form="sa_filter_form" class="sa-form-control sa-form-control-sm" style="width:auto;min-width:110px;" onchange="this.form.submit()">
+                        <option value="7" {{ $periodeTop === '7' ? 'selected' : '' }}>7 jours</option>
+                        <option value="30" {{ $periodeTop === '30' || $periodeTop === '' ? 'selected' : '' }}>30 jours</option>
+                        <option value="90" {{ $periodeTop === '90' ? 'selected' : '' }}>90 jours</option>
+                        <option value="mois" {{ $periodeTop === 'mois' ? 'selected' : '' }}>Ce mois-ci</option>
+                        <option value="perso" {{ $periodeTop === 'perso' ? 'selected' : '' }}>Personnalisée</option>
+                    </select>
+                </div>
             </div>
             <div class="sa-card-body">
                 <div class="chart-container"><canvas id="topEvenementsChart"></canvas></div>

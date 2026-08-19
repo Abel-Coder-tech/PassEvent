@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RegistrationAdminNotification;
+use App\Models\Message;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class InscriptionController extends Controller
@@ -183,11 +186,23 @@ class InscriptionController extends Controller
             return redirect()->route('dashboard')->with('error', 'Action non autorisée.');
         }
 
-        $user->update(['statut' => 'en_attente']);
+        $etaitEnCorrections = $user->statut === 'corrections_demandees';
+
+        $user->update(['statut' => $etaitEnCorrections ? 'corrections_apportees' : 'en_attente']);
 
         $superAdmins = User::where('role', 'super_admin')->get();
         foreach ($superAdmins as $sa) {
             Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
+            if ($etaitEnCorrections) {
+                Message::create([
+                    'user_id' => null,
+                    'nom_complet' => $user->nom,
+                    'email' => $user->email,
+                    'objet' => 'Corrections apportées - ' . ($user->nom ?? 'organisateur'),
+                    'message' => "{$user->nom} a apporté les corrections demandées à son profil et attend une nouvelle validation.\n\nConnectez-vous pour valider son compte.",
+                    'lu' => false,
+                ]);
+            }
         }
 
         return redirect()->route('dashboard')->with('success', 'Votre profil a été soumis à nouveau pour validation.');

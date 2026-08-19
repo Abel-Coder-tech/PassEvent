@@ -19,7 +19,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // Redirige vers page d'attente si le profil n'est pas validé
-        if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees' && $user->statut !== 'bloque') {
+        if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees' && $user->statut !== 'corrections_apportees' && $user->statut !== 'bloque') {
             $message = '';
             if ($user->statut === 'en_attente') {
                 $message = 'Votre profil est en cours de validation par notre équipe..';
@@ -30,6 +30,13 @@ class DashboardController extends Controller
             }
 
             return view('dashboard-pending', ['message' => $message, 'statut' => $user->statut]);
+        }
+
+        if ($user->statut === 'corrections_apportees') {
+            return view('dashboard-pending', [
+                'message' => 'Vos corrections ont été enregistrées et sont en cours de validation par notre équipe.',
+                'statut' => $user->statut,
+            ]);
         }
 
         $evenements = Evenement::where('user_id', $user->id)->get();

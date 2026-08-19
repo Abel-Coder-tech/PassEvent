@@ -46,7 +46,7 @@ class GoogleAuthController extends Controller
 
         if ($existing) {
             // Connexion automatique si le compte existe déjà
-            if (in_array($existing->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'bloque'])) {
+            if (in_array($existing->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees', 'bloque'])) {
                 Auth::login($existing, true);
                 request()->session()->regenerate();
                 return redirect()->intended(route('dashboard'));
