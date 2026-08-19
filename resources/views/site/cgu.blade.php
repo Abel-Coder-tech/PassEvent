@@ -38,15 +38,9 @@
                                 <li><strong>Ticket :</strong> le titre d'accès numérique généré après paiement</li>
                             </ul>
 
-                            <h6 class="fw-bold mt-4 mb-2">3. Achat de tickets</h6>
-                            <ul>
-                                <li>Les tickets sont achetés en ligne et en physique exclusivement via la plateforme</li>
-                                <li>Le paiement est effectué principalement en ligne via mobile money ou carte bancaire ou en espèce auprès d'organisateur ou d'agent de vente accrédité par l'organisateur</li>
-                                <li>Un ticket est émis uniquement après confirmation du paiement</li>
-                                <li>Les tickets contiennent un QR code unique au porteur à garder jalousement et à ne jamais partager avec un tiers</li>
-                                <li>Un ticket ne peut être utilisé qu'une seule fois</li>
-                                <li>La vente ou la revente des tickets hors les outils proposés directement sur la plateforme est proscrite</li>
-                            </ul>
+                            <h6 class="fw-bold mt-4 mb-2">3. Achat de codes QR</h6>
+                            <p>Pour sécuriser le contrôle d'accès des billets physiques et prévenir les risques de falsification ou de duplication par photocopie, l'Organisateur peut souscrire au service de génération de codes QR uniques, à intégrer au visuel avant impression ou à apposer ultérieurement.</p>
+                            <p>Les codes QR sont émis après paiement sous forme de document dans le tableau de bord ou par mail de l'organisateur. Chaque QR code étant unique et valable pour une seule entrée à l'événement concerné.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">4. Prix et paiement</h6>
                             <ul>
@@ -70,7 +64,7 @@
 
                             <h6 class="fw-bold mt-4 mb-2">7. Utilisation acceptable</h6>
                             <ul>
-                                <li><strong>Accès au service :</strong> La plateforme PaxEvent permet de consulter les événements disponibles, de s'inscrire ou d'acheter des billets électroniques (e-tickets). L'accès à la plateforme est gratuit, les frais d'équipement et de connexion internet étant à la charge exclusive de l'utilisateur.</li>
+                                <li><strong>Accès au service :</strong> La plateforme PaxEvent permet de consulter les événements disponibles, de s'inscrire ou d'acheter des billets électroniques (e-tickets) ou des codes QR. L'accès à la plateforme est gratuit, les frais d'équipement et de connexion internet étant à la charge exclusive de l'utilisateur.</li>
                                 <li><strong>Inscription et compte :</strong> Pour créer et gérer des événements, l'organisateur doit créer un compte en fournissant des informations exactes. Le compte est personnel et non transférable.</li>
                                 <li><strong>Éligibilité :</strong> L'utilisation est soumise à la capacité juridique de contracter en ligne, conformément aux lois en vigueur au Bénin.</li>
                                 <li><strong>Sécurité :</strong> Vous êtes seul responsable de la confidentialité de vos identifiants et de l'exactitude des informations fournies.</li>
@@ -99,25 +93,25 @@
                             <p><strong>9.1. Inscription, profil et validation</strong></p>
                             <ul>
                                 <li>La création de compte organisateur se fait via email ou compte Google.</li>
-                                <li>L'organisateur doit soumettre son profil (Particulier, Université, Entreprise, ONG) accompagné des justificatifs requis (CIP, IFU, RCCM ou Récépissé). Un délai de 24 heures est requis pour l'approbation du profil par l'équipe PaxEvent avant de pouvoir publier un événement.</li>
+                                <li>L'organisateur doit soumettre son profil (Particulier, Université, Entreprise, ONG) accompagné des justificatifs requis (CIP, IFU, RCCM ou Récépissé). Un délai de 06 heures est requis pour l'approbation du profil par l'équipe PaxEvent avant de pouvoir publier un événement.</li>
                             </ul>
                             <p><strong>9.2. Tarifs et commissions de PaxEvent</strong></p>
                             <ul>
                                 <li>Événements gratuits : L'accès à la plateforme et la billetterie à 0 FCFA sont 100% gratuits (sans commission, sous réserve de quotas).</li>
-                                <li>Événements payants : PaxEvent prélève une commission automatique de 10% sur chaque ticket vendu.</li>
+                                <li>Événements payants : En contrepartie du service de billetterie, de gestion des transactions et de maintenance, PaxEvent perçoit une commission sur chaque billet vendu. Les modalités de cette commission sont fixées par contrat de partenariat individuel avec l'Organisateur. Cependant le maximum percu sur chaque ticket est de 10%.</li>
+                                <li>Pour la Génération de codes QR pour les tickets physiques, PaxEvent prélève une commission de 5% sur chaque ticket vendu.</li>
                                 <li>Les services additionnels (campagnes marketing SMS/WhatsApp/Mail, terminaux physiques, agents supplémentaires) font l'objet d'une facturation à la demande.</li>
                             </ul>
                             <p><strong>9.3. Gestion du personnel et des ventes sur place</strong></p>
                             <ul>
-                                <li>L'organisateur dispose de 02 comptes agents gratuits non cumulables (Rôle unique par événement : Agent de Scan pour le contrôle ou Agent de Vente pour la billetterie physique). L'ajout d'agents supplémentaires est payant.</li>
-                                <li>Possibilité d'émettre des tickets depuis le tableau de bord (organisateur ou agent de vente) et d'encaisser par mobile money ou en espèces. Néanmoins, le règlement en espèces n'est autorisé que si au moins 15% des places totales de l'événement ont préalablement été vendues en ligne (via Mobile Money).</li>
-                                <li>L'organisateur et ses agents de scan s'engagent à n'utiliser la caméra de l'application que pour contrôler les tickets de leurs propres événements.</li>
+                                <li>L'organisateur dispose de 02 comptes agents gratuits non cumulables (Rôle unique par événement : Agent de Scan pour le contrôle ou Agent de Vente pour la billetterie physique). L'ajout d'agents supplémentaires est gratuit.</li>
                             </ul>
                             <p><strong>9.4. Reversement des revenus</strong></p>
                             <ul>
-                                <li>Retrait standard : Les revenus des ventes (nets de commission) sont versés à l'organisateur dans un délai de 24h à 72h après la tenue de l'événement.</li>
+                                <li>Retrait standard : Les recettes nettes issues des ventes de billets (déduction faite des commissions de PaxEvent) sont reversées à l'Organisateur dans un délai de 24h à 72h après la tenue de l'événement.</li>
                                 <li>Retrait anticipé : L'organisateur peut demander un retrait des fonds disponibles avant l'événement (traitement sous 4 jours ouvrés), sous réserve d'un solde minimum disponible de 1 000 FCFA.</li>
                                 <li>Blocage de sécurité : Tout retrait anticipé bloque la possibilité d'annuler l'événement via la plateforme. Dès qu'un retrait par anticipation est validé, l'organisateur ne peut plus annuler son événement. En cas de force majeure l'obligeant à annuler, l'organisateur devra assumer seul la responsabilité juridique et financière du remboursement intégral des acheteurs.</li>
+                                <li>De même, PaxEvent se réserve le droit de geler les fonds en cas de suspicion légitime de fraude ou de réclamation massive des Acheteurs.</li>
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">10. Acceptation de la nature des billets</h6>
@@ -159,13 +153,20 @@
                                 <li>Du manque à gagner de l'Organisateur en cas de dysfonctionnement temporaire de la plateforme indépendant de sa volonté.</li>
                             </ul>
 
-                            <h6 class="fw-bold mt-4 mb-2">14. Modification des CGU</h6>
+                            <h6 class="fw-bold mt-4 mb-2">14. Force majeure et sécurité des réseaux</h6>
+                            <p>PaxEvent ne pourra être tenu responsable de la non-exécution ou du retard dans l'exécution de l'une de ses obligations si cet échec découle d'un cas de force majeure, tel que défini par la jurisprudence et la législation béninoise.</p>
+                            <ul>
+                                <li><strong>Événements déclencheurs :</strong> Sont expressément considérés comme cas de force majeure : les catastrophes naturelles, les incendies, les grèves totales ou partielles, les décisions ou interdictions préfectorales et gouvernementales, les insurrections, ainsi que les pannes générales d'électricité (coupures nationales/délestages prolongés), les interruptions majeures des réseaux de télécommunication (coupures de câbles sous-marins de fibre optique ou blocage des serveurs des opérateurs MTN/Moov/Celtiis).</li>
+                                <li><strong>Suspension des obligations :</strong> La survenance d'un tel événement suspend immédiatement les obligations de PaxEvent pour toute la durée de la perturbation. PaxEvent mettra en œuvre tous les efforts raisonnables pour rétablir l'accès à la plateforme dès la cessation de l'événement de force majeure.</li>
+                            </ul>
+
+                            <h6 class="fw-bold mt-4 mb-2">15. Modification des CGU</h6>
                             <p>PaxEvent se réserve le droit de modifier les présentes CGU à tout moment afin de les adapter aux évolutions techniques ou réglementaires du droit béninois. Les modifications entrent en vigueur dès leur publication en ligne sur le site.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">15. Loi applicable et juridiction</h6>
+                            <h6 class="fw-bold mt-4 mb-2">16. Loi applicable et juridiction</h6>
                             <p>Les présentes CGU sont régies par le droit béninois. En cas de litige, les tribunaux compétents sont ceux du Bénin.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">16. Contact</h6>
+                            <h6 class="fw-bold mt-4 mb-2">17. Contact</h6>
                             <p>Pour toute question relative à l'utilisation de la plateforme, à l'achat de tickets d'événements, ou à l'application des présentes conditions générales d'utilisation et de vente, vous pouvez nous contacter :</p>
                             <ul>
                                 <li>Email : <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
