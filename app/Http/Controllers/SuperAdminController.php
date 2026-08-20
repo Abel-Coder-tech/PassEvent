@@ -1375,7 +1375,8 @@ class SuperAdminController extends Controller
             'ip' => request()->ip(),
         ]);
 
-        return back()->with('success', "Organisateur {$user->nom} supprimé définitivement.");
+        return redirect()->route('superadmin.organisateurs')
+            ->with('success', "Organisateur {$user->nom} supprimé définitivement.");
     }
 
     // Envoie un email personnalisé à un organisateur

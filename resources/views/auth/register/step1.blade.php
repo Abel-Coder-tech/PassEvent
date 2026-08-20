@@ -86,13 +86,6 @@
     }
     </script>
 
-    <div class="mb-3">
-        <label class="form-label">Photo de profil <span class="text-muted fw-normal">(optionnel)</span></label>
-        <input type="file" name="avatar" class="form-control @error('avatar') is-invalid @enderror" accept="image/*">
-        <div class="form-text">Formats acceptés : JPG, PNG. Max 2 Mo.</div>
-        @error('avatar') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
     <button type="submit" class="btn-primary">Créer mon compte</button>
     <a href="{{ route('inscriptions.organisateur') }}" class="btn-secondary">Précédent</a>
 </form>
