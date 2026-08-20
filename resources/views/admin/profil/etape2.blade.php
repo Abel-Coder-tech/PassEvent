@@ -32,6 +32,13 @@
     .toggle-btn input { display: none; }
     .doc-info { background: #f8f6f9; border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.82rem; color: #495057; }
     .doc-info i { color: #542680; margin-right: 0.35rem; }
+    @media (max-width: 575.98px) {
+        .type-card { padding: 0.9rem 0.4rem; }
+        .type-card .icon { font-size: 1.15rem; }
+        .type-card .name { font-size: 0.72rem; }
+        .type-card .desc { font-size: 0.6rem; }
+        .wizard-card { padding: 1rem; }
+    }
 </style>
 <div class="page-content">
     <div class="wizard-card">
@@ -55,7 +62,7 @@
         <form method="POST" action="{{ route('profil.post-step2') }}" enctype="multipart/form-data">
             @csrf
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
+                <div class="col-4">
                     <label class="type-card @if(old('type', $type) === 'universitaire') selected @endif" onclick="selectType(this, 'universitaire')">
                         <div class="icon"><i class="bi bi-mortarboard-fill"></i></div>
                         <div class="name">Universitaire</div>
@@ -63,7 +70,7 @@
                         <input type="radio" name="type" value="universitaire" @if(old('type', $type) === 'universitaire') checked @endif required>
                     </label>
                 </div>
-                <div class="col-md-4">
+                <div class="col-4">
                     <label class="type-card @if(old('type', $type) === 'particulier') selected @endif" onclick="selectType(this, 'particulier')">
                         <div class="icon"><i class="bi bi-person"></i></div>
                         <div class="name">Particulier</div>
@@ -71,7 +78,7 @@
                         <input type="radio" name="type" value="particulier" @if(old('type', $type) === 'particulier') checked @endif required>
                     </label>
                 </div>
-                <div class="col-md-4">
+                <div class="col-4">
                     <label class="type-card @if(old('type', $type) === 'organisation') selected @endif" onclick="selectType(this, 'organisation')">
                         <div class="icon"><i class="bi bi-building"></i></div>
                         <div class="name">Organisation</div>
