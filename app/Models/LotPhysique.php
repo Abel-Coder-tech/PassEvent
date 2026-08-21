@@ -10,6 +10,9 @@ class LotPhysique extends Model
 {
     protected $table = 'lots_physiques';
 
+    // Taux de commission fixe et non négociable pour l'auto-génération
+    public const TAUX_AUTO = 5.0;
+
     protected $fillable = [
         'user_id',
         'evenement_id',
@@ -18,6 +21,11 @@ class LotPhysique extends Model
         'nom',
         'quantite',
         'statut',
+        'auto_genere',
+        'montant_commission',
+        'email_reception',
+        'fedapay_transaction_id',
+        'reference_paiement',
         'download_count',
         'transmis_at',
     ];
@@ -28,6 +36,8 @@ class LotPhysique extends Model
             'quantite' => 'integer',
             'download_count' => 'integer',
             'commission_pourcentage' => 'decimal:2',
+            'auto_genere' => 'boolean',
+            'montant_commission' => 'decimal:2',
             'transmis_at' => 'datetime',
         ];
     }
