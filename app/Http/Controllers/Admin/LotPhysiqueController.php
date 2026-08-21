@@ -270,12 +270,6 @@ class LotPhysiqueController extends Controller
                 ->with('error', 'Impossible de supprimer ce lot : des tickets ont déjà été scannés à l\'entrée.');
         }
 
-        // Commande en attente dont le paiement est à réconcilier : on ne supprime pas
-        if ($lot->statut === 'en_attente_paiement' && $lot->fedapay_transaction_id) {
-            return redirect()->route('admin.lots-physiques.index')
-                ->with('error', 'Impossible de supprimer cette commande : son paiement est en cours de vérification.');
-        }
-
         DB::transaction(function () use ($lot) {
             Ticket::where('lot_physique_id', $lot->id)->delete();
             $lot->delete();
