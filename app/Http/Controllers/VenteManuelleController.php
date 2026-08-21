@@ -84,7 +84,7 @@ class VenteManuelleController extends Controller
             'evenement_id' => 'required|exists:evenement,id',
             'nom_acheteur' => 'required|string|max:255',
             'telephone' => 'required|string|max:30',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255',
             'quantite' => 'required|integer|min:1|max:20',
             'code_promo' => 'nullable|string|max:50',
         ];
@@ -92,6 +92,7 @@ class VenteManuelleController extends Controller
             'evenement_id.required' => 'Veuillez sélectionner un événement.',
             'nom_acheteur.required' => 'Le nom de l\'acheteur est obligatoire.',
             'telephone.required' => 'Le numéro de téléphone est obligatoire.',
+            'email.required' => 'L\'adresse email est obligatoire.',
             'quantite.required' => 'La quantité est obligatoire.',
             'quantite.min' => 'La quantité doit être d\'au moins 1.',
             'quantite.max' => 'La quantité ne doit pas dépasser 20.',
@@ -105,11 +106,6 @@ class VenteManuelleController extends Controller
 
             if (Auth::user()->type === 'universitaire') {
                 $rules['categorie'] = 'nullable|string';
-            }
-
-            if ($request->methode_paiement !== 'especes') {
-                $rules['email'] = 'required|email|max:255'; // Email obligatoire pour paiement mobile
-                $messages['email.required'] = 'L\'email est obligatoire pour le paiement mobile.';
             }
 
             // Blocage espèces si seuil mobile money non atteint ou si bloqué par le superadmin

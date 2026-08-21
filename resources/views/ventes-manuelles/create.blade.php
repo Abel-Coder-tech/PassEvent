@@ -55,8 +55,8 @@
                                 <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 62 83 66 29" required>
                             </div>
                             <div class="col-12">
-                                <label for="email" class="form-label fw-semibold">Email <span class="text-muted fw-normal email-optional">(optionnel)</span><span class="text-danger email-required d-none">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="adja@email.com">
+<label for="email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+<input type="email" class="form-control" id="email" name="email" placeholder="adja@email.com" required>
                             </div>
                         </div>
                     </div>
@@ -269,9 +269,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateUI() {
         const mobile = isMobile();
 
-        document.querySelector('.email-optional').classList.toggle('d-none', mobile);
-        document.querySelector('.email-required').classList.toggle('d-none', !mobile);
-
         document.getElementById('btnLabel').textContent = mobile ? 'Payer via FedaPay' : 'Enregistrer la vente';
 
         document.getElementById('submitInfo').innerHTML = mobile
@@ -315,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
         const telOk = document.getElementById('telephone').value.trim() !== '';
-        const emailOk = !isMobile() || emailInput.value.trim() !== '';
+        const emailOk = emailInput.value.trim() !== '';
         btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && nomOk && telOk && emailOk);
     }
 
