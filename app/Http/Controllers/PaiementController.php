@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\LotAutoConfirme;
 use App\Mail\PaymentErrorAlert;
 use App\Mail\TicketEmail;
 use App\Models\AgentVente;
 use App\Models\CodePromo;
 use App\Models\Log as LogModel;
+use App\Models\LotPhysique;
 use App\Models\Ticket;
 use App\Services\FedapayService;
+use App\Services\LotAutoService;
 use App\Services\PaiementMapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -106,11 +109,17 @@ class PaiementController extends Controller
             $fallback = match ($source) {
                 'agent_vente' => route('agent-vente.dashboard'),
                 'vente_manuelle' => route('ventes-manuelles.create'),
+                'lot_physique' => route('admin.lots-physiques.index'),
                 default => route('paiement.show', $ticketId),
             };
 
             return redirect()->to($fallback)
                 ->with('error', 'Aucune transaction retournee par FedaPay.'); // Pas de transaction
+        }
+
+        // Commande de QR codes auto-générés : flux dédié (pas de ticket existant avant paiement)
+        if ($source === 'lot_physique') {
+            return $this->callbackLotPhysique($request, $transactionId);
         }
 
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
@@ -264,6 +273,83 @@ class PaiementController extends Controller
             ->with('success', 'Paiement confirme avec succes!');
     }
 
+    // Callback FedaPay d'une commande de QR codes auto-générés.
+    // Les tickets ne sont créés qu'ici, APRÈS vérification du paiement via l'API FedaPay.
+    private function callbackLotPhysique(Request $request, string $transactionId)
+    {
+        $reference = $request->query('reference');
+        $lots = LotPhysique::with('tarif')
+            ->where('reference_paiement', $reference)
+            ->where('auto_genere', true)
+            ->get();
+
+        if ($lots->isEmpty()) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Commande introuvable.');
+        }
+
+        // Déjà confirmé (par le webhook par exemple) : simple redirection
+        if ($lots->first()->statut !== 'en_attente_paiement') {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('success', 'Paiement déjà confirmé. Vos planches sont disponibles ci-dessous.');
+        }
+
+        // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance aux query params)
+        $txData = $this->fedapay->getTransaction($transactionId);
+        $status = $txData['status'] ?? null;
+
+        if (! $status || ! in_array($status, ['approved', 'completed', 'accepted'], true)) {
+            $definitif = $status && in_array(strtolower($status), ['declined', 'canceled', 'cancelled', 'cancel'], true);
+
+            FacadesLog::warning('FedaPay callback lot - status non approuvé via API', [
+                'reference' => $reference,
+                'transaction_id' => $transactionId,
+                'api_status' => $status,
+            ]);
+
+            // Échec définitif : on supprime la commande (les lots en attente n'ont aucun ticket).
+            // Statut indéterminé : on conserve pour réconciliation (le webhook vérifié confirmera si payé).
+            if ($definitif) {
+                LotPhysique::where('reference_paiement', $reference)->where('statut', 'en_attente_paiement')->delete();
+            } else {
+                LotPhysique::where('reference_paiement', $reference)->where('statut', 'en_attente_paiement')
+                    ->update(['fedapay_transaction_id' => $transactionId]);
+            }
+
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Le paiement n\'a pas pu etre verifie. Vous pouvez reessayer depuis « Generer mes QR codes ».');
+        }
+
+        // Sécurité : le montant payé doit correspondre à la commission totale de la commande
+        $montantAttendu = round((float) $lots->sum('montant_commission'), 2);
+        $montantTx = (float) ($txData['amount'] ?? 0);
+        if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
+            FacadesLog::warning('FedaPay callback lot - montant incohérent avec la commande', [
+                'reference' => $reference,
+                'transaction_id' => $transactionId,
+                'montant_attendu' => $montantAttendu,
+                'montant_transaction' => $montantTx,
+            ]);
+
+            return redirect()->route('admin.lots-physiques.checkout', $reference)
+                ->with('error', 'Le montant de la transaction ne correspond pas à votre commande.');
+        }
+
+        // Paiement vérifié : génération des tickets (idempotent)
+        $confirme = LotAutoService::confirmerLots($lots, $transactionId);
+
+        if ($confirme) {
+            try {
+                Mail::to($lots->first()->email_reception)->send(new LotAutoConfirme($lots));
+            } catch (\Exception $e) {
+                FacadesLog::error('Email lot auto non envoye : '.$e->getMessage());
+            }
+        }
+
+        return redirect()->route('admin.lots-physiques.index')
+            ->with('success', 'Paiement confirme ! Vos planches de QR codes sont pretes a telecharger.');
+    }
+
     // Webhook FedaPay : notification serveur à serveur
     public function webhook(Request $request)
     {
@@ -299,8 +385,22 @@ class PaiementController extends Controller
         // Référence externe envoyée au checkout (id du premier ticket du groupe)
         $externalRef = $tx['external_id'] ?? $data['external_id'] ?? null;
         $metadata = $tx['custom_metadata'] ?? $data['custom_metadata'] ?? [];
+        // Les metadata peuvent aussi venir des données API re-vérifiées
+        if (empty($metadata)) {
+            $metadata = $txData['custom_metadata'] ?? [];
+        }
         $metadataTicketId = $metadata['ticket_id'] ?? null;
         $metadataGroup = $metadata['group_transaction_id'] ?? null;
+
+        // Commande de QR codes auto-générés : flux dédié, traité AVANT toute recherche de ticket
+        // (aucun ticket n'existe encore tant que le paiement n'est pas confirmé)
+        $metadataType = $metadata['type'] ?? null;
+        if ($metadataType === 'lot_physique' || str_starts_with((string) $externalRef, 'LOTAUTO-')) {
+            $referenceLot = (string) ($metadata['reference'] ?? $externalRef);
+            $transactionIdPayload = (string) ($tx['id'] ?? $data['id'] ?? '');
+
+            return $this->webhookLotPhysique($txData, $referenceLot, $transactionIdPayload, $request);
+        }
 
         $ticket = null;
         if ($metadataTicketId) {
@@ -418,6 +518,78 @@ class PaiementController extends Controller
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
             } catch (\Exception $e) {
                 FacadesLog::error('Webhook - email ticket non envoyé : '.$e->getMessage());
+            }
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    // Webhook FedaPay d'une commande de QR codes auto-générés.
+    // Vérifie statut + montant via l'API, puis génère les tickets (idempotent).
+    private function webhookLotPhysique(array $txData, string $reference, string $transactionIdPayload, Request $request)
+    {
+        if ($reference === '') {
+            FacadesLog::warning('FedaPay webhook lot - reference manquante', ['transaction_id' => $txData['id'] ?? null]);
+
+            return response()->json(['status' => 'ignored', 'reason' => 'missing_reference']);
+        }
+
+        $lots = LotPhysique::with('tarif')
+            ->where('reference_paiement', $reference)
+            ->where('auto_genere', true)
+            ->get();
+
+        if ($lots->isEmpty()) {
+            FacadesLog::warning('FedaPay webhook lot - commande introuvable', [
+                'reference' => $reference,
+                'transaction_id' => $txData['id'] ?? null,
+            ]);
+
+            return response()->json(['status' => 'ok', 'warning' => 'lot_not_found']);
+        }
+
+        if ($lots->first()->statut !== 'en_attente_paiement') {
+            return response()->json(['status' => 'ok']); // Déjà traité via callback
+        }
+
+        // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance au webhook)
+        $verifiedStatus = $txData['status'] ?? null;
+        if (! $verifiedStatus || ! in_array($verifiedStatus, ['approved', 'completed', 'accepted'], true)) {
+            FacadesLog::warning('FedaPay webhook lot - status non approuvé via API', [
+                'reference' => $reference,
+                'api_status' => $verifiedStatus,
+            ]);
+
+            return response()->json(['status' => 'ignored', 'reason' => 'status_not_verified']);
+        }
+
+        // Sécurité : cohérence du montant payé avec la commission totale de la commande
+        $montantAttendu = round((float) $lots->sum('montant_commission'), 2);
+        $montantTx = (float) ($txData['amount'] ?? 0);
+        if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
+            FacadesLog::warning('FedaPay webhook lot - montant incohérent avec la commande', [
+                'reference' => $reference,
+                'montant_attendu' => $montantAttendu,
+                'montant_transaction' => $montantTx,
+            ]);
+
+            return response()->json(['status' => 'ignored', 'reason' => 'amount_mismatch']);
+        }
+
+        $transactionId = (string) ($txData['id'] ?? '') !== '' ? (string) $txData['id'] : $transactionIdPayload;
+        if ($transactionId === '') {
+            FacadesLog::warning('FedaPay webhook lot - id de transaction introuvable', ['reference' => $reference]);
+
+            return response()->json(['status' => 'ignored', 'reason' => 'missing_transaction_id']);
+        }
+
+        $confirme = LotAutoService::confirmerLots($lots, $transactionId);
+
+        if ($confirme) {
+            try {
+                Mail::to($lots->first()->email_reception)->send(new LotAutoConfirme($lots));
+            } catch (\Exception $e) {
+                FacadesLog::error('Webhook - email lot auto non envoye : '.$e->getMessage());
             }
         }
 

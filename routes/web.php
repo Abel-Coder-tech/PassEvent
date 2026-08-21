@@ -308,6 +308,9 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
 
         Route::prefix('lots-physiques')->name('lots-physiques.')->group(function () {
             Route::get('/', [AdminLotPhysiqueController::class, 'index'])->name('index');
+            Route::get('/generer', [AdminLotPhysiqueController::class, 'generer'])->name('generer');
+            Route::post('/commander', [AdminLotPhysiqueController::class, 'commander'])->name('commander');
+            Route::get('/paiement/{reference}', [AdminLotPhysiqueController::class, 'checkout'])->name('checkout');
             Route::get('/{lot}/telecharger', [AdminLotPhysiqueController::class, 'download'])->name('download');
         });
     });

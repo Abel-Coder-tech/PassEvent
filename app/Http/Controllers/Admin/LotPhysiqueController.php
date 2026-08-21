@@ -3,12 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\LotAutoConfirme;
 use App\Models\Evenement;
 use App\Models\LotPhysique;
+use App\Models\Tarif;
 use App\Models\Ticket;
+use App\Services\LotAutoService;
 use App\Services\LotPhysiquePdfService;
 use App\Support\PerPage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log as FacadesLog;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class LotPhysiqueController extends Controller
 {
@@ -38,21 +46,186 @@ class LotPhysiqueController extends Controller
         $nbScannes = (clone $ticketsPhysiques)->where('utilise', true)->count();
         $recettesPhysiques = (float) (clone $ticketsPhysiquesValides)->sum('montant');
 
-        // Commission attendue sur le physique : taux par lot si défini, sinon taux effectif de l'événement
+        // Commission attendue sur le physique (hors lots auto-générés : leur commission de 5 %
+        // est payée d'avance via FedaPay et n'a aucun rapport avec les stats financières)
         $lotsCharges = LotPhysique::where('user_id', $user->id)->get()->keyBy('id');
         $evenements = Evenement::whereIn('id', $evenementIds)->get()->keyBy('id');
         $commissionPhysique = 0.0;
         foreach ($ticketsPhysiquesValides->get() as $ticket) {
             $lot = $ticket->lot_physique_id ? $lotsCharges->get($ticket->lot_physique_id) : null;
+            if ($lot?->auto_genere) {
+                continue; // Commission déjà réglée à la génération
+            }
             $taux = $lot?->commissionEffective() ?? $evenements->get($ticket->evenement_id)?->commissionEffective() ?? 10;
             $commissionPhysique += (float) $ticket->montant * $taux / 100;
         }
         $commissionPhysique = round($commissionPhysique, 2);
 
+        // Commissions auto déjà payées (frais de génération 5 %, affiché dans ce seul dashboard).
+        // Seuls les lots transmis comptent : un paiement non confirmé n'est pas une commission payée.
+        $commissionAutoPayee = round(
+            (float) LotPhysique::where('user_id', $user->id)
+                ->where('auto_genere', true)
+                ->where('statut', 'transmis')
+                ->sum('montant_commission'),
+            2
+        );
+
         return view('admin.lots-physiques.index', compact(
             'lots', 'nbTickets', 'nbAnnules', 'nbScannes',
-            'recettesPhysiques', 'commissionPhysique',
+            'recettesPhysiques', 'commissionPhysique', 'commissionAutoPayee',
         ));
+    }
+
+    // Page d'auto-génération des QR codes (barre de progression + calcul dynamique)
+    public function generer()
+    {
+        $user = Auth::user();
+
+        $evenements = $user->evenements()
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->orderBy('date_event')
+            ->with('tarifs')
+            ->get()
+            ->filter(fn ($e) => $e->tarifs->contains(fn ($t) => $t->statut === 'actif'))
+            ->values()
+            ->map(function ($evenement) {
+                $actifs = $evenement->tarifs->where('statut', 'actif')->values();
+
+                return [
+                    'id' => $evenement->id,
+                    'titre' => $evenement->titre,
+                    'date_event' => optional($evenement->date_event)->format('d/m/Y'),
+                    'gratuit' => (bool) $evenement->gratuit,
+                    'tarifs' => $actifs->map(fn ($t) => [
+                        'id' => $t->id,
+                        'nom' => $t->nom,
+                        'prix' => (float) $t->prix,
+                    ])->values()->all(),
+                ];
+            });
+
+        return view('admin.lots-physiques.generer', [
+            'evenements' => $evenements,
+            'tauxCommission' => LotPhysique::TAUX_AUTO,
+            'emailDefaut' => Auth::user()->email,
+        ]);
+    }
+
+    // Crée la commande (lots en attente de paiement) puis redirige vers le checkout FedaPay.
+    // AUCUN ticket n'est créé ici : ils ne le seront qu'après vérification du paiement.
+    public function commander(Request $request)
+    {
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'evenement_id' => 'required|integer',
+            'quantites' => 'required|array|min:1',
+            'quantites.*' => 'integer|min:0|max:500',
+            'email_reception' => 'nullable|email|max:191',
+        ], [
+            'email_reception.email' => 'L\'email de réception doit être une adresse valide.',
+            'quantites.*.max' => 'Maximum 500 tickets par tarif.',
+        ]);
+
+        $evenement = Evenement::where('user_id', $user->id)->find($data['evenement_id']);
+        if (! $evenement || ($evenement->date_event && $evenement->date_event->isPast())) {
+            return back()->with('error', 'Événement introuvable ou déjà passé.');
+        }
+
+        $lignes = [];
+        foreach ($data['quantites'] as $tarifId => $qte) {
+            $qte = (int) $qte;
+            if ($qte <= 0) {
+                continue;
+            }
+            $tarif = $evenement->tarifs()->where('statut', 'actif')->where('id', $tarifId)->first();
+            if (! $tarif) {
+                return back()->with('error', 'Un tarif sélectionné n\'est plus disponible.');
+            }
+            $lignes[] = ['tarif' => $tarif, 'quantite' => $qte];
+        }
+
+        if (empty($lignes)) {
+            return back()->with('error', 'Indiquez au moins une quantité.');
+        }
+
+        // Purge des commandes abandonnées (> 24 h sans transaction FedaPay)
+        LotPhysique::where('statut', 'en_attente_paiement')
+            ->whereNull('fedapay_transaction_id')
+            ->where('created_at', '<', now()->subDay())
+            ->delete();
+
+        $reference = 'LOTAUTO-'.strtoupper(Str::random(10));
+        $emailReception = trim($data['email_reception'] ?? '') !== '' ? $data['email_reception'] : $user->email;
+
+        DB::transaction(function () use ($lignes, $evenement, $user, $reference, $emailReception) {
+            foreach ($lignes as $ligne) {
+                LotPhysique::create([
+                    'user_id' => $user->id,
+                    'evenement_id' => $evenement->id,
+                    'tarif_id' => $ligne['tarif']->id,
+                    'commission_pourcentage' => null,
+                    'nom' => mb_substr('QR Auto - '.$ligne['tarif']->nom, 0, 100),
+                    'quantite' => $ligne['quantite'],
+                    'statut' => 'en_attente_paiement',
+                    'auto_genere' => true,
+                    'montant_commission' => round((float) $ligne['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $ligne['quantite'], 2),
+                    'email_reception' => $emailReception,
+                    'reference_paiement' => $reference,
+                ]);
+            }
+        });
+
+        $total = round(collect($lignes)->sum(fn ($l) => (float) $l['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $l['quantite']), 2);
+
+        // Événement gratuit ou tarifs à 0 F : rien à payer, génération immédiate
+        if ($total <= 0) {
+            $lots = LotPhysique::where('reference_paiement', $reference)->get();
+            LotAutoService::confirmerLots($lots, 'GRATUIT-'.$reference);
+            $this->envoyerConfirmation($lots);
+
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('success', 'Vos QR codes sont prêts ! Téléchargez vos planches ci-dessous.');
+        }
+
+        return redirect()->route('admin.lots-physiques.checkout', $reference);
+    }
+
+    // Checkout FedaPay de la commande (récap + bouton payer)
+    public function checkout(string $reference)
+    {
+        $lots = LotPhysique::with('tarif')
+            ->where('reference_paiement', $reference)
+            ->where('user_id', Auth::id())
+            ->where('auto_genere', true)
+            ->get();
+
+        if ($lots->isEmpty()) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Commande introuvable.');
+        }
+
+        if ($lots->first()->statut !== 'en_attente_paiement') {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('success', 'Cette commande a déjà été payée. Vos planches sont disponibles ci-dessous.');
+        }
+
+        $total = round((float) $lots->sum('montant_commission'), 2);
+        $publicKey = app(\App\Services\FedapayService::class)->getPublicKey();
+        $sandbox = app(\App\Services\FedapayService::class)->isSandbox();
+
+        return view('admin.lots-physiques.paiement', compact('lots', 'total', 'reference', 'publicKey', 'sandbox'));
+    }
+
+    // Email de confirmation vers l'adresse de réception (silencieux en cas d'échec SMTP)
+    private function envoyerConfirmation($lots): void
+    {
+        try {
+            Mail::to($lots->first()->email_reception ?? Auth::user()->email)->send(new LotAutoConfirme($lots));
+        } catch (\Exception $e) {
+            FacadesLog::error('Email lot auto non envoye : '.$e->getMessage());
+        }
     }
 
     // Télécharge la planche de QR codes (3 téléchargements max, lot transmis requis)

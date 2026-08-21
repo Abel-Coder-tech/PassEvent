@@ -24,6 +24,14 @@
             letter-spacing: 0.5px;
             margin-top: 3px;
         }
+        .type-footer {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #1d1d1f;
+            margin-top: 4px;
+        }
 
         .page-break { page-break-after: always; }
         .page-break:last-child { page-break-after: auto; }
@@ -47,6 +55,7 @@
             </tr>
             @endforeach
         </table>
+        <div class="type-footer">TICKETS {{ mb_strtoupper($groupe->lot->tarif?->nom ?? 'PASS') }} — {{ $groupe->lot->evenement?->titre }}</div>
 
         @if(!$loop->last)
         <div class="page-break"></div>

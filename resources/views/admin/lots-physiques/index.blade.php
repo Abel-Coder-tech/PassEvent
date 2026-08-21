@@ -47,7 +47,7 @@
                 <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
                 <div class="metric-label">Commission attendue</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionPhysique, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">A verser a PaxEvent</div>
+                <div class="metric-subtitle">A verser a PaxEvent @if($commissionAutoPayee > 0)— {{ number_format($commissionAutoPayee, 0, ',', ' ') }} F deja payes (QR auto)@endif</div>
             </div>
         </div>
     </div>
@@ -56,18 +56,26 @@
     <div class="text-center py-5 text-muted">
         <i class="bi bi-ticket-perforated" style="font-size:3rem;"></i>
         <p class="mt-2">Aucun lot de tickets physiques pour le moment.</p>
-        <p style="font-size:0.85rem;">Les lots sont generes par l'equipe PaxEvent. Vous serez notifie des qu'un lot vous est transmis.</p>
+        <p style="font-size:0.85rem;">Generez vos QR codes vous-meme en quelques clics, ou faites une demande a l'equipe PaxEvent.</p>
+        <a href="{{ route('admin.lots-physiques.generer') }}" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;">
+            <i class="bi bi-qr-code me-1"></i> Générer mes QR codes
+        </a>
         <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
-            <i class="bi bi-qr-code me-1"></i> Demander des QR codes
+            <i class="bi bi-envelope me-1"></i> Demander des QR codes
         </button>
     </div>
     @else
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="bi bi-stack me-1"></i> Mes lots de tickets physiques</strong>
-            <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
-                <i class="bi bi-qr-code me-1"></i> Demander des QR codes
-            </button>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('admin.lots-physiques.generer') }}" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;">
+                    <i class="bi bi-qr-code me-1"></i> Générer mes QR codes
+                </a>
+                <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
+                    <i class="bi bi-envelope me-1"></i> Demander des QR codes
+                </button>
+            </div>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 small">
@@ -87,7 +95,10 @@
                 <tbody>
                     @foreach($lots as $lot)
                     <tr>
-                        <td class="ps-3 fw-medium">{{ $lot->nom }}</td>
+                        <td class="ps-3 fw-medium">
+                            {{ $lot->nom }}
+                            @if($lot->auto_genere)<span class="badge" style="background:#7c3aed;font-size:.62rem;">AUTO</span>@endif
+                        </td>
                         <td>
                             @if($lot->evenement)
                             <a href="{{ route('admin.evenements.show', $lot->evenement) }}" class="text-decoration-none">{{ $lot->evenement->titre }}</a>
@@ -104,7 +115,9 @@
                             @if($lot->nb_scannes > 0)<span class="badge bg-success">{{ $lot->nb_scannes }}</span>@else 0 @endif
                         </td>
                         <td>
-                            @if($lot->estTransmis)
+                            @if($lot->statut === 'en_attente_paiement')
+                                <span class="badge bg-warning text-dark">En paiement</span>
+                            @elseif($lot->estTransmis)
                                 <span class="badge bg-success">Transmis</span>
                             @else
                                 <span class="badge bg-warning text-dark">En attente</span>
@@ -112,7 +125,11 @@
                         </td>
                         <td class="text-center">{{ $lot->download_count }}/3</td>
                         <td class="text-end pe-3">
-                            @if($lot->estTransmis && $lot->nb_tickets - $lot->nb_annules > 0)
+                            @if($lot->statut === 'en_attente_paiement' && $lot->reference_paiement)
+                                <a href="{{ route('admin.lots-physiques.checkout', $lot->reference_paiement) }}" class="btn btn-sm text-white" style="background:#f59e0b;">
+                                    <i class="bi bi-credit-card"></i> Payer
+                                </a>
+                            @elseif($lot->estTransmis && $lot->nb_tickets - $lot->nb_annules > 0)
                                 <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm text-white" style="background:#7c3aed;">
                                     <i class="bi bi-download"></i> Planche PDF
                                 </a>
