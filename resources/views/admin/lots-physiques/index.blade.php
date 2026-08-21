@@ -21,9 +21,9 @@
     .step-item.active .step-dot { background: #542680; color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
     .step-item.active .step-label { color: #542680; font-weight: 700; }
 
-    #modalGenerer .modal-dialog { flex-direction: column; max-width: min(1000px, 96vw); }
+    #modalGenerer .modal-dialog { flex-direction: column; width: min(1150px, 97vw); max-width: min(1150px, 97vw); }
     #modalGenerer .modal-content { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
-    #modalGenerer .modal-body { max-height: calc(100vh - 240px); overflow-y: auto; }
+    #modalGenerer .modal-body { max-height: calc(100vh - 210px); overflow-y: auto; }
 
     .event-card { cursor: pointer; border: 1.5px solid #e9ecef; border-radius: 12px; padding: .8rem .9rem; transition: all .18s; height: 100%; position: relative; }
     .event-card:hover { border-color: #c4a6dd; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(84,38,128,.08); }
@@ -448,11 +448,15 @@ function majBouton() {
     }
     let totalBillets = 0;
     document.querySelectorAll('#tarifsListe input').forEach(i => { totalBillets += parseInt(i.value) || 0; });
-    btn.setAttribute('type', 'button');
     btn.disabled = !(evenementCourant && totalBillets > 0);
-    btn.innerHTML = chemin === 'gratuit'
-        ? 'Continuer'
-        : '<i class="bi bi-shield-lock me-1"></i> Payer avec FedaPay';
+    if (chemin === 'gratuit') {
+        btn.setAttribute('type', 'button');
+        btn.innerHTML = 'Continuer';
+    } else {
+        // Payant : soumet le formulaire -> creation de la commande puis ouverture de FedaPay
+        btn.setAttribute('type', 'submit');
+        btn.innerHTML = '<i class="bi bi-shield-lock me-1"></i> Payer avec FedaPay';
+    }
 }
 
 function actionPrincipale() {
@@ -468,7 +472,6 @@ function actionPrincipale() {
         marquerEtapes(1);
         majBouton();
     }
-    // Payant : bouton type=submit -> poste directement vers le checkout FedaPay
 }
 
 function retourEtape() {

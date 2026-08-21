@@ -125,6 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Ouvre automatiquement la fenêtre de paiement à l'arrivée sur la page
+    setTimeout(function () { btn.click(); }, 600);
 });
 </script>
 @endsection
