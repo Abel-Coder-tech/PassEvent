@@ -71,18 +71,24 @@ class LotPhysiqueController extends Controller
             2
         );
 
-        return view('admin.lots-physiques.index', compact(
-            'lots', 'nbTickets', 'nbAnnules', 'nbScannes',
-            'recettesPhysiques', 'commissionPhysique', 'commissionAutoPayee',
-        ));
+        return view('admin.lots-physiques.index', [
+            'lots' => $lots,
+            'nbTickets' => $nbTickets,
+            'nbAnnules' => $nbAnnules,
+            'nbScannes' => $nbScannes,
+            'recettesPhysiques' => $recettesPhysiques,
+            'commissionPhysique' => $commissionPhysique,
+            'commissionAutoPayee' => $commissionAutoPayee,
+            'evenementsAuto' => $this->evenementsAuto($user),
+            'tauxCommission' => LotPhysique::TAUX_AUTO,
+            'emailDefaut' => $user->email,
+        ]);
     }
 
-    // Page d'auto-génération des QR codes (barre de progression + calcul dynamique)
-    public function generer()
+    // Événements éligibles à l'auto-génération (à venir, avec au moins un tarif actif)
+    private function evenementsAuto($user)
     {
-        $user = Auth::user();
-
-        $evenements = $user->evenements()
+        return $user->evenements()
             ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
             ->orderBy('date_event')
             ->with('tarifs')
@@ -104,12 +110,6 @@ class LotPhysiqueController extends Controller
                     ])->values()->all(),
                 ];
             });
-
-        return view('admin.lots-physiques.generer', [
-            'evenements' => $evenements,
-            'tauxCommission' => LotPhysique::TAUX_AUTO,
-            'emailDefaut' => Auth::user()->email,
-        ]);
     }
 
     // Crée la commande (lots en attente de paiement) puis redirige vers le checkout FedaPay.
@@ -186,7 +186,7 @@ class LotPhysiqueController extends Controller
             $this->envoyerConfirmation($lots);
 
             return redirect()->route('admin.lots-physiques.index')
-                ->with('success', 'Vos QR codes sont prêts ! Téléchargez vos planches ci-dessous.');
+                ->with('qr_succes', LotAutoService::donneesResultat($reference));
         }
 
         return redirect()->route('admin.lots-physiques.checkout', $reference);

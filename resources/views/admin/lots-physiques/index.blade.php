@@ -9,6 +9,40 @@
 
 @section('content')
 <div class="page-content">
+    <style>
+    .steps-bar { display: flex; align-items: center; margin-bottom: .9rem; }
+    .step-item { display: flex; align-items: center; flex: 1; min-width: 0; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0; transition: all .3s; }
+    .step-label { font-size: .7rem; color: #6c757d; margin-left: .4rem; white-space: nowrap; }
+    .step-line { flex: 1; height: 2px; background: #e9ecef; margin: 0 .5rem; min-width: 12px; transition: background .3s; border-radius: 2px; }
+    .step-item.done .step-dot { background: #198754; color: #fff; }
+    .step-item.done .step-label { color: #198754; }
+    .step-item.done .step-line { background: #198754; }
+    .step-item.active .step-dot { background: #542680; color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
+    .step-item.active .step-label { color: #542680; font-weight: 700; }
+
+    #modalGenerer .modal-content { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+    #modalGenerer .modal-body { max-height: calc(100vh - 320px); overflow-y: auto; }
+
+    .event-card { cursor: pointer; border: 1.5px solid #e9ecef; border-radius: 12px; padding: .8rem .9rem; transition: all .18s; height: 100%; position: relative; }
+    .event-card:hover { border-color: #c4a6dd; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(84,38,128,.08); }
+    .event-card.selected { border-color: #542680; background: rgba(84,38,128,.04); }
+    .event-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #dee2e6; display: flex; align-items: center; justify-content: center; color: transparent; font-size: .85rem; transition: all .18s; flex-shrink: 0; }
+    .event-card.selected .event-check { background: #542680; border-color: #542680; color: #fff; }
+
+    .tarif-row { padding: .8rem 0; border-bottom: 1px solid #f1f0f3; }
+    .tarif-row:last-child { border-bottom: none; }
+    .stepper { display: inline-flex; align-items: center; background: #f4f2f7; border-radius: 10px; padding: 3px; }
+    .st-btn { width: 28px; height: 28px; border: none; background: #fff; border-radius: 8px; color: #542680; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .st-btn:hover { background: #542680; color: #fff; }
+    .stepper input { width: 52px; border: none; background: transparent; text-align: center; font-weight: 700; color: #1d1d1f; outline: none; -moz-appearance: textfield; }
+    .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .recap-ligne { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px dashed #e9ecef; font-size: .88rem; }
+    .recap-ligne:last-child { border-bottom: none; }
+    .total-block { background: linear-gradient(135deg, rgba(84,38,128,.06), rgba(124,58,237,.06)); border-radius: 12px; padding: .8rem 1rem; }
+    </style>
+
     @if(session('success'))
     <div class="alert alert-success py-2 small">{{ session('success') }}</div>
     @endif
@@ -57,9 +91,9 @@
         <i class="bi bi-ticket-perforated" style="font-size:3rem;"></i>
         <p class="mt-2">Aucun lot de tickets physiques pour le moment.</p>
         <p style="font-size:0.85rem;">Generez vos QR codes vous-meme en quelques clics, ou faites une demande a l'equipe PaxEvent.</p>
-        <a href="{{ route('admin.lots-physiques.generer') }}" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;">
+        <button type="button" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="ouvrirModal()">
             <i class="bi bi-qr-code me-1"></i> Générer mes QR codes
-        </a>
+        </button>
         <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
             <i class="bi bi-envelope me-1"></i> Demander des QR codes
         </button>
@@ -69,9 +103,9 @@
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="bi bi-stack me-1"></i> Mes lots de tickets physiques</strong>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ route('admin.lots-physiques.generer') }}" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;">
+                <button type="button" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="ouvrirModal()">
                     <i class="bi bi-qr-code me-1"></i> Générer mes QR codes
-                </a>
+                </button>
                 <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
                     <i class="bi bi-envelope me-1"></i> Demander des QR codes
                 </button>
@@ -155,4 +189,294 @@
         Les tickets physiques ne comptent pas dans la capacite de vos evenements. Ils sont scannables a l'entree comme les tickets en ligne. La commission y afferente est suivie separement (rubrique ci-dessus).
     </div>
 </div>
+
+<!-- Modal d'auto-génération : barre de progression hors carte, même largeur que le modal -->
+<div class="modal fade" id="modalGenerer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="steps-bar px-1" id="stepsBarGen"></div>
+
+        <form method="POST" action="{{ route('admin.lots-physiques.commander') }}" id="formCommande">
+            @csrf
+            <input type="hidden" name="evenement_id" id="evenement_id" value="">
+            <div id="quantitesContainer"></div>
+
+            <div class="modal-content">
+                <div class="modal-header py-3 px-3">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-qr-code me-1" style="color:#542680;"></i> Générer mes QR codes</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <div class="modal-body px-3">
+                    @if($errors->any())
+                    <div class="alert alert-danger py-2 small">{{ $errors->all()[0] }}</div>
+                    @endif
+
+                    <!-- Étape Événement : cartes -->
+                    <div id="panelChoix">
+                        <p class="text-muted small mb-2">Choisissez l'événement concerné :</p>
+                        @if($evenementsAuto->isEmpty())
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-calendar-x" style="font-size:2.2rem;"></i>
+                            <p class="mt-2 mb-0 small">Aucun événement à venir avec des tarifs actifs.</p>
+                        </div>
+                        @else
+                        <div class="row g-2">
+                            @foreach($evenementsAuto as $ev)
+                            <div class="col-12 col-md-6">
+                                <div class="event-card" data-id="{{ $ev['id'] }}" onclick="selectionnerEvenement({{ $ev['id'] }}, this)">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <div style="min-width:0;">
+                                            <div class="fw-semibold text-truncate">{{ $ev['titre'] }}</div>
+                                            <div class="text-muted" style="font-size:.78rem;">
+                                                @if($ev['date_event'])<i class="bi bi-clock me-1"></i>{{ $ev['date_event'] }}@else<i class="bi bi-infinity me-1"></i>Date libre @endif
+                                                @if($ev['gratuit'])<span class="badge bg-success ms-1" style="font-size:.62rem;">Gratuit</span>@endif
+                                            </div>
+                                        </div>
+                                        <span class="event-check"><i class="bi bi-check-lg"></i></span>
+                                    </div>
+                                    <div class="mt-2 d-flex flex-wrap gap-1">
+                                        @foreach($ev['tarifs'] as $t)
+                                        <span class="badge bg-light text-dark border" style="font-size:.66rem;">{{ $t['nom'] }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Étape Événement : quantités (révélées après sélection) -->
+                    <div id="blocQtes" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 mb-1">
+                            <p class="text-muted small mb-0">Quantités pour <strong id="qtesEventTitre"></strong> :</p>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" style="font-size:.75rem;" onclick="reinitialiserChoix()"><i class="bi bi-pencil-square me-1"></i>Changer</button>
+                        </div>
+                        <div class="d-flex justify-content-end mb-1">
+                            <small class="text-muted">Commission PaxEvent : <strong>{{ number_format($tauxCommission, 1, ',', '') }} %</strong> du prix du billet</small>
+                        </div>
+                        <div id="tarifsListe"></div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
+                            <span class="small text-muted"><strong id="totalBillets" style="color:#1d1d1f;">0</strong> billet(s)</span>
+                            <span class="small" id="ligneTotalPayer">Total à payer : <strong id="totalPayer" style="font-size:1.15rem;color:#542680;">0 F</strong></span>
+                        </div>
+                        <div class="row g-2 align-items-center mt-2">
+                            <div class="col-auto" style="width:38px;"><i class="bi bi-envelope text-muted"></i></div>
+                            <div class="col">
+                                <input type="email" name="email_reception" class="form-control form-control-sm" value="{{ old('email_reception', $emailDefaut) }}" placeholder="Email de réception des planches (optionnel)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Récapitulatif (uniquement flux gratuit : rien à payer) -->
+                    <div id="panelRecapGratuit" style="display:none;">
+                        <div id="recapLignesGratuit" class="mb-2"></div>
+                        <div class="total-block d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-semibold small">Total à payer</span>
+                            <strong style="font-size:1.25rem;color:#198754;">0 F</strong>
+                        </div>
+                        <div class="alert alert-success border py-2 mb-0" style="font-size:.78rem;">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Événement gratuit : aucun paiement requis. Vos planches PDF seront générées immédiatement.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-secondary-custom" id="btnRetourGen" style="visibility:hidden;" onclick="allerEtape(etape - 1)">Retour</button>
+                    <button type="button" class="btn btn-sm text-white" id="btnPrincipal" style="background:#542680;border-radius:8px;font-weight:600;min-width:190px;" disabled onclick="actionPrincipale()">Continuer</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de résultat : succès (téléchargement) / échec / attente -->
+<div class="modal fade" id="modalResultat" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center" style="border:none;border-radius:16px;">
+            <div class="modal-body p-4">
+                <div id="iconeResultat" class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:64px;height:64px;border-radius:50%;font-size:1.8rem;background:rgba(25,135,84,.12);color:#198754;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <h5 class="fw-bold mb-2" id="titreResultat"></h5>
+                <p class="text-muted small mb-3" id="texteResultat"></p>
+                <div id="listeTelecharges" class="text-start mb-3"></div>
+                <button type="button" class="btn btn-sm text-white px-4" style="background:#542680;border-radius:8px;font-weight:600;" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+const EVENEMENTS = @json($evenementsAuto);
+const TAUX = {{ $tauxCommission }};
+let evenementCourant = null;
+let etape = 1;
+
+function ouvrirModal() {
+    new bootstrap.Modal(document.getElementById('modalGenerer')).show();
+}
+
+function marquerEtapes(actif) {
+    for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById('gstep' + i);
+        el.classList.toggle('done', i < actif);
+        el.classList.toggle('active', i === actif);
+        el.querySelector('.step-dot').innerHTML = i < actif ? '<i class="bi bi-check"></i>' : i;
+    }
+}
+
+function allerEtape(n) {
+    if (n === 2 && ! evenementCourant) return;
+    if (n === 3) {
+        const totaux = recalc();
+        if (totaux.totalBillets === 0) return;
+        construireRecap(totaux);
+    }
+
+    etape = n;
+    document.getElementById('panelEvent').style.display = n === 1 ? '' : 'none';
+    document.getElementById('panelQtes').style.display = n === 2 ? '' : 'none';
+    document.getElementById('panelRecap').style.display = n === 3 ? '' : 'none';
+    document.getElementById('btnRetourGen').style.visibility = n === 1 ? 'hidden' : 'visible';
+
+    const btn = document.getElementById('btnPrincipal');
+    if (n === 1) {
+        btn.setAttribute('type', 'button');
+        btn.innerHTML = 'Continuer';
+        btn.disabled = ! evenementCourant;
+    } else if (n === 2) {
+        btn.setAttribute('type', 'button');
+        btn.innerHTML = 'Voir le récapitulatif';
+        btn.disabled = false;
+    } else {
+        btn.setAttribute('type', 'submit');
+    }
+    marquerEtapes(n);
+}
+
+function actionPrincipale() {
+    if (etape < 3) allerEtape(etape + 1);
+}
+
+function selectionnerEvenement(id, el) {
+    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    evenementCourant = EVENEMENTS.find(e => e.id === id);
+    document.getElementById('evenement_id').value = id;
+    document.getElementById('btnPrincipal').disabled = false;
+
+    const liste = document.getElementById('tarifsListe');
+    liste.innerHTML = '';
+    evenementCourant.tarifs.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'tarif-row';
+        div.innerHTML =
+            '<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">' +
+              '<div><div class="fw-semibold">' + escapeHtml(t.nom) + '</div>' +
+              '<small class="text-muted">' + fmt(t.prix) + ' F / billet</small></div>' +
+              '<div class="stepper">' +
+                '<button type="button" class="st-btn" onclick="ajuster(this, -1)">&minus;</button>' +
+                '<input type="number" min="0" max="500" value="0" data-tarif="' + t.id + '" data-prix="' + t.prix + '" oninput="recalc()">' +
+                '<button type="button" class="st-btn" onclick="ajuster(this, 1)">+</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ligne-total small text-muted mt-1">Valeur billets : <span class="lv">0 F</span> &middot; Commission : <span class="lc fw-semibold">0 F</span></div>';
+        liste.appendChild(div);
+    });
+
+    document.getElementById('qtesEventTitre').textContent = evenementCourant.titre;
+    recalc();
+}
+
+function ajuster(btn, delta) {
+    const input = btn.parentElement.querySelector('input');
+    input.value = Math.max(0, Math.min(500, (parseInt(input.value) || 0) + delta));
+    recalc();
+}
+
+function recalc() {
+    let totalBillets = 0, totalCommission = 0;
+    document.querySelectorAll('#tarifsListe .tarif-row').forEach(row => {
+        const input = row.querySelector('input');
+        const qte = Math.max(0, Math.min(500, parseInt(input.value) || 0));
+        input.value = qte;
+        const prix = parseFloat(input.dataset.prix);
+        const valeur = qte * prix;
+        const commission = Math.round(valeur * TAUX) / 100;
+        row.querySelector('.lv').textContent = fmt(valeur) + ' F';
+        row.querySelector('.lc').textContent = fmt(commission) + ' F';
+        totalBillets += qte;
+        totalCommission += commission;
+    });
+    totalCommission = Math.round(totalCommission * 100) / 100;
+    document.getElementById('totalBillets').textContent = totalBillets;
+    document.getElementById('totalPayer').textContent = fmt(totalCommission) + ' F';
+    return { totalBillets, totalCommission };
+}
+
+function construireRecap(totaux) {
+    let html = '';
+    const container = document.getElementById('quantitesContainer');
+    container.innerHTML = '';
+    document.querySelectorAll('#tarifsListe .tarif-row').forEach(row => {
+        const input = row.querySelector('input');
+        const qte = parseInt(input.value) || 0;
+        if (qte <= 0) return;
+        const nom = row.querySelector('.fw-semibold').textContent.trim();
+        const prix = parseFloat(input.dataset.prix);
+        const commission = Math.round(qte * prix * TAUX) / 100;
+        html += '<div class="recap-ligne"><span><strong>' + qte + '</strong> &times; ' + escapeHtml(nom) +
+            ' <small class="text-muted">(' + fmt(prix) + ' F/u)</small></span>' +
+            '<span class="fw-semibold">' + fmt(commission) + ' F</span></div>';
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'quantites[' + input.dataset.tarif + ']';
+        hidden.value = qte;
+        container.appendChild(hidden);
+    });
+    document.getElementById('recapLignes').innerHTML = html;
+    document.getElementById('recapTotal').textContent = fmt(totaux.totalCommission) + ' F';
+
+    const gratuit = totaux.totalCommission <= 0;
+    document.getElementById('btnPrincipal').innerHTML = gratuit
+        ? '<i class="bi bi-magic me-1"></i> Générer gratuitement'
+        : '<i class="bi bi-shield-lock me-1"></i> Payer ' + fmt(totaux.totalCommission) + ' F';
+}
+
+function fmt(n) {
+    return new Intl.NumberFormat('fr-FR').format(Math.round(n * 100) / 100);
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+marquerEtapes(1);
+
+// Réouverture automatique avec restauration si erreurs de validation
+@if($errors->any() && old('evenement_id'))
+document.addEventListener('DOMContentLoaded', function () {
+    ouvrirModal();
+    const evId = {{ old('evenement_id') }};
+    const carte = document.querySelector('.event-card[data-id="' + evId + '"]');
+    if (carte) {
+        selectionnerEvenement(evId, carte);
+        @foreach(old('quantites', []) as $tid => $qte)
+        {
+            const inp = document.querySelector('input[data-tarif="{{ $tid }}"]');
+            if (inp) { inp.value = {{ (int) $qte }}; }
+        }
+        @endforeach
+        recalc();
+        allerEtape(2);
+    }
+});
+@endif
+</script>
 @endsection

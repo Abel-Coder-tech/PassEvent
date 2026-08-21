@@ -71,7 +71,7 @@
                     <div id="paymentError" class="mt-3" style="display:none;color:#dc3545;font-size:.85rem;"></div>
 
                     <div class="text-center mt-3">
-                        <a href="{{ route('admin.lots-physiques.generer') }}" class="text-decoration-none" style="font-size:.82rem;">
+                        <a href="{{ route('admin.lots-physiques.index') }}" class="text-decoration-none" style="font-size:.82rem;">
                             <i class="bi bi-arrow-left me-1"></i>Modifier ma commande
                         </a>
                     </div>
