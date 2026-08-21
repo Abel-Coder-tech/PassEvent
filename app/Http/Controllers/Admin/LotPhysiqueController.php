@@ -12,6 +12,7 @@ use App\Services\LotAutoService;
 use App\Services\LotPhysiquePdfService;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log as FacadesLog;
@@ -254,5 +255,33 @@ class LotPhysiqueController extends Controller
         $pdf = LotPhysiquePdfService::generer($lot, $tickets);
 
         return $pdf->download('Planche-'.$lot->nom.'-'.$lot->evenement?->titre.'.pdf');
+    }
+
+    // Supprime un lot de tickets physiques et ses tickets (jamais si des tickets ont été scannés)
+    public function destroy(LotPhysique $lot): RedirectResponse
+    {
+        if ($lot->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $nbScannes = $lot->tickets()->where('utilise', true)->count();
+        if ($nbScannes > 0) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Impossible de supprimer ce lot : des tickets ont déjà été scannés à l\'entrée.');
+        }
+
+        // Commande en attente dont le paiement est à réconcilier : on ne supprime pas
+        if ($lot->statut === 'en_attente_paiement' && $lot->fedapay_transaction_id) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Impossible de supprimer cette commande : son paiement est en cours de vérification.');
+        }
+
+        DB::transaction(function () use ($lot) {
+            Ticket::where('lot_physique_id', $lot->id)->delete();
+            $lot->delete();
+        });
+
+        return redirect()->route('admin.lots-physiques.index')
+            ->with('success', 'Lot supprimé.');
     }
 }

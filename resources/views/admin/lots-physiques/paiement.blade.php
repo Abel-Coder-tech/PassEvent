@@ -23,13 +23,11 @@
     .step-item.active .step-label { color: #542680; font-weight: 700; }
     </style>
 
-    <!-- Barre de progression : étapes 1-3 validées -->
+    <!-- Barre de progression : étape Événement validée, paiement en cours -->
     <div class="steps-bar">
         <div class="step-item done"><span class="step-dot"><i class="bi bi-check"></i></span><span class="step-label">Événement</span><span class="step-line"></span></div>
-        <div class="step-item done"><span class="step-dot"><i class="bi bi-check"></i></span><span class="step-label">Quantités</span><span class="step-line"></span></div>
-        <div class="step-item done"><span class="step-dot"><i class="bi bi-check"></i></span><span class="step-label">Récapitulatif</span><span class="step-line"></span></div>
-        <div class="step-item active"><span class="step-dot">4</span><span class="step-label">Paiement</span><span class="step-line"></span></div>
-        <div class="step-item"><span class="step-dot">5</span><span class="step-label">Téléchargement</span></div>
+        <div class="step-item active"><span class="step-dot">2</span><span class="step-label">Paiement</span><span class="step-line"></span></div>
+        <div class="step-item"><span class="step-dot">3</span><span class="step-label">Téléchargement</span></div>
     </div>
 
     @if(session('error'))

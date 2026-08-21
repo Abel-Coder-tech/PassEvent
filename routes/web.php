@@ -311,6 +311,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
             Route::post('/commander', [AdminLotPhysiqueController::class, 'commander'])->name('commander');
             Route::get('/paiement/{reference}', [AdminLotPhysiqueController::class, 'checkout'])->name('checkout');
             Route::get('/{lot}/telecharger', [AdminLotPhysiqueController::class, 'download'])->name('download');
+            Route::delete('/{lot}', [AdminLotPhysiqueController::class, 'destroy'])->name('destroy');
         });
     });
 

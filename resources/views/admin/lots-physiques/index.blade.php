@@ -122,7 +122,7 @@
                         <th class="text-center">Annues</th>
                         <th class="text-center">Scannes</th>
                         <th>Statut</th>
-                        <th class="text-center">Telechargements</th>
+                        <th class="text-center">Télechargements</th>
                         <th class="text-end pe-3">Actions</th>
                     </tr>
                 </thead>
@@ -159,10 +159,12 @@
                         </td>
                         <td class="text-center">{{ $lot->download_count }}/3</td>
                         <td class="text-end pe-3">
+                            <div class="d-inline-flex gap-1 align-items-center">
                             @if($lot->statut === 'en_attente_paiement' && $lot->reference_paiement)
                                 <a href="{{ route('admin.lots-physiques.checkout', $lot->reference_paiement) }}" class="btn btn-sm text-white" style="background:#f59e0b;">
                                     <i class="bi bi-credit-card"></i> Payer
                                 </a>
+                                
                             @elseif($lot->estTransmis && $lot->nb_tickets - $lot->nb_annules > 0)
                                 <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm text-white" style="background:#7c3aed;">
                                     <i class="bi bi-download"></i> Planche PDF
@@ -172,6 +174,17 @@
                                     @if(!$lot->estTransmis) En attente de transmission @else Aucun ticket valide @endif
                                 </span>
                             @endif
+                            @if($lot->nb_scannes == 0)
+                            <form action="{{ route('admin.lots-physiques.destroy', $lot) }}"
+                                  method="POST" class="d-inline"
+                                  onsubmit="return confirm('Supprimer ce lot et ses tickets définitivement ?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach
@@ -283,7 +296,7 @@
                 </div>
 
                 <div class="modal-footer py-2 px-3">
-                    <button type="button" class="btn btn-sm btn-secondary-custom" id="btnRetourGen" style="visibility:hidden;" onclick="allerEtape(etape - 1)">Retour</button>
+                    <button type="button" class="btn btn-sm btn-secondary-custom" id="btnRetourGen" style="visibility:hidden;" onclick="retourEtape()">Retour</button>
                     <button type="button" class="btn btn-sm text-white" id="btnPrincipal" style="background:#542680;border-radius:8px;font-weight:600;min-width:190px;" disabled onclick="actionPrincipale()">Continuer</button>
                 </div>
             </div>
@@ -315,51 +328,35 @@ const EVENEMENTS = @json($evenementsAuto);
 const TAUX = {{ $tauxCommission }};
 let evenementCourant = null;
 let etape = 1;
+let chemin = 'payant';
+let barLabels = [];
 
 function ouvrirModal() {
     new bootstrap.Modal(document.getElementById('modalGenerer')).show();
 }
 
-function marquerEtapes(actif) {
-    for (let i = 1; i <= 5; i++) {
+function construireBarre(labels) {
+    barLabels = labels;
+    let html = '';
+    labels.forEach((lbl, i) => {
+        html += '<div class="step-item" id="gstep' + i + '">' +
+            '<span class="step-dot">' + (i + 1) + '</span>' +
+            '<span class="step-label">' + lbl + '</span>' +
+            (i < labels.length - 1 ? '<span class="step-line"></span>' : '') +
+            '</div>';
+    });
+    document.getElementById('stepsBarGen').innerHTML = html;
+    marquerEtapes(etape - 1);
+}
+
+function marquerEtapes(actifIdx) {
+    barLabels.forEach((_, i) => {
         const el = document.getElementById('gstep' + i);
-        el.classList.toggle('done', i < actif);
-        el.classList.toggle('active', i === actif);
-        el.querySelector('.step-dot').innerHTML = i < actif ? '<i class="bi bi-check"></i>' : i;
-    }
-}
-
-function allerEtape(n) {
-    if (n === 2 && ! evenementCourant) return;
-    if (n === 3) {
-        const totaux = recalc();
-        if (totaux.totalBillets === 0) return;
-        construireRecap(totaux);
-    }
-
-    etape = n;
-    document.getElementById('panelEvent').style.display = n === 1 ? '' : 'none';
-    document.getElementById('panelQtes').style.display = n === 2 ? '' : 'none';
-    document.getElementById('panelRecap').style.display = n === 3 ? '' : 'none';
-    document.getElementById('btnRetourGen').style.visibility = n === 1 ? 'hidden' : 'visible';
-
-    const btn = document.getElementById('btnPrincipal');
-    if (n === 1) {
-        btn.setAttribute('type', 'button');
-        btn.innerHTML = 'Continuer';
-        btn.disabled = ! evenementCourant;
-    } else if (n === 2) {
-        btn.setAttribute('type', 'button');
-        btn.innerHTML = 'Voir le récapitulatif';
-        btn.disabled = false;
-    } else {
-        btn.setAttribute('type', 'submit');
-    }
-    marquerEtapes(n);
-}
-
-function actionPrincipale() {
-    if (etape < 3) allerEtape(etape + 1);
+        if (!el) return;
+        el.classList.toggle('done', i < actifIdx);
+        el.classList.toggle('active', i === actifIdx);
+        el.querySelector('.step-dot').innerHTML = i < actifIdx ? '<i class="bi bi-check"></i>' : (i + 1);
+    });
 }
 
 function selectionnerEvenement(id, el) {
@@ -367,7 +364,8 @@ function selectionnerEvenement(id, el) {
     el.classList.add('selected');
     evenementCourant = EVENEMENTS.find(e => e.id === id);
     document.getElementById('evenement_id').value = id;
-    document.getElementById('btnPrincipal').disabled = false;
+    document.getElementById('blocQtes').style.display = '';
+    document.getElementById('qtesEventTitre').textContent = evenementCourant.titre;
 
     const liste = document.getElementById('tarifsListe');
     liste.innerHTML = '';
@@ -388,7 +386,14 @@ function selectionnerEvenement(id, el) {
         liste.appendChild(div);
     });
 
-    document.getElementById('qtesEventTitre').textContent = evenementCourant.titre;
+    recalc();
+}
+
+function reinitialiserChoix() {
+    evenementCourant = null;
+    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('blocQtes').style.display = 'none';
+    document.getElementById('evenement_id').value = '';
     recalc();
 }
 
@@ -415,37 +420,138 @@ function recalc() {
     totalCommission = Math.round(totalCommission * 100) / 100;
     document.getElementById('totalBillets').textContent = totalBillets;
     document.getElementById('totalPayer').textContent = fmt(totalCommission) + ' F';
+
+    // Barre adaptée au parcours : gratuit (rien à payer) ou payant (FedaPay)
+    let nouveauChemin = chemin;
+    if (totalBillets > 0) {
+        nouveauChemin = totalCommission <= 0 ? 'gratuit' : 'payant';
+    }
+    if (! barLabels.length || nouveauChemin !== chemin) {
+        chemin = nouveauChemin;
+        construireBarre(chemin === 'gratuit'
+            ? ['Événement', 'Récapitulatif', 'Téléchargement']
+            : ['Événement', 'Paiement', 'Téléchargement']);
+    }
+    majBouton();
     return { totalBillets, totalCommission };
 }
 
-function construireRecap(totaux) {
+function majBouton() {
+    const btn = document.getElementById('btnPrincipal');
+    if (etape === 2) {
+        btn.setAttribute('type', 'submit');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-magic me-1"></i> Générer mes QR codes';
+        return;
+    }
+    let totalBillets = 0;
+    document.querySelectorAll('#tarifsListe input').forEach(i => { totalBillets += parseInt(i.value) || 0; });
+    btn.setAttribute('type', 'button');
+    btn.disabled = !(evenementCourant && totalBillets > 0);
+    btn.innerHTML = chemin === 'gratuit'
+        ? 'Continuer'
+        : '<i class="bi bi-shield-lock me-1"></i> Payer avec FedaPay';
+}
+
+function actionPrincipale() {
+    if (etape === 1 && chemin === 'gratuit') {
+        const t = recalc();
+        if (t.totalBillets === 0) return;
+        remplirQuantites();
+        document.getElementById('recapLignesGratuit').innerHTML = lignesRecapHtml();
+        etape = 2;
+        document.getElementById('panelRecapGratuit').style.display = '';
+        document.getElementById('blocQtes').style.display = 'none';
+        document.getElementById('btnRetourGen').style.visibility = 'visible';
+        marquerEtapes(1);
+        majBouton();
+    }
+    // Payant : bouton type=submit -> poste directement vers le checkout FedaPay
+}
+
+function retourEtape() {
+    if (etape !== 2) return;
+    etape = 1;
+    document.getElementById('panelRecapGratuit').style.display = 'none';
+    document.getElementById('blocQtes').style.display = '';
+    document.getElementById('btnRetourGen').style.visibility = 'hidden';
+    marquerEtapes(0);
+    majBouton();
+}
+
+function lignesRecapHtml() {
     let html = '';
-    const container = document.getElementById('quantitesContainer');
-    container.innerHTML = '';
     document.querySelectorAll('#tarifsListe .tarif-row').forEach(row => {
         const input = row.querySelector('input');
         const qte = parseInt(input.value) || 0;
         if (qte <= 0) return;
         const nom = row.querySelector('.fw-semibold').textContent.trim();
         const prix = parseFloat(input.dataset.prix);
-        const commission = Math.round(qte * prix * TAUX) / 100;
         html += '<div class="recap-ligne"><span><strong>' + qte + '</strong> &times; ' + escapeHtml(nom) +
             ' <small class="text-muted">(' + fmt(prix) + ' F/u)</small></span>' +
-            '<span class="fw-semibold">' + fmt(commission) + ' F</span></div>';
+            '<span class="fw-semibold">' + fmt(qte * prix) + ' F</span></div>';
+    });
+    return html;
+}
+
+function remplirQuantites() {
+    const container = document.getElementById('quantitesContainer');
+    container.innerHTML = '';
+    document.querySelectorAll('#tarifsListe input').forEach(input => {
+        const qte = parseInt(input.value) || 0;
+        if (qte <= 0) return;
         const hidden = document.createElement('input');
         hidden.type = 'hidden';
         hidden.name = 'quantites[' + input.dataset.tarif + ']';
         hidden.value = qte;
         container.appendChild(hidden);
     });
-    document.getElementById('recapLignes').innerHTML = html;
-    document.getElementById('recapTotal').textContent = fmt(totaux.totalCommission) + ' F';
-
-    const gratuit = totaux.totalCommission <= 0;
-    document.getElementById('btnPrincipal').innerHTML = gratuit
-        ? '<i class="bi bi-magic me-1"></i> Générer gratuitement'
-        : '<i class="bi bi-shield-lock me-1"></i> Payer ' + fmt(totaux.totalCommission) + ' F';
 }
+
+document.getElementById('formCommande').addEventListener('submit', remplirQuantites);
+
+function afficherResultat(cfg) {
+    const icone = document.getElementById('iconeResultat');
+    icone.innerHTML = cfg.icone;
+    icone.style.background = cfg.fond;
+    icone.style.color = cfg.couleur;
+    document.getElementById('titreResultat').textContent = cfg.titre;
+    document.getElementById('texteResultat').textContent = cfg.texte;
+
+    const liste = document.getElementById('listeTelecharges');
+    liste.innerHTML = '';
+    (cfg.lots || []).forEach(lot => {
+        liste.insertAdjacentHTML('beforeend',
+            '<div class="d-flex justify-content-between align-items-center py-1 border-bottom">' +
+            '<span class="small"><strong>' + lot.quantite + '</strong>&nbsp;&times;&nbsp;' + escapeHtml(lot.nom) + '</span>' +
+            (lot.telecharger
+                ? '<a href="' + lot.telecharger + '" class="btn btn-sm text-white" style="background:#542680;border-radius:8px;"><i class="bi bi-download"></i> Planche PDF</a>'
+                : '') +
+            '</div>');
+    });
+    new bootstrap.Modal(document.getElementById('modalResultat')).show();
+}
+
+const resultatSucces = @json(session('qr_succes'));
+const resultatEchec = @json(session('qr_echec'));
+const resultatAttente = @json(session('qr_attente'));
+
+if (resultatSucces) afficherResultat({
+    icone: '<i class="bi bi-check-lg"></i>', fond: 'rgba(25,135,84,.12)', couleur: '#198754',
+    titre: 'Vos QR codes sont prêts !',
+    texte: 'Téléchargez vos planches ci-dessous. Un email de confirmation vous a également été envoyé.',
+    lots: resultatSucces.lots,
+});
+if (resultatEchec) afficherResultat({
+    icone: '<i class="bi bi-x-lg"></i>', fond: 'rgba(220,53,69,.12)', couleur: '#dc3545',
+    titre: 'Paiement non abouti',
+    texte: resultatEchec,
+});
+if (resultatAttente) afficherResultat({
+    icone: '<i class="bi bi-hourglass-split"></i>', fond: 'rgba(255,193,7,.18)', couleur: '#b7791f',
+    titre: 'Vérification en cours',
+    texte: resultatAttente,
+});
 
 function fmt(n) {
     return new Intl.NumberFormat('fr-FR').format(Math.round(n * 100) / 100);
@@ -457,7 +563,8 @@ function escapeHtml(s) {
     return d.innerHTML;
 }
 
-marquerEtapes(1);
+construireBarre(['Événement', 'Paiement', 'Téléchargement']);
+majBouton();
 
 // Réouverture automatique avec restauration si erreurs de validation
 @if($errors->any() && old('evenement_id'))
@@ -474,7 +581,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         @endforeach
         recalc();
-        allerEtape(2);
     }
 });
 @endif
