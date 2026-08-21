@@ -21,7 +21,8 @@
     .step-item.active .step-dot { background: #542680; color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
     .step-item.active .step-label { color: #542680; font-weight: 700; }
 
-    #modalGenerer .modal-dialog { flex-direction: column; width: min(1150px, 97vw); max-width: min(1150px, 97vw); }
+    #modalGenerer .modal-dialog { flex-direction: column; align-items: stretch; width: min(1150px, 97vw); max-width: min(1150px, 97vw); }
+    #modalGenerer .modal-dialog > * { width: 100%; }
     #modalGenerer .modal-content { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
     #modalGenerer .modal-body { max-height: calc(100vh - 210px); overflow-y: auto; }
 
@@ -206,7 +207,7 @@
 
 <!-- Modal d'auto-génération : barre de progression hors carte, même largeur que le modal -->
 <div class="modal fade" id="modalGenerer" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="steps-bar px-1" id="stepsBarGen"></div>
 
         <form method="POST" action="{{ route('admin.lots-physiques.commander') }}" id="formCommande">
