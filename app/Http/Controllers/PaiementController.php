@@ -291,7 +291,7 @@ class PaiementController extends Controller
         // Déjà confirmé (par le webhook par exemple) : simple redirection
         if ($lots->first()->statut !== 'en_attente_paiement') {
             return redirect()->route('admin.lots-physiques.index')
-                ->with('success', 'Paiement déjà confirmé. Vos planches sont disponibles ci-dessous.');
+                ->with('qr_succes', LotAutoService::donneesResultat($reference));
         }
 
         // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance aux query params)
@@ -307,17 +307,18 @@ class PaiementController extends Controller
                 'api_status' => $status,
             ]);
 
-            // Échec définitif : on supprime la commande (les lots en attente n'ont aucun ticket).
-            // Statut indéterminé : on conserve pour réconciliation (le webhook vérifié confirmera si payé).
             if ($definitif) {
                 LotPhysique::where('reference_paiement', $reference)->where('statut', 'en_attente_paiement')->delete();
-            } else {
-                LotPhysique::where('reference_paiement', $reference)->where('statut', 'en_attente_paiement')
-                    ->update(['fedapay_transaction_id' => $transactionId]);
+
+                return redirect()->route('admin.lots-physiques.index')
+                    ->with('qr_echec', 'Le paiement a été refusé ou annulé. Votre commande n\'a pas été facturée : vous pouvez relancer une génération.');
             }
 
+            LotPhysique::where('reference_paiement', $reference)->where('statut', 'en_attente_paiement')
+                ->update(['fedapay_transaction_id' => $transactionId]);
+
             return redirect()->route('admin.lots-physiques.index')
-                ->with('error', 'Le paiement n\'a pas pu etre verifie. Vous pouvez reessayer depuis « Generer mes QR codes ».');
+                ->with('qr_attente', 'Le statut du paiement est en cours de vérification. Si il est confirmé, vos planches apparaîtront automatiquement dans la liste ci-dessous.');
         }
 
         // Sécurité : le montant payé doit correspondre à la commission totale de la commande
@@ -347,7 +348,7 @@ class PaiementController extends Controller
         }
 
         return redirect()->route('admin.lots-physiques.index')
-            ->with('success', 'Paiement confirme ! Vos planches de QR codes sont pretes a telecharger.');
+            ->with('qr_succes', LotAutoService::donneesResultat($reference));
     }
 
     // Webhook FedaPay : notification serveur à serveur

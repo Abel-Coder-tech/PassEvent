@@ -12,6 +12,7 @@ use App\Services\LotAutoService;
 use App\Services\LotPhysiquePdfService;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log as FacadesLog;
@@ -71,18 +72,24 @@ class LotPhysiqueController extends Controller
             2
         );
 
-        return view('admin.lots-physiques.index', compact(
-            'lots', 'nbTickets', 'nbAnnules', 'nbScannes',
-            'recettesPhysiques', 'commissionPhysique', 'commissionAutoPayee',
-        ));
+        return view('admin.lots-physiques.index', [
+            'lots' => $lots,
+            'nbTickets' => $nbTickets,
+            'nbAnnules' => $nbAnnules,
+            'nbScannes' => $nbScannes,
+            'recettesPhysiques' => $recettesPhysiques,
+            'commissionPhysique' => $commissionPhysique,
+            'commissionAutoPayee' => $commissionAutoPayee,
+            'evenementsAuto' => $this->evenementsAuto($user),
+            'tauxCommission' => LotPhysique::TAUX_AUTO,
+            'emailDefaut' => $user->email,
+        ]);
     }
 
-    // Page d'auto-génération des QR codes (barre de progression + calcul dynamique)
-    public function generer()
+    // Événements éligibles à l'auto-génération (à venir, avec au moins un tarif actif)
+    private function evenementsAuto($user)
     {
-        $user = Auth::user();
-
-        $evenements = $user->evenements()
+        return $user->evenements()
             ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
             ->orderBy('date_event')
             ->with('tarifs')
@@ -104,12 +111,6 @@ class LotPhysiqueController extends Controller
                     ])->values()->all(),
                 ];
             });
-
-        return view('admin.lots-physiques.generer', [
-            'evenements' => $evenements,
-            'tauxCommission' => LotPhysique::TAUX_AUTO,
-            'emailDefaut' => Auth::user()->email,
-        ]);
     }
 
     // Crée la commande (lots en attente de paiement) puis redirige vers le checkout FedaPay.
@@ -186,7 +187,7 @@ class LotPhysiqueController extends Controller
             $this->envoyerConfirmation($lots);
 
             return redirect()->route('admin.lots-physiques.index')
-                ->with('success', 'Vos QR codes sont prêts ! Téléchargez vos planches ci-dessous.');
+                ->with('qr_succes', LotAutoService::donneesResultat($reference));
         }
 
         return redirect()->route('admin.lots-physiques.checkout', $reference);
@@ -254,5 +255,33 @@ class LotPhysiqueController extends Controller
         $pdf = LotPhysiquePdfService::generer($lot, $tickets);
 
         return $pdf->download('Planche-'.$lot->nom.'-'.$lot->evenement?->titre.'.pdf');
+    }
+
+    // Supprime un lot de tickets physiques et ses tickets (jamais si des tickets ont été scannés)
+    public function destroy(LotPhysique $lot): RedirectResponse
+    {
+        if ($lot->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $nbScannes = $lot->tickets()->where('utilise', true)->count();
+        if ($nbScannes > 0) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Impossible de supprimer ce lot : des tickets ont déjà été scannés à l\'entrée.');
+        }
+
+        // Commande en attente dont le paiement est à réconcilier : on ne supprime pas
+        if ($lot->statut === 'en_attente_paiement' && $lot->fedapay_transaction_id) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Impossible de supprimer cette commande : son paiement est en cours de vérification.');
+        }
+
+        DB::transaction(function () use ($lot) {
+            Ticket::where('lot_physique_id', $lot->id)->delete();
+            $lot->delete();
+        });
+
+        return redirect()->route('admin.lots-physiques.index')
+            ->with('success', 'Lot supprimé.');
     }
 }

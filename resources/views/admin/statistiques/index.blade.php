@@ -47,7 +47,7 @@
     </div>
     <p class="text-muted mb-4" style="font-size: 0.9rem;">
         <i class="bi bi-calendar3 me-1"></i>
-        Periode selectionnee : <strong>{{ $stats['periode_label'] }}</strong>
+        Période selectionnée : <strong>{{ $stats['periode_label'] }}</strong>
     </p>
 
     {{-- KPIs --}}

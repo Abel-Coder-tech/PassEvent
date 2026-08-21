@@ -11,6 +11,25 @@ use Illuminate\Support\Str;
 
 class LotAutoService
 {
+    // Données du modal de résultat (succès) : lots de la commande + liens de téléchargement
+    public static function donneesResultat(string $reference): array
+    {
+        $lots = LotPhysique::with('tarif')
+            ->where('reference_paiement', $reference)
+            ->get();
+
+        return [
+            'reference' => $reference,
+            'lots' => $lots->map(fn ($l) => [
+                'nom' => $l->tarif?->nom ?? 'Pass',
+                'quantite' => $l->quantite,
+                'telecharger' => $l->statut === 'transmis'
+                    ? route('admin.lots-physiques.download', $l)
+                    : null,
+            ])->values()->all(),
+        ];
+    }
+
     // Crée les tickets de chaque lot auto-généré et marque les lots transmis.
     // Appelé UNIQUEMENT après vérification du paiement via l'API FedaPay (callback ou webhook).
     // Idempotent : le verrouillage + le contrôle de statut empêchent une double génération
