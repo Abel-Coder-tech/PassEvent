@@ -247,7 +247,7 @@
                         <label class="form-label fw-semibold" style="font-size: 0.82rem;">Événement <span class="text-danger">*</span></label>
                         <select name="evenement_id" id="createEventSelect" class="form-select" required onchange="loadTarifs(this.value)">
                             <option value="">Sélectionner un événement</option>
-                            @foreach($evenements as $event)
+                            @foreach($evenementsCreation as $event)
                                 <option value="{{ $event->id }}" {{ $selectedEvent == $event->id ? 'selected' : '' }}>
                                     {{ $event->titre }}
                                 </option>

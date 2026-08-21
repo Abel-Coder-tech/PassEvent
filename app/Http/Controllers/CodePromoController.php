@@ -22,6 +22,12 @@ class CodePromoController extends Controller
             ->orderBy('date_event', 'desc')
             ->get();
 
+        // Formulaire de création : uniquement les événements à venir
+        $evenementsCreation = Evenement::where('user_id', $user->id)
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->orderBy('date_event')
+            ->get();
+
         $selectedEvent = $request->input('evenement_id');
         $q = $request->input('q');
         $statut = $request->input('statut');
@@ -66,6 +72,7 @@ class CodePromoController extends Controller
         return view('admin.codes-promos.index', compact(
             'codesPromos',
             'evenements',
+            'evenementsCreation',
             'selectedEvent',
             'q',
             'statut',
@@ -96,6 +103,11 @@ class CodePromoController extends Controller
 
         if ($evenement->user_id !== Auth::id()) {
             abort(403);
+        }
+
+        // Règle métier : plus de codes promo sur un événement déjà passé
+        if ($evenement->date_event && $evenement->date_event->isPast()) {
+            return back()->with('error', 'Cet événement est déjà passé : impossible d\'y créer des codes promo.');
         }
 
         $count = $request->input('count', 1);

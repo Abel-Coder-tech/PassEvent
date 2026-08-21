@@ -35,7 +35,11 @@ class AgentVenteController extends Controller
     // Affiche le formulaire de création d'un agent de vente
     public function create(): View
     {
-        $evenements = Evenement::where('user_id', auth()->id())->latest()->get();
+        // Règle métier : affectation d'agents uniquement sur des événements à venir
+        $evenements = Evenement::where('user_id', auth()->id())
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->orderBy('date_event')
+            ->get();
 
         return view('admin.agents-vente.create', compact('evenements'));
     }
@@ -51,6 +55,11 @@ class AgentVenteController extends Controller
 
         $evenement = Evenement::where('user_id', auth()->id())
             ->findOrFail($validated['evenement_id']);
+
+        // Règle métier : pas d'agent de vente sur un événement déjà passé
+        if ($evenement->date_event && $evenement->date_event->isPast()) {
+            return back()->with('error', 'Cet événement est déjà passé : impossible d\'y affecter un agent de vente.');
+        }
 
         $nbActifs = $evenement->agentsVentes()->where('actif', true)->count();
         $limite = $evenement->limiteAgentsVente();
