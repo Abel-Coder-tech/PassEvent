@@ -5,7 +5,7 @@
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #7c3aed; color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header { background: linear-gradient(135deg, #542680, #3d1a5c); color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
         .header h1 { margin: 0; font-size: 1.5rem; }
         .content { padding: 20px; background: #f9fafb; }
         .info { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 16px 0; }

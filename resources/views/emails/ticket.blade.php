@@ -71,7 +71,7 @@
             width: 42px;
             height: 42px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #7B3FA0, #2E7D4F);
+            background: linear-gradient(135deg, #542680, #3d1a5c);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -111,7 +111,7 @@
             font-weight: 700;
         }
         .event-card .price {
-            color: #2E7D4F;
+            color: #542680;
             font-size: 15px;
         }
         .info-box {
