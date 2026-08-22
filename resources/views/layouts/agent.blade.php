@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Agent — PaxEvent')</title>
+    <script>document.documentElement.classList.add('fouc');</script>
+    <style>html.fouc body{visibility:hidden!important}</style>
+    <link rel="preload" href="/assets/css/bootstrap.min.css" as="style">
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -111,5 +114,6 @@
     <script src="/assets/js/bootstrap.bundle.min.js"></script>
     <script>function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}</script>
     @stack('scripts')
+    <script>document.documentElement.classList.remove('fouc');</script>
 </body>
 </html>
