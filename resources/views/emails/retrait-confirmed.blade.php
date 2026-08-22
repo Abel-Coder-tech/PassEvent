@@ -8,13 +8,13 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;line-height:1.6;color:#1d1d1f;margin:0;padding:0;background:#f5f3f0}
         .container{max-width:560px;margin:24px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.06)}
         .header{background:linear-gradient(135deg,#542680,#3d1a5c);color:#fff;padding:28px 36px;text-align:center;position:relative}
-        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#27ae60,#FED514,#27ae60)}
+        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#542680,#FED514,#542680)}
         .content{padding:28px 36px 20px}
         .greeting{font-size:15px;margin:0 0 4px}
         .greeting strong{color:#542680}
         .intro{font-size:13px;color:#6c757d;margin:0 0 20px}
-        .success-box{background:#f0faf4;border-radius:12px;padding:16px 20px;margin:0 0 20px;border-left:4px solid #27ae60;text-align:center}
-        .success-box h3{margin:0 0 8px;font-size:16px;color:#27ae60}
+        .success-box{background:#f6f1fa;border-radius:12px;padding:16px 20px;margin:0 0 20px;border-left:4px solid #542680;text-align:center}
+        .success-box h3{margin:0 0 8px;font-size:16px;color:#542680}
         .success-box p{margin:0;font-size:13px;color:#6c757d}
         .detail-box{background:#f8f6f9;border-radius:12px;padding:16px 20px;margin:0 0 20px}
         .detail-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ede5f0;font-size:13px}
