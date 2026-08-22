@@ -31,6 +31,9 @@
     <meta name="twitter:image" content="@yield('og_image', asset('images/og-image.png'))">
 
     @stack('meta')
+    <script>document.documentElement.classList.add('fouc');</script>
+    <style>html.fouc body{visibility:hidden!important}</style>
+    <link rel="preload" href="/assets/css/bootstrap.min.css" as="style">
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -691,5 +694,6 @@
     </script>
     <script>function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}</script>
     @yield('scripts')
+    <script>document.documentElement.classList.remove('fouc');</script>
 </body>
 </html>
