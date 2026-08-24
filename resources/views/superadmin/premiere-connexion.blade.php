@@ -46,7 +46,7 @@
             </div>
         @endif
 
-        <form action="{{ route('superadmin.premiere-connexion.post') }}" method="POST">
+        <form action="{{ route('equipe.premiere-connexion.post') }}" method="POST">
             @csrf
             <div class="mb-3">
                 <label class="form-label fw-semibold" style="font-size:0.8rem;">Pseudo</label>

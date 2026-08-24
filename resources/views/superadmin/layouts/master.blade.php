@@ -544,14 +544,14 @@
             <div class="brand-icon"><i class="bi bi-shield-fill-check"></i></div>
             <div>
                 <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" class="mb-1">
-                <div class="brand-sub">Super Admin</div>
+                <div class="brand-sub">{{ ($saUser = auth('superadmin')->user()) && $saUser->estEquipe() ? 'Espace Equipe' : 'Super Admin' }}</div>
             </div>
         </div>
 
         <nav class="sa-sidebar-nav">
-            @php $saUser = auth('superadmin')->user(); $estEquipe = $saUser->estEquipe(); @endphp
+            @php $saUser = auth('superadmin')->user(); $estEquipe = $saUser->estEquipe(); $saPref = $estEquipe ? 'equipe.' : 'superadmin.'; @endphp
             <div class="sa-nav-section">Supervision</div>
-            <a href="{{ route('superadmin.dashboard') }}" class="sa-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+            <a href="{{ route($saPref.'dashboard') }}" class="sa-nav-link {{ request()->routeIs($saPref.'dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
             </a>
             @if(!$estEquipe)
@@ -568,7 +568,7 @@
             </a>
             @endif
             @if($saUser->aRole('validateur'))
-            <a href="{{ route('superadmin.organisateurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.organisateurs*') ? 'active' : '' }}">
+            <a href="{{ route($saPref.'organisateurs') }}" class="sa-nav-link {{ request()->routeIs($saPref.'organisateurs*') ? 'active' : '' }}">
                 <i class="bi bi-person-badge-fill"></i> Organisateurs
                 @php $pendingOrgs = \App\Models\User::where('role','admin')->whereIn('statut', ['en_attente', 'corrections_apportees'])->count(); @endphp
                 @if($pendingOrgs > 0)<span class="sa-nav-badge amber">{{ $pendingOrgs }}</span>@endif
@@ -588,12 +588,12 @@
 
             @if($saUser->aRole('validateur'))
             <div class="sa-nav-section">Finances</div>
-            <a href="{{ route('superadmin.retraits') }}" class="sa-nav-link {{ request()->routeIs('superadmin.retraits*') ? 'active' : '' }}">
+            <a href="{{ route($saPref.'retraits') }}" class="sa-nav-link {{ request()->routeIs($saPref.'retraits*') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Retraits
                 @php $pendingRetraits = \App\Models\Withdrawal::where('status','en_attente')->count(); @endphp
                 @if($pendingRetraits > 0)<span class="sa-nav-badge">{{ $pendingRetraits }}</span>@endif
             </a>
-            <a href="{{ route('superadmin.remboursements.demandes') }}" class="sa-nav-link {{ request()->routeIs('superadmin.remboursements*') ? 'active' : '' }}">
+            <a href="{{ route($saPref.'remboursements.demandes') }}" class="sa-nav-link {{ request()->routeIs($saPref.'remboursements*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-return-left"></i> Remboursements
                 @php $pendingRemb = \App\Models\DemandeRemboursement::where('statut','en_attente')->count(); @endphp
                 @if($pendingRemb > 0)<span class="sa-nav-badge">{{ $pendingRemb }}</span>@endif
@@ -601,7 +601,7 @@
             @endif
 
             @if($saUser->aRole('assistant_technique'))
-            <a href="{{ route('superadmin.support') }}" class="sa-nav-link {{ request()->routeIs('superadmin.support*') ? 'active' : '' }}">
+            <a href="{{ route($saPref.'support') }}" class="sa-nav-link {{ request()->routeIs($saPref.'support*') ? 'active' : '' }}">
                 <i class="bi bi-tools"></i> Support technique
                 @php $incidentsSupport = \App\Models\Ticket::where('statut_paiement','en_attente')->whereNotNull('fedapay_transaction_id')->count(); @endphp
                 @if($incidentsSupport > 0)<span class="sa-nav-badge" style="background:#e74c3c;">{{ $incidentsSupport }}</span>@endif
@@ -623,7 +623,7 @@
             @endif
 
             @if($saUser->aRole('support_client', 'assistant_technique'))
-            <a href="{{ route('superadmin.notifications') }}" class="sa-nav-link {{ request()->routeIs('superadmin.notifications*') ? 'active' : '' }}">
+            <a href="{{ route($saPref.'notifications') }}" class="sa-nav-link {{ request()->routeIs($saPref.'notifications*') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
                 @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
                 @if($unreadMsgs > 0)<span class="sa-nav-badge">{{ $unreadMsgs }}</span>@endif
@@ -664,12 +664,12 @@
                 <span class="sa-topbar-title">@yield('page-title', 'Tableau de bord')</span>
             </div>
             <div class="sa-topbar-right">
-                <a href="{{ route('superadmin.notifications') }}" class="sa-notif-btn" title="Notifications">
+                <a href="{{ route($saPref.'notifications') }}" class="sa-notif-btn" title="Notifications">
                     <i class="bi bi-bell-fill"></i>
                     @php $headerUnread = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
                     @if($headerUnread > 0)<span class="sa-notif-dot">{{ $headerUnread > 99 ? '99+' : $headerUnread }}</span>@endif
                 </a>
-                <span class="sa-topbar-badge"><i class="bi bi-shield-fill-check"></i> Super Admin</span>
+                <span class="sa-topbar-badge"><i class="bi bi-shield-fill-check"></i> {{ $estEquipe ? 'Equipe PaxEvent' : 'Super Admin' }}</span>
                 <span class="sa-topbar-date">{{ now()->format('d M Y') }}</span>
             </div>
         </div>

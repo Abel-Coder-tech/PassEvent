@@ -48,8 +48,12 @@ class SuperAdminAuthController extends Controller
 
         // Membre de l'equipe : mot de passe temporaire -> changement obligatoire
         if ($user->estEquipe() && $user->must_change_password) {
-            return redirect()->route('superadmin.premiere-connexion')
+            return redirect()->route('equipe.premiere-connexion')
                 ->with('info', 'Bienvenue ! Pour votre sécurité, définissez votre propre mot de passe pour continuer.');
+        }
+
+        if ($user->estEquipe()) {
+            return redirect()->intended(route('equipe.dashboard'));
         }
 
         return redirect()->intended(route('superadmin.dashboard'));

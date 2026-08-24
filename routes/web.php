@@ -195,6 +195,23 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         });
     });
 });
+
+// ---- Espace dedie aux membres de l'equipe (URLs /equipe distinctes de l'admin) ----
+Route::prefix('equipe')->name('equipe.')->middleware('no_cache')->group(function () {
+    Route::get('/premiere-connexion', [SuperAdminController::class, 'premiereConnexion'])->name('premiere-connexion');
+    Route::post('/premiere-connexion', [SuperAdminController::class, 'enregistrerPremiereConnexion'])->name('premiere-connexion.post');
+
+    Route::middleware(['superadmin', 'equipe_permission'])->group(function () {
+        Route::get('/', [SuperAdminController::class, 'dashboardEquipe'])->name('dashboard');
+        Route::get('/organisateurs', [SuperAdminController::class, 'organisateurs'])->name('organisateurs');
+        Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
+        Route::get('/retraits', [SuperAdminController::class, 'retraits'])->name('retraits');
+        Route::get('/remboursements', [SuperAdminController::class, 'demandesRemboursement'])->name('remboursements.demandes');
+        Route::get('/remboursements/{demande}', [SuperAdminController::class, 'voirDemandeRemboursement'])->name('remboursements.voir');
+        Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
+        Route::get('/support', [SuperAdminController::class, 'support'])->name('support');
+    });
+});
 // Routes globales Spatie Sitemap
 Route::middleware('auth')->get('/generate-sitemap', function () {
     $sitemap = Sitemap::create()

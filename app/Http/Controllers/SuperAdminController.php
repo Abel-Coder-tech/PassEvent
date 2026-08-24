@@ -921,7 +921,7 @@ class SuperAdminController extends Controller
         $user = auth('superadmin')->user();
 
         if (!$user || !$user->estEquipe() || !$user->must_change_password) {
-            return redirect()->route('superadmin.dashboard');
+            return redirect()->route($user && $user->estSuperAdmin() ? 'superadmin.dashboard' : 'equipe.dashboard');
         }
 
         return view('superadmin.premiere-connexion', ['user' => $user]);
@@ -952,7 +952,7 @@ class SuperAdminController extends Controller
             'must_change_password' => false,
         ]);
 
-        return redirect()->route('superadmin.dashboard')->with('success', 'Mot de passe defini avec succes. Bienvenue dans l\'equipe PaxEvent !');
+        return redirect()->route('equipe.dashboard')->with('success', 'Mot de passe defini avec succes. Bienvenue dans l\'equipe PaxEvent !');
     }
 
     // Mise à jour du profil super admin (nom, email, téléphone)
