@@ -178,7 +178,7 @@
             </form>
 
             <div class="login-footer">
-                <span>PaxEvent &mdash; Administration</span>
+                <span>Membre de l'&eacute;quipe ? <a href="{{ route('equipe.login') }}">Connexion &eacute;quipe</a></span>
             </div>
         </div>
     </div>

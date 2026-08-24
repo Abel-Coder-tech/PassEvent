@@ -14,7 +14,7 @@
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h4 class="mb-1 fw-bold">Bonjour {{ auth('superadmin')->user()->prenom }} {{ auth('superadmin')->user()->nom }} 👋</h4>
+        <h4 class="mb-1 fw-bold">Bonjour {{ auth('superadmin')->user()->prenom }} {{ auth('superadmin')->user()->nom }} </h4>
         <p class="text-muted mb-0" style="font-size: 0.85rem;">Voici votre périmètre. Toute section hors périmètre est bloquée.</p>
     </div>
     <div>
