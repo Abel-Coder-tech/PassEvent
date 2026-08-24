@@ -23,7 +23,6 @@
 
                             <h6 class="fw-bold mt-4 mb-2">2. Produits</h6>
                             <p>Les billets sont émis sous forme électronique (e-ticket) contenant un QR code unique. Chaque billet est valable pour une seule entrée à l'événement concerné. Les billets sont au porteur : la première personne présentant le QR code à l'entrée est acceptée, sans obligation de vérifier la concordance avec le nom inscrit.</p>
-                            <p>Les codes QR pour ceux ayant fait la demande sont émis après paiement sous forme de document dans le tableau de bord ou par mail de l'organisateur. Chaque QR code étant unique et valable pour une seule entrée à l'événement concerné.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">3. Prix</h6>
                             <p>Les prix des billets sont fixés librement par les organisateurs et sont exprimés en Francs CFA (FCFA). Les frais de service des agrégateurs de paiement (FedaPay, Kkiapay) et des opérateurs Mobile Money partenaires ne sont pas inclus dans le prix affiché et sont entièrement à la charge de l'acheteur.</p>
@@ -49,9 +48,22 @@
                             <p>Conformément à la législation béninoise et aux exceptions applicables aux prestations de services de loisirs, les billets achetés sur PaxEvent ne sont ni échangeables ni remboursables, sauf dans les cas prévus par la politique de remboursement accessible sur la plateforme.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">9. Responsabilité</h6>
-                            <p>PaxEvent agit en qualité d'intermédiaire technique entre l'organisateur et l'acheteur. PaxEvent ne saurait être tenu responsable de la qualité de l'événement, de son annulation (hors défaut technique de la plateforme), ou des litiges entre l'organisateur et les participants.</p>
+                            <p>PaxEvent agit en qualité de simple mandataire d'encaissement pour le compte de l'Organisateur. PaxEvent ne saurait être tenu responsable de la qualité de l'événement, de son annulation (hors défaut technique de la plateforme), ou des litiges entre l'organisateur et les participants. En cas d'annulation de l'événement et si les fonds ont déjà été reversés à l'Organisateur, la responsabilité du remboursement incombe exclusivement et directement à ce dernier.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">10. Revente et marché noir (revente non officielle)</h6>
+                            <h6 class="fw-bold mt-4 mb-2">10. Annulation, report et modification d'un événement</h6>
+                            <p class="mb-1 fw-semibold">10.1. Conséquence de la décision</p>
+                            <p>Seul l'Organisateur est habilité à décider de l'annulation, du report ou d'une modification substantielle de l'événement. En cas d'annulation ou de report, la responsabilité de la décision et du remboursement des Billets incombe exclusivement et de plein droit à l'Organisateur.</p>
+                            <p class="mb-1 fw-semibold">10.2. Modalités et exécution des remboursements</p>
+                            <p>En cas d'annulation officielle de l'événement :</p>
+                            <ul>
+                                <li><strong>Fonds détenus par PaxEvent :</strong> Si les recettes issues de la vente de la billetterie sont encore conservées sur le compte séquestre de PaxEvent au moment de l'annulation, PaxEvent procédera, au nom et pour le compte de l'Organisateur, au remboursement direct des Acheteurs sur le moyen de paiement utilisé lors de la commande.</li>
+                                <li><strong>Fonds reversés à l'Organisateur :</strong> Dans l'hypothèse où tout ou partie des recettes de la billetterie aurait déjà été reversé à l'Organisateur au moment de l'annulation, le remboursement des Acheteurs reste sous la responsabilité directe de l'Organisateur. PaxEvent mettra en œuvre ses meilleurs efforts pour récupérer les fonds auprès de ce dernier afin de désintéresser les Acheteurs, mais ne saurait se substituer financièrement à la défaillance ou au refus de restitution de l'Organisateur.</li>
+                            </ul>
+                            <p class="mb-1 fw-semibold">10.3. Frais de service et commissions</p>
+                            <p>Sauf disposition contraire expressément communiquée lors de l'achat ou obligation légale applicable, les frais de service, de traitement bancaire ou de gestion perçus par PaxEvent correspondent à une prestation de billetterie et d'émission de Billet pleinement exécutée dès la validation de la commande.</p>
+                            <p>En conséquence, ces frais demeurent non remboursables à l'Acheteur en cas d'annulation ou de report de l'événement du fait de l'Organisateur, la valeur nominale du Billet (prix facial) constituant la seule somme exigible auprès de l'Organisateur.</p>
+
+                            <h6 class="fw-bold mt-4 mb-2">11. Revente et marché noir (revente non officielle)</h6>
                             <p>Bien que les e-tickets soient transférables et « au porteur » (permettant de les offrir légitimement à des tiers), PaxEvent applique une politique stricte concernant la revente commerciale non autorisée.</p>
                             <ul>
                                 <li><strong>Interdiction de spéculation :</strong> La revente de billets achetés sur PaxEvent à un prix supérieur à leur valeur faciale initiale (marché noir ou surévaluation) est formellement interdite.</li>
@@ -59,10 +71,10 @@
                                 <li><strong>Sanctions :</strong> L'Organisateur et PaxEvent se réservent le droit d'annuler sans préavis ni remboursement tout billet suspecté d'avoir fait l'objet d'une transaction frauduleuse ou spéculative, et de bloquer l'accès à l'événement au porteur de ce billet.</li>
                             </ul>
 
-                            <h6 class="fw-bold mt-4 mb-2">11. Données personnelles</h6>
+                            <h6 class="fw-bold mt-4 mb-2">12. Données personnelles</h6>
                             <p>Les données personnelles collectées lors de l'achat sont traitées conformément à la politique de confidentialité de PaxEvent, en accord avec la loi n° 2017-20 du 20 avril 2018 portant protection des données à caractère personnel en République du Bénin.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">12. Loi applicable et juridiction</h6>
+                            <h6 class="fw-bold mt-4 mb-2">13. Loi applicable et juridiction</h6>
                             <p>Les présentes CGV sont régies par le droit béninois. En cas de litige, les tribunaux compétents sont ceux du Bénin.</p>
                         </div>
 
