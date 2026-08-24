@@ -39,6 +39,12 @@ class CheckPermissionEquipe
         $chemins = explode('/', str_replace('superadmin/', '', trim($request->path(), '/')));
         $racine = $chemins[0] ?? '';
 
+        // Le tableau de bord (/superadmin ou /superadmin/) est accessible a tout membre connecte :
+        // son contenu est deja filtre par role dans le controleur.
+        if ($racine === '' || $racine === 'superadmin') {
+            return $next($request);
+        }
+
         foreach (self::CARTE as $motif => $roles) {
             if ($this->correspond($racine, $motif)) {
                 foreach ($roles as $slug) {
