@@ -196,13 +196,17 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     });
 });
 
-// ---- Espace dedie aux membres de l'equipe (URLs /equipe distinctes de l'admin) ----
+// ---- Portail dedie aux membres de l'equipe (URLs /equipe distinctes de l'admin et du superadmin) ----
 Route::prefix('equipe')->name('equipe.')->middleware('no_cache')->group(function () {
+    Route::get('/', [SuperAdminAuthController::class, 'portail'])->name('portail');
+    Route::get('/login', [SuperAdminAuthController::class, 'showLoginFormEquipe'])->name('login');
+    Route::post('/login', [SuperAdminAuthController::class, 'loginEquipe'])->name('login.post')->middleware('throttle:5,1');
+
     Route::get('/premiere-connexion', [SuperAdminController::class, 'premiereConnexion'])->name('premiere-connexion');
     Route::post('/premiere-connexion', [SuperAdminController::class, 'enregistrerPremiereConnexion'])->name('premiere-connexion.post');
 
-    Route::middleware(['superadmin', 'equipe_permission'])->group(function () {
-        Route::get('/', [SuperAdminController::class, 'dashboardEquipe'])->name('dashboard');
+    Route::middleware(['equipe_permission'])->group(function () {
+        Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/organisateurs', [SuperAdminController::class, 'organisateurs'])->name('organisateurs');
         Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
         Route::get('/retraits', [SuperAdminController::class, 'retraits'])->name('retraits');

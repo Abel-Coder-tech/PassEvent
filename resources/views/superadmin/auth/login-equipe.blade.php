@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin - PaxEvent</title>
+    <title>Espace Équipe - PaxEvent</title>
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -11,7 +11,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #1a1d23;
+            background: #0f172a;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -28,7 +28,7 @@
             background: #fff;
             border-radius: 16px;
             padding: 2.5rem 2rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
         }
 
         .login-brand {
@@ -37,7 +37,7 @@
         }
         .login-brand-icon {
             width: 56px; height: 56px;
-            background: linear-gradient(135deg, #6B3FA0, #5a35a0);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 1rem;
@@ -74,8 +74,8 @@
             background: #f8f9fa;
         }
         .login-input:focus {
-            border-color: #6B3FA0;
-            box-shadow: 0 0 0 3px rgba(107,63,160,0.12);
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
             outline: none;
             background: #fff;
         }
@@ -83,7 +83,7 @@
         .login-btn {
             width: 100%;
             padding: 0.8rem;
-            background: linear-gradient(135deg, #6B3FA0, #5a35a0);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: #fff;
             border: none;
             border-radius: 10px;
@@ -102,7 +102,7 @@
             color: #8898aa;
         }
         .login-footer a {
-            color: #6B3FA0;
+            color: #2563eb;
             text-decoration: none;
             font-weight: 600;
         }
@@ -111,6 +111,18 @@
         .login-alert {
             background: rgba(231,76,60,0.08);
             color: #e74c3c;
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            font-size: 0.82rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .login-info {
+            background: rgba(37,99,235,0.08);
+            color: #1d4ed8;
             border-radius: 10px;
             padding: 0.7rem 1rem;
             font-size: 0.82rem;
@@ -139,9 +151,10 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-brand">
-                <div class="login-brand-icon"><i class="bi bi-shield-fill-check"></i></div>
-                <h1>Bienvenue</h1>
-                <p>Dans votre espace administrateur</p>
+                <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="56" class="mb-3">
+                <div class="login-brand-icon"><i class="bi bi-people-fill"></i></div>
+                <h1>Espace Équipe</h1>
+                <p>Connexion réservée aux membres de l'équipe PaxEvent</p>
             </div>
 
             @if($errors->any())
@@ -149,9 +162,14 @@
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     {{ $errors->first() }}
                 </div>
+            @elseif(session('info'))
+                <div class="login-info">
+                    <i class="bi bi-info-circle-fill"></i>
+                    {{ session('info') }}
+                </div>
             @endif
 
-            <form action="{{ route('superadmin.login.post') }}" method="POST">
+            <form action="{{ route('equipe.login.post') }}" method="POST">
                 @csrf
 
                 <div class="mb-3">
@@ -163,22 +181,21 @@
                 <div class="mb-3">
                     <label class="login-label"><i class="bi bi-lock me-1"></i>Mot de passe</label>
                     <div class="position-relative">
-                        <input type="password" name="mot_de_passe" id="sa_password" class="login-input @error('mot_de_passe') is-invalid @enderror" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
+                        <input type="password" name="mot_de_passe" id="eq_password" class="login-input @error('mot_de_passe') is-invalid @enderror" placeholder="Mot de passe" required minlength="8" autocomplete="current-password">
                         <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
                             <i class="bi bi-eye" style="color: #9a9a9a;"></i>
                         </button>
                     </div>
                     @error('mot_de_passe')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
-                    <div class="password-hint"><i class="bi bi-shield-check"></i> Minimum 8 caracteres — mot de passe fort requis</div>
                 </div>
 
                 <button type="submit" class="login-btn">
-                    <i class="bi bi-shield-fill-check me-2"></i>Acceder au tableau de bord
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Accéder à mon espace
                 </button>
             </form>
 
             <div class="login-footer">
-                <span>Membre de l'&eacute;quipe ? <a href="{{ route('equipe.login') }}">Connexion &eacute;quipe</a></span>
+                <span>Vous êtes le propriétaire ? <a href="{{ route('superadmin.login') }}">Connexion administration</a></span>
             </div>
         </div>
     </div>

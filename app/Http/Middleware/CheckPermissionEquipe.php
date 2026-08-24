@@ -21,7 +21,9 @@ class CheckPermissionEquipe
         $user = auth('superadmin')->user();
 
         if (!$user) {
-            return redirect()->route('superadmin.login');
+            return redirect()->route($request->is('equipe') || $request->is('equipe/*')
+                ? 'equipe.login'
+                : 'superadmin.login');
         }
 
         if ($user->estSuperAdmin()) {
@@ -32,7 +34,7 @@ class CheckPermissionEquipe
             $autorises = [
                 'superadmin.premiere-connexion', 'superadmin.premiere-connexion.post',
                 'equipe.premiere-connexion', 'equipe.premiere-connexion.post',
-                'superadmin.logout',
+                'equipe.portail', 'superadmin.logout',
             ];
             if (!in_array($request->route()?->getName(), $autorises, true)) {
                 return redirect()->route('equipe.premiere-connexion')
@@ -81,7 +83,7 @@ class CheckPermissionEquipe
     private function autorise($user, string $racine): bool
     {
         // Le tableau de bord est accessible a tout membre connecte : son contenu est deja filtre par role.
-        if ($racine === '') {
+        if ($racine === '' || $racine === 'dashboard') {
             return true;
         }
 

@@ -920,8 +920,16 @@ class SuperAdminController extends Controller
     {
         $user = auth('superadmin')->user();
 
-        if (!$user || !$user->estEquipe() || !$user->must_change_password) {
-            return redirect()->route($user && $user->estSuperAdmin() ? 'superadmin.dashboard' : 'equipe.dashboard');
+        if (!$user) {
+            return redirect()->route('equipe.login');
+        }
+
+        if (!$user->estEquipe()) {
+            return redirect()->route($user->estSuperAdmin() ? 'superadmin.dashboard' : 'equipe.login');
+        }
+
+        if (!$user->must_change_password) {
+            return redirect()->route('equipe.dashboard');
         }
 
         return view('superadmin.premiere-connexion', ['user' => $user]);
@@ -932,7 +940,7 @@ class SuperAdminController extends Controller
         $user = auth('superadmin')->user();
 
         if (!$user || !$user->estEquipe()) {
-            return redirect()->route('superadmin.login');
+            return redirect()->route('equipe.login');
         }
 
         $donnees = $request->validate([
