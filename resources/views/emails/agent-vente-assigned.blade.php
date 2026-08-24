@@ -22,7 +22,7 @@
         </div>
         <div class="content">
             <p>Bonjour <strong>{{ $agent->nom }}</strong>,</p>
-            <p>Vous avez été ajouté comme agent de vente pour l'événement <strong>{{ $agent->evenement->titre }}</strong>.</p>
+            <p>Vous avez été designé comme agent de vente pour l'événement <strong>{{ $agent->evenement->titre }}</strong>.</p>
 
             <div class="info">
                 <p><span class="label">Événement :</span> {{ $agent->evenement->titre }}</p>
