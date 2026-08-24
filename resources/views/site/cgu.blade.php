@@ -129,10 +129,16 @@
                             </ul>
 
                             <h6 class="fw-bold mt-4 mb-2">11. Modification, report ou annulation de l'événement</h6>
+                            <p class="mb-1 fw-semibold">11.1. Notification</p>
+                            <p>En cas d'annulation, de report ou de modification majeure de l'événement, l'Organisateur s'engage à en informer PaxEvent par écrit sans délai. Dès réception de cette notification, PaxEvent procédera à la suspension immédiate des ventes de billets.</p>
+                            <p class="mb-1 fw-semibold">11.2. Modalités de remboursement</p>
+                            <p>Les remboursements sont exécutés par PaxEvent pour le compte de l'Organisateur, en utilisant le montant disponible issu de la billetterie de l'événement.</p>
                             <ul>
-                                <li>En cas de modification majeure (changement de lieu, de date ou d'horaire) ou d'annulation de l'événement, l'Organisateur doit immédiatement en informer PaxEvent ainsi que tous les Acheteurs ayant déjà réservé une place.</li>
-                                <li>En cas d'annulation définitive, l'Organisateur assume la responsabilité légale et financière du remboursement intégral ou partiel à hauteur de 90% de la valeur faciale des billets auprès des Acheteurs, conformément aux CGV.</li>
+                                <li>Si le montant total des ventes conservé par PaxEvent est suffisant, elle recréditera directement les acheteurs sur leur moyen de paiement d'origine.</li>
+                                <li>Si tout ou partie des recettes a déjà été reversé à l'Organisateur, ce dernier s'engage à recréditer le compte de PaxEvent du montant nécessaire sous un délai de cinq (5) jours ouvrés à compter de la notification.</li>
                             </ul>
+                            <p class="mb-1 fw-semibold">11.3. Frais de service et commissions</p>
+                            <p>Les commissions et frais de gestion dus à PaxEvent au titre de la vente initiale restent intégralement acquis à cette dernière, la prestation technique d'émission et de gestion de la transaction ayant été exécutée.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">12. Clause d'exclusion automatique et de bannissement</h6>
                             <p>PaxEvent se réserve le droit exclusif de suspendre temporairement ou de bannir définitivement, de manière automatique et sans préavis, le compte de tout Organisateur qui ne respecterait pas ses engagements contractuels et légaux.</p>
