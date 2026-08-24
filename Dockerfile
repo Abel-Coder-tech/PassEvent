@@ -1,4 +1,4 @@
-FROM richarvey/nginx-php-fpm:<version>@sha256:<digest>
+FROM richarvey/nginx-php-fpm:latest
 
 USER root
 
