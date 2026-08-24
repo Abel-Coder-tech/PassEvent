@@ -29,6 +29,36 @@ class User extends Authenticatable
         ],
     ];
 
+    // Permissions fines disponibles pour chaque role : cle => libelle affiche dans la case a cocher
+    public const ACCES_PAR_ROLE = [
+        'validateur' => [
+            'organisateurs.consulter' => 'Page Organisateurs',
+            'organisateurs.valider' => 'Valider / rejeter un compte',
+            'organisateurs.suspendre' => 'Suspendre / réactiver un compte',
+            'organisateurs.supprimer' => 'Supprimer un compte',
+            'retraits.consulter' => 'Page Retraits',
+            'retraits.traiter' => 'Approuver / confirmer un retrait',
+            'retraits.rejeter' => 'Rejeter un retrait',
+            'remboursements.consulter' => 'Page Remboursements',
+            'remboursements.traiter' => 'Traiter un remboursement',
+        ],
+        'support_client' => [
+            'notifications.consulter' => 'Page Notifications',
+            'notifications.repondre' => 'Répondre aux messages',
+            'notifications.supprimer' => 'Supprimer une notification',
+        ],
+        'assistant_technique' => [
+            'support.consulter' => 'Page Support technique',
+            'support.verifier' => 'Vérifier une transaction',
+            'support.confirmer' => 'Confirmer un paiement',
+            'support.recreeer' => 'Recréer un ticket',
+            'support.renvoyer' => 'Renvoyer l\'email d\'un ticket',
+            'support.rembourser' => 'Rembourser un achat',
+            'support.supprimer' => 'Supprimer un ticket',
+            'notifications.consulter' => 'Page Notifications',
+        ],
+    ];
+
     protected $fillable = [
         'nom',
         'prenom',
@@ -103,8 +133,10 @@ class User extends Authenticatable
             return true;
         }
 
+        $role = $this->roleEquipe();
+
         foreach ($slugs as $slug) {
-            if (in_array($slug, (array) ($this->permissions ?? []))) {
+            if ($slug === $role) {
                 return true;
             }
         }
@@ -112,14 +144,64 @@ class User extends Authenticatable
         return false;
     }
 
-    public function libelleRolesEquipe(): string
+    // Slug du role unique du membre (null si non defini). Compat ancien format [slugs].
+    public function roleEquipe(): ?string
     {
-        $libelles = [];
-        foreach ((array) ($this->permissions ?? []) as $slug) {
-            $libelles[] = self::ROLES_EQUIPE[$slug]['libelle'] ?? $slug;
+        $p = $this->permissions;
+
+        if (is_array($p) && isset($p['role'])) {
+            return isset(self::ROLES_EQUIPE[$p['role']]) ? $p['role'] : null;
         }
 
-        return implode(', ', $libelles) ?: 'Aucun rôle';
+        if (is_array($p) && $p !== []) {
+            $ancien = array_values($p)[0];
+
+            return isset(self::ROLES_EQUIPE[$ancien]) ? $ancien : null;
+        }
+
+        return null;
+    }
+
+    // Cles d'acces fines du membre. Ancien format : tous les acces du role par defaut.
+    public function accesEquipe(): array
+    {
+        $p = $this->permissions;
+
+        if (is_array($p) && isset($p['acces'])) {
+            return array_values(array_intersect(
+                (array) $p['acces'],
+                array_keys(self::ACCES_PAR_ROLE[$this->roleEquipe() ?? ''] ?? [])
+            ));
+        }
+
+        $role = $this->roleEquipe();
+
+        return $role ? array_keys(self::ACCES_PAR_ROLE[$role] ?? []) : [];
+    }
+
+    // Verifie une ou plusieurs cles d'acces fines (au moins une suffit)
+    public function peut(string ...$cles): bool
+    {
+        if ($this->estSuperAdmin()) {
+            return true;
+        }
+
+        $acces = $this->accesEquipe();
+
+        foreach ($cles as $cle) {
+            if (in_array($cle, $acces, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function libelleRoleEquipe(): string
+    {
+        $role = $this->roleEquipe();
+
+        return $role ? (self::ROLES_EQUIPE[$role]['libelle'] ?? $role) : 'Aucun rôle';
     }
 
     public function evenements(): HasMany

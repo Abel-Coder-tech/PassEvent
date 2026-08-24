@@ -567,7 +567,7 @@
                 <i class="bi bi-people-fill"></i> Utilisateurs
             </a>
             @endif
-            @if($saUser->aRole('validateur'))
+            @if($saUser->peut('organisateurs.consulter'))
             <a href="{{ route($saPref.'organisateurs') }}" class="sa-nav-link {{ request()->routeIs($saPref.'organisateurs*') ? 'active' : '' }}">
                 <i class="bi bi-person-badge-fill"></i> Organisateurs
                 @php $pendingOrgs = \App\Models\User::where('role','admin')->whereIn('statut', ['en_attente', 'corrections_apportees'])->count(); @endphp
@@ -586,13 +586,17 @@
             </a>
             @endif
 
-            @if($saUser->aRole('validateur'))
+            @if($saUser->peut('retraits.consulter', 'remboursements.consulter'))
             <div class="sa-nav-section">Finances</div>
+            @endif
+            @if($saUser->peut('retraits.consulter'))
             <a href="{{ route($saPref.'retraits') }}" class="sa-nav-link {{ request()->routeIs($saPref.'retraits*') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Retraits
                 @php $pendingRetraits = \App\Models\Withdrawal::where('status','en_attente')->count(); @endphp
                 @if($pendingRetraits > 0)<span class="sa-nav-badge">{{ $pendingRetraits }}</span>@endif
             </a>
+            @endif
+            @if($saUser->peut('remboursements.consulter'))
             <a href="{{ route($saPref.'remboursements.demandes') }}" class="sa-nav-link {{ request()->routeIs($saPref.'remboursements*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-return-left"></i> Remboursements
                 @php $pendingRemb = \App\Models\DemandeRemboursement::where('statut','en_attente')->count(); @endphp
@@ -600,7 +604,7 @@
             </a>
             @endif
 
-            @if($saUser->aRole('assistant_technique'))
+            @if($saUser->peut('support.consulter'))
             <a href="{{ route($saPref.'support') }}" class="sa-nav-link {{ request()->routeIs($saPref.'support*') ? 'active' : '' }}">
                 <i class="bi bi-tools"></i> Support technique
                 @php $incidentsSupport = \App\Models\Ticket::where('statut_paiement','en_attente')->whereNotNull('fedapay_transaction_id')->count(); @endphp
@@ -622,7 +626,7 @@
             <div class="sa-nav-section">Systeme</div>
             @endif
 
-            @if($saUser->aRole('support_client', 'assistant_technique'))
+            @if($saUser->peut('notifications.consulter'))
             <a href="{{ route($saPref.'notifications') }}" class="sa-nav-link {{ request()->routeIs($saPref.'notifications*') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
                 @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
@@ -648,7 +652,7 @@
             <div class="avatar">{{ substr($saUser->prenom ?: $saUser->nom, 0, 1) }}</div>
             <div class="user-info">
                 <div class="user-name">{{ trim(($saUser->prenom ?? '') . ' ' . $saUser->nom) }}</div>
-                <div class="user-role">{{ $saUser->estSuperAdmin() ? 'Super Admin' : $saUser->libelleRolesEquipe() }}</div>
+                <div class="user-role">{{ $saUser->estSuperAdmin() ? 'Super Admin' : $saUser->libelleRoleEquipe() }}</div>
             </div>
             <a href="{{ route('superadmin.logout') }}" onclick="event.preventDefault(); document.getElementById('sa-logout-form').submit();" title="Deconnexion">
                 <i class="bi bi-box-arrow-right"></i>
