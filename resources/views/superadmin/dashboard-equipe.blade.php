@@ -18,17 +18,16 @@
         <p class="text-muted mb-0" style="font-size: 0.85rem;">Voici votre périmètre. Toute section hors périmètre est bloquée.</p>
     </div>
     <div>
-        @foreach($roles as $slug)
-            @php $roleDef = \App\Models\User::ROLES_EQUIPE[$slug]; @endphp
-            <span class="sa-badge sa-badge-secondary me-1"><i class="bi {{ $roleDef['icone'] }} me-1"></i>{{ $roleDef['libelle'] }}</span>
-        @endforeach
-        @if(empty($roles))
+        @php $roleDefEquipe = \App\Models\User::ROLES_EQUIPE[auth('superadmin')->user()->roleEquipe() ?? ''] ?? null; @endphp
+        @if($roleDefEquipe)
+            <span class="sa-badge sa-badge-secondary"><i class="bi {{ $roleDefEquipe['icone'] }} me-1"></i>{{ $roleDefEquipe['libelle'] }}</span>
+        @else
             <span class="sa-badge sa-badge-danger">Aucun rôle attribué</span>
         @endif
     </div>
 </div>
 
-@if(empty($roles))
+@if(!$roleDefEquipe)
     <div class="sa-card">
         <div class="sa-card-body text-center py-5">
             <i class="bi bi-person-x-fill" style="font-size: 2.5rem; color: #adb5bd;"></i>

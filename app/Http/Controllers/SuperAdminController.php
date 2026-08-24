@@ -235,7 +235,7 @@ class SuperAdminController extends Controller
     private function dashboardEquipe(User $user)
     {
         $donnees = [
-            'roles' => array_values(array_filter($user->permissions ?? [], fn ($slug) => isset(User::ROLES_EQUIPE[$slug]))),
+            'role' => $user->libelleRoleEquipe(),
             'organisateursEnAttente' => collect(),
             'nbOrganisateursEnAttente' => 0,
             'retraitsEnAttente' => collect(),
@@ -246,24 +246,27 @@ class SuperAdminController extends Controller
             'nbIncidentsTechniques' => 0,
         ];
 
-        if ($user->aRole('validateur')) {
+        if ($user->peut('organisateurs.consulter')) {
             $donnees['organisateursEnAttente'] = User::where('role', 'admin')
                 ->whereIn('statut', ['en_attente', 'corrections_apportees'])
                 ->orderBy('created_at', 'desc')->limit(6)->get();
             $donnees['nbOrganisateursEnAttente'] = User::where('role', 'admin')
                 ->whereIn('statut', ['en_attente', 'corrections_apportees'])->count();
+        }
+
+        if ($user->peut('retraits.consulter')) {
             $donnees['retraitsEnAttente'] = Withdrawal::with('user')->where('status', 'en_attente')
                 ->orderBy('created_at', 'asc')->limit(6)->get();
             $donnees['nbRetraitsEnAttente'] = Withdrawal::where('status', 'en_attente')->count();
         }
 
-        if ($user->aRole('support_client')) {
+        if ($user->peut('notifications.consulter')) {
             $donnees['messagesNonLus'] = Message::where('lu', false)->whereNull('user_id')
                 ->orderBy('created_at', 'desc')->limit(6)->get();
             $donnees['nbMessagesNonLus'] = Message::where('lu', false)->whereNull('user_id')->count();
         }
 
-        if ($user->aRole('assistant_technique')) {
+        if ($user->peut('support.consulter')) {
             $donnees['incidentsTechniques'] = Ticket::where('statut_paiement', 'en_attente')
                 ->whereNotNull('fedapay_transaction_id')
                 ->orderBy('created_at', 'desc')->limit(6)->get();
@@ -778,8 +781,6 @@ class SuperAdminController extends Controller
             'email' => 'required|email|max:191|unique:users,email',
             'pseudo' => 'required|string|min:3|max:50|unique:users,pseudo|regex:/^[a-zA-Z0-9_.-]+$/',
             'mot_de_passe' => 'required|min:8',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'in:' . implode(',', array_keys(User::ROLES_EQUIPE)),
         ], [
             'pseudo.unique' => 'Ce pseudo est deja utilise.',
             'pseudo.regex' => 'Le pseudo ne peut contenir que des lettres, chiffres, points, tirets et underscores.',
@@ -794,7 +795,7 @@ class SuperAdminController extends Controller
             'mot_de_passe' => \Illuminate\Support\Facades\Hash::make($donnees['mot_de_passe']),
             'role' => 'equipe',
             'statut' => 'actif',
-            'permissions' => $donnees['permissions'] ?? [],
+            'permissions' => ['role' => null, 'acces' => []],
             'must_change_password' => true,
         ]);
 
@@ -816,37 +817,50 @@ class SuperAdminController extends Controller
             \Illuminate\Support\Facades\Log::warning('Email identifiants equipe non envoye : ' . $e->getMessage());
         }
 
-        return back()->with('success', "Membre ajoute. Connexion : pseudo {$membre->pseudo} + mot de passe temporaire (a changer a la premiere connexion).");
+        return back()
+            ->with('success', "Membre ajoute. Connexion : pseudo {$membre->pseudo} + mot de passe temporaire (a changer a la premiere connexion).")
+            ->with('ouvrir_roles', $membre->id);
     }
 
-    // Attribution des roles (cases a cocher) a un membre existant
+    // Attribution du role et des acces fins (etape 2) a un membre existant
     public function majRolesMembreEquipe(Request $request, User $membre)
     {
         $this->exigerSuperAdmin();
         abort_unless($membre->estEquipe(), 404);
 
         $donnees = $request->validate([
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'in:' . implode(',', array_keys(User::ROLES_EQUIPE)),
+            'role' => 'required|in:' . implode(',', array_keys(User::ROLES_EQUIPE)),
+            'acces' => 'nullable|array',
+            'acces.*' => 'in:' . implode(',', array_merge(...array_values(array_map('array_keys', User::ACCES_PAR_ROLE)))),
+        ], [
+            'role.required' => 'Choisissez un role.',
+            'role.in' => 'Role inconnu.',
         ]);
 
-        $anciens = (array) ($membre->permissions ?? []);
-        $membre->update(['permissions' => array_values($donnees['permissions'] ?? [])]);
+        // Ne conserver que les acces qui existent pour le role choisi
+        $accesAutorises = array_intersect(
+            $donnees['acces'] ?? [],
+            array_keys(User::ACCES_PAR_ROLE[$donnees['role']] ?? [])
+        );
 
-        if ($anciens !== (array) ($membre->permissions ?? [])) {
+        $nouveau = ['role' => $donnees['role'], 'acces' => array_values($accesAutorises)];
+        $anciens = (array) ($membre->permissions ?? []);
+        $membre->update(['permissions' => $nouveau]);
+
+        if ($anciens !== $nouveau) {
             Log::create([
                 'type_operation' => 'equipe_roles_modifies',
                 'ticket_id' => null,
                 'details' => json_encode([
                     'membre_id' => $membre->id,
                     'avant' => $anciens,
-                    'apres' => $membre->permissions,
+                    'apres' => $nouveau,
                     'modifie_par' => auth('superadmin')->user()->email,
                 ]),
             ]);
         }
 
-        return back()->with('success', 'Roles mis a jour pour ' . $membre->prenom . ' ' . $membre->nom . '.');
+        return back()->with('success', 'Acces mis a jour pour ' . $membre->prenom . ' ' . $membre->nom . '.');
     }
 
     public function basculerStatutMembreEquipe(User $membre)
