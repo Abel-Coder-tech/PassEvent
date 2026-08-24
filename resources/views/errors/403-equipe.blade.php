@@ -33,6 +33,12 @@
         <a href="{{ route('superadmin.dashboard') }}" class="btn w-100" style="background:linear-gradient(135deg,#6B3FA0,#5a35a0);color:#fff;border:none;border-radius:10px;padding:0.7rem;font-weight:700;">
             <i class="bi bi-grid-1x2-fill me-1"></i> Retour à mon tableau de bord
         </a>
+        <form action="{{ route('superadmin.logout') }}" method="POST" class="mt-2">
+            @csrf
+            <button type="submit" class="btn btn-link w-100 text-muted" style="font-size:0.78rem;text-decoration:none;">
+                <i class="bi bi-box-arrow-right me-1"></i> Se déconnecter
+            </button>
+        </form>
     </div>
 </body>
 </html>
