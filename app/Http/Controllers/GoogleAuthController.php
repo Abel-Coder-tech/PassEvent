@@ -47,7 +47,7 @@ class GoogleAuthController extends Controller
         if ($existing) {
             // Connexion automatique si le compte existe déjà
             if (in_array($existing->statut, ['en_attente', 'incomplet', 'corrections_demandees', 'corrections_apportees', 'bloque'])) {
-                Auth::login($existing, true);
+                Auth::login($existing); // Pas de remember cookie : session 30 min max
                 request()->session()->regenerate();
                 return redirect()->intended(route('dashboard'));
             }
@@ -58,7 +58,7 @@ class GoogleAuthController extends Controller
                 ]);
             }
 
-            Auth::login($existing, true);
+            Auth::login($existing); // Pas de remember cookie : session 30 min max
             request()->session()->regenerate();
 
             return $existing->role === 'super_admin'

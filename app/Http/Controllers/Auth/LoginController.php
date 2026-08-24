@@ -42,7 +42,8 @@ class LoginController extends Controller
             return back()->withErrors(['mot_de_passe' => 'Mot de passe incorrect.'])->onlyInput('email');
         }
 
-        Auth::login($user, $request->boolean('remember'));
+        // Pas de cookie "remember me" : la session expire aphe 30 min d'inactivite (regle de securite PaxEvent)
+        Auth::login($user);
         $request->session()->regenerate();
 
         if ($user->role === 'super_admin') { // Redirection différente pour le super admin

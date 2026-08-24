@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'no_cache' => \App\Http\Middleware\NoCache::class,
         ]);
 
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckInactivite::class, // Deconnexion aphe 30 min d'inactivite
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'paiement/webhook',
         ]);
