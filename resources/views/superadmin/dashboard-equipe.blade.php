@@ -46,7 +46,7 @@
         <div class="sa-card h-100">
             <div class="sa-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-person-check-fill me-2" style="color: var(--sa-primary);"></i>Comptes organisateurs à valider</span>
-                <a href="{{ route('superadmin.organisateurs') }}" class="sa-badge sa-badge-amber text-decoration-none">
+                <a href="{{ route('equipe.organisateurs') }}" class="sa-badge sa-badge-amber text-decoration-none">
                     {{ $nbOrganisateursEnAttente }} en attente
                 </a>
             </div>
@@ -63,7 +63,7 @@
                     @endforeach
                 </ul>
                 <div class="text-center py-2">
-                    <a href="{{ route('superadmin.organisateurs') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Voir tous les organisateurs →</a>
+                    <a href="{{ route('equipe.organisateurs') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Voir tous les organisateurs →</a>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
         <div class="sa-card h-100">
             <div class="sa-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-cash-coin me-2" style="color: var(--sa-primary);"></i>Demandes de retrait à traiter</span>
-                <a href="{{ route('superadmin.retraits') }}" class="sa-badge sa-badge-amber text-decoration-none">
+                <a href="{{ route('equipe.retraits') }}" class="sa-badge sa-badge-amber text-decoration-none">
                     {{ $nbRetraitsEnAttente }} en attente
                 </a>
             </div>
@@ -92,7 +92,7 @@
                     @endforeach
                 </ul>
                 <div class="text-center py-2">
-                    <a href="{{ route('superadmin.retraits') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Toutes les demandes →</a>
+                    <a href="{{ route('equipe.retraits') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Toutes les demandes →</a>
                 </div>
             </div>
         </div>
@@ -104,7 +104,7 @@
         <div class="sa-card h-100">
             <div class="sa-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-headset me-2" style="color: var(--sa-primary);"></i>Messages à traiter (Support)</span>
-                <a href="{{ route('superadmin.notifications') }}" class="sa-badge sa-badge-secondary text-decoration-none">
+                <a href="{{ route('equipe.notifications') }}" class="sa-badge sa-badge-secondary text-decoration-none">
                     {{ $nbMessagesNonLus }} non lus
                 </a>
             </div>
@@ -121,7 +121,7 @@
                     @endforeach
                 </ul>
                 <div class="text-center py-2">
-                    <a href="{{ route('superadmin.notifications') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Tous les messages →</a>
+                    <a href="{{ route('equipe.notifications') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Tous les messages →</a>
                 </div>
             </div>
         </div>
@@ -133,7 +133,7 @@
         <div class="sa-card h-100">
             <div class="sa-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-tools me-2" style="color: #e74c3c;"></i>Incidents techniques ouverts</span>
-                <a href="{{ route('superadmin.support') }}" class="sa-badge sa-badge-danger text-decoration-none">
+                <a href="{{ route('equipe.support') }}" class="sa-badge sa-badge-danger text-decoration-none">
                     {{ $nbIncidentsTechniques }}
                 </a>
             </div>
@@ -150,7 +150,7 @@
                     @endforeach
                 </ul>
                 <div class="text-center py-2">
-                    <a href="{{ route('superadmin.support') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Tous les incidents →</a>
+                    <a href="{{ route('equipe.support') }}" style="font-size: 0.78rem; color: var(--sa-primary); text-decoration: none;">Tous les incidents →</a>
                 </div>
             </div>
         </div>

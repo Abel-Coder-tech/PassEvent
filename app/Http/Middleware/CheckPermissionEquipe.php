@@ -28,34 +28,115 @@ class CheckPermissionEquipe
             return $next($request);
         }
 
-        if ($user->estEquipe() && $user->must_change_password) {
-            $autorises = ['superadmin.premiere-connexion', 'superadmin.premiere-connexion.post', 'superadmin.logout'];
-            if (!in_array($request->route()->getName(), $autorises, true)) {
-                return redirect()->route('superadmin.premiere-connexion')
+        if ($user->must_change_password) {
+            $autorises = [
+                'superadmin.premiere-connexion', 'superadmin.premiere-connexion.post',
+                'equipe.premiere-connexion', 'equipe.premiere-connexion.post',
+                'superadmin.logout',
+            ];
+            if (!in_array($request->route()?->getName(), $autorises, true)) {
+                return redirect()->route('equipe.premiere-connexion')
                     ->with('info', 'Pour votre sécurité, vous devez définir votre propre mot de passe avant de continuer.');
             }
         }
 
-        $chemins = explode('/', str_replace('superadmin/', '', trim($request->path(), '/')));
-        $racine = $chemins[0] ?? '';
+        $parts = explode('/', trim($request->path(), '/'));
+        $prefixe = $parts[0] ?? '';
+        $racine = $parts[1] ?? '';
 
-        // Le tableau de bord (/superadmin ou /superadmin/) est accessible a tout membre connecte :
-        // son contenu est deja filtre par role dans le controleur.
-        if ($racine === '' || $racine === 'superadmin') {
-            return $next($request);
+        // Espace equipe (/equipe/...) : pages dediees aux membres
+        if ($prefixe === 'equipe') {
+            if ($this->autorise($user, $racine)) {
+                return $next($request);
+            }
+
+            return response()->view('errors.403-equipe', [], 403);
+        }
+
+        // Espace admin (/superadmin/...) :
+        // - les actions POST/PUT/DELETE des formulaires restent autorisees selon la carte ;
+        // - les navigations GET sont redirigees vers la page equivalente de l'espace equipe.
+        if (!$request->isMethod('GET')) {
+            if ($this->autorise($user, $racine)) {
+                return $next($request);
+            }
+
+            return response()->view('errors.403-equipe', [], 403);
+        }
+
+        $cible = $this->pageEquipe($racine, $parts[2] ?? '');
+
+        if ($cible === null || !$this->autorise($user, $racine)) {
+            return response()->view('errors.403-equipe', [], 403);
+        }
+
+        $redirection = route($cible[0], $cible[1]);
+        if ($query = $request->getQueryString()) {
+            $redirection .= '?' . $query;
+        }
+
+        return redirect()->to($redirection);
+    }
+
+    private function autorise($user, string $racine): bool
+    {
+        // Le tableau de bord est accessible a tout membre connecte : son contenu est deja filtre par role.
+        if ($racine === '') {
+            return true;
         }
 
         foreach (self::CARTE as $motif => $roles) {
             if ($this->correspond($racine, $motif)) {
                 foreach ($roles as $slug) {
                     if ($user->aRole($slug)) {
-                        return $next($request);
+                        return true;
                     }
                 }
             }
         }
 
-        return response()->view('errors.403-equipe', [], 403);
+        return false;
+    }
+
+    // Correspondance d'une page /superadmin/<module> vers son equivalente /equipe/<module>.
+    // Retourne null si la page n'a pas d'equivalent membre (zone reservee au proprietaire).
+    private function pageEquipe(string $racine, string $sousSegment): ?array
+    {
+        switch ($racine) {
+            case '':
+            case 'dashboard':
+                return ['equipe.dashboard', []];
+
+            case 'organisateurs':
+                if ($sousSegment === '') {
+                    return ['equipe.organisateurs', []];
+                }
+
+                return is_numeric($sousSegment)
+                    ? ['equipe.organisateurs.voir', ['user' => $sousSegment]]
+                    : null;
+
+            case 'retraits':
+                return ['equipe.retraits', []];
+
+            case 'remboursements':
+                if ($sousSegment === '') {
+                    return ['equipe.remboursements.demandes', []];
+                }
+
+                return is_numeric($sousSegment)
+                    ? ['equipe.remboursements.voir', ['demande' => $sousSegment]]
+                    : null;
+
+            case 'notifications':
+                return ['equipe.notifications', []];
+
+            case 'support':
+                return ['equipe.support', []];
+
+            default:
+                return null;
+        }
     }
 
     private function correspond(string $valeur, string $motif): bool

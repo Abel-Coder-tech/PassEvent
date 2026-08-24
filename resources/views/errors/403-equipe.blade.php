@@ -30,7 +30,7 @@
             Cette section ne fait pas partie de votre périmètre.<br>
             Si vous pensez qu'il s'agit d'une erreur, contactez l'administrateur.
         </p>
-        <a href="{{ route('superadmin.dashboard') }}" class="btn w-100" style="background:linear-gradient(135deg,#6B3FA0,#5a35a0);color:#fff;border:none;border-radius:10px;padding:0.7rem;font-weight:700;">
+        <a href="{{ route('equipe.dashboard') }}" class="btn w-100" style="background:linear-gradient(135deg,#6B3FA0,#5a35a0);color:#fff;border:none;border-radius:10px;padding:0.7rem;font-weight:700;">
             <i class="bi bi-grid-1x2-fill me-1"></i> Retour à mon tableau de bord
         </a>
         <form action="{{ route('superadmin.logout') }}" method="POST" class="mt-2">
