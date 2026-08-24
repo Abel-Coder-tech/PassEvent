@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'superadmin' => \App\Http\Middleware\CheckSuperAdmin::class,
+            'equipe_permission' => \App\Http\Middleware\CheckPermissionEquipe::class,
             'agent' => \App\Http\Middleware\CheckAgent::class,
             'agent_vente' => \App\Http\Middleware\CheckAgentVente::class,
             'profil_verifie' => \App\Http\Middleware\CheckProfilActif::class,

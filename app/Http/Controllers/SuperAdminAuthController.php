@@ -22,7 +22,7 @@ class SuperAdminAuthController extends Controller
         ], [
             'pseudo.required' => 'Le pseudo est requis.',
             'mot_de_passe.required' => 'Le mot de passe est requis.',
-            'mot_de_passe.min' => 'Le mot de passe doit contenir au moins 8 caracteres.',
+            'mot_de_passe.min' => 'Le mot de passe doit contenir au minimum 8 caracteres.',
         ]);
 
         $user = \App\Models\User::where('pseudo', $credentials['pseudo'])->first();
@@ -31,8 +31,12 @@ class SuperAdminAuthController extends Controller
             return back()->withErrors(['pseudo' => 'Ce pseudo n\'existe pas.'])->onlyInput('pseudo');
         }
 
-        if ($user->role !== 'super_admin') {
-            return back()->withErrors(['pseudo' => 'Cet acces est reserve au super administrateur.']); // Rôle vérifié
+        if (!in_array($user->role, ['super_admin', 'equipe'], true)) {
+            return back()->withErrors(['pseudo' => 'Cet acces est reserve a l\'equipe PaxEvent.']); // Rôle vérifié
+        }
+
+        if ($user->role === 'equipe' && $user->statut !== 'actif') {
+            return back()->withErrors(['pseudo' => 'Votre compte a ete desactive. Contactez l\'administrateur.']);
         }
 
         if (!\Illuminate\Support\Facades\Hash::check($credentials['mot_de_passe'], $user->mot_de_passe)) {
@@ -41,6 +45,13 @@ class SuperAdminAuthController extends Controller
 
         auth('superadmin')->login($user); // Guard superadmin spécifique
         $request->session()->regenerate();
+
+        // Membre de l'equipe : mot de passe temporaire -> changement obligatoire
+        if ($user->estEquipe() && $user->must_change_password) {
+            return redirect()->route('superadmin.premiere-connexion')
+                ->with('info', 'Bienvenue ! Pour votre sécurité, définissez votre propre mot de passe pour continuer.');
+        }
+
         return redirect()->intended(route('superadmin.dashboard'));
     }
 

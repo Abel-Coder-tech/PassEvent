@@ -11,8 +11,27 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    public const ROLES_EQUIPE = [
+        'validateur' => [
+            'libelle' => 'Validateur',
+            'description' => 'Validation des comptes organisateurs et des retraits de fonds',
+            'icone' => 'bi-person-check-fill',
+        ],
+        'support_client' => [
+            'libelle' => 'Support client',
+            'description' => 'Sujets commerciaux : commissions, contrats, partenariats',
+            'icone' => 'bi-headset',
+        ],
+        'assistant_technique' => [
+            'libelle' => 'Assistant technique',
+            'description' => 'Problèmes de connexion, inscriptions, émission de tickets, bugs',
+            'icone' => 'bi-tools',
+        ],
+    ];
+
     protected $fillable = [
         'nom',
+        'prenom',
         'organisation',
         'telephone',
         'facebook_url',
@@ -27,6 +46,8 @@ class User extends Authenticatable
         'avatar',
         'mot_de_passe',
         'role',
+        'permissions',
+        'must_change_password',
         'notif_email_evenement',
         'notif_email_ticket',
         'notif_email_paiement',
@@ -56,12 +77,49 @@ class User extends Authenticatable
             'notif_email_paiement' => 'boolean',
             'notif_scan' => 'boolean',
             'commission_pourcentage' => 'float',
+            'permissions' => 'array',
+            'must_change_password' => 'boolean',
         ];
     }
 
     public function getAuthPassword()
     {
         return $this->mot_de_passe;
+    }
+
+    public function estEquipe(): bool
+    {
+        return $this->role === 'equipe';
+    }
+
+    public function estSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function aRole(string ...$slugs): bool
+    {
+        if ($this->estSuperAdmin()) {
+            return true;
+        }
+
+        foreach ($slugs as $slug) {
+            if (in_array($slug, (array) ($this->permissions ?? []))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function libelleRolesEquipe(): string
+    {
+        $libelles = [];
+        foreach ((array) ($this->permissions ?? []) as $slug) {
+            $libelles[] = self::ROLES_EQUIPE[$slug]['libelle'] ?? $slug;
+        }
+
+        return implode(', ', $libelles) ?: 'Aucun rôle';
     }
 
     public function evenements(): HasMany
@@ -118,7 +176,7 @@ class User extends Authenticatable
             ->get(['evenement_id', 'montant', 'methode_paiement']);
 
         // Tickets physiques (lots) : comptés à part, commission attendue séparée (tickets annulés exclus)
-        $physiques = Ticket::whereIn('evenement_id', $evenementsIds)
+        $physiques = Ticket::query()->whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
             ->whereNotNull('lot_physique_id')
             ->where('annule', false)

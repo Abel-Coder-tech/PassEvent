@@ -14,7 +14,7 @@ class CheckSuperAdmin
             return redirect()->route('superadmin.login');
         }
 
-        if (auth('superadmin')->user()->role !== 'super_admin') {
+        if (!in_array(auth('superadmin')->user()->role, ['super_admin', 'equipe'], true)) {
             abort(403, 'Acces reserve au super administrateur.');
         }
 
