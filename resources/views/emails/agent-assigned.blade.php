@@ -9,7 +9,7 @@
         <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
             <div style="background:linear-gradient(135deg,#542680,#3d1a5c);padding:2rem;text-align:center;">
                 <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" style="height:60px;filter:brightness(0)invert(1);">
-                <h1 style="color:#fff;font-size:1.3rem;margin:1rem 0 0;">Vous êtes chargé du scan</h1>
+                <h1 style="color:#fff;font-size:1.3rem;margin:1rem 0 0;">Vous êtes chargé du scan de l'événement {{ $agent->evenement->titre }}</h1>
             </div>
             <div style="padding:2rem;">
                 <p style="font-size:0.95rem;color:#333;">Bonjour <strong>{{ $agent->nom }}</strong>,</p>
@@ -53,7 +53,7 @@
                 </div>
 
                 <p style="font-size:0.8rem;color:#999;border-top:1px solid #eee;padding-top:1rem;margin-top:1rem;">
-                    Cet email a été envoyé automatiquement. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.<br>
+                    Cet email a été envoyé automatiquement depuis paxevent. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.<br>
                     PaxEvent — Billetterie en ligne.
                 </p>
             </div>
