@@ -549,10 +549,12 @@
         </div>
 
         <nav class="sa-sidebar-nav">
+            @php $saUser = auth('superadmin')->user(); $estEquipe = $saUser->estEquipe(); @endphp
             <div class="sa-nav-section">Supervision</div>
             <a href="{{ route('superadmin.dashboard') }}" class="sa-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
             </a>
+            @if(!$estEquipe)
             <a href="{{ route('superadmin.statistiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.statistiques') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-fill"></i> Statistiques
             </a>
@@ -564,12 +566,16 @@
             <a href="{{ route('superadmin.utilisateurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.utilisateurs') ? 'active' : '' }}">
                 <i class="bi bi-people-fill"></i> Utilisateurs
             </a>
-            <a href="{{ route('superadmin.organisateurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.organisateurs') ? 'active' : '' }}">
+            @endif
+            @if($saUser->aRole('validateur'))
+            <a href="{{ route('superadmin.organisateurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.organisateurs*') ? 'active' : '' }}">
                 <i class="bi bi-person-badge-fill"></i> Organisateurs
                 @php $pendingOrgs = \App\Models\User::where('role','admin')->whereIn('statut', ['en_attente', 'corrections_apportees'])->count(); @endphp
                 @if($pendingOrgs > 0)<span class="sa-nav-badge amber">{{ $pendingOrgs }}</span>@endif
             </a>
-            <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements') ? 'active' : '' }}">
+            @endif
+            @if(!$estEquipe)
+            <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements*') ? 'active' : '' }}">
                 <i class="bi bi-calendar-event-fill"></i> Evenements
             </a>
             <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.tickets-physiques*') ? 'active' : '' }}">
@@ -578,7 +584,9 @@
             <a href="{{ route('superadmin.moderation') }}" class="sa-nav-link {{ request()->routeIs('superadmin.moderation') ? 'active' : '' }}">
                 <i class="bi bi-shield-exclamation"></i> Moderation
             </a>
+            @endif
 
+            @if($saUser->aRole('validateur'))
             <div class="sa-nav-section">Finances</div>
             <a href="{{ route('superadmin.retraits') }}" class="sa-nav-link {{ request()->routeIs('superadmin.retraits*') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Retraits
@@ -590,11 +598,17 @@
                 @php $pendingRemb = \App\Models\DemandeRemboursement::where('statut','en_attente')->count(); @endphp
                 @if($pendingRemb > 0)<span class="sa-nav-badge">{{ $pendingRemb }}</span>@endif
             </a>
+            @endif
+
+            @if($saUser->aRole('assistant_technique'))
             <a href="{{ route('superadmin.support') }}" class="sa-nav-link {{ request()->routeIs('superadmin.support*') ? 'active' : '' }}">
                 <i class="bi bi-tools"></i> Support technique
                 @php $incidentsSupport = \App\Models\Ticket::where('statut_paiement','en_attente')->whereNotNull('fedapay_transaction_id')->count(); @endphp
                 @if($incidentsSupport > 0)<span class="sa-nav-badge" style="background:#e74c3c;">{{ $incidentsSupport }}</span>@endif
             </a>
+            @endif
+
+            @if(!$estEquipe)
             <a href="{{ route('superadmin.transactions') }}" class="sa-nav-link {{ request()->routeIs('superadmin.transactions') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Transactions
             </a>
@@ -606,27 +620,35 @@
             </a>
 
             <div class="sa-nav-section">Systeme</div>
-            <a href="{{ route('superadmin.notifications') }}" class="sa-nav-link {{ request()->routeIs('superadmin.notifications') ? 'active' : '' }}">
+            @endif
+
+            @if($saUser->aRole('support_client', 'assistant_technique'))
+            <a href="{{ route('superadmin.notifications') }}" class="sa-nav-link {{ request()->routeIs('superadmin.notifications*') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
                 @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
                 @if($unreadMsgs > 0)<span class="sa-nav-badge">{{ $unreadMsgs }}</span>@endif
             </a>
+            @endif
+            @if(!$estEquipe)
             <a href="{{ route('superadmin.logs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.logs') ? 'active' : '' }}">
                 <i class="bi bi-journal-text"></i> Logs systeme
             </a>
             <a href="{{ route('superadmin.newsletter') }}" class="sa-nav-link {{ request()->routeIs('superadmin.newsletter*') ? 'active' : '' }}">
                 <i class="bi bi-envelope-fill"></i> Newsletter
             </a>
+            @endif
+            @if(!$estEquipe)
             <a href="{{ route('superadmin.parametres') }}" class="sa-nav-link {{ request()->routeIs('superadmin.parametres') ? 'active' : '' }}">
                 <i class="bi bi-gear-fill"></i> Parametres
             </a>
+            @endif
         </nav>
 
         <div class="sa-sidebar-footer">
-            <div class="avatar">{{ substr(auth('superadmin')->user()->nom, 0, 1) }}</div>
+            <div class="avatar">{{ substr($saUser->prenom ?: $saUser->nom, 0, 1) }}</div>
             <div class="user-info">
-                <div class="user-name">{{ auth('superadmin')->user()->nom }}</div>
-                <div class="user-role">Super Admin</div>
+                <div class="user-name">{{ trim(($saUser->prenom ?? '') . ' ' . $saUser->nom) }}</div>
+                <div class="user-role">{{ $saUser->estSuperAdmin() ? 'Super Admin' : $saUser->libelleRolesEquipe() }}</div>
             </div>
             <a href="{{ route('superadmin.logout') }}" onclick="event.preventDefault(); document.getElementById('sa-logout-form').submit();" title="Deconnexion">
                 <i class="bi bi-box-arrow-right"></i>

@@ -38,6 +38,13 @@ class SuperAdminController extends Controller
     // Tableau de bord super admin avec statistiques globales de la plateforme
     public function dashboard(Request $request)
     {
+        $user = auth('superadmin')->user();
+
+        // Membre de l'equipe : tableau de bord restreint a son perimetre, sans chiffres d'affaires
+        if ($user->estEquipe()) {
+            return $this->dashboardEquipe($user);
+        }
+
         $now = now();
         $today = $now->copy()->startOfDay();
 
@@ -222,6 +229,49 @@ class SuperAdminController extends Controller
             'commissionPct',
             'messagesNonLus', 'newsletterCount'
         ));
+    }
+
+    // Tableau de bord restreint pour un membre de l'equipe : uniquement son perimetre, aucun chiffre d'affaires
+    private function dashboardEquipe(User $user)
+    {
+        $donnees = [
+            'roles' => array_values(array_filter($user->permissions ?? [], fn ($slug) => isset(User::ROLES_EQUIPE[$slug]))),
+            'organisateursEnAttente' => collect(),
+            'nbOrganisateursEnAttente' => 0,
+            'retraitsEnAttente' => collect(),
+            'nbRetraitsEnAttente' => 0,
+            'messagesNonLus' => collect(),
+            'nbMessagesNonLus' => 0,
+            'incidentsTechniques' => collect(),
+            'nbIncidentsTechniques' => 0,
+        ];
+
+        if ($user->aRole('validateur')) {
+            $donnees['organisateursEnAttente'] = User::where('role', 'admin')
+                ->whereIn('statut', ['en_attente', 'corrections_apportees'])
+                ->orderBy('created_at', 'desc')->limit(6)->get();
+            $donnees['nbOrganisateursEnAttente'] = User::where('role', 'admin')
+                ->whereIn('statut', ['en_attente', 'corrections_apportees'])->count();
+            $donnees['retraitsEnAttente'] = Withdrawal::with('user')->where('status', 'en_attente')
+                ->orderBy('created_at', 'asc')->limit(6)->get();
+            $donnees['nbRetraitsEnAttente'] = Withdrawal::where('status', 'en_attente')->count();
+        }
+
+        if ($user->aRole('support_client')) {
+            $donnees['messagesNonLus'] = Message::where('lu', false)->whereNull('user_id')
+                ->orderBy('created_at', 'desc')->limit(6)->get();
+            $donnees['nbMessagesNonLus'] = Message::where('lu', false)->whereNull('user_id')->count();
+        }
+
+        if ($user->aRole('assistant_technique')) {
+            $donnees['incidentsTechniques'] = Ticket::where('statut_paiement', 'en_attente')
+                ->whereNotNull('fedapay_transaction_id')
+                ->orderBy('created_at', 'desc')->limit(6)->get();
+            $donnees['nbIncidentsTechniques'] = Ticket::where('statut_paiement', 'en_attente')
+                ->whereNotNull('fedapay_transaction_id')->count();
+        }
+
+        return view('superadmin.dashboard-equipe', $donnees);
     }
 
     // Résout la période (start/end + période précédente) selon le filtre choisi
@@ -704,8 +754,205 @@ class SuperAdminController extends Controller
     public function parametres()
     {
         $user = auth('superadmin')->user();
+        $equipe = User::where('role', 'equipe')->orderBy('created_at', 'desc')->get();
+        $rolesEquipe = User::ROLES_EQUIPE;
 
-        return view('superadmin.parametres', compact('user'));
+        return view('superadmin.parametres', compact('user', 'equipe', 'rolesEquipe'));
+    }
+
+    // ==================== GESTION DE L'EQUIPE (super_admin uniquement) ====================
+
+    private function exigerSuperAdmin(): void
+    {
+        abort_unless(auth('superadmin')->user()?->estSuperAdmin(), 403, 'Acces non autorise.');
+    }
+
+    // Ajout d'un membre de l'equipe : creation du compte avec mot de passe temporaire
+    public function ajouterMembreEquipe(Request $request)
+    {
+        $this->exigerSuperAdmin();
+
+        $donnees = $request->validate([
+            'nom' => 'required|string|max:100',
+            'prenom' => 'required|string|max:100',
+            'email' => 'required|email|max:191|unique:users,email',
+            'pseudo' => 'required|string|min:3|max:50|unique:users,pseudo|regex:/^[a-zA-Z0-9_.-]+$/',
+            'mot_de_passe' => 'required|min:8',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'in:' . implode(',', array_keys(User::ROLES_EQUIPE)),
+        ], [
+            'pseudo.unique' => 'Ce pseudo est deja utilise.',
+            'pseudo.regex' => 'Le pseudo ne peut contenir que des lettres, chiffres, points, tirets et underscores.',
+            'email.unique' => 'Cette adresse email est deja utilisee.',
+        ]);
+
+        $membre = User::create([
+            'nom' => $donnees['nom'],
+            'prenom' => $donnees['prenom'],
+            'email' => strtolower($donnees['email']),
+            'pseudo' => $donnees['pseudo'],
+            'mot_de_passe' => \Illuminate\Support\Facades\Hash::make($donnees['mot_de_passe']),
+            'role' => 'equipe',
+            'statut' => 'actif',
+            'permissions' => $donnees['permissions'] ?? [],
+            'must_change_password' => true,
+        ]);
+
+        Log::create([
+            'type_operation' => 'equipe_ajoutee',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'membre_id' => $membre->id,
+                'nom_complet' => $membre->prenom . ' ' . $membre->nom,
+                'email' => $membre->email,
+                'permissions' => $membre->permissions,
+                'cree_par' => auth('superadmin')->user()->email,
+            ]),
+        ]);
+
+        try {
+            Mail::to($membre->email)->send(new \App\Mail\EquipeMembreCree($membre, $donnees['mot_de_passe']));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email identifiants equipe non envoye : ' . $e->getMessage());
+        }
+
+        return back()->with('success', "Membre ajoute. Connexion : pseudo {$membre->pseudo} + mot de passe temporaire (a changer a la premiere connexion).");
+    }
+
+    // Attribution des roles (cases a cocher) a un membre existant
+    public function majRolesMembreEquipe(Request $request, User $membre)
+    {
+        $this->exigerSuperAdmin();
+        abort_unless($membre->estEquipe(), 404);
+
+        $donnees = $request->validate([
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'in:' . implode(',', array_keys(User::ROLES_EQUIPE)),
+        ]);
+
+        $anciens = (array) ($membre->permissions ?? []);
+        $membre->update(['permissions' => array_values($donnees['permissions'] ?? [])]);
+
+        if ($anciens !== (array) ($membre->permissions ?? [])) {
+            Log::create([
+                'type_operation' => 'equipe_roles_modifies',
+                'ticket_id' => null,
+                'details' => json_encode([
+                    'membre_id' => $membre->id,
+                    'avant' => $anciens,
+                    'apres' => $membre->permissions,
+                    'modifie_par' => auth('superadmin')->user()->email,
+                ]),
+            ]);
+        }
+
+        return back()->with('success', 'Roles mis a jour pour ' . $membre->prenom . ' ' . $membre->nom . '.');
+    }
+
+    public function basculerStatutMembreEquipe(User $membre)
+    {
+        $this->exigerSuperAdmin();
+        abort_unless($membre->estEquipe(), 404);
+
+        $nouveauStatut = $membre->statut === 'actif' ? 'suspendu' : 'actif';
+        $membre->update(['statut' => $nouveauStatut]);
+
+        Log::create([
+            'type_operation' => 'equipe_statut_modifie',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'membre_id' => $membre->id,
+                'statut' => $nouveauStatut,
+                'modifie_par' => auth('superadmin')->user()->email,
+            ]),
+        ]);
+
+        return back()->with('success', 'Membre ' . ($nouveauStatut === 'actif' ? 'reactive' : 'desactive') . '.');
+    }
+
+    public function reinitialiserMdpMembreEquipe(Request $request, User $membre)
+    {
+        $this->exigerSuperAdmin();
+        abort_unless($membre->estEquipe(), 404);
+
+        $donnees = $request->validate([
+            'mot_de_passe' => 'nullable|min:8',
+        ]);
+        $mdp = $donnees['mot_de_passe'] ?: substr(bin2hex(random_bytes(6)), 0, 10);
+
+        $membre->update([
+            'mot_de_passe' => \Illuminate\Support\Facades\Hash::make($mdp),
+            'must_change_password' => true,
+        ]);
+
+        try {
+            Mail::to($membre->email)->send(new \App\Mail\EquipeMembreCree($membre, $mdp, true));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email réinitialisation équipe non envoyé : ' . $e->getMessage());
+        }
+
+        return back()->with('success', "Mot de passe réinitialisé pour {$membre->pseudo}. Nouveau mot de passe temporaire envoyé par email.");
+    }
+
+    public function supprimerMembreEquipe(User $membre)
+    {
+        $this->exigerSuperAdmin();
+        abort_unless($membre->estEquipe(), 404);
+
+        Log::create([
+            'type_operation' => 'equipe_supprimee',
+            'ticket_id' => null,
+            'details' => json_encode([
+                'membre_id' => $membre->id,
+                'nom_complet' => $membre->prenom . ' ' . $membre->nom,
+                'email' => $membre->email,
+                'supprime_par' => auth('superadmin')->user()->email,
+            ]),
+        ]);
+
+        $membre->delete();
+
+        return back()->with('success', 'Membre supprime.');
+    }
+
+    // Premiere connexion d'un membre : definition obligatoire d'un mot de passe personnel
+    public function premiereConnexion()
+    {
+        $user = auth('superadmin')->user();
+
+        if (!$user || !$user->estEquipe() || !$user->must_change_password) {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        return view('superadmin.premiere-connexion', ['user' => $user]);
+    }
+
+    public function enregistrerPremiereConnexion(Request $request)
+    {
+        $user = auth('superadmin')->user();
+
+        if (!$user || !$user->estEquipe()) {
+            return redirect()->route('superadmin.login');
+        }
+
+        $donnees = $request->validate([
+            'mot_de_passe' => 'required|min:8|confirmed',
+        ], [
+            'mot_de_passe.required' => 'Le nouveau mot de passe est requis.',
+            'mot_de_passe.min' => 'Le mot de passe doit contenir au moins 8 caracteres.',
+            'mot_de_passe.confirmed' => 'Les deux mots de passe ne correspondent pas.',
+        ]);
+
+        if (\Illuminate\Support\Facades\Hash::check($donnees['mot_de_passe'], $user->mot_de_passe)) {
+            return back()->withErrors(['mot_de_passe' => 'Le nouveau mot de passe doit etre different du mot de passe temporaire.']);
+        }
+
+        $user->update([
+            'mot_de_passe' => \Illuminate\Support\Facades\Hash::make($donnees['mot_de_passe']),
+            'must_change_password' => false,
+        ]);
+
+        return redirect()->route('superadmin.dashboard')->with('success', 'Mot de passe defini avec succes. Bienvenue dans l\'equipe PaxEvent !');
     }
 
     // Mise à jour du profil super admin (nom, email, téléphone)

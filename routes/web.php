@@ -106,7 +106,13 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
     Route::middleware(['superadmin', 'no_cache'])->group(function () {
         Route::post('/logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
-        Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+
+        // Premiere connexion d'un membre de l'equipe : changement de mot de passe force
+        Route::get('/premiere-connexion', [SuperAdminController::class, 'premiereConnexion'])->name('premiere-connexion');
+        Route::post('/premiere-connexion', [SuperAdminController::class, 'enregistrerPremiereConnexion'])->name('premiere-connexion.post');
+
+        Route::middleware(['no_cache', 'equipe_permission'])->group(function () {
+            Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/utilisateurs', [SuperAdminController::class, 'utilisateurs'])->name('utilisateurs');
         Route::get('/organisateurs', [SuperAdminController::class, 'organisateurs'])->name('organisateurs');
         Route::post('/organisateurs/creer', [SuperAdminController::class, 'creerOrganisateur'])->name('organisateurs.creer');
@@ -179,6 +185,14 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/support/rembourser', [SuperAdminController::class, 'supportRembourser'])->name('support.rembourser');
         Route::post('/support/tarifs', [SuperAdminController::class, 'supportTarifs'])->name('support.tarifs');
         Route::post('/support/incident-message', [SuperAdminController::class, 'supportVoirIncident'])->name('support.incident-message');
+
+            // ---- Gestion de l'equipe (super_admin uniquement, verifie dans le controleur) ----
+            Route::post('/parametres/equipe', [SuperAdminController::class, 'ajouterMembreEquipe'])->name('parametres.equipe.ajouter');
+            Route::post('/parametres/equipe/{membre}/roles', [SuperAdminController::class, 'majRolesMembreEquipe'])->name('parametres.equipe.roles');
+            Route::post('/parametres/equipe/{membre}/statut', [SuperAdminController::class, 'basculerStatutMembreEquipe'])->name('parametres.equipe.statut');
+            Route::post('/parametres/equipe/{membre}/reinit-mdp', [SuperAdminController::class, 'reinitialiserMdpMembreEquipe'])->name('parametres.equipe.reinit');
+            Route::delete('/parametres/equipe/{membre}', [SuperAdminController::class, 'supprimerMembreEquipe'])->name('parametres.equipe.supprimer');
+        });
     });
 });
 // Routes globales Spatie Sitemap
@@ -197,7 +211,7 @@ Route::middleware('auth')->get('/generate-sitemap', function () {
         ->add(Url::create(url('/affiliation')))
         ->add(Url::create(url('/contrat-prestation')));
 
-    Evenement::where('statut', 'publié')->get()->each(function ($evenement) use ($sitemap) {
+    Evenement::where('statut', '=', 'publié', 'and')->get()->each(function ($evenement) use ($sitemap) {
         $sitemap->add(Url::create(url('/evenements/'.$evenement->id)));
     });
 
