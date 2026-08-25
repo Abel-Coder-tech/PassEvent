@@ -23,7 +23,7 @@
                             @php $quantite = $groupTickets->count(); $textes = $ticket->evenement->getTextes(); @endphp
                             <h4 class="fw-bold mb-2">{{ $ticket->montant <= 0 ? ($textes['type'] === 'spectacle' ? 'Réservation confirmée !' : 'Inscription confirmée !') : 'Paiement confirmé !' }}</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                {{ $quantite > 1 ? "Vos {$quantite} " . mb_strtolower($textes['billet_pluriel']) . ' ont été générés avec succès.' : 'Votre ' . mb_strtolower($textes['billet']) . ' a été généré avec succès.' }}<br>
+                                {{ $quantite > 1 ? "Vos {$quantite} " . mb_strtolower($textes['billet_pluriel']) . ' ont été générés avec succès.' : 'Votre ' . mb_strtolower($textes['billet']) . ' a été réservé avec succès.' }}<br>
                                 {{ $quantite > 1 ? 'Ils ont été envoyés par email à' : 'Il a été envoyé par email à' }} <strong>{{ $ticket->email_acheteur }}</strong>
                             </p>
                         </div>

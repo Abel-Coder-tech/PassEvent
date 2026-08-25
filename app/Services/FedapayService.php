@@ -94,6 +94,15 @@ class FedapayService
             return null;
         }
 
+        // Sécurité : valider le format du transaction ID (empêche l'injection dans l'URL)
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $transactionId)) {
+            Log::warning('FedapayService::getTransaction - Transaction ID invalide', [
+                'transaction_id' => $transactionId,
+            ]);
+
+            return null;
+        }
+
         $baseUrl = $this->isSandbox()
             ? 'https://sandbox-api.fedapay.com'
             : 'https://api.fedapay.com';

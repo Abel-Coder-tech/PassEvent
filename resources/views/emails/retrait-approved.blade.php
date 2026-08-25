@@ -28,7 +28,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="filter:brightness(0) invert(1);">
+            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
         </div>
         <div class="content">
             <p class="greeting">Bonjour <strong>{{ $nomOrganisateur }}</strong>,</p>
