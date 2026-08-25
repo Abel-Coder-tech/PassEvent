@@ -908,6 +908,28 @@ class SuperAdminController extends Controller
         return back()->with('success', "Mot de passe réinitialisé pour {$membre->pseudo}. Nouveau mot de passe temporaire envoyé par email.");
     }
 
+    // Renvoyer les identifiants par email (regenere un mot de passe temporaire)
+    public function renvoyerEmailEquipe(User $membre)
+    {
+        $this->exigerSuperAdmin();
+        abort_unless($membre->estEquipe(), 404);
+
+        $mdp = substr(bin2hex(random_bytes(6)), 0, 10);
+
+        $membre->update([
+            'mot_de_passe' => \Illuminate\Support\Facades\Hash::make($mdp),
+            'must_change_password' => true,
+        ]);
+
+        try {
+            Mail::to($membre->email)->send(new \App\Mail\EquipeMembreCree($membre, $mdp));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email renvoi identifiants equipe non envoye : ' . $e->getMessage());
+        }
+
+        return back()->with('success', "Identifiants régénérés et envoyés à {$membre->email}.");
+    }
+
     // Fiche detail d un membre equipe : infos, mini dashboard selon ses acces, role/acces modifiables, interventions
     public function voirMembreEquipe(User $membre)
     {

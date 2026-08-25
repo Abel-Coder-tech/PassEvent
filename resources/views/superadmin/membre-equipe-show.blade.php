@@ -31,6 +31,15 @@
             @endif
         </div>
         <div class="text-end text-nowrap">
+            @if($membre->must_change_password)
+                <form action="{{ route('superadmin.parametres.equipe.renvoyer-email', $membre) }}" method="POST" class="d-inline"
+                      onsubmit="return confirm('Régénérer un mot de passe temporaire et le renvoyer à {{ $membre->email }} ?');">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-info" title="Renvoyer les identifiants par email">
+                        <i class="bi bi-envelope-plus me-1"></i>Renvoyer les identifiants
+                    </button>
+                </form>
+            @endif
             <form action="{{ route('superadmin.parametres.equipe.reinit', $membre) }}" method="POST" class="d-inline"
                   onsubmit="return confirm('Générer un nouveau mot de passe temporaire et l\'envoyer par email ?');">
                 @csrf
