@@ -24,7 +24,20 @@ class ParametresController extends Controller
             'organisation' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email,' . Auth::id(),
             'description' => 'nullable|string|max:500',
-            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:512',
+        ],
+        [
+            'nom.required' => 'Le nom est obligatoire.',
+            'nom.min' => 'Le nom doit contenir au moins 3 caractères.',
+            'nom.max' => 'Le nom ne doit pas dépasser 255 caractères.',
+            'organisation.max' => 'Le nom de l\'organisation ne doit pas dépasser 255 caractères.',
+            'email.required' => 'L\'email est obligatoire.',
+            'email.email' => 'L\'email doit être une adresse email valide.',
+            'email.unique' => 'Cet email est déjà utilisé par un autre compte.',
+            'description.max' => 'La description ne doit pas dépasser 500 caractères.',
+            'avatar.image' => 'Le fichier doit être une image.',
+            'avatar.mimes' => 'L\'image doit être au format JPG, JPEG ou PNG.',
+            'avatar.max' => 'L\'image ne doit pas dépasser 512 Ko.',
         ]);
 
         $user = Auth::user();

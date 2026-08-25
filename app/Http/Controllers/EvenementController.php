@@ -64,7 +64,7 @@ class EvenementController extends Controller
             'categorie' => 'required',
             'autre_categorie' => 'nullable|string|max:255',
             'capacite' => 'required|integer|min:1',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:512',
             'statut' => 'required|in:brouillon,publié',
             'type_evenement' => 'required|in:spectacle,formation,conference',
             'gratuit' => 'nullable|boolean',
@@ -96,7 +96,7 @@ class EvenementController extends Controller
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
             'image.image' => 'Le fichier doit être une image.',
-            'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
+            'image.max' => 'L\'image ne doit pas dépasser 512 Ko.',
             'statut.required' => 'Le statut est obligatoire.',
             'tarif_nom_1.required_without' => 'Le nom du tarif est obligatoire.',
             'tarif_prix_1.required_without' => 'Le prix du tarif est obligatoire.',
@@ -274,10 +274,11 @@ class EvenementController extends Controller
             'categorie' => 'required',
             'autre_categorie' => 'nullable|string|max:255',
             'capacite' => 'required|integer|min:1',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:512',
             'statut' => 'required|in:brouillon,publié',
             'type_evenement' => 'required|in:spectacle,formation,conference',
             'gratuit' => 'nullable|boolean',
+            
         ], [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
             'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
@@ -291,7 +292,7 @@ class EvenementController extends Controller
             'capacite.integer' => 'La capacité doit être un nombre entier.',
             'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
             'image.image' => 'Le fichier doit être une image.',
-            'image.max' => 'L\'image ne doit pas dépasser 2 Mo.',
+            'image.max' => 'L\'image ne doit pas dépasser 512 Ko.',
             'statut.required' => 'Le statut est obligatoire.',
         ]);
 

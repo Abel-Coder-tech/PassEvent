@@ -23,6 +23,17 @@
             <form action="{{ route('admin.evenements.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
 
+                @if($errors->any())
+                    <div class="alert alert-danger py-2 px-3" style="font-size: 0.85rem;">
+                        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i>L'événement n'a pas pu être enregistré :</strong>
+                        <ul class="mb-0 mt-1 ps-3">
+                            @foreach($errors->all() as $erreur)
+                                <li>{{ $erreur }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <div class="mb-3">
                     <label for="titre" class="form-label fw-semibold">Titre de l'événement <span class="text-danger">*</span></label>
                     <input type="text" class="form-control @error('titre') is-invalid @enderror" id="titre" name="titre" value="{{ old('titre') }}" required>
@@ -111,6 +122,10 @@
                 <div class="mb-3">
                     <label for="image" class="form-label fw-semibold">Image d'illustration</label>
                     <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
+                    <div id="alerteTailleImage" class="text-danger small mt-1 d-none">
+                        <i class="bi bi-exclamation-circle me-1"></i>Image trop lourde : le maximum est 512 Ko. Choisissez une image plus légère.
+                    </div>
+                    <div class="form-text">Format JPG ou PNG, 512 Ko maximum.</div>
                     @error('image') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
@@ -339,5 +354,12 @@ document.getElementById('generer_vip')?.addEventListener('change', updatePreview
 document.querySelectorAll('[name^="tarif_prix_"]').forEach(el => el.addEventListener('input', updatePreview));
 document.querySelectorAll('[name^="tarif_nom_"]').forEach(el => el.addEventListener('input', updatePreview));
 toggleGratuit();
+
+// Alerte immediate si l image depasse 512 Ko (avant meme de soumettre)
+document.getElementById('image')?.addEventListener('change', function () {
+    var alerte = document.getElementById('alerteTailleImage');
+    if (!alerte) return;
+    alerte.classList.toggle('d-none', !(this.files[0] && this.files[0].size > 512 * 1024));
+});
 </script>
 @endsection
