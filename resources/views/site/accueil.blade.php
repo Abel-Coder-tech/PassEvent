@@ -257,6 +257,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    hero-mockup:hover {
+        transform: translateY(-4px);
     }
     .hero-illustration {
         width: 400px;
