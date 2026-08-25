@@ -187,6 +187,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/support/incident-message', [SuperAdminController::class, 'supportVoirIncident'])->name('support.incident-message');
 
             // ---- Gestion de l'equipe (super_admin uniquement, verifie dans le controleur) ----
+            Route::get('/parametres/equipe/{membre}', [SuperAdminController::class, 'voirMembreEquipe'])->name('parametres.equipe.voir');
             Route::post('/parametres/equipe', [SuperAdminController::class, 'ajouterMembreEquipe'])->name('parametres.equipe.ajouter');
             Route::post('/parametres/equipe/{membre}/roles', [SuperAdminController::class, 'majRolesMembreEquipe'])->name('parametres.equipe.roles');
             Route::post('/parametres/equipe/{membre}/statut', [SuperAdminController::class, 'basculerStatutMembreEquipe'])->name('parametres.equipe.statut');

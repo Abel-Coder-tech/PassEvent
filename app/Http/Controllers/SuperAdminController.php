@@ -740,7 +740,7 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'notification_repondue',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => $this->avecActeur([
                 'message_id' => $message->id,
                 'email' => $expediteurEmail,
                 'sujet' => $message->objet,
@@ -802,13 +802,13 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'equipe_ajoutee',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => [
                 'membre_id' => $membre->id,
                 'nom_complet' => $membre->prenom . ' ' . $membre->nom,
                 'email' => $membre->email,
                 'permissions' => $membre->permissions,
                 'cree_par' => auth('superadmin')->user()->email,
-            ]),
+            ],
         ]);
 
         try {
@@ -851,12 +851,12 @@ class SuperAdminController extends Controller
             Log::create([
                 'type_operation' => 'equipe_roles_modifies',
                 'ticket_id' => null,
-                'details' => json_encode([
+                'details' => [
                     'membre_id' => $membre->id,
                     'avant' => $anciens,
                     'apres' => $nouveau,
                     'modifie_par' => auth('superadmin')->user()->email,
-                ]),
+                ],
             ]);
         }
 
@@ -874,11 +874,11 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'equipe_statut_modifie',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => [
                 'membre_id' => $membre->id,
                 'statut' => $nouveauStatut,
                 'modifie_par' => auth('superadmin')->user()->email,
-            ]),
+            ],
         ]);
 
         return back()->with('success', 'Membre ' . ($nouveauStatut === 'actif' ? 'reactive' : 'desactive') . '.');
@@ -908,6 +908,60 @@ class SuperAdminController extends Controller
         return back()->with('success', "Mot de passe réinitialisé pour {$membre->pseudo}. Nouveau mot de passe temporaire envoyé par email.");
     }
 
+    // Fiche detail d un membre equipe : infos, mini dashboard selon ses acces, role/acces modifiables, interventions
+    public function voirMembreEquipe(User $membre)
+    {
+        $this->exigerSuperAdmin();
+        abort_unless($membre->estEquipe(), 404);
+
+        return view('superadmin.membre-equipe-show', [
+            'membre' => $membre,
+            'roleMembre' => $membre->roleEquipe(),
+            'accesMembre' => $membre->accesEquipe(),
+            'rolesEquipe' => User::ROLES_EQUIPE,
+            'statsEquipe' => $this->statistiquesPour($membre),
+            'interventions' => Log::where('details', 'like', '%"par_membre_id":'.$membre->id.'%')
+                ->orderBy('created_at', 'desc')->limit(15)->get(),
+        ]);
+    }
+
+    // Compteurs du mini dashboard d un membre, limites a ce qu il peut consulter
+    private function statistiquesPour(User $membre): array
+    {
+        $stats = [];
+
+        if ($membre->peut('organisateurs.consulter')) {
+            $stats['organisateurs_attente'] = User::where('role', 'admin')
+                ->whereIn('statut', ['en_attente', 'corrections_apportees'])->count();
+        }
+        if ($membre->peut('retraits.consulter')) {
+            $stats['retraits_attente'] = Withdrawal::where('status', 'en_attente')->count();
+            $stats['retraits_en_cours'] = Withdrawal::where('status', 'en_cours')->count();
+        }
+        if ($membre->peut('notifications.consulter')) {
+            $stats['messages_non_lus'] = Message::where('lu', false)->whereNull('user_id')->count();
+        }
+        if ($membre->peut('support.consulter')) {
+            $stats['tickets_incidents'] = Ticket::where('statut_paiement', 'en_attente')
+                ->whereNotNull('fedapay_transaction_id')->count();
+        }
+
+        return $stats;
+    }
+
+    // Injecte l identite de l acteur dans les details de log quand c est un membre equipe
+    private function avecActeur(array $details): array
+    {
+        $acteur = auth('superadmin')->user();
+
+        if ($acteur && $acteur->estEquipe()) {
+            $details['par_membre_id'] = $acteur->id;
+            $details['par_membre_nom'] = trim($acteur->prenom.' '.$acteur->nom) ?: ($acteur->pseudo ?? 'Membre');
+        }
+
+        return $details;
+    }
+
     public function supprimerMembreEquipe(User $membre)
     {
         $this->exigerSuperAdmin();
@@ -916,12 +970,12 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'equipe_supprimee',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => [
                 'membre_id' => $membre->id,
                 'nom_complet' => $membre->prenom . ' ' . $membre->nom,
                 'email' => $membre->email,
                 'supprime_par' => auth('superadmin')->user()->email,
-            ]),
+            ],
         ]);
 
         $membre->delete();
@@ -1051,7 +1105,7 @@ class SuperAdminController extends Controller
         Log::create([ // Log de modération
             'type_operation' => 'evenement_annule',
             'ticket_id' => null,
-            'details' => json_encode(['evenement_id' => $evenement->id, 'titre' => $evenement->titre, 'par' => auth('superadmin')->user()->email]),
+            'details' => ['evenement_id' => $evenement->id, 'titre' => $evenement->titre, 'par' => auth('superadmin')->user()->email],
             'ip' => request()->ip(),
         ]);
 
@@ -1501,7 +1555,7 @@ class SuperAdminController extends Controller
         Log::create([ // Log de modération
             'type_operation' => 'organisateur_suspendu',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'evenements_annules' => $evenements]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'evenements_annules' => $evenements]),
             'ip' => request()->ip(),
         ]);
 
@@ -1526,7 +1580,7 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'organisateur_reactive',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'evenements_restaures' => $evenements]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'evenements_restaures' => $evenements]),
             'ip' => request()->ip(),
         ]);
 
@@ -1563,12 +1617,16 @@ class SuperAdminController extends Controller
 
         $user->update(['statut' => 'actif']); // Active le compte
 
-        Mail::to($user->email)->send(new RegistrationApproved($user)); // Notification email
+        try {
+            Mail::to($user->email)->send(new RegistrationApproved($user)); // Notification email
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email approbation organisateur non envoyé : ' . $e->getMessage());
+        }
 
         Log::create([ // Log d'action
             'type_operation' => 'organisateur_approuve',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email]),
             'ip' => request()->ip(),
         ]);
 
@@ -1586,12 +1644,16 @@ class SuperAdminController extends Controller
 
         $user->update(['statut' => 'rejete']);
 
-        Mail::to($user->email)->send(new RegistrationRejected($user, $request->motif));
+        try {
+            Mail::to($user->email)->send(new RegistrationRejected($user, $request->motif));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email rejet organisateur non envoyé : ' . $e->getMessage());
+        }
 
         Log::create([
             'type_operation' => 'organisateur_rejete',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'motif' => $request->motif]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'motif' => $request->motif]),
             'ip' => request()->ip(),
         ]);
 
@@ -1621,7 +1683,7 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'organisateur_corrections',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email, 'motif' => $request->motif]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'motif' => $request->motif]),
             'ip' => request()->ip(),
         ]);
 
@@ -1640,7 +1702,7 @@ class SuperAdminController extends Controller
         Log::create([ // Log de suppression
             'type_operation' => 'organisateur_supprime',
             'ticket_id' => null,
-            'details' => json_encode(['user_id' => $user->id, 'email' => $user->email]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email]),
             'ip' => request()->ip(),
         ]);
 
@@ -1665,12 +1727,12 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'email_organisateur',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'sujet' => $request->sujet,
                 'envoye_par' => auth('superadmin')->user()->email,
-            ]),
+            ],
             'ip' => request()->ip(),
         ]);
 
@@ -1754,7 +1816,11 @@ class SuperAdminController extends Controller
             'commission', 'recettesNettes', 'retirable',
             'physiqueRecettes', 'commissionPhysique',
             'historique'
-        ));
+        ) + ['interventions' => Log::where('details', 'like', '%"user_id":'.$user->id.'%')
+            ->whereIn('type_operation', [
+                'organisateur_approuve', 'organisateur_rejete', 'organisateur_suspendu',
+                'organisateur_reactive', 'organisateur_corrections', 'organisateur_supprime',
+            ])->orderBy('created_at', 'desc')->limit(12)->get()]);
     }
 
     // Liste des demandes de retrait
@@ -1791,6 +1857,17 @@ class SuperAdminController extends Controller
         $withdrawal->refresh();
         RetraitController::notifierOrganisateur($withdrawal, 'en_cours');
 
+        Log::create([
+            'type_operation' => 'retrait_approuve',
+            'ticket_id' => null,
+            'details' => $this->avecActeur([
+                'retrait_id' => $withdrawal->id,
+                'organisateur_id' => $withdrawal->user_id,
+                'montant' => $withdrawal->montant,
+            ]),
+            'ip' => request()->ip(),
+        ]);
+
         return back()->with('success', 'Retrait approuvé. En attente de transfert.');
     }
 
@@ -1809,6 +1886,17 @@ class SuperAdminController extends Controller
 
         $withdrawal->refresh();
         RetraitController::notifierOrganisateur($withdrawal, 'paye');
+
+        Log::create([
+            'type_operation' => 'retrait_confirme',
+            'ticket_id' => null,
+            'details' => $this->avecActeur([
+                'retrait_id' => $withdrawal->id,
+                'organisateur_id' => $withdrawal->user_id,
+                'montant' => $withdrawal->montant,
+            ]),
+            'ip' => request()->ip(),
+        ]);
 
         return back()->with('success', 'Paiement confirmé. L\'organisateur a été notifié.');
     }
@@ -1847,6 +1935,18 @@ class SuperAdminController extends Controller
         ]);
 
         RetraitController::notifierOrganisateur($withdrawal, 'rejete');
+
+        Log::create([
+            'type_operation' => 'retrait_rejete',
+            'ticket_id' => null,
+            'details' => $this->avecActeur([
+                'retrait_id' => $withdrawal->id,
+                'organisateur_id' => $withdrawal->user_id,
+                'montant' => $withdrawal->montant,
+                'motif' => $notes,
+            ]),
+            'ip' => request()->ip(),
+        ]);
 
         return back()->with('success', 'Retrait rejeté. L\'organisateur a été notifié.');
     }
@@ -1907,7 +2007,7 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'remboursement',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => $this->avecActeur([
                 'action' => 'approbation_remboursement',
                 'demande_id' => $demande->id,
                 'montant' => $demande->montant_total,
@@ -1950,7 +2050,7 @@ class SuperAdminController extends Controller
                 Log::create([
                     'ticket_id' => $ticket->id,
                     'type_operation' => 'remboursement',
-                    'details' => json_encode([
+                    'details' => $this->avecActeur([
                         'action' => 'remboursement_effectue',
                         'demande_id' => $demande->id,
                         'montant' => $ticket->montant,
@@ -2059,7 +2159,7 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'remboursement',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => $this->avecActeur([
                 'action' => 'refus_remboursement',
                 'demande_id' => $demande->id,
                 'motif' => $validated['motif_refus'],
@@ -2109,12 +2209,12 @@ class SuperAdminController extends Controller
         Log::create([
             'type_operation' => 'newsletter',
             'ticket_id' => null,
-            'details' => json_encode([
+            'details' => [
                 'action' => 'envoi_newsletter_masse',
                 'objet' => $validated['objet'],
                 'destinataires' => $abonnesActifs->count(),
                 'par' => $superadmin->email,
-            ]),
+            ],
             'ip' => $request->ip(),
         ]);
 
