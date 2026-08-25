@@ -224,18 +224,22 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
-    }
-    .hero-mockup:hover {
-        transform: translateY(-4px);
     }
     .hero-illustration {
         width: 400px;
         height: 320px;
         border-radius: 10px;
-        animation: heroFadeUp 0.8s ease 0.3s both;
+        animation: heroZoomIn 0.8s ease 0.3s both;
         max-width: 100%;
         object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    .hero-mockup:hover .hero-illustration {
+        transform: scale(1.04);
+    }
+    @keyframes heroZoomIn {
+        0% { opacity: 0; transform: scale(0.92); }
+        100% { opacity: 1; transform: scale(1); }
     }
 
     @media (max-width: 991.98px) {

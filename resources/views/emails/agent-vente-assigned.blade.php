@@ -43,7 +43,7 @@
             </ul>
         </div>
         <div class="footer">
-            <p>PassEvent &mdash; Billetterie en ligne 100% Bénin</p>
+            <p>PaxEvent &mdash; Billetterie en ligne 100% Bénin</p>
         </div>
     </div>
 </body>
