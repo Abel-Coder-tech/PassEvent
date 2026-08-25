@@ -88,17 +88,13 @@
                                     @endif
                                 </td>
                                 <td class="text-end text-nowrap">
+                                    <a href="{{ route('superadmin.parametres.equipe.voir', $membre) }}" class="btn btn-sm btn-outline-primary" title="Voir la fiche du membre">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <form action="{{ route('superadmin.parametres.equipe.statut', $membre) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ $membre->statut === 'actif' ? 'Désactiver le compte' : 'Réactiver le compte' }}">
                                             <i class="bi bi-{{ $membre->statut === 'actif' ? 'pause-circle' : 'play-circle' }}"></i>
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('superadmin.parametres.equipe.reinit', $membre) }}" method="POST" class="d-inline"
-                                          onsubmit="return confirm('Générer un nouveau mot de passe temporaire et l\'envoyer par email ?');">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Réinitialiser le mot de passe">
-                                            <i class="bi bi-key-fill"></i>
                                         </button>
                                     </form>
                                     <form action="{{ route('superadmin.parametres.equipe.supprimer', $membre) }}" method="POST" class="d-inline"

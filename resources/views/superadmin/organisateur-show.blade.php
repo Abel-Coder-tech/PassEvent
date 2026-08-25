@@ -618,6 +618,53 @@
     </div>
 </div>
 
+{{-- Interventions de l equipe sur ce compte --}}
+<div class="sa-card mb-4">
+    <div class="sa-card-header">
+        <span><i class="bi bi-people me-2" style="color: var(--sa-primary);"></i>Interventions sur ce compte</span>
+        <small class="text-muted">Qui a validé, rejeté ou suspendu ce compte</small>
+    </div>
+    <div class="sa-card-body p-0">
+        <table class="sa-table mb-0">
+            <thead>
+                <tr><th>Date</th><th>Action</th><th>Par</th><th>Détail</th></tr>
+            </thead>
+            <tbody>
+                @forelse($interventions as $log)
+                    @php
+                        $detailsLog = $log->details ?? [];
+                        $acteur = $detailsLog['par_membre_nom'] ?? 'Propriétaire';
+                        $libellesActions = [
+                            'organisateur_approuve' => ['Validé', 'success'],
+                            'organisateur_rejete' => ['Rejeté', 'danger'],
+                            'organisateur_suspendu' => ['Suspendu', 'danger'],
+                            'organisateur_reactive' => ['Réactivé', 'info'],
+                            'organisateur_corrections' => ['Corrections demandées', 'warning'],
+                            'organisateur_supprime' => ['Supprimé', 'danger'],
+                        ];
+                        $action = $libellesActions[$log->type_operation] ?? [ucfirst(str_replace('_', ' ', $log->type_operation)), 'secondary'];
+                    @endphp
+                    <tr>
+                        <td style="font-size:0.78rem;">{{ \Carbon\Carbon::parse($log->created_at)->isoFormat('D MMM YYYY HH:mm') }}</td>
+                        <td><span class="sa-badge sa-badge-{{ $action[1] }}">{{ $action[0] }}</span></td>
+                        <td style="font-size:0.78rem;">
+                            {{ $acteur }}
+                            @if(isset($detailsLog['par_membre_id']))
+                                <span class="sa-badge sa-badge-secondary" style="font-size:0.62rem;">Équipe</span>
+                            @endif
+                        </td>
+                        <td class="text-muted" style="font-size:0.75rem;">
+                            {{ $detailsLog['motif'] ?? ($detailsLog['email'] ?? '-') }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="4" class="text-center text-muted py-3">Aucune intervention enregistrée</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {{-- Modal Rejet --}}
 <div id="rejetModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
     <div class="modal-box">
