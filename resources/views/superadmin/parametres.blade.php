@@ -89,9 +89,6 @@
                                     @else
                                         <span class="sa-badge sa-badge-danger">Désactivé</span>
                                     @endif
-                                    @if($membre->must_change_password)
-                                        <br><small style="color:#b8860b;"><i class="bi bi-key me-1"></i>Mot de passe temporaire</small>
-                                    @endif
                                 </td>
                                 <td class="text-end text-nowrap">
                                     <a href="{{ route('superadmin.parametres.equipe.voir', $membre) }}" class="btn btn-sm btn-outline-primary" title="Voir la fiche du membre">
