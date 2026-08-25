@@ -45,11 +45,6 @@
                 puis attribuez-lui ses rôles.
             </p>
         @else
-            <p class="text-muted mb-2" style="font-size: 0.78rem;">
-                <strong>Étape 1 :</strong> Créez le compte du membre.<br>
-                <strong>Étape 2 :</strong> Choisissez son rôle dans la liste déroulante, puis cochez les pages et actions auxquelles il a droit.
-                Chaque membre ne voit que ce qui est coché ; toute page hors périmètre affiche « Accès non autorisé ».
-            </p>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0" style="font-size: 0.82rem;">
                     <thead>
