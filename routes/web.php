@@ -192,6 +192,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             Route::post('/parametres/equipe/{membre}/roles', [SuperAdminController::class, 'majRolesMembreEquipe'])->name('parametres.equipe.roles');
             Route::post('/parametres/equipe/{membre}/statut', [SuperAdminController::class, 'basculerStatutMembreEquipe'])->name('parametres.equipe.statut');
             Route::post('/parametres/equipe/{membre}/reinit-mdp', [SuperAdminController::class, 'reinitialiserMdpMembreEquipe'])->name('parametres.equipe.reinit');
+            Route::post('/parametres/equipe/{membre}/renvoyer-email', [SuperAdminController::class, 'renvoyerEmailEquipe'])->name('parametres.equipe.renvoyer-email');
             Route::delete('/parametres/equipe/{membre}', [SuperAdminController::class, 'supprimerMembreEquipe'])->name('parametres.equipe.supprimer');
         });
     });

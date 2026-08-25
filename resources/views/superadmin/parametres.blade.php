@@ -94,6 +94,15 @@
                                     <a href="{{ route('superadmin.parametres.equipe.voir', $membre) }}" class="btn btn-sm btn-outline-primary" title="Voir la fiche du membre">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    @if($membre->must_change_password)
+                                        <form action="{{ route('superadmin.parametres.equipe.renvoyer-email', $membre) }}" method="POST" class="d-inline"
+                                              onsubmit="return confirm('Régénérer un mot de passe temporaire et le renvoyer à {{ $membre->email }} ?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-info" title="Renvoyer les identifiants par email">
+                                                <i class="bi bi-envelope-plus"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                     <form action="{{ route('superadmin.parametres.equipe.statut', $membre) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ $membre->statut === 'actif' ? 'Désactiver le compte' : 'Réactiver le compte' }}">
