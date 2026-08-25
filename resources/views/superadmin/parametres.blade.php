@@ -17,6 +17,17 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
+@if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" style="border-radius: 10px; font-size: 0.85rem;">
+        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i>Erreur lors de la création du membre :</strong>
+        <ul class="mb-0 mt-1" style="font-size: 0.82rem;">
+            @foreach($errors->all() as $erreur)
+                <li>{{ $erreur }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
 
 {{-- Gestion de l'equipe --}}
 <div class="sa-card mb-3">
@@ -458,6 +469,13 @@ document.addEventListener('DOMContentLoaded', function () {
     (function () {
         var cible = document.querySelector('[data-modifier-acces][data-membre="{{ session('ouvrir_roles') }}"]');
         if (cible) ouvrirModalRoles(cible);
+    })();
+    @endif
+
+    @if($errors->any())
+    (function () {
+        var modalAjout = document.getElementById('modalAjoutMembre');
+        if (modalAjout) bootstrap.Modal.getOrCreateInstance(modalAjout).show();
     })();
     @endif
 });
