@@ -56,18 +56,6 @@
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
                 <div class="hero-mockup">
                     <img src="{{ asset_v('images/image_heros.jpeg') }}" alt="Illustration PaxEvent" class="hero-illustration">
-                    <div class="hero-float-card float-card-1">
-                        <i class="bi bi-ticket-perforated"></i>
-                        <span>Billet électronique</span>
-                    </div>
-                    <div class="hero-float-card float-card-2">
-                        <i class="bi bi-shield-check"></i>
-                        <span>Paiement sécurisé</span>
-                    </div>
-                    <div class="hero-float-card float-card-3">
-                        <i class="bi bi-qr-code"></i>
-                        <span>Scan QR code</span>
-                    </div>
                 </div>
             </div>
         </div>
