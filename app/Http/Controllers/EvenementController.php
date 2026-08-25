@@ -83,6 +83,14 @@ class EvenementController extends Controller
             'generer_vip' => 'nullable|boolean',
         ];
 
+        if ($gratuit) {
+            foreach ($rules as $key => $rule) {
+                if (str_starts_with($key, 'tarif_')) {
+                    unset($rules[$key]);
+                }
+            }
+        }
+
         $validated = $request->validate($rules, [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
             'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
@@ -99,7 +107,10 @@ class EvenementController extends Controller
             'image.max' => 'L\'image ne doit pas dépasser 512 Ko.',
             'statut.required' => 'Le statut est obligatoire.',
             'tarif_nom_1.required_without' => 'Le nom du tarif est obligatoire.',
+            'tarif_nom_1.string' => 'Le nom du tarif doit être du texte.',
             'tarif_prix_1.required_without' => 'Le prix du tarif est obligatoire.',
+            'tarif_prix_1.numeric' => 'Le prix du tarif doit être un nombre.',
+            'tarif_prix_1.min' => 'Le prix du tarif ne peut pas être négatif.',
         ]);
 
         if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
