@@ -92,13 +92,24 @@
 
     .btn-download { background: #542680; color: #fff; border-radius: 8px; font-weight: 600; }
     .btn-download:hover { background: #3d1a5c; color: #fff; }
+
+    .file-error { background: #fff5f5; border: 1px solid #f5c6cb; color: #842029; border-radius: 6px; padding: .5rem .75rem; font-size: .8rem; margin-top: .35rem; display: none; }
+    .file-error.show { display: block; }
+
+    .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #542680; color: #fff; font-size: .7rem; font-weight: 700; margin-right: .4rem; flex-shrink: 0; }
+    .step-label { font-size: .82rem; font-weight: 600; color: #1d1d1f; }
+    .step-hint { font-size: .75rem; color: #888; margin-top: .15rem; }
     </style>
 
     @if(session('success'))
-    <div class="alert alert-success py-2 small">{{ session('success') }}</div>
+    <div class="alert alert-success py-2 small d-flex align-items-center gap-2">
+        <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+    </div>
     @endif
     @if(session('error'))
-    <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
+    <div class="alert alert-danger py-2 small d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+    </div>
     @endif
 
     <div class="lot-info mb-3 d-flex flex-wrap gap-3 align-items-center">
@@ -121,14 +132,13 @@
         <input type="hidden" name="qr_size" id="qr_size_val" value="{{ old('qr_size', $lot->qr_size ?? 40) }}">
 
         <div class="template-wrap">
-            <!-- Zone canvas : image + overlay QR draggable -->
             <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
                 @if($lot->template_path)
                     <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
                     <div class="qr-overlay" id="qrOverlay"><div class="qr-resize" id="qrResize"></div></div>
                 @else
                     <div class="canvas-empty" id="canvasEmpty">
-                        <i class="bi bi-image"></i>
+                        <i class="bi bi-cloud-arrow-up"></i>
                         <p class="mb-1 fw-semibold">Glissez votre image de ticket ici</p>
                         <p class="small mb-2">ou cliquez pour parcourir</p>
                         <p class="small text-muted">PNG ou JPG — max 10 Mo</p>
@@ -136,7 +146,6 @@
                 @endif
             </div>
 
-            <!-- Panneau de configuration -->
             <div class="config-panel">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-2">
@@ -144,49 +153,59 @@
                     </div>
                     <div class="card-body py-3">
                         @if($errors->any())
-                        <div class="alert alert-danger py-2 small">{{ $errors->first() }}</div>
+                        <div class="alert alert-danger py-2 small d-flex align-items-start gap-2">
+                            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                            <span>{!! $errors->first() !!}</span>
+                        </div>
                         @endif
 
                         <div class="mb-3">
-                            <label class="form-label">Image du ticket</label>
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="step-badge">1</span>
+                                <span class="step-label">Image du ticket</span>
+                            </div>
+                            <div class="step-hint mb-2">Importez votre ticket physique pour créer le template.</div>
                             <input type="file" name="template_image" id="templateImageInput" accept="image/jpeg,image/png" class="form-control form-control-sm">
-                            <small class="text-muted">PNG ou JPG — max 10 Mo</small>
+                            <div class="file-error" id="fileError"></div>
                         </div>
 
-                        <div class="row g-2 mb-3">
-                            <div class="col-4">
-                                <label class="form-label">Position X</label>
-                                <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $lot->qr_x ?? 30) }}">
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="step-badge">2</span>
+                                <span class="step-label">Positionnez le QR code</span>
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Position Y</label>
-                                <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $lot->qr_y ?? 60) }}">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label">Taille QR</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" class="form-control" id="qrSizeInput" min="20" max="80" value="{{ old('qr_size', $lot->qr_size ?? 40) }}">
-                                    <span class="input-group-text">mm</span>
+                            <div class="step-hint mb-2">Glissez le cadre rouge pour le déplacer, ou utilisez la poignée en bas à droite pour le redimensionner.</div>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <label class="form-label">X (mm)</label>
+                                    <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $lot->qr_x ?? 30) }}">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label">Y (mm)</label>
+                                    <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $lot->qr_y ?? 60) }}">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label">Taille</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="qrSizeInput" min="20" max="80" value="{{ old('qr_size', $lot->qr_size ?? 40) }}">
+                                        <span class="input-group-text">mm</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Tickets par page</label>
-                            <select class="form-select form-select-sm" id="parPageSelect">
-                                <option value="4" selected>4 par page (2×2) — A4</option>
-                            </select>
-                            <small class="text-muted">Format A4 portrait</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <p class="small text-muted mb-2"><i class="bi bi-info-circle me-1"></i> Glissez le cadre rouge pour le déplacer. Utilisez la poignée en bas à droite pour redimensionner le QR.</p>
-                            <div id="previewStatus" class="small text-muted"></div>
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="step-badge">3</span>
+                                <span class="step-label">Enregistrez</span>
+                            </div>
+                            <div class="step-hint mb-2">Vérifiez l'aperçu puis enregistrez pour appliquer le design à la planche PDF.</div>
                         </div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-sm btn-download" id="btnSave">
-                                <i class="bi bi-check-lg me-1"></i>Enregistrer le template
+                                <i class="bi bi-check-lg me-1"></i><span id="btnSaveText">Enregistrer le template</span>
+                                <span id="btnSaveSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status"></span>
                             </button>
                         </div>
                     </div>
@@ -198,27 +217,31 @@
 
 <script>
 (function() {
-    const canvas = document.getElementById('canvasArea');
-    const overlay = document.getElementById('qrOverlay');
-    const img = document.getElementById('canvasImg');
-    const qrXInput = document.getElementById('qrXInput');
-    const qrYInput = document.getElementById('qrYInput');
-    const qrSizeInput = document.getElementById('qrSizeInput');
-    const qrXHidden = document.getElementById('qr_x');
-    const qrYHidden = document.getElementById('qr_y');
-    const qrSizeHidden = document.getElementById('qr_size_val');
+    var canvas = document.getElementById('canvasArea');
+    var overlay = document.getElementById('qrOverlay');
+    var img = document.getElementById('canvasImg');
+    var qrXInput = document.getElementById('qrXInput');
+    var qrYInput = document.getElementById('qrYInput');
+    var qrSizeInput = document.getElementById('qrSizeInput');
+    var qrXHidden = document.getElementById('qr_x');
+    var qrYHidden = document.getElementById('qr_y');
+    var qrSizeHidden = document.getElementById('qr_size_val');
+    var fileError = document.getElementById('fileError');
+    var fileInput = document.getElementById('templateImageInput');
+    var form = document.getElementById('formTemplate');
+    var btnSave = document.getElementById('btnSave');
+    var btnSaveText = document.getElementById('btnSaveText');
+    var btnSaveSpinner = document.getElementById('btnSaveSpinner');
 
-    let dragging = false;
-    let resizing = false;
-    let startResizeX = 0, startResizeY = 0, startResizeW = 0;
-    let offsetX = 0, offsetY = 0;
-    let imgNatW = 0, imgNatH = 0;
-    let imgDispW = 0, imgDispH = 0;
-    let imgOffX = 0, imgOffY = 0;
+    var dragging = false;
+    var resizing = false;
+    var startResizeX = 0, startResizeW = 0;
+    var offsetX = 0, offsetY = 0;
+    var imgDispW = 0, imgDispH = 0;
+    var imgOffX = 0, imgOffY = 0;
 
-    // Conversion px → mm (basé sur la taille d'affichage du ticket)
-    const TICKET_MM_W = {{ $ticketLargeur ?? 95 }};
-    const TICKET_MM_H = {{ $ticketHauteur ?? 138 }};
+    var TICKET_MM_W = {{ $ticketLargeur ?? 95 }};
+    var TICKET_MM_H = {{ $ticketHauteur ?? 138 }};
 
     function pxToMm(px) {
         if (!imgDispW) return 0;
@@ -229,21 +252,28 @@
         return (mm / TICKET_MM_W) * imgDispW;
     }
 
+    function showFileError(msg) {
+        fileError.textContent = msg;
+        fileError.classList.add('show');
+    }
+    function hideFileError() {
+        fileError.classList.remove('show');
+        fileError.textContent = '';
+    }
+
     function updateOverlay() {
-        if (!img || !img.naturalWidth) return;
-        imgNatW = img.naturalWidth;
-        imgNatH = img.naturalHeight;
+        if (!overlay || !img || !img.naturalWidth) return;
         imgDispW = img.clientWidth;
         imgDispH = img.clientHeight;
         imgOffX = img.offsetLeft;
         imgOffY = img.offsetTop;
 
-        const qrMm = parseInt(qrSizeInput.value) || 40;
-        const qrPx = mmToPx(qrMm);
-        const xMm = parseInt(qrXInput.value) || 0;
-        const yMm = parseInt(qrYInput.value) || 0;
-        const xPx = mmToPx(xMm) + imgOffX;
-        const yPx = mmToPx(yMm) + imgOffY;
+        var qrMm = parseInt(qrSizeInput.value) || 40;
+        var qrPx = mmToPx(qrMm);
+        var xMm = parseInt(qrXInput.value) || 0;
+        var yMm = parseInt(qrYInput.value) || 0;
+        var xPx = mmToPx(xMm) + imgOffX;
+        var yPx = mmToPx(yMm) + imgOffY;
 
         overlay.style.left = xPx + 'px';
         overlay.style.top = yPx + 'px';
@@ -251,65 +281,63 @@
         overlay.style.height = qrPx + 'px';
     }
 
-    if (overlay) {
+    function bindOverlayEvents() {
+        overlay = document.getElementById('qrOverlay');
         var resizeHandle = document.getElementById('qrResize');
+        if (!overlay) return;
 
-        // Déplacement du QR
         overlay.addEventListener('mousedown', function(e) {
             if (e.target === resizeHandle) return;
             dragging = true;
             offsetX = e.clientX - overlay.offsetLeft;
             offsetY = e.clientY - overlay.offsetTop;
             e.preventDefault();
+            e.stopPropagation();
         });
 
-        // Redimensionnement par la poignée
         if (resizeHandle) {
             resizeHandle.addEventListener('mousedown', function(e) {
                 resizing = true;
                 startResizeX = e.clientX;
-                startResizeY = e.clientY;
                 startResizeW = overlay.clientWidth;
                 e.preventDefault();
                 e.stopPropagation();
             });
         }
-
-        document.addEventListener('mousemove', function(e) {
-            if (dragging) {
-                let xPx = e.clientX - offsetX;
-                let yPx = e.clientY - offsetY;
-                xPx = Math.max(0, Math.min(imgDispW - overlay.clientWidth, xPx));
-                yPx = Math.max(0, Math.min(imgDispH - overlay.clientHeight, yPx));
-
-                overlay.style.left = xPx + 'px';
-                overlay.style.top = yPx + 'px';
-
-                const xMm = pxToMm(xPx - imgOffX);
-                const yMm = pxToMm(yPx - imgOffY);
-                qrXInput.value = xMm;
-                qrYInput.value = yMm;
-                qrXHidden.value = xMm;
-                qrYHidden.value = yMm;
-            }
-            if (resizing) {
-                const dx = e.clientX - startResizeX;
-                const newW = Math.max(20, Math.min(imgDispW - overlay.offsetLeft, startResizeW + dx));
-                const newMm = pxToMm(newW);
-                if (newMm >= 20 && newMm <= 80) {
-                    overlay.style.width = newW + 'px';
-                    overlay.style.height = newW + 'px';
-                    qrSizeInput.value = newMm;
-                    qrSizeHidden.value = newMm;
-                }
-            }
-        });
-
-        document.addEventListener('mouseup', function() {
-            dragging = false;
-            resizing = false;
-        });
     }
+
+    document.addEventListener('mousemove', function(e) {
+        if (dragging && overlay) {
+            var xPx = e.clientX - offsetX;
+            var yPx = e.clientY - offsetY;
+            xPx = Math.max(0, Math.min(imgDispW - overlay.clientWidth, xPx));
+            yPx = Math.max(0, Math.min(imgDispH - overlay.clientHeight, yPx));
+
+            overlay.style.left = xPx + 'px';
+            overlay.style.top = yPx + 'px';
+
+            qrXInput.value = pxToMm(xPx - imgOffX);
+            qrYInput.value = pxToMm(yPx - imgOffY);
+            qrXHidden.value = qrXInput.value;
+            qrYHidden.value = qrYInput.value;
+        }
+        if (resizing && overlay) {
+            var dx = e.clientX - startResizeX;
+            var newW = Math.max(20, Math.min(imgDispW - overlay.offsetLeft, startResizeW + dx));
+            var newMm = pxToMm(newW);
+            if (newMm >= 20 && newMm <= 80) {
+                overlay.style.width = newW + 'px';
+                overlay.style.height = newW + 'px';
+                qrSizeInput.value = newMm;
+                qrSizeHidden.value = newMm;
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        dragging = false;
+        resizing = false;
+    });
 
     // Sync inputs
     [qrXInput, qrYInput, qrSizeInput].forEach(function(el) {
@@ -326,43 +354,51 @@
         new ResizeObserver(updateOverlay).observe(img);
     }
 
-    // Click canvas → open file picker
+    // Click canvas → open file picker (only on empty area)
     canvas.addEventListener('click', function(e) {
+        if (e.target.closest('.qr-overlay') || e.target.closest('.qr-resize')) return;
         if (e.target === canvas || e.target.closest('.canvas-empty')) {
-            const input = document.getElementById('templateImageInput');
-            if (input) input.click();
+            if (fileInput) fileInput.click();
         }
     });
 
-    // File input → preview
+    // Validate + load file
     function handleFile(file) {
-        if (!file || !file.type.match(/^image\/(jpeg|png)$/)) {
-            alert('Format accepté : JPG ou PNG.');
+        hideFileError();
+        if (!file) return;
+
+        var allowed = ['image/jpeg', 'image/png'];
+        if (allowed.indexOf(file.type) === -1) {
+            showFileError('Format non accepté. Veuillez choisir un fichier JPG ou PNG.');
             return;
         }
-        const reader = new FileReader();
+        if (file.size > 10 * 1024 * 1024) {
+            showFileError('Le fichier est trop volumineux (' + (file.size / 1024 / 1024).toFixed(1) + ' Mo). Taille maximale : 10 Mo.');
+            return;
+        }
+
+        var reader = new FileReader();
         reader.onload = function(ev) {
             canvas.innerHTML = '';
             canvas.classList.add('has-image');
-            const imgEl = document.createElement('img');
+            var imgEl = document.createElement('img');
             imgEl.src = ev.target.result;
             imgEl.className = 'canvas-img';
             imgEl.id = 'canvasImg';
             canvas.appendChild(imgEl);
-            const ov = document.createElement('div');
+            var ov = document.createElement('div');
             ov.className = 'qr-overlay';
             ov.id = 'qrOverlay';
-            const rh = document.createElement('div');
+            var rh = document.createElement('div');
             rh.className = 'qr-resize';
             rh.id = 'qrResize';
             ov.appendChild(rh);
             canvas.appendChild(ov);
-            imgEl.onload = function() { updateOverlay(); };
+            img = imgEl;
+            imgEl.onload = function() { updateOverlay(); bindOverlayEvents(); };
 
-            // Also update hidden file input for form submission
-            const dt = new DataTransfer();
+            var dt = new DataTransfer();
             dt.items.add(file);
-            const fileInput = document.getElementById('templateImageInput');
             if (fileInput) fileInput.files = dt.files;
         };
         reader.readAsDataURL(file);
@@ -383,15 +419,26 @@
     });
 
     // File input change
-    const fileInput = document.getElementById('templateImageInput');
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             if (this.files.length) handleFile(this.files[0]);
         });
     }
 
-    // Init overlay position
-    if (overlay) updateOverlay();
+    // Prevent submit without image
+    form.addEventListener('submit', function(e) {
+        if (!canvas.classList.contains('has-image')) {
+            e.preventDefault();
+            showFileError('Veuillez importer une image de ticket avant d\'enregistrer.');
+            return;
+        }
+        btnSaveText.textContent = 'Enregistrement...';
+        btnSaveSpinner.classList.remove('d-none');
+        btnSave.disabled = true;
+    });
+
+    // Init
+    if (overlay) { updateOverlay(); bindOverlayEvents(); }
 })();
 </script>
 @endsection
