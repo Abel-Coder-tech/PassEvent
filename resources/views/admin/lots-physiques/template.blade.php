@@ -60,6 +60,30 @@
         font-size: 10px;
     }
 
+    .qr-resize {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border: 2px solid #e74c3c;
+        border-radius: 3px;
+        cursor: nwse-resize;
+        z-index: 11;
+    }
+    .qr-resize::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 6px 6px;
+        border-color: transparent transparent #e74c3c transparent;
+    }
+
     .config-panel .form-label { font-size: .82rem; font-weight: 600; color: #1d1d1f; }
     .config-panel .form-control, .config-panel .form-select { font-size: .85rem; }
 
@@ -82,8 +106,11 @@
         <span><i class="bi bi-calendar me-1"></i>{{ $lot->evenement?->titre ?? '—' }}</span>
         <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
         <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
-        <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm btn-download ms-auto">
+        <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm btn-download">
             <i class="bi bi-download me-1"></i>Télécharger la planche
+        </a>
+        <a href="{{ route('admin.lots-physiques.index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
         </a>
     </div>
 
@@ -98,7 +125,7 @@
             <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
                 @if($lot->template_path)
                     <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
-                    <div class="qr-overlay" id="qrOverlay"></div>
+                    <div class="qr-overlay" id="qrOverlay"><div class="qr-resize" id="qrResize"></div></div>
                 @else
                     <div class="canvas-empty" id="canvasEmpty">
                         <i class="bi bi-image"></i>
@@ -153,7 +180,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <p class="small text-muted mb-2"><i class="bi bi-info-circle me-1"></i> Glissez le cadre rouge sur l'image pour positionner le QR code.</p>
+                            <p class="small text-muted mb-2"><i class="bi bi-info-circle me-1"></i> Glissez le cadre rouge pour le déplacer. Utilisez la poignée en bas à droite pour redimensionner le QR.</p>
                             <div id="previewStatus" class="small text-muted"></div>
                         </div>
 
@@ -182,6 +209,8 @@
     const qrSizeHidden = document.getElementById('qr_size_val');
 
     let dragging = false;
+    let resizing = false;
+    let startResizeX = 0, startResizeY = 0, startResizeW = 0;
     let offsetX = 0, offsetY = 0;
     let imgNatW = 0, imgNatH = 0;
     let imgDispW = 0, imgDispH = 0;
@@ -223,33 +252,62 @@
     }
 
     if (overlay) {
+        var resizeHandle = document.getElementById('qrResize');
+
+        // Déplacement du QR
         overlay.addEventListener('mousedown', function(e) {
+            if (e.target === resizeHandle) return;
             dragging = true;
             offsetX = e.clientX - overlay.offsetLeft;
             offsetY = e.clientY - overlay.offsetTop;
             e.preventDefault();
         });
 
+        // Redimensionnement par la poignée
+        if (resizeHandle) {
+            resizeHandle.addEventListener('mousedown', function(e) {
+                resizing = true;
+                startResizeX = e.clientX;
+                startResizeY = e.clientY;
+                startResizeW = overlay.clientWidth;
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+
         document.addEventListener('mousemove', function(e) {
-            if (!dragging) return;
-            let xPx = e.clientX - offsetX;
-            let yPx = e.clientY - offsetY;
-            xPx = Math.max(0, Math.min(imgDispW - overlay.clientWidth, xPx));
-            yPx = Math.max(0, Math.min(imgDispH - overlay.clientHeight, yPx));
+            if (dragging) {
+                let xPx = e.clientX - offsetX;
+                let yPx = e.clientY - offsetY;
+                xPx = Math.max(0, Math.min(imgDispW - overlay.clientWidth, xPx));
+                yPx = Math.max(0, Math.min(imgDispH - overlay.clientHeight, yPx));
 
-            overlay.style.left = xPx + 'px';
-            overlay.style.top = yPx + 'px';
+                overlay.style.left = xPx + 'px';
+                overlay.style.top = yPx + 'px';
 
-            const xMm = pxToMm(xPx - imgOffX);
-            const yMm = pxToMm(yPx - imgOffY);
-            qrXInput.value = xMm;
-            qrYInput.value = yMm;
-            qrXHidden.value = xMm;
-            qrYHidden.value = yMm;
+                const xMm = pxToMm(xPx - imgOffX);
+                const yMm = pxToMm(yPx - imgOffY);
+                qrXInput.value = xMm;
+                qrYInput.value = yMm;
+                qrXHidden.value = xMm;
+                qrYHidden.value = yMm;
+            }
+            if (resizing) {
+                const dx = e.clientX - startResizeX;
+                const newW = Math.max(20, Math.min(imgDispW - overlay.offsetLeft, startResizeW + dx));
+                const newMm = pxToMm(newW);
+                if (newMm >= 20 && newMm <= 80) {
+                    overlay.style.width = newW + 'px';
+                    overlay.style.height = newW + 'px';
+                    qrSizeInput.value = newMm;
+                    qrSizeHidden.value = newMm;
+                }
+            }
         });
 
         document.addEventListener('mouseup', function() {
             dragging = false;
+            resizing = false;
         });
     }
 
@@ -294,6 +352,10 @@
             const ov = document.createElement('div');
             ov.className = 'qr-overlay';
             ov.id = 'qrOverlay';
+            const rh = document.createElement('div');
+            rh.className = 'qr-resize';
+            rh.id = 'qrResize';
+            ov.appendChild(rh);
             canvas.appendChild(ov);
             imgEl.onload = function() { updateOverlay(); };
 
