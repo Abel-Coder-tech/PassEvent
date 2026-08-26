@@ -96,15 +96,15 @@
 @endif
 
 <div class="lot-info mb-3 d-flex flex-wrap gap-3 align-items-center">
+    <a href="{{ route('superadmin.tickets-physiques') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Retour
+    </a>
     <span><i class="bi bi-ticket-perforated me-1" style="color:var(--sa-primary);"></i><strong>{{ $lot->nom }}</strong></span>
     <span><i class="bi bi-calendar me-1"></i>{{ $lot->evenement?->titre ?? '—' }}</span>
     <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
     <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
-    <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="btn btn-sm btn-download">
+    <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="btn btn-sm btn-download ms-auto">
         <i class="bi bi-download me-1"></i>Télécharger la planche
-    </a>
-    <a href="{{ route('superadmin.tickets-physiques') }}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Retour
     </a>
 </div>
 
