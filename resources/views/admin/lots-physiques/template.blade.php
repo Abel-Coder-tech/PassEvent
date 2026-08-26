@@ -37,10 +37,18 @@
 
     .qr-overlay {
         position: absolute;
-        border: 2px dashed #e74c3c;
-        background: rgba(231, 76, 60, .12);
+        border: 2.5px solid #e74c3c;
+        background:
+            repeating-linear-gradient(
+                45deg,
+                rgba(231, 76, 60, .15),
+                rgba(231, 76, 60, .15) 4px,
+                rgba(231, 76, 60, .08) 4px,
+                rgba(231, 76, 60, .08) 8px
+            );
         border-radius: 4px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         font-size: 11px;
@@ -48,17 +56,66 @@
         color: #c0392b;
         cursor: move;
         user-select: none;
-        transition: background .15s;
         z-index: 10;
+        box-shadow: 0 0 0 1px rgba(231,76,60,.25), inset 0 0 12px rgba(231,76,60,.1);
     }
-    .qr-overlay:hover { background: rgba(231, 76, 60, .22); }
-    .qr-overlay::after {
-        content: 'QR';
-        background: rgba(255,255,255,.85);
-        padding: 2px 6px;
+    .qr-overlay:hover {
+        box-shadow: 0 0 0 2px rgba(231,76,60,.4), inset 0 0 16px rgba(231,76,60,.15);
+    }
+    .qr-overlay .qr-label {
+        background: #e74c3c;
+        color: #fff;
+        padding: 2px 8px;
         border-radius: 3px;
         font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        pointer-events: none;
     }
+    .qr-overlay .qr-crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+    .qr-overlay .qr-crosshair::before,
+    .qr-overlay .qr-crosshair::after {
+        content: '';
+        position: absolute;
+        background: rgba(231, 76, 60, .5);
+    }
+    .qr-overlay .qr-crosshair::before {
+        width: 1px;
+        height: 16px;
+        top: -8px;
+        left: 0;
+    }
+    .qr-overlay .qr-crosshair::after {
+        width: 16px;
+        height: 1px;
+        top: 0;
+        left: -8px;
+    }
+    .qr-tooltip {
+        position: absolute;
+        top: -28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .15s;
+        z-index: 12;
+    }
+    .qr-tooltip.show { opacity: 1; }
 
     .qr-resize {
         position: absolute;
@@ -135,7 +192,12 @@
             <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
                 @if($lot->template_path)
                     <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
-                    <div class="qr-overlay" id="qrOverlay"><div class="qr-resize" id="qrResize"></div></div>
+                    <div class="qr-overlay" id="qrOverlay">
+                        <div class="qr-tooltip" id="qrTooltip">30 mm, 60 mm</div>
+                        <div class="qr-crosshair"></div>
+                        <span class="qr-label">QR Code</span>
+                        <div class="qr-resize" id="qrResize"></div>
+                    </div>
                 @else
                     <div class="canvas-empty" id="canvasEmpty">
                         <i class="bi bi-cloud-arrow-up"></i>
@@ -232,6 +294,7 @@
     var btnSave = document.getElementById('btnSave');
     var btnSaveText = document.getElementById('btnSaveText');
     var btnSaveSpinner = document.getElementById('btnSaveSpinner');
+    var qrTooltip = document.getElementById('qrTooltip');
 
     var dragging = false;
     var resizing = false;
@@ -316,10 +379,17 @@
             overlay.style.left = xPx + 'px';
             overlay.style.top = yPx + 'px';
 
-            qrXInput.value = pxToMm(xPx - imgOffX);
-            qrYInput.value = pxToMm(yPx - imgOffY);
-            qrXHidden.value = qrXInput.value;
-            qrYHidden.value = qrYInput.value;
+            var xMm = pxToMm(xPx - imgOffX);
+            var yMm = pxToMm(yPx - imgOffY);
+            qrXInput.value = xMm;
+            qrYInput.value = yMm;
+            qrXHidden.value = xMm;
+            qrYHidden.value = yMm;
+
+            if (qrTooltip) {
+                qrTooltip.textContent = xMm + ' mm, ' + yMm + ' mm';
+                qrTooltip.classList.add('show');
+            }
         }
         if (resizing && overlay) {
             var dx = e.clientX - startResizeX;
@@ -330,6 +400,13 @@
                 overlay.style.height = newW + 'px';
                 qrSizeInput.value = newMm;
                 qrSizeHidden.value = newMm;
+
+                if (qrTooltip) {
+                    var xMm2 = parseInt(qrXInput.value) || 0;
+                    var yMm2 = parseInt(qrYInput.value) || 0;
+                    qrTooltip.textContent = xMm2 + ' mm, ' + yMm2 + ' mm — ' + newMm + ' mm';
+                    qrTooltip.classList.add('show');
+                }
             }
         }
     });
@@ -337,6 +414,7 @@
     document.addEventListener('mouseup', function() {
         dragging = false;
         resizing = false;
+        if (qrTooltip) qrTooltip.classList.remove('show');
     });
 
     // Sync inputs
@@ -389,12 +467,25 @@
             var ov = document.createElement('div');
             ov.className = 'qr-overlay';
             ov.id = 'qrOverlay';
+            var tt = document.createElement('div');
+            tt.className = 'qr-tooltip';
+            tt.id = 'qrTooltip';
+            tt.textContent = '30 mm, 60 mm';
+            ov.appendChild(tt);
+            var ch = document.createElement('div');
+            ch.className = 'qr-crosshair';
+            ov.appendChild(ch);
+            var lb = document.createElement('span');
+            lb.className = 'qr-label';
+            lb.textContent = 'QR Code';
+            ov.appendChild(lb);
             var rh = document.createElement('div');
             rh.className = 'qr-resize';
             rh.id = 'qrResize';
             ov.appendChild(rh);
             canvas.appendChild(ov);
             img = imgEl;
+            qrTooltip = tt;
             imgEl.onload = function() { updateOverlay(); bindOverlayEvents(); };
 
             var dt = new DataTransfer();
