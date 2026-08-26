@@ -10,6 +10,7 @@ use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\LotAutoService;
 use App\Services\LotPhysiquePdfService;
+use App\Services\LotPhysiqueTemplatePdfService;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class LotPhysiqueController extends Controller
@@ -252,7 +254,12 @@ class LotPhysiqueController extends Controller
 
         $lot->increment('download_count');
 
-        $pdf = LotPhysiquePdfService::generer($lot, $tickets);
+        // Si un template est configuré, génère le PDF avec le template
+        if ($lot->aUnTemplate()) {
+            $pdf = LotPhysiqueTemplatePdfService::generer($lot, $tickets);
+        } else {
+            $pdf = LotPhysiquePdfService::generer($lot, $tickets);
+        }
 
         return $pdf->download('Planche-'.$lot->nom.'-'.$lot->evenement?->titre.'.pdf');
     }
@@ -277,5 +284,91 @@ class LotPhysiqueController extends Controller
 
         return redirect()->route('admin.lots-physiques.index')
             ->with('success', 'Lot supprimé.');
+    }
+
+    // ─── TEMPLATE : configuration du design physique ────────────────────────
+
+    // Page step 2 : upload du template image + positionnement du QR code
+    public function showTemplate(LotPhysique $lot)
+    {
+        if ($lot->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($lot->download_count >= 3) {
+            return back()->with('error', 'Limite de téléchargements atteinte.');
+        }
+
+        $tickets = $lot->tickets()->where('annule', false)->count();
+        $ticketLargeur = \App\Services\LotPhysiqueTemplatePdfService::TICKET_LARGEUR;
+        $ticketHauteur = \App\Services\LotPhysiqueTemplatePdfService::TICKET_HAUTEUR;
+
+        return view('admin.lots-physiques.template', compact('lot', 'tickets', 'ticketLargeur', 'ticketHauteur'));
+    }
+
+    // Sauvegarde du template image + coordonnées QR
+    public function saveTemplate(Request $request, LotPhysique $lot)
+    {
+        if ($lot->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'template_image' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+            'qr_x' => 'required|numeric|min:0',
+            'qr_y' => 'required|numeric|min:0',
+            'qr_size' => 'required|numeric|min:20|max:80',
+        ], [
+            'template_image.required' => 'Veuillez importez une image de template.',
+            'template_image.image' => 'Le fichier doit être une image.',
+            'template_image.mimes' => 'Format accepté : JPG ou PNG.',
+            'template_image.max' => 'L\'image ne doit pas dépasser 10 Mo.',
+            'qr_x.required' => 'Position X du QR code requise.',
+            'qr_y.required' => 'Position Y du QR code requise.',
+            'qr_size.required' => 'Taille du QR code requise.',
+        ]);
+
+        // Supprime l'ancien template s'il existe
+        if ($lot->template_path && Storage::disk('public')->exists($lot->template_path)) {
+            Storage::disk('public')->delete($lot->template_path);
+        }
+
+        // Stocke le nouveau template
+        $file = $request->file('template_image');
+        $filename = 'lot-templates/'.$lot->id.'_'.time().'.'.$file->getClientOriginalExtension();
+        $file->storeAs('', $filename, 'public');
+
+        $lot->update([
+            'template_path' => $filename,
+            'qr_x' => (int) $validated['qr_x'],
+            'qr_y' => (int) $validated['qr_y'],
+            'qr_size' => (int) $validated['qr_size'],
+        ]);
+
+        return back()->with('success', 'Template enregistré. Vous pouvez maintenant télécharger votre planche.');
+    }
+
+    // Aperçu JSON d'un ticket composité (template + QR)
+    public function previewTemplate(LotPhysique $lot)
+    {
+        if ($lot->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $ticket = $lot->tickets()->where('annule', false)->first();
+
+        if (! $ticket) {
+            return response()->json(['error' => 'Aucun ticket valide.'], 404);
+        }
+
+        try {
+            $pdfContent = LotPhysiqueTemplatePdfService::apercuTicket($lot, $ticket);
+
+            return response()->json(['pdf' => $pdfContent]);
+        } catch (\Exception $e) {
+            FacadesLog::error('Aperçu template lot physique échoué : '.$e->getMessage());
+
+            return response()->json(['error' => 'Erreur lors de la génération de l\'aperçu.'], 500);
+        }
     }
 }

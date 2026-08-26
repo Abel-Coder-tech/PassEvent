@@ -28,6 +28,11 @@ class LotPhysique extends Model
         'reference_paiement',
         'download_count',
         'transmis_at',
+        'template_path',
+        'qr_x',
+        'qr_y',
+        'qr_size',
+        'pdf_par_page',
     ];
 
     protected function casts(): array
@@ -39,6 +44,10 @@ class LotPhysique extends Model
             'auto_genere' => 'boolean',
             'montant_commission' => 'decimal:2',
             'transmis_at' => 'datetime',
+            'qr_x' => 'integer',
+            'qr_y' => 'integer',
+            'qr_size' => 'integer',
+            'pdf_par_page' => 'integer',
         ];
     }
 
@@ -90,5 +99,23 @@ class LotPhysique extends Model
     public function getEstTransmisAttribute(): bool
     {
         return $this->statut === 'transmis' && $this->transmis_at !== null;
+    }
+
+    public function aUnTemplate(): bool
+    {
+        if ($this->template_path === null || $this->qr_x === null || $this->qr_y === null) {
+            return false;
+        }
+
+        return file_exists(storage_path("app/public/{$this->template_path}"));
+    }
+
+    public function getTemplateUrlAttribute(): ?string
+    {
+        if (! $this->template_path) {
+            return null;
+        }
+
+        return asset('storage/'.$this->template_path);
     }
 }

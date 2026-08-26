@@ -75,6 +75,9 @@
                             <a href="{{ route('superadmin.tickets-physiques.voir', $lot) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le lot">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            <a href="{{ route('superadmin.tickets-physiques.template', $lot) }}" class="sa-btn sa-btn-sm" style="background:var(--sa-primary);border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Configurer le template du ticket">
+                                <i class="bi bi-image"></i>
+                            </a>
                             @unless($lot->estTransmis)
                                 <button type="button" class="sa-btn sa-btn-sm sa-btn-success" title="Transmettre"
                                     data-bs-toggle="modal" data-bs-target="#transmettreModal"
