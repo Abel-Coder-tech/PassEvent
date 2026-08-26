@@ -150,6 +150,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'store'])->name('tickets-physiques.store');
         Route::get('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'show'])->name('tickets-physiques.voir');
         Route::get('/tickets-physiques/{lot}/planche', [SuperAdminLotPhysiqueController::class, 'telechargerPlanche'])->name('tickets-physiques.planche');
+        Route::get('/tickets-physiques/{lot}/template', [SuperAdminLotPhysiqueController::class, 'showTemplate'])->name('tickets-physiques.template');
+        Route::post('/tickets-physiques/{lot}/template', [SuperAdminLotPhysiqueController::class, 'saveTemplate'])->name('tickets-physiques.template.save');
+        Route::get('/tickets-physiques/{lot}/apercu', [SuperAdminLotPhysiqueController::class, 'previewTemplate'])->name('tickets-physiques.template.preview');
         Route::post('/tickets-physiques/{lot}/transmettre', [SuperAdminLotPhysiqueController::class, 'transmettre'])->name('tickets-physiques.transmettre');
         Route::post('/tickets-physiques/{lot}/tickets/{ticket}/annuler', [SuperAdminLotPhysiqueController::class, 'annulerTicket'])->name('tickets-physiques.annuler');
         Route::post('/tickets-physiques/{lot}/action-masse', [SuperAdminLotPhysiqueController::class, 'actionMasse'])->name('tickets-physiques.action-masse');
@@ -348,6 +351,9 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
             Route::post('/commander', [AdminLotPhysiqueController::class, 'commander'])->name('commander');
             Route::get('/paiement/{reference}', [AdminLotPhysiqueController::class, 'checkout'])->name('checkout');
             Route::get('/{lot}/telecharger', [AdminLotPhysiqueController::class, 'download'])->name('download');
+            Route::get('/{lot}/template', [AdminLotPhysiqueController::class, 'showTemplate'])->name('template');
+            Route::post('/{lot}/template', [AdminLotPhysiqueController::class, 'saveTemplate'])->name('template.save');
+            Route::get('/{lot}/apercu', [AdminLotPhysiqueController::class, 'previewTemplate'])->name('template.preview');
             Route::delete('/{lot}', [AdminLotPhysiqueController::class, 'destroy'])->name('destroy');
         });
     });

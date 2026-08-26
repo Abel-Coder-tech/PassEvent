@@ -171,6 +171,9 @@
                                 <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm text-white" style="background:#7c3aed;">
                                     <i class="bi bi-download"></i> Planche PDF
                                 </a>
+                                <a href="{{ route('admin.lots-physiques.template', $lot) }}" class="btn btn-sm btn-outline-primary" title="Configurer le template du ticket">
+                                    <i class="bi bi-image"></i>
+                                </a>
                             @else
                                 <span class="text-muted" style="font-size:0.78rem;">
                                     @if(!$lot->estTransmis) En attente de transmission @else Aucun ticket valide @endif

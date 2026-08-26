@@ -125,6 +125,9 @@
                     <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="sa-btn" style="background:#3b82f6;border:none;color:#fff;" title="Télécharger la planche PDF de ce lot">
                         <i class="bi bi-file-earmark-pdf"></i> Planche PDF
                     </a>
+                    <a href="{{ route('superadmin.tickets-physiques.template', $lot) }}" class="sa-btn" style="background:var(--sa-primary);border:none;color:#fff;" title="Configurer le template du ticket physique">
+                        <i class="bi bi-image"></i> Template
+                    </a>
                 </div>
             </div>
         </div>
