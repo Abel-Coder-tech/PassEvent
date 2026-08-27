@@ -15,7 +15,7 @@
     <form method="GET" action="{{ route('superadmin.tickets-physiques') }}" id="searchForm" class="d-inline-flex align-items-center">
         <div class="position-relative">
             <i class="bi bi-search position-absolute" style="left:10px; top:50%; transform:translateY(-50%); color:#888; font-size:0.8rem; pointer-events:none;"></i>
-            <input type="text" name="q" id="qInput" class="form-control form-control-sm ps-4" style="border-radius:999px; min-width:220px;" placeholder="Rechercher par événement ou organisateur" value="{{ $q ?? '' }}" autocomplete="off">
+            <input type="text" name="q" id="qInput" class="form-control form-control-sm ps-4" style="border-radius:10px; min-width:500px;" placeholder="Rechercher par événement ou organisateur" value="{{ $q ?? '' }}" autocomplete="off">
         </div>
         @if(!empty($q))
         <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-btn sa-btn-sm ms-1" style="background:#e74c3c;border:none;color:#fff;padding:0.2rem 0.5rem;border-radius:6px;font-size:0.7rem;text-decoration:none;" title="Effacer la recherche">
