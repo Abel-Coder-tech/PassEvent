@@ -10,46 +10,114 @@ use Illuminate\Support\Collection;
 
 class LotPhysiqueTemplatePdfService
 {
-    // Dimensions A4 utiles pour 4 tickets (2×2) avec marges 10mm
-    public const A4_LARGEUR = 210; // mm
-    public const A4_HAUTEUR = 297; // mm
-    public const MARGE = 10; // mm
+    // Marge externe autour du bloc de tickets
+    public const MARGE = 4; // mm
 
-    // Dimensions d'un ticket dans la grille 2×2 avec espacement 4mm
-    public const TICKET_LARGEUR = 93; // mm
-    public const TICKET_HAUTEUR = 134; // mm
+    // Gouttière (zone de découpe) entre les tickets
+    public const GOUTTIERE = 2; // mm
 
     // Padding blanc autour du QR code
     public const QR_PADDING = 4; // mm
 
     /**
+     * Détails du format d'un lot (ou du format par défaut).
+     */
+    public static function formatDetails(LotPhysique $lot): array
+    {
+        $nom = $lot->format && isset(LotPhysique::FORMATS[$lot->format])
+            ? $lot->format
+            : 's1';
+
+        return LotPhysique::FORMATS[$nom];
+    }
+
+    /**
+     * Génère les positions (x, y en mm) et les lignes de découpe d'une page.
+     */
+    public static function layoutPage(array $format): array
+    {
+        $orientation = $format['orientation'];
+        $pageW = $orientation === 'landscape' ? 297 : 210;
+        $pageH = $orientation === 'landscape' ? 210 : 297;
+
+        $slotW = $format['largeur'];
+        $slotH = $format['hauteur'];
+        $cols = $format['colonnes'];
+        $rows = $format['lignes'];
+
+        $blockW = $cols * $slotW + ($cols - 1) * self::GOUTTIERE;
+        $blockH = $rows * $slotH + ($rows - 1) * self::GOUTTIERE;
+        $startX = ($pageW - $blockW) / 2;
+        $startY = max(($pageH - $blockH) / 2, self::MARGE);
+
+        $positions = [];
+        for ($r = 0; $r < $rows; $r++) {
+            for ($c = 0; $c < $cols; $c++) {
+                $positions[] = [
+                    'x' => round($startX + $c * ($slotW + self::GOUTTIERE), 2),
+                    'y' => round($startY + $r * ($slotH + self::GOUTTIERE), 2),
+                ];
+            }
+        }
+
+        $coupesH = [];
+        for ($r = 1; $r < $rows; $r++) {
+            $coupesH[] = round($startY + $r * ($slotH + self::GOUTTIERE) - self::GOUTTIERE / 2, 2);
+        }
+        $coupesV = [];
+        for ($c = 1; $c < $cols; $c++) {
+            $coupesV[] = round($startX + $c * ($slotW + self::GOUTTIERE) - self::GOUTTIERE / 2, 2);
+        }
+
+        return [
+            'orientation' => $orientation,
+            'page_largeur' => $pageW,
+            'page_hauteur' => $pageH,
+            'slot_largeur' => $slotW,
+            'slot_hauteur' => $slotH,
+            'colonnes' => $cols,
+            'lignes' => $rows,
+            'par_page' => $cols * $rows,
+            'positions' => $positions,
+            'coupes_h' => $coupesH,
+            'coupes_v' => $coupesV,
+            'bloc_gauche' => round($startX, 2),
+            'bloc_haut' => round($startY, 2),
+            'bloc_largeur' => round($blockW, 2),
+            'bloc_hauteur' => round($blockH, 2),
+        ];
+    }
+
+    /**
      * Génère le PDF avec template image + QR codes positionnés.
-     * 4 tickets par page A4 (2×2).
      */
     public static function generer(LotPhysique $lot, Collection $tickets): DomPdfWrapper
     {
-        $parPage = $lot->pdf_par_page ?? 4;
-        $pages = $tickets->chunk($parPage)->values();
+        $format = self::formatDetails($lot);
+        $layout = self::layoutPage($format);
 
-        // Pré-génère tous les QR codes en data URI SVG
         $qrs = $tickets->mapWithKeys(fn (Ticket $t) => [
             $t->id => QrCodeService::generateDataUri($t->code_unique, 300),
         ]);
 
-        // Convertit l'image en data URI base64 pour DomPDF (enable_remote=false)
         $templateUrl = self::templateToDataUri($lot);
-        $qrX = $lot->qr_x ?? 0;
-        $qrY = $lot->qr_y ?? 0;
-        $qrSize = $lot->qr_size ?? 40;
-        $ticketLargeur = self::TICKET_LARGEUR;
-        $ticketHauteur = self::TICKET_HAUTEUR;
+
+        $qrSize = $lot->qr_size ?? $format['qr_defaut'];
+        $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
+        $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
         $qrPadding = self::QR_PADDING;
+
+        $pageLargeur = $layout['page_largeur'];
+        $pageHauteur = $layout['page_hauteur'];
+
+        $pages = $tickets->chunk($layout['par_page'])->values();
 
         $pdf = Pdf::loadView('tickets.pdf.template', compact(
             'lot', 'pages', 'qrs', 'templateUrl',
-            'qrX', 'qrY', 'qrSize', 'ticketLargeur', 'ticketHauteur', 'qrPadding'
+            'qrX', 'qrY', 'qrSize', 'qrPadding',
+            'layout', 'pageLargeur', 'pageHauteur', 'format'
         ));
-        $pdf->setPaper('a4', 'portrait');
+        $pdf->setPaper('a4', $layout['orientation']);
         $pdf->render();
 
         return $pdf;
@@ -63,20 +131,23 @@ class LotPhysiqueTemplatePdfService
     {
         $qrDataUri = QrCodeService::generateDataUri($ticket->code_unique, 300);
         $templateUrl = self::templateToDataUri($lot);
-        $qrX = $lot->qr_x ?? 0;
-        $qrY = $lot->qr_y ?? 0;
-        $qrSize = $lot->qr_size ?? 40;
-        $ticketLargeur = self::TICKET_LARGEUR;
-        $ticketHauteur = self::TICKET_HAUTEUR;
+
+        $format = self::formatDetails($lot);
+        $slotW = $format['largeur'];
+        $slotH = $format['hauteur'];
+
+        $qrSize = $lot->qr_size ?? $format['qr_defaut'];
+        $qrX = $lot->qr_x ?? round(($slotW - $qrSize) / 2);
+        $qrY = $lot->qr_y ?? round(($slotH - $qrSize) / 2);
         $qrPadding = self::QR_PADDING;
 
         $html = view('tickets.pdf.ticket-preview', compact(
             'templateUrl', 'qrDataUri', 'qrX', 'qrY', 'qrSize',
-            'ticketLargeur', 'ticketHauteur', 'qrPadding'
-        ))->render();
+            'slotW', 'slotH', 'qrPadding'
+        ))->with('codeUnique', $ticket->code_unique)->render();
 
         $pdf = Pdf::loadHtml($html);
-        $pdf->setPaper([0, 0, $ticketLargeur * 2.835, $ticketHauteur * 2.835], 'portrait');
+        $pdf->setPaper([0, 0, $slotW * 2.835, $slotH * 2.835], 'portrait');
 
         return $pdf->inline();
     }

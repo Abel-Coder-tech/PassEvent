@@ -6,8 +6,8 @@
         html, body { margin: 0; padding: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .ticket {
-            width: {{ $ticketLargeur }}mm;
-            height: {{ $ticketHauteur }}mm;
+            width: {{ $slotW }}mm;
+            height: {{ $slotH }}mm;
             position: relative;
             overflow: hidden;
             background-color: #fff;
@@ -15,7 +15,7 @@
         .ticket-bg {
             width: 100%;
             height: 100%;
-            object-fit: fill;
+            object-fit: contain;
             display: block;
         }
         .qr-zone {
@@ -32,6 +32,23 @@
             height: 100%;
             display: block;
         }
+        .pax-code {
+            position: absolute;
+            bottom: 1.2mm;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #1d1d1f;
+            text-shadow:
+                -1px -1px 0 #fff,
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                1px 1px 0 #fff;
+            line-height: 1.1;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +57,7 @@
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR">
     </div>
+    <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
 </div>
 </body>
 </html>

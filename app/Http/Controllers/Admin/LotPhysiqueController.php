@@ -300,10 +300,13 @@ class LotPhysiqueController extends Controller
         }
 
         $tickets = $lot->tickets()->where('annule', false)->count();
-        $ticketLargeur = \App\Services\LotPhysiqueTemplatePdfService::TICKET_LARGEUR;
-        $ticketHauteur = \App\Services\LotPhysiqueTemplatePdfService::TICKET_HAUTEUR;
+        $format = $lot->formatDetails();
+        $qrSize = $lot->qr_size ?? $format['qr_defaut'];
+        $qrX = $lot->qr_x ?? round(($format['largeur'] - $qrSize) / 2);
+        $qrY = $lot->qr_y ?? round(($format['hauteur'] - $qrSize) / 2);
+        $formats = array_map(fn ($f) => $f['label'], LotPhysique::FORMATS);
 
-        return view('admin.lots-physiques.template', compact('lot', 'tickets', 'ticketLargeur', 'ticketHauteur'));
+        return view('admin.lots-physiques.template', compact('lot', 'tickets', 'format', 'qrX', 'qrY', 'qrSize', 'formats'));
     }
 
     // Sauvegarde du template image + coordonnées QR
@@ -313,36 +316,74 @@ class LotPhysiqueController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'template_image' => 'required|image|mimes:jpg,jpeg,png|max:10240',
-            'qr_x' => 'required|numeric|min:0',
-            'qr_y' => 'required|numeric|min:0',
-            'qr_size' => 'required|numeric|min:20|max:80',
-        ], [
+        $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);
+
+        $rules = [
+            'format' => ['required', 'in:s1,s2,v1,v2'],
+            'qr_x' => 'nullable|numeric|min:0',
+            'qr_y' => 'nullable|numeric|min:0',
+            'qr_size' => 'nullable|numeric|min:20|max:80',
+            'supprimer_template' => 'nullable|boolean',
+        ];
+        $rules['template_image'] = $request->hasFile('template_image')
+            ? ['image', 'mimes:png', 'max:10240']
+            : ($hasTemplate ? ['nullable'] : ['required']);
+
+        $validated = $request->validate($rules, [
+            'format.required' => 'Veuillez choisir un format.',
+            'format.in' => 'Format invalide.',
             'template_image.required' => 'Veuillez importez une image de template.',
             'template_image.image' => 'Le fichier doit être une image.',
-            'template_image.mimes' => 'Format accepté : JPG ou PNG.',
+            'template_image.mimes' => 'Format accepté : PNG uniquement.',
             'template_image.max' => 'L\'image ne doit pas dépasser 10 Mo.',
-            'qr_x.required' => 'Position X du QR code requise.',
-            'qr_y.required' => 'Position Y du QR code requise.',
-            'qr_size.required' => 'Taille du QR code requise.',
+            'qr_x.numeric' => 'Position X du QR code invalide.',
+            'qr_y.numeric' => 'Position Y du QR code invalide.',
+            'qr_size.numeric' => 'Taille du QR code invalide.',
+            'qr_size.min' => 'La taille du QR doit être d\'au moins 20 mm.',
+            'qr_size.max' => 'La taille du QR ne doit pas dépasser 80 mm.',
         ]);
 
-        // Supprime l'ancien template s'il existe
-        if ($lot->template_path && Storage::disk('public')->exists($lot->template_path)) {
-            Storage::disk('public')->delete($lot->template_path);
+        $formatDef = LotPhysique::FORMATS[$validated['format']];
+
+        // Suppression du template demandée (croix ✕)
+        if ($request->boolean('supprimer_template')) {
+            if ($lot->template_path && Storage::disk('public')->exists($lot->template_path)) {
+                Storage::disk('public')->delete($lot->template_path);
+            }
+            $lot->template_path = null;
+        } elseif ($request->hasFile('template_image')) {
+            // Vérifie le ratio de l'image vs format choisi (tolérance 1 %)
+            $ratioAttendu = $formatDef['largeur'] / $formatDef['hauteur'];
+            $test = getimagesize($request->file('template_image')->getRealPath());
+            if ($test !== false) {
+                $ratioReel = $test[0] / max($test[1], 1);
+                if (abs($ratioReel - $ratioAttendu) / $ratioAttendu > 0.01) {
+                    return back()
+                        ->withErrors(['template_image' => "Cette image ne respecte pas le format « {$formatDef['label']} ». Ratio attendu : {$formatDef['largeur']}×{$formatDef['hauteur']} mm. Redimensionnez votre image."])
+                        ->withInput();
+                }
+            }
+
+            if ($lot->template_path && Storage::disk('public')->exists($lot->template_path)) {
+                Storage::disk('public')->delete($lot->template_path);
+            }
+
+            $file = $request->file('template_image');
+            $filename = 'lot-templates/'.$lot->id.'_'.time().'.'.$file->getClientOriginalExtension();
+            $file->storeAs('', $filename, 'public');
+            $lot->template_path = $filename;
         }
 
-        // Stocke le nouveau template
-        $file = $request->file('template_image');
-        $filename = 'lot-templates/'.$lot->id.'_'.time().'.'.$file->getClientOriginalExtension();
-        $file->storeAs('', $filename, 'public');
+        // QR code : garde les valeurs du lot si le format n'a pas changé, sinon défauts du format
+        $qrSize = isset($validated['qr_size']) ? (int) $validated['qr_size'] : ($lot->qr_size ?? $formatDef['qr_defaut']);
+        $qrX = isset($validated['qr_x']) ? (int) $validated['qr_x'] : ($lot->qr_x ?? round(($formatDef['largeur'] - $qrSize) / 2));
+        $qrY = isset($validated['qr_y']) ? (int) $validated['qr_y'] : ($lot->qr_y ?? round(($formatDef['hauteur'] - $qrSize) / 2));
 
         $lot->update([
-            'template_path' => $filename,
-            'qr_x' => (int) $validated['qr_x'],
-            'qr_y' => (int) $validated['qr_y'],
-            'qr_size' => (int) $validated['qr_size'],
+            'format' => $validated['format'],
+            'qr_x' => $qrX,
+            'qr_y' => $qrY,
+            'qr_size' => $qrSize,
         ]);
 
         return back()->with('success', 'Template enregistré. Vous pouvez maintenant télécharger votre planche.');
