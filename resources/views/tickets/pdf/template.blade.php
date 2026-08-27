@@ -4,45 +4,34 @@
     <meta charset="UTF-8">
     <title>Planche de tickets - {{ $lot->nom }}</title>
     <style>
-        @page { size: A4 portrait; margin: 10mm; }
+        @page { size: A4 {{ $layout['orientation'] }}; margin: 0; }
         html, body { font-family: 'DejaVu Sans', sans-serif; margin: 0; padding: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .grille {
-            width: 190mm;
-            table-layout: fixed;
-            border-collapse: separate;
-            border-spacing: 4mm;
-        }
-        .grille td {
-            width: {{ $ticketLargeur }}mm;
-            height: {{ $ticketHauteur }}mm;
-            padding: 0;
-            vertical-align: top;
-            page-break-inside: avoid;
-            overflow: hidden;
-        }
-        .ticket-cell {
-            width: {{ $ticketLargeur }}mm;
-            height: {{ $ticketHauteur }}mm;
+        .page {
             position: relative;
+            width: {{ $pageLargeur }}mm;
+            height: {{ $pageHauteur }}mm;
             overflow: hidden;
+            page-break-after: always;
+        }
+        .page:last-child { page-break-after: auto; }
+
+        .slot {
+            position: absolute;
             background-color: #fff;
-            border-radius: 2mm;
-            box-shadow: 0 0 1px rgba(0,0,0,.08);
+            border-radius: 1.5mm;
+            overflow: hidden;
+            box-shadow: 0 0 0.5px rgba(0,0,0,.12);
         }
         .ticket-bg {
             width: 100%;
             height: 100%;
-            object-fit: fill;
+            object-fit: contain;
             display: block;
         }
         .qr-zone {
             position: absolute;
-            left: {{ $qrX }}mm;
-            top: {{ $qrY }}mm;
-            width: {{ $qrSize }}mm;
-            height: {{ $qrSize }}mm;
             background: #fff;
             padding: {{ $qrPadding }}mm;
             box-sizing: border-box;
@@ -53,42 +42,55 @@
             display: block;
         }
 
-        .page-footer {
+        .pax-code {
+            position: absolute;
+            bottom: 1.2mm;
+            left: 0;
+            width: 100%;
             text-align: center;
-            font-size: 9px;
+            font-size: 12px;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
             color: #1d1d1f;
-            margin-top: 3mm;
+            text-shadow:
+                -1px -1px 0 #fff,
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                1px 1px 0 #fff;
+            line-height: 1.1;
         }
 
-        .page-break { page-break-after: always; }
-        .page-break:last-child { page-break-after: auto; }
+        .coupe-h, .coupe-v {
+            position: absolute;
+            border: 0;
+            background: transparent;
+            border-top: 0.15mm dashed #d9d9d9;
+        }
+        .coupe-h { border-top-style: dashed; }
+        .coupe-v { border-left: 0.15mm dashed #d9d9d9; }
     </style>
 </head>
 <body>
-@foreach($pages as $pageIdx => $page)
-    <table class="grille">
-        @foreach($page->chunk(2) as $row)
-        <tr>
-            @foreach($row as $ticket)
-            <td>
-                <div class="ticket-cell">
-                    <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
-                    <div class="qr-zone">
-                        <img src="{{ $qrs[$ticket->id] }}" alt="QR">
-                    </div>
+@foreach($pages as $page)
+    <div class="page">
+        @foreach($page as $slotIdx => $ticket)
+            @php $pos = $layout['positions'][$slotIdx % $layout['par_page']]; @endphp
+            <div class="slot" style="left: {{ $pos['x'] }}mm; top: {{ $pos['y'] }}mm; width: {{ $layout['slot_largeur'] }}mm; height: {{ $layout['slot_hauteur'] }}mm;">
+                <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
+                <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                    <img src="{{ $qrs[$ticket->id] }}" alt="QR">
                 </div>
-            </td>
-            @endforeach
-        </tr>
+                <div class="pax-code">{{ $ticket->code_unique }}</div>
+            </div>
         @endforeach
-    </table>
-    <div class="page-footer">TICKETS {{ mb_strtoupper($lot->tarif?->nom ?? 'PASS') }} — {{ $lot->evenement?->titre }}</div>
 
-    @if(!$loop->last)
-    <div class="page-break"></div>
-    @endif
+        @foreach($layout['coupes_h'] as $y)
+            <div class="coupe-h" style="top: {{ $y }}mm; left: {{ $layout['bloc_gauche'] }}mm; width: {{ $layout['bloc_largeur'] }}mm;"></div>
+        @endforeach
+        @foreach($layout['coupes_v'] as $x)
+            <div class="coupe-v" style="left: {{ $x }}mm; top: {{ $layout['bloc_haut'] }}mm; height: {{ $layout['bloc_hauteur'] }}mm;"></div>
+        @endforeach
+    </div>
 @endforeach
 </body>
 </html>

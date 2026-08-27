@@ -33,6 +33,47 @@ class LotPhysique extends Model
         'qr_y',
         'qr_size',
         'pdf_par_page',
+        'format',
+    ];
+
+    // Formats de tickets physiques (taille nominale → slot A4 avec marges/gouttières)
+    public const FORMATS = [
+        's1' => [
+            'label' => 'Standard (14×5)',
+            'largeur' => 137, // mm (slot, ratio 2.8:1 préservé)
+            'hauteur' => 49,
+            'orientation' => 'landscape',
+            'colonnes' => 2,
+            'lignes' => 4,
+            'qr_defaut' => 30,
+        ],
+        's2' => [
+            'label' => 'Standard 2 (14×7)',
+            'largeur' => 132,
+            'hauteur' => 66,
+            'orientation' => 'landscape',
+            'colonnes' => 2,
+            'lignes' => 3,
+            'qr_defaut' => 34,
+        ],
+        'v1' => [
+            'label' => 'VIP (18×7)',
+            'largeur' => 180,
+            'hauteur' => 70,
+            'orientation' => 'portrait',
+            'colonnes' => 1,
+            'lignes' => 3,
+            'qr_defaut' => 48,
+        ],
+        'v2' => [
+            'label' => 'VIP 2 (9,9×7)',
+            'largeur' => 99,
+            'hauteur' => 70,
+            'orientation' => 'portrait',
+            'colonnes' => 1,
+            'lignes' => 3,
+            'qr_defaut' => 42,
+        ],
     ];
 
     protected function casts(): array
@@ -48,7 +89,16 @@ class LotPhysique extends Model
             'qr_y' => 'integer',
             'qr_size' => 'integer',
             'pdf_par_page' => 'integer',
+            'format' => 'string',
         ];
+    }
+
+    // Détails du format choisi (fallback s1)
+    public function formatDetails(): array
+    {
+        $format = isset(self::FORMATS[$this->format]) ? $this->format : 's1';
+
+        return self::FORMATS[$format];
     }
 
     // Commission effective du lot : spécifique (lot) > événement > organisateur > global 10 %

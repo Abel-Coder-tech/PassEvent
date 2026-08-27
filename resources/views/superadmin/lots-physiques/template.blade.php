@@ -5,7 +5,7 @@
 
 @section('content')
 <style>
-.template-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+.template-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
 @media (max-width: 900px) { .template-wrap { grid-template-columns: 1fr; } }
 
 .canvas-area {
@@ -28,6 +28,28 @@
 .canvas-empty i { font-size: 3rem; display: block; margin-bottom: .5rem; }
 
 .canvas-img { max-width: 100%; max-height: 500px; display: block; border-radius: 8px; }
+
+.remove-img {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    transition: transform .15s, background .15s;
+}
+.remove-img:hover { background: #c0392b; transform: scale(1.1); }
 
 .qr-overlay {
     position: absolute;
@@ -147,6 +169,19 @@
 .file-error { background: #fff5f5; border: 1px solid #f5c6cb; color: #842029; border-radius: 6px; padding: .5rem .75rem; font-size: .8rem; margin-top: .35rem; display: none; }
 .file-error.show { display: block; }
 
+.format-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--sa-primary);
+    background: #f0eaf7;
+    border: 1px solid #d9c6ee;
+    border-radius: 999px;
+    padding: .2rem .6rem;
+}
+
 .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--sa-primary); color: #fff; font-size: .7rem; font-weight: 700; margin-right: .4rem; flex-shrink: 0; }
 .step-label { font-size: .82rem; font-weight: 600; color: #1d1d1f; }
 .step-hint { font-size: .75rem; color: #888; margin-top: .15rem; }
@@ -171,6 +206,7 @@
     <span><i class="bi bi-calendar me-1"></i>{{ $lot->evenement?->titre ?? '—' }}</span>
     <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
     <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
+    <span class="format-badge"><i class="bi bi-aspect-ratio"></i><span id="formatBadgeLabel">{{ $format['label'] }}</span></span>
     <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="btn btn-sm btn-download ms-auto">
         <i class="bi bi-download me-1"></i>Télécharger la planche
     </a>
@@ -178,16 +214,17 @@
 
 <form method="POST" action="{{ route('superadmin.tickets-physiques.template.save', $lot) }}" enctype="multipart/form-data" id="formTemplate">
     @csrf
-    <input type="hidden" name="qr_x" id="qr_x" value="{{ old('qr_x', $lot->qr_x ?? 30) }}">
-    <input type="hidden" name="qr_y" id="qr_y" value="{{ old('qr_y', $lot->qr_y ?? 60) }}">
-    <input type="hidden" name="qr_size" id="qr_size_val" value="{{ old('qr_size', $lot->qr_size ?? 40) }}">
+    <input type="hidden" name="qr_x" id="qr_x" value="{{ old('qr_x', $qrX ?? 0) }}">
+    <input type="hidden" name="qr_y" id="qr_y" value="{{ old('qr_y', $qrY ?? 0) }}">
+    <input type="hidden" name="qr_size" id="qr_size_val" value="{{ old('qr_size', $qrSize ?? 40) }}">
+    <input type="hidden" name="supprimer_template" id="supprimer_template" value="{{ old('supprimer_template', '0') }}">
 
     <div class="template-wrap">
         <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
             @if($lot->template_path)
                 <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
                 <div class="qr-overlay" id="qrOverlay">
-                    <div class="qr-tooltip" id="qrTooltip">30 mm, 60 mm</div>
+                    <div class="qr-tooltip" id="qrTooltip">{{ $qrX }} mm, {{ $qrY }} mm</div>
                     <div class="qr-crosshair"></div>
                     <span class="qr-label">QR Code</span>
                     <div class="qr-resize" id="qrResize"></div>
@@ -197,9 +234,12 @@
                     <i class="bi bi-cloud-arrow-up"></i>
                     <p class="mb-1 fw-semibold">Glissez votre image de ticket ici</p>
                     <p class="small mb-2">ou cliquez pour parcourir</p>
-                    <p class="small text-muted">PNG ou JPG — max 10 Mo</p>
+                    <p class="small text-muted">PNG max 10 Mo</p>
                 </div>
             @endif
+            <button type="button" id="btnRemoveImg" class="remove-img" title="Supprimer l'image" style="display:none;">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
 
         <div class="config-panel">
@@ -218,30 +258,48 @@
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-1">
                             <span class="step-badge">1</span>
-                            <span class="step-label">Image du ticket</span>
+                            <span class="step-label">Format du ticket</span>
                         </div>
-                        <div class="step-hint mb-2">Importez votre ticket physique pour créer le template.</div>
-                        <input type="file" name="template_image" id="templateImageInput" accept="image/jpeg,image/png" class="form-control form-control-sm">
-                        <div class="file-error" id="fileError"></div>
+                        <div class="step-hint mb-2" id="formatHint">
+                            {{ $format['colonnes'] }}×{{ $format['lignes'] }} tickets par page A4
+                            @if($format['orientation'] === 'landscape') (paysage) @else (portrait) @endif
+                            — {{ $format['largeur'] }}×{{ $format['hauteur'] }} mm.
+                        </div>
+                        <select name="format" id="formatSelect" class="form-select form-select-sm">
+                            @foreach($formats as $key => $label)
+                                <option value="{{ $key }}" @selected(($lot->format ?? 's1') === $key)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <div class="step-hint mt-1">Le QR passe automatiquement au centre du nouveau format. L'image doit respecter son ratio.</div>
                     </div>
 
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-1">
                             <span class="step-badge">2</span>
+                            <span class="step-label">Image du ticket</span>
+                        </div>
+                        <div class="step-hint mb-2">Importez votre ticket physique pour créer le template.</div>
+                        <input type="file" name="template_image" id="templateImageInput" accept="image/png" class="form-control form-control-sm">
+                        <div class="file-error" id="fileError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="step-badge">3</span>
                             <span class="step-label">Positionnez le QR code</span>
                         </div>
                         <div class="step-hint mb-2">Glissez le cadre rouge pour le déplacer, ou utilisez la poignée en bas à droite pour le redimensionner.</div>
                         <div class="row g-2">
                             <div class="col-4">
                                 <label class="form-label">X (mm)</label>
-                                <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $lot->qr_x ?? 30) }}">
+                                <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $qrX ?? 0) }}">
                                 @error('qr_x')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Y (mm)</label>
-                                <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $lot->qr_y ?? 60) }}">
+                                <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $qrY ?? 0) }}">
                                 @error('qr_y')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -249,7 +307,7 @@
                             <div class="col-4">
                                 <label class="form-label">Taille</label>
                                 <div class="input-group input-group-sm">
-                                    <input type="number" class="form-control" id="qrSizeInput" min="20" max="80" value="{{ old('qr_size', $lot->qr_size ?? 40) }}">
+                                    <input type="number" class="form-control" id="qrSizeInput" min="20" max="80" value="{{ old('qr_size', $qrSize ?? 40) }}">
                                     <span class="input-group-text">mm</span>
                                 </div>
                             </div>
@@ -258,7 +316,7 @@
 
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-1">
-                            <span class="step-badge">3</span>
+                            <span class="step-badge">4</span>
                             <span class="step-label">Enregistrez</span>
                         </div>
                         <div class="step-hint mb-2">Vérifiez l'aperçu puis enregistrez pour appliquer le design à la planche PDF.</div>
@@ -280,6 +338,11 @@
 @push('scripts')
 <script>
 (function() {
+    var FORMATS = @json(\App\Models\LotPhysique::FORMATS);
+    var fmtKey = '{{ $lot->format ?? 's1' }}';
+
+    function fmt(key) { return FORMATS[key] || FORMATS.s1; }
+
     var canvas = document.getElementById('canvasArea');
     var overlay = document.getElementById('qrOverlay');
     var img = document.getElementById('canvasImg');
@@ -296,6 +359,12 @@
     var btnSaveText = document.getElementById('btnSaveText');
     var btnSaveSpinner = document.getElementById('btnSaveSpinner');
     var qrTooltip = document.getElementById('qrTooltip');
+    var btnRemoveImg = document.getElementById('btnRemoveImg');
+    var formatSelect = document.getElementById('formatSelect');
+    var formatHint = document.getElementById('formatHint');
+    var formatBadgeLabel = document.getElementById('formatBadgeLabel');
+    var supprimerTemplate = document.getElementById('supprimer_template');
+    var hasStored = {{ $lot->template_path ? 'true' : 'false' }};
 
     var dragging = false;
     var resizing = false;
@@ -304,8 +373,15 @@
     var imgDispW = 0, imgDispH = 0;
     var imgOffX = 0, imgOffY = 0;
 
-    var TICKET_MM_W = {{ $ticketLargeur ?? 95 }};
-    var TICKET_MM_H = {{ $ticketHauteur ?? 138 }};
+    var TICKET_MM_W = fmt(fmtKey).largeur;
+    var TICKET_MM_H = fmt(fmtKey).hauteur;
+
+    function currentFmt() { return fmt(formatSelect ? formatSelect.value : fmtKey); }
+
+    function syncFormatHint(f) {
+        if (formatHint) formatHint.textContent = f.colonnes + '×' + f.lignes + ' tickets par page A4 ' + (f.orientation === 'landscape' ? '(paysage)' : '(portrait)') + ' — ' + f.largeur + '×' + f.hauteur + ' mm.';
+        if (formatBadgeLabel) formatBadgeLabel.textContent = f.label;
+    }
 
     function pxToMm(px) {
         if (!imgDispW) return 0;
@@ -332,7 +408,7 @@
         imgOffX = img.offsetLeft;
         imgOffY = img.offsetTop;
 
-        var qrMm = parseInt(qrSizeInput.value) || 40;
+        var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
         var yMm = parseInt(qrYInput.value) || 0;
@@ -431,13 +507,66 @@
         new ResizeObserver(updateOverlay).observe(img);
     }
 
+    function checkRatio(f, naturalW, naturalH) {
+        if (!naturalW || !naturalH) return true;
+        var ratioReel = naturalW / naturalH;
+        var ratioAttendu = f.largeur / f.hauteur;
+        if (Math.abs(ratioReel - ratioAttendu) / ratioAttendu > 0.01) {
+            showFileError('Cette image ne respecte pas le format « ' + f.label + ' ». Ratio attendu : ' + f.largeur + '×' + f.hauteur + ' mm. Redimensionnez votre image.');
+            return false;
+        }
+        hideFileError();
+        return true;
+    }
+
+    if (formatSelect) {
+        formatSelect.addEventListener('change', function() {
+            var f = fmt(this.value);
+            TICKET_MM_W = f.largeur;
+            TICKET_MM_H = f.hauteur;
+            var qrMM = f.qr_defaut;
+            qrSizeInput.value = qrMM;
+            qrSizeHidden.value = qrMM;
+            qrXInput.value = Math.round((f.largeur - qrMM) / 2);
+            qrYInput.value = Math.round((f.hauteur - qrMM) / 2);
+            qrXHidden.value = qrXInput.value;
+            qrYHidden.value = qrYInput.value;
+            syncFormatHint(f);
+            if (img && img.naturalWidth) checkRatio(f, img.naturalWidth, img.naturalHeight);
+            updateOverlay();
+        });
+    }
+
+    function showRemoveBtn() { if (btnRemoveImg) btnRemoveImg.style.display = 'flex'; }
+    function hideRemoveBtn() { if (btnRemoveImg) btnRemoveImg.style.display = 'none'; }
+    function clearCanvas() {
+        canvas.classList.remove('has-image');
+        canvas.innerHTML = '';
+        var empty = document.createElement('div');
+        empty.className = 'canvas-empty';
+        empty.id = 'canvasEmpty';
+        empty.innerHTML = '<i class="bi bi-cloud-arrow-up"></i><p class="mb-1 fw-semibold">Glissez votre image de ticket ici</p><p class="small mb-2">ou cliquez pour parcourir</p><p class="small text-muted">PNG max 10 Mo</p>';
+        canvas.appendChild(empty);
+        canvas.appendChild(btnRemoveImg);
+        hideRemoveBtn();
+        img = null;
+        overlay = null;
+    }
+    if (btnRemoveImg) {
+        btnRemoveImg.addEventListener('click', function() {
+            supprimerTemplate.value = '1';
+            clearCanvas();
+            hideFileError();
+        });
+    }
+
     function handleFile(file) {
         hideFileError();
         if (!file) return;
 
-        var allowed = ['image/jpeg', 'image/png'];
+        var allowed = ['image/png'];
         if (allowed.indexOf(file.type) === -1) {
-            showFileError('Format non accepté. Veuillez choisir un fichier JPG ou PNG.');
+            showFileError('Format non accepté. Veuillez choisir un fichier PNG uniquement.');
             return;
         }
         if (file.size > 10 * 1024 * 1024) {
@@ -460,7 +589,7 @@
             var tt = document.createElement('div');
             tt.className = 'qr-tooltip';
             tt.id = 'qrTooltip';
-            tt.textContent = '30 mm, 60 mm';
+            tt.textContent = qrXInput.value + ' mm, ' + qrYInput.value + ' mm';
             ov.appendChild(tt);
             var ch = document.createElement('div');
             ch.className = 'qr-crosshair';
@@ -474,9 +603,18 @@
             rh.id = 'qrResize';
             ov.appendChild(rh);
             canvas.appendChild(ov);
+            canvas.appendChild(btnRemoveImg);
+            showRemoveBtn();
             img = imgEl;
             qrTooltip = tt;
-            imgEl.onload = function() { updateOverlay(); bindOverlayEvents(); };
+            supprimerTemplate.value = '0';
+            imgEl.onload = function() {
+                TICKET_MM_W = currentFmt().largeur;
+                TICKET_MM_H = currentFmt().hauteur;
+                checkRatio(currentFmt(), imgEl.naturalWidth, imgEl.naturalHeight);
+                updateOverlay();
+                bindOverlayEvents();
+            };
 
             var dt = new DataTransfer();
             dt.items.add(file);
@@ -503,7 +641,8 @@
     }
 
     form.addEventListener('submit', function(e) {
-        if (!canvas.classList.contains('has-image')) {
+        var hasImage = canvas.classList.contains('has-image');
+        if (!hasImage && !hasStored && supprimerTemplate.value !== '1') {
             e.preventDefault();
             showFileError('Veuillez importer une image de ticket avant d\'enregistrer.');
             return;
@@ -513,7 +652,9 @@
         btnSave.disabled = true;
     });
 
+    syncFormatHint(currentFmt());
     if (overlay) { updateOverlay(); bindOverlayEvents(); }
+    if (img && hasStored) showRemoveBtn();
 })();
 </script>
 @endpush
