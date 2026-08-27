@@ -24,17 +24,26 @@ use Illuminate\Support\Str;
 
 class LotPhysiqueController extends Controller
 {
-    // Liste des lots de tickets physiques
-    public function index()
+    // Liste des lots de tickets physiques (recherche par organisateur ou événement)
+    public function index(Request $request)
     {
+        $q = trim((string) $request->query('q', ''));
+
         $lots = LotPhysique::with('evenement', 'user', 'tarif')
             ->withCount(['tickets as nb_tickets'])
-            ->withCount(['tickets as nb_annules' => fn ($q) => $q->where('annule', true)])
-            ->withCount(['tickets as nb_scannes' => fn ($q) => $q->where('utilise', true)])
+            ->withCount(['tickets as nb_annules' => fn ($q2) => $q2->where('annule', true)])
+            ->withCount(['tickets as nb_scannes' => fn ($q2) => $q2->where('utilise', true)])
+            ->when($q !== '', fn ($query) => $query
+                ->where(function ($query) use ($q) {
+                    $query->whereHas('user', fn ($u) => $u->where('nom', 'like', "%{$q}%"))
+                        ->orWhereHas('evenement', fn ($e) => $e->where('titre', 'like', "%{$q}%"));
+                })
+            )
             ->orderByDesc('created_at')
-            ->paginate(PerPage::resolve());
+            ->paginate(PerPage::resolve())
+            ->withQueryString();
 
-        return view('superadmin.lots-physiques.index', compact('lots'));
+        return view('superadmin.lots-physiques.index', compact('lots', 'q'));
     }
 
     // Formulaire de création d'un lot

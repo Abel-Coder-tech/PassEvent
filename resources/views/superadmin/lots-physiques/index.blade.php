@@ -26,7 +26,20 @@
 <div class="sa-card">
     <div class="sa-card-header">
         <span><i class="bi bi-ticket-perforated-fill me-2" style="color: var(--sa-primary);"></i>Lots</span>
-        <span class="text-muted" style="font-size:0.8rem;">{{ $lots->total() }} total</span>
+        <span class="d-flex align-items-center gap-2 ms-auto">
+            <form method="GET" action="{{ route('superadmin.tickets-physiques') }}" id="searchForm" class="d-inline-flex align-items-center">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute" style="left:10px; top:50%; transform:translateY(-50%); color:#888; font-size:0.8rem; pointer-events:none;"></i>
+                    <input type="text" name="q" id="qInput" class="form-control form-control-sm ps-4" style="border-radius:999px; min-width:220px;" placeholder="Organisateur ou événement..." value="{{ $q ?? '' }}" autocomplete="off">
+                </div>
+                @if(!empty($q))
+                <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-btn sa-btn-sm ms-1" style="background:#e74c3c;border:none;color:#fff;padding:0.2rem 0.5rem;border-radius:6px;font-size:0.7rem;text-decoration:none;" title="Effacer la recherche">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                @endif
+            </form>
+            <span class="text-muted" style="font-size:0.8rem;">{{ $lots->total() }} total</span>
+        </span>
     </div>
     <div class="sa-card-body p-0">
         @if($lots->isEmpty())
@@ -151,5 +164,20 @@ document.querySelectorAll('[data-bs-toggle="modal"][data-target="#transmettreMod
         document.getElementById('modalNote').value = '';
     });
 });
+
+// Recherche automatique (debounce 350ms)
+const qInput = document.getElementById('qInput');
+if (qInput) {
+    let debounce;
+    qInput.addEventListener('input', function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(function () {
+            const url = new URL(qInput.closest('form').action);
+            url.searchParams.set('q', qInput.value.trim());
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }, 350);
+    });
+}
 </script>
 @endpush
