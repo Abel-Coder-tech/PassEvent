@@ -11,7 +11,8 @@
         .grille {
             width: 190mm;
             table-layout: fixed;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 4mm;
         }
         .grille td {
             width: {{ $ticketLargeur }}mm;
@@ -27,6 +28,8 @@
             position: relative;
             overflow: hidden;
             background-color: #fff;
+            border-radius: 2mm;
+            box-shadow: 0 0 1px rgba(0,0,0,.08);
         }
         .ticket-bg {
             width: 100%;
@@ -65,7 +68,7 @@
 </head>
 <body>
 @foreach($pages as $pageIdx => $page)
-    <table class="grille" cellpadding="0" cellspacing="0">
+    <table class="grille">
         @foreach($page->chunk(2) as $row)
         <tr>
             @foreach($row as $ticket)

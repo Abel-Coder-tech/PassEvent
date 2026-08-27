@@ -15,9 +15,9 @@ class LotPhysiqueTemplatePdfService
     public const A4_HAUTEUR = 297; // mm
     public const MARGE = 10; // mm
 
-    // Dimensions d'un ticket dans la grille 2×2
-    public const TICKET_LARGEUR = 95; // mm
-    public const TICKET_HAUTEUR = 138; // mm
+    // Dimensions d'un ticket dans la grille 2×2 avec espacement 4mm
+    public const TICKET_LARGEUR = 93; // mm
+    public const TICKET_HAUTEUR = 134; // mm
 
     // Padding blanc autour du QR code
     public const QR_PADDING = 4; // mm

@@ -373,8 +373,8 @@
         if (dragging && overlay) {
             var xPx = e.clientX - offsetX;
             var yPx = e.clientY - offsetY;
-            xPx = Math.max(0, Math.min(imgDispW - overlay.clientWidth, xPx));
-            yPx = Math.max(0, Math.min(imgDispH - overlay.clientHeight, yPx));
+            xPx = Math.max(-overlay.clientWidth / 2, Math.min(imgDispW - overlay.clientWidth / 2, xPx));
+            yPx = Math.max(-overlay.clientHeight / 2, Math.min(imgDispH - overlay.clientHeight / 2, yPx));
 
             overlay.style.left = xPx + 'px';
             overlay.style.top = yPx + 'px';
@@ -431,14 +431,6 @@
     if (typeof ResizeObserver !== 'undefined' && img) {
         new ResizeObserver(updateOverlay).observe(img);
     }
-
-    // Click canvas → open file picker (only on empty area)
-    canvas.addEventListener('click', function(e) {
-        if (e.target.closest('.qr-overlay') || e.target.closest('.qr-resize')) return;
-        if (e.target === canvas || e.target.closest('.canvas-empty')) {
-            if (fileInput) fileInput.click();
-        }
-    });
 
     // Validate + load file
     function handleFile(file) {
