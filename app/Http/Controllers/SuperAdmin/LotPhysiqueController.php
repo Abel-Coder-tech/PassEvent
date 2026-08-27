@@ -80,7 +80,7 @@ class LotPhysiqueController extends Controller
             'user_id' => 'required|exists:users,id',
             'evenement_id' => 'required|exists:evenement,id',
             'nom' => 'required|string|max:100',
-            'quantite' => 'required|integer|min:1|max:500',
+            'quantite' => 'required|integer|min:1|max:1000',
             'commission_pourcentage' => 'nullable|numeric|min:0|max:100',
         ];
         $messages = [
@@ -89,7 +89,7 @@ class LotPhysiqueController extends Controller
             'nom.required' => 'Le nom du lot est obligatoire.',
             'quantite.required' => 'La quantité est obligatoire.',
             'quantite.min' => 'La quantité doit être d\'au moins 1.',
-            'quantite.max' => 'La quantité ne doit pas dépasser 500.',
+            'quantite.max' => 'La quantité ne doit pas dépasser 1000.',
         ];
 
         $validated = $request->validate($rules, $messages);
@@ -161,13 +161,13 @@ class LotPhysiqueController extends Controller
             Log::create([
                 'type_operation' => 'lot_physique',
                 'ticket_id' => null,
-                'details' => json_encode([
+                'details' => [
                     'lot_id' => $lot->id,
                     'user_id' => $validated['user_id'],
                     'evenement_id' => $evenement->id,
                     'quantite' => $validated['quantite'],
                     'commission_pourcentage' => $commission,
-                ]),
+                ],
                 'ip' => request()->ip(),
             ]);
 
@@ -274,7 +274,7 @@ class LotPhysiqueController extends Controller
         Log::create([
             'type_operation' => 'lot_physique_transmis',
             'ticket_id' => null,
-            'details' => json_encode(['lot_id' => $lot->id, 'user_id' => $lot->user_id]),
+            'details' => ['lot_id' => $lot->id, 'user_id' => $lot->user_id],
             'ip' => request()->ip(),
         ]);
 
@@ -301,7 +301,7 @@ class LotPhysiqueController extends Controller
         Log::create([
             'type_operation' => 'lot_physique_annulation',
             'ticket_id' => $ticket->id,
-            'details' => json_encode(['lot_id' => $lot->id, 'code' => $ticket->code_unique]),
+            'details' => ['lot_id' => $lot->id, 'code' => $ticket->code_unique],
             'ip' => request()->ip(),
         ]);
 
@@ -315,6 +315,14 @@ class LotPhysiqueController extends Controller
             'action' => 'required|in:annuler,supprimer',
             'tickets' => 'required|array|min:1',
             'tickets.*' => 'integer|exists:ticket,id',
+        ],
+        [
+            'action.required' => 'Veuillez sélectionner une action.',
+            'action.in' => 'Action invalide.',
+            'tickets.required' => 'Veuillez sélectionner au moins un ticket.',
+            'tickets.array' => 'Tickets invalides.',
+            'tickets.min' => 'Veuillez sélectionner au moins un ticket.',
+            'tickets.*.exists' => 'Ticket invalide.',
         ]);
 
         $tickets = $lot->tickets()
@@ -348,14 +356,14 @@ class LotPhysiqueController extends Controller
                     Log::create([
                         'type_operation' => 'lot_physique_annulation',
                         'ticket_id' => $ticket->id,
-                        'details' => json_encode(['lot_id' => $lot->id, 'code' => $ticket->code_unique, 'action' => $validated['action']]),
+                        'details' => ['lot_id' => $lot->id, 'code' => $ticket->code_unique, 'action' => $validated['action']],
                         'ip' => request()->ip(),
                     ]);
                 } else {
                     Log::create([
                         'type_operation' => 'lot_physique_ticket_supprime',
                         'ticket_id' => $ticket->id,
-                        'details' => json_encode(['lot_id' => $lot->id, 'code' => $ticket->code_unique, 'action' => $validated['action']]),
+                        'details' => ['lot_id' => $lot->id, 'code' => $ticket->code_unique, 'action' => $validated['action']],
                         'ip' => request()->ip(),
                     ]);
                     $ticket->delete();
@@ -389,7 +397,7 @@ class LotPhysiqueController extends Controller
         Log::create([
             'type_operation' => 'lot_physique_supprime',
             'ticket_id' => null,
-            'details' => json_encode(['lot_id' => $lot->id, 'evenement_id' => $lot->evenement_id]),
+            'details' => ['lot_id' => $lot->id, 'evenement_id' => $lot->evenement_id],
             'ip' => request()->ip(),
         ]);
 

@@ -328,7 +328,7 @@ class TicketController extends Controller
         Log::create([
             'ticket_id' => $ticket->id,
             'type_operation' => 'envoi',
-            'details' => json_encode(['methode' => 'renvoi_admin', 'email' => $ticket->email_acheteur]), // Contexte : renvoi admin
+            'details' => ['methode' => 'renvoi_admin', 'email' => $ticket->email_acheteur], // Contexte : renvoi admin
             'ip' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
@@ -362,7 +362,7 @@ class TicketController extends Controller
         Log::create([
             'ticket_id' => $ticket->id,
             'type_operation' => 'remboursement',
-            'details' => json_encode(['ancien_statut' => $ancienStatut, 'motif' => 'annulation_admin']),
+            'details' => ['ancien_statut' => $ancienStatut, 'motif' => 'annulation_admin'],
             'ip' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);

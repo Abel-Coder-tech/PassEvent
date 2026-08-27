@@ -230,13 +230,13 @@ class ScanController extends Controller
             // Ticket introuvable : log et retourne erreur
             Log::create([
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'ticket_introuvable',
                     'agent' => Auth::id(),
                     'evenement_id' => $accessEvenementId,
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -253,12 +253,12 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'evenement_non_autorise',
                     'agent' => Auth::id(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -275,13 +275,13 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'paiement_non_confirmé',
                     'statut' => $ticket->statut_paiement,
                     'agent' => Auth::id(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -304,12 +304,12 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'ticket_annule',
                     'agent' => Auth::id(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -329,12 +329,12 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'pas_de_session_aujourdhui',
                     'agent' => Auth::id(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -352,13 +352,13 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'session_pas_commencee',
                     'agent' => Auth::id(),
                     'debut' => $jourScan->date_debut->toDateTimeString(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -374,12 +374,12 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
                     'raison' => 'session_terminee',
                     'agent' => Auth::id(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -396,12 +396,12 @@ class ScanController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
-                'details' => json_encode([
+                'details' => [
                     'code' => $code,
                     'resultat' => 'deja_utilise',
                     'raison' => 'ticket_deja_scanne_aujourdhui',
                     'agent' => Auth::id(),
-                ]),
+                ],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -422,11 +422,11 @@ class ScanController extends Controller
         Log::create([ // Log du scan réussi
             'ticket_id' => $ticket->id,
             'type_operation' => 'scan',
-            'details' => json_encode([
+            'details' => [
                 'code' => $code,
                 'resultat' => 'valide',
                 'agent' => Auth::id(),
-            ]),
+            ],
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

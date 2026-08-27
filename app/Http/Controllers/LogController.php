@@ -121,11 +121,11 @@ class LogController extends Controller
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'envoi',
-                'details' => json_encode([
+                'details' => [
                     'canal' => 'email',
                     'email' => $ticket->email_acheteur,
                     'contexte' => 'recuperation_admin',
-                ]),
+                ],
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
