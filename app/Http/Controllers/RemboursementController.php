@@ -173,10 +173,10 @@ class RemboursementController extends Controller
         Log::create([
             'ticket_id' => $ticket->id,
             'type_operation' => 'remboursement',
-            'details' => json_encode([
+            'details' => [
                 'action' => 'annulation_remboursement',
                 'agent' => Auth::id(),
-            ]),
+            ],
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

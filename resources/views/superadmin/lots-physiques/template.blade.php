@@ -235,10 +235,16 @@
                             <div class="col-4">
                                 <label class="form-label">X (mm)</label>
                                 <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $lot->qr_x ?? 30) }}">
+                                @error('qr_x')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Y (mm)</label>
                                 <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $lot->qr_y ?? 60) }}">
+                                @error('qr_y')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Taille</label>
