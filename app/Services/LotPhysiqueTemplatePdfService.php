@@ -85,6 +85,8 @@ class LotPhysiqueTemplatePdfService
             'bloc_haut' => round($startY, 2),
             'bloc_largeur' => round($blockW, 2),
             'bloc_hauteur' => round($blockH, 2),
+            'marge_gauche' => round($startX, 2),
+            'marge_bas' => round($pageH - ($startY + $blockH), 2),
         ];
     }
 
@@ -110,12 +112,17 @@ class LotPhysiqueTemplatePdfService
         $pageLargeur = $layout['page_largeur'];
         $pageHauteur = $layout['page_hauteur'];
 
+        // Signature PaxEvent dans la marge : texte plus petit si la marge basse est réduite
+        $signBottom = $layout['marge_bas'] >= 8 ? 2.0 : 0.5;
+        $signFont = $layout['marge_bas'] >= 8 ? 9 : 6.5;
+
         $pages = $tickets->chunk($layout['par_page'])->values();
 
         $pdf = Pdf::loadView('tickets.pdf.template', compact(
             'lot', 'pages', 'qrs', 'templateUrl',
             'qrX', 'qrY', 'qrSize', 'qrPadding',
-            'layout', 'pageLargeur', 'pageHauteur', 'format'
+            'layout', 'pageLargeur', 'pageHauteur', 'format',
+            'signBottom', 'signFont'
         ));
         $pdf->setPaper('a4', $layout['orientation']);
         $pdf->render();
@@ -124,10 +131,10 @@ class LotPhysiqueTemplatePdfService
     }
 
     /**
-     * Génère un seul ticket composité (template + QR) en image base64.
-     * Utile pour l'aperçu en temps réel.
+     * Génère un seul ticket composité (template + QR) en PDF.
+     * Utile pour l'aperçu en temps réel (nouvel onglet).
      */
-    public static function apercuTicket(LotPhysique $lot, Ticket $ticket): string
+    public static function apercuTicket(LotPhysique $lot, Ticket $ticket)
     {
         $qrDataUri = QrCodeService::generateDataUri($ticket->code_unique, 300);
         $templateUrl = self::templateToDataUri($lot);
@@ -149,7 +156,7 @@ class LotPhysiqueTemplatePdfService
         $pdf = Pdf::loadHtml($html);
         $pdf->setPaper([0, 0, $slotW * 2.835, $slotH * 2.835], 'portrait');
 
-        return $pdf->inline();
+        return $pdf->inline('Apercu-'.$ticket->code_unique.'.pdf');
     }
 
     /**

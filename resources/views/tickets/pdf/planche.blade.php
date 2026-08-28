@@ -25,12 +25,20 @@
             margin-top: 3px;
         }
         .type-footer {
-            text-align: center;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #1d1d1f;
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 4px;
+        }
+        .type-footer td { font-size: 8px; }
+        .type-footer .tf-left {
+            text-align: left;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #1d1d1f;
+        }
+        .type-footer .tf-right {
+            text-align: right;
+            color: #888;
         }
 
         .page-break { page-break-after: always; }
@@ -51,7 +59,12 @@
         </tr>
         @endforeach
     </table>
-    <div class="type-footer">TICKETS {{ mb_strtoupper($lot->tarif?->nom ?? 'PASS') }} — {{ $lot->evenement?->titre }}</div>
+    <table class="type-footer" cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="tf-left">TICKETS {{ mb_strtoupper($lot->tarif?->nom ?? 'PASS') }} — {{ $lot->evenement?->titre }}</td>
+            <td class="tf-right">© {{ date('Y') }} PaxEvent . Billetterie en ligne 100% Bénin</td>
+        </tr>
+    </table>
 
     @if(!$loop->last)
     <div class="page-break"></div>

@@ -44,13 +44,11 @@
 
         .pax-code {
             position: absolute;
-            bottom: 1.2mm;
-            left: 0;
-            width: 100%;
+            padding-top: 0.8mm;
             text-align: center;
-            font-size: 12px;
+            font-size: 8.5px;
             font-weight: 700;
-            letter-spacing: 1.5px;
+            letter-spacing: 0.5px;
             color: #1d1d1f;
             text-shadow:
                 -1px -1px 0 #fff,
@@ -68,6 +66,14 @@
         }
         .coupe-h { border-top-style: dashed; }
         .coupe-v { border-left: 0.15mm dashed #d9d9d9; }
+
+        .marge-sign {
+            position: absolute;
+            color: #9a9a9a;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -80,7 +86,7 @@
                 <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR">
                 </div>
-                <div class="pax-code">{{ $ticket->code_unique }}</div>
+                <div class="pax-code" style="left: {{ $qrX }}mm; top: {{ $qrY + $qrSize + 0.8 }}mm; width: {{ $qrSize }}mm;">{{ $ticket->code_unique }}</div>
             </div>
         @endforeach
 
@@ -90,6 +96,9 @@
         @foreach($layout['coupes_v'] as $x)
             <div class="coupe-v" style="left: {{ $x }}mm; top: {{ $layout['bloc_haut'] }}mm; height: {{ $layout['bloc_hauteur'] }}mm;"></div>
         @endforeach
+
+        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">{{ $lot->evenement?->titre ?? '' }}{{ $lot->tarif?->nom ? ' — '.$lot->tarif->nom : '' }}</span>
+        <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">© {{ date('Y') }} PaxEvent . Billetterie en ligne 100% Bénin</span>
     </div>
 @endforeach
 </body>

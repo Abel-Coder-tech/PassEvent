@@ -207,6 +207,9 @@
     <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
     <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
     <span class="format-badge"><i class="bi bi-aspect-ratio"></i><span id="formatBadgeLabel">{{ $format['label'] }}</span></span>
+    <a href="{{ route('superadmin.tickets-physiques.template.preview', $lot) }}" target="_blank" class="sa-btn sa-btn-sm" style="background:#1d1d1f;border:none;color:#fff;">
+        <i class="bi bi-eye me-1"></i>Visualiser
+    </a>
     <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="btn btn-sm btn-download ms-auto">
         <i class="bi bi-download me-1"></i>Télécharger la planche
     </a>
@@ -507,12 +510,13 @@
         new ResizeObserver(updateOverlay).observe(img);
     }
 
+    function cmAffiche(px) { return (px * 2.54 / 96).toFixed(1).replace('.', ','); }
     function checkRatio(f, naturalW, naturalH) {
         if (!naturalW || !naturalH) return true;
         var ratioReel = naturalW / naturalH;
         var ratioAttendu = f.largeur / f.hauteur;
         if (Math.abs(ratioReel - ratioAttendu) / ratioAttendu > 0.01) {
-            showFileError('Cette image ne respecte pas le format « ' + f.label + ' ». Ratio attendu : ' + f.largeur + '×' + f.hauteur + ' mm. Redimensionnez votre image.');
+            showFileError('Image fournie : ' + cmAffiche(naturalW) + ' × ' + cmAffiche(naturalH) + ' cm. Le format « ' + f.label + ' » attend une image ≈ ' + (f.largeur / 10).toFixed(1).replace('.', ',') + ' × ' + (f.hauteur / 10).toFixed(1).replace('.', ',') + ' cm (même ratio). Redimensionnez votre image.');
             return false;
         }
         hideFileError();

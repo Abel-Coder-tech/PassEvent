@@ -213,6 +213,9 @@
         <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
         <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
         <span class="format-badge"><i class="bi bi-aspect-ratio"></i><span id="formatBadgeLabel">{{ $format['label'] }}</span></span>
+        <a href="{{ route('admin.lots-physiques.template.preview', $lot) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-eye me-1"></i>Visualiser
+        </a>
         <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm btn-download ms-auto">
             <i class="bi bi-download me-1"></i>Télécharger la planche
         </a>
@@ -286,6 +289,9 @@
                             </div>
                             <div class="step-hint mb-2">Importez votre ticket physique pour créer le template.</div>
                             <input type="file" name="template_image" id="templateImageInput" accept="image/png" class="form-control form-control-sm">
+                            @if($errors->has('template_image'))
+                                <div class="text-danger small mt-1">{{ $errors->first('template_image') }}</div>
+                            @endif
                             <div class="file-error" id="fileError"></div>
                         </div>
 
@@ -299,10 +305,16 @@
                                 <div class="col-4">
                                     <label class="form-label">X (mm)</label>
                                     <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $qrX ?? 0) }}">
+                                    @if($errors->has('qr_x'))
+                                        <div class="text-danger small mt-1">{{ $errors->first('qr_x') }}</div>
+                                    @endif
                                 </div>
                                 <div class="col-4">
                                     <label class="form-label">Y (mm)</label>
                                     <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $qrY ?? 0) }}">
+                                    @if($errors->has('qr_y'))
+                                        <div class="text-danger small mt-1">{{ $errors->first('qr_y') }}</div>
+                                    @endif
                                 </div>
                                 <div class="col-4">
                                     <label class="form-label">Taille</label>
@@ -509,12 +521,13 @@
     }
 
     // Validate ratio client-side
+    function cmAffiche(px) { return (px * 2.54 / 96).toFixed(1).replace('.', ','); }
     function checkRatio(f, naturalW, naturalH) {
         if (!naturalW || !naturalH) return true;
         var ratioReel = naturalW / naturalH;
         var ratioAttendu = f.largeur / f.hauteur;
         if (Math.abs(ratioReel - ratioAttendu) / ratioAttendu > 0.01) {
-            showFileError('Cette image ne respecte pas le format « ' + f.label + ' ». Ratio attendu : ' + f.largeur + '×' + f.hauteur + ' mm. Redimensionnez votre image.');
+            showFileError('Image fournie : ' + cmAffiche(naturalW) + ' × ' + cmAffiche(naturalH) + ' cm. Le format « ' + f.label + ' » attend une image ≈ ' + (f.largeur / 10).toFixed(1).replace('.', ',') + ' × ' + (f.hauteur / 10).toFixed(1).replace('.', ',') + ' cm (même ratio). Redimensionnez votre image.');
             return false;
         }
         hideFileError();
