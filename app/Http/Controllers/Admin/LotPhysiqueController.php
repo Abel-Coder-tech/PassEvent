@@ -390,7 +390,7 @@ class LotPhysiqueController extends Controller
         return back()->with('success', 'Template enregistré. Vous pouvez maintenant télécharger votre planche.');
     }
 
-    // Aperçu JSON d'un ticket composité (template + QR)
+    // Aperçu PDF d'un ticket composité (template + QR)
     public function previewTemplate(LotPhysique $lot)
     {
         if ($lot->user_id !== Auth::id()) {
@@ -399,16 +399,18 @@ class LotPhysiqueController extends Controller
 
         $ticket = $lot->tickets()->where('annule', false)->first();
 
+        // Sans ticket valide, on compose l'aperçu sur un code d'exemple
         if (! $ticket) {
-            return response()->json(['error' => 'Aucun ticket valide.'], 404);
+            $ticket = new Ticket;
+            $ticket->code_unique = 'PAX-XXXXX';
         }
 
         try {
             return LotPhysiqueTemplatePdfService::apercuTicket($lot, $ticket);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             FacadesLog::error('Aperçu template lot physique échoué : '.$e->getMessage());
 
-            return response()->json(['error' => 'Erreur lors de la génération de l\'aperçu.'], 500);
+            abort(500, 'Erreur lors de la génération de l\'aperçu.');
         }
     }
 }

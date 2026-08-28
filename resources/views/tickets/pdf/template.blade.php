@@ -82,7 +82,9 @@
         @foreach($page as $slotIdx => $ticket)
             @php $pos = $layout['positions'][$slotIdx % $layout['par_page']]; @endphp
             <div class="slot" style="left: {{ $pos['x'] }}mm; top: {{ $pos['y'] }}mm; width: {{ $layout['slot_largeur'] }}mm; height: {{ $layout['slot_hauteur'] }}mm;">
-                <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
+                @if ($templateUrl)
+                    <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
+                @endif
                 <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR">
                 </div>

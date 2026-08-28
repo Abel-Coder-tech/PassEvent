@@ -156,15 +156,24 @@ class LotPhysiqueTemplatePdfService
         $pdf = Pdf::loadHtml($html);
         $pdf->setPaper([0, 0, $slotW * 2.835, $slotH * 2.835], 'portrait');
 
-        return $pdf->inline('Apercu-'.$ticket->code_unique.'.pdf');
+        return $pdf->stream('Apercu-'.$ticket->code_unique.'.pdf');
     }
 
     /**
      * Convertit l'image du template en data URI base64 pour DomPDF.
+     * Retourne null si aucune image enregistrée.
      */
-    private static function templateToDataUri(LotPhysique $lot): string
+    private static function templateToDataUri(LotPhysique $lot): ?string
     {
+        if (! $lot->template_path) {
+            return null;
+        }
+
         $path = storage_path("app/public/{$lot->template_path}");
+        if (! is_file($path)) {
+            return null;
+        }
+
         $raw = file_get_contents($path);
         $mime = mime_content_type($path) ?: 'image/png';
 
