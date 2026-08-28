@@ -229,15 +229,17 @@ class TicketController extends Controller
         $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
         $this->authoriserOrganisateur($ticket); // Contrôle de propriété
 
-        if ($ticket->download_count >= 3) {
-            return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).'); // Anti-abus
+        $max = config('app.max_downloads');
+
+        if ($ticket->download_count >= $max) {
+            return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).'); // Anti-abus
         }
 
         $ticket->increment('download_count', 1, []); // Incrémente le compteur
 
-        $reste = 3 - $ticket->download_count;
+        $reste = $max - $ticket->download_count;
         if ($reste === 1) {
-            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les 3 autorisés.");
+            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
@@ -259,15 +261,15 @@ class TicketController extends Controller
             return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.'); // Paiement requis
         }
 
-        if ($ticket->download_count >= 3) {
-            return back()->with('error', 'Limite de téléchargements atteinte (3 maximum).');
+        if ($ticket->download_count >= $max) {
+            return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).');
         }
 
         $ticket->increment('download_count', 1, []);
 
-        $reste = 3 - $ticket->download_count;
+        $reste = $max - $ticket->download_count;
         if ($reste === 1) {
-            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les 3 autorisés.");
+            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);

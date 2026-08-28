@@ -242,8 +242,10 @@ class LotPhysiqueController extends Controller
             return back()->with('error', 'Ce lot n\'a pas encore été transmis par le super admin.');
         }
 
-        if ($lot->download_count >= 3) {
-            return back()->with('error', 'Limite de téléchargements atteinte (3 maximum). Contactez le support si nécessaire.');
+        $max = config('app.max_downloads');
+
+        if ($lot->download_count >= $max) {
+            return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum). Contactez le support si nécessaire.');
         }
 
         $tickets = $lot->tickets()->where('annule', false)->orderBy('code_unique')->get();
@@ -293,10 +295,6 @@ class LotPhysiqueController extends Controller
     {
         if ($lot->user_id !== Auth::id()) {
             abort(403);
-        }
-
-        if ($lot->download_count >= 3) {
-            return back()->with('error', 'Limite de téléchargements atteinte.');
         }
 
         $tickets = $lot->tickets()->where('annule', false)->count();

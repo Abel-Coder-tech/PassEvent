@@ -27,12 +27,18 @@ class AuthController extends Controller
         return view('agent-vente.auth.login');
     }
 
-    // Authentifie un agent de vente avec vérifications (actif, événement non terminé)
+    // Authentifié un agent de vente avec vérifications (actif, événement non terminé)
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
+        ],
+        [
+            'email.required' => 'Veuillez saisir votre adresse e-mail.',
+            'email.email' => 'Veuillez saisir une adresse e-mail valide.',
+            'password.required' => 'Veuillez saisir votre mot de passe.',
+            'password.string' => 'Le mot de passe doit être une chaîne de caractères.',
         ]);
 
         if (Auth::guard('agent_vente')->attempt($credentials)) {
@@ -127,6 +133,10 @@ class AuthController extends Controller
         $validated = $request->validate([
             'periode' => 'nullable|string|in:aujourdhui,hier,semaine,mois,tout',
             'per_page' => 'nullable|integer',
+        ],
+        [
+            'periode.in' => 'Période invalide. Choisissez parmi : aujourd\'hui, hier, semaine, mois, tout.',
+            'per_page.integer' => 'Le nombre de résultats par page doit être un entier.',
         ]);
 
         $periode = $validated['periode'] ?? 'aujourdhui';
@@ -166,6 +176,16 @@ class AuthController extends Controller
             'tarif_id' => 'required|exists:tarifs,id',
             'methode_paiement' => 'required|in:cash,mobile_money',
             'code_promo' => 'nullable|string|max:50',
+        ],
+        [
+            'nom_acheteur.required' => 'Veuillez saisir le nom de l\'acheteur.',
+            'email_acheteur.required' => 'Veuillez saisir l\'adresse e-mail de l\'acheteur.',
+            'email_acheteur.email' => 'Veuillez saisir une adresse e-mail valide.',
+            'telephone_acheteur.required' => 'Veuillez saisir le numéro de téléphone de l\'acheteur.',
+            'tarif_id.required' => 'Veuillez sélectionner un tarif.',
+            'tarif_id.exists' => 'Le tarif sélectionné est invalide.',
+            'methode_paiement.required' => 'Veuillez sélectionner une méthode de paiement.',
+            'methode_paiement.in' => 'Méthode de paiement invalide. Choisissez entre espèces ou mobile money.',
         ]);
 
         if ($agent->evenement->date_event < now()) {
@@ -190,7 +210,7 @@ class AuthController extends Controller
         if ($validated['methode_paiement'] === 'cash' && ! $agent->evenement->ventesEspecesActivees()) {
             if ($agent->evenement->ventesEspecesBloqueesSuperadmin()) {
                 return back()->withErrors([
-                    'methode_paiement' => 'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money.',
+                    'methode_paiement' => 'Les ventes espèces sont actuellement désactivées pour cet événement. Utilisez le mobile money pour vendre vos tickets.',
                 ]);
             }
             $seuil = (int) ceil($agent->evenement->capacite * Evenement::SEUIL_ESPECES_PCT / 100);
@@ -226,11 +246,11 @@ class AuthController extends Controller
             $ticket->update(['statut_paiement' => 'payé']); // Paiement espèces = confirmé immédiatement
             $agent->evenement->increment('quota_vendu', 1);
             $tarif->increment('quantite_vendue', 1);
-            $agent->increment('tickets_count');
-            $agent->increment('montant_total', $prixUnitaire);
+            $agent->increment('tickets_count', 1, []);
+            $agent->increment('montant_total', $prixUnitaire, []);
             // Comptabilise le code promo une fois la vente espèces confirmée
             if ($codePromo) {
-                $codePromo->increment('nb_utilisations', 1);
+                $codePromo->increment('nb_utilisations', 1, []);
             }
             session()->flash('ticket_created', $ticket->id); // Pour affichage du dernier ticket
 
@@ -274,15 +294,17 @@ class AuthController extends Controller
             abort(403, 'Le paiement de ce ticket n\'a pas été confirmé.'); // Ticket non payé
         }
 
-        if ($ticket->download_count >= 3) {
-            abort(403, 'Limite de téléchargements atteinte (3 maximum).'); // Limite anti-abus
+        $max = config('app.max_downloads');
+
+        if ($ticket->download_count >= $max) {
+            abort(403, 'Limite de téléchargements atteinte ('.$max.' maximum).'); // Limite anti-abus
         }
 
         $ticket->increment('download_count');
 
-        $reste = 3 - $ticket->download_count;
+        $reste = $max - $ticket->download_count;
         if ($reste === 1) {
-            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les 3 autorisés.");
+            session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
         $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
