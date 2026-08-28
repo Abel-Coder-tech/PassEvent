@@ -337,55 +337,117 @@
     </div>
 </form>
 
-<div class="sa-card mt-4">
-    <div class="sa-card-header">
-        <span><i class="bi bi-info-circle me-2" style="color:var(--sa-primary);"></i> Comment ça marche ?</span>
+<div class="sa-card mt-4 overflow-hidden">
+    <div class="sa-card-header d-flex align-items-center gap-2">
+        <i class="bi bi-question-circle-fill fs-4" style="color:var(--sa-primary);"></i>
+        <span>Comment ça marche ?</span>
+        <span class="sa-badge ms-auto" style="background:var(--sa-primary);color:#fff;">Aide</span>
     </div>
-    <div class="sa-card-body py-3 small">
-        <p class="fw-semibold mb-1"><i class="bi bi-list-ol me-1" style="color:var(--sa-primary);"></i> Étapes</p>
-        <ol class="ps-3 mb-3">
-            <li><strong>Choisissez le format</strong> : taille du ticket, nombre de tickets par A4 et orientation.</li>
-            <li><strong>Importez l'image PNG</strong> (max 10 Mo) de votre ticket au ratio du format choisi. L'image est placée à la taille exacte du ticket sans déformation ni recadrage.</li>
-            <li><strong>Positionnez le QR code</strong> : glissez le cadre rouge pour le déplacer, ou utilisez la poignée en bas à droite pour le redimensionner.</li>
-            <li><strong>Visualisez puis enregistrez</strong> : le bouton « Visualiser » ouvre le rendu exact (PDF) dans un nouvel onglet.</li>
-        </ol>
+    <div class="sa-card-body py-3">
+        <div class="accordion" id="saHelpAccordion">
+            <div class="accordion-item border-0 rounded-3 shadow-sm mb-2 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#saCollapseSteps" aria-expanded="true" aria-controls="saCollapseSteps">
+                        <i class="bi bi-list-ol me-2 text-primary"></i> Les 4 étapes
+                        <span class="badge bg-primary-subtle text-primary rounded-pill ms-2">Générer</span>
+                    </button>
+                </h2>
+                <div id="saCollapseSteps" class="accordion-collapse collapse show" data-bs-parent="#saHelpAccordion">
+                    <div class="accordion-body">
+                        <ol class="ps-3 mb-0" style="line-height:1.9;">
+                            <li><strong>Choisissez le format</strong> : taille du ticket, nombre de tickets par A4 et orientation (Standard 14×5, Standard 2 14×7, VIP 18×7, VIP 2 9,9×7).</li>
+                            <li><strong>Importez l'image PNG</strong> (max 10 Mo) de votre ticket au ratio du format choisi. L'image est placée à la taille exacte du ticket, sans déformation ni recadrage.</li>
+                            <li><strong>Positionnez le QR code</strong> : glissez le cadre rouge pour le déplacer, ou tirez la poignée pour le redimensionner.</li>
+                            <li><strong>Visualisez puis enregistrez</strong> : le bouton « Visualiser » ouvre le rendu exact (PDF) dans un nouvel onglet.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
 
-        <p class="fw-semibold mb-1"><i class="bi bi-image me-1" style="color:var(--sa-primary);"></i> Dimensions d'image acceptées</p>
-        <div class="table-responsive mb-2">
-            <table class="table table-sm table-bordered align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Format</th>
-                        <th>Ticket (cm)</th>
-                        <th>Ratio</th>
-                        <th>Tickets / A4</th>
-                        <th>Orientation</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(\App\Models\LotPhysique::FORMATS as $def)
-                        <tr>
-                            <td>{{ $def['label'] }}</td>
-                            <td>{{ number_format($def['largeur'] / 10, 1, ',', ' ') }} × {{ number_format($def['hauteur'] / 10, 1, ',', ' ') }}</td>
-                            <td>{{ str_replace('.', ',', rtrim(rtrim(number_format($def['largeur'] / $def['hauteur'], 2, ',', ''), '0'), ',')) }} : 1</td>
-                            <td>{{ $def['colonnes'] }} × {{ $def['lignes'] }} = {{ $def['colonnes'] * $def['lignes'] }}</td>
-                            <td>{{ $def['orientation'] === 'landscape' ? 'Paysage' : 'Portrait' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="accordion-item border-0 rounded-3 shadow-sm mb-2 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#saCollapseDims" aria-expanded="false" aria-controls="saCollapseDims">
+                        <i class="bi bi-image me-2 text-success"></i> Dimensions d'image acceptées
+                        <span class="badge bg-success-subtle text-success rounded-pill ms-2">PNG</span>
+                    </button>
+                </h2>
+                <div id="saCollapseDims" class="accordion-collapse collapse" data-bs-parent="#saHelpAccordion">
+                    <div class="accordion-body">
+                        <div class="alert alert-warning d-flex align-items-start gap-2 py-2 mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <span class="small">L'image est contrôlée sur le <strong>ratio</strong> du format : tolérance de <strong>± 1 %</strong>, sinon l'enregistrement est refusé. Le ratio choisi s'affiche dès la sélection du fichier.</span>
+                        </div>
+                        <div class="table-responsive mb-2">
+                            <table class="table table-sm table-hover table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th><i class="bi bi-layout-three-columns me-1"></i>Format</th>
+                                        <th>Ticket (cm)</th>
+                                        <th>Ratio</th>
+                                        <th>Tickets / A4</th>
+                                        <th>Orientation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach(\App\Models\LotPhysique::FORMATS as $def)
+                                        <tr>
+                                            <td class="fw-semibold">{{ $def['label'] }}</td>
+                                            <td>{{ number_format($def['largeur'] / 10, 1, ',', ' ') }} × {{ number_format($def['hauteur'] / 10, 1, ',', ' ') }}</td>
+                                            <td><span class="badge bg-light text-dark border">{{ str_replace('.', ',', rtrim(rtrim(number_format($def['largeur'] / $def['hauteur'], 2, ',', ''), '0'), ',')) }} : 1</span></td>
+                                            <td>{{ $def['colonnes'] }} × {{ $def['lignes'] }} = {{ $def['colonnes'] * $def['lignes'] }}</td>
+                                            <td>{{ $def['orientation'] === 'landscape' ? 'Paysage' : 'Portrait' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="alert alert-info d-flex align-items-start gap-2 py-2 mb-0">
+                            <i class="bi bi-lightbulb-fill me-1"></i>
+                            <span class="small">À l'écran (96 DPI), 1 cm ≈ 37,8 px : pour le « Standard (14×5) », visez ~1400 × 500 px. Une image plus grande en pixels mais au même ratio est acceptée et restera nette à la taille exacte du ticket.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item border-0 rounded-3 shadow-sm overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#saCollapseMargins" aria-expanded="false" aria-controls="saCollapseMargins">
+                        <i class="bi bi-scissors me-2 text-danger"></i> Marges & découpe
+                        <span class="badge bg-danger-subtle text-danger rounded-pill ms-2">Découpe</span>
+                    </button>
+                </h2>
+                <div id="saCollapseMargins" class="accordion-collapse collapse" data-bs-parent="#saHelpAccordion">
+                    <div class="accordion-body">
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
+                                <i class="bi bi-square-half text-primary"></i>
+                                <span><strong>Marge externe :</strong> 4 mm autour du bloc de tickets sur l'A4.</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
+                                <i class="bi bi-border-style text-danger"></i>
+                                <span><strong>Gouttière de découpe :</strong> 2 mm entre chaque ticket (lignes en pointillés sur la planche).</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
+                                <i class="bi bi-qr-code text-success"></i>
+                                <span><strong>QR code :</strong> zone blanche de 4 mm (quiet zone) pour garantir la lecture.</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
+                                <i class="bi bi-upc-scan text-warning"></i>
+                                <span><strong>Code PAX :</strong> imprimé sous le QR code.</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
+                                <i class="bi bi-ticket-perforated text-secondary"></i>
+                                <span><strong>Signature PaxEvent</strong> (événement — tarif, © {{ date('Y') }} PaxEvent) dans la marge basse.</span>
+                            </div>
+                        </div>
+                        <div class="alert alert-success d-flex align-items-start gap-2 py-2 mb-0">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            <span class="small">Astuce : rognez d'abord votre image aux dimensions du ticket choisies, puis laissez PaxEvent gérer les marges de découpe automatiquement.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p class="text-muted mb-3">
-            L'image est contrôlée sur le ratio du format (tolérance 1 %). À l'écran (96 DPI), 1 cm ≈ 37,8 px, soit pour le « Standard (14×5) » une image d'environ 1400 × 500 px. Une image plus grande en pixels mais au même ratio est acceptée : elle sera affichée nette, à la taille exacte du ticket, sans distorsion.
-        </p>
-
-        <p class="fw-semibold mb-1"><i class="bi bi-scissors me-1" style="color:var(--sa-primary);"></i> Marges & découpe</p>
-        <ul class="ps-3 mb-0">
-            <li>Marge externe : 4 mm autour du bloc de tickets sur l'A4.</li>
-            <li>Gouttière de découpe : 2 mm entre chaque ticket (lignes en pointillés sur la planche).</li>
-            <li>QR code : zone blanche de 4 mm autour pour garantir la lecture.</li>
-            <li>Le code PAX est imprimé sous le QR, et la signature PaxEvent (événement — tarif, © {{ date('Y') }} PaxEvent) dans la marge basse.</li>
-        </ul>
     </div>
 </div>
 
