@@ -345,6 +345,58 @@
             </div>
         </div>
     </form>
+
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-info-circle me-1 text-primary"></i>Comment ça marche ?
+        </div>
+        <div class="card-body small">
+            <p class="fw-semibold mb-1"><i class="bi bi-list-ol me-1 text-primary"></i>Étapes</p>
+            <ol class="ps-3 mb-3">
+                <li><strong>Choisissez le format</strong> : taille du ticket, nombre de tickets par A4 et orientation.</li>
+                <li><strong>Importez l'image PNG</strong> (max 10 Mo) de votre ticket au ratio du format choisi. L'image est placée à la taille exacte du ticket sans déformation ni recadrage.</li>
+                <li><strong>Positionnez le QR code</strong> : glissez le cadre rouge pour le déplacer, ou utilisez la poignée en bas à droite pour le redimensionner.</li>
+                <li><strong>Visualisez puis enregistrez</strong> : le bouton « Visualiser » ouvre le rendu exact (PDF) dans un nouvel onglet.</li>
+            </ol>
+
+            <p class="fw-semibold mb-1"><i class="bi bi-image me-1 text-primary"></i>Dimensions d'image acceptées</p>
+            <div class="table-responsive mb-2">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Format</th>
+                            <th>Ticket (cm)</th>
+                            <th>Ratio</th>
+                            <th>Tickets / A4</th>
+                            <th>Orientation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(\App\Models\LotPhysique::FORMATS as $def)
+                            <tr>
+                                <td>{{ $def['label'] }}</td>
+                                <td>{{ number_format($def['largeur'] / 10, 1, ',', ' ') }} × {{ number_format($def['hauteur'] / 10, 1, ',', ' ') }}</td>
+                                <td>{{ str_replace('.', ',', rtrim(rtrim(number_format($def['largeur'] / $def['hauteur'], 2, ',', ''), '0'), ',')) }} : 1</td>
+                                <td>{{ $def['colonnes'] }} × {{ $def['lignes'] }} = {{ $def['colonnes'] * $def['lignes'] }}</td>
+                                <td>{{ $def['orientation'] === 'landscape' ? 'Paysage' : 'Portrait' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted mb-3">
+                L'image est contrôlée sur le ratio du format (tolérance 1 %). À l'écran (96 DPI), 1 cm ≈ 37,8 px, soit pour le « Standard (14×5) » une image d'environ 1400 × 500 px. Une image plus grande en pixels mais au même ratio est acceptée : elle sera affichée nette, à la taille exacte du ticket, sans distorsion.
+            </p>
+
+            <p class="fw-semibold mb-1"><i class="bi bi-scissors me-1 text-primary"></i>Marges & découpe</p>
+            <ul class="ps-3 mb-0">
+                <li>Marge externe : 4 mm autour du bloc de tickets sur l'A4.</li>
+                <li>Gouttière de découpe : 2 mm entre chaque ticket (lignes en pointillés sur la planche).</li>
+                <li>QR code : zone blanche de 4 mm autour pour garantir la lecture.</li>
+                <li>Le code PAX est imprimé sous le QR, et la signature PaxEvent (événement — tarif, © {{ date('Y') }} PaxEvent) dans la marge basse.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>

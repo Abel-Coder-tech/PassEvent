@@ -51,7 +51,9 @@
 </head>
 <body>
 <div class="ticket">
+    @if ($templateUrl)
     <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
+@endif
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR">
     </div>
