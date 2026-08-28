@@ -28,7 +28,7 @@
             <i class="bi bi-file-earmark-pdf"></i> Toutes les planches (1 PDF)
         </a>
         <a href="{{ route('superadmin.tickets-physiques.creer') }}" class="sa-btn sa-btn-primary">
-            <i class="bi bi-plus-lg"></i> Generer un lot
+            <i class="bi bi-plus-lg"></i> Générer un lot
         </a>
     </div>
 </div>
@@ -137,7 +137,7 @@
                         <textarea name="note" id="modalNote" class="form-control" rows="3" placeholder="Un petit message pour l'organisateur..."></textarea>
                     </div>
                     <div class="small text-muted">
-                        Le lot sera transmis : l'organisateur recevra un email et une notification dans son espace. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
+                        Le lot sera transmis : l'organisateur recevra un email et une notification dans son espace organisateur. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
                     </div>
                 </div>
                 <div class="modal-footer">

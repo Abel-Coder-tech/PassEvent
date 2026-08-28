@@ -159,7 +159,7 @@
                                 <span class="badge bg-warning text-dark">En attente</span>
                             @endif
                         </td>
-                        <td class="text-center">{{ $lot->download_count }}/3</td>
+                        <td class="text-center">{{ $lot->download_count }}/{{ config('app.max_downloads') }}</td>
                         <td class="text-end pe-3">
                             <div class="d-inline-flex gap-1 align-items-center">
                             @if($lot->statut === 'en_attente_paiement' && $lot->reference_paiement)

@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Téléchargements max autorisés (limite anti-abus)
+    |--------------------------------------------------------------------------
+    |
+    | Nombre maximal de téléchargements d'un ticket PDF (acheteur) ou d'une
+    | planche de lots physiques (organisateur). Modifiable à tout moment.
+    |
+    */
+
+    'max_downloads' => 3,
+
 ];

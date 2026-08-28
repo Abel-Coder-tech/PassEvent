@@ -37,7 +37,7 @@
                         <div style="font-size:0.72rem;color:#888;">Scannes</div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div style="font-size:1.4rem;font-weight:800;color:#7B3FA0;">{{ $lot->download_count }}/3</div>
+                        <div style="font-size:1.4rem;font-weight:800;color:#7B3FA0;">{{ $lot->download_count }}/{{ config('app.max_downloads') }}</div>
                         <div style="font-size:0.72rem;color:#888;">Telechargements</div>
                     </div>
                 </div>
