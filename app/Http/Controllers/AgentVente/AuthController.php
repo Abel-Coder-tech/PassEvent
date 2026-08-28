@@ -300,7 +300,7 @@ class AuthController extends Controller
             abort(403, 'Limite de téléchargements atteinte ('.$max.' maximum).'); // Limite anti-abus
         }
 
-        $ticket->increment('download_count');
+        $ticket->increment('download_count', 1, []); // Incrémente le compteur de téléchargements
 
         $reste = $max - $ticket->download_count;
         if ($reste === 1) {

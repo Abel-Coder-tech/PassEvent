@@ -356,8 +356,11 @@ class LotPhysiqueController extends Controller
             if ($test !== false) {
                 $ratioReel = $test[0] / max($test[1], 1);
                 if (abs($ratioReel - $ratioAttendu) / $ratioAttendu > 0.01) {
+                    $fourni = number_format($test[0] * 2.54 / 96, 1, ',', ' ').' × '.number_format($test[1] * 2.54 / 96, 1, ',', ' ').' cm';
+                    $attendu = number_format($formatDef['largeur'] / 10, 1, ',', ' ').' × '.number_format($formatDef['hauteur'] / 10, 1, ',', ' ').' cm';
+
                     return back()
-                        ->withErrors(['template_image' => "Cette image ne respecte pas le format « {$formatDef['label']} ». Ratio attendu : {$formatDef['largeur']}×{$formatDef['hauteur']} mm. Redimensionnez votre image."])
+                        ->withErrors(['template_image' => "Image fournie : {$fourni}. Le format « {$formatDef['label']} » attend une image ≈ {$attendu} (même ratio). Redimensionnez votre image."])
                         ->withInput();
                 }
             }
@@ -401,9 +404,7 @@ class LotPhysiqueController extends Controller
         }
 
         try {
-            $pdfContent = LotPhysiqueTemplatePdfService::apercuTicket($lot, $ticket);
-
-            return response()->json(['pdf' => $pdfContent]);
+            return LotPhysiqueTemplatePdfService::apercuTicket($lot, $ticket);
         } catch (\Exception $e) {
             FacadesLog::error('Aperçu template lot physique échoué : '.$e->getMessage());
 
