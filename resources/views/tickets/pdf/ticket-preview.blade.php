@@ -32,9 +32,8 @@
         }
         .pax-code {
             position: absolute;
-            padding-top: 0.8mm;
             text-align: center;
-            font-size: 8.5px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.5px;
             color: #1d1d1f;
@@ -55,7 +54,7 @@
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR">
     </div>
-    <div class="pax-code" style="left: {{ $qrX }}mm; top: {{ $qrY + $qrSize + 0.8 }}mm; width: {{ $qrSize }}mm;">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
+    <div class="pax-code" style="left: {{ $qrX }}mm; top: {{ $qrY + $qrSize + 1.2 }}mm; width: {{ $qrSize }}mm;">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
 </div>
 </body>
 </html>
