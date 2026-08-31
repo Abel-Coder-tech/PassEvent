@@ -51,27 +51,45 @@
 }
 .remove-img:hover { background: #c0392b; transform: scale(1.1); }
 
-.zoom-handle {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
+.zoom-bar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .5rem;
+    padding: .45rem .6rem;
+    background: rgba(107,63,160,.05);
+    border: 1px solid rgba(107,63,160,.18);
+    border-radius: 10px;
+}
+.zoom-bar-label { font-size: .75rem; font-weight: 700; color: var(--sa-primary); white-space: nowrap; display: flex; align-items: center; gap: .3rem; }
+.zoom-step {
     width: 28px;
     height: 28px;
-    background: var(--sa-primary, #542680);
-    color: #fff;
-    border-radius: 50%;
-    display: none;
+    flex: 0 0 28px;
+    border: 1px solid rgba(107,63,160,.3);
+    background: #fff;
+    color: var(--sa-primary);
+    border-radius: 8px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    cursor: nwse-resize;
-    z-index: 12;
-    font-size: 13px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.25);
-    transition: transform .15s;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: background .15s, color .15s;
 }
-.zoom-handle.show { display: flex; }
-.zoom-handle:hover { transform: scale(1.1); }
-.zoom-handle.active { filter: brightness(.85); }
+.zoom-step:hover { background: var(--sa-primary); color: #fff; }
+.zoom-bar .form-range { flex: 1; min-width: 0; margin: 0; accent-color: var(--sa-primary); }
+.zoom-badge {
+    flex: 0 0 52px;
+    text-align: center;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--sa-primary);
+    background: #fff;
+    border: 1px solid rgba(107,63,160,.3);
+    border-radius: 8px;
+    padding: .2rem 0;
+}
 
 .file-error.warn { background: #fff8e6; border-color: #ffd88a; color: #7a5a00; }
 
@@ -276,9 +294,18 @@
             <button type="button" id="btnRemoveImg" class="remove-img" title="Supprimer l'image" style="display:none;">
                 <i class="bi bi-x-lg"></i>
             </button>
-            <div class="zoom-handle" id="zoomHandle" title="Redimensionner l'image (zoom / recadrage)">
-                <i class="bi bi-arrows-angle-expand"></i>
-            </div>
+        </div>
+
+        <div class="zoom-bar">
+            <span class="zoom-bar-label"><i class="bi bi-zoom-in"></i> Zoom image</span>
+            <button type="button" class="zoom-step" id="zoomMinus" title="Réduire (recadre le débordement)">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+            <input type="range" class="form-range" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}">
+            <button type="button" class="zoom-step" id="zoomPlus" title="Agrandir">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <span class="zoom-badge" id="zoomValue">{{ $zoom }}%</span>
         </div>
 
         <div class="config-panel">
@@ -320,12 +347,7 @@
                         <div class="step-hint mb-2">Importez votre ticket physique pour créer le template.</div>
                         <input type="file" name="template_image" id="templateImageInput" accept="image/png" class="form-control form-control-sm">
                         <div class="file-error" id="fileError"></div>
-                        <div class="d-flex align-items-center gap-2 mt-2">
-                            <span class="input-group-text px-2 py-1 small">Zoom image</span>
-                            <input type="range" class="form-range flex-grow-1" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}" style="min-width:0;">
-                            <span class="badge bg-light text-dark border px-2 py-1" id="zoomValue" style="min-width:52px;">{{ $zoom }}%</span>
-                        </div>
-                        <div class="step-hint mt-1">Glissez la poignée en bas à droite de l'image ou le curseur : agrandissez si elle ne couvre pas, réduisez pour recadrer (le débordement est coupé).</div>
+                        <div class="step-hint mt-1">Utilisez la barre « Zoom image » sous l'aperçu : agrandissez si l'image ne couvre pas le ticket, réduisez pour recadrer (le débordement est coupé).</div>
                     </div>
 
                     <div class="mb-3">
@@ -531,10 +553,9 @@
     var zoomRange = document.getElementById('zoomRange');
     var zoomValue = document.getElementById('zoomValue');
     var zoomInput = document.getElementById('template_zoom');
-    var zoomHandle = document.getElementById('zoomHandle');
+    var zoomMinus = document.getElementById('zoomMinus');
+    var zoomPlus = document.getElementById('zoomPlus');
     var currentZoom = parseInt(zoomInput ? zoomInput.value : '100') || 100;
-    var zoomDragging = false;
-    var zoomStartX = 0, zoomStartY = 0, zoomStartVal = 100;
 
     var dragging = false;
     var resizing = false;
@@ -586,26 +607,14 @@
         if (zoomValue) zoomValue.textContent = v + '%';
         if (img) img.style.transform = 'scale(' + (v / 100) + ')';
     }
-    function showZoomHandle() { if (zoomHandle) zoomHandle.classList.add('show'); }
-    function hideZoomHandle() { if (zoomHandle) zoomHandle.classList.remove('show'); }
-
-    if (zoomRange) {
+    function bindZoomRange() {
+        if (!zoomRange || zoomRange._bound) return;
+        zoomRange._bound = true;
         zoomRange.addEventListener('input', function() { setZoom(parseInt(this.value) || 100); });
     }
-    function bindZoomHandle() {
-        if (!zoomHandle || zoomHandle._bound) return;
-        zoomHandle._bound = true;
-        zoomHandle.addEventListener('mousedown', function(e) {
-            zoomDragging = true;
-            zoomStartX = e.clientX;
-            zoomStartY = e.clientY;
-            zoomStartVal = currentZoom;
-            zoomHandle.classList.add('active');
-            e.preventDefault();
-            e.stopPropagation();
-        });
-    }
-    bindZoomHandle();
+    bindZoomRange();
+    if (zoomMinus) zoomMinus.addEventListener('click', function() { setZoom(currentZoom - 1); });
+    if (zoomPlus) zoomPlus.addEventListener('click', function() { setZoom(currentZoom + 1); });
 
     function updateOverlay() {
         if (!overlay || !img || !img.naturalWidth) return;
@@ -653,11 +662,6 @@
     }
 
     document.addEventListener('mousemove', function(e) {
-        if (zoomDragging) {
-            var dx = e.clientX - zoomStartX;
-            var dy = e.clientY - zoomStartY;
-            setZoom(zoomStartVal + (dx + dy) * 0.5);
-        }
         if (dragging && overlay) {
             var xPx = e.clientX - offsetX;
             var yPx = e.clientY - offsetY;
@@ -702,8 +706,6 @@
     document.addEventListener('mouseup', function() {
         dragging = false;
         resizing = false;
-        zoomDragging = false;
-        if (zoomHandle) zoomHandle.classList.remove('active');
         if (qrTooltip) qrTooltip.classList.remove('show');
     });
 
@@ -763,8 +765,6 @@
         canvas.appendChild(empty);
         canvas.appendChild(btnRemoveImg);
         hideRemoveBtn();
-        hideZoomHandle();
-        zoomHandle = null;
         img = null;
         overlay = null;
     }
@@ -819,15 +819,6 @@
             rh.id = 'qrResize';
             ov.appendChild(rh);
             canvas.appendChild(ov);
-            var zh = document.createElement('div');
-            zh.className = 'zoom-handle';
-            zh.id = 'zoomHandle';
-            zh.title = 'Redimensionner l\'image (zoom / recadrage)';
-            zh.innerHTML = '<i class="bi bi-arrows-angle-expand"></i>';
-            canvas.appendChild(zh);
-            zoomHandle = zh;
-            bindZoomHandle();
-            showZoomHandle();
             canvas.appendChild(btnRemoveImg);
             showRemoveBtn();
             img = imgEl;
@@ -880,7 +871,7 @@
 
     syncFormatHint(currentFmt());
     if (overlay) { updateOverlay(); bindOverlayEvents(); }
-    if (img && hasStored) { showRemoveBtn(); showZoomHandle(); setZoom(currentZoom); }
+    if (img && hasStored) { showRemoveBtn(); setZoom(currentZoom); }
 })();
 </script>
 @endpush
