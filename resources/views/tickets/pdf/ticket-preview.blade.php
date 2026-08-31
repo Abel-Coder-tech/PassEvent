@@ -37,6 +37,7 @@
             font-weight: 700;
             letter-spacing: 0.5px;
             color: #1d1d1f;
+            white-space: nowrap;
             text-shadow:
                 -1px -1px 0 #fff,
                 1px -1px 0 #fff,
@@ -54,7 +55,7 @@
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR">
     </div>
-    <div class="pax-code" style="left: {{ $qrX }}mm; top: {{ $qrY + $qrSize + 1.2 }}mm; width: {{ $qrSize }}mm;">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
+    <div class="pax-code" style="left: {{ $qrX + $qrSize / 2 - 18 }}mm; top: {{ $qrY + $qrSize + 1.6 }}mm; width: 36mm;">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
 </div>
 </body>
 </html>

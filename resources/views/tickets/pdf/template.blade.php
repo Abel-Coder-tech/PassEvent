@@ -43,10 +43,11 @@
         .pax-code {
             position: absolute;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.5px;
             color: #1d1d1f;
+            white-space: nowrap;
             text-shadow:
                 -1px -1px 0 #fff,
                 1px -1px 0 #fff,
@@ -85,7 +86,7 @@
                 <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR">
                 </div>
-                <div class="pax-code" style="left: {{ $qrX }}mm; top: {{ $qrY + $qrSize + 1.2 }}mm; width: {{ $qrSize }}mm;">{{ $ticket->code_unique }}</div>
+                <div class="pax-code" style="left: {{ $qrX + $qrSize / 2 - 18 }}mm; top: {{ $qrY + $qrSize + 1.6 }}mm; width: 36mm;">{{ $ticket->code_unique }}</div>
             </div>
         @endforeach
 
