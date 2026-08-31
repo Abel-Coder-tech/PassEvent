@@ -25,9 +25,7 @@
             box-shadow: 0 0 0.5px rgba(0,0,0,.12);
         }
         .ticket-bg {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            position: absolute;
             display: block;
         }
         .qr-zone {
@@ -83,7 +81,7 @@
             @php $pos = $layout['positions'][$slotIdx % $layout['par_page']]; @endphp
             <div class="slot" style="left: {{ $pos['x'] }}mm; top: {{ $pos['y'] }}mm; width: {{ $layout['slot_largeur'] }}mm; height: {{ $layout['slot_hauteur'] }}mm;">
                 @if ($templateUrl)
-                    <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
+                    <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
                 @endif
                 <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR">

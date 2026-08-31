@@ -436,7 +436,7 @@ class LotPhysiqueController extends Controller
         $qrY = $lot->qr_y ?? round(($format['hauteur'] - $qrSize) / 2);
         $formats = array_map(fn ($f) => $f['label'], LotPhysique::FORMATS);
 
-        return view('superadmin.lots-physiques.template', compact('lot', 'tickets', 'format', 'qrX', 'qrY', 'qrSize', 'formats'));
+        return view('superadmin.lots-physiques.template', compact('lot', 'tickets', 'format', 'qrX', 'qrY', 'qrSize', 'formats'))->with('zoom', $lot->template_zoom ?? 100);
     }
 
     public function saveTemplate(Request $request, LotPhysique $lot)
@@ -449,6 +449,7 @@ class LotPhysiqueController extends Controller
             'qr_y' => 'nullable|numeric|min:0',
             'qr_size' => 'nullable|numeric|min:20|max:80',
             'supprimer_template' => 'nullable|boolean',
+            'template_zoom' => 'nullable|numeric|min:70|max:150',
         ];
         $rules['template_image'] = $request->hasFile('template_image')
             ? ['image', 'mimes:png', 'max:10240']
@@ -466,6 +467,9 @@ class LotPhysiqueController extends Controller
             'qr_size.numeric' => 'Taille du QR code invalide.',
             'qr_size.min' => 'La taille du QR doit être d\'au moins 20 mm.',
             'qr_size.max' => 'La taille du QR ne doit pas dépasser 80 mm.',
+            'template_zoom.numeric' => 'Zoom de l\'image invalide.',
+            'template_zoom.min' => 'Le zoom ne peut pas être inférieur à 70 %.',
+            'template_zoom.max' => 'Le zoom ne peut pas dépasser 150 %.',
         ]);
 
         $formatDef = LotPhysique::FORMATS[$validated['format']];
@@ -477,23 +481,6 @@ class LotPhysiqueController extends Controller
             }
             $lot->template_path = null;
         } elseif ($request->hasFile('template_image')) {
-            // Vérifie le ratio de l'image vs format choisi (tolérance 1 %)
-            $ratioAttendu = $formatDef['largeur'] / $formatDef['hauteur'];
-            $image = [0, 0];
-            $test = getimagesize($request->file('template_image')->getRealPath());
-            if ($test !== false) {
-                $image = [$test[0], $test[1]];
-                $ratioReel = $image[0] / max($image[1], 1);
-                if (abs($ratioReel - $ratioAttendu) / $ratioAttendu > 0.01) {
-                    $fourni = number_format($image[0] * 2.54 / 96, 1, ',', ' ').' × '.number_format($image[1] * 2.54 / 96, 1, ',', ' ').' cm';
-                    $attendu = number_format($formatDef['largeur'] / 10, 1, ',', ' ').' × '.number_format($formatDef['hauteur'] / 10, 1, ',', ' ').' cm';
-
-                    return back()
-                        ->withErrors(['template_image' => "Image fournie : {$fourni}. Le format « {$formatDef['label']} » attend une image ≈ {$attendu} (même ratio). Redimensionnez votre image."])
-                        ->withInput();
-                }
-            }
-
             if ($lot->template_path && Storage::disk('public')->exists($lot->template_path)) {
                 Storage::disk('public')->delete($lot->template_path);
             }
@@ -508,12 +495,14 @@ class LotPhysiqueController extends Controller
         $qrSize = isset($validated['qr_size']) ? (int) $validated['qr_size'] : ($lot->qr_size ?? $formatDef['qr_defaut']);
         $qrX = isset($validated['qr_x']) ? (int) $validated['qr_x'] : ($lot->qr_x ?? round(($formatDef['largeur'] - $qrSize) / 2));
         $qrY = isset($validated['qr_y']) ? (int) $validated['qr_y'] : ($lot->qr_y ?? round(($formatDef['hauteur'] - $qrSize) / 2));
+        $zoom = isset($validated['template_zoom']) ? (int) $validated['template_zoom'] : ($lot->template_zoom ?? 100);
 
         $lot->update([
             'format' => $validated['format'],
             'qr_x' => $qrX,
             'qr_y' => $qrY,
             'qr_size' => $qrSize,
+            'template_zoom' => $zoom,
         ]);
 
         return back()->with('success', 'Template enregistré. Le prochain téléchargement utilisera ce design.');

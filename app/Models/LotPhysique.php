@@ -29,6 +29,7 @@ class LotPhysique extends Model
         'download_count',
         'transmis_at',
         'template_path',
+        'template_zoom',
         'qr_x',
         'qr_y',
         'qr_size',
@@ -88,6 +89,7 @@ class LotPhysique extends Model
             'qr_x' => 'integer',
             'qr_y' => 'integer',
             'qr_size' => 'integer',
+            'template_zoom' => 'integer',
             'pdf_par_page' => 'integer',
             'format' => 'string',
         ];
