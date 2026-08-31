@@ -62,7 +62,7 @@
         align-items: center;
         gap: .5rem;
         padding: .5rem .65rem;
-        background: #1d1d1f;
+        background: #542680;
         border-radius: 8px;
     }
     .zoom-bar-label { font-size: .75rem; font-weight: 700; color: #fff; white-space: nowrap; display: flex; align-items: center; gap: .3rem; }
@@ -70,9 +70,9 @@
         width: 28px;
         height: 28px;
         flex: 0 0 28px;
-        border: 1px solid #444;
-        background: #fff;
-        color: #1d1d1f;
+        border: 1px solid rgba(255,255,255,.4);
+        background: rgba(255,255,255,.15);
+        color: #fff;
         border-radius: 6px;
         display: flex;
         align-items: center;
@@ -81,14 +81,14 @@
         cursor: pointer;
         transition: background .15s, color .15s;
     }
-    .zoom-step:hover { background: #1d1d1f; color: #fff; border-color: #1d1d1f; }
+    .zoom-step:hover { background: #3d1a5c; color: #fff; }
     .zoom-bar .form-range { flex: 1; min-width: 0; margin: 0; accent-color: #fff; }
     .zoom-badge {
         flex: 0 0 52px;
         text-align: center;
         font-size: .8rem;
         font-weight: 700;
-        color: #1d1d1f;
+        color: #542680;
         background: #fff;
         border-radius: 6px;
         padding: .2rem 0;
@@ -208,8 +208,10 @@
     .lot-info { background: #f8f7fa; border-radius: 10px; padding: .8rem 1rem; font-size: .82rem; }
     .lot-info strong { color: #542680; }
 
-    .btn-download { background: #1d1d1f; color: #fff; border-radius: 8px; font-weight: 600; }
-    .btn-download:hover { background: #333; color: #fff; }
+    .btn-download { background: #542680; color: #fff; border-radius: 8px; font-weight: 600; }
+    .btn-download:hover { background: #3d1a5c; color: #fff; }
+    .btn-preview { background: #542680; color: #fff; border: none; border-radius: 8px; font-weight: 600; }
+    .btn-preview:hover { background: #3d1a5c; color: #fff; }
 
     .file-error { background: #fff5f5; border: 1px solid #f5c6cb; color: #842029; border-radius: 6px; padding: .5rem .75rem; font-size: .8rem; margin-top: .35rem; display: none; }
     .file-error.show { display: block; }
@@ -261,7 +263,7 @@
         <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
         <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
         <span class="format-badge"><i class="bi bi-aspect-ratio"></i><span id="formatBadgeLabel">{{ $format['label'] }}</span></span>
-        <a href="{{ route('admin.lots-physiques.template.preview', $lot) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+        <a href="{{ route('admin.lots-physiques.template.preview', $lot) }}" target="_blank" class="btn btn-sm btn-preview">
             <i class="bi bi-eye me-1"></i>Visualiser
         </a>
         <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm btn-download ms-auto">
