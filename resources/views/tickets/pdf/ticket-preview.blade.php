@@ -25,6 +25,8 @@
             background: #fff;
             padding: {{ $qrPadding }}mm;
             box-sizing: border-box;
+            overflow: hidden;
+            text-align: center;
         }
         .qr-zone img {
             width: 100%;
@@ -32,10 +34,6 @@
             display: block;
         }
         .pax-code {
-            position: absolute;
-            left: {{ $qrX }}mm;
-            top: {{ $qrY + $qrSize + 1.5 }}mm;
-            width: {{ $qrSize }}mm;
             text-align: center;
             font-size: 9px;
             font-weight: 700;
@@ -43,7 +41,7 @@
             color: #000;
             white-space: nowrap;
             line-height: 1;
-            background: #fff;
+            margin-top: 1mm;
             text-shadow:
                 -0.5px -0.5px 0 #fff,
                 0.5px -0.5px 0 #fff,
@@ -57,10 +55,11 @@
     @if ($templateUrl)
     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
 @endif
+    @php $qrImgMaxH = max(0, $qrSize - 2 * $qrPadding - 4); @endphp
     <div class="qr-zone">
-        <img src="{{ $qrDataUri }}" alt="QR">
+        <img src="{{ $qrDataUri }}" alt="QR" style="max-height: {{ $qrImgMaxH }}mm;">
+        <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
     </div>
-    <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
 </div>
 </body>
 </html>
