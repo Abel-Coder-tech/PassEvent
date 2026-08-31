@@ -91,7 +91,7 @@
     padding: .2rem 0;
 }
 
-.file-error.warn { background: #fff8e6; border-color: #ffd88a; color: #7a5a00; }
+.file-error.warn { background: #ffd88a; border-color: #f0b429; color: #6b5200; }
 
 .qr-overlay {
     position: absolute;
@@ -217,6 +217,7 @@
 .help-accordion .accordion-button:focus { box-shadow: none; border-color: rgba(107,63,160,.3); }
 .help-accordion .accordion-body { font-size: .84rem; }
 .help-alert { background: rgba(107,63,160,.06); border: 1px solid rgba(107,63,160,.18); color: var(--sa-primary); border-radius: .5rem; display: flex; align-items: flex-start; gap: .5rem; padding: .5rem .75rem; font-size: .82rem; }
+.help-alert.warn { background: #ffd88a; border-color: #f0b429; color: #6b5200; border-radius: .5rem; display: flex; align-items: flex-start; gap: .5rem; padding: .5rem .75rem; font-size: .82rem; border-width: 1px; border-style: solid; }
 .help-line { background: rgba(107,63,160,.05); }
 
 .format-badge {
@@ -439,7 +440,7 @@
                 </h2>
                 <div id="saCollapseDims" class="accordion-collapse collapse" data-bs-parent="#saHelpAccordion">
                     <div class="accordion-body">
-                        <div class="help-alert mb-3">
+                        <div class="help-alert warn mb-3">
                             <i class="bi bi-exclamation-triangle-fill mt-1"></i>
                             <span><strong>Ratio & zoom :</strong> une image au ratio différent du format déclenche un avertissement (ex. 13,8 × 5,3 cm au lieu de 14 × 5). Ajustez le zoom : proportions conservées, débordement coupé.</span>
                         </div>

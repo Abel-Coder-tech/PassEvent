@@ -97,7 +97,7 @@
         padding: .2rem 0;
     }
 
-    .file-error.warn { background: #fff8e6; border-color: #ffd88a; color: #7a5a00; }
+    .file-error.warn { background: #ffd88a; border-color: #f0b429; color: #6b5200; }
 
     .qr-overlay {
         position: absolute;
@@ -239,7 +239,8 @@
     .help-accordion .accordion-button:not(.collapsed) { background: rgba(84,38,128,.06); color: #542680; box-shadow: none; }
     .help-accordion .accordion-button:focus { box-shadow: none; border-color: rgba(84,38,128,.25); }
     .help-accordion .accordion-body { font-size: .84rem; }
-    .help-alert { background: #ffd88a; border: 1px solid rgba(84,38,128,.18); color: #542680; border-radius: .5rem; display: flex; align-items: flex-start; gap: .5rem; padding: .5rem .75rem; font-size: .82rem; }
+    .help-alert { background: rgba(84,38,128,.06); border: 1px solid rgba(84,38,128,.18); color: #542680; border-radius: .5rem; display: flex; align-items: flex-start; gap: .5rem; padding: .5rem .75rem; font-size: .82rem; }
+    .help-alert.warn { background: #ffd88a; border-color: #f0b429; color: #6b5200; display: flex; align-items: flex-start; gap: .5rem; padding: .5rem .75rem; font-size: .82rem; border-radius: .5rem; border-width: 1px; border-style: solid; }
     .help-line { background: #ffd88a; border: 1px solid rgba(84,38,128,.18); color: #542680; font-size: .82rem; }
     </style>
 
@@ -448,9 +449,9 @@
                     </h2>
                     <div id="collapseDims" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <div class="help-alert mb-3">
+                            <div class="help-alert warn mb-3">
                                 <i class="bi bi-exclamation-triangle-fill mt-1"></i>
-                                <span ><strong>Ratio & zoom :</strong> une image au ratio différent du format déclenche un avertissement (ex. 13,8 × 5,3 cm au lieu de 14 × 5). Ajustez le zoom : proportions conservées, débordement coupé.</span>
+                                <span><strong>Ratio & zoom :</strong> une image au ratio différent du format déclenche un avertissement (ex. 13,8 × 5,3 cm au lieu de 14 × 5). Ajustez le zoom : proportions conservées, débordement coupé.</span>
                             </div>
                             <div class="table-responsive mb-2">
                                 <table class="table table-sm table-hover table-bordered align-middle mb-0">
