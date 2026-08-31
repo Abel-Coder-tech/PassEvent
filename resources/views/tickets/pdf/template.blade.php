@@ -43,7 +43,7 @@
 
         .pax-code {
             text-align: center;
-            font-size: 9px;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.4px;
             color: #000;
