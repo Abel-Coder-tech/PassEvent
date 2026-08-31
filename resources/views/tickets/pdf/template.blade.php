@@ -33,31 +33,28 @@
             background: #fff;
             padding: {{ $qrPadding }}mm;
             box-sizing: border-box;
-            overflow: hidden;
         }
         .qr-zone img {
             width: 100%;
-            height: 100%;
+            height: auto;
             display: block;
         }
 
         .pax-code {
             position: absolute;
-            bottom: 0.3mm;
-            left: 0;
-            width: 100%;
             text-align: center;
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #1d1d1f;
+            letter-spacing: 0.4px;
+            color: #000;
             white-space: nowrap;
+            line-height: 1;
+            background: #fff;
             text-shadow:
-                -1px -1px 0 #fff,
-                1px -1px 0 #fff,
-                -1px 1px 0 #fff,
-                1px 1px 0 #fff;
-            line-height: 1.1;
+                -0.5px -0.5px 0 #fff,
+                0.5px -0.5px 0 #fff,
+                -0.5px 0.5px 0 #fff,
+                0.5px 0.5px 0 #fff;
         }
 
         .coupe-h, .coupe-v {
@@ -89,8 +86,9 @@
                 @endif
                 <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR">
-                    <div class="pax-code">{{ $ticket->code_unique }}</div>
                 </div>
+                @php $paxTop = $qrY + $qrSize + 1.5; @endphp
+                <div class="pax-code" style="left: {{ $qrX }}mm; top: {{ $paxTop }}mm; width: {{ $qrSize }}mm;">{{ $ticket->code_unique }}</div>
             </div>
         @endforeach
 

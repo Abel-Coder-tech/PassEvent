@@ -25,30 +25,30 @@
             background: #fff;
             padding: {{ $qrPadding }}mm;
             box-sizing: border-box;
-            overflow: hidden;
         }
         .qr-zone img {
             width: 100%;
-            height: 100%;
+            height: auto;
             display: block;
         }
         .pax-code {
             position: absolute;
-            bottom: 0.3mm;
-            left: 0;
-            width: 100%;
+            left: {{ $qrX }}mm;
+            top: {{ $qrY + $qrSize + 1.5 }}mm;
+            width: {{ $qrSize }}mm;
             text-align: center;
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #1d1d1f;
+            letter-spacing: 0.4px;
+            color: #000;
             white-space: nowrap;
+            line-height: 1;
+            background: #fff;
             text-shadow:
-                -1px -1px 0 #fff,
-                1px -1px 0 #fff,
-                -1px 1px 0 #fff,
-                1px 1px 0 #fff;
-            line-height: 1.1;
+                -0.5px -0.5px 0 #fff,
+                0.5px -0.5px 0 #fff,
+                -0.5px 0.5px 0 #fff,
+                0.5px 0.5px 0 #fff;
         }
     </style>
 </head>
@@ -59,8 +59,8 @@
 @endif
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR">
-        <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
     </div>
+    <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
 </div>
 </body>
 </html>
