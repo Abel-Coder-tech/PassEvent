@@ -13,9 +13,7 @@
             background-color: #fff;
         }
         .ticket-bg {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            position: absolute;
             display: block;
         }
         .qr-zone {
@@ -52,7 +50,7 @@
 <body>
 <div class="ticket">
     @if ($templateUrl)
-    <img src="{{ $templateUrl }}" alt="" class="ticket-bg">
+    <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
 @endif
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR">

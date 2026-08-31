@@ -57,6 +57,30 @@
     }
     .remove-img:hover { background: #c0392b; transform: scale(1.1); }
 
+    .zoom-handle {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        background: #542680;
+        color: #fff;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: nwse-resize;
+        z-index: 12;
+        font-size: 13px;
+        box-shadow: 0 2px 6px rgba(0,0,0,.25);
+        transition: transform .15s;
+    }
+    .zoom-handle.show { display: flex; }
+    .zoom-handle:hover { transform: scale(1.1); }
+    .zoom-handle.active { background: #3d1a5c; }
+
+    .file-error.warn { background: #fff8e6; border-color: #ffd88a; color: #7a5a00; }
+
     .qr-overlay {
         position: absolute;
         border: 2.5px solid #e74c3c;
@@ -191,6 +215,14 @@
     .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #542680; color: #fff; font-size: .7rem; font-weight: 700; margin-right: .4rem; flex-shrink: 0; }
     .step-label { font-size: .82rem; font-weight: 600; color: #1d1d1f; }
     .step-hint { font-size: .75rem; color: #888; margin-top: .15rem; }
+
+    .help-accordion .accordion-item { border: 1px solid rgba(84,38,128,.15); }
+    .help-accordion .accordion-button { color: #542680; background: #fff; box-shadow: none; font-weight: 600; font-size: .88rem; }
+    .help-accordion .accordion-button:not(.collapsed) { background: rgba(84,38,128,.06); color: #542680; box-shadow: none; }
+    .help-accordion .accordion-button:focus { box-shadow: none; border-color: rgba(84,38,128,.25); }
+    .help-accordion .accordion-body { font-size: .84rem; }
+    .help-alert { background: rgba(84,38,128,.06); border: 1px solid rgba(84,38,128,.18); color: #542680; border-radius: .5rem; display: flex; align-items: flex-start; gap: .5rem; padding: .5rem .75rem; font-size: .82rem; }
+    .help-line { background: rgba(84,38,128,.05); }
     </style>
 
     @if(session('success'))
@@ -227,6 +259,7 @@
         <input type="hidden" name="qr_y" id="qr_y" value="{{ old('qr_y', $qrY ?? 0) }}">
         <input type="hidden" name="qr_size" id="qr_size_val" value="{{ old('qr_size', $qrSize ?? 40) }}">
         <input type="hidden" name="supprimer_template" id="supprimer_template" value="{{ old('supprimer_template', '0') }}">
+        <input type="hidden" name="template_zoom" id="template_zoom" value="{{ old('template_zoom', $zoom) }}">
 
         <div class="template-wrap">
             <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
@@ -249,6 +282,9 @@
                 <button type="button" id="btnRemoveImg" class="remove-img" title="Supprimer l'image" style="display:none;">
                     <i class="bi bi-x-lg"></i>
                 </button>
+                <div class="zoom-handle" id="zoomHandle" title="Redimensionner l'image (zoom / recadrage)">
+                    <i class="bi bi-arrows-angle-expand"></i>
+                </div>
             </div>
 
             <div class="config-panel">
@@ -293,6 +329,12 @@
                                 <div class="text-danger small mt-1">{{ $errors->first('template_image') }}</div>
                             @endif
                             <div class="file-error" id="fileError"></div>
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <span class="input-group-text px-2 py-1 small">Zoom image</span>
+                                <input type="range" class="form-range flex-grow-1" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}" style="min-width:0;">
+                                <span class="badge bg-light text-dark border px-2 py-1" id="zoomValue" style="min-width:52px;">{{ $zoom }}%</span>
+                            </div>
+                            <div class="step-hint mt-1">Glissez la poignée en bas à droite de l'image ou le curseur : agrandissez si elle ne couvre pas, réduisez pour recadrer (le débordement est coupé).</div>
                         </div>
 
                         <div class="mb-3">
@@ -347,28 +389,28 @@
     </form>
 
     <div class="card border-0 shadow-sm mt-4 overflow-hidden">
-        <div class="help-header d-flex align-items-center gap-2 px-3 py-3">
-            <i class="bi bi-question-circle-fill fs-4" style="color:#6f42c1;"></i>
+        <div class="d-flex align-items-center gap-2 px-3 py-3" style="background:#faf7fd;border-bottom:1px solid rgba(84,38,128,.12);">
+            <i class="bi bi-question-circle-fill fs-4" style="color:#542680;"></i>
             <div>
-                <div class="fw-semibold">Comment ça marche ?</div>
-                <div class="small text-muted">Créez le design de votre ticket physique en quelques clicks.</div>
+                <div class="fw-semibold" style="color:#542680;">Comment ça marche ?</div>
+                <div class="small text-muted">Créez le design de votre ticket physique en quelques clics.</div>
             </div>
-            <span class="badge rounded-pill ms-auto" style="background:#6f42c1;color:#fff;">Aide</span>
+            <span class="badge rounded-pill ms-auto" style="background:#542680;color:#fff;">Aide</span>
         </div>
         <div class="card-body">
-            <div class="accordion" id="helpAccordion">
-                <div class="accordion-item border-0 rounded-3 shadow-sm mb-2 overflow-hidden">
+            <div class="accordion help-accordion" id="helpAccordion">
+
+                <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSteps" aria-expanded="true" aria-controls="collapseSteps">
-                            <i class="bi bi-list-ol me-2 text-primary"></i> Les 4 étapes
-                            <span class="badge bg-primary-subtle text-primary rounded-pill ms-2">Générer</span>
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSteps" aria-expanded="true" aria-controls="collapseSteps">
+                            <i class="bi bi-list-ol me-2" style="color:#542680;"></i> Les 4 étapes
                         </button>
                     </h2>
                     <div id="collapseSteps" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
                             <ol class="ps-3 mb-0" style="line-height:1.9;">
                                 <li><strong>Choisissez le format</strong> : taille du ticket, nombre de tickets par A4 et orientation (Standard 14×5, Standard 2 14×7, VIP 18×7, VIP 2 9,9×7).</li>
-                                <li><strong>Importez l'image PNG</strong> (max 10 Mo) de votre ticket au ratio du format choisi. L'image est placée à la taille exacte du ticket, sans déformation ni recadrage.</li>
+                                <li><strong>Importez l'image PNG</strong> (max 10 Mo) de votre ticket. Elle est placée à la taille exacte du ticket sans déformation. Ratio différent ? Ajustez le zoom avec la poignée en bas à droite de l'aperçu (70–150 %) : le débordement est coupé.</li>
                                 <li><strong>Positionnez le QR code</strong> : glissez le cadre rouge pour le déplacer, ou tirez la poignée pour le redimensionner.</li>
                                 <li><strong>Visualisez puis enregistrez</strong> : le bouton « Visualiser » ouvre le rendu exact (PDF) dans un nouvel onglet.</li>
                             </ol>
@@ -376,18 +418,17 @@
                     </div>
                 </div>
 
-                <div class="accordion-item border-0 rounded-3 shadow-sm mb-2 overflow-hidden">
+                <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDims" aria-expanded="false" aria-controls="collapseDims">
-                            <i class="bi bi-image me-2 text-success"></i> Dimensions d'image acceptées
-                            <span class="badge bg-success-subtle text-success rounded-pill ms-2">PNG</span>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDims" aria-expanded="false" aria-controls="collapseDims">
+                            <i class="bi bi-image me-2" style="color:#542680;"></i> Dimensions d'image acceptées
                         </button>
                     </h2>
                     <div id="collapseDims" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <div class="alert alert-warning d-flex align-items-start gap-2 py-2 mb-3">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                <span class="small">L'image est contrôlée sur le <strong>ratio</strong> du format : tolérance de <strong>± 1 %</strong>, sinon l'enregistrement est refusé. Le ratio choisi s'affiche dès la sélection du fichier.</span>
+                            <div class="help-alert mb-3">
+                                <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                                <span><strong>Ratio & zoom :</strong> une image au ratio différent du format déclenche un avertissement (ex. 13,8 × 5,3 cm au lieu de 14 × 5). Ajustez le zoom : proportions conservées, débordement coupé.</span>
                             </div>
                             <div class="table-responsive mb-2">
                                 <table class="table table-sm table-hover table-bordered align-middle mb-0">
@@ -405,7 +446,7 @@
                                             <tr>
                                                 <td class="fw-semibold">{{ $def['label'] }}</td>
                                                 <td>{{ number_format($def['largeur'] / 10, 1, ',', ' ') }} × {{ number_format($def['hauteur'] / 10, 1, ',', ' ') }}</td>
-                                                <td><span class="badge bg-light text-dark border">{{ str_replace('.', ',', rtrim(rtrim(number_format($def['largeur'] / $def['hauteur'], 2, ',', ''), '0'), ',')) }} : 1</span></td>
+                                                <td><span class="badge rounded-pill" style="background:rgba(84,38,128,.08);color:#542680;border:1px solid rgba(84,38,128,.2);">{{ str_replace('.', ',', rtrim(rtrim(number_format($def['largeur'] / $def['hauteur'], 2, ',', ''), '0'), ',')) }} : 1</span></td>
                                                 <td>{{ $def['colonnes'] }} × {{ $def['lignes'] }} = {{ $def['colonnes'] * $def['lignes'] }}</td>
                                                 <td>{{ $def['orientation'] === 'landscape' ? 'Paysage' : 'Portrait' }}</td>
                                             </tr>
@@ -413,52 +454,52 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="alert alert-info d-flex align-items-start gap-2 py-2 mb-0">
-                                <i class="bi bi-lightbulb-fill me-1"></i>
-                                <span class="small">À l'écran (96 DPI), 1 cm ≈ 37,8 px : pour le « Standard (14×5) », visez ~1400 × 500 px. Une image plus grande en pixels mais au même ratio est acceptée et restera nette à la taille exacte du ticket.</span>
+                            <div class="help-alert mb-0">
+                                <i class="bi bi-lightbulb-fill mt-1"></i>
+                                <span>À l'écran (96 DPI), 1 cm ≈ 37,8 px : pour le « Standard (14×5) », visez ~1400 × 500 px. Une image plus grande en pixels mais au même ratio reste nette à la taille exacte du ticket.</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="accordion-item border-0 rounded-3 shadow-sm overflow-hidden">
+                <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMargins" aria-expanded="false" aria-controls="collapseMargins">
-                            <i class="bi bi-scissors me-2 text-danger"></i> Marges & découpe
-                            <span class="badge bg-danger-subtle text-danger rounded-pill ms-2">Découpe</span>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMargins" aria-expanded="false" aria-controls="collapseMargins">
+                            <i class="bi bi-scissors me-2" style="color:#542680;"></i> Marges & découpe
                         </button>
                     </h2>
                     <div id="collapseMargins" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
                             <div class="d-flex flex-column gap-2 mb-3">
-                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
-                                    <i class="bi bi-square-half text-primary"></i>
+                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
+                                    <i class="bi bi-square-half" style="color:#542680;"></i>
                                     <span><strong>Marge externe :</strong> 4 mm autour du bloc de tickets sur l'A4.</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
-                                    <i class="bi bi-border-style text-danger"></i>
+                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
+                                    <i class="bi bi-border-style" style="color:#542680;"></i>
                                     <span><strong>Gouttière de découpe :</strong> 2 mm entre chaque ticket (lignes en pointillés sur la planche).</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
-                                    <i class="bi bi-qr-code text-success"></i>
+                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
+                                    <i class="bi bi-qr-code" style="color:#542680;"></i>
                                     <span><strong>QR code :</strong> zone blanche de 4 mm (quiet zone) pour garantir la lecture.</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
-                                    <i class="bi bi-upc-scan text-warning"></i>
+                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
+                                    <i class="bi bi-upc-scan" style="color:#542680;"></i>
                                     <span><strong>Code PAX :</strong> imprimé sous le QR code.</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-light small">
-                                    <i class="bi bi-ticket-perforated text-secondary"></i>
+                                <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
+                                    <i class="bi bi-ticket-perforated" style="color:#542680;"></i>
                                     <span><strong>Signature PaxEvent</strong> (événement — tarif, © {{ date('Y') }} PaxEvent) dans la marge basse.</span>
                                 </div>
                             </div>
-                            <div class="alert alert-success d-flex align-items-start gap-2 py-2 mb-0">
-                                <i class="bi bi-check-circle-fill me-1"></i>
-                                <span class="small">Astuce : rognez d'abord votre image aux dimensions du ticket choisies, puis laissez PaxEvent gérer les marges de découpe automatiquement.</span>
+                            <div class="help-alert mb-0">
+                                <i class="bi bi-check-circle-fill mt-1"></i>
+                                <span>Astuce : rognez d'abord votre image aux dimensions du ticket, puis laissez PaxEvent gérer les marges de découpe automatiquement.</span>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -494,6 +535,14 @@
     var supprimerTemplate = document.getElementById('supprimer_template');
     var hasStored = {{ $lot->template_path ? 'true' : 'false' }};
 
+    var zoomRange = document.getElementById('zoomRange');
+    var zoomValue = document.getElementById('zoomValue');
+    var zoomInput = document.getElementById('template_zoom');
+    var zoomHandle = document.getElementById('zoomHandle');
+    var currentZoom = parseInt(zoomInput ? zoomInput.value : '100') || 100;
+    var zoomDragging = false;
+    var zoomStartX = 0, zoomStartY = 0, zoomStartVal = 100;
+
     var dragging = false;
     var resizing = false;
     var startResizeX = 0, startResizeW = 0;
@@ -522,12 +571,55 @@
 
     function showFileError(msg) {
         fileError.textContent = msg;
+        fileError.classList.remove('warn');
+        fileError.classList.add('show');
+    }
+    function showFileWarning(msg) {
+        fileError.textContent = msg;
+        fileError.classList.add('warn');
         fileError.classList.add('show');
     }
     function hideFileError() {
         fileError.classList.remove('show');
+        fileError.classList.remove('warn');
         fileError.textContent = '';
     }
+
+    function setZoom(v) {
+        v = Math.max(70, Math.min(150, Math.round(v)));
+        currentZoom = v;
+        if (zoomInput) zoomInput.value = v;
+        if (zoomRange) zoomRange.value = v;
+        if (zoomValue) zoomValue.textContent = v + '%';
+        if (img) img.style.transform = 'scale(' + (v / 100) + ')';
+    }
+    function showZoomHandle() { if (zoomHandle) zoomHandle.classList.add('show'); }
+    function hideZoomHandle() { if (zoomHandle) zoomHandle.classList.remove('show'); }
+
+    if (zoomRange) {
+        zoomRange.addEventListener('input', function() { setZoom(parseInt(this.value) || 100); });
+    }
+    function bindZoomHandle() {
+        if (!zoomHandle || zoomHandle._bound) return;
+        zoomHandle._bound = true;
+        zoomHandle.addEventListener('mousedown', function(e) {
+            zoomDragging = true;
+            zoomStartX = e.clientX;
+            zoomStartY = e.clientY;
+            zoomStartVal = currentZoom;
+            zoomHandle.classList.add('active');
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    }
+    bindZoomHandle();
+    document.addEventListener('mousemove', function(e) {
+        if (zoomDragging) {
+            var dx = e.clientX - zoomStartX;
+            var dy = e.clientY - zoomStartY;
+            setZoom(zoomStartVal + (dx + dy) * 0.5);
+        }
+        if (dragging && overlay) {
 
     function updateOverlay() {
         if (!overlay || !img || !img.naturalWidth) return;
@@ -619,6 +711,8 @@
     document.addEventListener('mouseup', function() {
         dragging = false;
         resizing = false;
+        zoomDragging = false;
+        if (zoomHandle) zoomHandle.classList.remove('active');
         if (qrTooltip) qrTooltip.classList.remove('show');
     });
 
@@ -644,8 +738,8 @@
         var ratioReel = naturalW / naturalH;
         var ratioAttendu = f.largeur / f.hauteur;
         if (Math.abs(ratioReel - ratioAttendu) / ratioAttendu > 0.01) {
-            showFileError('Image fournie : ' + cmAffiche(naturalW) + ' × ' + cmAffiche(naturalH) + ' cm. Le format « ' + f.label + ' » attend une image ≈ ' + (f.largeur / 10).toFixed(1).replace('.', ',') + ' × ' + (f.hauteur / 10).toFixed(1).replace('.', ',') + ' cm (même ratio). Redimensionnez votre image.');
-            return false;
+            showFileWarning('Image fournie : ' + cmAffiche(naturalW) + ' × ' + cmAffiche(naturalH) + ' cm. Le format « ' + f.label + ' » attend ≈ ' + (f.largeur / 10).toFixed(1).replace('.', ',') + ' × ' + (f.hauteur / 10).toFixed(1).replace('.', ',') + ' cm. Ajustez le zoom ou recadrez votre image.');
+            return true;
         }
         hideFileError();
         return true;
@@ -683,6 +777,8 @@
         canvas.appendChild(empty);
         canvas.appendChild(btnRemoveImg);
         hideRemoveBtn();
+        hideZoomHandle();
+        zoomHandle = null;
         img = null;
         overlay = null;
     }
@@ -738,6 +834,15 @@
             rh.id = 'qrResize';
             ov.appendChild(rh);
             canvas.appendChild(ov);
+            var zh = document.createElement('div');
+            zh.className = 'zoom-handle';
+            zh.id = 'zoomHandle';
+            zh.title = 'Redimensionner l\'image (zoom / recadrage)';
+            zh.innerHTML = '<i class="bi bi-arrows-angle-expand"></i>';
+            canvas.appendChild(zh);
+            zoomHandle = zh;
+            bindZoomHandle();
+            showZoomHandle();
             canvas.appendChild(btnRemoveImg);
             showRemoveBtn();
             img = imgEl;
@@ -746,6 +851,7 @@
             imgEl.onload = function() {
                 TICKET_MM_W = currentFmt().largeur;
                 TICKET_MM_H = currentFmt().hauteur;
+                setZoom(currentZoom);
                 checkRatio(currentFmt(), imgEl.naturalWidth, imgEl.naturalHeight);
                 updateOverlay();
                 bindOverlayEvents();
@@ -795,7 +901,7 @@
     // Init
     syncFormatHint(currentFmt());
     if (overlay) { updateOverlay(); bindOverlayEvents(); }
-    if (img && hasStored) showRemoveBtn();
+    if (img && hasStored) { showRemoveBtn(); showZoomHandle(); setZoom(currentZoom); }
 })();
 </script>
 @endsection

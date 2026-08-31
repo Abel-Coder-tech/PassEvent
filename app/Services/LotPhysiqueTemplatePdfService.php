@@ -19,6 +19,10 @@ class LotPhysiqueTemplatePdfService
     // Padding blanc autour du QR code
     public const QR_PADDING = 4; // mm
 
+    // Bornes du zoom de l'image du template (70 % → 150 %)
+    public const ZOOM_MIN = 70;
+    public const ZOOM_MAX = 150;
+
     /**
      * Détails du format d'un lot (ou du format par défaut).
      */
@@ -103,11 +107,19 @@ class LotPhysiqueTemplatePdfService
         ]);
 
         $templateUrl = self::templateToDataUri($lot);
+        [$templateW, $templateH] = self::templateSize($lot);
+        $zoom = self::zoomEffectif($lot);
 
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
         $qrPadding = self::QR_PADDING;
+
+        // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
+        $imgW = $layout['slot_largeur'] * $zoom / 100;
+        $imgH = $templateW > 0 ? $imgW * $templateH / $templateW : $layout['slot_hauteur'] * $zoom / 100;
+        $imgLeft = ($layout['slot_largeur'] - $imgW) / 2;
+        $imgTop = ($layout['slot_hauteur'] - $imgH) / 2;
 
         $pageLargeur = $layout['page_largeur'];
         $pageHauteur = $layout['page_hauteur'];
@@ -122,7 +134,8 @@ class LotPhysiqueTemplatePdfService
             'lot', 'pages', 'qrs', 'templateUrl',
             'qrX', 'qrY', 'qrSize', 'qrPadding',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
-            'signBottom', 'signFont'
+            'signBottom', 'signFont', 'zoom',
+            'imgW', 'imgH', 'imgLeft', 'imgTop'
         ));
         $pdf->setPaper('a4', $layout['orientation']);
         $pdf->render();
@@ -138,10 +151,18 @@ class LotPhysiqueTemplatePdfService
     {
         $qrDataUri = QrCodeService::generateDataUri($ticket->code_unique, 300);
         $templateUrl = self::templateToDataUri($lot);
+        [$templateW, $templateH] = self::templateSize($lot);
+        $zoom = self::zoomEffectif($lot);
 
         $format = self::formatDetails($lot);
         $slotW = $format['largeur'];
         $slotH = $format['hauteur'];
+
+        // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
+        $imgW = $slotW * $zoom / 100;
+        $imgH = $templateW > 0 ? $imgW * $templateH / $templateW : $slotH * $zoom / 100;
+        $imgLeft = ($slotW - $imgW) / 2;
+        $imgTop = ($slotH - $imgH) / 2;
 
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($slotW - $qrSize) / 2);
@@ -150,13 +171,43 @@ class LotPhysiqueTemplatePdfService
 
         $html = view('tickets.pdf.ticket-preview', compact(
             'templateUrl', 'qrDataUri', 'qrX', 'qrY', 'qrSize',
-            'slotW', 'slotH', 'qrPadding'
+            'slotW', 'slotH', 'qrPadding', 'zoom',
+            'imgW', 'imgH', 'imgLeft', 'imgTop'
         ))->with('codeUnique', $ticket->code_unique)->render();
 
         $pdf = Pdf::loadHtml($html);
         $pdf->setPaper([0, 0, $slotW * 2.835, $slotH * 2.835], 'portrait');
 
         return $pdf->stream('Apercu-'.$ticket->code_unique.'.pdf');
+    }
+
+    /**
+     * Zoom effectif de l'image du template (borne 70 % → 150 %).
+     */
+    public static function zoomEffectif(LotPhysique $lot): int
+    {
+        $zoom = (int) ($lot->template_zoom ?? 100);
+
+        return max(self::ZOOM_MIN, min(self::ZOOM_MAX, $zoom));
+    }
+
+    /**
+     * Taille intrinsèque (px) de l'image du template, [0, 0] si absente.
+     */
+    private static function templateSize(LotPhysique $lot): array
+    {
+        if (! $lot->template_path) {
+            return [0, 0];
+        }
+
+        $path = storage_path("app/public/{$lot->template_path}");
+        if (! is_file($path)) {
+            return [0, 0];
+        }
+
+        $info = @getimagesize($path);
+
+        return $info !== false ? [$info[0], $info[1]] : [0, 0];
     }
 
     /**
