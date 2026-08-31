@@ -27,6 +27,7 @@
         cursor: crosshair;
         transition: border-color .2s;
     }
+    .canvas-col { min-width: 0; }
     .canvas-area.has-image { border-color: #542680; border-style: solid; }
     .canvas-area.dragover { border-color: #542680; background: rgba(84,38,128,.04); }
 
@@ -280,7 +281,8 @@
         <input type="hidden" name="template_zoom" id="template_zoom" value="{{ old('template_zoom', $zoom) }}">
 
         <div class="template-wrap">
-            <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
+            <div class="canvas-col">
+                <div class="canvas-area {{ $lot->template_path ? 'has-image' : '' }}" id="canvasArea">
                 @if($lot->template_path)
                     <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
                     <div class="qr-overlay" id="qrOverlay">
@@ -300,6 +302,19 @@
                 <button type="button" id="btnRemoveImg" class="remove-img" title="Supprimer l'image" style="display:none;">
                     <i class="bi bi-x-lg"></i>
                 </button>
+                </div>
+
+                <div class="zoom-bar mt-3">
+                    <span class="zoom-bar-label"><i class="bi bi-zoom-in"></i> Zoom image</span>
+                    <button type="button" class="zoom-step" id="zoomMinus" title="Réduire (recadre le débordement)">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <input type="range" class="form-range" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}">
+                    <button type="button" class="zoom-step" id="zoomPlus" title="Agrandir">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <span class="zoom-badge" id="zoomValue">{{ $zoom }}%</span>
+                </div>
             </div>
 
             <div class="config-panel">
@@ -391,18 +406,6 @@
                                 <i class="bi bi-check-lg me-1"></i><span id="btnSaveText">Enregistrer le template</span>
                                 <span id="btnSaveSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status"></span>
                             </button>
-                        </div>
-
-                        <div class="zoom-bar mt-3">
-                            <span class="zoom-bar-label"><i class="bi bi-zoom-in"></i> Zoom image</span>
-                            <button type="button" class="zoom-step" id="zoomMinus" title="Réduire (recadre le débordement)">
-                                <i class="bi bi-dash-lg"></i>
-                            </button>
-                            <input type="range" class="form-range" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}">
-                            <button type="button" class="zoom-step" id="zoomPlus" title="Agrandir">
-                                <i class="bi bi-plus-lg"></i>
-                            </button>
-                            <span class="zoom-badge" id="zoomValue">{{ $zoom }}%</span>
                         </div>
                     </div>
                 </div>
