@@ -33,6 +33,7 @@
             background: #fff;
             padding: {{ $qrPadding }}mm;
             box-sizing: border-box;
+            overflow: hidden;
         }
         .qr-zone img {
             width: 100%;
@@ -42,6 +43,9 @@
 
         .pax-code {
             position: absolute;
+            bottom: 0.3mm;
+            left: 0;
+            width: 100%;
             text-align: center;
             font-size: 11px;
             font-weight: 700;
@@ -85,8 +89,8 @@
                 @endif
                 <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR">
+                    <div class="pax-code">{{ $ticket->code_unique }}</div>
                 </div>
-                <div class="pax-code" style="left: {{ $qrX + $qrSize / 2 - 18 }}mm; top: {{ $qrY + $qrSize + 1.6 }}mm; width: 36mm;">{{ $ticket->code_unique }}</div>
             </div>
         @endforeach
 
