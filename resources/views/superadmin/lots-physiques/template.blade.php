@@ -55,21 +55,19 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    margin-top: .5rem;
-    padding: .45rem .6rem;
-    background: rgba(107,63,160,.05);
-    border: 1px solid rgba(107,63,160,.18);
-    border-radius: 10px;
+    padding: .5rem .65rem;
+    background: #1d1d1f;
+    border-radius: 8px;
 }
-.zoom-bar-label { font-size: .75rem; font-weight: 700; color: var(--sa-primary); white-space: nowrap; display: flex; align-items: center; gap: .3rem; }
+.zoom-bar-label { font-size: .75rem; font-weight: 700; color: #fff; white-space: nowrap; display: flex; align-items: center; gap: .3rem; }
 .zoom-step {
     width: 28px;
     height: 28px;
     flex: 0 0 28px;
-    border: 1px solid rgba(107,63,160,.3);
+    border: 1px solid #444;
     background: #fff;
-    color: var(--sa-primary);
-    border-radius: 8px;
+    color: #1d1d1f;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -77,17 +75,16 @@
     cursor: pointer;
     transition: background .15s, color .15s;
 }
-.zoom-step:hover { background: var(--sa-primary); color: #fff; }
-.zoom-bar .form-range { flex: 1; min-width: 0; margin: 0; accent-color: var(--sa-primary); }
+.zoom-step:hover { background: #1d1d1f; color: #fff; border-color: #1d1d1f; }
+.zoom-bar .form-range { flex: 1; min-width: 0; margin: 0; accent-color: #fff; }
 .zoom-badge {
     flex: 0 0 52px;
     text-align: center;
     font-size: .8rem;
     font-weight: 700;
-    color: var(--sa-primary);
+    color: #1d1d1f;
     background: #fff;
-    border: 1px solid rgba(107,63,160,.3);
-    border-radius: 8px;
+    border-radius: 6px;
     padding: .2rem 0;
 }
 
@@ -205,8 +202,8 @@
 .lot-info { background: #f8f7fa; border-radius: 10px; padding: .8rem 1rem; font-size: .82rem; }
 .lot-info strong { color: var(--sa-primary); }
 
-.btn-download { background: var(--sa-primary); color: #fff; border-radius: 8px; font-weight: 600; }
-.btn-download:hover { background: #3d1a5c; color: #fff; }
+.btn-download { background: #1d1d1f; color: #fff; border-radius: 8px; font-weight: 600; }
+.btn-download:hover { background: #333; color: #fff; }
 
 .file-error { background: #fff5f5; border: 1px solid #f5c6cb; color: #842029; border-radius: 6px; padding: .5rem .75rem; font-size: .8rem; margin-top: .35rem; display: none; }
 .file-error.show { display: block; }
@@ -233,7 +230,7 @@
     padding: .2rem .6rem;
 }
 
-.step-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--sa-primary); color: #fff; font-size: .7rem; font-weight: 700; margin-right: .4rem; flex-shrink: 0; }
+.step-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #1d1d1f; color: #fff; font-size: .7rem; font-weight: 700; margin-right: .4rem; flex-shrink: 0; }
 .step-label { font-size: .82rem; font-weight: 600; color: #1d1d1f; }
 .step-hint { font-size: .75rem; color: #888; margin-top: .15rem; }
 </style>
@@ -297,22 +294,10 @@
             </button>
         </div>
 
-        <div class="zoom-bar">
-            <span class="zoom-bar-label"><i class="bi bi-zoom-in"></i> Zoom image</span>
-            <button type="button" class="zoom-step" id="zoomMinus" title="Réduire (recadre le débordement)">
-                <i class="bi bi-dash-lg"></i>
-            </button>
-            <input type="range" class="form-range" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}">
-            <button type="button" class="zoom-step" id="zoomPlus" title="Agrandir">
-                <i class="bi bi-plus-lg"></i>
-            </button>
-            <span class="zoom-badge" id="zoomValue">{{ $zoom }}%</span>
-        </div>
-
         <div class="config-panel">
             <div class="sa-card">
                 <div class="sa-card-header">
-                    <span><i class="bi bi-sliders me-2" style="color:var(--sa-primary);"></i> Configuration</span>
+                    <span><i class="bi bi-sliders me-2" style="color:#1d1d1f;"></i> Configuration</span>
                 </div>
                 <div class="sa-card-body py-3">
                     @if($errors->any())
@@ -395,6 +380,18 @@
                             <i class="bi bi-check-lg me-1"></i><span id="btnSaveText">Enregistrer le template</span>
                             <span id="btnSaveSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status"></span>
                         </button>
+                    </div>
+
+                    <div class="zoom-bar mt-3">
+                        <span class="zoom-bar-label"><i class="bi bi-zoom-in"></i> Zoom image</span>
+                        <button type="button" class="zoom-step" id="zoomMinus" title="Réduire (recadre le débordement)">
+                            <i class="bi bi-dash-lg"></i>
+                        </button>
+                        <input type="range" class="form-range" id="zoomRange" min="70" max="150" step="1" value="{{ $zoom }}">
+                        <button type="button" class="zoom-step" id="zoomPlus" title="Agrandir">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <span class="zoom-badge" id="zoomValue">{{ $zoom }}%</span>
                     </div>
                 </div>
             </div>
