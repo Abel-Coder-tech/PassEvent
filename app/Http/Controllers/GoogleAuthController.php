@@ -23,7 +23,8 @@ class GoogleAuthController extends Controller
         if (!config('services.google.client_id')) {
             return redirect()->route('inscriptions.organisateur')->withErrors(['email' => 'Authentification Google non configurée.']); // Config manquante
         }
-        return $this->socialite->driver('google')->redirect();
+        // Callback sur le même hôte que la visite (www ou non), sinon la session/state est perdue
+        return $this->socialite->driver('google')->redirectUrl(url('/auth/google/callback'))->redirect();
     }
 
     // Traite le callback Google après authentification
