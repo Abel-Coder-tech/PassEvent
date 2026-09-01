@@ -50,16 +50,13 @@
             overflow: hidden;
         }
         .pax-band .pax-code {
+            display: inline-block;
             font-size: 8px;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            letter-spacing: 0;
             color: #000;
             white-space: nowrap;
-            text-shadow:
-                -0.5px -0.5px 0 #fff,
-                0.5px -0.5px 0 #fff,
-                -0.5px 0.5px 0 #fff,
-                0.5px 0.5px 0 #fff;
+            line-height: normal;
         }
 
         .coupe-h, .coupe-v {
