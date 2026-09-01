@@ -45,7 +45,6 @@
         }
         .pax-band .pax-code {
             display: inline-block;
-            margin-top: 0.3mm;
             font-size: 8px;
             font-weight: 700;
             letter-spacing: 0;
