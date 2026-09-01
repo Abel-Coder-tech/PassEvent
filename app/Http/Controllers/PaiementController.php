@@ -51,7 +51,7 @@ class PaiementController extends Controller
         if ($ticket->montant <= 0) { // Traitement spécial pour tickets gratuits
             // Find all tickets in the same free group or single ticket
             $freeTickets = collect([$ticket]);
-            if (str_starts_with($ticket->transaction_id, 'GRATUIT-')) {
+            if (str_starts_with($ticket->transaction_id, 'GRATUIT-') || str_starts_with($ticket->transaction_id, 'GRP-')) {
                 $freeTickets = Ticket::where('transaction_id', $ticket->transaction_id)
                     ->where('statut_paiement', 'en_attente')
                     ->with('evenement', 'tarif')

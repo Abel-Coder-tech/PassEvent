@@ -223,7 +223,7 @@ class EvenementPublicController extends Controller
         $sessionTickets = session('paiement_tickets', []);
         session(['paiement_tickets' => array_values(array_unique(array_merge($sessionTickets, collect($tickets)->pluck('id')->all())))]);
 
-        if ($evenement->gratuit) { // Traitement spécial pour les événements gratuits
+        if ($evenement->gratuit || $montantUnitaire <= 0) { // Traitement spécial pour les tickets gratuits (événement gratuit, tarif 0 F ou promo 100 %)
             // Le code promo n'est comptabilisé qu'une fois le paiement confirmé :
             // pour un événement gratuit, la confirmation est immédiate ici.
             if ($codePromoUtilise) {
