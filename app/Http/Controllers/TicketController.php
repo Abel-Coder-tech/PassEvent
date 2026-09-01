@@ -261,6 +261,8 @@ class TicketController extends Controller
             return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.'); // Paiement requis
         }
 
+        $max = config('app.max_downloads');
+
         if ($ticket->download_count >= $max) {
             return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).');
         }
