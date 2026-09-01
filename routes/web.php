@@ -56,6 +56,7 @@ Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation']
 Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
 Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher');
 Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTicket'])->name('tickets.telecharger')->middleware('signed');
+Route::get('/ticket/{ticket}/telecharger-tous', [TicketController::class, 'downloadAll'])->name('tickets.telecharger-tous')->middleware('signed');
 
 Route::get('/aide', [SitePublicController::class, 'aide'])->name('aide');
 Route::get('/contact', [SitePublicController::class, 'contact'])->name('contact');

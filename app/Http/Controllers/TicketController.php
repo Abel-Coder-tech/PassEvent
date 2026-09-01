@@ -284,6 +284,56 @@ class TicketController extends Controller
         return $pdf->download($filename);
     }
 
+    // Télécharge tous les tickets d'une même commande (même transaction_id) en un seul ZIP
+    public function downloadAll(int $ticketId)
+    {
+        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+
+        if ($ticket->statut_paiement !== 'payé') {
+            return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.');
+        }
+
+        $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
+            ->where('statut_paiement', 'payé')
+            ->get();
+
+        if ($groupTickets->isEmpty()) {
+            abort(404);
+        }
+
+        $max = config('app.max_downloads');
+
+        if ($groupTickets->contains(fn($gt) => $gt->download_count >= $max)) {
+            return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum par billet).');
+        }
+
+        foreach ($groupTickets as $gt) {
+            $gt->increment('download_count', 1, []);
+        }
+
+        $zip = new \ZipArchive();
+        $zipName = tempnam(sys_get_temp_dir(), 'pax').'.zip';
+
+        if ($zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Impossible de créer l\'archive.');
+        }
+
+        $logoDataUri = Ticket::logoVioletDataUri();
+
+        foreach ($groupTickets as $t) {
+            $qrCodeDataUri = QrCodeService::generateDataUri($t->code_unique, 170);
+            $pdf = TicketPdfService::generer($t, $qrCodeDataUri, $logoDataUri);
+            $zip->addFromString('PaxEvent-'.$t->code_unique.'.pdf', $pdf->output());
+        }
+
+        $zip->close();
+
+        $evenementTitre = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', ($ticket->evenement->titre ?? 'tickets'));
+        $response = response()->download($zipName, 'PaxEvent-'.$evenementTitre.'.zip')->deleteFileAfterSend(true);
+
+        return $response;
+    }
+
     // Page de récupération de ticket par le public
     public function recuperer()
     {

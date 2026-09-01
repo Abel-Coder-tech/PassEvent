@@ -225,8 +225,26 @@
                 <p>Imprimez-les ou pr&eacute;sentez-les sur votre t&eacute;l&eacute;phone le jour de l&rsquo;&eacute;v&eacute;nement. Le QR code sera scann&eacute; pour valider votre acc&egrave;s.</p>
             </div>
 
+            @if($quantite > 1)
+            <div class="info-box" style="background:#fff;border:1px solid #e3d5ec;">
+                <h3 style="color:#542680;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#7B3FA0" viewBox="0 0 16 16" style="vertical-align:-2px;"><path d="M4.5 1h7A1.5 1.5 0 0 1 13 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13.5v-11A1.5 1.5 0 0 1 4.5 1zM3 6v1h4V6H3zm0 3v1h4V9H3zm5-3v1h3V6H8zm0 3v1h3V9H8z"/></svg> Partager chaque billet</h3>
+                <p style="font-size:13px;color:#5a5a5a;margin-bottom:10px;">Transf&eacute;rez &agrave; chaque personne le lien de <strong>son</strong> billet ci-dessous. Chaque lien ne t&eacute;l&eacute;charge que le billet correspondant.</p>
+                @foreach($tickets as $gt)
+                    <p style="margin:6px 0;font-size:13px;line-height:1.5;">
+                        {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }} — {{ $textes['billet'] }} <strong>{{ $gt->code_unique }}</strong><br>
+                        <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $gt->id]) }}" style="color:#542680;font-weight:600;word-break:break-all;">{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $gt->id]) }}</a>
+                    </p>
+                @endforeach
+            </div>
+            @endif
+
             <div class="btn-wrap">
-                <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $first->id]) }}" class="btn">Télécharger ticket</a>
+                @if($quantite > 1)
+                    <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger-tous', ['ticket' => $first->id]) }}" class="btn">Télécharger tous mes tickets (ZIP)</a>
+                    <p style="text-align:center;margin:6px 0 0;"><a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $first->id]) }}" style="font-size:12px;color:#7B3FA0;">Télécharger un seul ticket</a></p>
+                @else
+                    <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $first->id]) }}" class="btn">Télécharger ticket</a>
+                @endif
             </div>
 
             <p class="help-text">
