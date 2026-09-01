@@ -39,6 +39,8 @@
             line-height: {{ $qrPaddingBottom }}mm;
             text-align: center;
             overflow: hidden;
+            padding-bottom: 0.2mm;
+            box-sizing: border-box;
         }
         .pax-band .pax-code {
             font-size: 8px;
