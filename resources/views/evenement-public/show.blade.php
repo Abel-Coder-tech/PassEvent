@@ -99,6 +99,7 @@
                         <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
                             @csrf
                             <input type="hidden" name="gratuit" value="1">
+                            <input type="hidden" name="quantite" id="hiddenQuantiteG" value="1">
                             <div class="mb-3">
                                 <label class="show-label">Nombre de places</label>
                                 <div class="show-qty">
@@ -719,13 +720,14 @@ function showToast(message, type) {
 @if($evenement->gratuit)
 document.addEventListener('DOMContentLoaded', function() {
     const qty = document.getElementById('quantiteInputG');
+    const hiddenQuantiteG = document.getElementById('hiddenQuantiteG');
     document.getElementById('qtyMinusG').addEventListener('click', function() {
         const v = parseInt(qty.value);
-        if (v > 1) qty.value = v - 1;
+        if (v > 1) { qty.value = v - 1; hiddenQuantiteG.value = v - 1; }
     });
     document.getElementById('qtyPlusG').addEventListener('click', function() {
         const v = parseInt(qty.value);
-        if (v < {{ max(1, $placesRestantes) }}) qty.value = v + 1;
+        if (v < {{ max(1, $placesRestantes) }}) { qty.value = v + 1; hiddenQuantiteG.value = v + 1; }
     });
 });
 @else
