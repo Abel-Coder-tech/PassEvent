@@ -71,8 +71,12 @@
                         <!-- Actions -->
                         <div class="d-grid gap-2">
                             @if($quantite > 1)
+                                <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger-tous', ['ticket' => $ticket->id]) }}" class="btn btn-violet py-3" style="border-radius: 8px;">
+                                    <i class="bi bi-file-earmark-zip me-1"></i> Telecharger tous mes {{ $textes['billet_pluriel'] }} (ZIP)
+                                </a>
+                                <hr class="my-1">
                                 @foreach($groupTickets as $gt)
-                                    <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $gt->id]) }}" class="btn btn-violet py-2" style="border-radius: 8px;">
+                                    <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('tickets.telecharger', ['ticket' => $gt->id]) }}" class="btn btn-outline-secondary py-2" style="border-radius: 8px;">
                                         <i class="bi bi-file-earmark-pdf me-1"></i> Telecharger {{ mb_strtolower($textes['billet']) }} {{ $loop->iteration }}
                                     </a>
                                 @endforeach
