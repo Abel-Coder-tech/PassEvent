@@ -30,9 +30,8 @@
         }
         .qr-zone {
             position: absolute;
-            background: #fff;
-            padding: {{ $qrPadding }}mm;
-            box-sizing: border-box;
+            width: {{ $qrSize }}mm;
+            height: {{ $qrSize }}mm;
             overflow: hidden;
             text-align: center;
         }
@@ -84,11 +83,10 @@
                 @if ($templateUrl)
                     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
                 @endif
-                @php $qrImgSize = max(0, $qrSize - 2 * $qrPadding); @endphp
-                <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width: {{ $qrImgSize }}mm; height: {{ $qrImgSize }}mm;">
-                </div>
                 @php $paxBandTop = $qrY + $qrSize; @endphp
+                <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                </div>
                 <div class="pax-band" style="left: {{ $qrX }}mm; top: {{ $paxBandTop }}mm; width: {{ $qrSize }}mm;">
                     <div class="pax-code">{{ $ticket->code_unique }}</div>
                 </div>
