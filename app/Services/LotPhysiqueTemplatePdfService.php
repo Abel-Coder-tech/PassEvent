@@ -18,7 +18,7 @@ class LotPhysiqueTemplatePdfService
 
     // Padding blanc autour du QR code (quiet zone)
     public const QR_PADDING = 0.5; // mm (haut, gauche, droite)
-    public const QR_PADDING_BOTTOM = 1; // mm (bas, logement du code pass)
+    public const QR_PADDING_BOTTOM = 3; // mm (bas, logement du code pass)
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
     public const ZOOM_MIN = 70;
