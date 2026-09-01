@@ -17,7 +17,7 @@ class LotPhysiqueTemplatePdfService
     public const GOUTTIERE = 2; // mm
 
     // Padding blanc autour du QR code (quiet zone)
-    public const QR_PADDING = 2; // mm
+    public const QR_PADDING = 1; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
     public const ZOOM_MIN = 70;
