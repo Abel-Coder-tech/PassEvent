@@ -17,8 +17,7 @@ class LotPhysiqueTemplatePdfService
     public const GOUTTIERE = 2; // mm
 
     // Padding blanc autour du QR code (quiet zone)
-    public const QR_PADDING_BOTTOM = 1; // mm
-    public const QR_PADDING = 0.5; // mm
+    public const QR_PADDING = 1; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
     public const ZOOM_MIN = 70;
@@ -115,7 +114,6 @@ class LotPhysiqueTemplatePdfService
         $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
         $qrPadding = self::QR_PADDING;
-        $qrPaddingBottom = self::QR_PADDING_BOTTOM;
 
         // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
         $imgW = $layout['slot_largeur'] * $zoom / 100;
@@ -134,7 +132,7 @@ class LotPhysiqueTemplatePdfService
 
         $pdf = Pdf::loadView('tickets.pdf.template', compact(
             'lot', 'pages', 'qrs', 'templateUrl',
-            'qrX', 'qrY', 'qrSize', 'qrPadding', 'qrPaddingBottom',
+            'qrX', 'qrY', 'qrSize', 'qrPadding',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
             'signBottom', 'signFont', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
@@ -170,11 +168,10 @@ class LotPhysiqueTemplatePdfService
         $qrX = $lot->qr_x ?? round(($slotW - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($slotH - $qrSize) / 2);
         $qrPadding = self::QR_PADDING;
-        $qrPaddingBottom = self::QR_PADDING_BOTTOM;
 
         $html = view('tickets.pdf.ticket-preview', compact(
             'templateUrl', 'qrDataUri', 'qrX', 'qrY', 'qrSize',
-            'slotW', 'slotH', 'qrPadding', 'qrPaddingBottom', 'zoom',
+            'slotW', 'slotH', 'qrPadding', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
         ))->with('codeUnique', $ticket->code_unique)->render();
 
