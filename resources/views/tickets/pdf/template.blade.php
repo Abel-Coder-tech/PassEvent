@@ -31,7 +31,7 @@
         .qr-zone {
             position: absolute;
             background: #fff;
-            padding: {{ $qrPadding }}mm;
+            padding: {{ $qrPadding }}mm {{ $qrPadding }}mm {{ $qrPaddingBottom }}mm;
             box-sizing: border-box;
             overflow: hidden;
             text-align: center;
@@ -49,7 +49,7 @@
             color: #000;
             white-space: nowrap;
             line-height: 1;
-            margin-top: 0.6mm;
+            margin-top: 0.4mm;
             text-shadow:
                 -0.5px -0.5px 0 #fff,
                 0.5px -0.5px 0 #fff,
