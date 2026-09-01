@@ -34,13 +34,13 @@
         }
         .pax-code {
             text-align: center;
-            font-size: 12px;
+            font-size: 8px;
             font-weight: 700;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             color: #000;
             white-space: nowrap;
             line-height: 1;
-            margin-top: 1mm;
+            margin-top: 0.6mm;
             text-shadow:
                 -0.5px -0.5px 0 #fff,
                 0.5px -0.5px 0 #fff,
@@ -54,7 +54,7 @@
     @if ($templateUrl)
     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
 @endif
-    @php $qrImgSize = max(0, $qrSize - 2 * $qrPadding - 4); @endphp
+    @php $qrImgSize = max(0, $qrSize - 2 * $qrPadding); @endphp
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR" style="width: {{ $qrImgSize }}mm; height: {{ $qrImgSize }}mm;">
         <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
