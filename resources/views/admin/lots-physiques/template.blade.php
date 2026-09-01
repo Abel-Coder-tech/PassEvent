@@ -34,7 +34,7 @@
     .canvas-empty { text-align: center; color: #6c757d; padding: 2rem; }
     .canvas-empty i { font-size: 3rem; display: block; margin-bottom: .5rem; }
 
-    .canvas-img { max-width: 100%; max-height: 500px; display: block; border-radius: 8px; }
+    .canvas-img { max-width: 100%; max-height: 500px; display: block; border-radius: 8px; transform-origin: center center; }
 
     .remove-img {
         position: absolute;
@@ -584,13 +584,15 @@
         if (formatBadgeLabel) formatBadgeLabel.textContent = f.label;
     }
 
+    function zoomFactor() { return (currentZoom || 100) / 100; }
+
     function pxToMm(px) {
         if (!imgDispW) return 0;
-        return Math.round((px / imgDispW) * TICKET_MM_W);
+        return Math.round(((px / (imgDispW * zoomFactor())) * TICKET_MM_W));
     }
     function mmToPx(mm) {
         if (!imgDispW) return 0;
-        return (mm / TICKET_MM_W) * imgDispW;
+        return (mm / TICKET_MM_W) * imgDispW * zoomFactor();
     }
 
     function showFileError(msg) {
@@ -616,6 +618,7 @@
         if (zoomRange) zoomRange.value = v;
         if (zoomValue) zoomValue.textContent = v + '%';
         if (img) img.style.transform = 'scale(' + (v / 100) + ')';
+        updateOverlay();
     }
     function bindZoomRange() {
         if (!zoomRange || zoomRange._bound) return;
@@ -625,8 +628,6 @@
     bindZoomRange();
     if (zoomMinus) zoomMinus.addEventListener('click', function() { setZoom(currentZoom - 1); });
     if (zoomPlus) zoomPlus.addEventListener('click', function() { setZoom(currentZoom + 1); });
-    document.addEventListener('mousemove', function(e) {
-        if (dragging && overlay) {
 
     function updateOverlay() {
         if (!overlay || !img || !img.naturalWidth) return;
@@ -635,12 +636,16 @@
         imgOffX = img.offsetLeft;
         imgOffY = img.offsetTop;
 
+        var z = zoomFactor();
+        var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
+        var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
+
         var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
         var yMm = parseInt(qrYInput.value) || 0;
-        var xPx = mmToPx(xMm) + imgOffX;
-        var yPx = mmToPx(yMm) + imgOffY;
+        var xPx = dispX + mmToPx(xMm);
+        var yPx = dispY + mmToPx(yMm);
 
         overlay.style.left = xPx + 'px';
         overlay.style.top = yPx + 'px';
@@ -677,14 +682,15 @@
         if (dragging && overlay) {
             var xPx = e.clientX - offsetX;
             var yPx = e.clientY - offsetY;
-            xPx = Math.max(-overlay.clientWidth / 2, Math.min(imgDispW - overlay.clientWidth / 2, xPx));
-            yPx = Math.max(-overlay.clientHeight / 2, Math.min(imgDispH - overlay.clientHeight / 2, yPx));
 
             overlay.style.left = xPx + 'px';
             overlay.style.top = yPx + 'px';
 
-            var xMm = pxToMm(xPx - imgOffX);
-            var yMm = pxToMm(yPx - imgOffY);
+            var z = zoomFactor();
+            var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
+            var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
+            var xMm = pxToMm(xPx - dispX);
+            var yMm = pxToMm(yPx - dispY);
             qrXInput.value = xMm;
             qrYInput.value = yMm;
             qrXHidden.value = xMm;
@@ -697,7 +703,7 @@
         }
         if (resizing && overlay) {
             var dx = e.clientX - startResizeX;
-            var newW = Math.max(20, Math.min(imgDispW - overlay.offsetLeft, startResizeW + dx));
+            var newW = Math.max(20, startResizeW + dx);
             var newMm = pxToMm(newW);
             if (newMm >= 20 && newMm <= 80) {
                 overlay.style.width = newW + 'px';
