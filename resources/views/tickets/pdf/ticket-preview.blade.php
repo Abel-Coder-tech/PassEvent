@@ -23,7 +23,7 @@
             width: {{ $qrSize }}mm;
             height: {{ $qrSize }}mm;
             background: #fff;
-            padding: {{ $qrPadding }}mm;
+            padding: {{ $qrPadding }}mm {{ $qrPadding }}mm {{ $qrPaddingBottom }}mm;
             box-sizing: border-box;
             overflow: hidden;
             text-align: center;
