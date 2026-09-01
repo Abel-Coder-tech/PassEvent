@@ -23,7 +23,7 @@
             width: {{ $qrSize }}mm;
             height: {{ $qrSize }}mm;
             background: #fff;
-            padding: {{ $qrPadding }}mm {{ $qrPadding }}mm {{ $qrPaddingBottom }}mm;
+            padding: {{ $qrPadding }}mm;
             box-sizing: border-box;
             overflow: hidden;
             text-align: center;
@@ -32,15 +32,23 @@
             display: block;
             margin: 0 auto;
         }
-        .pax-code {
+        .pax-band {
+            position: absolute;
+            left: {{ $qrX }}mm;
+            top: {{ $qrY + $qrSize }}mm;
+            width: {{ $qrSize }}mm;
+            height: {{ $qrPaddingBottom }}mm;
+            background: #fff;
+            line-height: {{ $qrPaddingBottom }}mm;
             text-align: center;
+            overflow: hidden;
+        }
+        .pax-band .pax-code {
             font-size: 8px;
             font-weight: 700;
             letter-spacing: 0.3px;
             color: #000;
             white-space: nowrap;
-            line-height: 1;
-            margin-top: 0.6mm;
             text-shadow:
                 -0.5px -0.5px 0 #fff,
                 0.5px -0.5px 0 #fff,
@@ -57,6 +65,8 @@
     @php $qrImgSize = max(0, $qrSize - 2 * $qrPadding); @endphp
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR" style="width: {{ $qrImgSize }}mm; height: {{ $qrImgSize }}mm;">
+    </div>
+    <div class="pax-band">
         <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
     </div>
 </div>
