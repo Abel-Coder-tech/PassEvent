@@ -123,31 +123,63 @@
                 <p class="doc-info"><i class="bi bi-info-circle"></i> Vous organisez en tant que particulier.</p>
             </div>
 
-            <div class="mb-3" id="field-numero-rc" style="display:none;">
-                <label class="form-label" id="numero-rc-label">Numéro du Registre de Commerce</label>
-                <input type="text" name="numero_rc" class="form-control @error('numero_rc') is-invalid @enderror"
-                       value="{{ old('numero_rc', $data['numero_rc'] ?? '') }}" id="input-rc">
-                @error('numero_rc') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label" id="numero-cip-label">Numéro CIP</label>
-                <input type="text" name="numero_cip" class="form-control @error('numero_cip') is-invalid @enderror"
-                       value="{{ old('numero_cip', $data['numero_cip'] ?? '') }}" id="input-cip" placeholder="Ex : numéro figurant sur la pièce" required>
-                @error('numero_cip') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label" id="doc-label">Pièce justificative</label>
-                <div id="doc-helper" class="doc-info mb-2"><i class="bi bi-file-earmark-text"></i> <span id="doc-text">Carte étudiante ou lettre de l'université</span></div>
-                @if(!empty($existingDocuments) && !empty($data['document_justificatif']))
-                <div class="alert alert-success py-2 mb-2" style="font-size:0.82rem;border-radius:8px;">
-                    <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
+            <div id="block-doc-simple" style="display:none;">
+                <div class="mb-3">
+                    <label class="form-label" id="doc-simple-label">Carte CIP</label>
+                    @if(!empty($existingDocuments) && !empty($data['document_justificatif']))
+                    <div class="alert alert-success py-2 mb-2" style="font-size:0.82rem;border-radius:8px;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
+                    </div>
+                    @endif
+                    <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
+                    <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
+                    @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                @endif
-                <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
-                <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
-                @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="mb-3">
+                    <label class="form-label" id="doc-simple-number-label">Numéro de la carte</label>
+                    <input type="text" name="numero_cip" class="form-control @error('numero_cip') is-invalid @enderror"
+                           value="{{ old('numero_cip', $data['numero_cip'] ?? '') }}" placeholder="Ex : numéro figurant sur la pièce" required>
+                    @error('numero_cip') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+            </div>
+
+            <div id="block-doc-organisation" style="display:none;">
+                <div class="mb-3">
+                    <label class="form-label" id="doc-org-label">Registre de Commerce (RC)</label>
+                    @if(!empty($existingDocuments) && !empty($data['document_justificatif']))
+                    <div class="alert alert-success py-2 mb-2" style="font-size:0.82rem;border-radius:8px;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
+                    </div>
+                    @endif
+                    <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
+                    <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
+                    @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" id="doc-org-number-label">Numéro du Registre de Commerce</label>
+                    <input type="text" name="numero_rc" class="form-control @error('numero_rc') is-invalid @enderror"
+                           value="{{ old('numero_rc', $data['numero_rc'] ?? '') }}">
+                    @error('numero_rc') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Carte CIP du représentant</label>
+                    <div class="doc-info mb-2"><i class="bi bi-info-circle"></i> Carte d'identité personnelle du représentant / responsable</div>
+                    @if(!empty($existingDocuments) && !empty($data['document_cip']))
+                    <div class="alert alert-success py-2 mb-2" style="font-size:0.82rem;border-radius:8px;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
+                    </div>
+                    @endif
+                    <input type="file" name="document_cip" class="form-control @error('document_cip') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ (empty($existingDocuments) || empty($data['document_cip'])) ? 'required' : '' }}>
+                    <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
+                    @error('document_cip') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Numéro CIP du représentant</label>
+                    <input type="text" name="numero_cip_rep" class="form-control @error('numero_cip_rep') is-invalid @enderror"
+                           value="{{ old('numero_cip_rep', $data['numero_cip'] ?? '') }}" placeholder="Ex : numéro figurant sur la CIP">
+                    @error('numero_cip_rep') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
             </div>
 
             <div class="mb-3">
@@ -171,30 +203,19 @@
 
 @section('scripts')
 <script>
-    const docLabels = {
-        universitaire: 'Carte étudiante du responsable',
-        particulier: 'CIP (Carte d\'identité personnelle)',
-        organisation: 'Registre de Commerce (RC)',
+    const simpleLabels = {
+        universitaire: { doc: 'Carte étudiante du responsable', num: 'Numéro de la carte étudiant' },
+        particulier: { doc: 'Carte CIP', num: 'Numéro CIP' }
+    };
+
+    const orgDocLabel = {
+        entreprise: 'Registre de Commerce (RC)',
         association: 'Récépissé d\'autorisation'
     };
 
-    const cipLabels = {
-        universitaire: 'Numéro de la carte étudiant du responsable',
-        particulier: 'Numéro CIP',
-        organisation: 'Numéro CIP du représentant',
-        association: 'Numéro CIP du représentant'
-    };
-
-    const rcLabels = {
+    const orgNumLabel = {
         entreprise: 'Numéro du Registre de Commerce (RC)',
         association: 'Numéro du récépissé d\'autorisation'
-    };
-
-    const cipPlaceholders = {
-        universitaire: 'Ex : numéro de la carte étudiant',
-        particulier: 'Ex : numéro figurant sur la CIP',
-        organisation: 'Ex : numéro figurant sur la CIP du représentant',
-        association: 'Ex : numéro figurant sur la CIP du représentant'
     };
 
     function typeDetail() {
@@ -206,28 +227,21 @@
         return null;
     }
 
-    function updateNumberFields(val) {
+    function updateBlocks(val) {
         const isOrg = val === 'organisation';
-        const isOrgDetail = isOrg ? typeDetail() : null;
+        const simple = document.getElementById('block-doc-simple');
+        const org = document.getElementById('block-doc-organisation');
+        simple.style.display = isOrg ? 'none' : 'block';
+        org.style.display = isOrg ? 'block' : 'none';
 
-        document.getElementById('field-numero-rc').style.display = isOrg ? 'block' : 'none';
-        const rcInput = document.getElementById('input-rc');
-        if (isOrg) {
-            rcInput.required = true;
-            document.getElementById('numero-rc-label').textContent = rcLabels[isOrgDetail] || rcLabels.entreprise;
+        if (!isOrg) {
+            const labels = simpleLabels[val] || simpleLabels.particulier;
+            document.getElementById('doc-simple-label').textContent = labels.doc;
+            document.getElementById('doc-simple-number-label').textContent = labels.num;
         } else {
-            rcInput.required = false;
-        }
-
-        const cipInput = document.getElementById('input-cip');
-        cipInput.required = true;
-        document.getElementById('numero-cip-label').textContent = cipLabels[val] || 'Numéro CIP';
-        cipInput.placeholder = cipPlaceholders[val] || cipPlaceholders.particulier;
-
-        if (isOrg) {
-            document.getElementById('doc-text').textContent = docLabels[isOrgDetail] || docLabels.organisation;
-        } else {
-            document.getElementById('doc-text').textContent = docLabels[val] || 'Document justificatif';
+            const detail = typeDetail();
+            document.getElementById('doc-org-label').textContent = orgDocLabel[detail] || orgDocLabel.entreprise;
+            document.getElementById('doc-org-number-label').textContent = orgNumLabel[detail] || orgNumLabel.entreprise;
         }
     }
 
@@ -238,17 +252,16 @@
         document.getElementById('fields-universitaire').style.display = val === 'universitaire' ? 'block' : 'none';
         document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
         document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
-        updateNumberFields(val);
+        updateBlocks(val);
     }
 
     (function init() {
         const selected = document.querySelector('.type-card.selected');
+        document.getElementById('fields-universitaire').style.display = selected && selected.querySelector('input[type="radio"]').value === 'universitaire' ? 'block' : 'none';
+        document.getElementById('fields-organisation').style.display = selected && selected.querySelector('input[type="radio"]').value === 'organisation' ? 'block' : 'none';
+        document.getElementById('fields-particulier').style.display = selected && selected.querySelector('input[type="radio"]').value === 'particulier' ? 'block' : 'none';
         if (selected) {
-            const val = selected.querySelector('input[type="radio"]').value;
-            document.getElementById('fields-universitaire').style.display = val === 'universitaire' ? 'block' : 'none';
-            document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
-            document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
-            updateNumberFields(val);
+            updateBlocks(selected.querySelector('input[type="radio"]').value);
         }
     })();
 
@@ -257,7 +270,7 @@
             this.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             this.querySelector('input').checked = true;
-            updateNumberFields('organisation');
+            updateBlocks('organisation');
         });
     });
 </script>
