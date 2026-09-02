@@ -123,6 +123,20 @@
                 <p class="doc-info"><i class="bi bi-info-circle"></i> Vous organisez en tant que particulier.</p>
             </div>
 
+            <div class="mb-3" id="field-numero-rc" style="display:none;">
+                <label class="form-label" id="numero-rc-label">Numéro du Registre de Commerce</label>
+                <input type="text" name="numero_rc" class="form-control @error('numero_rc') is-invalid @enderror"
+                       value="{{ old('numero_rc', $data['numero_rc'] ?? '') }}" id="input-rc">
+                @error('numero_rc') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" id="numero-cip-label">Numéro CIP</label>
+                <input type="text" name="numero_cip" class="form-control @error('numero_cip') is-invalid @enderror"
+                       value="{{ old('numero_cip', $data['numero_cip'] ?? '') }}" id="input-cip" placeholder="Ex : numéro figurant sur la pièce" required>
+                @error('numero_cip') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+
             <div class="mb-3">
                 <label class="form-label" id="doc-label">Pièce justificative</label>
                 <div id="doc-helper" class="doc-info mb-2"><i class="bi bi-file-earmark-text"></i> <span id="doc-text">Carte étudiante ou lettre de l'université</span></div>
@@ -158,21 +172,62 @@
 @section('scripts')
 <script>
     const docLabels = {
-        universitaire: 'Carte étudiante ou lettre de l\'université',
+        universitaire: 'Carte étudiante du responsable',
         particulier: 'CIP (Carte d\'identité personnelle)',
-        organisation: 'IFU ou RCCM',
-        association: 'IFU / RCCM / Récépissé ONG'
+        organisation: 'Registre de Commerce (RC)',
+        association: 'Récépissé d\'autorisation'
     };
 
-    function updateDocLabel() {
+    const cipLabels = {
+        universitaire: 'Numéro de la carte étudiant du responsable',
+        particulier: 'Numéro CIP',
+        organisation: 'Numéro CIP du représentant',
+        association: 'Numéro CIP du représentant'
+    };
+
+    const rcLabels = {
+        entreprise: 'Numéro du Registre de Commerce (RC)',
+        association: 'Numéro du récépissé d\'autorisation'
+    };
+
+    const cipPlaceholders = {
+        universitaire: 'Ex : numéro de la carte étudiant',
+        particulier: 'Ex : numéro figurant sur la CIP',
+        organisation: 'Ex : numéro figurant sur la CIP du représentant',
+        association: 'Ex : numéro figurant sur la CIP du représentant'
+    };
+
+    function typeDetail() {
         const orgFields = document.getElementById('fields-organisation');
         if (orgFields.style.display === 'block') {
             const checked = orgFields.querySelector('input[name="type_detail"]:checked');
-            if (checked && checked.value === 'association') {
-                document.getElementById('doc-text').textContent = docLabels.association;
-            } else {
-                document.getElementById('doc-text').textContent = docLabels.organisation;
-            }
+            return checked ? checked.value : null;
+        }
+        return null;
+    }
+
+    function updateNumberFields(val) {
+        const isOrg = val === 'organisation';
+        const isOrgDetail = isOrg ? typeDetail() : null;
+
+        document.getElementById('field-numero-rc').style.display = isOrg ? 'block' : 'none';
+        const rcInput = document.getElementById('input-rc');
+        if (isOrg) {
+            rcInput.required = true;
+            document.getElementById('numero-rc-label').textContent = rcLabels[isOrgDetail] || rcLabels.entreprise;
+        } else {
+            rcInput.required = false;
+        }
+
+        const cipInput = document.getElementById('input-cip');
+        cipInput.required = true;
+        document.getElementById('numero-cip-label').textContent = cipLabels[val] || 'Numéro CIP';
+        cipInput.placeholder = cipPlaceholders[val] || cipPlaceholders.particulier;
+
+        if (isOrg) {
+            document.getElementById('doc-text').textContent = docLabels[isOrgDetail] || docLabels.organisation;
+        } else {
+            document.getElementById('doc-text').textContent = docLabels[val] || 'Document justificatif';
         }
     }
 
@@ -183,8 +238,7 @@
         document.getElementById('fields-universitaire').style.display = val === 'universitaire' ? 'block' : 'none';
         document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
         document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
-        document.getElementById('doc-text').textContent = docLabels[val] || 'Document justificatif';
-        updateDocLabel();
+        updateNumberFields(val);
     }
 
     (function init() {
@@ -194,8 +248,7 @@
             document.getElementById('fields-universitaire').style.display = val === 'universitaire' ? 'block' : 'none';
             document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
             document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
-            document.getElementById('doc-text').textContent = docLabels[val] || 'Document justificatif';
-            updateDocLabel();
+            updateNumberFields(val);
         }
     })();
 
@@ -204,7 +257,7 @@
             this.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             this.querySelector('input').checked = true;
-            updateDocLabel();
+            updateNumberFields('organisation');
         });
     });
 </script>
