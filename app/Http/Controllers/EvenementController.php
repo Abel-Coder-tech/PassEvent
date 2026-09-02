@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Evenement;
 use App\Models\Tarif;
-use App\Services\ContratService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -188,19 +187,23 @@ class EvenementController extends Controller
     }
 
     // Génère un contrat de prestation PDF pour l'organisateur
-    public function contratPrestation(ContratService $contratService)
+    public function contratPrestation()
     {
         $user = Auth::user();
 
-        if (!$user || !in_array($user->statut, ['actif', 'approuvé', 'verifie'])) {
+        if (!$user || !in_array($user->statut, ['approuvé', 'verifie'])) {
             abort(403, 'Accès réservé aux organisateurs approuvés.');
         }
 
         $user->load('evenements');
 
-        $pdf = $contratService->pdf($user);
+        $html = view('site.contrat-prestation', compact('user'))->render();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+        $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->download($contratService->filename($user));
+        $filename = 'Contrat-Prestation-PaxEvent-' . $user->id . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     // Affiche les détails d'un événement avec statistiques de ventes

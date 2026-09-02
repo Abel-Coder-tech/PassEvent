@@ -117,12 +117,6 @@
                            value="{{ old('organisation', $data['organisation'] ?? '') }}" placeholder="Ex: ABC SARL">
                     @error('organisation') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Fonction du représentant</label>
-                    <input type="text" name="fonction" class="form-control @error('fonction') is-invalid @enderror"
-                           value="{{ old('fonction', $data['fonction'] ?? '') }}" placeholder="Ex: Directeur Général, Président(e)...">
-                    @error('fonction') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
             </div>
 
             <div id="fields-particulier" style="display:none;">

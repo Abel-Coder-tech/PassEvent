@@ -86,12 +86,6 @@
                         {{ $labels[$data['type_detail']] ?? ucfirst($data['type_detail']) }}
                     </span>
                 </div>
-                @if(!empty($data['fonction']))
-                <div class="recap-row">
-                    <span class="recap-label"><i class="bi bi-person-badge" style="color:#9972B0;font-size:0.8rem;"></i> Fonction du représentant</span>
-                    <span class="recap-value">{{ $data['fonction'] }}</span>
-                </div>
-                @endif
                 @endif
             @endif
             <div class="recap-row">
