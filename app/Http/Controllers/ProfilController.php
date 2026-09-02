@@ -35,6 +35,7 @@ class ProfilController extends Controller
                 'type' => $user->type,
                 'organisation' => $user->organisation,
                 'type_detail' => $user->type_detail,
+                'fonction' => $user->fonction,
                 'document_justificatif' => $user->document_justificatif,
                 'document_cip' => $user->document_cip,
                 'signature' => $user->signature,
@@ -79,6 +80,7 @@ class ProfilController extends Controller
 
         if ($request->type === 'organisation') {
             $rules['type_detail'] = 'required|in:entreprise,association';
+            $rules['fonction'] = 'required|string|max:255';
             $rules['numero_rc'] = 'required|string|max:100';
             $rules['numero_cip_rep'] = 'required|string|max:100';
 
@@ -181,8 +183,10 @@ class ProfilController extends Controller
 
         if ($data['type'] === 'organisation') {
             $updateData['type_detail'] = $data['type_detail'] ?? null;
+            $updateData['fonction'] = $data['fonction'] ?? null;
         } else {
             $updateData['type_detail'] = null;
+            $updateData['fonction'] = null;
         }
 
         $updateData['numero_rc'] = $data['numero_rc'] ?? null;
