@@ -30,6 +30,16 @@
             <i class="bi bi-arrow-right-circle me-1"></i> Modifier mon profil
         </a>
     </div>
+    @elseif(Auth::user()->statut === 'actif')
+    <div class="alert d-flex align-items-center gap-3 flex-wrap" style="border:none;background:#f0f7ee;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #2e7d4f;">
+        <div style="flex:1;">
+            <strong style="color:#2e7d4f;"><i class="bi bi-check-circle-fill me-1"></i> Compte validé avec succès</strong>
+            <span style="color:#3c6e4f;font-size:0.85rem;"> — Votre compte a été validé. Vous pouvez télécharger votre contrat de prestation.</span>
+        </div>
+        <a href="{{ route('contrat-prestation') }}" class="btn btn-sm" style="background:#2e7d4f;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            <i class="bi bi-file-pdf me-1"></i> Télécharger mon contrat
+        </a>
+    </div>
     @endif
 
     {{-- Notifications / messages techniques --}}
