@@ -89,6 +89,8 @@ class User extends Authenticatable
         'type_detail',
         'document_justificatif',
         'signature',
+        'numero_rc',
+        'numero_cip',
         'ventes_especes',
         'commission_pourcentage',
     ];

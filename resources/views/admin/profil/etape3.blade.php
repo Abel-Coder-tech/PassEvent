@@ -92,6 +92,18 @@
                 <span class="recap-label"><i class="bi bi-file-earmark-pdf" style="color:#9972B0;font-size:0.8rem;"></i> Justificatif</span>
                 <span class="recap-value"><span class="recap-badge"><i class="bi bi-check-circle-fill"></i> Fourni</span></span>
             </div>
+            @if(!empty($data['numero_cip']))
+            <div class="recap-row">
+                <span class="recap-label"><i class="bi bi-key" style="color:#9972B0;font-size:0.8rem;"></i> N° CIP</span>
+                <span class="recap-value">{{ $data['numero_cip'] }}</span>
+            </div>
+            @endif
+            @if(!empty($data['numero_rc']))
+            <div class="recap-row">
+                <span class="recap-label"><i class="bi bi-key" style="color:#9972B0;font-size:0.8rem;"></i> N° RC / Récépissé</span>
+                <span class="recap-value">{{ $data['numero_rc'] }}</span>
+            </div>
+            @endif
             <div class="recap-row">
                 <span class="recap-label"><i class="bi bi-pen" style="color:#9972B0;font-size:0.8rem;"></i> Signature</span>
                 <span class="recap-value"><span class="recap-badge"><i class="bi bi-check-circle-fill"></i> Fournie</span></span>

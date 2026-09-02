@@ -44,6 +44,12 @@
                         <a href="{{ asset('storage/' . $user->document_justificatif) }}" download class="btn btn-sm" style="border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#666;">
                             <i class="bi bi-download"></i>
                         </a>
+                        @if($user->numero_cip)
+                            <div class="mt-2 small text-muted"><i class="bi bi-person-vcard me-1"></i> N° CIP : <strong>{{ $user->numero_cip }}</strong></div>
+                        @endif
+                        @if($user->numero_rc)
+                            <div class="mt-1 small text-muted"><i class="bi bi-briefcase me-1"></i> N° RC / Récépissé : <strong>{{ $user->numero_rc }}</strong></div>
+                        @endif
                     </div>
                 @endif
                 @if($user->signature)
