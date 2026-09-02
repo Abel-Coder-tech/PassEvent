@@ -50,16 +50,18 @@
         <hr style="margin:0.75rem 0 1.25rem;border-color:#f0eeec;">
 
         @if($errors->any())
-            <div class="alert alert-danger py-2" style="font-size:.85rem;border-radius:10px;">
+            <div id="error-summary-server" class="alert alert-danger py-2" style="font-size:.85rem;border-radius:10px;">
                 @foreach($errors->all() as $e) {{ $e }} @break @endforeach
             </div>
+        @else
+            <div id="error-summary-server" class="alert alert-danger py-2" style="font-size:.85rem;border-radius:10px;display:none;"></div>
         @endif
 
         <div style="margin-bottom:1.5rem;">
             <p style="font-size:0.9rem;color:#6c757d;margin:0;">Complétez votre profil pour pouvoir créer et gérer des événements.</p>
         </div>
 
-        <form method="POST" action="{{ route('profil.post-step2') }}" enctype="multipart/form-data">
+        <form id="step2-form" method="POST" action="{{ route('profil.post-step2') }}" enctype="multipart/form-data" novalidate>
             @csrf
             <div class="row g-3 mb-4">
                 <div class="col-4">
@@ -287,6 +289,95 @@
         updateBlocks(val);
     }
 
+    function setFieldError(name, message) {
+        const inputs = document.querySelectorAll('input[name="' + name + '"]');
+        let input = null;
+        // Privilégier un champ visible (le champ caché de l'autre bloc n'est pas pris en compte)
+        inputs.forEach(function(candidate) {
+            if (candidate.offsetParent !== null) input = candidate;
+        });
+        if (!input && inputs.length) input = inputs[0];
+        if (!input) return;
+        input.classList.add('is-invalid');
+        let feedback = input.closest('.mb-3').querySelector('.invalid-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            input.closest('.mb-3').appendChild(feedback);
+        }
+        feedback.innerHTML = message;
+    }
+
+    function clearFieldErrors() {
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    }
+
+    function showSummary(messages) {
+        const box = document.getElementById('error-summary-server');
+        box.style.display = 'block';
+        box.innerHTML = messages;
+    }
+
+    function initServerErrors() {
+        @if($errors->any())
+            @foreach($errors->getMessages() as $field => $messages)
+                @foreach($messages as $message)
+                    setFieldError('{{ $field }}', '{{ addslashes($message) }}');
+                @endforeach
+            @endforeach
+        @endif
+    }
+
+    document.getElementById('step2-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const button = form.querySelector('button[type="submit"]');
+        const originalLabel = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Envoi en cours...';
+        clearFieldErrors();
+
+        const fd = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
+            },
+            body: fd
+        }).then(function(res) {
+            if (res.redirected) {
+                window.location.href = res.url;
+                return null;
+            }
+            return res.json().then(function(data) {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                    return null;
+                }
+                return data;
+            }).catch(function() {
+                return { errors: {} };
+            });
+        }).then(function(data) {
+            if (!data) return;
+            if (data.errors) {
+                Object.keys(data.errors).forEach(function(field) {
+                    setFieldError(field, data.errors[field][0]);
+                });
+                const firstKey = Object.keys(data.errors)[0];
+                showSummary(data.errors[firstKey][0]);
+            }
+        }).catch(function(err) {
+            console.error(err);
+            showSummary('Une erreur est survenue. Veuillez réessayer.');
+        }).finally(function() {
+            button.disabled = false;
+            button.innerHTML = originalLabel;
+        });
+    });
+
     (function init() {
         const selected = document.querySelector('.type-card.selected');
         document.getElementById('fields-universitaire').style.display = selected && selected.querySelector('input[type="radio"]').value === 'universitaire' ? 'block' : 'none';
@@ -298,6 +389,7 @@
         // Signature : requise si non déjà fournie
         const sig = document.querySelector('input[name="signature"]');
         if (sig && !alreadySignature) sig.setAttribute('required', '');
+        initServerErrors();
     })();
 
     document.querySelectorAll('.toggle-btn').forEach(btn => {
