@@ -65,17 +65,45 @@ class ProfilController extends Controller
             'type' => 'required|in:universitaire,particulier,organisation',
         ];
 
+        $messages = [
+            'type.required' => 'Veuillez choisir un type de compte.',
+            'type.in' => 'Le type de compte sélectionné est invalide.',
+        ];
+
+        // Libellés lisibles
+        $labels = [
+            'document_justificatif' => 'le document justificatif (carte CIP ou carte étudiant)',
+            'signature' => 'la signature',
+            'document_cip' => 'la carte CIP du représentant',
+            'numero_cip' => 'le numéro CIP',
+            'numero_cip_rep' => 'le numéro CIP du représentant',
+            'numero_rc' => 'le numéro du registre de commerce (ou récépissé)',
+            'fonction' => 'la fonction du représentant',
+            'organisation' => 'le nom de l\'organisation',
+            'type_detail' => 'le type de structure',
+        ];
+
         $hasDocs = $user->statut === 'corrections_demandees' && $user->document_justificatif && $user->signature;
 
         if (!$hasDocs || $request->hasFile('document_justificatif')) {
             $rules['document_justificatif'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+            $messages['document_justificatif.required'] = 'Veuillez joindre ' . $labels['document_justificatif'] . '.';
+            $messages['document_justificatif.file'] = 'Le fichier joint est invalide.';
+            $messages['document_justificatif.mimes'] = 'Le fichier doit être au format PDF, JPG ou PNG.';
+            $messages['document_justificatif.max'] = 'Le fichier ne doit pas dépasser 2 Mo.';
+            $messages['document_justificatif.uploaded'] = 'Le fichier n\'a pas pu être téléversé. Vérifiez que sa taille ne dépasse pas la limite du serveur.';
         }
         if (!$hasDocs || $request->hasFile('signature')) {
             $rules['signature'] = 'required|file|mimes:jpg,jpeg,png|max:2048';
+            $messages['signature.required'] = 'Veuillez joindre ' . $labels['signature'] . '.';
+            $messages['signature.mimes'] = 'La signature doit être au format JPG ou PNG.';
+            $messages['signature.max'] = 'La signature ne doit pas dépasser 2 Mo.';
+            $messages['signature.uploaded'] = 'La signature n\'a pas pu être téléversée. Vérifiez sa taille.';
         }
 
         if ($request->type === 'universitaire' || $request->type === 'organisation') {
             $rules['organisation'] = 'required|string|max:255';
+            $messages['organisation.required'] = 'Veuillez renseigner ' . $labels['organisation'] . '.';
         }
 
         if ($request->type === 'organisation') {
@@ -83,16 +111,26 @@ class ProfilController extends Controller
             $rules['fonction'] = 'required|string|max:255';
             $rules['numero_rc'] = 'required|string|max:100';
             $rules['numero_cip_rep'] = 'required|string|max:100';
+            $messages['type_detail.required'] = 'Veuillez choisir ' . $labels['type_detail'] . '.';
+            $messages['fonction.required'] = 'Veuillez renseigner ' . $labels['fonction'] . '.';
+            $messages['numero_rc.required'] = 'Veuillez renseigner ' . $labels['numero_rc'] . '.';
+            $messages['numero_cip_rep.required'] = 'Veuillez renseigner ' . $labels['numero_cip_rep'] . '.';
 
             $hasCipDoc = $user->statut === 'corrections_demandees' && $user->document_cip;
             if (!$hasCipDoc || $request->hasFile('document_cip')) {
                 $rules['document_cip'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+                $messages['document_cip.required'] = 'Veuillez joindre ' . $labels['document_cip'] . '.';
+                $messages['document_cip.file'] = 'Le fichier joint est invalide.';
+                $messages['document_cip.mimes'] = 'Le fichier doit être au format PDF, JPG ou PNG.';
+                $messages['document_cip.max'] = 'Le fichier ne doit pas dépasser 2 Mo.';
+                $messages['document_cip.uploaded'] = 'Le fichier n\'a pas pu être téléversé.';
             }
         } else {
             $rules['numero_cip'] = 'required|string|max:100';
+            $messages['numero_cip.required'] = 'Veuillez renseigner ' . $labels['numero_cip'] . '.';
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, $messages);
 
         if ($request->hasFile('document_justificatif')) {
             if ($user->document_justificatif) {
