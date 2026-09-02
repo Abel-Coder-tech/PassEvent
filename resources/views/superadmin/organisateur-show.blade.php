@@ -30,9 +30,6 @@
                 @if($user->organisation)
                     <p class="small mb-0 mt-2"><i class="bi bi-building"></i> {{ $user->organisation }}</p>
                 @endif
-                @if($user->fonction)
-                    <p class="small mb-0"><i class="bi bi-person-badge"></i> Fonction : {{ $user->fonction }}</p>
-                @endif
                 @if($user->telephone)
                     <p class="small mb-0"><i class="bi bi-telephone"></i> {{ $user->telephone }}</p>
                 @endif
