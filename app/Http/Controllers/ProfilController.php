@@ -36,6 +36,7 @@ class ProfilController extends Controller
                 'organisation' => $user->organisation,
                 'type_detail' => $user->type_detail,
                 'document_justificatif' => $user->document_justificatif,
+                'document_cip' => $user->document_cip,
                 'signature' => $user->signature,
                 'numero_rc' => $user->numero_rc,
                 'numero_cip' => $user->numero_cip,
@@ -79,7 +80,12 @@ class ProfilController extends Controller
         if ($request->type === 'organisation') {
             $rules['type_detail'] = 'required|in:entreprise,association';
             $rules['numero_rc'] = 'required|string|max:100';
-            $rules['numero_cip'] = 'required|string|max:100';
+            $rules['numero_cip_rep'] = 'required|string|max:100';
+
+            $hasCipDoc = $user->statut === 'corrections_demandees' && $user->document_cip;
+            if (!$hasCipDoc || $request->hasFile('document_cip')) {
+                $rules['document_cip'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+            }
         } else {
             $rules['numero_cip'] = 'required|string|max:100';
         }
@@ -93,6 +99,16 @@ class ProfilController extends Controller
             $validated['document_justificatif'] = $request->file('document_justificatif')->store('justificatifs', 'public');
         } elseif ($hasDocs) {
             $validated['document_justificatif'] = $user->document_justificatif; // Conserve l'existant
+        }
+
+        if ($request->type === 'organisation') {
+            $hasCipDoc = $user->statut === 'corrections_demandees' && $user->document_cip;
+            if ($request->hasFile('document_cip')) {
+                Storage::disk('public')->delete($user->document_cip);
+                $validated['document_cip'] = $request->file('document_cip')->store('justificatifs', 'public');
+            } elseif ($hasCipDoc) {
+                $validated['document_cip'] = $user->document_cip;
+            }
         }
 
         if ($request->hasFile('signature')) {
@@ -151,6 +167,12 @@ class ProfilController extends Controller
             'statut' => $etaitEnCorrections ? 'corrections_apportees' : 'en_attente',
         ];
 
+        if ($data['type'] === 'organisation') {
+            $updateData['document_cip'] = $data['document_cip'] ?? null;
+        } else {
+            $updateData['document_cip'] = null;
+        }
+
         if ($data['type'] === 'universitaire' || $data['type'] === 'organisation') {
             $updateData['organisation'] = $data['organisation'] ?? null;
         } else {
@@ -164,7 +186,7 @@ class ProfilController extends Controller
         }
 
         $updateData['numero_rc'] = $data['numero_rc'] ?? null;
-        $updateData['numero_cip'] = $data['numero_cip'] ?? null;
+        $updateData['numero_cip'] = $data['numero_cip'] ?? ($data['numero_cip_rep'] ?? null);
 
         $user->update($updateData);
 

@@ -88,6 +88,7 @@ class User extends Authenticatable
         'type',
         'type_detail',
         'document_justificatif',
+        'document_cip',
         'signature',
         'numero_rc',
         'numero_cip',
