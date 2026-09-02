@@ -137,14 +137,14 @@
                         <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
                     </div>
                     @endif
-                    <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
+                    <input type="file" name="document_justificatif" id="doc-simple-file" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png">
                     <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                     @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label" id="doc-simple-number-label">Numéro de la carte</label>
-                    <input type="text" name="numero_cip" class="form-control @error('numero_cip') is-invalid @enderror"
-                           value="{{ old('numero_cip', $data['numero_cip'] ?? '') }}" placeholder="Ex : numéro figurant sur la pièce" required>
+                    <input type="text" name="numero_cip" id="doc-simple-num" class="form-control @error('numero_cip') is-invalid @enderror"
+                           value="{{ old('numero_cip', $data['numero_cip'] ?? '') }}" placeholder="Ex : numéro figurant sur la pièce">
                     @error('numero_cip') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
@@ -157,13 +157,13 @@
                         <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
                     </div>
                     @endif
-                    <input type="file" name="document_justificatif" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ empty($existingDocuments) ? 'required' : '' }}>
+                    <input type="file" name="document_justificatif" id="doc-org-file" class="form-control @error('document_justificatif') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png">
                     <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                     @error('document_justificatif') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label" id="doc-org-number-label">Numéro du Registre de Commerce</label>
-                    <input type="text" name="numero_rc" class="form-control @error('numero_rc') is-invalid @enderror"
+                    <input type="text" name="numero_rc" id="doc-org-num-rc" class="form-control @error('numero_rc') is-invalid @enderror"
                            value="{{ old('numero_rc', $data['numero_rc'] ?? '') }}">
                     @error('numero_rc') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
@@ -176,13 +176,13 @@
                         <i class="bi bi-check-circle-fill me-1"></i> Fichier déjà fourni. Vous pouvez le remplacer si besoin.
                     </div>
                     @endif
-                    <input type="file" name="document_cip" class="form-control @error('document_cip') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" {{ (empty($existingDocuments) || empty($data['document_cip'])) ? 'required' : '' }}>
+                    <input type="file" name="document_cip" id="doc-org-cip-file" class="form-control @error('document_cip') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png">
                     <div class="form-text">Format PDF, JPG ou PNG. Max 2 Mo.</div>
                     @error('document_cip') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Numéro CIP du représentant</label>
-                    <input type="text" name="numero_cip_rep" class="form-control @error('numero_cip_rep') is-invalid @enderror"
+                    <input type="text" name="numero_cip_rep" id="doc-org-cip-num" class="form-control @error('numero_cip_rep') is-invalid @enderror"
                            value="{{ old('numero_cip_rep', $data['numero_cip'] ?? '') }}" placeholder="Ex : numéro figurant sur la CIP">
                     @error('numero_cip_rep') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
@@ -209,6 +209,15 @@
 
 @section('scripts')
 <script>
+    @php
+        $alreadyJustificatif = !empty($existingDocuments) && !empty($data['document_justificatif']);
+        $alreadyCip = !empty($existingDocuments) && !empty($data['document_cip']);
+        $alreadySignature = !empty($existingDocuments) && !empty($data['signature']);
+    @endphp
+    const alreadyJustificatif = {!! $alreadyJustificatif ? 'true' : 'false' !!};
+    const alreadyCip = {!! $alreadyCip ? 'true' : 'false' !!};
+    const alreadySignature = {!! $alreadySignature ? 'true' : 'false' !!};
+
     const simpleLabels = {
         universitaire: { doc: 'Carte étudiante du responsable', num: 'Numéro de la carte étudiant' },
         particulier: { doc: 'Carte CIP', num: 'Numéro CIP' }
@@ -223,6 +232,13 @@
         entreprise: 'Numéro du Registre de Commerce (RC)',
         association: 'Numéro du récépissé d\'autorisation'
     };
+
+    function setRequired(id, required) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (required) el.setAttribute('required', '');
+        else el.removeAttribute('required');
+    }
 
     function typeDetail() {
         const orgFields = document.getElementById('fields-organisation');
@@ -240,14 +256,24 @@
         simple.style.display = isOrg ? 'none' : 'block';
         org.style.display = isOrg ? 'block' : 'none';
 
+        // Nettoyer les attributs required des deux blocs
+        ['doc-simple-file','doc-simple-num','doc-org-file','doc-org-num-rc','doc-org-cip-file','doc-org-cip-num'].forEach(id => setRequired(id, false));
+
         if (!isOrg) {
             const labels = simpleLabels[val] || simpleLabels.particulier;
             document.getElementById('doc-simple-label').textContent = labels.doc;
             document.getElementById('doc-simple-number-label').textContent = labels.num;
+            // Seul le bloc visible est requis
+            setRequired('doc-simple-file', !alreadyJustificatif);
+            setRequired('doc-simple-num', true);
         } else {
             const detail = typeDetail();
             document.getElementById('doc-org-label').textContent = orgDocLabel[detail] || orgDocLabel.entreprise;
             document.getElementById('doc-org-number-label').textContent = orgNumLabel[detail] || orgNumLabel.entreprise;
+            setRequired('doc-org-file', !alreadyJustificatif);
+            setRequired('doc-org-num-rc', true);
+            setRequired('doc-org-cip-file', !alreadyCip);
+            setRequired('doc-org-cip-num', true);
         }
     }
 
@@ -269,6 +295,9 @@
         if (selected) {
             updateBlocks(selected.querySelector('input[type="radio"]').value);
         }
+        // Signature : requise si non déjà fournie
+        const sig = document.querySelector('input[name="signature"]');
+        if (sig && !alreadySignature) sig.setAttribute('required', '');
     })();
 
     document.querySelectorAll('.toggle-btn').forEach(btn => {
