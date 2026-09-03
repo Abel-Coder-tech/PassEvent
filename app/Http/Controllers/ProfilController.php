@@ -35,6 +35,7 @@ class ProfilController extends Controller
                 'type' => $user->type,
                 'organisation' => $user->organisation,
                 'type_detail' => $user->type_detail,
+                'nom_representant' => $user->nom_representant,
                 'fonction' => $user->fonction,
                 'document_justificatif' => $user->document_justificatif,
                 'document_cip' => $user->document_cip,
@@ -79,6 +80,7 @@ class ProfilController extends Controller
             'numero_cip_rep' => 'le numéro CIP du représentant',
             'numero_rc' => 'le numéro du registre de commerce (ou récépissé)',
             'fonction' => 'la fonction du représentant',
+            'nom_representant' => 'le nom du représentant',
             'organisation' => 'le nom de l\'organisation',
             'type_detail' => 'le type de structure',
         ];
@@ -103,16 +105,18 @@ class ProfilController extends Controller
 
         if ($request->type === 'universitaire' || $request->type === 'organisation') {
             $rules['organisation'] = 'required|string|max:255';
+            $rules['nom_representant'] = 'required|string|max:255';
+            $rules['fonction'] = 'required|string|max:255';
             $messages['organisation.required'] = 'Veuillez renseigner ' . $labels['organisation'] . '.';
+            $messages['nom_representant.required'] = 'Veuillez renseigner ' . $labels['nom_representant'] . '.';
+            $messages['fonction.required'] = 'Veuillez renseigner ' . $labels['fonction'] . '.';
         }
 
         if ($request->type === 'organisation') {
             $rules['type_detail'] = 'required|in:entreprise,association';
-            $rules['fonction'] = 'required|string|max:255';
             $rules['numero_rc'] = 'required|string|max:100';
             $rules['numero_cip_rep'] = 'required|string|max:100';
             $messages['type_detail.required'] = 'Veuillez choisir ' . $labels['type_detail'] . '.';
-            $messages['fonction.required'] = 'Veuillez renseigner ' . $labels['fonction'] . '.';
             $messages['numero_rc.required'] = 'Veuillez renseigner ' . $labels['numero_rc'] . '.';
             $messages['numero_cip_rep.required'] = 'Veuillez renseigner ' . $labels['numero_cip_rep'] . '.';
 
@@ -221,9 +225,15 @@ class ProfilController extends Controller
 
         if ($data['type'] === 'organisation') {
             $updateData['type_detail'] = $data['type_detail'] ?? null;
-            $updateData['fonction'] = $data['fonction'] ?? null;
         } else {
             $updateData['type_detail'] = null;
+        }
+
+        if ($data['type'] === 'universitaire' || $data['type'] === 'organisation') {
+            $updateData['nom_representant'] = $data['nom_representant'] ?? null;
+            $updateData['fonction'] = $data['fonction'] ?? null;
+        } else {
+            $updateData['nom_representant'] = null;
             $updateData['fonction'] = null;
         }
 
