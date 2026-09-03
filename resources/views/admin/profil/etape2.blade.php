@@ -242,6 +242,13 @@
         else el.removeAttribute('required');
     }
 
+    function setDisabled(id, disabled) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (disabled) el.setAttribute('disabled', 'disabled');
+        else el.removeAttribute('disabled');
+    }
+
     function typeDetail() {
         const orgFields = document.getElementById('fields-organisation');
         if (orgFields.style.display === 'block') {
@@ -258,20 +265,25 @@
         simple.style.display = isOrg ? 'none' : 'block';
         org.style.display = isOrg ? 'block' : 'none';
 
-        // Nettoyer les attributs required des deux blocs
-        ['doc-simple-file','doc-simple-num','doc-org-file','doc-org-num-rc','doc-org-cip-file','doc-org-cip-num'].forEach(id => setRequired(id, false));
+        // Nettoyer les attributs required et disabled des deux blocs
+        const allFields = ['doc-simple-file','doc-simple-num','doc-org-file','doc-org-num-rc','doc-org-cip-file','doc-org-cip-num'];
+        allFields.forEach(id => setRequired(id, false));
+        allFields.forEach(id => setDisabled(id, false));
 
         if (!isOrg) {
             const labels = simpleLabels[val] || simpleLabels.particulier;
             document.getElementById('doc-simple-label').textContent = labels.doc;
             document.getElementById('doc-simple-number-label').textContent = labels.num;
-            // Seul le bloc visible est requis
+            // Seul le bloc visible est requis ; le bloc masque est desactive
+            ['doc-org-file','doc-org-num-rc','doc-org-cip-file','doc-org-cip-num'].forEach(id => setDisabled(id, true));
             setRequired('doc-simple-file', !alreadyJustificatif);
             setRequired('doc-simple-num', true);
         } else {
             const detail = typeDetail();
             document.getElementById('doc-org-label').textContent = orgDocLabel[detail] || orgDocLabel.entreprise;
             document.getElementById('doc-org-number-label').textContent = orgNumLabel[detail] || orgNumLabel.entreprise;
+            // Seul le bloc visible est requis ; le bloc masque est desactive
+            ['doc-simple-file','doc-simple-num'].forEach(id => setDisabled(id, true));
             setRequired('doc-org-file', !alreadyJustificatif);
             setRequired('doc-org-num-rc', true);
             setRequired('doc-org-cip-file', !alreadyCip);
