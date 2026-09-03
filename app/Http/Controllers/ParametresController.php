@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\RetraitController;
+use App\Models\NumeroRetrait;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +15,10 @@ class ParametresController extends Controller
     // Page d'accueil des paramètres
     public function index()
     {
-        return view('admin.parametres.index');
+        return view('admin.parametres.index', [
+            'numerosRetrait' => Auth::user()->numerosRetrait()->orderByDesc('id')->get(),
+            'reseauxConfig' => RetraitController::RESEAUX_CONFIG,
+        ]);
     }
 
     // Met à jour le profil de l'organisateur (nom, email, avatar)
@@ -144,5 +149,38 @@ class ParametresController extends Controller
         $user->delete();
 
         return redirect('/login')->with('success', 'Votre compte a ete supprime.');
+    }
+
+    // Ajoute un numéro de retrait pour l'utilisateur connecté
+    public function storeNumeroRetrait(Request $request)
+    {
+        $validated = $request->validate([
+            'operateur' => 'required|in:mtn,moov,celtiis',
+            'nom' => 'required|string|max:255',
+            'mobile' => 'required|string|max:50',
+        ], [
+            'operateur.required' => 'Veuillez choisir un opérateur.',
+            'operateur.in' => 'L\'opérateur choisi est invalide.',
+            'nom.required' => 'Le nom du bénéficiaire est obligatoire.',
+            'nom.max' => 'Le nom ne doit pas dépasser 255 caractères.',
+            'mobile.required' => 'Le numéro Mobile Money est obligatoire.',
+            'mobile.max' => 'Le numéro ne doit pas dépasser 50 caractères.',
+        ]);
+
+        Auth::user()->numerosRetrait()->create($validated);
+
+        return back()->with('success_numero_retrait', 'Numéro de retrait ajouté avec succès.');
+    }
+
+    // Supprime un numéro de retrait (source : l'utilisateur connecté uniquement)
+    public function destroyNumeroRetrait(NumeroRetrait $numero)
+    {
+        if ($numero->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $numero->delete();
+
+        return back()->with('success_numero_retrait', 'Numéro de retrait supprimé.');
     }
 }

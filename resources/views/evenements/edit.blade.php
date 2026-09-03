@@ -176,7 +176,7 @@
                             </div>
                             <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Pour modifier les tarifs, accédez à la section "Tarifs" depuis la page de l'événement.
+                                Pour gérer les tarifs, accédez à la section "Tarifs" depuis la page de l'événement. Le prix d'un tarif ne peut plus être modifié après sa création.
                             </p>
                         @endif
                     </div>

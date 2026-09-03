@@ -10,6 +10,7 @@ use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\AttributionAgent;
 use App\Models\DemandeRemboursement;
+use App\Models\DemandeModificationTarif;
 use App\Models\Evenement;
 use App\Models\Log;
 use App\Models\Message;
@@ -1971,6 +1972,111 @@ class SuperAdminController extends Controller
         ]);
 
         return back()->with('success', 'Retrait rejeté. L\'organisateur a été notifié.');
+    }
+
+    // Liste les demandes de modification de prix de tarifs envoyées par les organisateurs
+    public function demandesModificationTarifs()
+    {
+        $demandes = DemandeModificationTarif::with('evenement', 'tarif', 'user')
+            ->orderByRaw("FIELD(statut, 'en_attente', 'approuve', 'refuse')")
+            ->orderByDesc('created_at')
+            ->paginate(PerPage::resolve());
+
+        $stats = [
+            'en_attente' => DemandeModificationTarif::where('statut', 'en_attente')->count(),
+            'approuve' => DemandeModificationTarif::where('statut', 'approuve')->count(),
+            'refuse' => DemandeModificationTarif::where('statut', 'refuse')->count(),
+            'total' => DemandeModificationTarif::count(),
+        ];
+
+        return view('superadmin.demandes-modification-tarifs', compact('demandes', 'stats'));
+    }
+
+    // Approuve une demande : applique le nouveau prix au tarif et notifie l'organisateur
+    public function approuverDemandeModificationTarif(Request $request, DemandeModificationTarif $demande)
+    {
+        if ($demande->statut !== 'en_attente') {
+            return back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+
+        $demande->update([
+            'statut' => 'approuve',
+            'notes' => $request->input('notes'),
+            'traitee_le' => now(),
+        ]);
+
+        $demande->refresh();
+        $demande->tarif->update(['prix' => $demande->nouveau_prix]);
+
+        Message::create([
+            'user_id' => $demande->user_id,
+            'nom_complet' => 'PaxEvent',
+            'email' => 'contact@paxevent.com',
+            'objet' => 'Modification de tarif approuvée — PaxEvent',
+            'message' => 'Votre demande de modification du prix du tarif « '.$demande->tarif->nom.' » ('.
+                number_format($demande->ancien_prix, 0, ',', ' ').' F → '.number_format($demande->nouveau_prix, 0, ',', ' ').' F) '.
+                'pour l\'événement « '.$demande->evenement->titre.' » a été approuvée par PaxEvent.',
+            'lu' => false,
+        ]);
+
+        Log::create([
+            'type_operation' => 'demande_modification_tarif_approuve',
+            'ticket_id' => null,
+            'details' => $this->avecActeur([
+                'demande_id' => $demande->id,
+                'evenement_id' => $demande->evenement_id,
+                'tarif_id' => $demande->tarif_id,
+                'organisateur_id' => $demande->user_id,
+                'ancien_prix' => $demande->ancien_prix,
+                'nouveau_prix' => $demande->nouveau_prix,
+            ]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'Demande approuvée. Le nouveau prix a été appliqué et l\'organisateur a été notifié.');
+    }
+
+    // Refuse une demande : ne modifie pas le prix et notifie l'organisateur
+    public function refuserDemandeModificationTarif(Request $request, DemandeModificationTarif $demande)
+    {
+        if ($demande->statut !== 'en_attente') {
+            return back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+
+        $notes = $request->input('notes') ?: 'Non spécifiée';
+
+        $demande->update([
+            'statut' => 'refuse',
+            'notes' => $notes,
+            'traitee_le' => now(),
+        ]);
+
+        $demande->refresh();
+
+        Message::create([
+            'user_id' => $demande->user_id,
+            'nom_complet' => 'PaxEvent',
+            'email' => 'contact@paxevent.com',
+            'objet' => 'Modification de tarif refusée — PaxEvent',
+            'message' => 'Votre demande de modification du prix du tarif « '.$demande->tarif->nom.' » '.
+                'pour l\'événement « '.$demande->evenement->titre.' » a été refusée par PaxEvent. Raison : '.$notes,
+            'lu' => false,
+        ]);
+
+        Log::create([
+            'type_operation' => 'demande_modification_tarif_refuse',
+            'ticket_id' => null,
+            'details' => $this->avecActeur([
+                'demande_id' => $demande->id,
+                'evenement_id' => $demande->evenement_id,
+                'tarif_id' => $demande->tarif_id,
+                'organisateur_id' => $demande->user_id,
+                'notes' => $notes,
+            ]),
+            'ip' => request()->ip(),
+        ]);
+
+        return back()->with('error', 'Demande refusée. L\'organisateur a été notifié.');
     }
 
     // Liste des demandes de remboursement

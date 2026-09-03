@@ -107,6 +107,11 @@ class Evenement extends Model
         return $this->hasMany(Tarif::class);
     }
 
+    public function demandesModificationTarif(): HasMany
+    {
+        return $this->hasMany(DemandeModificationTarif::class, 'evenement_id');
+    }
+
     public function codesPromos(): HasMany
     {
         return $this->hasMany(CodePromo::class);

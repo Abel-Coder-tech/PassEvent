@@ -66,44 +66,62 @@
                     </p>
                     <form action="{{ route('admin.retraits.store') }}" method="POST" id="formRetrait" autocomplete="none">
                         @csrf
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Réseau cible <span class="text-danger">*</span></label>
-                            <select name="reseau" id="reseauSelect" class="form-select" required autocomplete="one-time-code">
-                                <option value="">Choisir le réseau du retrait —</option>
-                                @foreach(\App\Http\Controllers\RetraitController::RESEAUX_CONFIG as $key => $cfg)
-                                <option value="{{ $key }}">{{ $cfg['label'] }}</option>
-                                @endforeach
-                            </select>
-                            <small class="text-muted">Réseau sur lequel vous souhaitez recevoir le montant</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Montant à retirer <span class="text-danger">*</span></label>
-                            <input type="number" name="montant" class="form-control" min="1000" max="{{ $soldeDisponible }}" step="100" placeholder="Ex: 50000" required autocomplete="one-time-code">
-                            <small class="text-muted">Min 1 000 FCFA · Max {{ number_format($soldeDisponible, 0, ',', ' ') }} FCFA</small>
-                            @error('montant')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nom du bénéficiaire <span class="text-danger">*</span></label>
-                            <input type="text" name="nom" class="form-control" placeholder="Ex: Kofi Mensah" required autocomplete="one-time-code">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro Mobile Money <span class="text-danger">*</span></label>
-                            <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 6X XX XX XX" required autocomplete="one-time-code">
-                            <small class="text-muted">Doit correspondre au réseau sélectionné</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmez votre mot de passe <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="password" name="password" id="retraitPassword" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="new-password" style="border-radius:8px 0 0 8px;">
-                                <button class="btn btn-outline-secondary" type="button" id="toggleRetraitPwd" style="border-color:#ede5f0; color:#6c757d;">
-                                    <i class="bi bi-eye" id="retraitPwdIcon"></i>
-                                </button>
+                        @if(!$numerosRetrait->count())
+                            <div class="alert alert-warning d-flex align-items-start gap-2 py-3 px-3 mb-0" style="border-radius:10px; font-size:0.85rem;">
+                                <i class="bi bi-exclamation-triangle me-1" style="color:#f39c12; font-size:1.1rem;"></i>
+                                <div>
+                                    <strong>Ajoutez d'abord un numéro de retrait.</strong>
+                                    <p class="mb-0 mt-1 text-muted">Pour demander un retrait, enregistrez d'abord votre numéro Mobile Money dans vos <a href="{{ route('parametres.index') }}#paiement" style="color:var(--violet); font-weight:600;">paramètres (section Paiement)</a>.</p>
+                                </div>
                             </div>
-                            @error('password')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
-                        </div>
-                        <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
-                            <i class="bi bi-send me-1"></i> Envoyer la demande
-                        </button>
+                        @else
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size:0.82rem; font-weight:600;">Réseau cible <span class="text-danger">*</span></label>
+                                <select name="reseau" id="reseauSelect" class="form-select" required autocomplete="one-time-code">
+                                    <option value="">Choisir le réseau du retrait —</option>
+                                    @foreach($numerosRetrait->unique('reseau') as $grpReseau)
+                                    <option value="{{ $grpReseau->operateur }}">{{ \App\Http\Controllers\RetraitController::getLabelReseau($grpReseau->operateur) }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Réseau sur lequel vous souhaitez recevoir le montant</small>
+                            </div>
+                            <div class="mb-3" id="numeroSelectWrap" style="display:none;">
+                                <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro de retrait <span class="text-danger">*</span></label>
+                                <select name="numero_id" id="numeroSelect" class="form-select" required autocomplete="one-time-code">
+                                    <option value="">Choisir le numéro —</option>
+                                </select>
+                                <small class="text-muted">Sélectionnez le numéro enregistré à utiliser</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size:0.82rem; font-weight:600;">Montant à retirer <span class="text-danger">*</span></label>
+                                <input type="number" name="montant" class="form-control" min="1000" max="{{ $soldeDisponible }}" step="100" placeholder="Ex: 50000" required autocomplete="one-time-code">
+                                <small class="text-muted">Min 1 000 FCFA · Max {{ number_format($soldeDisponible, 0, ',', ' ') }} FCFA</small>
+                                @error('montant')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nom du bénéficiaire</label>
+                                <input type="text" name="nom" id="beneficiaireNom" class="form-control" readonly style="background:#f5f2f6; cursor:not-allowed;">
+                                <small class="text-muted">Renseigné automatiquement depuis vos numéros enregistrés</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro Mobile Money</label>
+                                <input type="text" name="mobile" id="beneficiaireMobile" class="form-control" readonly style="background:#f5f2f6; cursor:not-allowed;">
+                                <small class="text-muted">Renseigné automatiquement depuis vos numéros enregistrés</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size:0.82rem; font-weight:600;">Confirmez votre mot de passe <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" name="password" id="retraitPassword" class="form-control @error('password') is-invalid @enderror" placeholder="Saisissez votre mot de passe" required autocomplete="new-password" style="border-radius:8px 0 0 8px;">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleRetraitPwd" style="border-color:#ede5f0; color:#6c757d;">
+                                        <i class="bi bi-eye" id="retraitPwdIcon"></i>
+                                    </button>
+                                </div>
+                                @error('password')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                            </div>
+                            <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
+                                <i class="bi bi-send me-1"></i> Envoyer la demande
+                            </button>
+                        @endif
                     </form>
                 </div>
             </div>
@@ -243,9 +261,56 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formRetrait');
     const retraitModal = document.getElementById('retraitModal');
 
+    const numerosData = @json($numerosRetrait);
+    const reseauSelect = document.getElementById('reseauSelect');
+    const numeroSelect = document.getElementById('numeroSelect');
+    const numeroSelectWrap = document.getElementById('numeroSelectWrap');
+    const benefNom = document.getElementById('beneficiaireNom');
+    const benefMobile = document.getElementById('beneficiaireMobile');
+
+    function resetBeneficiaire() {
+        if (benefNom) benefNom.value = '';
+        if (benefMobile) benefMobile.value = '';
+        if (numeroSelect) {
+            numeroSelect.innerHTML = '<option value="">Choisir le numéro —</option>';
+        }
+        if (numeroSelectWrap) numeroSelectWrap.style.display = 'none';
+    }
+
+    if (reseauSelect) {
+        reseauSelect.addEventListener('change', function() {
+            resetBeneficiaire();
+            const reseau = this.value;
+            if (!reseau) return;
+            const nums = numerosData.filter(n => n.reseau === reseau);
+            if (nums.length === 0) return;
+            nums.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n.id;
+                opt.dataset.nom = n.nom;
+                opt.dataset.mobile = n.mobile;
+                opt.textContent = n.nom + ' — ' + n.mobile;
+                numeroSelect.appendChild(opt);
+            });
+            numeroSelectWrap.style.display = '';
+            if (nums.length === 1) {
+                numeroSelect.value = nums[0].id;
+                numeroSelect.dispatchEvent(new Event('change'));
+            }
+        });
+
+        numeroSelect.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            benefNom.value = opt ? (opt.dataset.nom || '') : '';
+            benefMobile.value = opt ? (opt.dataset.mobile || '') : '';
+        });
+    }
+
     retraitModal.addEventListener('show.bs.modal', function() {
         setTimeout(function() {
             form.reset();
+            if (reseauSelect) reseauSelect.value = '';
+            resetBeneficiaire();
             document.getElementById('retraitPassword').value = '';
             document.getElementById('retraitPassword').type = 'password';
             document.getElementById('retraitPwdIcon').className = 'bi bi-eye';
