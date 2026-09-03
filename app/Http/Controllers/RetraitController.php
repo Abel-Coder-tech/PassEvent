@@ -77,6 +77,7 @@ class RetraitController extends Controller
         return view('admin.retraits.index', array_merge($data, [
             'retraits' => $retraits,
             'commissionPct' => $user->commissionPourcentage(),
+            'numerosRetrait' => $user->numerosRetrait()->orderByDesc('id')->get(),
         ]));
     }
 
@@ -94,11 +95,19 @@ class RetraitController extends Controller
 
             $validated = $request->validate([
                 'reseau' => 'required|in:mtn,moov,celtiis',
+                'numero_id' => 'required|integer',
                 'montant' => 'required|numeric|min:1000|max:'.$data['soldeDisponible'],
-                'nom' => 'required|string|max:255',
-                'mobile' => 'required|string|max:50',
                 'password' => 'required|string',
             ]);
+
+            $numero = $user->numerosRetrait()
+                ->where('id', $validated['numero_id'])
+                ->where('operateur', $validated['reseau'])
+                ->first();
+
+            if (! $numero) {
+                return ['error' => true, 'message' => 'Numéro de retrait invalide.'];
+            }
 
             if (! Hash::check($validated['password'], $user->getAuthPassword())) {
                 return ['error' => true, 'message' => 'Mot de passe incorrect.'];
@@ -108,8 +117,8 @@ class RetraitController extends Controller
                 'user_id' => $user->id,
                 'montant' => $validated['montant'],
                 'commission_percentage' => $user->commissionPourcentage(),
-                'nom' => $validated['nom'],
-                'mobile' => $validated['mobile'],
+                'nom' => $numero->nom,
+                'mobile' => $numero->mobile,
                 'reseau' => $validated['reseau'],
                 'status' => 'en_attente',
             ]);

@@ -387,13 +387,59 @@
                         <h5><i class="bi bi-credit-card me-2" style="color: var(--vert);"></i>Paiement</h5>
                     </div>
                     <div class="panel-card-body">
-                        <div class="alert alert-info d-flex align-items-center gap-3 py-3 px-3 mb-0" style="background: rgba(66,140,121,0.06); border-radius: 10px; border: 1px solid rgba(66,140,121,0.15);">
+                        <div class="alert alert-info d-flex align-items-center gap-3 py-3 px-3 mb-4" style="background: rgba(66,140,121,0.06); border-radius: 10px; border: 1px solid rgba(66,140,121,0.15);">
                             <i class="bi bi-shield-check" style="font-size: 1.5rem; color: var(--vert);"></i>
                             <div style="font-size: 0.85rem;">
                                 <strong class="d-block mb-1">Paiement centralisé</strong>
                                 <p class="mb-0 text-muted">Les paiements sont gérés par la plateforme. Les fonds sont reversés sur votre compte via le système de retrait disponible dans la section <a href="{{ route('admin.retraits.index') }}" style="color: var(--vert); font-weight: 600;">Retraits</a>.</p>
                             </div>
                         </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3" style="border-top: 1px solid #f0f0f0; padding-top: 1.25rem;">
+                            <div>
+                                <div class="fw-bold" style="font-size: 0.95rem;">Numéros de retrait</div>
+                                <div class="text-muted" style="font-size: 0.78rem;">Veuillez ajouter vos numéros de retraits. Ils seront utilisé lors d'une demande de retrait.</div>
+                            </div>
+                            <button type="button" class="btn btn-vert" style="border-radius: 8px; white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#modalAjouterNumero">
+                                <i class="bi bi-plus-lg me-1"></i> Ajouter
+                            </button>
+                        </div>
+
+                        @if(session('success_numero_retrait'))
+                            <div class="alert alert-success d-flex align-items-center gap-2 py-2 px-3 mb-3" style="border-radius: 8px; font-size: 0.85rem;">
+                                <i class="bi bi-check-circle"></i> {{ session('success_numero_retrait') }}
+                            </div>
+                        @endif
+
+                        @if($numerosRetrait->count() === 0)
+                            <div class="text-center py-4" style="color: var(--gris);">
+                                <i class="bi bi-wallet2 d-block mb-2" style="font-size: 2rem;"></i>
+                                <p class="mb-0" style="font-size: 0.85rem;">Aucun numéro de retrait enregistré.<br>Cliquez sur <strong>Ajouter</strong> pour en créer un.</p>
+                            </div>
+                        @else
+                            <div class="row g-3">
+                                @foreach($numerosRetrait as $numero)
+                                    @php $cfg = $reseauxConfig[$numero->operateur] ?? null; @endphp
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="p-3 rounded" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15); position: relative;">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <i class="{{ $cfg['icon'] ?? 'bi-phone' }}" style="color: var(--violet); font-size: 1.1rem;"></i>
+                                                <span class="fw-bold" style="font-size: 0.85rem; color: var(--violet);">{{ $cfg['label'] ?? ucfirst($numero->operateur) }}</span>
+                                                <form action="{{ route('parametres.numeros-retrait.destroy', $numero) }}" method="POST" class="ms-auto" onsubmit="return confirm('Supprimer ce numéro de retrait ?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Supprimer" style="color: #e74c3c;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <div class="fw-semibold" style="font-size: 0.9rem;">{{ $numero->nom }}</div>
+                                            <div class="text-muted" style="font-size: 0.82rem;">{{ $numero->mobile }}</div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -505,7 +551,51 @@
     </div>
 </div>
 
-{{-- Modal suppression compte --}}
+{{-- Modal ajouter un numéro de retrait --}}
+<div class="modal fade" id="modalAjouterNumero" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 14px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold" style="color: #1a1a2e;"><i class="bi bi-wallet2 me-2" style="color: var(--violet);"></i> Ajouter un numéro de retrait</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ route('parametres.numeros-retrait.store') }}" method="POST" id="formNumeroRetrait">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:0.82rem; font-weight:600;">Opérateur <span class="text-danger">*</span></label>
+                        <div class="row g-2" id="reseauCartes">
+                            @foreach($reseauxConfig as $key => $cfg)
+                            <div class="col-4">
+                                <label class="reseau-carte text-center w-100" data-reseau="{{ $key }}" style="cursor:pointer; display:block; border:1px solid #e5e0e8; border-radius:10px; padding:0.75rem 0.25rem; transition: all .15s;">
+                                    <input type="radio" name="operateur" value="{{ $key }}" hidden style="display:none;" required>
+                                    <i class="{{ $cfg['icon'] }}" style="font-size:1.25rem; color:var(--violet); display:block; margin-bottom:0.25rem;"></i>
+                                    <span style="font-size:0.72rem; font-weight:600; color:#444;">{{ $cfg['label'] }}</span>
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
+                        @error('operateur')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nom du bénéficiaire <span class="text-danger">*</span></label>
+                        <input type="text" name="nom" class="form-control" placeholder="Nom et prénom en toutes lettres" required>
+                        @error('nom')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:0.82rem; font-weight:600;">Numéro Mobile Money <span class="text-danger">*</span></label>
+                        <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 6X XX XX XX" required>
+                        @error('mobile')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                        <small class="text-muted">Doit correspondre au réseau sélectionné</small>
+                    </div>
+                    <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
+                        <i class="bi bi-check-lg me-1"></i> Sauvegarder
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="modalDeleteAccount" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: 1px solid rgba(231,76,60,0.2);">
@@ -564,5 +654,13 @@ function generateScanCode() {
     }
     document.querySelector('input[name="code_acces_scan"]').value = code;
 }
+
+document.querySelectorAll('.reseau-carte').forEach(card => {
+    card.addEventListener('click', function() {
+        document.querySelectorAll('.reseau-carte').forEach(c => c.style.borderColor = '#e5e0e8');
+        this.style.borderColor = 'var(--violet)';
+        this.style.boxShadow = '0 0 0 2px rgba(123,63,160,0.15)';
+    });
+});
 </script>
 @endsection

@@ -595,6 +595,11 @@
                 @php $pendingRetraits = \App\Models\Withdrawal::where('status','en_attente')->count(); @endphp
                 @if($pendingRetraits > 0)<span class="sa-nav-badge">{{ $pendingRetraits }}</span>@endif
             </a>
+            <a href="{{ route($saPref.'demandes-modification-tarifs') }}" class="sa-nav-link {{ request()->routeIs($saPref.'demandes-modification-tarifs*') ? 'active' : '' }}">
+                <i class="bi bi-tags"></i> Demandes de modif. tarifs
+                @php $pendingDemandes = \App\Models\DemandeModificationTarif::where('statut','en_attente')->count(); @endphp
+                @if($pendingDemandes > 0)<span class="sa-nav-badge">{{ $pendingDemandes }}</span>@endif
+            </a>
             @endif
             @if($saUser->peut('remboursements.consulter'))
             <a href="{{ route($saPref.'remboursements.demandes') }}" class="sa-nav-link {{ request()->routeIs($saPref.'remboursements*') ? 'active' : '' }}">

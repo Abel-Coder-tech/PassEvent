@@ -220,6 +220,16 @@ class User extends Authenticatable
         return $this->hasMany(Withdrawal::class);
     }
 
+    public function numerosRetrait(): HasMany
+    {
+        return $this->hasMany(NumeroRetrait::class);
+    }
+
+    public function demandesModificationTarif(): HasMany
+    {
+        return $this->hasMany(DemandeModificationTarif::class, 'user_id');
+    }
+
     public function lotsPhysiques(): HasMany
     {
         return $this->hasMany(LotPhysique::class, 'user_id');

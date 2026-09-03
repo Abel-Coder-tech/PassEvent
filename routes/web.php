@@ -171,6 +171,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/retraits/{withdrawal}/approuver', [SuperAdminController::class, 'approuverRetrait'])->name('retraits.approuver');
         Route::post('/retraits/{withdrawal}/confirmer', [SuperAdminController::class, 'confirmerRetrait'])->name('retraits.confirmer');
         Route::post('/retraits/{withdrawal}/rejeter', [SuperAdminController::class, 'rejeterRetrait'])->name('retraits.rejeter');
+        Route::get('/demandes-modification-tarifs', [SuperAdminController::class, 'demandesModificationTarifs'])->name('demandes-modification-tarifs');
+        Route::post('/demandes-modification-tarifs/{demande}/approuver', [SuperAdminController::class, 'approuverDemandeModificationTarif'])->name('demandes-modification-tarifs.approuver');
+        Route::post('/demandes-modification-tarifs/{demande}/refuser', [SuperAdminController::class, 'refuserDemandeModificationTarif'])->name('demandes-modification-tarifs.refuser');
         Route::get('/logs', [SuperAdminController::class, 'logsSysteme'])->name('logs');
         Route::get('/moderation', [SuperAdminController::class, 'moderation'])->name('moderation');
         Route::get('/remboursements', [SuperAdminController::class, 'demandesRemboursement'])->name('remboursements.demandes');
@@ -307,6 +310,8 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::put('/notifications', [ParametresController::class, 'notifications'])->name('notifications.update');
         Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
         Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
+        Route::post('/numeros-retrait', [ParametresController::class, 'storeNumeroRetrait'])->name('numeros-retrait.store');
+        Route::delete('/numeros-retrait/{numero}', [ParametresController::class, 'destroyNumeroRetrait'])->name('numeros-retrait.destroy');
     });
 
     Route::get('/contrat-prestation', [EvenementController::class, 'contratPrestation'])->name('contrat-prestation');
@@ -321,6 +326,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::post('/evenements/{evenement}/tarifs', [TarifController::class, 'store'])->name('tarifs.store');
         Route::get('/evenements/{evenement}/tarifs/{tarif}/edit', [TarifController::class, 'edit'])->name('tarifs.edit');
         Route::put('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
+        Route::post('/evenements/{evenement}/tarifs/{tarif}/demande-modification', [TarifController::class, 'demanderModificationPrix'])->name('tarifs.demande-modification');
         Route::delete('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'destroy'])->name('tarifs.destroy');
 
         Route::get('/scan-codes', [EvenementController::class, 'scanCodesIndex'])->name('scan-codes.index');

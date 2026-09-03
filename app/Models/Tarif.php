@@ -44,4 +44,9 @@ class Tarif extends Model
     {
         return $this->hasMany(LotPhysique::class);
     }
+
+    public function demandesModification(): HasMany
+    {
+        return $this->hasMany(DemandeModificationTarif::class, 'tarif_id');
+    }
 }
