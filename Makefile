@@ -3,6 +3,9 @@ deploy:
 
 
 install: vendor/autoload.php .env  public/storage public/build/manifest.json
+	php artisan view:clear
+	php artisan route:clear
+	php artisan config:clear
 	php artisan config:cache
 	php artisan route:cache
 	php artisan view:cache
