@@ -137,12 +137,20 @@
 
                 <div class="panel-card mt-4 mb-4" style="border-left: 3px solid var(--violet);">
                     <div class="panel-card-body p-3">
-                        <h6 class="fw-bold mb-3" style="color: var(--violet);">
-                            <i class="bi bi-cash-coin me-2"></i>Tarifs
-                        </h6>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="fw-bold mb-0" style="color: var(--violet);">
+                                <i class="bi bi-cash-coin me-2"></i>Tarifs
+                            </h6>
+                            @php $evenementAVendu = $evenement->tarifs()->sum('quantite_vendue') > 0; @endphp
+                            <a href="{{ route('admin.tarifs.index', $evenement->id) }}" class="btn btn-sm btn-primary-custom">
+                                <i class="bi bi-gear me-1"></i> Gérer les tarifs
+                            </a>
+                        </div>
 
                         @if($evenement->tarifs->isEmpty())
-                            <p class="text-muted">Aucun tarif défini pour cet événement.</p>
+                            <p class="text-muted">Aucun tarif défini pour cet événement.
+                                <a href="{{ route('admin.tarifs.create', $evenement->id) }}">Ajouter un tarif</a>.
+                            </p>
                         @else
                             <div class="table-responsive">
                                 <table class="table custom-table mb-0">
@@ -176,7 +184,19 @@
                             </div>
                             <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Pour gérer les tarifs, accédez à la section "Tarifs" depuis la page de l'événement. Le prix d'un tarif ne peut plus être modifié après sa création.
+                                Les tarifs se gèrent via le bouton « Gérer les tarifs ».
+                                @if($evenementAVendu)
+                                    Des billets ont déjà été vendus : le prix d'un tarif ne peut plus être modifié directement. Depuis la page des tarifs, utilisez « Demander une modification » ; la nouvelle valeur sera validée par PaxEvent.
+                                @else
+                                    Aucun billet vendu pour l'instant : vous pouvez créer et modifier librement les prix des tarifs.
+                                @endif
+                            </p>
+                        @endif
+                    </div>
+                </div>
+                            <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Pour gérer les tarifs (ajouter, modifier le prix, la quantité...), accédez à la section "Tarifs" depuis la page de l'événement. Le prix d'un tarif peut être modifié librement tant qu'aucun billet n'a été vendu ; si des billets ont déjà été vendus, toute modification de prix devra être validée par PaxEvent.
                             </p>
                         @endif
                     </div>
