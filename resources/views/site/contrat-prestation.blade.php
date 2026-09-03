@@ -38,6 +38,9 @@
         .parties {
             margin: 12px 0;
         }
+        .parties p {
+            margin: 0 0 8px;
+        }
         .parties strong {
             display: inline-block;
             margin-top: 6px;
@@ -113,32 +116,13 @@
     <h3>ENTRE LES SOUSSIGNÉS :</h3>
 
     <div class="parties">
-        <strong>Noctam Communication</strong>, immatriculée au RCCM sous le numéro RB/PNO/20 A 13348, dont le siège social est situé à Porto-Novo, Oganla Attakpamè, M/MARTIN, représentée par M. AHOUANVOEKE Amos, en sa qualité de Directeur Général, ci-après dénommée « PaxEvent »,
-        <br><br>
-        D'une part,
-        <br><br>
-        <strong>ET :</strong><br>
-        <strong>{{ $denomination }}</strong>
-        @if($pieceNumero)
-            <br>Immatriculé(e) sous le numéro de {{ $pieceLibelle }} : {{ $pieceNumero }}
-        @endif
-        @if($estPersonneMorale && $nomRepresentant)
-            <br>Représenté(e) par {{ $nomRepresentant }}
-            @if($fonctionRepresentant)
-                , en qualité de {{ $fonctionRepresentant }}
-            @endif
-            @if($cipRepresentant)
-                (CIP n° {{ $cipRepresentant }})
-            @endif
-        @endif
-        <br>Email : {{ $user->email }}
-        <br>Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}
-        <br><br>
-        Ci-après désigné « L'Organisateur »,
-        <br><br>
-        D'autre part.
-        <br><br>
-        <strong>Les deux ensemble dénommés « les Parties » conviennent de ce qui suit :</strong>
+        <p>
+            <strong>Noctam Communication</strong>, immatriculée au RCCM sous le numéro RB/PNO/20 A 13348, dont le siège social est situé à Porto-Novo, Oganla Attakpamè, M/MARTIN, représentée par M. AHOUANVOEKE Amos, en sa qualité de Directeur Général, ci-après dénommée « PaxEvent », d'une part.
+        </p>
+        <p>
+            <strong>ET :</strong> {{ $denomination }}@if($pieceNumero), immatriculé(e) sous le numéro de {{ $pieceLibelle }} : {{ $pieceNumero }}@endif@if($estPersonneMorale && $nomRepresentant), représenté(e) par {{ $nomRepresentant }}@if($fonctionRepresentant), en qualité de {{ $fonctionRepresentant }}@endif@if($cipRepresentant) (CIP n° {{ $cipRepresentant }})@endif@endif, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « L'Organisateur », d'autre part.
+        </p>
+        <p><strong>Les deux ensemble dénommés « les Parties » conviennent de ce qui suit :</strong></p>
     </div>
 
     <hr>

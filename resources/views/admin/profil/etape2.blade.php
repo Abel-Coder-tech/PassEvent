@@ -291,6 +291,15 @@
         }
     }
 
+    function setContainerDisabled(containerId, disabled) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.querySelectorAll('input, select, textarea').forEach(el => {
+            if (disabled) el.setAttribute('disabled', 'disabled');
+            else el.removeAttribute('disabled');
+        });
+    }
+
     function selectType(el, val) {
         document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
@@ -298,6 +307,10 @@
         document.getElementById('fields-universitaire').style.display = val === 'universitaire' ? 'block' : 'none';
         document.getElementById('fields-organisation').style.display = val === 'organisation' ? 'block' : 'none';
         document.getElementById('fields-particulier').style.display = val === 'particulier' ? 'block' : 'none';
+        // Désactiver les champs des blocs masqués pour éviter les doublons de nom
+        setContainerDisabled('fields-universitaire', val !== 'universitaire');
+        setContainerDisabled('fields-organisation', val !== 'organisation');
+        setContainerDisabled('fields-particulier', val !== 'particulier');
         updateBlocks(val);
     }
 
@@ -392,11 +405,15 @@
 
     (function init() {
         const selected = document.querySelector('.type-card.selected');
-        document.getElementById('fields-universitaire').style.display = selected && selected.querySelector('input[type="radio"]').value === 'universitaire' ? 'block' : 'none';
-        document.getElementById('fields-organisation').style.display = selected && selected.querySelector('input[type="radio"]').value === 'organisation' ? 'block' : 'none';
-        document.getElementById('fields-particulier').style.display = selected && selected.querySelector('input[type="radio"]').value === 'particulier' ? 'block' : 'none';
+        const selVal = selected && selected.querySelector('input[type="radio"]').value;
+        document.getElementById('fields-universitaire').style.display = selVal === 'universitaire' ? 'block' : 'none';
+        document.getElementById('fields-organisation').style.display = selVal === 'organisation' ? 'block' : 'none';
+        document.getElementById('fields-particulier').style.display = selVal === 'particulier' ? 'block' : 'none';
+        setContainerDisabled('fields-universitaire', selVal !== 'universitaire');
+        setContainerDisabled('fields-organisation', selVal !== 'organisation');
+        setContainerDisabled('fields-particulier', selVal !== 'particulier');
         if (selected) {
-            updateBlocks(selected.querySelector('input[type="radio"]').value);
+            updateBlocks(selVal);
         }
         // Signature : requise si non déjà fournie
         const sig = document.querySelector('input[name="signature"]');
