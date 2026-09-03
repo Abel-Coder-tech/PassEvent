@@ -148,7 +148,9 @@ class ProfilController extends Controller
         if ($request->type === 'organisation') {
             $hasCipDoc = $user->statut === 'corrections_demandees' && $user->document_cip;
             if ($request->hasFile('document_cip')) {
-                Storage::disk('public')->delete($user->document_cip);
+                if ($user->document_cip) {
+                    Storage::disk('public')->delete($user->document_cip);
+                }
                 $validated['document_cip'] = $request->file('document_cip')->store('justificatifs', 'public');
             } elseif ($hasCipDoc) {
                 $validated['document_cip'] = $user->document_cip;
