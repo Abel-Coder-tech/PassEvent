@@ -194,13 +194,6 @@
                         @endif
                     </div>
                 </div>
-                            <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Pour gérer les tarifs (ajouter, modifier le prix, la quantité...), accédez à la section "Tarifs" depuis la page de l'événement. Le prix d'un tarif peut être modifié librement tant qu'aucun billet n'a été vendu ; si des billets ont déjà été vendus, toute modification de prix devra être validée par PaxEvent.
-                            </p>
-                        @endif
-                    </div>
-                </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-semibold d-block">Statut <span class="text-danger">*</span></label>
