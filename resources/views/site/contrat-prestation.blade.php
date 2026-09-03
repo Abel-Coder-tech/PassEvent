@@ -42,8 +42,7 @@
             margin: 0 0 8px;
         }
         .parties strong {
-            display: inline-block;
-            margin-top: 6px;
+            /* inline to keep "Noctam Communication" and "ET :" on the same line as the sentence */
         }
         ul {
             margin: 4px 0 12px;
@@ -96,8 +95,8 @@
             $pieceNumero = $user->numero_cip ?: null;
         }
 
-        $nomRepresentant = $estPersonneMorale
-            ? $nomComplet
+        $nomRepresentant = ($estPersonneMorale || ($user->type ?? '') === 'universitaire')
+            ? ($user->nom_representant ?: $nomComplet)
             : null;
         $fonctionRepresentant = $user->fonction ?? null;
         $cipRepresentant = $estPersonneMorale
@@ -117,10 +116,10 @@
 
     <div class="parties">
         <p>
-            <strong>Noctam Communication</strong>, immatriculée au RCCM sous le numéro RB/PNO/20 A 13348, dont le siège social est situé à Porto-Novo, Oganla Attakpamè, M/MARTIN, représentée par M. AHOUANVOEKE Amos, en sa qualité de Directeur Général, ci-après dénommée « PaxEvent », d'une part.
+            <strong>Noctam Communication</strong>, immatriculée au RCCM sous le numéro <strong>RB/PNO/20 A 13348</strong>, dont le siège social est situé à Porto-Novo, Oganla Attakpamè, M/MARTIN, représentée par <strong>M. AHOUANVOEKE Amos </strong>, en sa qualité de Directeur Général, ci-après dénommée « <strong>PaxEvent</strong> », d'une part.
         </p>
         <p>
-            <strong>ET :</strong> {{ $denomination }}@if($pieceNumero), immatriculé(e) sous le numéro de {{ $pieceLibelle }} : {{ $pieceNumero }}@endif@if($estPersonneMorale && $nomRepresentant), représenté(e) par {{ $nomRepresentant }}@if($fonctionRepresentant), en qualité de {{ $fonctionRepresentant }}@endif@if($cipRepresentant) (CIP n° {{ $cipRepresentant }})@endif@endif, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « L'Organisateur », d'autre part.
+            <strong>ET :</strong> {{ $denomination }}@if($pieceNumero), immatriculé(e) sous le numéro de <strong>{{ $pieceLibelle }}</strong> : <strong>{{ $pieceNumero }}</strong>@endif@if(($estPersonneMorale || ($user->type ?? '') === 'universitaire') && $nomRepresentant), représenté(e) par <strong>{{ $nomRepresentant }}</strong>@if($fonctionRepresentant), en qualité de <strong>{{ $fonctionRepresentant }}</strong>@endif@if($cipRepresentant) (CIP n° <strong>{{ $cipRepresentant }}</strong>)@endif@endif, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « <strong>L'Organisateur</strong> », d'autre part.
         </p>
         <p><strong>Les deux ensemble dénommés « les Parties » conviennent de ce qui suit :</strong></p>
     </div>

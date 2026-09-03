@@ -97,6 +97,18 @@
                            value="{{ old('organisation', $data['organisation'] ?? '') }}" placeholder="Ex: Université d'Abomey-Calavi">
                     @error('organisation') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Nom du représentant</label>
+                    <input type="text" name="nom_representant" class="form-control @error('nom_representant') is-invalid @enderror"
+                           value="{{ old('nom_representant', $data['nom_representant'] ?? '') }}" placeholder="Ex: Jean AHOUANVOEKE">
+                    @error('nom_representant') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Fonction du représentant</label>
+                    <input type="text" name="fonction" class="form-control @error('fonction') is-invalid @enderror"
+                           value="{{ old('fonction', $data['fonction'] ?? '') }}" placeholder="Ex: Recteur, Président(e), Secrétaire Général...">
+                    @error('fonction') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
             </div>
 
             <div id="fields-organisation" style="display:none;">
@@ -118,6 +130,12 @@
                     <input type="text" name="organisation" class="form-control @error('organisation') is-invalid @enderror"
                            value="{{ old('organisation', $data['organisation'] ?? '') }}" placeholder="Ex: ABC SARL">
                     @error('organisation') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nom du représentant</label>
+                    <input type="text" name="nom_representant" class="form-control @error('nom_representant') is-invalid @enderror"
+                           value="{{ old('nom_representant', $data['nom_representant'] ?? '') }}" placeholder="Ex: Jean AHOUANVOEKE">
+                    @error('nom_representant') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Fonction du représentant</label>
