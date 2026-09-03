@@ -22,6 +22,18 @@
 
 @section('content')
 <div class="page-content">
+    @php $evenementAVendu = $evenement->tarifs()->sum('quantite_vendue') > 0; @endphp
+    @if($evenementAVendu)
+        <div class="alert alert-warning">
+            <i class="bi bi-info-circle me-2"></i>
+            Des billets ont déjà été vendus pour cet événement : le prix d'un tarif ne peut plus être modifié directement. Cliquez sur « Modifier » puis utilisez le bouton « Demander une modification » pour soumettre un nouveau prix à validation par PaxEvent.
+        </div>
+    @else
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Aucun billet vendu pour l'instant : vous pouvez créer et modifier librement les prix des tarifs.
+        </div>
+    @endif
     <div class="panel-card">
         <div class="card-body p-0">
         @if($tarifs->count() > 0)
@@ -53,8 +65,8 @@
                                 <td>{{ $tarif->quantite_vendue }}</td>
                                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($tarif->statut) }}</span></td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.tarifs.edit', [$evenement->id, $tarif->id]) }}" class="btn btn-sm btn-outline-secondary me-1">
-                                        <i class="bi bi-pencil"></i>
+                                    <a href="{{ route('admin.tarifs.edit', [$evenement->id, $tarif->id]) }}" class="btn btn-sm btn-outline-secondary me-1" title="Modifier ce tarif (prix, quantité, ou demande de modification)">
+                                        <i class="bi bi-pencil me-1"></i> Modifier
                                     </a>
                                     <form action="{{ route('admin.tarifs.destroy', [$evenement->id, $tarif->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tarif ?')">
                                         @csrf
