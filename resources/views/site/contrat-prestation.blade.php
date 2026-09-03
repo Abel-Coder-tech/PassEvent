@@ -81,18 +81,20 @@
             : $nomComplet;
 
         // Libellé et numéro d'immatriculation
-        if ($estAssociation) {
+        $pieceNumero = $user->numero_rc ?: ($user->numero_cip ?: null);
+        $partiePiece = '';
+        if ($estAssociation && $pieceNumero) {
             $pieceLibelle = 'récépissé d\'immatriculation';
-            $pieceNumero = $user->numero_rc ?: null;
-        } elseif ($estPersonneMorale) {
+            $partiePiece = ', immatriculée sous le numéro du <strong>' . $pieceLibelle . '</strong> : <strong>' . $pieceNumero . '</strong>';
+        } elseif ($estPersonneMorale && $pieceNumero) {
             $pieceLibelle = 'Registre de Commerce (RC)';
-            $pieceNumero = $user->numero_rc ?: null;
-        } elseif (($user->type ?? '') === 'universitaire') {
+            $partiePiece = ', immatriculé(e) sous le numéro du <strong>' . $pieceLibelle . '</strong> : <strong>' . $pieceNumero . '</strong>';
+        } elseif (($user->type ?? '') === 'universitaire' && $pieceNumero) {
             $pieceLibelle = 'carte d\'étudiant';
-            $pieceNumero = $user->numero_cip ?: null;
-        } else { // particulier
+            $partiePiece = ', détenteur(trice) de la <strong>' . $pieceLibelle . '</strong> n° <strong>' . $pieceNumero . '</strong>';
+        } elseif (($user->type ?? '') === 'particulier' && $pieceNumero) {
             $pieceLibelle = 'carte CIP';
-            $pieceNumero = $user->numero_cip ?: null;
+            $partiePiece = ', détenteur(trice) de la <strong>' . $pieceLibelle . '</strong> n° <strong>' . $pieceNumero . '</strong>';
         }
 
         $nomRepresentant = ($estPersonneMorale || ($user->type ?? '') === 'universitaire')
@@ -110,7 +112,7 @@
                 $partieRepresentant .= ', en qualité de ' . $fonctionRepresentant;
             }
             if ($cipRepresentant) {
-                $partieRepresentant .= ' (CIP n° ' . $cipRepresentant . ')';
+                $partieRepresentant .= ', détenteur(trice) de la carte CIP n° ' . $cipRepresentant;
             }
         }
     @endphp
@@ -130,7 +132,7 @@
             <strong>Noctam Communication</strong>, immatriculée au RCCM sous le numéro <strong>RB/PNO/20 A 13348</strong>, dont le siège social est situé à Porto-Novo, Oganla Attakpamè, M/MARTIN, représentée par <strong>M. AHOUANVOEKE Amos </strong>, en sa qualité de Directeur Général, ci-après dénommée « <strong>PaxEvent</strong> », d'une part.
         </p>
         <p>
-            <strong>ET :</strong> {{ $denomination }}@if($pieceNumero), immatriculé(e) sous le numéro de <strong>{{ $pieceLibelle }}</strong> : <strong>{{ $pieceNumero }}</strong>@endif{{ $partieRepresentant }}, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « <strong>L'Organisateur</strong> », d'autre part.
+            <strong>ET :</strong> {{ $denomination }}{{ $partiePiece }}{{ $partieRepresentant }}, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « <strong>L'Organisateur</strong> », d'autre part.
         </p>
         <p><strong>Les deux ensemble dénommés « les Parties » conviennent de ce qui suit :</strong></p>
     </div>
