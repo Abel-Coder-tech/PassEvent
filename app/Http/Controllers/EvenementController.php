@@ -200,6 +200,10 @@ class EvenementController extends Controller
 
         $pdf = $contratService->pdf($user);
 
+        if (!$user->contrat_telecharge_le) {
+            $user->update(['contrat_telecharge_le' => now()]);
+        }
+
         return $pdf->download($contratService->filename($user));
     }
 

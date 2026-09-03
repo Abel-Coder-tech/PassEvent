@@ -93,6 +93,7 @@ class User extends Authenticatable
         'signature',
         'numero_rc',
         'numero_cip',
+        'contrat_telecharge_le',
         'ventes_especes',
         'commission_pourcentage',
     ];
