@@ -138,22 +138,22 @@
         {{-- Sidebar --}}
         <div class="settings-sidebar">
             <nav class="d-flex flex-column gap-1">
-                <button class="settings-nav-link active" onclick="showSection('profil', this)">
+                <button class="settings-nav-link active" data-section="profil" onclick="showSection('profil', this)">
                     <i class="bi bi-person"></i> Profil
                 </button>
-                <button class="settings-nav-link" onclick="showSection('securite', this)">
+                <button class="settings-nav-link" data-section="securite" onclick="showSection('securite', this)">
                     <i class="bi bi-shield-lock"></i> Securite
                 </button>
-                <button class="settings-nav-link" onclick="showSection('notifications', this)">
+                <button class="settings-nav-link" data-section="notifications" onclick="showSection('notifications', this)">
                     <i class="bi bi-bell"></i> Notifications
                 </button>
-                <button class="settings-nav-link" onclick="showSection('paiement', this)">
+                <button class="settings-nav-link" data-section="paiement" onclick="showSection('paiement', this)">
                     <i class="bi bi-credit-card"></i> Paiement
                 </button>
-                <button class="settings-nav-link" onclick="showSection('scan', this)">
+                <button class="settings-nav-link" data-section="scan" onclick="showSection('scan', this)">
                     <i class="bi bi-qr-code-scan"></i> Acces scan
                 </button>
-                <button class="settings-nav-link danger" onclick="showSection('danger', this)">
+                <button class="settings-nav-link danger" data-section="danger" onclick="showSection('danger', this)">
                     <i class="bi bi-exclamation-triangle"></i> Zone de danger
                 </button>
             </nav>
@@ -417,29 +417,55 @@
                                 <p class="mb-0" style="font-size: 0.85rem;">Aucun numéro de retrait enregistré.<br>Cliquez sur <strong>Ajouter</strong> pour en créer un.</p>
                             </div>
                         @else
-                            <div class="row g-3">
-                                @foreach($numerosRetrait as $numero)
-                                    @php $cfg = $reseauxConfig[$numero->operateur] ?? null; @endphp
-                                    <div class="col-md-6 col-lg-4">
-                                        <div class="p-3 rounded" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15); position: relative;">
-                                            <div class="d-flex align-items-center gap-2 mb-2">
-                                                <i class="{{ $cfg['icon'] ?? 'bi-phone' }}" style="color: var(--violet); font-size: 1.1rem;"></i>
-                                                <span class="fw-bold" style="font-size: 0.85rem; color: var(--violet);">{{ $cfg['label'] ?? ucfirst($numero->operateur) }}</span>
-                                                <form action="{{ route('parametres.numeros-retrait.destroy', $numero) }}" method="POST" class="ms-auto" onsubmit="return confirm('Supprimer ce numéro de retrait ?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Supprimer" style="color: #e74c3c;">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                            <div class="fw-semibold" style="font-size: 0.9rem;">{{ $numero->nom }}</div>
-                                            <div class="text-muted" style="font-size: 0.82rem;">{{ $numero->mobile }}</div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                            <div class="table-responsive">
+                                <table class="table custom-table mb-0 align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="font-size:0.78rem;">Opérateur</th>
+                                            <th style="font-size:0.78rem;">Bénéficiaire</th>
+                                            <th style="font-size:0.78rem;">Numéro Mobile Money</th>
+                                            <th style="font-size:0.78rem; width:60px; text-align:right;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($numerosRetrait as $numero)
+                                            @php $cfg = $reseauxConfig[$numero->operateur] ?? null; @endphp
+                                            <tr>
+                                                <td>
+                                                    <span class="d-inline-flex align-items-center gap-2">
+                                                        <i class="{{ $cfg['icon'] ?? 'bi-phone' }}" style="color: var(--violet);"></i>
+                                                        <span class="fw-bold" style="font-size:0.85rem; color: var(--violet);">{{ $cfg['label'] ?? ucfirst($numero->operateur) }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="fw-semibold" style="font-size:0.88rem;">{{ $numero->nom }}</td>
+                                                <td style="font-size:0.85rem;">{{ $numero->mobile }}</td>
+                                                <td style="text-align:right;">
+                                                    <form action="{{ route('parametres.numeros-retrait.destroy', $numero) }}" method="POST" onsubmit="return confirm('Supprimer ce numéro de retrait ?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Supprimer" style="color: #e74c3c;">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         @endif
+
+                        <div class="p-3 rounded mt-4" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Contrat de prestation</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">Telecharger le contrat personnalise liant PaxEvent a votre structure.</div>
+                                </div>
+                                <a href="{{ route('contrat-prestation') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
+                                    <i class="bi bi-file-pdf me-1"></i> Telecharger (PDF)
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -530,18 +556,6 @@
                                 <button type="button" class="btn btn-sm" style="border-radius: 8px; border: 1px solid #f39c12; color: #f39c12; background: transparent;">
                                     <i class="bi bi-download me-1"></i> Exporter
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="p-3 rounded mt-3" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Contrat de prestation</div>
-                                    <div class="text-muted" style="font-size: 0.78rem;">Telecharger le contrat personnalise liant PaxEvent a votre structure.</div>
-                                </div>
-                                <a href="{{ route('contrat-prestation') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
-                                    <i class="bi bi-file-pdf me-1"></i> Telecharger (PDF)
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -643,8 +657,33 @@ function showSection(sectionId, el) {
     document.querySelectorAll('.settings-nav-link').forEach(l => l.classList.remove('active'));
 
     document.getElementById('section-' + sectionId).classList.add('active');
-    el.classList.add('active');
+    if (el) el.classList.add('active');
 }
+
+function openSectionByName(name) {
+    const btn = document.querySelector('.settings-nav-link[data-section="' + name + '"]');
+    const target = document.getElementById('section-' + name);
+    if (!target) return false;
+    if (btn) {
+        showSection(name, btn);
+    } else {
+        document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.settings-nav-link').forEach(l => l.classList.remove('active'));
+        target.classList.add('active');
+    }
+    return true;
+}
+
+function applyHashSection() {
+    const hash = (location.hash || '').replace('#', '');
+    if (hash && openSectionByName(hash)) {
+        const target = document.getElementById('section-' + hash);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', applyHashSection);
+window.addEventListener('hashchange', applyHashSection);
 
 function generateScanCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

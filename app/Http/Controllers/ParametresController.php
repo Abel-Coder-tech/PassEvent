@@ -169,7 +169,7 @@ class ParametresController extends Controller
 
         Auth::user()->numerosRetrait()->create($validated);
 
-        return back()->with('success_numero_retrait', 'Numéro de retrait ajouté avec succès.');
+        return redirect(route('parametres.index') . '#paiement')->with('success_numero_retrait', 'Numéro de retrait ajouté avec succès.');
     }
 
     // Supprime un numéro de retrait (source : l'utilisateur connecté uniquement)
@@ -181,6 +181,6 @@ class ParametresController extends Controller
 
         $numero->delete();
 
-        return back()->with('success_numero_retrait', 'Numéro de retrait supprimé.');
+        return redirect(route('parametres.index') . '#paiement')->with('success_numero_retrait', 'Numéro de retrait supprimé.');
     }
 }
