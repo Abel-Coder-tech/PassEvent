@@ -20,7 +20,6 @@
         .slot {
             position: absolute;
             background-color: #fff;
-            border-radius: 1.5mm;
             overflow: hidden;
             box-shadow: 0 0 0.5px rgba(0,0,0,.12);
         }
@@ -30,8 +29,8 @@
         }
         .qr-zone {
             position: absolute;
-            width: {{ $qrSize }}mm;
-            height: {{ $qrSize }}mm;
+            background: #fff;
+            border-radius: 1.5mm;
             overflow: hidden;
             text-align: center;
         }
@@ -85,12 +84,11 @@
                 @if ($templateUrl)
                     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
                 @endif
-                @php $paxBandTop = $qrY + $qrSize; @endphp
-                <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize + $qrPaddingBottom }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-                </div>
-                <div class="pax-band" style="left: {{ $qrX }}mm; top: {{ $paxBandTop }}mm; width: {{ $qrSize }}mm;">
-                    <div class="pax-code">{{ $ticket->code_unique }}</div>
+                    <div class="pax-band" style="left: 0; bottom: 0; width: {{ $qrSize }}mm;">
+                        <div class="pax-code">{{ $ticket->code_unique }}</div>
+                    </div>
                 </div>
             </div>
         @endforeach
