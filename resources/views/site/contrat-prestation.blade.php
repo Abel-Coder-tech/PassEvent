@@ -102,6 +102,17 @@
         $cipRepresentant = $estPersonneMorale
             ? ($user->numero_cip ?: null)
             : null;
+
+        $partieRepresentant = '';
+        if ($nomRepresentant && ($estPersonneMorale || ($user->type ?? '') === 'universitaire')) {
+            $partieRepresentant = ', représenté(e) par ' . $nomRepresentant;
+            if ($fonctionRepresentant) {
+                $partieRepresentant .= ', en qualité de ' . $fonctionRepresentant;
+            }
+            if ($cipRepresentant) {
+                $partieRepresentant .= ' (CIP n° ' . $cipRepresentant . ')';
+            }
+        }
     @endphp
 
     <div class="header">
@@ -119,7 +130,7 @@
             <strong>Noctam Communication</strong>, immatriculée au RCCM sous le numéro <strong>RB/PNO/20 A 13348</strong>, dont le siège social est situé à Porto-Novo, Oganla Attakpamè, M/MARTIN, représentée par <strong>M. AHOUANVOEKE Amos </strong>, en sa qualité de Directeur Général, ci-après dénommée « <strong>PaxEvent</strong> », d'une part.
         </p>
         <p>
-            <strong>ET :</strong> {{ $denomination }}@if($pieceNumero), immatriculé(e) sous le numéro de <strong>{{ $pieceLibelle }}</strong> : <strong>{{ $pieceNumero }}</strong>@endif@if(($estPersonneMorale || ($user->type ?? '') === 'universitaire') && $nomRepresentant), représenté(e) par <strong>{{ $nomRepresentant }}</strong>@if($fonctionRepresentant), en qualité de <strong>{{ $fonctionRepresentant }}</strong>@endif@if($cipRepresentant) (CIP n° <strong>{{ $cipRepresentant }}</strong>)@endif@endif, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « <strong>L'Organisateur</strong> », d'autre part.
+            <strong>ET :</strong> {{ $denomination }}@if($pieceNumero), immatriculé(e) sous le numéro de <strong>{{ $pieceLibelle }}</strong> : <strong>{{ $pieceNumero }}</strong>@endif{{ $partieRepresentant }}, Email : {{ $user->email }}, Téléphone : {{ $user->telephone ?? $user->phone ?? '' }}, ci-après désigné « <strong>L'Organisateur</strong> », d'autre part.
         </p>
         <p><strong>Les deux ensemble dénommés « les Parties » conviennent de ce qui suit :</strong></p>
     </div>
