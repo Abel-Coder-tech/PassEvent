@@ -8,9 +8,13 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\SerializesModels;
 
-class RegistrationApproved extends Mailable
+class RegistrationApproved extends Mailable implements ShouldQueue
 {
+    use SerializesModels;
+
     public User $user;
 
     public function __construct(User $user)
