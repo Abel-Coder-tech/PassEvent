@@ -6,6 +6,8 @@ use App\Mail\NewsletterMassEmail;
 use App\Mail\RegistrationApproved;
 use App\Mail\RegistrationCorrections;
 use App\Mail\RegistrationRejected;
+use App\Mail\TarifDemandeApprouvee;
+use App\Mail\TarifDemandeRefusee;
 use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\AttributionAgent;
@@ -2019,6 +2021,12 @@ class SuperAdminController extends Controller
             'lu' => false,
         ]);
 
+        // Notifie l'organisateur par email en plus de la notification du tableau de bord.
+        $organisateur = $demande->user;
+        if ($organisateur && $organisateur->email) {
+            Mail::to($organisateur->email)->queue(new TarifDemandeApprouvee($demande));
+        }
+
         Log::create([
             'type_operation' => 'demande_modification_tarif_approuve',
             'ticket_id' => null,
@@ -2062,6 +2070,12 @@ class SuperAdminController extends Controller
                 'pour l\'événement « '.$demande->evenement->titre.' » a été refusée par PaxEvent. Raison : '.$notes,
             'lu' => false,
         ]);
+
+        // Notifie l'organisateur par email en plus de la notification du tableau de bord.
+        $organisateur = $demande->user;
+        if ($organisateur && $organisateur->email) {
+            Mail::to($organisateur->email)->queue(new TarifDemandeRefusee($demande, $notes));
+        }
 
         Log::create([
             'type_operation' => 'demande_modification_tarif_refuse',

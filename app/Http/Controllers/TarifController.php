@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Tarif;
 use App\Models\Evenement;
+use App\Models\User;
 use App\Models\DemandeModificationTarif;
+use App\Mail\TarifDemandeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class TarifController extends Controller
 {
@@ -133,7 +136,7 @@ class TarifController extends Controller
             return back()->with('error', 'Une demande de modification est déjà en attente pour ce tarif.');
         }
 
-        DemandeModificationTarif::create([
+        $demande = DemandeModificationTarif::create([
             'evenement_id' => $evenement->id,
             'tarif_id' => $tarif->id,
             'user_id' => Auth::id(),
@@ -141,6 +144,12 @@ class TarifController extends Controller
             'nouveau_prix' => $validated['nouveau_prix'],
             'statut' => 'en_attente',
         ]);
+
+        // Notifie PaxEvent par email (super administrateurs) pour traiter la demande.
+        $superAdmins = User::where('role', 'super_admin')->get();
+        foreach ($superAdmins as $sa) {
+            Mail::to($sa->email)->queue(new TarifDemandeNotification($demande));
+        }
 
         return back()->with('success', 'Votre demande de modification de prix a été envoyée à PaxEvent.');
     }
