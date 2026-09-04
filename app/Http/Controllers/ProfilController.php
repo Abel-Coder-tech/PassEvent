@@ -246,11 +246,11 @@ class ProfilController extends Controller
 
         session()->forget('profil');
 
-        Mail::to($user->email)->send(new RegistrationPending($user));
+        Mail::to($user->email)->queue(new RegistrationPending($user));
 
         $superAdmins = User::where('role', 'super_admin')->get();
         foreach ($superAdmins as $sa) {
-            Mail::to($sa->email)->send(new RegistrationAdminNotification($user));
+            Mail::to($sa->email)->queue(new RegistrationAdminNotification($user));
             if ($etaitEnCorrections) {
                 Message::create([
                     'user_id' => null,

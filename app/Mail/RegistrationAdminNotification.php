@@ -6,9 +6,13 @@ use App\Models\User;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\SerializesModels;
 
-class RegistrationAdminNotification extends Mailable
+class RegistrationAdminNotification extends Mailable implements ShouldQueue
 {
+    use SerializesModels;
+
     public User $user;
 
     public function __construct(User $user)

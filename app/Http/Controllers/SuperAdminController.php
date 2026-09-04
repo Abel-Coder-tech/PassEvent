@@ -1641,7 +1641,7 @@ class SuperAdminController extends Controller
         $user->update(['statut' => 'actif']); // Active le compte
 
         try {
-            Mail::to($user->email)->send(new RegistrationApproved($user)); // Notification email
+            Mail::to($user->email)->queue(new RegistrationApproved($user)); // Notification email
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Email approbation organisateur non envoyé : ' . $e->getMessage());
         }
@@ -1668,7 +1668,7 @@ class SuperAdminController extends Controller
         $user->update(['statut' => 'rejete']);
 
         try {
-            Mail::to($user->email)->send(new RegistrationRejected($user, $request->motif));
+            Mail::to($user->email)->queue(new RegistrationRejected($user, $request->motif));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Email rejet organisateur non envoyé : ' . $e->getMessage());
         }
@@ -1694,7 +1694,7 @@ class SuperAdminController extends Controller
 
         $user->update(['statut' => 'corrections_demandees']); // Change le statut
 
-        Mail::to($user->email)->send(new RegistrationCorrections($user, $request->motif)); // Email de notification
+        Mail::to($user->email)->queue(new RegistrationCorrections($user, $request->motif)); // Email de notification
 
         Message::create([ // Notification système dans l'appli
             'user_id' => $user->id,
