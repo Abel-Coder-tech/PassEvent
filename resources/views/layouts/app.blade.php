@@ -1037,6 +1037,13 @@
             </div>
         </div>
         <div class="top-bar-right">
+            @php $topbarUnread = \App\Models\Message::where('lu', false)->where('user_id', auth()->id())->count(); @endphp
+            <a href="{{ route('admin.messages.index') }}" class="btn btn-sm position-relative" style="border-radius:10px;border:1px solid #e5e5e5;background:var(--blanc);" title="Notifications">
+                <i class="bi bi-bell" style="font-size:1.05rem;"></i>
+                @if($topbarUnread > 0)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc3545;font-size:0.6rem;">{{ $topbarUnread }}</span>
+                @endif
+            </a>
             @yield('topbar-actions')
             @if(Auth::user()->statut !== 'bloque')
             <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm {{ request()->routeIs('admin.evenements.create', 'admin.evenements.edit', 'admin.evenements.show', 'statistiques.index', 'admin.codes-promos.*') ? 'd-none d-sm-inline-flex' : '' }}">
