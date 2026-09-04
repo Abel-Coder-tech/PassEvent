@@ -5,17 +5,22 @@ namespace App\Http\Controllers;
 use App\Mail\TicketEmail;
 use App\Models\CodePromo;
 use App\Models\Evenement;
+use App\Models\EventWaitlist;
 use App\Models\Message;
 use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class EvenementPublicController extends Controller
 {
+    // Durée (en minutes) pendant laquelle une réservation en ligne non payée reste réservée.
+    public const DUREE_RESERVATION_MINUTES = 15;
+
     // Liste publique des événements avec filtres par catégorie, date et recherche
     public function index(Request $request)
     {
@@ -147,13 +152,6 @@ class EvenementPublicController extends Controller
         // Quantité illimitée par personne (plafonnée uniquement par les places restantes)
         $quantite = max(1, (int) ($validated['quantite'] ?? 1));
 
-        $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
-        if ($placesRestantes < $quantite) {
-            $placesRestantes = max(0, $placesRestantes);
-
-            return back()->with('error', "Il ne reste que {$placesRestantes} place(s) disponible(s) pour cet événement.")->withInput();
-        }
-
         $codePromoUtilise = null;
         $montantReduction = 0;
         $montantUnitaire = $tarif->prix;
@@ -189,8 +187,49 @@ class EvenementPublicController extends Controller
             $montantUnitaire = $tarif->prix - $montantReduction;
         }
 
+        $estGratuit = $evenement->gratuit || $montantUnitaire <= 0;
+
+        // Réservation ATOMIQUE des places : le verrou (lockForUpdate) sérialise les demandes
+        // simultanées, garantissant qu'on ne vend jamais plus que la capacité, même à 200
+        // demandes au même moment. Les places réservées sont comptées immédiatement dans
+        // quota_vendu (réservation incluse).
+        $reserve = DB::transaction(function () use ($evenement, $quantite) {
+            $verrou = Evenement::whereKey($evenement->id)->lockForUpdate()->first();
+            if (! $verrou) {
+                return false;
+            }
+            $placesRestantes = $verrou->capacite - $verrou->quota_vendu;
+            if ($placesRestantes < $quantite) {
+                return false;
+            }
+            $verrou->increment('quota_vendu', $quantite);
+            return true;
+        });
+
+        if (! $reserve) {
+            // Capacité pleine : on met l'acheteur en file d'attente (il sera recontacté si une
+            // place se libère) plutôt que de le laisser payer pour rien.
+            EventWaitlist::create([
+                'evenement_id' => $evenement->id,
+                'tarif_id' => $tarif->id ?? null,
+                'nom_acheteur' => $validated['nom_acheteur'],
+                'email_acheteur' => strtolower($validated['email_acheteur']),
+                'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
+                'quantite' => $quantite,
+                'code_promo_utilise' => $codePromoUtilise,
+                'montant_unitaire' => (int) round($montantUnitaire),
+                'montant_reduction' => (int) round($montantReduction),
+                'statut' => 'en_attente',
+            ]);
+
+            return back()->with('error', "Capacité atteinte pour cet événement. Vous êtes inscrit(e) en file d'attente ; nous vous préviendrons si une place se libère.")->withInput();
+        }
+
         $groupTransactionId = 'GRP-'.strtoupper(Str::random(16)); // ID de transaction groupée
         $tickets = [];
+        // Les tickets payants sont réservés pour une durée limitée ; s'ils ne sont pas payés,
+        // la place est libérée et proposée à la file d'attente.
+        $reservationExpireLe = $estGratuit ? null : now()->addMinutes(self::DUREE_RESERVATION_MINUTES);
 
         // Création de N tickets avec un ID de transaction partagé
         for ($i = 0; $i < $quantite; $i++) {
@@ -207,6 +246,7 @@ class EvenementPublicController extends Controller
                 'quantite' => 1,
                 'statut_paiement' => 'en_attente',
                 'transaction_id' => $groupTransactionId,
+                'reservation_expire_le' => $reservationExpireLe,
                 'date_achat' => now(),
                 'code_promo_utilise' => $codePromoUtilise,
             ]);
@@ -235,12 +275,13 @@ class EvenementPublicController extends Controller
                 $t->update([
                     'statut_paiement' => 'payé',
                     'transaction_id' => $freeGroupId,
+                    'reservation_expire_le' => null,
                 ]);
             }
-            $evenement->increment('quota_vendu', $quantite);
+            // quota_vendu a déjà été incrémenté lors de la réservation atomique ci-dessus.
             $tarif->increment('quantite_vendue', $quantite);
             try {
-                Mail::to($tickets[0]->email_acheteur)->send(new TicketEmail($tickets));
+                Mail::to($tickets[0]->email_acheteur)->queue(new TicketEmail($tickets));
             } catch (\Exception $e) {
                 Log::error('Email gratuit non envoyé : '.$e->getMessage());
             }

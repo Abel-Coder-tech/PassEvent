@@ -60,18 +60,22 @@ class PaiementController extends Controller
 
             $groupId = 'GRATUIT-'.$freeTickets->first()->id;
             foreach ($freeTickets as $ft) {
+                $reservationDejaComptee = $ft->reservation_expire_le !== null;
                 $ft->update([
                     'statut_paiement' => 'payé', // Confirme le paiement gratuit
                     'transaction_id' => $groupId,
+                    'reservation_expire_le' => null,
                 ]);
-                $ft->evenement->increment('quota_vendu', $ft->quantite);
+                if (! $reservationDejaComptee) {
+                    $ft->evenement->increment('quota_vendu', $ft->quantite);
+                }
                 if ($ft->tarif) {
                     $ft->tarif->increment('quantite_vendue', $ft->quantite);
                 }
             }
 
             try {
-                Mail::to($ticket->email_acheteur)->send(new TicketEmail($freeTickets));
+                Mail::to($ticket->email_acheteur)->queue(new TicketEmail($freeTickets));
             } catch (\Exception $e) {
                 FacadesLog::error('Email gratuit non envoye pour ticket '.$ticket->id.' : '.$e->getMessage());
             }
@@ -95,6 +99,23 @@ class PaiementController extends Controller
         $sandbox = $this->fedapay->isSandbox();
 
         return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox', 'montantTotal'));
+    }
+
+    // Accès au paiement via un lien signé (ex: ticket réservé depuis la file d'attente).
+    // Ajoute le ticket à la session de l'acheteur pour valider l'anti-IDOR, puis redirige
+    // vers la page de paiement standard.
+    public function accederDepuisLien($ticketId)
+    {
+        $ticket = Ticket::find($ticketId);
+
+        if (! $ticket || $ticket->statut_paiement === 'payé') {
+            abort(404);
+        }
+
+        $sessionTickets = session('paiement_tickets', []);
+        session(['paiement_tickets' => array_values(array_unique(array_merge($sessionTickets, [$ticket->id])))]);
+
+        return redirect()->route('paiement.show', $ticket->id);
     }
 
     // Callback FedaPay : traite le résultat du paiement
@@ -252,7 +273,7 @@ class PaiementController extends Controller
         }
 
         try {
-            Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
+            Mail::to($ticket->email_acheteur)->queue(new TicketEmail($groupTickets));
         } catch (\Exception $e) {
             FacadesLog::error('Email non envoye pour ticket '.$ticket->id.' : '.$e->getMessage());
         }
@@ -516,7 +537,7 @@ class PaiementController extends Controller
 
         if ($confirme) {
             try {
-                Mail::to($ticket->email_acheteur)->send(new TicketEmail($groupTickets));
+                Mail::to($ticket->email_acheteur)->queue(new TicketEmail($groupTickets));
             } catch (\Exception $e) {
                 FacadesLog::error('Webhook - email ticket non envoyé : '.$e->getMessage());
             }
@@ -617,16 +638,24 @@ class PaiementController extends Controller
                     continue;
                 }
 
-                // Contrôle de capacité : on n'incrémente jamais au-delà de la capacité
-                $nouveauQuota = (int) $evenement->quota_vendu + (int) $locked->quantite;
-                if ($nouveauQuota > (int) $evenement->capacite) {
-                    FacadesLog::warning('FedaPay - dépassement de capacité à la confirmation, quota plafonné', [
-                        'ticket' => $locked->id,
-                        'evenement' => $evenement->id,
-                        'quota_actuel' => $evenement->quota_vendu,
-                        'capacite' => $evenement->capacite,
-                    ]);
-                    $nouveauQuota = (int) $evenement->capacite;
+                // Si le ticket provient d'un achat public en ligne, les places ont déjà été
+                // réservées (comptées dans quota_vendu) lors de 'achat()' : on ne re-compte pas,
+                // on lève simplement la réservation. Sinon (vente manuelle, agent, réconciliation),
+                // on compte comme avant, sans jamais dépasser la capacité.
+                $reservationDejaComptee = $locked->reservation_expire_le !== null;
+
+                if (! $reservationDejaComptee) {
+                    $nouveauQuota = (int) $evenement->quota_vendu + (int) $locked->quantite;
+                    if ($nouveauQuota > (int) $evenement->capacite) {
+                        FacadesLog::warning('FedaPay - dépassement de capacité à la confirmation, quota plafonné', [
+                            'ticket' => $locked->id,
+                            'evenement' => $evenement->id,
+                            'quota_actuel' => $evenement->quota_vendu,
+                            'capacite' => $evenement->capacite,
+                        ]);
+                        $nouveauQuota = (int) $evenement->capacite;
+                    }
+                    $evenement->update(['quota_vendu' => $nouveauQuota]);
                 }
 
                 $locked->update([
@@ -636,9 +665,8 @@ class PaiementController extends Controller
                     'methode_paiement' => $operateur ?? ($locked->methode_paiement ?? ($locked->montant > 0 ? 'mobile_money' : 'especes')),
                     'type_paiement' => $moyenPaiement,
                     'telephone_paiement' => $telephonePaiement,
+                    'reservation_expire_le' => null,
                 ]);
-
-                $evenement->update(['quota_vendu' => $nouveauQuota]);
 
                 if ($locked->tarif) {
                     $tarif = $locked->tarif()->lockForUpdate()->first();

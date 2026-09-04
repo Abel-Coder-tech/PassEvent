@@ -51,6 +51,7 @@ Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name(
 Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
 
 Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
+Route::get('/paiement/lien/{ticket}', [PaiementController::class, 'accederDepuisLien'])->name('paiement.acces-lien')->middleware('signed');
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
 
 Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
