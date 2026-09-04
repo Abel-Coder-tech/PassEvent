@@ -185,7 +185,7 @@
                                                     <i class="bi bi-hourglass-split me-1"></i>Demande en attente
                                                 </span>
                                             @else
-                                                <button type="submit" form="demande-form-{{ $tarif->id }}" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;white-space:nowrap;">
+                                                <button type="button" onclick="soumettreDemande(event, {{ $tarif->id }})" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;white-space:nowrap;">
                                                     <i class="bi bi-send me-1"></i> Envoyer pour approbation
                                                 </button>
                                             @endif
@@ -293,6 +293,20 @@ function syncDemande(input) {
     const tarifId = input.getAttribute('data-demande');
     const hidden = document.getElementById('demande-prix-' + tarifId);
     if (hidden) hidden.value = input.value;
+}
+
+function soumettreDemande(event, tarifId) {
+    const visible = document.getElementById('prix-tarif-' + tarifId);
+    const hidden = document.getElementById('demande-prix-' + tarifId);
+    if (!visible || !hidden) return;
+    const valeur = visible.value;
+    if (valeur === '' || isNaN(parseFloat(valeur)) || parseFloat(valeur) < 0) {
+        alert('Veuillez saisir un prix valide avant d\'envoyer la demande.');
+        return;
+    }
+    hidden.value = valeur;
+    const form = document.getElementById('demande-form-' + tarifId);
+    if (form) form.submit();
 }
 </script>
 @endsection
