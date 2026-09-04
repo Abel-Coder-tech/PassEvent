@@ -42,44 +42,6 @@
     </div>
     @endif
 
-    {{-- Notifications / messages techniques --}}
-    @if($notificationsNonLues > 0)
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <div class="panel-card" style="border-left:4px solid #7B3FA0;">
-                <div class="panel-card-header">
-                    <h5>
-                        <i class="bi bi-bell me-1" style="color:#7B3FA0;"></i> Notifications
-                        @if($notificationsNonLues > 0)
-                            <span class="badge bg-danger" style="font-size:0.65rem;vertical-align:middle;">{{ $notificationsNonLues }} non lu{{ $notificationsNonLues > 1 ? 's' : '' }}</span>
-                        @endif
-                    </h5>
-                    <a href="{{ route('admin.messages.index') }}">Tout voir</a>
-                </div>
-                <div class="panel-card-body" style="padding:0;">
-                    @foreach($notifications as $notification)
-                    <div class="d-flex align-items-center px-3 py-2 {{ $notification->lu ? '' : 'bg-light' }}" style="{{ $loop->last ? '' : 'border-bottom:1px solid #f5f5f5;' }}">
-                        <div style="width:32px;height:32px;background:{{ $notification->lu ? 'rgba(152,145,155,0.12)' : 'rgba(135,66,139,0.12)' }};border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:0.75rem;flex-shrink:0;">
-                            <i class="bi bi-info-circle" style="color:{{ $notification->lu ? '#98919b' : '#7B3FA0' }};font-size:0.85rem;"></i>
-                        </div>
-                        <a href="{{ route('admin.messages.show', $notification->id) }}" style="flex:1;min-width:0;text-decoration:none;color:inherit;">
-                            <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);">
-                                {{ $notification->objet }}
-                                @if(!$notification->lu)<span class="badge bg-primary" style="font-size:0.6rem;">Nouveau</span>@endif
-                            </div>
-                            <div style="font-size:0.7rem;color:var(--gris);">
-                                {{ \Illuminate\Support\Str::limit(strip_tags($notification->message), 90) }}
-                            </div>
-                        </a>
-                        <span style="font-size:0.65rem;color:var(--gris);white-space:nowrap;flex-shrink:0;">{{ $notification->created_at->diffForHumans() }}</span>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
     {{-- Actions rapides --}}
     <div class="row g-2 mb-4 align-items-center">
         <div class="col-md-6">
