@@ -31,6 +31,7 @@ class Ticket extends Model
         'quantite',
         'statut_paiement',
         'transaction_id',
+        'reservation_expire_le',
         'fedapay_transaction_id',
         'methode_paiement',
         'type_paiement',
@@ -75,8 +76,9 @@ class Ticket extends Model
             'utilise' => 'boolean',
             'annule' => 'boolean',
             'date_achat' => 'datetime',
-            'montant' => 'decimal:2',
-            'quantite' => 'integer',
+            'montant'             => 'decimal:2',
+            'quantite'            => 'integer',
+            'reservation_expire_le' => 'datetime',
         ];
     }
 
