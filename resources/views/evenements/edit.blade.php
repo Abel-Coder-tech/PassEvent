@@ -141,7 +141,6 @@
                             <h6 class="fw-bold mb-0" style="color: var(--violet);">
                                 <i class="bi bi-cash-coin me-2"></i>Tarifs
                             </h6>
-                            @php $evenementAVendu = $evenement->tarifs()->sum('quantite_vendue') > 0; @endphp
                             <a href="{{ route('admin.tarifs.index', $evenement->id) }}" class="btn btn-sm btn-primary-custom">
                                 <i class="bi bi-gear me-1"></i> Gérer les tarifs
                             </a>
@@ -152,43 +151,55 @@
                                 <a href="{{ route('admin.tarifs.create', $evenement->id) }}">Ajouter un tarif</a>.
                             </p>
                         @else
-                            <div class="table-responsive">
-                                <table class="table custom-table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th style="font-size: 0.75rem;">Nom</th>
-                                            <th style="font-size: 0.75rem;">Prix</th>
-                                            <th style="font-size: 0.75rem;">Dispo.</th>
-                                            <th style="font-size: 0.75rem;">Vendu</th>
-                                            <th style="font-size: 0.75rem;">Statut</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($evenement->tarifs as $tarif)
-                                            <tr>
-                                                <td style="font-size: 0.82rem;">{{ $tarif->nom }}</td>
-                                                <td style="font-size: 0.82rem;" class="fw-bold">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
-                                                <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible ?? 'Illimité' }}</td>
-                                                <td style="font-size: 0.82rem;">{{ $tarif->quantite_vendue }}</td>
-                                                <td style="font-size: 0.82rem;">
-                                                    @if($tarif->statut === 'actif')
-                                                        <span class="badge" style="background: rgba(18,151,110,0.12); color: var(--vert);">Actif</span>
-                                                    @else
-                                                        <span class="badge" style="background: rgba(152,145,155,0.15); color: var(--gris);">Inactif</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
+                            @php $evenementAVendu = $evenement->tarifs()->sum('quantite_vendue') > 0; @endphp
+                            @foreach($evenement->tarifs as $tarif)
+                                @php
+                                    $tarifVendu = $tarif->quantite_vendue > 0;
+                                    $dejaDemande = $tarifVendu && $tarif->demandesModification()->where('statut', 'en_attente')->exists();
+                                @endphp
+                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 py-2 {{ !$loop->last ? 'border-bottom' : '' }}" style="border-color:#f0f0f0;">
+                                    <div style="flex:1;min-width:0;">
+                                        <div class="fw-semibold" style="font-size:0.85rem;">{{ $tarif->nom }}</div>
+                                        <div style="font-size:0.72rem;color:var(--gris);">
+                                            {{ $tarif->quantite_disponible ?? 'Illimité' }} dispo. · {{ $tarif->quantite_vendue }} vendu(s)
+                                            · <span class="{{ $tarif->statut === 'actif' ? 'text-success' : 'text-muted' }}">{{ ucfirst($tarif->statut) }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2" style="flex-shrink:0;">
+                                        <div style="position:relative;">
+                                            <input type="number" step="0.01" min="0"
+                                                   name="prix_tarifs[{{ $tarif->id }}]"
+                                                   id="prix-tarif-{{ $tarif->id }}"
+                                                   value="{{ old('prix_tarifs.'.$tarif->id, $tarif->prix) }}"
+                                                   class="form-control form-control-sm"
+                                                   style="width:130px;text-align:right;"
+                                                   {{ $tarifVendu ? 'data-demande="'.$tarif->id.'" oninput="syncDemande(this)"' : '' }}
+                                                   @error('prix_tarifs.'.$tarif->id) is-invalid @enderror>
+                                            <span style="position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);font-size:0.7rem;color:var(--gris);pointer-events:none;">F</span>
+                                        </div>
+
+                                        @if($tarifVendu)
+                                            @if($dejaDemande)
+                                                <span class="badge" style="background:rgba(224,168,0,0.15);color:#8b6914;font-size:0.7rem;white-space:nowrap;">
+                                                    <i class="bi bi-hourglass-split me-1"></i>Demande en attente
+                                                </span>
+                                            @else
+                                                <button type="submit" form="demande-form-{{ $tarif->id }}" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;white-space:nowrap;">
+                                                    <i class="bi bi-send me-1"></i> Envoyer pour approbation
+                                                </button>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <p class="text-muted mt-3 mb-0" style="font-size:0.78rem;">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Les tarifs se gèrent via le bouton « Gérer les tarifs ».
                                 @if($evenementAVendu)
-                                    Des billets ont déjà été vendus : le prix d'un tarif ne peut plus être modifié directement. Depuis la page des tarifs, utilisez « Demander une modification » ; la nouvelle valeur sera validée par PaxEvent.
+                                    Un tarif ayant déjà des ventes ne se modifie plus directement : saisissez le nouveau prix puis cliquez sur « Envoyer pour approbation » ; PaxEvent devra le valider. Les autres tarifs se modifient directement avec « Enregistrer » ci-dessous.
                                 @else
-                                    Aucun billet vendu pour l'instant : vous pouvez créer et modifier librement les prix des tarifs.
+                                    Aucun billet vendu pour l'instant : vous pouvez modifier librement le prix des tarifs (sauvegardé via « Enregistrer »).
                                 @endif
                             </p>
                         @endif
@@ -221,6 +232,17 @@
                     </button>
                 </div>
             </form>
+
+            {{-- Formulaires de demande d'approbation (tarifs avec ventes), hors formulaire principal --}}
+            @foreach($evenement->tarifs as $tarif)
+                @php $tarifVendu = $tarif->quantite_vendue > 0; @endphp
+                @if($tarifVendu)
+                    <form id="demande-form-{{ $tarif->id }}" action="{{ route('admin.tarifs.demande-modification', [$evenement->id, $tarif->id]) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="nouveau_prix" id="demande-prix-{{ $tarif->id }}" value="{{ $tarif->prix }}">
+                    </form>
+                @endif
+            @endforeach
         </div>
     </div>
 </div>
@@ -265,6 +287,12 @@ function removeDateSupp(btn) {
     if (row) row.remove();
     dateSuppCount--;
     document.getElementById('addDateSuppBtn').style.display = dateSuppCount >= maxDatesSupp ? 'none' : 'inline-flex';
+}
+
+function syncDemande(input) {
+    const tarifId = input.getAttribute('data-demande');
+    const hidden = document.getElementById('demande-prix-' + tarifId);
+    if (hidden) hidden.value = input.value;
 }
 </script>
 @endsection

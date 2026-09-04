@@ -328,6 +328,8 @@ class EvenementController extends Controller
 
         if ($validated['gratuit']) {
             $evenement->tarifs()->update(['prix' => 0]);
+        } else {
+            $this->synchroniserPrixTarifs($evenement, (array) $request->input('prix_tarifs', []));
         }
 
         return redirect()->route('admin.evenements.index')
@@ -360,6 +362,33 @@ class EvenementController extends Controller
 
         return redirect()->route('admin.evenements.index')
             ->with('success', 'Événement supprimé avec succès.');
+    }
+
+    // Applique directement le nouveau prix aux tarifs n'ayant aucune vente
+    // (les tarifs avec ventes passent obligatoirement par une approbation PaxEvent).
+    private function synchroniserPrixTarifs(Evenement $evenement, array $prixTarifs): void
+    {
+        foreach ($prixTarifs as $tarifId => $prix) {
+            $tarif = $evenement->tarifs()->find((int) $tarifId);
+            if (!$tarif) {
+                continue;
+            }
+
+            // Un tarif avec des ventes laisse le prix inchangé :
+            // sa modification passe par une demande d'approbation dédiée.
+            if ($tarif->quantite_vendue > 0) {
+                continue;
+            }
+
+            $prix = trim((string) $prix);
+            if ($prix === '' || !is_numeric($prix) || (float) $prix < 0) {
+                continue;
+            }
+
+            if ((float) $prix !== (float) $tarif->prix) {
+                $tarif->update(['prix' => (float) $prix]);
+            }
+        }
     }
 
     // Collecte les dates supplémentaires saisies dans le formulaire (dates_supplementaires[])
