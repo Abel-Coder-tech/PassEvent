@@ -662,7 +662,6 @@
 @media (max-width: 767px) {
     .show-hero { padding: 2.5rem 0 2rem; }
     .show-title { font-size: 1.5rem; }
-    .show-hero-image img { height: 200px; }
     .show-infos { gap: 0.5rem; }
 }
 </style>
