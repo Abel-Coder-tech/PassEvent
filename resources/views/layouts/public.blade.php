@@ -494,9 +494,9 @@
         @media (max-width: 575.98px) {
             .public-footer .container { padding-left: 24px; padding-right: 24px; }
             .public-footer .row.g-4 { --bs-gutter-y: 1.5rem; }
-            .public-footer .brand { justify-content: center; }
+            .public-footer .brand { justify-content: flex-start; }
             .public-footer .brand img { height: 70px; }
-            .footer-social { justify-content: center; }
+            .footer-social { justify-content: flex-start; }
         }
     </style>
     @yield('styles')
@@ -607,6 +607,9 @@
                     <a href="{{ route('accueil') }}" class="brand" style="display:flex; align-items:center; gap:0.5rem;">
                         <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" style="filter:brightness(0) invert(1);">
                     </a>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.75rem 0 0;">
+                        Billetterie simple et rapide pour vos événements
+                    </p>
                     <div class="footer-social d-flex gap-2 mt-2">
                         <a href="https://facebook.com/paxevent" target="_blank" title="Facebook"><i class="bi bi-facebook"></i></a>
                         <a href="https://instagram.com/paxevent" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
@@ -614,9 +617,7 @@
                         <a href="https://youtube.com/@paxevent" target="_blank" title="YouTube"><i class="bi bi-youtube"></i></a>
                         <a href="https://linkedin.com/company/paxevent" target="_blank" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
                     </div>
-                    <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.75rem 0 0;">
-                        Billetterie simple et rapide pour vos événements
-                    </p>
+                    
                 </div>
 
                 {{-- Colonne 2 : Liens utiles --}}
