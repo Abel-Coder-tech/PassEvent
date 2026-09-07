@@ -495,7 +495,7 @@
                                 <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quand et comment retirer mes revenus ?</h6>
                                 <ul style="padding-left:1.2rem;margin:0 0 1rem;">
                                     <li>Les revenus sont principalement versés à l'organisateur <strong>24h à 72h après la tenue de l'événement</strong>.</li>
-                                    <li>Avant la tenue de l'événement, un organisateur peut à tout moment demander un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 04 jours ouvrés.</li>
+                                    <li>Avant la tenue de l'événement, un organisateur peut à tout moment demander un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 03 jours ouvrés.</li>
                                     
                                      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;margin-bottom:0.75rem;">
                                     <i class="bi bi-exclamation-triangle me-1"></i> <strong> Attention : </strong> À partir du moment où un retrait est validé avant la tenue de l'événement, l'organisateur ne pourra plus annuler cet événement. S'il tient à l'annuler en cas de force majeure, il devra assurer lui-même le remboursement des tickets à hauteur du montant retiré.
