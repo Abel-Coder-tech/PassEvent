@@ -37,6 +37,8 @@
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
+        html { overflow-x: hidden; }
+
         :root {
             --violet:        #542680;
             --violet-clair:  #9972B0;
@@ -55,6 +57,7 @@
             color: var(--sombre);
             margin: 0;
             padding-top: 64px;
+            overflow-x: hidden;
         }
 
         /* ========== STICKY HEADER ========== */
