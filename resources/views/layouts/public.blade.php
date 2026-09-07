@@ -607,10 +607,10 @@
                     <a href="{{ route('accueil') }}" class="brand" style="display:flex; align-items:center; gap:0.5rem;">
                         <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="64" style="filter:brightness(0) invert(1);">
                     </a>
-                    <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.75rem 0 0;">
+                    <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.25rem 0 0;">
                         Billetterie simple et rapide pour vos événements
                     </p>
-                    <div class="footer-social d-flex gap-2 mt-2">
+                    <div class="footer-social d-flex gap-2 mt-3">
                         <a href="https://facebook.com/paxevent" target="_blank" title="Facebook"><i class="bi bi-facebook"></i></a>
                         <a href="https://instagram.com/paxevent" target="_blank" title="Instagram"><i class="bi bi-instagram"></i></a>
                         <a href="https://wa.me/22962836629" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
