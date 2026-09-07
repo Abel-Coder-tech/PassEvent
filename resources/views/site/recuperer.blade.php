@@ -45,6 +45,11 @@
                             </button>
                         </form>
 
+                        <div class="alert text-start mt-4 mb-0" style="font-size: 0.82rem; background: rgba(254,213,20,0.14); color: #7a5b00; border: 1px solid rgba(254,213,20,0.5); border-radius: 8px;">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>Important :</strong> les tickets gratuits (0 FCFA) ne sont pas récupérables en cas de perte. Conservez précieusement l'email contenant votre e-ticket.
+                        </div>
+
                         <div class="mt-4">
                             <a href="{{ route('accueil') }}" class="text-decoration-underline" style="color: var(--violet); font-size: 0.88rem;">
                                 <i class="bi bi-arrow-left me-1"></i> Retour a l'accueil
