@@ -109,12 +109,15 @@ class EvenementPublicController extends Controller
             'email_acheteur' => 'required|email|max:255',
             'code_promo' => 'nullable|string|max:50',
             'quantite' => 'nullable|integer|min:1',
+            'whatsapp_acheteur' => 'required|string|min:10|max:20',
         ];
 
         $messages = [
             'nom_acheteur.required' => 'Le nom est obligatoire.',
             'email_acheteur.required' => 'L\'email est obligatoire.',
             'email_acheteur.email' => 'Le format de l\'email est invalide.',
+            'whatsapp_acheteur.required' => 'Le numéro WhatsApp est obligatoire.',
+            'whatsapp_acheteur.min' => 'Le numéro WhatsApp doit contenir au moins 10 caractères.',
         ];
 
         if ($estGratuit) {
@@ -215,6 +218,7 @@ class EvenementPublicController extends Controller
                 'nom_acheteur' => $validated['nom_acheteur'],
                 'email_acheteur' => strtolower($validated['email_acheteur']),
                 'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
+                'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
                 'quantite' => $quantite,
                 'code_promo_utilise' => $codePromoUtilise,
                 'montant_unitaire' => (int) round($montantUnitaire),
@@ -239,6 +243,7 @@ class EvenementPublicController extends Controller
                 'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
                 'email_acheteur' => strtolower($validated['email_acheteur']),
                 'telephone_acheteur' => $validated['telephone_acheteur'] ?? null,
+                'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
                 'nom_acheteur' => $validated['nom_acheteur'],
                 'nom_tarif' => $tarif->nom,
                 'montant' => $montantUnitaire,

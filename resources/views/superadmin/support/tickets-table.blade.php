@@ -40,7 +40,7 @@
                 <small style="font-size:0.68rem;color:#666;">{{ $ticket->email_acheteur ?? '—' }}</small><br>
                 <small style="font-size:0.68rem;color:#666;">{{ $ticket->telephone_acheteur ?? '—' }}</small>
             </td>
-            <td class="fw-bold" style="font-size:0.78rem;">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
+            <td class="fw-bold" style="font-size:0.78rem;">@if($ticket->montant > 0){{ number_format($ticket->montant, 0, ',', ' ') }} F @else Gratuit @endif</td>
             <td>
                 @if($ticket->statut_paiement === 'payé')
                     <span class="sa-badge sa-badge-success">Payé</span>

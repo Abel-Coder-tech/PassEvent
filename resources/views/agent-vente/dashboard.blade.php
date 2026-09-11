@@ -90,6 +90,10 @@
                             <input type="tel" name="telephone_acheteur" class="form-control form-control-sm" required>
                         </div>
                         <div class="mb-2">
+                            <label class="form-label small fw-medium">N° WhatsApp <span class="text-muted">(facultatif)</span></label>
+                            <input type="tel" name="whatsapp_acheteur" class="form-control form-control-sm" placeholder="+229 XX XX XX XX">
+                        </div>
+                        <div class="mb-2">
                             <label class="form-label small fw-medium">Tarif</label>
                             <select name="tarif_id" class="form-select form-select-sm" required>
                                 <option value="">Sélectionner...</option>

@@ -54,6 +54,10 @@
                                 <label for="telephone" class="form-label fw-semibold">Téléphone <span class="text-danger">*</span></label>
                                 <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 62 83 66 29" required>
                             </div>
+                            <div class="col-md-6">
+                                <label for="whatsapp" class="form-label fw-semibold">N° WhatsApp <span class="text-muted fw-normal">(facultatif)</span></label>
+                                <input type="tel" class="form-control" id="whatsapp" name="whatsapp" placeholder="+229 62 83 66 29">
+                            </div>
                             <div class="col-12">
 <label for="email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
 <input type="email" class="form-control" id="email" name="email" placeholder="adja@email.com" required>

@@ -19,7 +19,7 @@
                 <tr>
                     <td style="font-family:monospace;font-size:0.75rem;">{{ $t->transaction_id }}</td>
                     <td>{{ $t->evenement->titre ?? '-' }}</td>
-                    <td><strong>{{ number_format($t->montant, 0, ',', ' ') }} F</strong></td>
+                    <td><strong>@if($t->montant > 0){{ number_format($t->montant, 0, ',', ' ') }} F @else Gratuit @endif</strong></td>
                     <td>
                         @if($t->statut_paiement === 'payé') <span class="sa-badge sa-badge-success">Reussi</span>
                         @elseif($t->statut_paiement === 'échoué') <span class="sa-badge sa-badge-danger">Echoue</span>
@@ -27,7 +27,7 @@
                         @else <span class="sa-badge sa-badge-secondary">{{ $t->statut_paiement }}</span>
                         @endif
                     </td>
-                    <td>{{ $t->methode_paiement ?? '-' }}</td>
+                    <td>@if($t->montant > 0){{ \App\Models\Ticket::methodePaiementLabel($t->methode_paiement) }}@else — @endif</td>
                     <td>{{ $t->email_acheteur }}</td>
                     <td style="font-size:0.75rem;">{{ $t->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
                 </tr>

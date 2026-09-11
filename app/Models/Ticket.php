@@ -23,6 +23,7 @@ class Ticket extends Model
         'qr_signature',
         'email_acheteur',
         'telephone_acheteur',
+        'whatsapp_acheteur',
         'telephone_paiement',
         'nom_acheteur',
         'nom_tarif',
