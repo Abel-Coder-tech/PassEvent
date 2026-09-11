@@ -26,7 +26,7 @@ class LotPhysiqueTemplatePdfService
     public const PAX_LINE_HEIGHT = 3.8; // mm
 
     // Le code pass vit dans la marge basse du QR : petite marge entre le texte et le bord de la zone QR
-    public const PAX_BOTTOM = 0.3; // mm
+    public const PAX_BOTTOM = 0.2; // mm
 
     // Bande du code pass : marge haut (quiet zone) + texte, zone blanche close sous le texte
     public const PAX_BAND_HEIGHT = self::QR_PADDING + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM;
