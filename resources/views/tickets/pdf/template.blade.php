@@ -35,18 +35,15 @@
             text-align: center;
         }
         .qr-zone img {
+            position: absolute;
             display: block;
-            margin: 0 auto;
         }
 
         .pax-band {
             position: absolute;
             background: #fff;
-            height: {{ $qrPaddingBottom }}mm;
-            line-height: {{ $qrPaddingBottom }}mm;
             text-align: center;
             overflow: hidden;
-            padding-bottom: 0.2mm;
             box-sizing: border-box;
         }
         .pax-band .pax-code {
@@ -55,6 +52,7 @@
             letter-spacing: 0;
             color: #000;
             white-space: nowrap;
+            line-height: {{ $paxLineH }}mm;
         }
 
         .coupe-h, .coupe-v {
@@ -84,9 +82,9 @@
                 @if ($templateUrl)
                     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
                 @endif
-                <div class="qr-zone" style="left: {{ $qrX }}mm; top: {{ $qrY }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize + $qrPaddingBottom }}mm;">
-                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-                    <div class="pax-band" style="left: 0; bottom: 0; width: {{ $qrSize }}mm;">
+                <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
+                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $qrPadding }}mm; top: {{ $qrPadding }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                    <div class="pax-band" style="left: 0; bottom: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $qrPadding }}mm 0;">
                         <div class="pax-code">{{ $ticket->code_unique }}</div>
                     </div>
                 </div>
