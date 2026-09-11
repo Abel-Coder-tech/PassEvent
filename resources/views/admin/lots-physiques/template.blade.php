@@ -784,7 +784,7 @@
         var empty = document.createElement('div');
         empty.className = 'canvas-empty';
         empty.id = 'canvasEmpty';
-        empty.innerHTML = '<i class="bi bi-cloud-arrow-up"></i><p class="mb-1 fw-semibold">Glissez l\\'image de votre ticket ici</p><p class="small mb-2">ou cliquez pour parcourir</p><p class="small text-muted">PNG max 10 Mo</p>';
+        empty.innerHTML = '<i class="bi bi-cloud-arrow-up"></i><p class="mb-1 fw-semibold">Glissez l\'image de votre ticket ici</p><p class="small mb-2">ou cliquez pour parcourir</p><p class="small text-muted">PNG max 10 Mo</p>';
         canvas.appendChild(empty);
         canvas.appendChild(btnRemoveImg);
         hideRemoveBtn();
@@ -890,7 +890,7 @@
         var hasImage = canvas.classList.contains('has-image');
         if (!hasImage && !hasStored && supprimerTemplate.value !== '1') {
             e.preventDefault();
-            showFileError('Veuillez importer une image de ticket avant d\\'enregistrer.');
+            showFileError('Veuillez importer une image de ticket avant d\'enregistrer.');
             return;
         }
         btnSaveText.textContent = 'Enregistrement...';
