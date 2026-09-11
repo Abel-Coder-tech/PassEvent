@@ -18,30 +18,29 @@
         }
         .qr-zone {
             position: absolute;
-            left: {{ $qrX }}mm;
-            top: {{ $qrY }}mm;
-            width: {{ $qrSize }}mm;
-            height: {{ $qrSize + $qrPaddingBottom }}mm;
+            left: {{ $zoneX }}mm;
+            top: {{ $zoneY }}mm;
+            width: {{ $zoneW }}mm;
+            height: {{ $zoneH }}mm;
             background: #fff;
             border-radius: 1.5mm;
             overflow: hidden;
             text-align: center;
         }
         .qr-zone img {
+            position: absolute;
             display: block;
-            margin: 0 auto;
         }
         .pax-band {
             position: absolute;
             left: 0;
             bottom: 0;
             width: 100%;
-            height: {{ $qrPaddingBottom }}mm;
+            height: {{ $paxBandH }}mm;
+            padding: {{ $qrPadding }}mm 0;
             background: #fff;
-            line-height: {{ $qrPaddingBottom }}mm;
             text-align: center;
             overflow: hidden;
-            padding-bottom: 0.2mm;
             box-sizing: border-box;
         }
         .pax-band .pax-code {
@@ -50,6 +49,7 @@
             letter-spacing: 0;
             color: #000;
             white-space: nowrap;
+            line-height: {{ $paxLineH }}mm;
         }
     </style>
 </head>
@@ -59,7 +59,7 @@
     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
 @endif
     <div class="qr-zone">
-        <img src="{{ $qrDataUri }}" alt="QR" style="width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+        <img src="{{ $qrDataUri }}" alt="QR" style="left: {{ $qrPadding }}mm; top: {{ $qrPadding }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
         <div class="pax-band">
             <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
         </div>
