@@ -19,16 +19,16 @@ class LotPhysiqueTemplatePdfService
     // Marge blanche (quiet zone) autour du QR code : haut, gauche, droite
     public const QR_PADDING = 1.5; // mm
 
-    // Taille du texte du code pass (agrandie à 9 px)
-    public const PAX_FONT = 9; // px
+    // Taille du texte du code pass
+    public const PAX_FONT = 10; // px
 
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
-    public const PAX_LINE_HEIGHT = 3.5; // mm
+    public const PAX_LINE_HEIGHT = 3.8; // mm
 
-    // Marge basse sous le code pass, quasi supprimée (juste de quoi ne pas couper la police)
-    public const PAX_BOTTOM = 0.2; // mm
+    // Le code pass vit dans la marge basse du QR : petite marge entre le texte et le bord de la zone QR
+    public const PAX_BOTTOM = 0.5; // mm
 
-    // Bande du code pass : marge haut (quiet zone) + texte + marge bas minimale
+    // Bande du code pass : marge haut (quiet zone) + texte, zone blanche close sous le texte
     public const PAX_BAND_HEIGHT = self::QR_PADDING + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM;
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
