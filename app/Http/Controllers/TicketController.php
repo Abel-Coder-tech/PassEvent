@@ -75,7 +75,7 @@ class TicketController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
 
             fputcsv($out, [
-                'Reference', 'Participant', 'Telephone', 'Email', 'Evenement',
+                'Reference', 'Participant', 'WhatsApp', 'N transaction', 'Email', 'Evenement',
                 'Tarif', 'Montant (FCFA)', 'Statut', 'Moyen de paiement',
                 'Operateur', 'Transaction ID', 'Date achat',
             ], ';');
@@ -84,7 +84,8 @@ class TicketController extends Controller
                 fputcsv($out, [
                     $ticket->code_unique,
                     $ticket->nom_acheteur,
-                    $ticket->telephone_acheteur,
+                    $ticket->whatsapp_acheteur ?? $ticket->telephone_acheteur ?? '-',
+                    $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '-',
                     $ticket->email_acheteur,
                     $ticket->evenement?->titre ?? '-',
                     $ticket->nom_tarif ?? '-',
@@ -125,6 +126,7 @@ class TicketController extends Controller
             $query->where(function (Builder $sub) use ($s) {
                 $sub->where('nom_acheteur', 'like', '%'.$s.'%')
                     ->orWhere('telephone_acheteur', 'like', '%'.$s.'%')
+                    ->orWhere('whatsapp_acheteur', 'like', '%'.$s.'%')
                     ->orWhere('email_acheteur', 'like', '%'.$s.'%')
                     ->orWhere('code_unique', 'like', '%'.$s.'%');
             });

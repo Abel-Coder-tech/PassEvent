@@ -333,8 +333,9 @@
                                     </div>
                                     <div style="font-size:0.68rem;color:var(--gris);">
                                         {{ $ticket->evenement->titre ?? '—' }} · {{ $ticket->date_achat?->format('d/m H:i') }}
-                                        @if($ticket->whatsapp_acheteur)
-                                            <span class="d-block"><i class="bi bi-whatsapp me-1"></i>{{ $ticket->whatsapp_acheteur }}</span>
+                                        @if($ticket->whatsapp_acheteur || $ticket->telephone_paiement || $ticket->telephone_acheteur)
+                                            <span class="d-block"><i class="bi bi-whatsapp me-1"></i>WhatsApp : {{ $ticket->whatsapp_acheteur ?? '—' }}</span>
+                                            <span class="d-block"><i class="bi bi-cash-coin me-1"></i>Paiement : {{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</span>
                                         @endif
                                     </div>
                                 </div>

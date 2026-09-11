@@ -115,7 +115,8 @@
                         <th class="ps-3">Date</th>
                         <th>Acheteur</th>
                         <th>Email</th>
-                        <th>Téléphone</th>
+                        <th>WhatsApp</th>
+                        <th>N° paiement</th>
                         <th>Tarif</th>
                         <th class="text-end">Montant</th>
                         <th>Paiement</th>
@@ -128,7 +129,8 @@
                         <td class="ps-3">{{ $ticket->date_achat->format('d/m/Y H:i') }}</td>
                         <td>{{ $ticket->nom_acheteur }}</td>
                         <td>{{ $ticket->email_acheteur }}</td>
-                        <td>{{ $ticket->telephone_acheteur }}</td>
+                        <td>{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
+                        <td>{{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</td>
                         <td>{{ optional($ticket->tarif)->getLabel() ?? 'N/A' }}</td>
                         @if($ticket->montant > 0)
                         <td class="text-end fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
@@ -146,7 +148,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-3">Aucune vente</td>
+                        <td colspan="9" class="text-center text-muted py-3">Aucune vente</td>
                     </tr>
                     @endforelse
                 </tbody>

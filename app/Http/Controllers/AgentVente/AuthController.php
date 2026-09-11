@@ -172,7 +172,6 @@ class AuthController extends Controller
         $validated = $request->validate([
             'nom_acheteur' => 'required|string|max:255',
             'email_acheteur' => 'required|email|max:255',
-            'telephone_acheteur' => 'required|string|max:20',
             'whatsapp_acheteur' => 'nullable|string|max:20',
             'tarif_id' => 'required|exists:tarifs,id',
             'methode_paiement' => 'required|in:cash,mobile_money',
@@ -182,7 +181,6 @@ class AuthController extends Controller
             'nom_acheteur.required' => 'Veuillez saisir le nom de l\'acheteur.',
             'email_acheteur.required' => 'Veuillez saisir l\'adresse e-mail de l\'acheteur.',
             'email_acheteur.email' => 'Veuillez saisir une adresse e-mail valide.',
-            'telephone_acheteur.required' => 'Veuillez saisir le numéro de téléphone de l\'acheteur.',
             'tarif_id.required' => 'Veuillez sélectionner un tarif.',
             'tarif_id.exists' => 'Le tarif sélectionné est invalide.',
             'methode_paiement.required' => 'Veuillez sélectionner une méthode de paiement.',
@@ -229,7 +227,6 @@ class AuthController extends Controller
             'code_unique' => Ticket::genererCodeSecurise(),
             'qr_signature' => Str::uuid()->toString(),
             'email_acheteur' => $validated['email_acheteur'],
-            'telephone_acheteur' => $validated['telephone_acheteur'],
             'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
             'nom_acheteur' => $validated['nom_acheteur'],
             'nom_tarif' => $tarif->nom ?? 'Standard',

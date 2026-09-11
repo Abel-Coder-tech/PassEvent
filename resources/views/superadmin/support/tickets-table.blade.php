@@ -38,7 +38,8 @@
             <td style="max-width:150px;">
                 <div style="font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $ticket->nom_acheteur }}</div>
                 <small style="font-size:0.68rem;color:#666;">{{ $ticket->email_acheteur ?? '—' }}</small><br>
-                <small style="font-size:0.68rem;color:#666;">{{ $ticket->telephone_acheteur ?? '—' }}</small>
+                <small style="font-size:0.68rem;color:#666;">WhatsApp : {{ $ticket->whatsapp_acheteur ?? '—' }}</small><br>
+                <small style="font-size:0.68rem;color:#666;">N° payement : {{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</small>
             </td>
             <td class="fw-bold" style="font-size:0.78rem;">@if($ticket->montant > 0){{ number_format($ticket->montant, 0, ',', ' ') }} F @else Gratuit @endif</td>
             <td>

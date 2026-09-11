@@ -219,7 +219,7 @@
                                 <tr class="border-bottom">
                                     <td class="ps-3">
                                         <div class="fw-bold" style="font-size: 0.85rem;">{{ $ticket->nom_acheteur }}</div>
-                                        <small class="text-muted">{{ $ticket->telephone_acheteur }}</small>
+                                        <small class="text-muted">Paiement : {{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</small>
                                     </td>
                                     <td class="small">{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
                                     <td>

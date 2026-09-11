@@ -97,7 +97,10 @@ class LogController extends Controller
             'email' => 'required|email',
         ]);
 
-        $ticketQuery = Ticket::where('telephone_acheteur', $validated['telephone'])
+        $ticketQuery = Ticket::where(function ($q) use ($validated) {
+            $q->where('telephone_acheteur', $validated['telephone'])
+                ->orWhere('whatsapp_acheteur', $validated['telephone']);
+        })
             ->where('email_acheteur', $validated['email'])
             ->where('statut_paiement', 'payé');
 
