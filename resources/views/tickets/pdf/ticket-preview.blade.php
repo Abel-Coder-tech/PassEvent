@@ -37,14 +37,14 @@
             bottom: 0;
             width: 100%;
             height: {{ $paxBandH }}mm;
-            padding: {{ $qrPadding }}mm 0;
+            padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;
             background: #fff;
             text-align: center;
             overflow: hidden;
             box-sizing: border-box;
         }
         .pax-band .pax-code {
-            font-size: 8px;
+            font-size: {{ $paxFont }}px;
             font-weight: 700;
             letter-spacing: 0;
             color: #000;
