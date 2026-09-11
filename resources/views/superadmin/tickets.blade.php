@@ -12,7 +12,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Code unique</th><th>Evenement</th><th>Acheteur</th><th>WhatsApp</th><th>Montant</th><th>Statut</th><th>Utilise</th><th>Date achat</th></tr>
+                <tr><th>Code unique</th><th>Evenement</th><th>Acheteur</th><th>WhatsApp</th><th>N° paiement</th><th>Montant</th><th>Statut</th><th>Utilise</th><th>Date achat</th></tr>
             </thead>
             <tbody>
                 @foreach($allTickets as $t)
@@ -21,6 +21,7 @@
                     <td>{{ $t->evenement->titre ?? '-' }}</td>
                     <td>{{ $t->email_acheteur }}<br><small class="text-muted">{{ $t->nom_acheteur ?? '-' }}</small></td>
                     <td>@if($t->whatsapp_acheteur){{ $t->whatsapp_acheteur }}@else <span class="text-muted">—</span> @endif</td>
+                    <td>@if($t->telephone_paiement){{ $t->telephone_paiement }}@elseif($t->telephone_acheteur){{ $t->telephone_acheteur }}@else <span class="text-muted">—</span> @endif</td>
                     <td><strong>@if($t->montant > 0){{ number_format($t->montant, 0, ',', ' ') }} F @else Gratuit @endif</strong></td>
                     <td>
                         @if($t->statut_paiement === 'payé') <span class="sa-badge sa-badge-success">Paye</span>

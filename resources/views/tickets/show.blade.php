@@ -90,12 +90,12 @@
                             <div class="fw-semibold">{{ $ticket->email_acheteur }}</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Telephone</label>
-                            <div class="fw-semibold">{{ $ticket->telephone_acheteur }}</div>
+                            <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">WhatsApp</label>
+                            <div class="fw-semibold">{{ $ticket->whatsapp_acheteur ?? '—' }}</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Telephone paiement</label>
-                            <div class="fw-semibold">{{ $ticket->telephone_paiement ?? '—' }}</div>
+                            <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">N° transaction</label>
+                            <div class="fw-semibold">{{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</div>
                         </div>
                     </div>
 

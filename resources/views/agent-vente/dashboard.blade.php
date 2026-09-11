@@ -86,10 +86,6 @@
                             <input type="email" name="email_acheteur" class="form-control form-control-sm" required>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label small fw-medium">Téléphone</label>
-                            <input type="tel" name="telephone_acheteur" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
                             <label class="form-label small fw-medium">N° WhatsApp <span class="text-muted">(facultatif)</span></label>
                             <input type="tel" name="whatsapp_acheteur" class="form-control form-control-sm" placeholder="+229 XX XX XX XX">
                         </div>
@@ -156,6 +152,8 @@
                                 <tr>
                                     <th class="ps-3">Heure</th>
                                     <th>Acheteur</th>
+                                    <th>WhatsApp</th>
+                                    <th>N° paiement</th>
                                     <th>Tarif</th>
                                     <th>Montant</th>
                                     <th>Paiement</th>
@@ -167,6 +165,8 @@
                                 <tr>
                                     <td class="ps-3 small">{{ $ticket->date_achat->format('H:i') }}</td>
                                     <td class="small">{{ $ticket->nom_acheteur }}</td>
+                                    <td class="small">{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
+                                    <td class="small">{{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</td>
                                     <td class="small">{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
                                     @if($ticket->montant > 0)
                                     <td class="small fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>

@@ -51,10 +51,6 @@
                                 <input type="text" class="form-control" id="nom_acheteur" name="nom_acheteur" placeholder="Ex: Adja Koné" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="telephone" class="form-label fw-semibold">Téléphone <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="+229 62 83 66 29" required>
-                            </div>
-                            <div class="col-md-6">
                                 <label for="whatsapp" class="form-label fw-semibold">N° WhatsApp <span class="text-muted fw-normal">(facultatif)</span></label>
                                 <input type="tel" class="form-control" id="whatsapp" name="whatsapp" placeholder="+229 62 83 66 29">
                             </div>
@@ -290,8 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (isFreeEvent) {
             const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
-            const telOk = document.getElementById('telephone').value.trim() !== '';
-            btnSubmit.disabled = !(eventSelect.value && nomOk && telOk);
+            btnSubmit.disabled = !(eventSelect.value && nomOk);
             return;
         }
 
@@ -315,9 +310,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
-        const telOk = document.getElementById('telephone').value.trim() !== '';
         const emailOk = emailInput.value.trim() !== '';
-        btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && nomOk && telOk && emailOk);
+        btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && nomOk && emailOk);
     }
 
     function numberFormat(n) {
@@ -476,7 +470,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('nom_acheteur').addEventListener('input', updateRecap);
-    document.getElementById('telephone').addEventListener('input', updateRecap);
     emailInput.addEventListener('input', updateRecap);
 
     methodeSelect.addEventListener('change', function() {

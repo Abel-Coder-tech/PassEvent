@@ -169,10 +169,6 @@
                                 <input type="email" class="show-input" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
                             </div>
                             <div class="mb-3">
-                                <label class="show-label">Téléphone <span class="text-danger">*</span></label>
-                                <input type="tel" class="show-input" name="telephone_acheteur" value="{{ old('telephone_acheteur') }}" placeholder="+229 XX XX XX XX" required>
-                            </div>
-                            <div class="mb-3">
                                 <label class="show-label">N° WhatsApp <span class="text-danger">*</span></label>
                                 <input type="tel" class="show-input" name="whatsapp_acheteur" value="{{ old('whatsapp_acheteur') }}" placeholder="+229 XX XX XX XX" required>
                             </div>
