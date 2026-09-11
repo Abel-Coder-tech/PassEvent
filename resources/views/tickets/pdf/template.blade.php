@@ -47,7 +47,7 @@
             box-sizing: border-box;
         }
         .pax-band .pax-code {
-            font-size: 8px;
+            font-size: {{ $paxFont }}px;
             font-weight: 700;
             letter-spacing: 0;
             color: #000;
@@ -84,7 +84,7 @@
                 @endif
                 <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $qrPadding }}mm; top: {{ $qrPadding }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-                    <div class="pax-band" style="left: 0; bottom: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $qrPadding }}mm 0;">
+                    <div class="pax-band" style="left: 0; bottom: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;">
                         <div class="pax-code">{{ $ticket->code_unique }}</div>
                     </div>
                 </div>
