@@ -12,7 +12,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Code unique</th><th>Evenement</th><th>Acheteur</th><th>Montant</th><th>Statut</th><th>Utilise</th><th>Date achat</th></tr>
+                <tr><th>Code unique</th><th>Evenement</th><th>Acheteur</th><th>WhatsApp</th><th>Montant</th><th>Statut</th><th>Utilise</th><th>Date achat</th></tr>
             </thead>
             <tbody>
                 @foreach($allTickets as $t)
@@ -20,7 +20,8 @@
                     <td style="font-family:monospace;font-size:0.75rem;">{{ $t->code_unique }}</td>
                     <td>{{ $t->evenement->titre ?? '-' }}</td>
                     <td>{{ $t->email_acheteur }}<br><small class="text-muted">{{ $t->nom_acheteur ?? '-' }}</small></td>
-                    <td><strong>{{ number_format($t->montant, 0, ',', ' ') }} F</strong></td>
+                    <td>@if($t->whatsapp_acheteur){{ $t->whatsapp_acheteur }}@else <span class="text-muted">—</span> @endif</td>
+                    <td><strong>@if($t->montant > 0){{ number_format($t->montant, 0, ',', ' ') }} F @else Gratuit @endif</strong></td>
                     <td>
                         @if($t->statut_paiement === 'payé') <span class="sa-badge sa-badge-success">Paye</span>
                         @elseif($t->statut_paiement === 'échoué') <span class="sa-badge sa-badge-danger">Echoue</span>

@@ -249,7 +249,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Date</th><th>Acheteur</th><th>Email</th><th>Tarif</th><th>Montant</th><th>Méthode</th></tr>
+                <tr><th>Date</th><th>Acheteur</th><th>Email</th><th>WhatsApp</th><th>Tarif</th><th>Montant</th><th>Méthode</th></tr>
             </thead>
             <tbody>
                 @forelse($tickets as $ticket)
@@ -257,12 +257,19 @@
                     <td style="font-size:0.78rem;">{{ $ticket->date_achat->isoFormat('D MMM YYYY HH:mm') }}</td>
                     <td>{{ $ticket->nom_acheteur }}</td>
                     <td>{{ $ticket->email_acheteur }}</td>
+                    <td>@if($ticket->whatsapp_acheteur){{ $ticket->whatsapp_acheteur }}@else <span class="text-muted">—</span> @endif</td>
                     <td>{{ $ticket->nom_tarif }}</td>
-                    <td class="fw-bold" style="color: var(--sa-success);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                    <td>{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}</td>
+                    <td>
+                        @if($ticket->montant > 0)
+                        <span class="fw-bold" style="color: var(--sa-success);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</span>
+                        @else
+                        <span class="text-muted">Gratuit</span>
+                        @endif
+                    </td>
+                    <td>@if($ticket->montant > 0){{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}@else — @endif</td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center text-muted py-3">Aucun ticket vendu</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-3">Aucun ticket vendu</td></tr>
                 @endforelse
             </tbody>
         </table>

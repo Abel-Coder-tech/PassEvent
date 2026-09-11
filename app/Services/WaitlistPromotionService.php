@@ -75,6 +75,7 @@ class WaitlistPromotionService
                     'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
                     'email_acheteur' => strtolower($promu->email_acheteur),
                     'telephone_acheteur' => $promu->telephone_acheteur,
+                    'whatsapp_acheteur' => $promu->whatsapp_acheteur,
                     'nom_acheteur' => $promu->nom_acheteur,
                     'nom_tarif' => $tarif?->nom ?? 'Standard',
                     'montant' => $promu->montant_unitaire,

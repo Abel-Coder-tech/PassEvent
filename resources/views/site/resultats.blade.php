@@ -60,7 +60,7 @@
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Montant :</span><br>
-                                    <strong style="color: var(--violet);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</strong>
+                                    <strong style="color: var(--violet);">@if($ticket->montant > 0){{ number_format($ticket->montant, 0, ',', ' ') }} F @else Gratuit @endif</strong>
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted">Code :</span><br>

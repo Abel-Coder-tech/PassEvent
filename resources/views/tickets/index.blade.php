@@ -181,6 +181,7 @@
                         <thead>
                             <tr>
                                 <th class="ps-3">Participant</th>
+                                <th>N° WhatsApp</th>
                                 <th>Evenement</th>
                                 <th>QR code</th>
                                 <th>Type</th>
@@ -220,6 +221,7 @@
                                         <div class="fw-bold" style="font-size: 0.85rem;">{{ $ticket->nom_acheteur }}</div>
                                         <small class="text-muted">{{ $ticket->telephone_acheteur }}</small>
                                     </td>
+                                    <td class="small">{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
                                     <td>
                                         <div class="fw-semibold" style="font-size: 0.85rem;">{{ $ticket->evenement?->titre ?? '—' }}</div>
                                         <small class="text-muted">{{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '—' }}</small>

@@ -333,10 +333,13 @@
                                     </div>
                                     <div style="font-size:0.68rem;color:var(--gris);">
                                         {{ $ticket->evenement->titre ?? '—' }} · {{ $ticket->date_achat?->format('d/m H:i') }}
+                                        @if($ticket->whatsapp_acheteur)
+                                            <span class="d-block"><i class="bi bi-whatsapp me-1"></i>{{ $ticket->whatsapp_acheteur }}</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div style="font-size:0.85rem;font-weight:700;color:var(--vert);white-space:nowrap;flex-shrink:0;">
-                                    {{ number_format($ticket->montant, 0, ',', ' ') }} F
+                                    @if($ticket->montant > 0){{ number_format($ticket->montant, 0, ',', ' ') }} F @else <span style="color:var(--gris);">Gratuit</span> @endif
                                 </div>
                             </div>
                         @endforeach
