@@ -30,7 +30,8 @@ class LotPhysiqueTemplatePdfService
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
     public const PAX_LINE_HEIGHT = 3.8; // mm
 
-    // Côté minimal de la zone blanche (QR + code pass) : 2 cm → zone carrée 20×20
+    // Côté minimal de la zone blanche (QR + code pass) : 2 cm → zone carrée 20×20.
+    // La zone peut grandir au-delà de 2 cm si le QR choisi est plus grand.
     public const ZONE_MIN = 20; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
@@ -135,10 +136,8 @@ class LotPhysiqueTemplatePdfService
         $paxBottom = self::PAX_BOTTOM;
 
         // Zone blanche : minimum 2 cm de côté (2 cm²), en grandissant si le QR est grand.
-        // Les marges demandées (haut 0,3 / côtés 1 / écart 0,5 / bas 0,3) sont des minimums :
-        // le surplus d'une zone à 2 cm pour un petit QR se répartit dans l'écart QR↔code et
-        // les côtés. La position mémorisée (qr_x/qr_y) reste le coin haut-gauche du QR ; la
-        // zone est clampée dans le ticket pour que rien ne soit coupé.
+        // Les marges (haut 0,1 / côtés 0,3 / écart 0,2 / bas 0,3) sont des minimums,
+        // le surplus d'une zone à 2 cm pour un petit QR se répartit dans l'écart et les côtés.
         $zoneW = round(max($qrSize + 2 * $qrSide, self::ZONE_MIN), 2);
         $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
         $padX = round(max($qrSide, ($zoneW - $qrSize) / 2), 2);
