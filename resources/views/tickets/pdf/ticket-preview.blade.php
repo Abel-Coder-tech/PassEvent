@@ -37,7 +37,7 @@
             left: 0;
             width: 100%;
             height: {{ $paxBandH }}mm;
-            padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;
+            padding: {{ $gap }}mm 0 {{ $paxBottom }}mm;
             background: #fff;
             text-align: center;
             overflow: hidden;

@@ -542,24 +542,29 @@
     var FORMATS = @json(\App\Models\LotPhysique::FORMATS);
     var fmtKey = '{{ $lot->format ?? 's1' }}';
     var ZONE = {
-        pad: {{ \App\Services\LotPhysiqueTemplatePdfService::QR_PADDING }},
-        band: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_BAND_HEIGHT }},
+        top: {{ \App\Services\LotPhysiqueTemplatePdfService::QR_TOP }},
+        gap: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_GAP }},
+        line: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT }},
+        bottom: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }},
         min: {{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN }},
         qrMin: 10,
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : chaque côté vaut au moins 2 cm,
-    // le contenu est centré (marges internes égales), cf. LotPhysiqueTemplatePdfService.
+    // Dimensions de la zone blanche (QR + code pass) : vrai carré, chaque côté vaut au moins
+    // 2 cm, QR poussé vers le haut (marge haute réduite), code pass en bas (petite marge
+    // basse) et écart important entre les deux, cf. LotPhysiqueTemplatePdfService.
     function zoneDims(qrMm) {
-        var w = Math.max(qrMm + 2 * ZONE.pad, ZONE.min);
-        var h = Math.max(qrMm + ZONE.band + 2 * ZONE.pad, ZONE.min);
+        var z = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
+        var gap = z - ZONE.top - qrMm - ZONE.line - ZONE.bottom;
         return {
-            w: w,
-            h: h,
-            padX: (w - qrMm) / 2,
-            padTop: (h - qrMm - ZONE.band) / 2,
-            bandTop: (h - qrMm - ZONE.band) / 2 + qrMm
+            w: z,
+            h: z,
+            padX: (z - qrMm) / 2,
+            padTop: ZONE.top,
+            gap: gap,
+            bandTop: ZONE.top + qrMm,
+            bandH: gap + ZONE.line + ZONE.bottom
         };
     }
 

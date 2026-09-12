@@ -16,8 +16,13 @@ class LotPhysiqueTemplatePdfService
     // Gouttière (zone de découpe) entre les tickets
     public const GOUTTIERE = 2; // mm
 
-    // Marge blanche (quiet zone) autour du QR code : égale sur les 4 côtés
-    public const QR_PADDING = 1.5; // mm
+    // Marge haute du QR code dans la zone réservée (réduite : QR poussé vers le haut)
+    public const QR_TOP = 0.5; // mm
+
+    // Écart minimal entre le QR code et le code pass. Correctif adaptatif : la zone
+    // valant 2 cm (QR ≈ 1,3 cm sur le ticket reçu), l'écart réellement laissé = le
+    // reste de la zone, d'où un écart nominal petit qui grossit quand le QR diminue.
+    public const PAX_GAP = 2; // mm
 
     // Taille du texte du code pass
     public const PAX_FONT = 10; // px
@@ -25,11 +30,8 @@ class LotPhysiqueTemplatePdfService
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
     public const PAX_LINE_HEIGHT = 3.8; // mm
 
-    // Marge basse du code pass : symétrique de la marge haute (marges internes égales tout autour)
-    public const PAX_BOTTOM = self::QR_PADDING; // mm
-
-    // Bande du code pass : marge haute (quiet zone) + texte + marge basse symétrique
-    public const PAX_BAND_HEIGHT = self::QR_PADDING + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM;
+    // Marge basse du code pass (petite)
+    public const PAX_BOTTOM = 0.5; // mm
 
     // Côté minimal de la zone blanche (carré QR + code pass) : 2 cm
     public const ZONE_MIN = 20; // mm
@@ -128,21 +130,24 @@ class LotPhysiqueTemplatePdfService
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
-        $qrPadding = self::QR_PADDING;
-        $paxBandH = self::PAX_BAND_HEIGHT;
+        $padTop = self::QR_TOP;
+        $paxGap = self::PAX_GAP;
         $paxLineH = self::PAX_LINE_HEIGHT;
         $paxFont = self::PAX_FONT;
         $paxBottom = self::PAX_BOTTOM;
 
-        // Zone blanche (carré) : QR code + bande code pass, chaque côté vaut au moins 2 cm.
-        // Le contenu (QR + bande) est centré : marges internes égales de tous les côtés.
-        // La position mémorisée (qr_x/qr_y) reste le coin haut-gauche du QR ; la zone
-        // est clampée dans le ticket pour que rien ne soit coupé.
-        $zoneW = round(max($qrSize + 2 * $qrPadding, self::ZONE_MIN), 2);
-        $zoneH = round(max($qrSize + $paxBandH + 2 * $qrPadding, self::ZONE_MIN), 2);
-        $padX = round(($zoneW - $qrSize) / 2, 2);
-        $padTop = round(($zoneH - $qrSize - $paxBandH) / 2, 2);
+        // Zone blanche (carré, chaque côté vaut au moins 2 cm) : le QR est poussé vers le
+        // haut (marge haute réduite), le code pass reste en bas avec une petite marge basse,
+        // et l'écart QR ↔ code pass (important) occupe le milieu de la zone. Les marges
+        // gauche/droite du QR restent inchangées (centrage horizontal dans la zone).
+        // La position mémorisée (qr_x/qr_y) reste le coin haut-gauche du QR ; la zone est
+        // clampée dans le ticket pour que rien ne soit coupé.
+        $zone = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
+        $zoneW = $zoneH = $zone;
+        $padX = round(($zone - $qrSize) / 2, 2);
+        $gap = round($zone - $padTop - $qrSize - $paxLineH - $paxBottom, 2);
         $bandTop = round($padTop + $qrSize, 2);
+        $paxBandH = round($gap + $paxLineH + $paxBottom, 2);
         $zoneX = min(max($qrX - $padX, 0.0), max($layout['slot_largeur'] - $zoneW, 0.0));
         $zoneY = min(max($qrY - $padTop, 0.0), max($layout['slot_hauteur'] - $zoneH, 0.0));
 
@@ -163,8 +168,8 @@ class LotPhysiqueTemplatePdfService
 
         $pdf = Pdf::loadView('tickets.pdf.template', compact(
             'lot', 'pages', 'qrs', 'templateUrl',
-            'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrPadding', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
-            'padX', 'padTop', 'bandTop',
+            'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
+            'padX', 'padTop', 'bandTop', 'gap',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
             'signBottom', 'signFont', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
@@ -199,25 +204,27 @@ class LotPhysiqueTemplatePdfService
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($slotW - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($slotH - $qrSize) / 2);
-        $qrPadding = self::QR_PADDING;
-        $paxBandH = self::PAX_BAND_HEIGHT;
+        $padTop = self::QR_TOP;
+        $paxGap = self::PAX_GAP;
         $paxLineH = self::PAX_LINE_HEIGHT;
         $paxFont = self::PAX_FONT;
         $paxBottom = self::PAX_BOTTOM;
 
-        // Zone blanche (carré) : QR + code pass, min 2 cm, contenu centré (marges égales)
-        $zoneW = round(max($qrSize + 2 * $qrPadding, self::ZONE_MIN), 2);
-        $zoneH = round(max($qrSize + $paxBandH + 2 * $qrPadding, self::ZONE_MIN), 2);
-        $padX = round(($zoneW - $qrSize) / 2, 2);
-        $padTop = round(($zoneH - $qrSize - $paxBandH) / 2, 2);
+        // Zone blanche (carré, min 2 cm de côté) : QR en haut, code pass en bas (petite
+        // marge basse), écart important entre les deux, marges latérales inchangées.
+        $zone = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
+        $zoneW = $zoneH = $zone;
+        $padX = round(($zone - $qrSize) / 2, 2);
+        $gap = round($zone - $padTop - $qrSize - $paxLineH - $paxBottom, 2);
         $bandTop = round($padTop + $qrSize, 2);
+        $paxBandH = round($gap + $paxLineH + $paxBottom, 2);
         $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));
         $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - $zoneH, 0.0));
 
         $html = view('tickets.pdf.ticket-preview', compact(
             'templateUrl', 'qrDataUri',
-            'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrPadding', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
-            'padX', 'padTop', 'bandTop',
+            'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
+            'padX', 'padTop', 'bandTop', 'gap',
             'slotW', 'slotH', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
         ))->with('codeUnique', $ticket->code_unique)->render();

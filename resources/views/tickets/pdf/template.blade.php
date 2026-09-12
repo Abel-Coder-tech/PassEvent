@@ -84,7 +84,7 @@
                 @endif
                 <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-                    <div class="pax-band" style="top: {{ $bandTop }}mm; left: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;">
+                    <div class="pax-band" style="top: {{ $bandTop }}mm; left: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $gap }}mm 0 {{ $paxBottom }}mm;">
                         <div class="pax-code">{{ $ticket->code_unique }}</div>
                     </div>
                 </div>
