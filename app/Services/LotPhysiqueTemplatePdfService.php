@@ -17,8 +17,9 @@ class LotPhysiqueTemplatePdfService
     public const GOUTTIERE = 2; // mm
 
     // Marges demandées (essai) : haut 0,1 — côtés 0,3 — bas 0,3 — écart QR↔code 0,2.
-    // La zone (2 cm minimum, carrée) vaut exactement 20×20 quand le QR est petit ;
-    // le surplus est réparti dans l'écart QR↔code (vertical) et les côtés (horizontal).
+    // La zone est carrée, minimum 2 cm de côté (20×20) quand le QR est petit ;
+    // le surplus est réparti dans l'écart QR↔code reste fixe à 0,2 et les marges
+    // hauts/bas, les côtés remplissent la largeur du carré pour un petit QR.
     public const QR_TOP = 0.1; // mm  marge entre le bord haut de la zone et le QR
     public const QR_SIDE = 0.3; // mm   marge gauche/droite entre le bord de la zone et le QR
     public const PAX_GAP = 0.2; // mm  écart entre le QR et le code pass
@@ -135,15 +136,15 @@ class LotPhysiqueTemplatePdfService
         $paxFont = self::PAX_FONT;
         $paxBottom = self::PAX_BOTTOM;
 
-        // Zone blanche : la largeur épouse le QR (marges latérales 0,3 fixes),
-        // la hauteur garde un minimum de 2 cm et grandit si le QR est grand.
-        // Les marges (haut 0,1 / côtés 0,3 / écart 0,2 / bas 0,3) sont des minimums :
-        // l'écart QR↔code reste fixe (0,2) et le surplus vertical d'une zone à 2 cm
-        // pour un petit QR se partage entre haut et bas.
-        $zoneW = round($qrSize + 2 * $qrSide, 2);
+        // Zone blanche carrée : largeur = hauteur, minimum 2 cm (20×20), en grandissant
+        // si le QR est grand. Les marges (haut 0,1 / côtés 0,3 / écart 0,2 / bas 0,3)
+        // sont des minimums ; l'écart QR↔code reste fixe à 0,2 et le surplus vertical
+        // d'une zone à 2 cm pour un petit QR se partage entre haut et bas (le surplus
+        // horizontal va aux côtés pour remplir la largeur du carré).
         $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
-        $padX = $qrSide; // marge latérale : toujours au minimum demandé
-        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé
+        $zoneW = $zoneH; // zone carrée
+        $padX = round(max($qrSide, ($zoneW - $qrSize) / 2), 2);
+        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé (0,2)
         $extraV = round($zoneH - ($padTop + $qrSize + $gap + $paxLineH + $paxBottom), 2);
         $padTop = round($padTop + $extraV / 2, 2);        // surplus → haut
         $paxBottom = round($paxBottom + $extraV - $extraV / 2, 2); // surplus → bas
@@ -212,13 +213,14 @@ class LotPhysiqueTemplatePdfService
         $paxFont = self::PAX_FONT;
         $paxBottom = self::PAX_BOTTOM;
 
-        // Zone blanche : la largeur épouse le QR (marges latérales 0,3 fixes) ;
-        // la hauteur garde un minimum de 2 cm. Les marges demandées sont des
-        // minimums : écart QR↔code fixe, surplus vertical partagé entre haut et bas.
-        $zoneW = round($qrSize + 2 * $qrSide, 2);
+        // Zone blanche carrée : largeur = hauteur, minimum 2 cm (20×20), en grandissant
+        // si le QR est grand. Les marges demandées sont des minimums : écart QR↔code
+        // fixe à 0,2, surplus vertical partagé entre haut et bas, surplus horizontal
+        // aux côtés pour remplir la largeur du carré.
         $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
-        $padX = $qrSide; // marge latérale : toujours au minimum demandé
-        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé
+        $zoneW = $zoneH; // zone carrée
+        $padX = round(max($qrSide, ($zoneW - $qrSize) / 2), 2);
+        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé (0,2)
         $extraV = round($zoneH - ($padTop + $qrSize + $gap + $paxLineH + $paxBottom), 2);
         $padTop = round($padTop + $extraV / 2, 2);        // surplus → haut
         $paxBottom = round($paxBottom + $extraV - $extraV / 2, 2); // surplus → bas
