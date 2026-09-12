@@ -16,12 +16,11 @@ class LotPhysiqueTemplatePdfService
     // Gouttière (zone de découpe) entre les tickets
     public const GOUTTIERE = 2; // mm
 
-    // Marges demandées (essai) : haut 0,1 — côtés 0,5 — bas 0,3 — écart QR↔code 0,2.
-    // Ce sont des minimums : la zone vaut toujours au moins 2 cm de côté (ZONE_MIN),
-    // donc pour un petit QR elle fait exactement 20×20 et le surplus de la zone est
-    // réparti dans l'écart QR↔code (vertical) et les côtés (horizontal).
+    // Marges demandées (essai) : haut 0,1 — côtés 0,3 — bas 0,3 — écart QR↔code 0,2.
+    // Ce sont des minimums : sans plancher (ZONE_MIN = 0) la zone épouse exactement
+    // le QR + marges, donc les valeurs demandées s'appliquent toujours.
     public const QR_TOP = 0.1; // mm  marge entre le bord haut de la zone et le QR
-    public const QR_SIDE = 0.5; // mm   marge gauche/droite entre le bord de la zone et le QR
+    public const QR_SIDE = 0.3; // mm   marge gauche/droite entre le bord de la zone et le QR
     public const PAX_GAP = 0.2; // mm  écart entre le QR et le code pass
     public const PAX_BOTTOM = 0.3; // mm  marge entre le code pass et le bord bas de la zone
 
@@ -31,8 +30,8 @@ class LotPhysiqueTemplatePdfService
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
     public const PAX_LINE_HEIGHT = 3.8; // mm
 
-    // Côté minimal de la zone blanche (QR + code pass) : 2 cm
-    public const ZONE_MIN = 20; // mm
+    // Côté minimal de la zone blanche (QR + code pass) : 0 = épouse le contenu + marges
+    public const ZONE_MIN = 0; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
     public const ZOOM_MIN = 70;
