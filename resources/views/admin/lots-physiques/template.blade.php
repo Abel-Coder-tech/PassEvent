@@ -578,17 +578,17 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : hauteur minimum 2 cm (20 mm),
-    // la largeur épouse le QR (+ marges latérales). Marges : haut 0,25 / côtés 1,5 /
-    // écart QR↔code 1,5 / bas 0,35 ; le surplus vertical se partage entre haut et bas.
+    // Dimensions de la zone blanche (QR + code pass) : hauteur = 2 cm fixe,
+    // largeur = QR + marges latérales. Marges fixes : haut 1,5 / côtés 1,5 /
+    // écart QR↔code 1,5 / bas 1,5. Le QR vaut toujours la zone restante
+    // (20 − marges), il n'est plus lié à la valeur stockée du Taille.
     function zoneDims(qrMm) {
         var w = qrMm + 2 * ZONE.side;
-        var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
+        var h = qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom;
         var padX = ZONE.side;
         var gap = ZONE.gap;
-        var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
-        var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
-        var bottom = Math.round((ZONE.bottom + extraV - extraV / 2) * 100) / 100;
+        var padTop = ZONE.top;
+        var bottom = ZONE.bottom;
         return {
             w: w,
             h: h,
@@ -706,9 +706,11 @@
         var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
         var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
 
-        var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
-        qrMm = Math.max(ZONE.qrMin, Math.min(ZONE.qrMax, qrMm));
-        if (qrSizeInput) qrSizeInput.value = qrMm; // le champ reflète toujours la taille réellement rendue
+        // Le QR vaut toujours la zone restante (2 cm − marges) ; le champ Taille s'affiche
+        // en lecture seule et reflète cette taille réelle.
+        var qrMm = ZONE.qrMin;
+        qrSizeInput.value = qrMm;
+        if (qrSizeHidden) qrSizeHidden.value = qrMm; // champ caché synchrone avec la taille rendue
         var zone = zoneDims(qrMm);
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
