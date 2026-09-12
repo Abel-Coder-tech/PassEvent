@@ -702,7 +702,8 @@
         // Le QR vaut toujours la zone restante (2 cm − marges) ; le champ Taille s'affiche
         // en lecture seule et reflète cette taille réelle.
         var qrMm = ZONE.qrMin;
-        qrSizeInput.value = qrMm; // le champ reflète toujours la taille réellement rendue
+        qrSizeInput.value = qrMm;
+        if (qrSizeHidden) qrSizeHidden.value = qrMm; // champ caché synchrone avec la taille rendue
         var zone = zoneDims(qrMm);
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
