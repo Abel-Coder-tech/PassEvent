@@ -120,7 +120,7 @@
                 return;
             }
             selEvt.innerHTML = data.evenements.map(e =>
-                '<option value="' + e.id + '">' + e.titre + (e.date_event ? ' (' + e.date_event + ')' : '') + '</option>'
+                '<option value="' + e.id + '">' + e.titre + '</option>'
             ).join('');
             selEvt.disabled = false;
         });
