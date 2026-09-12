@@ -571,17 +571,18 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : hauteur = 2 cm fixe,
-    // largeur = QR + marges latérales. Marges fixes : haut 1,5 / côtés 1,5 /
-    // écart QR↔code 1,5 / bas 1,5. Le QR vaut toujours la zone restante
-    // (20 − marges), il n'est plus lié à la valeur stockée du Taille.
+    // Dimensions de la zone blanche (QR + code pass) : carrée, 2 cm minimum (20×20),
+    // en grandissant si le QR est grand. Les marges (haut 0,25 / côtés 0,2 / écart
+    // 0,1 / bas 0,35) sont des minimums ; l'écart QR↔code reste fixe à 0,1, le
+    // surplus vertical se partage entre haut et bas, le surplus horizontal va aux côtés.
     function zoneDims(qrMm) {
-        var w = qrMm + 2 * ZONE.side;
-        var h = qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom;
-        var padX = ZONE.side;
+        var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
+        var w = h; // zone carrée
+        var padX = Math.max(ZONE.side, (w - qrMm) / 2);
         var gap = ZONE.gap;
-        var padTop = ZONE.top;
-        var bottom = ZONE.bottom;
+        var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
+        var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
+        var bottom = Math.round((ZONE.bottom + extraV - extraV / 2) * 100) / 100;
         return {
             w: w,
             h: h,
@@ -699,11 +700,11 @@
         var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
         var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
 
-        // Le QR vaut toujours la zone restante (2 cm − marges) ; le champ Taille s'affiche
-        // en lecture seule et reflète cette taille réelle.
-        var qrMm = ZONE.qrMin;
+        // QR : piloté par le champ Taille (minimum plancher remplissant la zone, maximum 80).
+        var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
+        qrMm = Math.max(ZONE.qrMin, Math.min(ZONE.qrMax, qrMm));
         qrSizeInput.value = qrMm;
-        if (qrSizeHidden) qrSizeHidden.value = qrMm; // champ caché synchrone avec la taille rendue
+        if (qrSizeHidden) qrSizeHidden.value = qrMm;
         var zone = zoneDims(qrMm);
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
