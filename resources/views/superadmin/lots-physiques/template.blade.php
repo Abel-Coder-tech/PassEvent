@@ -409,7 +409,7 @@
                                 <label class="form-label">Taille</label>
                                 <div class="input-group input-group-sm">
                                     <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-1" aria-label="Diminuer la taille">−</button>
-                                    <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrSizeInput" data-min="10" data-max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                    <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrSizeInput" data-min="{{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN - \App\Services\LotPhysiqueTemplatePdfService::QR_TOP - \App\Services\LotPhysiqueTemplatePdfService::PAX_GAP - \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT - \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }}" data-max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
                                     <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="1" aria-label="Augmenter la taille">+</button>
                                     <span class="input-group-text">mm</span>
                                 </div>
@@ -567,7 +567,7 @@
         line: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT }},
         bottom: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }},
         min: {{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN }},
-        qrMin: 10,
+        qrMin: {{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN - \App\Services\LotPhysiqueTemplatePdfService::QR_TOP - \App\Services\LotPhysiqueTemplatePdfService::PAX_GAP - \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT - \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }},
         qrMax: 80
     };
 
@@ -702,6 +702,7 @@
 
         var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
         qrMm = Math.max(ZONE.qrMin, Math.min(ZONE.qrMax, qrMm));
+        if (qrSizeInput) qrSizeInput.value = qrMm; // le champ reflète toujours la taille réellement rendue
         var zone = zoneDims(qrMm);
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
