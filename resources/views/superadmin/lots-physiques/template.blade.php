@@ -119,16 +119,29 @@
     box-shadow: 0 0 0 2px rgba(231,76,60,.4), inset 0 0 16px rgba(231,76,60,.15);
 }
 .qr-overlay .qr-label {
-    background: #e74c3c;
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    pointer-events: none;
-}
+        position: absolute;
+        top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #e74c3c;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 12;
+    }
+    .qr-overlay .zone-inner {
+        position: absolute;
+        border: 1.5px dashed rgba(231, 76, 60, .55);
+        background: rgba(255, 255, 255, .55);
+        border-radius: 5px;
+        pointer-events: none;
+        z-index: 11;
+    }
 .qr-overlay .qr-crosshair {
     position: absolute;
     top: 50%;
@@ -281,6 +294,7 @@
                 <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
                 <div class="qr-overlay" id="qrOverlay">
                     <div class="qr-tooltip" id="qrTooltip">{{ $qrX }} mm, {{ $qrY }} mm</div>
+                    <div class="zone-inner" id="zoneInner"></div>
                     <div class="qr-crosshair"></div>
                     <span class="qr-label">QR Code</span>
                     <div class="qr-resize" id="qrResize"></div>
@@ -377,7 +391,7 @@
                             <div class="col-4">
                                 <label class="form-label">Taille</label>
                                 <div class="input-group input-group-sm">
-                                    <input type="number" class="form-control" id="qrSizeInput" min="20" max="80" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                    <input type="number" class="form-control" id="qrSizeInput" min="10" max="80" value="{{ old('qr_size', $qrSize ?? 40) }}">
                                     <span class="input-group-text">mm</span>
                                 </div>
                             </div>
@@ -505,7 +519,7 @@
                             </div>
                             <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                 <i class="bi bi-ticket-perforated" style="color:var(--sa-primary);"></i>
-                                <span><strong>Signature PaxEvent</strong> (événement — tarif, © {{ date('Y') }} PaxEvent) dans la marge basse.</span>
+                                <span><strong>Signature PaxEvent</strong> (événement — tarif — prix, © {{ date('Y') }} PaxEvent) dans la marge basse.</span>
                             </div>
                         </div>
                         <div class="help-alert mb-0">
@@ -527,11 +541,33 @@
 (function() {
     var FORMATS = @json(\App\Models\LotPhysique::FORMATS);
     var fmtKey = '{{ $lot->format ?? 's1' }}';
+    var ZONE = {
+        pad: {{ \App\Services\LotPhysiqueTemplatePdfService::QR_PADDING }},
+        band: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_BAND_HEIGHT }},
+        min: {{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN }},
+        qrMin: 10,
+        qrMax: 80
+    };
+
+    // Dimensions de la zone blanche (QR + code pass) : chaque côté vaut au moins 2 cm,
+    // le contenu est centré (marges internes égales), cf. LotPhysiqueTemplatePdfService.
+    function zoneDims(qrMm) {
+        var w = Math.max(qrMm + 2 * ZONE.pad, ZONE.min);
+        var h = Math.max(qrMm + ZONE.band + 2 * ZONE.pad, ZONE.min);
+        return {
+            w: w,
+            h: h,
+            padX: (w - qrMm) / 2,
+            padTop: (h - qrMm - ZONE.band) / 2,
+            bandTop: (h - qrMm - ZONE.band) / 2 + qrMm
+        };
+    }
 
     function fmt(key) { return FORMATS[key] || FORMATS.s1; }
 
     var canvas = document.getElementById('canvasArea');
     var overlay = document.getElementById('qrOverlay');
+    var zoneInner = document.getElementById('zoneInner');
     var img = document.getElementById('canvasImg');
     var qrXInput = document.getElementById('qrXInput');
     var qrYInput = document.getElementById('qrYInput');
@@ -634,16 +670,25 @@
         var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
 
         var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
+        qrMm = Math.max(ZONE.qrMin, Math.min(ZONE.qrMax, qrMm));
+        var zone = zoneDims(qrMm);
         var qrPx = mmToPx(qrMm);
         var xMm = parseInt(qrXInput.value) || 0;
         var yMm = parseInt(qrYInput.value) || 0;
-        var xPx = dispX + mmToPx(xMm);
-        var yPx = dispY + mmToPx(yMm);
+        var xPx = dispX + mmToPx(xMm) - mmToPx(zone.padX);
+        var yPx = dispY + mmToPx(yMm) - mmToPx(zone.padTop);
 
         overlay.style.left = xPx + 'px';
         overlay.style.top = yPx + 'px';
-        overlay.style.width = qrPx + 'px';
-        overlay.style.height = qrPx + 'px';
+        overlay.style.width = mmToPx(zone.w) + 'px';
+        overlay.style.height = mmToPx(zone.h) + 'px';
+
+        if (zoneInner) {
+            zoneInner.style.left = mmToPx(zone.padX) + 'px';
+            zoneInner.style.top = mmToPx(zone.padTop) + 'px';
+            zoneInner.style.width = qrPx + 'px';
+            zoneInner.style.height = qrPx + 'px';
+        }
     }
 
     function bindOverlayEvents() {
@@ -664,7 +709,7 @@
             resizeHandle.addEventListener('mousedown', function(e) {
                 resizing = true;
                 startResizeX = e.clientX;
-                startResizeW = overlay.clientWidth;
+                startResizeW = zoneInner ? zoneInner.clientWidth : overlay.clientWidth;
                 e.preventDefault();
                 e.stopPropagation();
             });
@@ -682,8 +727,10 @@
             var z = zoomFactor();
             var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
             var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
-            var xMm = pxToMm(xPx - dispX);
-            var yMm = pxToMm(yPx - dispY);
+            var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
+            var zone = zoneDims(qrMm);
+            var xMm = pxToMm((xPx - dispX) + mmToPx(zone.padX));
+            var yMm = pxToMm((yPx - dispY) + mmToPx(zone.padTop));
             qrXInput.value = xMm;
             qrYInput.value = yMm;
             qrXHidden.value = xMm;
@@ -696,18 +743,17 @@
         }
         if (resizing && overlay) {
             var dx = e.clientX - startResizeX;
-            var newW = Math.max(20, startResizeW + dx);
-            var newMm = pxToMm(newW);
-            if (newMm >= 20 && newMm <= 80) {
-                overlay.style.width = newW + 'px';
-                overlay.style.height = newW + 'px';
-                qrSizeInput.value = newMm;
-                qrSizeHidden.value = newMm;
+            var newQrPx = startResizeW + dx;
+            var newMm = pxToMm(newQrPx);
+            if (newMm >= ZONE.qrMin && newMm <= ZONE.qrMax) {
+                qrSizeInput.value = Math.round(newMm);
+                qrSizeHidden.value = qrSizeInput.value;
+                updateOverlay();
 
                 if (qrTooltip) {
                     var xMm2 = parseInt(qrXInput.value) || 0;
                     var yMm2 = parseInt(qrYInput.value) || 0;
-                    qrTooltip.textContent = xMm2 + ' mm, ' + yMm2 + ' mm — ' + newMm + ' mm';
+                    qrTooltip.textContent = xMm2 + ' mm, ' + yMm2 + ' mm — ' + qrSizeInput.value + ' mm';
                     qrTooltip.classList.add('show');
                 }
             }
@@ -778,6 +824,7 @@
         hideRemoveBtn();
         img = null;
         overlay = null;
+        zoneInner = null;
     }
     if (btnRemoveImg) {
         btnRemoveImg.addEventListener('click', function() {
@@ -818,6 +865,10 @@
             tt.id = 'qrTooltip';
             tt.textContent = qrXInput.value + ' mm, ' + qrYInput.value + ' mm';
             ov.appendChild(tt);
+            var zi = document.createElement('div');
+            zi.className = 'zone-inner';
+            zi.id = 'zoneInner';
+            ov.appendChild(zi);
             var ch = document.createElement('div');
             ch.className = 'qr-crosshair';
             ov.appendChild(ch);
@@ -833,6 +884,8 @@
             canvas.appendChild(btnRemoveImg);
             showRemoveBtn();
             img = imgEl;
+            overlay = ov;
+            zoneInner = zi;
             qrTooltip = tt;
             supprimerTemplate.value = '0';
             imgEl.onload = function() {

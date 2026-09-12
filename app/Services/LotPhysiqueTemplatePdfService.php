@@ -16,7 +16,7 @@ class LotPhysiqueTemplatePdfService
     // Gouttière (zone de découpe) entre les tickets
     public const GOUTTIERE = 2; // mm
 
-    // Marge blanche (quiet zone) autour du QR code : haut, gauche, droite
+    // Marge blanche (quiet zone) autour du QR code : égale sur les 4 côtés
     public const QR_PADDING = 1.5; // mm
 
     // Taille du texte du code pass
@@ -25,11 +25,14 @@ class LotPhysiqueTemplatePdfService
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
     public const PAX_LINE_HEIGHT = 3.8; // mm
 
-    // Le code pass vit dans la marge basse du QR : petite marge entre le texte et le bord de la zone QR
-    public const PAX_BOTTOM = 0.2; // mm
+    // Marge basse du code pass : symétrique de la marge haute (marges internes égales tout autour)
+    public const PAX_BOTTOM = self::QR_PADDING; // mm
 
-    // Bande du code pass : marge haut (quiet zone) + texte, zone blanche close sous le texte
+    // Bande du code pass : marge haute (quiet zone) + texte + marge basse symétrique
     public const PAX_BAND_HEIGHT = self::QR_PADDING + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM;
+
+    // Côté minimal de la zone blanche (carré QR + code pass) : 2 cm
+    public const ZONE_MIN = 20; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
     public const ZOOM_MIN = 70;
@@ -131,13 +134,17 @@ class LotPhysiqueTemplatePdfService
         $paxFont = self::PAX_FONT;
         $paxBottom = self::PAX_BOTTOM;
 
-        // Zone blanche du QR : marge (quiet zone) + QR + bande code pass.
+        // Zone blanche (carré) : QR code + bande code pass, chaque côté vaut au moins 2 cm.
+        // Le contenu (QR + bande) est centré : marges internes égales de tous les côtés.
         // La position mémorisée (qr_x/qr_y) reste le coin haut-gauche du QR ; la zone
         // est clampée dans le ticket pour que rien ne soit coupé.
-        $zoneW = $qrSize + 2 * $qrPadding;
-        $zoneH = $qrPadding + $qrSize + $paxBandH;
-        $zoneX = min(max($qrX - $qrPadding, 0.0), max($layout['slot_largeur'] - $zoneW, 0.0));
-        $zoneY = min(max($qrY - $qrPadding, 0.0), max($layout['slot_hauteur'] - $zoneH, 0.0));
+        $zoneW = round(max($qrSize + 2 * $qrPadding, self::ZONE_MIN), 2);
+        $zoneH = round(max($qrSize + $paxBandH + 2 * $qrPadding, self::ZONE_MIN), 2);
+        $padX = round(($zoneW - $qrSize) / 2, 2);
+        $padTop = round(($zoneH - $qrSize - $paxBandH) / 2, 2);
+        $bandTop = round($padTop + $qrSize, 2);
+        $zoneX = min(max($qrX - $padX, 0.0), max($layout['slot_largeur'] - $zoneW, 0.0));
+        $zoneY = min(max($qrY - $padTop, 0.0), max($layout['slot_hauteur'] - $zoneH, 0.0));
 
         // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
         $imgW = $layout['slot_largeur'] * $zoom / 100;
@@ -157,6 +164,7 @@ class LotPhysiqueTemplatePdfService
         $pdf = Pdf::loadView('tickets.pdf.template', compact(
             'lot', 'pages', 'qrs', 'templateUrl',
             'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrPadding', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
+            'padX', 'padTop', 'bandTop',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
             'signBottom', 'signFont', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
@@ -197,15 +205,19 @@ class LotPhysiqueTemplatePdfService
         $paxFont = self::PAX_FONT;
         $paxBottom = self::PAX_BOTTOM;
 
-        // Zone blanche du QR clampée dans le ticket (rien ne doit être coupé)
-        $zoneW = $qrSize + 2 * $qrPadding;
-        $zoneH = $qrPadding + $qrSize + $paxBandH;
-        $zoneX = min(max($qrX - $qrPadding, 0.0), max($slotW - $zoneW, 0.0));
-        $zoneY = min(max($qrY - $qrPadding, 0.0), max($slotH - $zoneH, 0.0));
+        // Zone blanche (carré) : QR + code pass, min 2 cm, contenu centré (marges égales)
+        $zoneW = round(max($qrSize + 2 * $qrPadding, self::ZONE_MIN), 2);
+        $zoneH = round(max($qrSize + $paxBandH + 2 * $qrPadding, self::ZONE_MIN), 2);
+        $padX = round(($zoneW - $qrSize) / 2, 2);
+        $padTop = round(($zoneH - $qrSize - $paxBandH) / 2, 2);
+        $bandTop = round($padTop + $qrSize, 2);
+        $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));
+        $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - $zoneH, 0.0));
 
         $html = view('tickets.pdf.ticket-preview', compact(
             'templateUrl', 'qrDataUri',
             'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrPadding', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
+            'padX', 'padTop', 'bandTop',
             'slotW', 'slotH', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
         ))->with('codeUnique', $ticket->code_unique)->render();

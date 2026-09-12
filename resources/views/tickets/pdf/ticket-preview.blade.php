@@ -33,8 +33,8 @@
         }
         .pax-band {
             position: absolute;
+            top: {{ $bandTop }}mm;
             left: 0;
-            bottom: 0;
             width: 100%;
             height: {{ $paxBandH }}mm;
             padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;
@@ -59,7 +59,7 @@
     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
 @endif
     <div class="qr-zone">
-        <img src="{{ $qrDataUri }}" alt="QR" style="left: {{ $qrPadding }}mm; top: {{ $qrPadding }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+        <img src="{{ $qrDataUri }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
         <div class="pax-band">
             <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
         </div>
