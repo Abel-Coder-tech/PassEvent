@@ -16,13 +16,13 @@ class LotPhysiqueTemplatePdfService
     // Gouttière (zone de découpe) entre les tickets
     public const GOUTTIERE = 2; // mm
 
-    // Marges demandées (essai) : haut 0,3 — côtés 1 — bas 0,3 — écart QR↔code 0,5.
+    // Marges demandées (essai) : haut 0,2 — côtés 1 — bas 0,3 — écart QR↔code 0,3.
     // Ce sont des minimums : la zone vaut toujours au moins 2 cm de côté (ZONE_MIN),
     // donc pour un petit QR elle fait exactement 20×20 et le surplus de la zone est
     // réparti dans l'écart QR↔code (vertical) et les côtés (horizontal).
-    public const QR_TOP = 0.3; // mm  marge entre le bord haut de la zone et le QR
+    public const QR_TOP = 0.2; // mm  marge entre le bord haut de la zone et le QR
     public const QR_SIDE = 1; // mm   marge gauche/droite entre le bord de la zone et le QR
-    public const PAX_GAP = 0.5; // mm  écart entre le QR et le code pass
+    public const PAX_GAP = 0.3; // mm  écart entre le QR et le code pass
     public const PAX_BOTTOM = 0.3; // mm  marge entre le code pass et le bord bas de la zone
 
     // Taille du texte du code pass
