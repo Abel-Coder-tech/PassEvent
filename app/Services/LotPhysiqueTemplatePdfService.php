@@ -116,6 +116,10 @@ class LotPhysiqueTemplatePdfService
      */
     public static function generer(LotPhysique $lot, Collection $tickets): DomPdfWrapper
     {
+        // Les grandes planches (template en raster + 150 QR) dépassent la limite par
+        // défaut : on autorise plus de mémoire le temps du rendu dompdf.
+        @ini_set('memory_limit', '1024M');
+
         $format = self::formatDetails($lot);
         $layout = self::layoutPage($format);
 
@@ -191,6 +195,8 @@ class LotPhysiqueTemplatePdfService
      */
     public static function apercuTicket(LotPhysique $lot, Ticket $ticket)
     {
+        @ini_set('memory_limit', '1024M');
+
         $qrDataUri = QrCodeService::generateDataUri($ticket->code_unique, 300);
         $templateUrl = self::templateToDataUri($lot);
         [$templateW, $templateH] = self::templateSize($lot);
@@ -295,6 +301,32 @@ $qrSize = $lot->qr_size ?? $format['qr_defaut'];
 
         $raw = file_get_contents($path);
         $mime = mime_content_type($path) ?: 'image/png';
+
+        // Images trop grandes (ex. PNG 2400×2400) : dompdf décode l'image entière
+        // et fait exploser la mémoire sur de grandes planches. On réduit donc à la
+        // volée à ~300 dpi pour l'impression d'un ticket (max 1600 px de côté).
+        $maxSide = 1600;
+        $info = @getimagesize($path);
+        if ($info && max($info[0], $info[1]) > $maxSide && function_exists('imagecreatefromstring')) {
+            $src = @imagecreatefromstring($raw);
+            if ($src) {
+                $w = imagesx($src);
+                $h = imagesy($src);
+                $scale = $maxSide / max($w, $h);
+                $nw = (int) round($w * $scale);
+                $nh = (int) round($h * $scale);
+                $dst = imagecreatetruecolor($nw, $nh);
+                imagealphablending($dst, false);
+                imagesavealpha($dst, true);
+                imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+                ob_start();
+                imagepng($dst);
+                $resized = ob_get_clean();
+                imagedestroy($src);
+                imagedestroy($dst);
+                return 'data:image/png;base64,'.base64_encode($resized);
+            }
+        }
 
         return 'data:'.$mime.';base64,'.base64_encode($raw);
     }
