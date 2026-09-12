@@ -571,14 +571,13 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : carrée, 1,8 cm minimum (18×18),
-    // en grandissant si le QR est grand. Les marges (haut 0,1 / côtés 0,3 / écart 0,2
-    // / bas 0,3) sont des minimums ; l'écart QR↔code reste fixe à 0,2, le surplus
-    // vertical se partage entre haut et bas, le surplus horizontal va aux côtés.
+    // Dimensions de la zone blanche (QR + code pass) : hauteur minimum 1,8 cm (18 mm),
+    // la largeur épouse le QR (+ marges latérales). Marges : haut 0,25 / côtés 1,5 /
+    // écart QR↔code 1,5 / bas 0,35 ; le surplus vertical se partage entre haut et bas.
     function zoneDims(qrMm) {
+        var w = qrMm + 2 * ZONE.side;
         var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
-        var w = h; // zone carrée
-        var padX = Math.max(ZONE.side, (w - qrMm) / 2);
+        var padX = ZONE.side;
         var gap = ZONE.gap;
         var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
         var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
