@@ -578,7 +578,7 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : hauteur minimum 1,8 cm (18 mm),
+    // Dimensions de la zone blanche (QR + code pass) : hauteur minimum 2 cm (20 mm),
     // la largeur épouse le QR (+ marges latérales). Marges : haut 0,25 / côtés 1,5 /
     // écart QR↔code 1,5 / bas 0,35 ; le surplus vertical se partage entre haut et bas.
     function zoneDims(qrMm) {
