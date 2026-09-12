@@ -103,6 +103,45 @@
         select.disabled = true;
     }
 
+    function loadTarifs(evenementId) {
+        if (!evenementId) {
+            reset(selTar, '-- Aucun tarif --');
+            return;
+        }
+        reset(selTar, '-- Aucun tarif --');
+
+        fetch('{{ route("superadmin.tickets-physiques.tarifs") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ evenement_id: evenementId }),
+        })
+        .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+        .then(data => {
+            inpCommission.value = '';
+            const tarifs = data.tarifs || [];
+            if (!tarifs.length) {
+                if (data.gratuit) {
+                    selTar.innerHTML = '<option value="">Evenement gratuit (tarif auto)</option>';
+                } else {
+                    selTar.innerHTML = '<option value="">-- Aucun tarif --</option>';
+                }
+                if (data.commission) inpCommission.value = data.commission;
+                return;
+            }
+            selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + tarifs.map(t => {
+                var etat = (t.statut && t.statut !== 'actif') ? ' (' + t.statut + ')' : '';
+                return '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA' + etat + '</option>';
+            }).join('');
+            selTar.disabled = false;
+            if (data.commission) inpCommission.value = data.commission;
+        })
+        .catch(err => erreur(selTar, 'Erreur chargement tarifs (' + err + ')'));
+    }
+
     selOrg.addEventListener('change', function () {
         reset(selEvt, '-- Aucun evenement --');
         reset(selTar, '-- Choisir un evenement --');
@@ -129,44 +168,17 @@
                 '<option value="' + e.id + '">' + e.titre + '</option>'
             ).join('');
             selEvt.disabled = false;
+            // La première option est présélectionnée par le navigateur (surtout si un seul
+            // événement) : on charge donc directment ses tarifs, sinon `change` ne se déclenche pas.
+            loadTarifs(selEvt.value);
         })
         .catch(err => erreur(selEvt, 'Erreur chargement evenements (' + err + ')'));
     });
 
     selEvt.addEventListener('change', function () {
-        reset(selTar, '-- Aucun tarif --');
+        reset(selTar, '-- Choisir un evenement --');
         if (!this.value) return;
-
-        fetch('{{ route("superadmin.tickets-physiques.tarifs") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ evenement_id: this.value }),
-        })
-        .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
-        .then(data => {
-            inpCommission.value = '';
-            const tarifs = data.tarifs || [];
-            if (!tarifs.length) {
-                if (data.gratuit) {
-                    selTar.innerHTML = '<option value="">Evenement gratuit (tarif auto)</option>';
-                } else {
-                    selTar.innerHTML = '<option value="">-- Aucun tarif --</option>';
-                }
-                if (data.commission) inpCommission.value = data.commission;
-                return;
-            }
-            selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + tarifs.map(t => {
-                var etat = (t.statut && t.statut !== 'actif') ? ' (' + t.statut + ')' : '';
-                return '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA' + etat + '</option>';
-            }).join('');
-            selTar.disabled = false;
-            if (data.commission) inpCommission.value = data.commission;
-        })
-        .catch(err => erreur(selTar, 'Erreur chargement tarifs (' + err + ')'));
+        loadTarifs(this.value);
     });
 })();
 </script>
