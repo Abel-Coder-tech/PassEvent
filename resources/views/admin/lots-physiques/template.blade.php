@@ -578,7 +578,7 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : carrée, 2 cm minimum (20×20),
+    // Dimensions de la zone blanche (QR + code pass) : carrée, 1,8 cm minimum (18×18),
     // en grandissant si le QR est grand. Les marges (haut 0,1 / côtés 0,3 / écart 0,2
     // / bas 0,3) sont des minimums ; l'écart QR↔code reste fixe à 0,2, le surplus
     // vertical se partage entre haut et bas, le surplus horizontal va aux côtés.
