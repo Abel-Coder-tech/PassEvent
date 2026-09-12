@@ -11,7 +11,8 @@
 @section('content')
 <div class="page-content">
     <style>
-    .step-btn { min-width: 2.2rem; touch-action: manipulation; user-select: none; }
+    .step-btn { min-width: 2.2rem; touch-action: manipulation; user-select: none; flex-shrink: 0; }
+    .step-value { min-width: 0; flex: 1 1 auto !important; }
     .template-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
     @media (max-width: 900px) { .template-wrap { grid-template-columns: 1fr; } }
 
@@ -395,7 +396,7 @@
                                     <label class="form-label">X (mm)</label>
                                     <div class="input-group input-group-sm">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrXInput" data-step="-1" aria-label="Diminuer X">−</button>
-                                        <input type="number" class="form-control text-center" id="qrXInput" min="0" step="1" value="{{ old('qr_x', $qrX ?? 0) }}">
+                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrXInput" data-min="0" step="1" value="{{ old('qr_x', $qrX ?? 0) }}">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrXInput" data-step="1" aria-label="Augmenter X">+</button>
                                     </div>
                                     @if($errors->has('qr_x'))
@@ -406,7 +407,7 @@
                                     <label class="form-label">Y (mm)</label>
                                     <div class="input-group input-group-sm">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrYInput" data-step="-1" aria-label="Diminuer Y">−</button>
-                                        <input type="number" class="form-control text-center" id="qrYInput" min="0" step="1" value="{{ old('qr_y', $qrY ?? 0) }}">
+                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrYInput" data-min="0" step="1" value="{{ old('qr_y', $qrY ?? 0) }}">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrYInput" data-step="1" aria-label="Augmenter Y">+</button>
                                     </div>
                                     @if($errors->has('qr_y'))
@@ -417,7 +418,7 @@
                                     <label class="form-label">Taille</label>
                                     <div class="input-group input-group-sm">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-1" aria-label="Diminuer la taille">−</button>
-                                        <input type="number" class="form-control text-center" id="qrSizeInput" min="10" max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrSizeInput" data-min="10" data-max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="1" aria-label="Augmenter la taille">+</button>
                                         <span class="input-group-text">mm</span>
                                     </div>
@@ -577,14 +578,14 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : la largeur épouse le QR
-    // (marges latérales 0,3 fixes), la hauteur garde un minimum de 2 cm ; les marges
-    // demandées (haut 0,1 / côtés 0,3 / écart 0,2 / bas 0,3) sont des minimums,
-    // l'écart QR↔code reste fixe (0,2) et le surplus vertical se partage entre haut et bas.
+    // Dimensions de la zone blanche (QR + code pass) : carrée, 2 cm minimum (20×20),
+    // en grandissant si le QR est grand. Les marges (haut 0,1 / côtés 0,3 / écart 0,2
+    // / bas 0,3) sont des minimums ; l'écart QR↔code reste fixe à 0,2, le surplus
+    // vertical se partage entre haut et bas, le surplus horizontal va aux côtés.
     function zoneDims(qrMm) {
-        var w = qrMm + 2 * ZONE.side;
         var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
-        var padX = ZONE.side; // marge latérale : toujours au minimum demandé
+        var w = h; // zone carrée
+        var padX = Math.max(ZONE.side, (w - qrMm) / 2);
         var gap = ZONE.gap;
         var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
         var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
@@ -852,8 +853,8 @@
                 var input = document.getElementById(btn.getAttribute('data-step-for'));
                 if (!input) return;
                 var delta = parseFloat(btn.getAttribute('data-step')) || 0;
-                var min = input.min !== undefined && input.min !== '' ? parseFloat(input.min) : null;
-                var max = input.max !== undefined && input.max !== '' ? parseFloat(input.max) : null;
+                var min = input.getAttribute('data-min') !== null && input.getAttribute('data-min') !== '' ? parseFloat(input.getAttribute('data-min')) : null;
+                var max = input.getAttribute('data-max') !== null && input.getAttribute('data-max') !== '' ? parseFloat(input.getAttribute('data-max')) : null;
                 var val = (parseFloat(input.value) || 0) + delta;
                 if (min !== null && val < min) val = min;
                 if (max !== null && val > max) val = max;
