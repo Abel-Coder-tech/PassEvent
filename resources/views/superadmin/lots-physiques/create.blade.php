@@ -98,6 +98,11 @@
         select.disabled = true;
     }
 
+    function erreur(select, message) {
+        select.innerHTML = '<option value="">' + message + '</option>';
+        select.disabled = true;
+    }
+
     selOrg.addEventListener('change', function () {
         reset(selEvt, '-- Aucun evenement --');
         reset(selTar, '-- Choisir un evenement --');
@@ -113,17 +118,19 @@
             },
             body: JSON.stringify({ user_id: this.value }),
         })
-        .then(r => r.json())
+        .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
         .then(data => {
-            if (!data.evenements.length) {
+            const evenements = data.evenements || [];
+            if (!evenements.length) {
                 selEvt.innerHTML = '<option value="">-- Aucun evenement --</option>';
                 return;
             }
-            selEvt.innerHTML = data.evenements.map(e =>
+            selEvt.innerHTML = evenements.map(e =>
                 '<option value="' + e.id + '">' + e.titre + '</option>'
             ).join('');
             selEvt.disabled = false;
-        });
+        })
+        .catch(err => erreur(selEvt, 'Erreur chargement evenements (' + err + ')'));
     });
 
     selEvt.addEventListener('change', function () {
@@ -139,10 +146,11 @@
             },
             body: JSON.stringify({ evenement_id: this.value }),
         })
-        .then(r => r.json())
+        .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
         .then(data => {
             inpCommission.value = '';
-            if (!data.tarifs.length) {
+            const tarifs = data.tarifs || [];
+            if (!tarifs.length) {
                 if (data.gratuit) {
                     selTar.innerHTML = '<option value="">Evenement gratuit (tarif auto)</option>';
                 } else {
@@ -151,13 +159,14 @@
                 if (data.commission) inpCommission.value = data.commission;
                 return;
             }
-            selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + data.tarifs.map(t => {
+            selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + tarifs.map(t => {
                 var etat = (t.statut && t.statut !== 'actif') ? ' (' + t.statut + ')' : '';
                 return '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA' + etat + '</option>';
             }).join('');
             selTar.disabled = false;
             if (data.commission) inpCommission.value = data.commission;
-        });
+        })
+        .catch(err => erreur(selTar, 'Erreur chargement tarifs (' + err + ')'));
     });
 })();
 </script>
