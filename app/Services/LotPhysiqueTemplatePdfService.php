@@ -136,12 +136,16 @@ class LotPhysiqueTemplatePdfService
         $paxBottom = self::PAX_BOTTOM;
 
         // Zone blanche : minimum 2 cm de côté (2 cm²), en grandissant si le QR est grand.
-        // Les marges (haut 0,1 / côtés 0,3 / écart 0,2 / bas 0,3) sont des minimums,
-        // le surplus d'une zone à 2 cm pour un petit QR se répartit dans l'écart et les côtés.
+        // Les marges (haut 0,1 / côtés 0,3 / écart 0,2 / bas 0,3) sont des minimums :
+        // l'écart QR↔code reste fixe (0,2) et le surplus vertical d'une zone à 2 cm pour
+        // un petit QR se partage entre haut et bas ; le surplus horizontal va aux côtés.
         $zoneW = round(max($qrSize + 2 * $qrSide, self::ZONE_MIN), 2);
         $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
         $padX = round(max($qrSide, ($zoneW - $qrSize) / 2), 2);
-        $gap = round(max($paxGap, $zoneH - $padTop - $qrSize - $paxLineH - $paxBottom), 2);
+        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé
+        $extraV = round($zoneH - ($padTop + $qrSize + $gap + $paxLineH + $paxBottom), 2);
+        $padTop = round($padTop + $extraV / 2, 2);        // surplus → haut
+        $paxBottom = round($paxBottom + $extraV - $extraV / 2, 2); // surplus → bas
         $bandTop = round($padTop + $qrSize, 2);
         $paxBandH = round($gap + $paxLineH + $paxBottom, 2);
         $zoneX = min(max($qrX - $padX, 0.0), max($layout['slot_largeur'] - $zoneW, 0.0));
@@ -208,11 +212,15 @@ class LotPhysiqueTemplatePdfService
         $paxBottom = self::PAX_BOTTOM;
 
         // Zone blanche : minimum 2 cm de côté (2 cm²), en grandissant si le QR est grand ;
-        // les marges demandées sont des minimums (surplus réparti dans l'écart et les côtés).
+        // les marges demandées sont des minimums : écart QR↔code fixe, surplus vertical
+        // partagé entre haut et bas, surplus horizontal aux côtés.
         $zoneW = round(max($qrSize + 2 * $qrSide, self::ZONE_MIN), 2);
         $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
         $padX = round(max($qrSide, ($zoneW - $qrSize) / 2), 2);
-        $gap = round(max($paxGap, $zoneH - $padTop - $qrSize - $paxLineH - $paxBottom), 2);
+        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé
+        $extraV = round($zoneH - ($padTop + $qrSize + $gap + $paxLineH + $paxBottom), 2);
+        $padTop = round($padTop + $extraV / 2, 2);        // surplus → haut
+        $paxBottom = round($paxBottom + $extraV - $extraV / 2, 2); // surplus → bas
         $bandTop = round($padTop + $qrSize, 2);
         $paxBandH = round($gap + $paxLineH + $paxBottom, 2);
         $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));

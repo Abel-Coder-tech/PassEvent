@@ -5,8 +5,16 @@
 
 @section('content')
 <style>
+.step-btn { min-width: 2.2rem; touch-action: manipulation; user-select: none; }
 .template-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
 @media (max-width: 900px) { .template-wrap { grid-template-columns: 1fr; } }
+
+@media (max-width: 576px) {
+    .canvas-area { min-height: 280px; }
+    .qr-resize { width: 24px; height: 24px; border-width: 3px; }
+    .qr-label { font-size: 11px; padding: 3px 9px; }
+    .zoom-bar { flex-wrap: wrap; justify-content: center; }
+}
 
 .canvas-area {
     background: #f8f9fa;
@@ -374,24 +382,34 @@
                         </div>
                         <div class="step-hint mb-2">Glissez le cadre rouge pour le déplacer, ou utilisez la poignée en bas à droite pour le redimensionner.</div>
                         <div class="row g-2">
-                            <div class="col-4">
+                            <div class="col-6 col-md-4">
                                 <label class="form-label">X (mm)</label>
-                                <input type="number" class="form-control form-control-sm" id="qrXInput" min="0" value="{{ old('qr_x', $qrX ?? 0) }}">
+                                <div class="input-group input-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrXInput" data-step="-1" aria-label="Diminuer X">−</button>
+                                    <input type="number" class="form-control text-center" id="qrXInput" min="0" step="1" value="{{ old('qr_x', $qrX ?? 0) }}">
+                                    <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrXInput" data-step="1" aria-label="Augmenter X">+</button>
+                                </div>
                                 @error('qr_x')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4">
+                            <div class="col-6 col-md-4">
                                 <label class="form-label">Y (mm)</label>
-                                <input type="number" class="form-control form-control-sm" id="qrYInput" min="0" value="{{ old('qr_y', $qrY ?? 0) }}">
+                                <div class="input-group input-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrYInput" data-step="-1" aria-label="Diminuer Y">−</button>
+                                    <input type="number" class="form-control text-center" id="qrYInput" min="0" step="1" value="{{ old('qr_y', $qrY ?? 0) }}">
+                                    <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrYInput" data-step="1" aria-label="Augmenter Y">+</button>
+                                </div>
                                 @error('qr_y')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4">
+                            <div class="col-6 col-md-4">
                                 <label class="form-label">Taille</label>
                                 <div class="input-group input-group-sm">
-                                    <input type="number" class="form-control" id="qrSizeInput" min="10" max="80" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                    <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-1" aria-label="Diminuer la taille">−</button>
+                                    <input type="number" class="form-control text-center" id="qrSizeInput" min="10" max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                    <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="1" aria-label="Augmenter la taille">+</button>
                                     <span class="input-group-text">mm</span>
                                 </div>
                             </div>
@@ -554,19 +572,23 @@
 
     // Dimensions de la zone blanche (QR + code pass) : 2 cm minimum, carrée ;
     // les marges demandées (top 0,1 / côtés 0,3 / écart 0,2 / bas 0,3) sont des
-    // minimums, le surplus d'une zone à 2 cm se répartit dans l'écart et les côtés.
+    // minimums, l'écart QR↔code reste fixe (0,2) et le surplus vertical se partage
+    // entre haut et bas ; le surplus horizontal va aux côtés.
     function zoneDims(qrMm) {
         var w = Math.max(qrMm + 2 * ZONE.side, ZONE.min);
         var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
-        var gap = Math.max(ZONE.gap, h - ZONE.top - qrMm - ZONE.line - ZONE.bottom);
+        var gap = ZONE.gap; // écart fixe minimum
+        var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
+        var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
+        var bottom = Math.round((ZONE.bottom + extraV - extraV / 2) * 100) / 100;
         return {
             w: w,
             h: h,
             padX: Math.max(ZONE.side, (w - qrMm) / 2),
-            padTop: ZONE.top,
+            padTop: padTop,
             gap: gap,
-            bandTop: ZONE.top + qrMm,
-            bandH: gap + ZONE.line + ZONE.bottom
+            bandTop: padTop + qrMm,
+            bandH: gap + ZONE.line + bottom
         };
     }
 
@@ -712,6 +734,17 @@
             e.stopPropagation();
         });
 
+        // Touch (mobile) : déplacement du cadre
+        overlay.addEventListener('touchstart', function(e) {
+            if (e.target === resizeHandle) return;
+            var t = e.touches[0];
+            dragging = true;
+            offsetX = t.clientX - overlay.offsetLeft;
+            offsetY = t.clientY - overlay.offsetTop;
+            if (e.cancelable) e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+
         if (resizeHandle) {
             resizeHandle.addEventListener('mousedown', function(e) {
                 resizing = true;
@@ -720,13 +753,23 @@
                 e.preventDefault();
                 e.stopPropagation();
             });
+
+            // Touch (mobile) : redimensionnement
+            resizeHandle.addEventListener('touchstart', function(e) {
+                var t = e.touches[0];
+                resizing = true;
+                startResizeX = t.clientX;
+                startResizeW = zoneInner ? zoneInner.clientWidth : overlay.clientWidth;
+                if (e.cancelable) e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
         }
     }
 
-    document.addEventListener('mousemove', function(e) {
+    function movePointer(clientX, clientY) {
         if (dragging && overlay) {
-            var xPx = e.clientX - offsetX;
-            var yPx = e.clientY - offsetY;
+            var xPx = clientX - offsetX;
+            var yPx = clientY - offsetY;
 
             overlay.style.left = xPx + 'px';
             overlay.style.top = yPx + 'px';
@@ -749,7 +792,7 @@
             }
         }
         if (resizing && overlay) {
-            var dx = e.clientX - startResizeX;
+            var dx = clientX - startResizeX;
             var newQrPx = startResizeW + dx;
             var newMm = pxToMm(newQrPx);
             if (newMm >= ZONE.qrMin && newMm <= ZONE.qrMax) {
@@ -765,13 +808,24 @@
                 }
             }
         }
-    });
+    }
 
-    document.addEventListener('mouseup', function() {
+    function stopPointer() {
         dragging = false;
         resizing = false;
         if (qrTooltip) qrTooltip.classList.remove('show');
-    });
+    }
+
+    document.addEventListener('mousemove', function(e) { movePointer(e.clientX, e.clientY); });
+    document.addEventListener('mouseup', stopPointer);
+    document.addEventListener('touchmove', function(e) {
+        if (!dragging && !resizing) return;
+        var t = e.touches[0];
+        movePointer(t.clientX, t.clientY);
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('touchend', stopPointer);
+    document.addEventListener('touchcancel', stopPointer);
 
     [qrXInput, qrYInput, qrSizeInput].forEach(function(el) {
         el.addEventListener('input', function() {
@@ -781,6 +835,25 @@
             updateOverlay();
         });
     });
+
+    // Boutons − / + (mobile : pas de flèches natives sur les champs numériques)
+    function activerSteppers() {
+        document.querySelectorAll('.step-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var input = document.getElementById(btn.getAttribute('data-step-for'));
+                if (!input) return;
+                var delta = parseFloat(btn.getAttribute('data-step')) || 0;
+                var min = input.min !== undefined && input.min !== '' ? parseFloat(input.min) : null;
+                var max = input.max !== undefined && input.max !== '' ? parseFloat(input.max) : null;
+                var val = (parseFloat(input.value) || 0) + delta;
+                if (min !== null && val < min) val = min;
+                if (max !== null && val > max) val = max;
+                input.value = val;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+    }
+    activerSteppers();
 
     if (typeof ResizeObserver !== 'undefined' && img) {
         new ResizeObserver(updateOverlay).observe(img);
@@ -834,7 +907,8 @@
         zoneInner = null;
     }
     if (btnRemoveImg) {
-        btnRemoveImg.addEventListener('click', function() {
+        btnRemoveImg.addEventListener('click', function(e) {
+            e.stopPropagation();
             supprimerTemplate.value = '1';
             clearCanvas();
             hideFileError();
@@ -920,6 +994,13 @@
         e.preventDefault();
         canvas.classList.remove('dragover');
         if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    // Tap sur la zone vide (mobile) : ouvre le sélecteur de fichier
+    canvas.addEventListener('click', function(e) {
+        if (!canvas.classList.contains('has-image') && fileInput) {
+            fileInput.click();
+        }
     });
 
     if (fileInput) {
