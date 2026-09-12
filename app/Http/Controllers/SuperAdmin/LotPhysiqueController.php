@@ -83,7 +83,11 @@ class LotPhysiqueController extends Controller
         ]);
 
         $evenement = Evenement::findOrFail($request->evenement_id);
-        $tarifs = $evenement->tarifs()->where('statut', 'actif')->get(['id', 'nom', 'prix']);
+        // Tous les tarifs de l'événement (même épuisés/désactivés) : le super admin
+        // choisit le tarif pour lequel il veut générer la planche de tickets physiques.
+        $tarifs = $evenement->tarifs()
+            ->orderBy('prix')
+            ->get(['id', 'nom', 'prix', 'statut']);
 
         return response()->json([
             'tarifs' => $tarifs,
@@ -447,7 +451,7 @@ class LotPhysiqueController extends Controller
             'format' => ['required', 'in:s1,s2,v1,v2'],
             'qr_x' => 'nullable|numeric|min:0',
             'qr_y' => 'nullable|numeric|min:0',
-            'qr_size' => 'nullable|numeric|min:20|max:80',
+            'qr_size' => ['nullable', 'numeric', 'min:10', 'max:80'],
             'supprimer_template' => 'nullable|boolean',
             'template_zoom' => 'nullable|numeric|min:70|max:150',
         ];
@@ -465,7 +469,7 @@ class LotPhysiqueController extends Controller
             'qr_x.numeric' => 'Position X du QR code invalide.',
             'qr_y.numeric' => 'Position Y du QR code invalide.',
             'qr_size.numeric' => 'Taille du QR code invalide.',
-            'qr_size.min' => 'La taille du QR doit être d\'au moins 20 mm.',
+            'qr_size.min' => 'La taille du QR doit être d\'au moins 10 mm.',
             'qr_size.max' => 'La taille du QR ne doit pas dépasser 80 mm.',
             'template_zoom.numeric' => 'Zoom de l\'image invalide.',
             'template_zoom.min' => 'Le zoom ne peut pas être inférieur à 70 %.',

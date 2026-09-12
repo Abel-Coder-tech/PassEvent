@@ -142,19 +142,19 @@
         .then(r => r.json())
         .then(data => {
             inpCommission.value = '';
-            if (data.gratuit) {
-                selTar.innerHTML = '<option value="">Evenement gratuit (tarif auto)</option>';
-                if (data.commission) inpCommission.value = data.commission;
-                return;
-            }
             if (!data.tarifs.length) {
-                selTar.innerHTML = '<option value="">-- Aucun tarif actif --</option>';
+                if (data.gratuit) {
+                    selTar.innerHTML = '<option value="">Evenement gratuit (tarif auto)</option>';
+                } else {
+                    selTar.innerHTML = '<option value="">-- Aucun tarif --</option>';
+                }
                 if (data.commission) inpCommission.value = data.commission;
                 return;
             }
-            selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + data.tarifs.map(t =>
-                '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA</option>'
-            ).join('');
+            selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + data.tarifs.map(t => {
+                var etat = (t.statut && t.statut !== 'actif') ? ' (' + t.statut + ')' : '';
+                return '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA' + etat + '</option>';
+            }).join('');
             selTar.disabled = false;
             if (data.commission) inpCommission.value = data.commission;
         });

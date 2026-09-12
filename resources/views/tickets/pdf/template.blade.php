@@ -83,8 +83,8 @@
                     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
                 @endif
                 <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
-                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $qrPadding }}mm; top: {{ $qrPadding }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-                    <div class="pax-band" style="left: 0; bottom: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;">
+                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                    <div class="pax-band" style="top: {{ $bandTop }}mm; left: 0; width: 100%; height: {{ $paxBandH }}mm; padding: {{ $qrPadding }}mm 0 {{ $paxBottom }}mm;">
                         <div class="pax-code">{{ $ticket->code_unique }}</div>
                     </div>
                 </div>
@@ -98,7 +98,7 @@
             <div class="coupe-v" style="left: {{ $x }}mm; top: {{ $layout['bloc_haut'] }}mm; height: {{ $layout['bloc_hauteur'] }}mm;"></div>
         @endforeach
 
-        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">{{ $lot->evenement?->titre ?? '' }}{{ $lot->tarif?->nom ? ' — '.$lot->tarif->nom : '' }}</span>
+        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">{{ $lot->evenement?->titre ?? '' }}{{ $lot->tarif?->nom ? ' — '.$lot->tarif->nom : '' }}{{ $lot->tarif && $lot->tarif->prix !== null ? ' — '.number_format((float) $lot->tarif->prix, 0, ',', ' ').' FCFA' : '' }}</span>
         <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">© {{ date('Y') }} PaxEvent . Billetterie en ligne 100% Bénin</span>
     </div>
 @endforeach
