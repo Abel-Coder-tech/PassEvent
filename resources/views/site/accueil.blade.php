@@ -305,19 +305,21 @@
     }
 
     .hero-gallery-sm {
-        width: 100%;
+        width: min(78vw, 320px);
         overflow: hidden;
-        margin-top: 2.2rem;
-        --card-h: 220px;
+        margin: 2.2rem auto 0;
+        --card-h: auto;
     }
     .hero-gallery-sm .hero-gallery-track {
         flex-direction: row;
         gap: 12px;
     }
     .hero-gallery-sm .hero-gallery-item {
-        width: 260px;
+        width: 100%;
+        height: var(--card-h);
     }
     .hero-gallery-sm .hero-gallery-item img {
+        height: auto;
         border-radius: 16px;
         box-shadow: 0 10px 24px rgba(33,28,49,0.14);
     }
