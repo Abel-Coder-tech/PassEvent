@@ -351,7 +351,7 @@
             var cards = track.children;
             var n = cards.length - 1;
             if (n < 1) { return { start: function () {}, stop: function () {} }; }
-            var PAUSE = 5000, DUR = 700;
+            var PAUSE = 3000, DUR = 700;
             var step = 0, timer = null, size = 0;
 
             function measure() {
