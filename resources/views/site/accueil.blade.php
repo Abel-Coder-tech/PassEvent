@@ -274,7 +274,7 @@
         width: 100%;
         max-width: 520px;
         --card-h: 360px;
-        gap: 1.1rem;
+        gap: 5px;
     }
     .hero-gallery-col {
         flex: 1 1 0;
@@ -284,6 +284,7 @@
     }
     .hero-gallery-col:nth-child(2) {
         flex: 1.12 1 0;
+        margin-top: 3.4rem;
     }
     .hero-gallery-track {
         display: flex;
