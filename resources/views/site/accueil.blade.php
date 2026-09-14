@@ -14,14 +14,7 @@
         'Organisateur.jpeg' => 'Devenir organisateur avec PaxEvent',
     ];
     $heroKeys = array_keys($heroImages);
-    // Colonne droite : démarre à la 3e image pour ne jamais coïncider
-    // avec la colonne de gauche (un miroir strict créerait forcément un doublon).
-    $heroColB = [];
-    foreach ([2, 3, 4, 0, 1] as $ix) {
-        $heroColB[$heroKeys[$ix]] = $heroImages[$heroKeys[$ix]];
-    }
     $heroFirst = $heroKeys[0];
-    $heroFirstB = array_key_first($heroColB);
 @endphp
 
 @section('og_image', asset('images/og-image.png'))
@@ -70,33 +63,7 @@
                 </div>
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
-                <div class="hero-gallery-lg d-none d-lg-flex" data-gallery="lg">
-                    <div class="hero-gallery-col">
-                        <div class="hero-gallery-track">
-                            @foreach($heroImages as $src => $alt)
-                                <div class="hero-gallery-item">
-                                    <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
-                                </div>
-                            @endforeach
-                            <div class="hero-gallery-item" aria-hidden="true">
-                                <img src="{{ asset_v('images/heros/' . $heroFirst) }}" alt="">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-gallery-col">
-                        <div class="hero-gallery-track">
-                            @foreach($heroColB as $src => $alt)
-                                <div class="hero-gallery-item">
-                                    <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
-                                </div>
-                            @endforeach
-                            <div class="hero-gallery-item" aria-hidden="true">
-                                <img src="{{ asset_v('images/heros/' . $heroFirstB) }}" alt="">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="hero-gallery-sm d-lg-none" data-gallery="sm">
+                <div class="hero-gallery">
                     <div class="hero-gallery-track">
                         @foreach($heroImages as $src => $alt)
                             <div class="hero-gallery-item">
@@ -270,58 +237,35 @@
         font-weight: 500;
     }
 
-    .hero-gallery-lg {
+    .hero-gallery {
         width: 100%;
-        max-width: 520px;
-        --card-h: 360px;
-        gap: 5px;
-    }
-    .hero-gallery-col {
-        flex: 1 1 0;
-        height: var(--card-h);
+        max-width: 380px;
         overflow: hidden;
-        border-radius: 18px;
-    }
-    .hero-gallery-col:nth-child(2) {
-        flex: 1.12 1 0;
-        margin-top: 3.4rem;
+        border-radius: 20px;
     }
     .hero-gallery-track {
         display: flex;
         flex-direction: column;
+        gap: 20px;
         will-change: transform;
     }
     .hero-gallery-item {
         flex: 0 0 auto;
-        height: var(--card-h, 360px);
+        width: 100%;
     }
     .hero-gallery-item img {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 18px;
+        height: auto;
         display: block;
-        box-shadow: 0 10px 28px rgba(33,28,49,0.16);
+        border-radius: 20px;
+        box-shadow: 0 12px 30px rgba(33,28,49,0.18);
     }
 
-    .hero-gallery-sm {
-        width: min(78vw, 320px);
-        overflow: hidden;
-        margin: 2.2rem auto 0;
-        --card-h: auto;
-    }
-    .hero-gallery-sm .hero-gallery-track {
-        flex-direction: row;
-        gap: 12px;
-    }
-    .hero-gallery-sm .hero-gallery-item {
-        width: 100%;
-        height: var(--card-h);
-    }
-    .hero-gallery-sm .hero-gallery-item img {
-        height: auto;
-        border-radius: 16px;
-        box-shadow: 0 10px 24px rgba(33,28,49,0.14);
+    @media (max-width: 991.98px) {
+        .hero-gallery {
+            max-width: min(78vw, 320px);
+            margin: 2.2rem auto 0;
+        }
     }
 
     @media (max-width: 991.98px) {
@@ -346,54 +290,76 @@
 
 <script>
     (function () {
-        var lgQuery = window.matchMedia('(min-width: 992px)');
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) { return; }
 
-        function createStepper(track, axis) {
+        var PAUSE = 3000, DUR = 1600;
+        var EASE = 'cubic-bezier(.19,1,.22,1)';
+
+        function createStepper(box) {
+            var track = box.querySelector('.hero-gallery-track');
+            if (!track) { return { start: function () {}, resume: function () {}, stop: function () {} }; }
             var cards = track.children;
             var n = cards.length - 1;
-            if (n < 1) { return { start: function () {}, stop: function () {} }; }
-            var PAUSE = 3000, DUR = 700;
-            var step = 0, timer = null, size = 0;
+            if (n < 1) { return { start: function () {}, resume: function () {}, stop: function () {} }; }
+
+            var step = 0, timer = null, offsets = [], ready = false;
 
             function measure() {
-                if (cards.length > 1) {
-                    size = axis === 'v'
-                        ? cards[1].offsetTop - cards[0].offsetTop
-                        : cards[1].offsetLeft - cards[0].offsetLeft;
-                } else {
-                    size = axis === 'v' ? cards[0].offsetHeight : cards[0].offsetWidth;
+                var i, h, maxH = 0;
+                for (i = 0; i < cards.length; i++) {
+                    h = cards[i].offsetHeight;
+                    if (h > maxH) { maxH = h; }
                 }
+                if (!maxH) { return false; }
+                box.style.height = maxH + 'px';
+                offsets = [];
+                for (i = 0; i < cards.length; i++) {
+                    offsets.push(cards[i].offsetTop + Math.round((maxH - cards[i].offsetHeight) / 2));
+                }
+                ready = true;
+                return true;
             }
-            function translate(s) {
-                var off = size * s;
-                track.style.transform = axis === 'v' ? 'translateY(-' + off + 'px)' : 'translateX(-' + off + 'px)';
+
+            function translate(s, dur) {
+                track.style.transition = dur ? 'transform ' + dur + 'ms ' + EASE : 'none';
+                track.style.transform = 'translateY(-' + offsets[s] + 'px)';
             }
+
             function go() {
                 step++;
                 if (step === n) {
-                    track.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.42,0,.22,1)';
-                    translate(step);
+                    translate(step, DUR);
                     setTimeout(function () {
-                        track.style.transition = 'none';
+                        translate(0, 0);
                         step = 0;
-                        translate(0);
                     }, DUR + 40);
                 } else {
-                    track.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.42,0,.22,1)';
-                    translate(step);
+                    translate(step, DUR);
                 }
                 timer = setTimeout(go, PAUSE + DUR);
             }
+
+            function schedule() {
+                clearTimeout(timer);
+                timer = setTimeout(go, PAUSE + DUR);
+            }
+
             return {
                 start: function () {
-                    if (timer) { return; }
-                    measure();
-                    if (!size) { return; }
-                    track.style.transition = 'none';
+                    if (!measure()) {
+                        ready = false;
+                        return;
+                    }
+                    translate(0, 0);
                     step = 0;
-                    translate(0);
+                    clearTimeout(timer);
                     timer = setTimeout(go, PAUSE);
+                },
+                resume: function () {
+                    if (timer) { return; }
+                    if (!ready && !measure()) { return; }
+                    schedule();
                 },
                 stop: function () {
                     clearTimeout(timer);
@@ -402,39 +368,20 @@
             };
         }
 
-        if (reduced) { return; }
-
         var steppers = [];
-        [].forEach.call(document.querySelectorAll('[data-gallery="lg"], [data-gallery="sm"]'), function (box) {
-            var isLg = box.getAttribute('data-gallery') === 'lg';
-            var axis = isLg ? 'v' : 'h';
-            var handles = [];
-            [].forEach.call(box.querySelectorAll('.hero-gallery-track'), function (track) {
-                handles.push(createStepper(track, axis));
-            });
-            steppers.push({
-                isLg: isLg,
-                start: function () { handles.forEach(function (h) { h.start(); }); },
-                stop: function () { handles.forEach(function (h) { h.stop(); }); },
-                pause: function () { handles.forEach(function (h) { h.stop(); }); },
-                resume: function () { handles.forEach(function (h) { h.start(); }); }
-            });
-            box.addEventListener('mouseenter', function () { steppers[steppers.length - 1].pause(); });
-            box.addEventListener('mouseleave', function () { steppers[steppers.length - 1].resume(); });
+        [].forEach.call(document.querySelectorAll('.hero-gallery'), function (box) {
+            var s = createStepper(box);
+            steppers.push(s);
+            box.addEventListener('mouseenter', function () { s.stop(); });
+            box.addEventListener('mouseleave', function () { s.resume(); });
         });
 
-        function setActive() {
-            var lg = lgQuery.matches;
-            steppers.forEach(function (s) {
-                s.stop();
-                if (s.isLg === lg) { s.start(); }
-            });
+        function refresh() {
+            steppers.forEach(function (s) { s.stop(); s.start(); });
         }
-        if (window.addEventListener) {
-            lgQuery.addEventListener('change', setActive);
-        }
-        window.addEventListener('load', setActive);
-        setActive();
+        window.addEventListener('load', refresh);
+        window.addEventListener('resize', refresh);
+        refresh();
     })();
 </script>
 
