@@ -13,12 +13,15 @@
         'Marketing.jpeg' => 'Marketing événementiel PaxEvent',
         'Organisateur.jpeg' => 'Devenir organisateur avec PaxEvent',
     ];
-    $heroColA = [];
+    $heroKeys = array_keys($heroImages);
+    // Colonne droite : démarre à la 3e image pour ne jamais coïncider
+    // avec la colonne de gauche (un miroir strict créerait forcément un doublon).
     $heroColB = [];
-    $heroIdx = 0;
-    foreach ($heroImages as $src => $alt) {
-        if ($heroIdx++ % 2 === 0) { $heroColA[$src] = $alt; } else { $heroColB[$src] = $alt; }
+    foreach ([2, 3, 4, 0, 1] as $ix) {
+        $heroColB[$heroKeys[$ix]] = $heroImages[$heroKeys[$ix]];
     }
+    $heroFirst = $heroKeys[0];
+    $heroFirstB = array_key_first($heroColB);
 @endphp
 
 @section('og_image', asset('images/og-image.png'))
@@ -67,44 +70,42 @@
                 </div>
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
-                <div class="hero-gallery-lg d-none d-lg-flex">
-                    <div class="hero-gallery-col" style="--d: {{ count($heroColA) * 7 }}s">
-                        @foreach($heroColA as $src => $alt)
-                            <div class="hero-gallery-item">
-                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
-                            </div>
-                        @endforeach
-                        @foreach($heroColA as $src => $alt)
+                <div class="hero-gallery-lg d-none d-lg-flex" data-gallery="lg">
+                    <div class="hero-gallery-col">
+                        <div class="hero-gallery-track">
+                            @foreach($heroImages as $src => $alt)
+                                <div class="hero-gallery-item">
+                                    <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
+                                </div>
+                            @endforeach
                             <div class="hero-gallery-item" aria-hidden="true">
-                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
+                                <img src="{{ asset_v('images/heros/' . $heroFirst) }}" alt="">
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                    <div class="hero-gallery-col hero-gallery-col-offset" style="--d: {{ count($heroColB) * 9 }}s">
-                        @foreach($heroColB as $src => $alt)
-                            <div class="hero-gallery-item">
-                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
-                            </div>
-                        @endforeach
-                        @foreach($heroColB as $src => $alt)
+                    <div class="hero-gallery-col">
+                        <div class="hero-gallery-track">
+                            @foreach($heroColB as $src => $alt)
+                                <div class="hero-gallery-item">
+                                    <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
+                                </div>
+                            @endforeach
                             <div class="hero-gallery-item" aria-hidden="true">
-                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
+                                <img src="{{ asset_v('images/heros/' . $heroFirstB) }}" alt="">
                             </div>
-                        @endforeach
+                        </div>
                     </div>
                 </div>
-                <div class="hero-gallery-sm d-lg-none">
-                    <div class="hero-gallery-sm-track" style="--d: {{ count($heroImages) * 5 }}s">
+                <div class="hero-gallery-sm d-lg-none" data-gallery="sm">
+                    <div class="hero-gallery-track">
                         @foreach($heroImages as $src => $alt)
-                            <div class="hero-gallery-sm-item">
+                            <div class="hero-gallery-item">
                                 <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
                             </div>
                         @endforeach
-                        @foreach($heroImages as $src => $alt)
-                            <div class="hero-gallery-sm-item" aria-hidden="true">
-                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
-                            </div>
-                        @endforeach
+                        <div class="hero-gallery-item" aria-hidden="true">
+                            <img src="{{ asset_v('images/heros/' . $heroFirst) }}" alt="">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -272,38 +273,31 @@
     .hero-gallery-lg {
         width: 100%;
         max-width: 520px;
-        height: min(62vh, 580px);
-        overflow: hidden;
-        gap: 1rem;
+        --card-h: 360px;
+        gap: 1.1rem;
     }
     .hero-gallery-col {
         flex: 1 1 0;
-        display: flex;
-        flex-direction: column;
-        gap: 1.2rem;
-        will-change: transform;
-        animation: heroGalleryV var(--d, 28s) linear infinite;
+        height: var(--card-h);
+        overflow: hidden;
+        border-radius: 18px;
     }
     .hero-gallery-col:nth-child(2) {
         flex: 1.12 1 0;
     }
-    .hero-gallery-col-offset {
-        padding-top: 3.4rem;
-    }
-    .hero-gallery-lg:hover .hero-gallery-col,
-    .hero-gallery-lg:focus-within .hero-gallery-col {
-        animation-play-state: paused;
-    }
-    @keyframes heroGalleryV {
-        0% { transform: translateY(0); }
-        100% { transform: translateY(-50%); }
+    .hero-gallery-track {
+        display: flex;
+        flex-direction: column;
+        will-change: transform;
     }
     .hero-gallery-item {
         flex: 0 0 auto;
+        height: var(--card-h, 360px);
     }
     .hero-gallery-item img {
         width: 100%;
-        height: auto;
+        height: 100%;
+        object-fit: cover;
         border-radius: 18px;
         display: block;
         box-shadow: 0 10px 28px rgba(33,28,49,0.16);
@@ -313,40 +307,17 @@
         width: 100%;
         overflow: hidden;
         margin-top: 2.2rem;
+        --card-h: 220px;
     }
-    .hero-gallery-sm-track {
-        display: flex;
-        gap: 1rem;
-        width: max-content;
-        will-change: transform;
-        animation: heroGalleryH var(--d, 24s) linear infinite;
+    .hero-gallery-sm .hero-gallery-track {
+        flex-direction: row;
     }
-    .hero-gallery-sm:hover .hero-gallery-sm-track,
-    .hero-gallery-sm:focus-within .hero-gallery-sm-track {
-        animation-play-state: paused;
+    .hero-gallery-sm .hero-gallery-item {
+        width: 260px;
     }
-    @keyframes heroGalleryH {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
-    .hero-gallery-sm-item {
-        flex: 0 0 auto;
-        width: 250px;
-    }
-    .hero-gallery-sm-item img {
-        width: 100%;
-        height: 210px;
-        object-fit: cover;
+    .hero-gallery-sm .hero-gallery-item img {
         border-radius: 16px;
-        display: block;
         box-shadow: 0 10px 24px rgba(33,28,49,0.14);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .hero-gallery-col,
-        .hero-gallery-sm-track {
-            animation: none;
-        }
     }
 
     @media (max-width: 991.98px) {
@@ -368,6 +339,94 @@
         .hero-stat-value { font-size: 1.2rem; }
     }
 </style>
+
+<script>
+    (function () {
+        var lgQuery = window.matchMedia('(min-width: 992px)');
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function createStepper(track, axis) {
+            var cards = track.children;
+            var n = cards.length - 1;
+            if (n < 1) { return { start: function () {}, stop: function () {} }; }
+            var PAUSE = 5000, DUR = 700;
+            var step = 0, timer = null, size = 0;
+
+            function measure() {
+                size = axis === 'v' ? cards[0].offsetHeight : cards[0].offsetWidth;
+            }
+            function translate(s) {
+                var off = size * s;
+                track.style.transform = axis === 'v' ? 'translateY(-' + off + 'px)' : 'translateX(-' + off + 'px)';
+            }
+            function go() {
+                step++;
+                if (step === n) {
+                    track.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.42,0,.22,1)';
+                    translate(step);
+                    setTimeout(function () {
+                        track.style.transition = 'none';
+                        step = 0;
+                        translate(0);
+                    }, DUR + 40);
+                } else {
+                    track.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.42,0,.22,1)';
+                    translate(step);
+                }
+                timer = setTimeout(go, PAUSE + DUR);
+            }
+            return {
+                start: function () {
+                    if (timer) { return; }
+                    measure();
+                    if (!size) { return; }
+                    track.style.transition = 'none';
+                    step = 0;
+                    translate(0);
+                    timer = setTimeout(go, PAUSE);
+                },
+                stop: function () {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+            };
+        }
+
+        if (reduced) { return; }
+
+        var steppers = [];
+        [].forEach.call(document.querySelectorAll('[data-gallery="lg"], [data-gallery="sm"]'), function (box) {
+            var isLg = box.getAttribute('data-gallery') === 'lg';
+            var axis = isLg ? 'v' : 'h';
+            var handles = [];
+            [].forEach.call(box.querySelectorAll('.hero-gallery-track'), function (track) {
+                handles.push(createStepper(track, axis));
+            });
+            steppers.push({
+                isLg: isLg,
+                start: function () { handles.forEach(function (h) { h.start(); }); },
+                stop: function () { handles.forEach(function (h) { h.stop(); }); },
+                pause: function () { handles.forEach(function (h) { h.stop(); }); },
+                resume: function () { handles.forEach(function (h) { h.start(); }); }
+            });
+            box.addEventListener('mouseenter', function () { steppers[steppers.length - 1].pause(); });
+            box.addEventListener('mouseleave', function () { steppers[steppers.length - 1].resume(); });
+        });
+
+        function setActive() {
+            var lg = lgQuery.matches;
+            steppers.forEach(function (s) {
+                s.stop();
+                if (s.isLg === lg) { s.start(); }
+            });
+        }
+        if (window.addEventListener) {
+            lgQuery.addEventListener('change', setActive);
+        }
+        window.addEventListener('load', setActive);
+        setActive();
+    })();
+</script>
 
 <!-- Evenements a la une (carrousel) -->
 @if($evenementsUne->isNotEmpty())
