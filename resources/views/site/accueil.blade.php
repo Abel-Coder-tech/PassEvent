@@ -312,6 +312,7 @@
     }
     .hero-gallery-sm .hero-gallery-track {
         flex-direction: row;
+        gap: 12px;
     }
     .hero-gallery-sm .hero-gallery-item {
         width: 260px;
@@ -354,7 +355,13 @@
             var step = 0, timer = null, size = 0;
 
             function measure() {
-                size = axis === 'v' ? cards[0].offsetHeight : cards[0].offsetWidth;
+                if (cards.length > 1) {
+                    size = axis === 'v'
+                        ? cards[1].offsetTop - cards[0].offsetTop
+                        : cards[1].offsetLeft - cards[0].offsetLeft;
+                } else {
+                    size = axis === 'v' ? cards[0].offsetHeight : cards[0].offsetWidth;
+                }
             }
             function translate(s) {
                 var off = size * s;
