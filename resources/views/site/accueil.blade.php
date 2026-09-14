@@ -13,6 +13,12 @@
         'Marketing.jpeg' => 'Marketing événementiel PaxEvent',
         'Organisateur.jpeg' => 'Devenir organisateur avec PaxEvent',
     ];
+    $heroColA = [];
+    $heroColB = [];
+    $heroIdx = 0;
+    foreach ($heroImages as $src => $alt) {
+        if ($heroIdx++ % 2 === 0) { $heroColA[$src] = $alt; } else { $heroColB[$src] = $alt; }
+    }
 @endphp
 
 @section('og_image', asset('images/og-image.png'))
@@ -61,15 +67,41 @@
                 </div>
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
-                <div class="hero-gallery">
-                    <div class="hero-gallery-track" style="--d: {{ count($heroImages) * 5.5 }}s">
-                        @foreach($heroImages as $src => $alt)
+                <div class="hero-gallery-lg d-none d-lg-flex">
+                    <div class="hero-gallery-col" style="--d: {{ count($heroColA) * 7 }}s">
+                        @foreach($heroColA as $src => $alt)
                             <div class="hero-gallery-item">
                                 <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
                             </div>
                         @endforeach
-                        @foreach($heroImages as $src => $alt)
+                        @foreach($heroColA as $src => $alt)
                             <div class="hero-gallery-item" aria-hidden="true">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="hero-gallery-col hero-gallery-col-offset" style="--d: {{ count($heroColB) * 9 }}s">
+                        @foreach($heroColB as $src => $alt)
+                            <div class="hero-gallery-item">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
+                            </div>
+                        @endforeach
+                        @foreach($heroColB as $src => $alt)
+                            <div class="hero-gallery-item" aria-hidden="true">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="hero-gallery-sm d-lg-none">
+                    <div class="hero-gallery-sm-track" style="--d: {{ count($heroImages) * 5 }}s">
+                        @foreach($heroImages as $src => $alt)
+                            <div class="hero-gallery-sm-item">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
+                            </div>
+                        @endforeach
+                        @foreach($heroImages as $src => $alt)
+                            <div class="hero-gallery-sm-item" aria-hidden="true">
                                 <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
                             </div>
                         @endforeach
@@ -237,34 +269,29 @@
         font-weight: 500;
     }
 
-    .hero-gallery {
-        position: relative;
+    .hero-gallery-lg {
         width: 100%;
-        max-width: 460px;
-        height: min(62vh, 620px);
+        max-width: 520px;
+        height: min(62vh, 580px);
         overflow: hidden;
-        border-radius: 16px;
-        -webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
-        mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+        gap: 1rem;
     }
-    .hero-gallery::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border: 1px solid rgba(84,38,128,0.12);
-        border-radius: 16px;
-        pointer-events: none;
-    }
-    .hero-gallery-track {
+    .hero-gallery-col {
+        flex: 1 1 0;
         display: flex;
         flex-direction: column;
         gap: 1.2rem;
-        width: 100%;
         will-change: transform;
         animation: heroGalleryV var(--d, 28s) linear infinite;
     }
-    .hero-gallery:hover .hero-gallery-track,
-    .hero-gallery:focus-within .hero-gallery-track {
+    .hero-gallery-col:nth-child(2) {
+        flex: 1.12 1 0;
+    }
+    .hero-gallery-col-offset {
+        padding-top: 3.4rem;
+    }
+    .hero-gallery-lg:hover .hero-gallery-col,
+    .hero-gallery-lg:focus-within .hero-gallery-col {
         animation-play-state: paused;
     }
     @keyframes heroGalleryV {
@@ -273,15 +300,53 @@
     }
     .hero-gallery-item {
         flex: 0 0 auto;
-        width: 100%;
     }
     .hero-gallery-item img {
         width: 100%;
-        height: 300px;
-        object-fit: cover;
-        border-radius: 12px;
+        height: auto;
+        border-radius: 18px;
         display: block;
-        box-shadow: 0 12px 30px rgba(33,28,49,0.18);
+        box-shadow: 0 10px 28px rgba(33,28,49,0.16);
+    }
+
+    .hero-gallery-sm {
+        width: 100%;
+        overflow: hidden;
+        margin-top: 2.2rem;
+    }
+    .hero-gallery-sm-track {
+        display: flex;
+        gap: 1rem;
+        width: max-content;
+        will-change: transform;
+        animation: heroGalleryH var(--d, 24s) linear infinite;
+    }
+    .hero-gallery-sm:hover .hero-gallery-sm-track,
+    .hero-gallery-sm:focus-within .hero-gallery-sm-track {
+        animation-play-state: paused;
+    }
+    @keyframes heroGalleryH {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    .hero-gallery-sm-item {
+        flex: 0 0 auto;
+        width: 250px;
+    }
+    .hero-gallery-sm-item img {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+        border-radius: 16px;
+        display: block;
+        box-shadow: 0 10px 24px rgba(33,28,49,0.14);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hero-gallery-col,
+        .hero-gallery-sm-track {
+            animation: none;
+        }
     }
 
     @media (max-width: 991.98px) {
@@ -292,28 +357,6 @@
         .hero-actions { justify-content: center; }
         .hero-stats { justify-content: center; }
         .hero-chip { margin-left: auto; margin-right: auto; }
-        .hero-gallery {
-            max-width: 100%;
-            height: 230px;
-            margin-top: 2rem;
-            -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-        }
-        .hero-gallery-track {
-            flex-direction: row;
-            width: max-content;
-            animation-name: heroGalleryH;
-        }
-        @keyframes heroGalleryH {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .hero-gallery-item {
-            width: 240px;
-        }
-        .hero-gallery-item img {
-            height: 230px;
-        }
     }
     @media (max-width: 767.98px) {
         .hero-title { font-size: 1.8rem; }
