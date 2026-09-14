@@ -6,6 +6,13 @@
 @section('og_description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')
 @php
     $categories = ['Festival', 'Concert', 'Conférence', 'Soirée'];
+    $heroImages = [
+        'Chill.jpeg' => 'Événement Chill PaxEvent',
+        'Concert.jpeg' => 'Concert PaxEvent',
+        'Festival.jpeg' => 'Festival PaxEvent',
+        'Marketing.jpeg' => 'Marketing événementiel PaxEvent',
+        'Organisateur.jpeg' => 'Devenir organisateur avec PaxEvent',
+    ];
 @endphp
 
 @section('og_image', asset('images/og-image.png'))
@@ -54,8 +61,19 @@
                 </div>
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
-                <div class="hero-mockup">
-                    <img src="{{ asset_v('images/image_heros.jpeg') }}" alt="Illustration PaxEvent" class="hero-illustration">
+                <div class="hero-gallery">
+                    <div class="hero-gallery-track" style="--d: {{ count($heroImages) * 5.5 }}s">
+                        @foreach($heroImages as $src => $alt)
+                            <div class="hero-gallery-item">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
+                            </div>
+                        @endforeach
+                        @foreach($heroImages as $src => $alt)
+                            <div class="hero-gallery-item" aria-hidden="true">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="">
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,27 +237,51 @@
         font-weight: 500;
     }
 
-    .hero-mockup {
+    .hero-gallery {
         position: relative;
+        width: 100%;
+        max-width: 460px;
+        height: min(62vh, 620px);
+        overflow: hidden;
+        border-radius: 16px;
+        -webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+        mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+    }
+    .hero-gallery::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(84,38,128,0.12);
+        border-radius: 16px;
+        pointer-events: none;
+    }
+    .hero-gallery-track {
         display: flex;
-        align-items: center;
-        justify-content: center;
+        flex-direction: column;
+        gap: 1.2rem;
+        width: 100%;
+        will-change: transform;
+        animation: heroGalleryV var(--d, 28s) linear infinite;
     }
-    .hero-illustration {
-        width: 400px;
-        height: 320px;
-        border-radius: 10px;
-        animation: heroZoomIn 0.8s ease 0.3s both;
-        max-width: 100%;
+    .hero-gallery:hover .hero-gallery-track,
+    .hero-gallery:focus-within .hero-gallery-track {
+        animation-play-state: paused;
+    }
+    @keyframes heroGalleryV {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-50%); }
+    }
+    .hero-gallery-item {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+    .hero-gallery-item img {
+        width: 100%;
+        height: 300px;
         object-fit: cover;
-        transition: transform 0.4s ease;
-    }
-    .hero-mockup:hover .hero-illustration {
-        transform: scale(1.04);
-    }
-    @keyframes heroZoomIn {
-        0% { opacity: 0; transform: scale(0.92); }
-        100% { opacity: 1; transform: scale(1); }
+        border-radius: 12px;
+        display: block;
+        box-shadow: 0 12px 30px rgba(33,28,49,0.18);
     }
 
     @media (max-width: 991.98px) {
@@ -250,13 +292,27 @@
         .hero-actions { justify-content: center; }
         .hero-stats { justify-content: center; }
         .hero-chip { margin-left: auto; margin-right: auto; }
-        .hero-illustration {
-            width: 100%;
-            max-width: 360px;
-            height: 288px;
-            border-radius: 10px;
-            object-fit: cover;
+        .hero-gallery {
+            max-width: 100%;
+            height: 230px;
             margin-top: 2rem;
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+        }
+        .hero-gallery-track {
+            flex-direction: row;
+            width: max-content;
+            animation-name: heroGalleryH;
+        }
+        @keyframes heroGalleryH {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .hero-gallery-item {
+            width: 240px;
+        }
+        .hero-gallery-item img {
+            height: 230px;
         }
     }
     @media (max-width: 767.98px) {
@@ -267,13 +323,6 @@
         .btn-hero-outline { width: auto; justify-content: center; padding: 0.7rem 1.2rem; font-size: 0.85rem; }
         .hero-stats { gap: 1.5rem; }
         .hero-stat-value { font-size: 1.2rem; }
-        .hero-illustration {
-            width: 100%;
-            max-width: 300px;
-            height: 240px;
-            border-radius: 10px;
-            object-fit: cover;
-        }
     }
 </style>
 

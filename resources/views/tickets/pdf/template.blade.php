@@ -98,8 +98,18 @@
             <div class="coupe-v" style="left: {{ $x }}mm; top: {{ $layout['bloc_haut'] }}mm; height: {{ $layout['bloc_hauteur'] }}mm;"></div>
         @endforeach
 
-        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">{{ $lot->evenement?->titre ?? '' }}{{ $lot->tarif?->nom ? ' — '.$lot->tarif->nom : '' }}{{ $lot->tarif && $lot->tarif->prix !== null ? ' — '.number_format((float) $lot->tarif->prix, 0, ',', ' ').' FCFA' : '' }}</span>
-        <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">© {{ date('Y') }} PaxEvent . Billetterie en ligne 100% Bénin</span>
+        @php
+            $ev = $lot->evenement;
+            $tarif = $lot->tarif;
+            $legendParts = array_values(array_filter([
+                $ev?->titre,
+                $ev?->date_event ? \Carbon\Carbon::parse($ev->date_event)->format('d/m/Y') : null,
+                $tarif?->nom,
+                $tarif && $tarif->prix !== null ? number_format((float) $tarif->prix, 0, ',', ' ').' FCFA' : null,
+            ]));
+        @endphp
+        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">{{ implode(' — ', $legendParts) }}</span>
+        <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">© {{ date('Y') }} PaxEvent · Billetterie en ligne 100% Bénin</span>
     </div>
 @endforeach
 </body>
