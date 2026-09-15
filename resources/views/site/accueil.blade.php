@@ -263,11 +263,17 @@
 
     @media (max-width: 991.98px) {
         .hero-gallery {
-            max-width: min(60vw, 250px);
+            width: calc(min(60vw, 250px) + 80px);
+            max-width: 330px;
             margin: 2.2rem auto 0;
         }
         .hero-gallery-track {
+            flex-direction: row;
             gap: 24px;
+            align-items: flex-start;
+        }
+        .hero-gallery-item {
+            width: min(60vw, 250px);
         }
     }
 
@@ -298,6 +304,7 @@
 
         var PAUSE = 4000, DUR = 1300;
         var EASE = 'cubic-bezier(.19,1,.22,1)';
+        var PEEK = 40;
 
         function createStepper(box) {
             var track = box.querySelector('.hero-gallery-track');
@@ -306,7 +313,7 @@
             var n = cards.length - 1;
             if (n < 1) { return { start: function () {}, resume: function () {}, stop: function () {} }; }
 
-            var step = 0, timer = null, offsets = [], ready = false;
+            var step = 0, timer = null, offsets = [], axis = 'v', ready = false;
 
             function measure() {
                 var i, h, maxH = 0;
@@ -315,10 +322,20 @@
                     if (h > maxH) { maxH = h; }
                 }
                 if (!maxH) { return false; }
+                axis = window.innerWidth >= 992 ? 'v' : 'h';
                 box.style.height = maxH + 'px';
                 offsets = [];
-                for (i = 0; i < cards.length; i++) {
-                    offsets.push(cards[i].offsetTop + Math.round((maxH - cards[i].offsetHeight) / 2));
+                if (axis === 'v') {
+                    for (i = 0; i < cards.length; i++) {
+                        offsets.push(cards[i].offsetTop + Math.round((maxH - cards[i].offsetHeight) / 2));
+                    }
+                } else {
+                    var pitch = cards.length > 1
+                        ? cards[1].offsetLeft - cards[0].offsetLeft
+                        : cards[0].offsetWidth;
+                    for (i = 0; i < cards.length; i++) {
+                        offsets.push(i * pitch - PEEK);
+                    }
                 }
                 ready = true;
                 return true;
@@ -326,7 +343,9 @@
 
             function translate(s, dur) {
                 track.style.transition = dur ? 'transform ' + dur + 'ms ' + EASE : 'none';
-                track.style.transform = 'translateY(-' + offsets[s] + 'px)';
+                track.style.transform = axis === 'v'
+                    ? 'translateY(-' + offsets[s] + 'px)'
+                    : 'translateX(-' + offsets[s] + 'px)';
             }
 
             function go() {
