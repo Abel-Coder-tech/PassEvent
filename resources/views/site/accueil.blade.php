@@ -301,7 +301,7 @@
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduced) { return; }
 
-        var PAUSE = 4000, DUR = 1300;
+        var PAUSE = 2500, DUR = 1300;
         var EASE = 'cubic-bezier(.19,1,.22,1)';
         var PEEK = 40;
 
