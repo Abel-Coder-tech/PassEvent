@@ -323,13 +323,14 @@
                 }
                 if (!maxH) { return false; }
                 axis = window.innerWidth >= 992 ? 'v' : 'h';
-                box.style.height = maxH + 'px';
                 offsets = [];
                 if (axis === 'v') {
+                    box.style.height = (maxH + 2 * PEEK) + 'px';
                     for (i = 0; i < cards.length; i++) {
-                        offsets.push(cards[i].offsetTop + Math.round((maxH - cards[i].offsetHeight) / 2));
+                        offsets.push(cards[i].offsetTop - PEEK);
                     }
                 } else {
+                    box.style.height = maxH + 'px';
                     var pitch = cards.length > 1
                         ? cards[1].offsetLeft - cards[0].offsetLeft
                         : cards[0].offsetWidth;
