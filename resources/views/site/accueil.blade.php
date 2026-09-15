@@ -239,9 +239,8 @@
 
     .hero-gallery {
         width: 100%;
-        max-width: 380px;
+        max-width: 375px;
         overflow: hidden;
-        border-radius: 20px;
     }
     .hero-gallery-track {
         display: flex;
@@ -257,14 +256,14 @@
         width: 100%;
         height: auto;
         display: block;
-        border-radius: 20px;
-        box-shadow: 0 12px 30px rgba(33,28,49,0.18);
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(33,28,49,0.1);
     }
 
     @media (max-width: 991.98px) {
         .hero-gallery {
-            width: calc(min(60vw, 250px) + 80px);
-            max-width: 330px;
+            width: calc(min(60vw, 245px) + 80px);
+            max-width: 325px;
             margin: 2.2rem auto 0;
         }
         .hero-gallery-track {
@@ -273,7 +272,7 @@
             align-items: flex-start;
         }
         .hero-gallery-item {
-            width: min(60vw, 250px);
+            width: min(60vw, 245px);
         }
     }
 
