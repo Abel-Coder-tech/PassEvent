@@ -245,7 +245,7 @@
     .hero-gallery-track {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 12px;
         will-change: transform;
     }
     .hero-gallery-item {
@@ -268,7 +268,7 @@
         }
         .hero-gallery-track {
             flex-direction: row;
-            gap: 24px;
+            gap: 10px;
             align-items: flex-start;
         }
         .hero-gallery-item {
