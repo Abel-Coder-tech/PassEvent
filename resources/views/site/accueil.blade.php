@@ -67,7 +67,7 @@
                     <div class="hero-gallery-track">
                         @foreach($heroImages as $src => $alt)
                             <div class="hero-gallery-item">
-                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="lazy">
+                                <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="eager">
                             </div>
                         @endforeach
                         <div class="hero-gallery-item" aria-hidden="true">
@@ -263,8 +263,11 @@
 
     @media (max-width: 991.98px) {
         .hero-gallery {
-            max-width: min(78vw, 320px);
+            max-width: min(60vw, 250px);
             margin: 2.2rem auto 0;
+        }
+        .hero-gallery-track {
+            gap: 24px;
         }
     }
 
@@ -293,7 +296,7 @@
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduced) { return; }
 
-        var PAUSE = 3000, DUR = 1600;
+        var PAUSE = 4000, DUR = 1300;
         var EASE = 'cubic-bezier(.19,1,.22,1)';
 
         function createStepper(box) {
@@ -369,16 +372,18 @@
         }
 
         var steppers = [];
+        function refresh() {
+            steppers.forEach(function (s) { s.stop(); s.start(); });
+        }
         [].forEach.call(document.querySelectorAll('.hero-gallery'), function (box) {
             var s = createStepper(box);
             steppers.push(s);
             box.addEventListener('mouseenter', function () { s.stop(); });
             box.addEventListener('mouseleave', function () { s.resume(); });
+            [].forEach.call(box.querySelectorAll('img'), function (img) {
+                img.addEventListener('load', refresh);
+            });
         });
-
-        function refresh() {
-            steppers.forEach(function (s) { s.stop(); s.start(); });
-        }
         window.addEventListener('load', refresh);
         window.addEventListener('resize', refresh);
         refresh();
