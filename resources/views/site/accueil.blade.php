@@ -15,6 +15,8 @@
     ];
     $heroKeys = array_keys($heroImages);
     $heroFirst = $heroKeys[0];
+    $heroSecond = $heroKeys[1];
+    $heroLast = end($heroKeys);
 @endphp
 
 @section('og_image', asset('images/og-image.png'))
@@ -65,6 +67,9 @@
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
                 <div class="hero-gallery">
                     <div class="hero-gallery-track">
+                        <div class="hero-gallery-item" aria-hidden="true">
+                            <img src="{{ asset_v('images/heros/' . $heroLast) }}" alt="">
+                        </div>
                         @foreach($heroImages as $src => $alt)
                             <div class="hero-gallery-item">
                                 <img src="{{ asset_v('images/heros/' . $src) }}" alt="{{ $alt }}" loading="eager">
@@ -72,6 +77,9 @@
                         @endforeach
                         <div class="hero-gallery-item" aria-hidden="true">
                             <img src="{{ asset_v('images/heros/' . $heroFirst) }}" alt="">
+                        </div>
+                        <div class="hero-gallery-item" aria-hidden="true">
+                            <img src="{{ asset_v('images/heros/' . $heroSecond) }}" alt="">
                         </div>
                     </div>
                 </div>
@@ -313,6 +321,9 @@
             if (n < 1) { return { start: function () {}, resume: function () {}, stop: function () {} }; }
 
             var step = 0, timer = null, offsets = [], axis = 'v', ready = false;
+            var N = cards.length - 3;
+            var nStart = 1;
+            var nLast = 1 + N;
 
             function measure() {
                 var i, h, maxH = 0;
@@ -350,11 +361,11 @@
 
             function go() {
                 step++;
-                if (step === n) {
+                if (step === nLast) {
                     translate(step, DUR);
                     setTimeout(function () {
-                        translate(0, 0);
-                        step = 0;
+                        translate(nStart, 0);
+                        step = nStart;
                     }, DUR + 40);
                 } else {
                     translate(step, DUR);
@@ -373,8 +384,8 @@
                         ready = false;
                         return;
                     }
-                    translate(0, 0);
-                    step = 0;
+                    translate(nStart, 0);
+                    step = nStart;
                     clearTimeout(timer);
                     timer = setTimeout(go, PAUSE);
                 },
