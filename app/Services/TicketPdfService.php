@@ -59,7 +59,7 @@ class TicketPdfService
     // Favicon PaxEvent (incrusté au centre du QR code), en data-URI (ou null).
     protected static function faviconDataUri(): ?string
     {
-        foreach (['favicon.png', 'images/paxevent_icone1.png'] as $rel) {
+        foreach (['images/paxevent_icone1.png', 'images/logo_paxevent.png', 'favicon.png'] as $rel) {
             $abs = public_path($rel);
             if (is_file($abs)) {
                 return 'data:image/png;base64,' . base64_encode((string) file_get_contents($abs));
