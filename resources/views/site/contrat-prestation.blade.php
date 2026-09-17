@@ -16,7 +16,7 @@
             text-align: justify;
         }
         h3 {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: normal;
             margin: 12px 0 5px;
         }
