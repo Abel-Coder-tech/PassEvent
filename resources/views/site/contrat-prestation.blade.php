@@ -175,12 +175,12 @@
         <p>
             <strong>{{ $denomination }}</strong>{!! $partiePiece !!}{{ $partieRepresentant }}, agissant en sa qualité de {{ $fonctionRepresentant ?: 'représentant dûment habilité' }} à l'effet des présentes.
         </p>
-        <p>Ci-après dénommé le « <strong>Organisateur ou Client</strong> » d'une part.</p>
+        <p>Ci-après dénommé l' « <strong>Organisateur ou Client</strong> » d'une part.</p>
 
         <p><strong>ET</strong></p>
 
         <p>
-            <strong>NOCTAM COMMUNICATION</strong> (éditeur de PAXEVENT), sise à Oganla Atakpamé C/12, M/MARTIN, Porto-Novo Bénin, immatriculée auprès du Registre du Commerce et du Crédit Mobilier sous le N° <strong>RB/PNO/20 A 13348</strong> et représentée par <strong>Amos AHOUANVOEKE</strong>, agissant en sa qualité de Directeur Général, dûment habilité à l'effet des présentes.
+            <strong>NOCTAM COMMUNICATION</strong> (éditeur de PAXEVENT), sise à Oganla Atakpamé C/12, M/MARTIN, Porto-Novo Bénin, immatriculée au du Registre du Commerce et du Crédit Mobilier sous le N° <strong>RB/PNO/20 A 13348</strong> et représentée par <strong>Amos AHOUANVOEKE</strong>, agissant en sa qualité de Directeur Général, dûment habilité à l'effet des présentes.
         </p>
         <p>Ci-après désignée « <strong>PaxEvent ou Prestataire</strong> », d'autre part.</p>
 
