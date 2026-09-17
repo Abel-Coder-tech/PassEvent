@@ -34,7 +34,22 @@ class ContratService
             'organisateur_signature_uri' => $user->signature
                 ? $this->signatureDataUri(Storage::disk('public')->path($user->signature))
                 : null,
+            'header_logo_uri' => $this->headerLogoDataUri(),
         ];
+    }
+
+    /**
+     * Logo PaxEvent pour l'en-tête du contrat (data-URI).
+     */
+    protected function headerLogoDataUri(): ?string
+    {
+        foreach (['images/paxevent_icone1.png', 'images/logo_paxevent.png', 'favicon.png'] as $rel) {
+            $abs = public_path($rel);
+            if (is_file($abs)) {
+                return 'data:image/png;base64,' . base64_encode((string) file_get_contents($abs));
+            }
+        }
+        return null;
     }
 
     /**
