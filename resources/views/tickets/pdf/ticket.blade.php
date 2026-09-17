@@ -34,7 +34,7 @@
             height: 13cm;
             margin: 0;
             padding: 0;
-            background: #ffffff;
+            background: #f5f5f5;
             overflow: hidden;
         }
 
@@ -84,7 +84,7 @@
             left: 0;
             width: 100%;
             height: 4.16cm;
-            background: #ffffff;
+            background: #f5f5f5;
             padding: 0 0.30cm 0.10cm 0.30cm;
             overflow: hidden;
             z-index: 2;
@@ -99,17 +99,17 @@
         ========================================================= */
 
         .ticket-title {
-            width: 6.83cm;           /* largeur totale de la carte (6.83cm intérieur ticket-inner) */
+            width: 6.83cm;
             margin-left: -0.30cm;
             margin-right: -0.30cm;
-            padding: 0.15cm 0 0.10cm 0;  /* PAS de padding horizontal : dompdf ignore box-sizing */
+            padding: 0.15cm 0 0.10cm 0;
             text-align: center;
             font-size: 10pt;
             font-weight: 700;
-            color: rgba(57, 59, 61, 0.56);
+            color: #333333;
             letter-spacing: 0;
             text-transform: uppercase;
-            background: rgba(96, 33, 131, 0.05);
+            background: #e0e0e0;
             line-height: 1.2;
             box-sizing: border-box;
         }
@@ -330,48 +330,56 @@
             background: #ffffff;
             border-radius: 0.35cm;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.2cm;
+            box-sizing: border-box;
         }
-
-        .code-pass-value {
-            display: block;
-            padding-top: 0.30cm;
-            font-size: 15pt;
-            font-weight: 600;
-            color: #552680;
-            letter-spacing: 0.05cm;
-            text-transform: uppercase;
-            line-height: 1;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        /* =========================================================
-           BLOC QR CODE
-        ========================================================= */
 
         .qr-wrap {
             position: relative;
-            width: 4.51cm;
-            height: 4.51cm;
-            margin: 0.12cm auto 0;
+            width: 4.20cm;
+            height: 4.20cm;
+            margin: 0 auto;
+            flex-shrink: 0;
         }
 
         .qr-wrap .qr-img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 4.51cm;
-            height: 4.51cm;
+            width: 4.20cm;
+            height: 4.20cm;
+            background: #ffffff;
         }
 
         .qr-favicon {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 1.00cm;
-            height: 0.93cm;
-            margin-top: -0.465cm;
-            margin-left: -0.50cm;
+            width: 0.85cm;
+            height: 0.85cm;
+            margin-top: -0.425cm;
+            margin-left: -0.425cm;
+            border-radius: 50%;
+            background: #ffffff;
+            padding: 0.08cm;
+            box-sizing: border-box;
+        }
+
+        .code-pass-value {
+            display: block;
+            margin-top: 0.15cm;
+            font-size: 11pt;
+            font-weight: 700;
+            color: #000000;
+            letter-spacing: 0.04cm;
+            text-transform: uppercase;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
         }
 
         /* =========================================================
@@ -506,10 +514,6 @@
 
             <div class="qr-card">
 
-                @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
-                <div class="code-pass-value">{{ $ticket->code_unique }}</div>
-                @endif
-
                 <div class="qr-wrap">
                     <img src="{{ $qrCodeDataUri }}" alt="QR Code" class="qr-img">
                     @if($faviconDataUri)
@@ -517,10 +521,14 @@
                     @endif
                 </div>
 
+                @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
+                <div class="code-pass-value">{{ $ticket->code_unique }}</div>
+                @endif
+
             </div>
 
-            <div class="footer-row">
-                <span class="footer-merci" @if($eventImageDataUri) style="color:#ffffff;" @endif>Merci d'utiliser PaxEvent !</span>
+            <div class="footer-row" style="background: #e0e0e0; padding: 0.15cm 0; margin-top: 0.3cm; border-radius: 0.35cm;">
+                <span class="footer-merci" style="color: #333333;">Merci d'utiliser PaxEvent !</span>
             </div>
 
         </div>
