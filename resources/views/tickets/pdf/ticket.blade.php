@@ -389,16 +389,16 @@
            FOOTER
         ========================================================= */
 
-        .ticket-footer {
+.ticket-footer {
             position: absolute;
-            bottom: 0.3cm;
-            left: 0;
-            width: 100%;
+            bottom: 0.69cm;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6.83cm;
             text-align: center;
             font-size: 10pt;
             font-weight: 700;
             color: #333333;
-            text-transform: uppercase;
             letter-spacing: 0;
             background: #e0e0e0;
             padding: 0.15cm 0;
