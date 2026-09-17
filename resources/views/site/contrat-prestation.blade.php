@@ -21,7 +21,6 @@
             color: #000;
             margin: 14px 0 6px;
             text-transform: uppercase;
-            border-bottom: 1px solid #000;
             padding-bottom: 3px;
         }
         hr {
@@ -78,18 +77,20 @@
             margin-bottom: 4px;
         }
         .signature-block {
-            margin-top: 30px;
+            margin-top: 24px;
             page-break-inside: avoid;
         }
         table.signatures {
-            width: 100%;
-            margin-top: 16px;
+            width: 70%;
+            max-width: 140mm;
+            margin: 16px auto 0;
             border-collapse: collapse;
         }
         table.signatures td {
             width: 50%;
             vertical-align: top;
             text-align: center;
+            padding: 0 4mm;
         }
         .signature-img {
             width: 20mm;
@@ -100,15 +101,14 @@
             padding: 2px;
         }
         .signature-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             color: #000;
             margin-top: 8px;
-            text-transform: uppercase;
             letter-spacing: 0.3px;
         }
         .signature-sub {
-            font-size: 10px;
+            font-size: 12px;
             color: #000;
             margin: 2px 0 4px;
         }
@@ -118,14 +118,9 @@
             margin: 12mm auto 4mm;
             border-bottom: 1px solid #000;
         }
-        .signature-hr {
-            width: 60mm;
-            margin: 4mm auto 0;
-            border: none;
-            border-top: 1px solid #000;
-        }
+        
         .signature-name {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             color: #000;
         }
@@ -375,7 +370,7 @@
                 </td>
                 <td>
                     <p class="signature-label">Organisateur</p>
-                    <p class="signature-sub">signature</p>
+                    <p class="signature-sub">Signature</p>
                     @if($organisateur_signature_uri)
                         <img class="signature-img" src="{{ $organisateur_signature_uri }}" alt="Signature de l'organisateur">
                     @else
