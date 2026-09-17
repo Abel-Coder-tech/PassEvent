@@ -293,7 +293,7 @@
             width: 100%;
             height: 7.46cm;
             background: #ffffff;
-            padding: 0.18cm 0 0.12cm;
+            padding: 0.05cm 0 0.05cm;
             overflow: hidden;
             z-index: 1;
         }
@@ -325,16 +325,16 @@
         .qr-card {
             position: relative;
             z-index: 3;
-            width: 5.00cm;
-            height: 5.00cm;
+            width: 5.20cm;
+            height: 5.20cm;
             background: #ffffff;
             border-radius: 0.35cm;
-            margin: 0 auto;
+            margin: 2.0cm auto 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.5cm;
+            padding: 0.3cm;
             box-sizing: border-box;
         }
 
@@ -390,18 +390,20 @@
             position: relative;
             z-index: 3;
             width: 100%;
-            height: 0.82cm;
-            margin: 0.10cm 0 0;
+            height: 1.0cm;
+            margin: 0.15cm 0 0;
             padding: 0;
-            text-align: center;
+            border-radius: 0 0 0.35cm 0.35cm;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .footer-merci {
-            display: block;
-            font-size: 6pt;
-            font-weight: 600;
-            color: #393B3D;
-            line-height: 1.1;
+            font-size: 9pt;
+            font-weight: 700;
+            color: #333333;
         }
 
         /* =========================================================
@@ -527,8 +529,8 @@
 
             </div>
 
-            <div class="footer-row" style="background: #e0e0e0; padding: 0.15cm 0; margin-top: 0.3cm; border-radius: 0.35cm;">
-                <span class="footer-merci" style="color: #333333;">Merci d'utiliser PaxEvent !</span>
+            <div class="footer-row">
+                <span class="footer-merci">Merci d'utiliser PaxEvent !</span>
             </div>
 
         </div>
