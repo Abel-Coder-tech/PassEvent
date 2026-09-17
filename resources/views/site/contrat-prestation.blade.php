@@ -6,11 +6,11 @@
     <title>Contrat de prestation — PaxEvent</title>
 <style>
         @page {
-            margin: 25mm 20mm 30mm 20mm;
+            margin: 25mm 20mm 20mm 20mm;
         }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1.6;
             color: #000;
             text-align: justify;
@@ -19,10 +19,10 @@
             font-size: 13px;
             font-weight: 700;
             color: #000;
-            margin: 18px 0 8px;
+            margin: 14px 0 6px;
             text-transform: uppercase;
             border-bottom: 1px solid #000;
-            padding-bottom: 4px;
+            padding-bottom: 3px;
         }
         hr {
             border: none;
@@ -33,13 +33,14 @@
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #000;
         }
         .header-logo {
             width: 35mm;
             height: auto;
+            margin-top: -6mm;
         }
         .header-content {
             flex: 1;
@@ -130,7 +131,7 @@
         }
         .footer {
             position: fixed;
-            bottom: -22mm;
+            bottom: -18mm;
             left: 0;
             right: 0;
             width: 100%;
@@ -203,8 +204,6 @@
             <p>Ce document officiel est téléchargeable par l'Organisateur depuis son tableau de bord</p>
         </div>
     </div>
-
-    <hr>
 
     <div class="parties">
         <h3><strong>ENTRE</strong></h3>
@@ -357,8 +356,6 @@
 
     <h3>ARTICLE 21 : ENTRÉE EN VIGUEUR</h3>
     <p>Le présent contrat est réputé signé électroniquement par l'Organisateur dès la validation de son compte sur PaxEvent.</p>
-
-    <hr>
 
     <div class="signature-block">
         <p>Fait à Porto-Novo le {{ now()->format('d/m/Y') }}</p>

@@ -43,7 +43,7 @@ class ContratService
      */
     protected function headerLogoDataUri(): ?string
     {
-        foreach (['images/paxevent_icone1.png', 'images/logo_paxevent.png', 'favicon.png'] as $rel) {
+        foreach (['images/logo_paxevent.png', 'images/paxevent_icone1.png', 'favicon.png'] as $rel) {
             $abs = public_path($rel);
             if (is_file($abs)) {
                 return 'data:image/png;base64,' . base64_encode((string) file_get_contents($abs));
