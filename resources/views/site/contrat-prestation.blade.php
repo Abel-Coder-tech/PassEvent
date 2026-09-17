@@ -112,12 +112,7 @@
             color: #000;
             margin: 2px 0 4px;
         }
-        .signature-line {
-            display: block;
-            width: 60mm;
-            margin: 12mm auto 4mm;
-            border-bottom: 1px solid #000;
-        }
+      
         
         .signature-name {
             font-size: 12px;
@@ -353,7 +348,7 @@
     <p>Le présent contrat est réputé signé électroniquement par l'Organisateur dès la validation de son compte sur PaxEvent.</p>
 
     <div class="signature-block">
-        <p>Fait à Porto-Novo le {{ now()->format('d/m/Y') }}</p>
+        <p style="text-align: center; margin-bottom: 8px;">Fait à Porto-Novo le {{ now()->format('d/m/Y') }}</p>
 
         <table class="signatures">
             <tr>
