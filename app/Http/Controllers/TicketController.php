@@ -244,7 +244,7 @@ class TicketController extends Controller
             session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
         $logoDataUri = Ticket::logoVioletDataUri();
 
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
@@ -276,7 +276,7 @@ class TicketController extends Controller
             session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
         $logoDataUri = Ticket::logoVioletDataUri();
 
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
@@ -323,7 +323,7 @@ class TicketController extends Controller
         $logoDataUri = Ticket::logoVioletDataUri();
 
         foreach ($groupTickets as $t) {
-            $qrCodeDataUri = QrCodeService::generateDataUri($t->code_unique, 170);
+            $qrCodeDataUri = QrCodeService::generateDataUri($t->code_unique, 170, 'H');
             $pdf = TicketPdfService::generer($t, $qrCodeDataUri, $logoDataUri);
             $zip->addFromString('PaxEvent-'.$t->code_unique.'.pdf', $pdf->output());
         }
