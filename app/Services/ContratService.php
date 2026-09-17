@@ -4,15 +4,74 @@ namespace App\Services;
 
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class ContratService
 {
+    /** Dimensions d'affichage des signatures dans le PDF (px). */
+    public const SIG_WIDTH = 300;
+    public const SIG_HEIGHT = 180;
+
+    /** Chemin (relatif à public/) de la signature officielle PaxEvent. */
+    public const PAX_SIGNATURE = 'images/Signature/signature-paxevent.jpeg';
+
     /**
      * Génère le contenu HTML du contrat pour un organisateur.
      */
     public function render(User $user): string
     {
-        return view('site.contrat-prestation', compact('user'))->render();
+        return view('site.contrat-prestation', $this->viewData($user))->render();
+    }
+
+    /**
+     * Données passées à la vue du contrat.
+     */
+    public function viewData(User $user): array
+    {
+        return [
+            'user' => $user,
+            'pax_signature_uri' => $this->signatureDataUri(public_path(self::PAX_SIGNATURE)),
+            'organisateur_signature_uri' => $user->signature
+                ? $this->signatureDataUri(Storage::disk('public')->path($user->signature))
+                : null,
+        ];
+    }
+
+    /**
+     * Embarque l'image d'une signature en PNG data-URI de SIG_WIDTH x SIG_HEIGHT px.
+     * La signature est ajustée au centre d'un fond blanc sans être déformée.
+     * Retourne null si l'image est illisible ou introuvable.
+     */
+    public function signatureDataUri(?string $path): ?string
+    {
+        if (!$path || !is_file($path) || !function_exists('imagecreatefromstring')) {
+            return null;
+        }
+
+        $source = @imagecreatefromstring((string) file_get_contents($path));
+        if (!$source) {
+            return null;
+        }
+
+        $sw = imagesx($source);
+        $sh = imagesy($source);
+        $ratio = min(self::SIG_WIDTH / $sw, self::SIG_HEIGHT / $sh);
+
+        $iw = (int) round($sw * $ratio);
+        $ih = (int) round($sh * $ratio);
+        $dx = (int) floor((self::SIG_WIDTH - $iw) / 2);
+        $dy = (int) floor((self::SIG_HEIGHT - $ih) / 2);
+
+        $canvas = imagecreatetruecolor(self::SIG_WIDTH, self::SIG_HEIGHT);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefill($canvas, 0, 0, $white);
+        imagecopyresampled($canvas, $source, $dx, $dy, 0, 0, $iw, $ih, $sw, $sh);
+
+        ob_start();
+        imagepng($canvas);
+        $png = (string) ob_get_clean();
+
+        return 'data:image/png;base64,' . base64_encode($png);
     }
 
     /**

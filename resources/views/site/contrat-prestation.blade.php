@@ -57,7 +57,8 @@
             margin-bottom: 4px;
         }
         .signature-block {
-            margin-top: 24px;
+            margin-top: 40px;
+            page-break-inside: avoid;
         }
         table.signatures {
             width: 100%;
@@ -69,11 +70,22 @@
             vertical-align: top;
             padding-right: 10px;
         }
+        .signature-img {
+            width: 300px;
+            height: 180px;
+        }
         .signature-line {
             display: inline-block;
             width: 200px;
             border-bottom: 1px solid #333;
             margin-top: 30px;
+        }
+        .signature-block td + td .signature-line {
+            margin-left: 40px;
+        }
+        .signature-label {
+            font-weight: bold;
+            margin-top: 6px;
         }
         .signature-note {
             font-size: 9.5px;
@@ -315,14 +327,22 @@
         <table class="signatures">
             <tr>
                 <td>
-                    <strong>Pour PaxEvent</strong><br>
-                    <div class="signature-line"></div>
+                    @if($pax_signature_uri)
+                        <img class="signature-img" src="{{ $pax_signature_uri }}" alt="Signature PaxEvent">
+                    @else
+                        <div class="signature-line"></div>
+                    @endif
+                    <p class="signature-label">PaxEvent</p>
                     <p class="signature-note">Amos AHOUANVOEKE<br>Directeur Général</p>
                 </td>
                 <td>
-                    <strong>L'Organisateur</strong><br>
-                    <div class="signature-line"></div>
-                    <p class="signature-note">{{ $denomination }}</p>
+                    @if($organisateur_signature_uri)
+                        <img class="signature-img" src="{{ $organisateur_signature_uri }}" alt="Signature de l'organisateur">
+                    @else
+                        <div class="signature-line"></div>
+                    @endif
+                    <p class="signature-label">Organisateur de {{ $denomination }}</p>
+                    <p class="signature-note">{{ $nomRepresentant ?: $nomComplet }}</p>
                 </td>
             </tr>
         </table>
