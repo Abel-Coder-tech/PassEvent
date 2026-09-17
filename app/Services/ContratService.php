@@ -35,11 +35,12 @@ class ContratService
                 ? $this->signatureDataUri(Storage::disk('public')->path($user->signature))
                 : null,
             'header_logo_uri' => $this->headerLogoDataUri(),
+            'certifie_uri' => $this->certifieDataUri(),
         ];
     }
 
     /**
-     * Logo PaxEvent pour l'en-tête du contrat (data-URI).
+     * Logo pour l'en-tête du contrat (data-URI).
      */
     protected function headerLogoDataUri(): ?string
     {
@@ -48,6 +49,18 @@ class ContratService
             if (is_file($abs)) {
                 return 'data:image/png;base64,' . base64_encode((string) file_get_contents($abs));
             }
+        }
+        return null;
+    }
+
+    /**
+     * Image "Certifié" pour le coin de chaque page (data-URI).
+     */
+    protected function certifieDataUri(): ?string
+    {
+        $abs = public_path('images/Signature/certifie.png');
+        if (is_file($abs)) {
+            return 'data:image/png;base64,' . base64_encode((string) file_get_contents($abs));
         }
         return null;
     }
