@@ -9,13 +9,15 @@
             margin: 16mm 14mm 24mm 14mm;
         }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 11px;
+            font-family: 'Times New Roman', 'Times', serif;
+            font-size: 12px;
             line-height: 1.55;
             color: #1d1d1f;
+            text-align: justify;
         }
         h3 {
             font-size: 12px;
+            font-weight: normal;
             margin: 12px 0 5px;
         }
         hr {
@@ -71,8 +73,8 @@
             padding-right: 10px;
         }
         .signature-img {
-            width: 300px;
-            height: 180px;
+            width: 60mm;
+            height: 36mm;
         }
         .signature-line {
             display: inline-block;
@@ -128,16 +130,16 @@
         $partiePiece = '';
         if ($estAssociation && $pieceNumero) {
             $pieceLibelle = 'récépissé d\'immatriculation';
-            $partiePiece = ', immatriculée sous le numéro du <strong>' . $pieceLibelle . '</strong> : <strong>' . $pieceNumero . '</strong>';
+            $partiePiece = ', immatriculée sous le numéro du <strong>' . $pieceLibelle . '</strong> : <strong>' . e($pieceNumero) . '</strong>';
         } elseif ($estPersonneMorale && $pieceNumero) {
             $pieceLibelle = 'Registre de Commerce (RC)';
-            $partiePiece = ', immatriculé(e) sous le numéro du <strong>' . $pieceLibelle . '</strong> : <strong>' . $pieceNumero . '</strong>';
+            $partiePiece = ', immatriculé(e) sous le numéro du <strong>' . $pieceLibelle . '</strong> : <strong>' . e($pieceNumero) . '</strong>';
         } elseif (($user->type ?? '') === 'universitaire' && $pieceNumero) {
             $pieceLibelle = 'carte d\'étudiant';
-            $partiePiece = ', détenteur(trice) de la <strong>' . $pieceLibelle . '</strong> n° <strong>' . $pieceNumero . '</strong>';
+            $partiePiece = ', détenteur(trice) de la <strong>' . $pieceLibelle . '</strong> n° <strong>' . e($pieceNumero) . '</strong>';
         } elseif (($user->type ?? '') === 'particulier' && $pieceNumero) {
             $pieceLibelle = 'carte CIP';
-            $partiePiece = ', détenteur(trice) de la <strong>' . $pieceLibelle . '</strong> n° <strong>' . $pieceNumero . '</strong>';
+            $partiePiece = ', détenteur(trice) de la <strong>' . $pieceLibelle . '</strong> n° <strong>' . e($pieceNumero) . '</strong>';
         }
 
         $nomRepresentant = ($estPersonneMorale || ($user->type ?? '') === 'universitaire')
@@ -168,9 +170,9 @@
     <hr>
 
     <div class="parties">
-        <h3>ENTRE</h3>
+        <h3><strong>ENTRE</strong></h3>
         <p>
-            <strong>{{ $denomination }}</strong>{{ $partiePiece }}{{ $partieRepresentant }}, agissant en sa qualité de {{ $fonctionRepresentant ?: 'représentant dûment habilité' }} à l'effet des présentes.
+            <strong>{{ $denomination }}</strong>{!! $partiePiece !!}{{ $partieRepresentant }}, agissant en sa qualité de {{ $fonctionRepresentant ?: 'représentant dûment habilité' }} à l'effet des présentes.
         </p>
         <p>Ci-après dénommé le « <strong>Organisateur ou Client</strong> » d'une part.</p>
 
@@ -179,19 +181,19 @@
         <p>
             <strong>NOCTAM COMMUNICATION</strong> (éditeur de PAXEVENT), sise à Oganla Atakpamé C/12, M/MARTIN, Porto-Novo Bénin, immatriculée auprès du Registre du Commerce et du Crédit Mobilier sous le N° <strong>RB/PNO/20 A 13348</strong> et représentée par <strong>Amos AHOUANVOEKE</strong>, agissant en sa qualité de Directeur Général, dûment habilité à l'effet des présentes.
         </p>
-        <p>Ci-après désignée le « <strong>PaxEvent ou Prestataire</strong> », d'autre part.</p>
+        <p>Ci-après désignée « <strong>PaxEvent ou Prestataire</strong> », d'autre part.</p>
 
         <p>Les deux étant collectivement désignées « les <strong>Parties</strong> » et individuellement « une <strong>Partie</strong> ».</p>
     </div>
 
-    <h3>PRÉAMBULE :</h3>
+    <h3><strong>PRÉAMBULE :</strong></h3>
     <ul>
         <li>Etant entendu que le client exerce régulièrement une activité génératrice de revenu,</li>
         <li>Etant entendu que le Prestataire dispose des compétences et aptitudes à fournir un service de billetterie fiable et sécurisé,</li>
     </ul>
     <p>Les parties ont donc convenu et arrêté ce qui suit :</p>
 
-    <h3>DÉFINITIONS :</h3>
+    <h3><strong>DÉFINITIONS :</strong></h3>
     <div class="bloc-def">
         <ul>
             <li>« <strong>Prestataire</strong> » désigne celui qui doit fournir une prestation.</li>
@@ -203,20 +205,20 @@
         </ul>
     </div>
 
-    <h3>ARTICLE 1 : OBJET DU CONTRAT</h3>
+    <h3><strong><u>Article 1</u></strong> : OBJET DU CONTRAT</h3>
     <p>Le présent contrat définit les conditions dans lesquelles PaxEvent met à disposition de l'Organisateur son service de billetterie en ligne fiable et sécurisé dans le cadre de ses activités.</p>
 
-    <h3>ARTICLE 2 : FONCTIONNEMENT DU SERVICE</h3>
+    <h3><strong><u>Article 2</u></strong> : FONCTIONNEMENT DU SERVICE</h3>
     <p>Le mode de fonctionnement de PaxEvent est consigné dans la documentation qui est à consulter sur : <strong>https://paxevent.com/aide</strong></p>
 
-    <h3>ARTICLE 3 : MOYEN DE PAIEMENT DISPONIBLE</h3>
+    <h3><strong><u>Article 3</u></strong> : MOYEN DE PAIEMENT DISPONIBLE</h3>
     <p>Le paiement des tickets sur PaxEvent est traité de façon sécurisée :</p>
     <ul>
         <li>Via Mobile Money / carte bancaire grâce à nos agrégateurs de paiement partenaires (FedaPay et/ou KkiaPay).</li>
         <li>Et en espèces grâce aux ventes manuelles de tickets effectuées par l'organisateur et ses agents via la plateforme.</li>
     </ul>
 
-    <h3>ARTICLE 4 : DESCRIPTION DES PRESTATIONS</h3>
+    <h3><strong><u>Article 4</u></strong> : DESCRIPTION DES PRESTATIONS</h3>
     <p>PaxEvent met à disposition de l'Organisateur son service de billetterie en ligne comprenant :</p>
     <ul>
         <li>La création de compte organisateur et la publication des événements, gratuitement.</li>
@@ -228,16 +230,16 @@
         <li>La vente manuelle de tickets et le contrôle des accès par scanning le jour de l'événement.</li>
     </ul>
 
-    <h3>ARTICLE 5 : NATURE DES TICKETS</h3>
+    <h3><strong><u>Article 5</u></strong> : NATURE DES TICKETS</h3>
     <p>Tous les tickets générés par PaxEvent sont électroniques mais aussi physiques (destinés à l'impression). Ils sont dotés d'un QR Code avec un Code Pass, infalsifiables, unique au porteur et transférable. C'est-à-dire que la première personne à présenter un ticket valide à l'entrée en est le propriétaire légitimement. Le contrôle des tickets s'effectue par scan du QR Code ou par saisie manuelle du Code Pass via des interfaces dédiées.</p>
 
-    <h3>ARTICLE 6 : COMMISSIONS</h3>
+    <h3><strong><u>Article 6</u></strong> : COMMISSIONS</h3>
     <ul>
         <li>Pour chaque e-ticket vendu, PaxEvent prélève des frais de commission d'un taux de <strong>10%</strong> de la valeur nominale du ticket ;</li>
         <li>Pour chaque ticket physique généré, PaxEvent prélève des frais de commission d'un taux de <strong>5%</strong> de la valeur nominale du ticket.</li>
     </ul>
 
-    <h3>ARTICLE 7 : RETRAIT DES AVOIRS</h3>
+    <h3><strong><u>Article 7</u></strong> : RETRAIT DES AVOIRS</h3>
     <ul>
         <li><strong>Retrait standard :</strong> Les recettes nettes issues des ventes de tickets (déduction faite des commissions de PaxEvent) sont versées à l'Organisateur dans un délai de 24h à 72h après la tenue de l'événement.</li>
         <li><strong>Retrait anticipé :</strong> L'organisateur peut demander un retrait des fonds disponibles avant la tenue de l'événement, avec un délai de traitement maximal de 3 jours ouvrés. Le solde minimum disponible autorisé est de 1 000 FCFA.</li>
@@ -249,17 +251,17 @@
         </li>
     </ul>
 
-    <h3>ARTICLE 8 : ENGAGEMENT DE PAXEVENT</h3>
+    <h3><strong><u>Article 8</u></strong> : ENGAGEMENT DE PAXEVENT</h3>
     <p>PaxEvent s'engage à assister l'Organisateur dans l'utilisation du service en lui fournissant des appuis et conseils techniques nécessaires. Il s'engage à l'accompagner pour une offre sur mesure dans la mesure du possible.</p>
 
-    <h3>ARTICLE 9 : ENGAGEMENT DE L'ORGANISATEUR</h3>
+    <h3><strong><u>Article 9</u></strong> : ENGAGEMENT DE L'ORGANISATEUR</h3>
     <p>L'Organisateur s'engage à :</p>
     <ul>
         <li>Donner libre accès à toutes informations pouvant contribuer à la bonne marche et à l'utilisation du service.</li>
         <li>Respecter les termes des documents intitulés « Conditions Générales d'Utilisation », « Conditions Générales de vente » et la « Politique de Confidentialité » disponibles sur le site internet de PaxEvent.</li>
     </ul>
 
-    <h3>ARTICLE 10 : DROITS ET LIMITATIONS</h3>
+    <h3><strong><u>Article 10</u></strong> : DROITS ET LIMITATIONS</h3>
     <p>PaxEvent conserve l'exclusivité de tous les droits, titres et profits liés à sa solution.</p>
     <p>Il est strictement interdit à l'organisateur (ainsi qu'à ses employés, clients ou tiers) de :</p>
     <ul>
@@ -269,20 +271,20 @@
     <p>Pour accorder un accès à une entité liée (filiale ou groupe), l'organisateur doit adresser une demande écrite à PaxEvent, qui proposera un contrat direct à cette structure.</p>
     <p>L'organisateur désigne un référent technique unique, chargé de la gestion informatique du compte PaxEvent, de ses supports et de sa documentation.</p>
 
-    <h3>ARTICLE 11 : OBLIGATION DE CONFIDENTIALITÉ</h3>
+    <h3><strong><u>Article 11</u></strong> : OBLIGATION DE CONFIDENTIALITÉ</h3>
     <p>PaxEvent garantit la stricte confidentialité des données liées au contrat, y compris vis-à-vis de ses salariés. Seules font exception les informations déjà publiques, préalablement connues ou légalement transmises par un tiers.</p>
 
-    <h3>ARTICLE 12 : CERTIFICATIONS ET ENREGISTREMENT</h3>
+    <h3><strong><u>Article 12</u></strong> : CERTIFICATIONS ET ENREGISTREMENT</h3>
     <p>Le site www.paxevent.com répond aux exigences de l'Autorité de Protection des Données Personnelles du Bénin pour le traitement des données personnelles de ses utilisateurs.</p>
     <p>Il dispose également d'une connexion chiffrée via un certificat SSL à jour. La plateforme de billetterie dispose de plusieurs instances hébergées sur des serveurs en Europe avec redondance et backup automatiques des données pour éviter les interruptions de service.</p>
     <p>Toutes les transactions s'effectuent sous authentification sécurisée par nos agrégateurs de paiement (FedaPay / KkiaPay) qui sont conformes à la certification PCI DSS niveau II.</p>
 
-    <h3>ARTICLE 13 : SÉCURITÉ ET PROTECTION DES DONNÉES</h3>
+    <h3><strong><u>Article 13</u></strong> : SÉCURITÉ ET PROTECTION DES DONNÉES</h3>
     <p>PaxEvent privilégie des interventions sans interruption de service. En cas de maintenance critique programmée, un préavis de deux (2) semaines est transmis au Client. PaxEvent se réserve le droit de suspendre temporairement l'accès au service pour des raisons techniques ou de sécurité, sans indemnité et dans la stricte mesure du nécessaire.</p>
     <p>Les Parties s'engagent à traiter l'ensemble des données à caractère personnel conformément aux réglementations applicables, notamment la loi n° 2017-20 du 20 avril 2018 portant Code du numérique en République du Bénin.</p>
     <p>PaxEvent applique toutes les mesures nécessaires pour garantir la sécurité, l'intégrité et la confidentialité des données collectées. L'accès à ces données est strictement limité aux seuls collaborateurs dont les fonctions l'exigent.</p>
 
-    <h3>ARTICLE 14 : MODIFICATION, ANNULATION DE L'ÉVÉNEMENT ET RESPONSABILITÉ FINANCIÈRE</h3>
+    <h3><strong><u>Article 14</u></strong> : MODIFICATION, ANNULATION DE L'ÉVÉNEMENT ET RESPONSABILITÉ FINANCIÈRE</h3>
     <p><strong>Notification :</strong> En cas d'annulation, de report ou de modification majeure de l'événement, l'Organisateur s'engage à en informer PaxEvent par écrit sans délai. Dès réception de cette notification, PaxEvent procédera à la suspension immédiate des ventes de billets.</p>
     <p><strong>Modalités de remboursement :</strong> Les remboursements sont exécutés automatiquement par PaxEvent pour le compte de l'Organisateur, à la hauteur du solde disponible pour l'événement.</p>
     <ul>
@@ -296,27 +298,27 @@
     </ul>
     <p><strong>Frais de commissions :</strong> Les frais de commission issus des tickets vendus et générés par PaxEvent restent intégralement acquis et ne peuvent, en aucun cas, faire l'objet de remboursement.</p>
 
-    <h3>ARTICLE 15 : CLAUSE DE BANNISSEMENT</h3>
+    <h3><strong><u>Article 15</u></strong> : CLAUSE DE BANNISSEMENT</h3>
     <p>En cas de fraude avérée, de publication d'événement fictif, ou de non-respect de la législation béninoise sur le numérique, PaxEvent résiliera immédiatement ce contrat, procédera au bannissement définitif du compte de l'Organisateur et au gel conservatoire de ses fonds pendant 90 jours.</p>
 
-    <h3>ARTICLE 16 : RESPONSABILITÉS ET GARANTIES</h3>
+    <h3><strong><u>Article 16</u></strong> : RESPONSABILITÉS ET GARANTIES</h3>
     <p>Le Prestataire garantit la continuité du service et la sécurité des fonds du Client jusqu'à leur versement sur son compte bancaire.</p>
     <p>PaxEvent ne traitant pas directement les transactions, les délais d'exécution des agrégateurs partenaires peuvent s'allonger de sept (7) jours maximum.</p>
     <p>La responsabilité du Prestataire en cas de piratage ne couvre ni les attaques par phishing, ni la négligence du Client quant à la sécurité de ses identifiants et terminaux.</p>
 
-    <h3>ARTICLE 17 : PUBLICITÉS</h3>
+    <h3><strong><u>Article 17</u></strong> : PUBLICITÉS</h3>
     <p>Par le présent, le Client accorde au Prestataire les autorisations d'utiliser son nom et son logo dans les documents de marketing, y compris sur le site Web de PaxEvent, dans les listes des organisateurs, dans les interviews et dans les communiqués de presse, sans s'y limiter.</p>
 
-    <h3>ARTICLE 18 : FORCE MAJEURE</h3>
+    <h3><strong><u>Article 18</u></strong> : FORCE MAJEURE</h3>
     <p>Les Parties ne seront pas tenues pour responsables, ou considérées comme ayant failli au titre des présentes, en cas de retard ou inexécution, lorsque leur cause est liée à un cas de force majeure tel que défini par le droit positif béninois.</p>
 
-    <h3>ARTICLE 19 : DURÉE</h3>
+    <h3><strong><u>Article 19</u></strong> : DURÉE</h3>
     <p>Ce contrat est à durée indéterminée. L'Organisateur peut suspendre son utilisation de PaxEvent ou y mettre fin définitivement à tout moment. PaxEvent ne peut résilier le contrat sans restituer les avoirs de l'Organisateur, sauf en cas de mesure judiciaire (acte d'huissier, réquisition ou ordonnance) ordonnant leur blocage.</p>
 
-    <h3>ARTICLE 20 : RÈGLEMENT DES LITIGES</h3>
+    <h3><strong><u>Article 20</u></strong> : RÈGLEMENT DES LITIGES</h3>
     <p>Le présent contrat est régi par le Droit Béninois. Tout litige persistant après une tentative de conciliation amiable sera soumis à la compétence exclusive du tribunal de commerce.</p>
 
-    <h3>ARTICLE 21 : ENTRÉE EN VIGUEUR</h3>
+    <h3><strong><u>Article 21</u></strong> : ENTRÉE EN VIGUEUR</h3>
     <p>Le présent contrat est réputé signé électroniquement par l'Organisateur dès la validation de son compte sur PaxEvent.</p>
 
     <hr>
@@ -341,7 +343,7 @@
                     @else
                         <div class="signature-line"></div>
                     @endif
-                    <p class="signature-label">Organisateur de {{ $denomination }}</p>
+                    <p class="signature-label">Organisateur</p>
                     <p class="signature-note">{{ $nomRepresentant ?: $nomComplet }}</p>
                 </td>
             </tr>

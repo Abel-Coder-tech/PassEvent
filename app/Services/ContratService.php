@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ContratService
 {
-    /** Dimensions d'affichage des signatures dans le PDF (px). */
+    /** Résolution de rendu des signatures embarquées (px). L'affichage PDF est de 60 mm de large (voir la vue). */
     public const SIG_WIDTH = 300;
     public const SIG_HEIGHT = 180;
 
