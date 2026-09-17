@@ -306,7 +306,7 @@ class AuthController extends Controller
             session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170);
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
         $logoDataUri = Ticket::logoVioletDataUri();
         $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
         $filename = 'ticket-'.$ticket->code_unique.'.pdf';

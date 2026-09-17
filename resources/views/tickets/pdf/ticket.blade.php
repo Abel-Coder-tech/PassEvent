@@ -34,7 +34,7 @@
             height: 13cm;
             margin: 0;
             padding: 0;
-            background: #542680;
+            background: #ffffff;
             overflow: hidden;
         }
 
@@ -48,7 +48,7 @@
             height: 13cm;
             margin: 0;
             padding: 0;
-            background: #542680;
+            background: #ffffff;
             overflow: hidden;
             page-break-inside: avoid;
             break-inside: avoid;
@@ -267,7 +267,7 @@
             width: 0.28cm;
             height: 0.28cm;
             transform: translateY(-50%);
-            background: #542680;
+            background: #ffffff;
             border-radius: 50%;
         }
 
@@ -278,7 +278,7 @@
             width: 0.28cm;
             height: 0.28cm;
             transform: translateY(-50%);
-            background: #542680;
+            background: #ffffff;
             border-radius: 50%;
         }
 
@@ -298,29 +298,43 @@
             z-index: 1;
         }
 
-        .zone-bottom-center {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.10cm;
+        /* Image de l'événement au fond de la zone basse + voile noir 80% */
+        .zone-bottom-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .zone-bottom-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1;
         }
 
         /* =========================================================
            CODE UNIQUE / PAX-XXXXXX
         ========================================================= */
 
-        .code-pass-wrap {
-            width: 4.14cm;
-            height: 0.90cm;
-            background: rgba(96, 33, 131, 0.05);
-            border-radius: 0.18cm;
+        .qr-card {
+            position: relative;
+            z-index: 3;
+            width: 5.60cm;
+            height: 5.60cm;
+            background: #ffffff;
+            border-radius: 0.35cm;
             margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .code-pass-value {
+            display: block;
+            padding-top: 0.30cm;
             font-size: 15pt;
             font-weight: 600;
             color: #552680;
@@ -335,30 +349,29 @@
            BLOC QR CODE
         ========================================================= */
 
-        .qr-block {
-            width: 100%;
-            text-align: center;
-            margin-top: 0;
-            padding: 0;
-            background: #ffffff;
+        .qr-wrap {
+            position: relative;
+            width: 4.51cm;
+            height: 4.51cm;
+            margin: 0.12cm auto 0;
         }
 
-        .qr-block img {
-            display: block;
-            width: 4.89cm;
-            height: 4.89cm;
-            margin: 0 auto;
-            padding: 0;
+        .qr-wrap .qr-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4.51cm;
+            height: 4.51cm;
         }
 
-        .qr-label {
-            font-size: 7pt;
-            font-weight: 500;
-            color: #767683;
-            letter-spacing: 0.02cm;
-            text-transform: uppercase;
-            margin-top: 0.04cm;
-            line-height: 1.1;
+        .qr-favicon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1.00cm;
+            height: 0.93cm;
+            margin-top: -0.465cm;
+            margin-left: -0.50cm;
         }
 
         /* =========================================================
@@ -367,30 +380,19 @@
 
         .footer-row {
             position: relative;
-            width: 6.23cm;
+            z-index: 3;
+            width: 100%;
             height: 0.82cm;
-            margin: 0.10cm 0 0 0.30cm;
+            margin: 0.10cm 0 0;
             padding: 0;
-        }
-
-        .footer-row .footer-logo {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 2.07cm;
-            height: 0.82cm;
-            display: block;
+            text-align: center;
         }
 
         .footer-merci {
-            position: absolute;
-            right: 0;
-            top: 0.30cm;
+            display: block;
             font-size: 6pt;
             font-weight: 600;
             color: #393B3D;
-            text-align: right;
-            white-space: nowrap;
             line-height: 1.1;
         }
 
@@ -497,24 +499,28 @@
         {{-- ZONE BASSE --}}
         <div class="zone-bottom">
 
-            <div class="zone-bottom-center">
+            @if($eventImageDataUri)
+                <img src="{{ $eventImageDataUri }}" alt="" class="zone-bottom-bg">
+                <div class="zone-bottom-overlay"></div>
+            @endif
+
+            <div class="qr-card">
 
                 @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
-                <div class="code-pass-wrap">
-                    <div class="code-pass-value">{{ $ticket->code_unique }}</div>
-                </div>
+                <div class="code-pass-value">{{ $ticket->code_unique }}</div>
                 @endif
 
-                <div class="qr-block">
-                    <img src="{{ $qrCodeDataUri }}" alt="QR Code">
-                    <div class="qr-label">Scannez à l'entrée</div>
+                <div class="qr-wrap">
+                    <img src="{{ $qrCodeDataUri }}" alt="QR Code" class="qr-img">
+                    @if($faviconDataUri)
+                        <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon">
+                    @endif
                 </div>
 
             </div>
 
             <div class="footer-row">
-                <img src="{{ $logoDataUri }}" alt="PaxEvent" class="footer-logo">
-                <span class="footer-merci">Merci d'utiliser PaxEvent !</span>
+                <span class="footer-merci" @if($eventImageDataUri) style="color:#ffffff;" @endif>Merci d'utiliser PaxEvent !</span>
             </div>
 
         </div>
