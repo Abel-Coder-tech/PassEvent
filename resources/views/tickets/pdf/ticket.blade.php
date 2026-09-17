@@ -293,9 +293,12 @@
             width: 100%;
             height: 7.46cm;
             background: #ffffff;
-            padding: 0.05cm 0 0.05cm;
             overflow: hidden;
             z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Image de l'événement au fond de la zone basse + voile noir 80% */
@@ -325,16 +328,16 @@
         .qr-card {
             position: relative;
             z-index: 3;
-            width: 5.20cm;
-            height: 5.20cm;
+            width: 5.60cm;
+            height: 5.60cm;
             background: #ffffff;
             border-radius: 0.35cm;
-            margin: 2.0cm auto 0;
+            margin: 1.5cm auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.3cm;
+            padding: 0.1cm 0.1cm 0.2cm 0.1cm;
             box-sizing: border-box;
         }
 
@@ -386,24 +389,20 @@
            FOOTER
         ========================================================= */
 
-        .footer-row {
-            position: relative;
-            z-index: 3;
+        .ticket-footer {
+            position: absolute;
+            bottom: 0.3cm;
+            left: 0;
             width: 100%;
-            height: 1.0cm;
-            margin: 0.15cm 0 0;
-            padding: 0;
-            border-radius: 0 0 0.35cm 0.35cm;
-            background: #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .footer-merci {
-            font-size: 9pt;
+            text-align: center;
+            font-size: 10pt;
             font-weight: 700;
             color: #333333;
+            text-transform: uppercase;
+            letter-spacing: 0;
+            background: #e0e0e0;
+            padding: 0.15cm 0;
+            border-radius: 0 0 0.35cm 0.35cm;
         }
 
         /* =========================================================
@@ -529,12 +528,10 @@
 
             </div>
 
-            <div class="footer-row">
-                <span class="footer-merci">Merci d'utiliser PaxEvent !</span>
-            </div>
-
         </div>
     </div>
+
+    <div class="ticket-footer">Merci d'utiliser PaxEvent !</div>
 </div>
 
 </body>
