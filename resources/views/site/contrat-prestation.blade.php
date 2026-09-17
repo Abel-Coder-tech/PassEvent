@@ -15,13 +15,15 @@
             color: #000;
             text-align: justify;
         }
-        h3 {
+h3 {
             font-size: 13px;
             font-weight: 700;
             color: #000;
             margin: 14px 0 6px;
             text-transform: uppercase;
+            border-bottom: 1px solid #000;
             padding-bottom: 3px;
+            page-break-after: avoid;
         }
         hr {
             border: none;
