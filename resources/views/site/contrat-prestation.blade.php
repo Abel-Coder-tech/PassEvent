@@ -81,8 +81,8 @@
             page-break-inside: avoid;
         }
         table.signatures {
-            width: 70%;
-            max-width: 140mm;
+            width: 85%;
+            max-width: 160mm;
             margin: 16px auto 0;
             border-collapse: collapse;
         }
@@ -361,7 +361,6 @@
                         <div class="signature-line"></div>
                     @endif
                     <p class="signature-name">Amos AHOUANVOEKE</p>
-                    <hr class="signature-hr">
                 </td>
                 <td>
                     <p class="signature-label">Organisateur</p>
