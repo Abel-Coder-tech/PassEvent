@@ -325,8 +325,8 @@
         .qr-card {
             position: relative;
             z-index: 3;
-            width: 5.60cm;
-            height: 5.60cm;
+            width: 5.00cm;
+            height: 5.00cm;
             background: #ffffff;
             border-radius: 0.35cm;
             margin: 0 auto;
@@ -334,14 +334,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.2cm;
+            padding: 0.5cm;
             box-sizing: border-box;
         }
 
         .qr-wrap {
             position: relative;
-            width: 4.20cm;
-            height: 4.20cm;
+            width: 4.00cm;
+            height: 4.00cm;
             margin: 0 auto;
             flex-shrink: 0;
         }
@@ -350,8 +350,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 4.20cm;
-            height: 4.20cm;
+            width: 4.00cm;
+            height: 4.00cm;
             background: #ffffff;
         }
 
