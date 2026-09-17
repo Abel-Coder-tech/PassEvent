@@ -8,28 +8,23 @@
         @page {
             margin: 25mm 20mm 20mm 20mm;
         }
-        #page-header {
-            position: running(page-header);
-            width: 30mm;
-            height: auto;
-            opacity: 0.6;
-        }
-        @page :first {
-            @top-right {
-                content: element(page-header);
-            }
-        }
-        @page {
-            @top-right {
-                content: element(page-header);
-            }
-        }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             font-size: 12px;
             line-height: 1.6;
             color: #000;
             text-align: justify;
+            position: relative;
+        }
+        .page-certifie {
+            position: fixed;
+            top: -10mm;
+            right: -10mm;
+            width: 45mm;
+            height: auto;
+            opacity: 0.85;
+            z-index: 1000;
+            pointer-events: none;
         }
 h3 {
             font-size: 13px;
@@ -37,7 +32,6 @@ h3 {
             color: #000;
             margin: 14px 0 6px;
             text-transform: uppercase;
-            border-bottom: 1px solid #000;
             padding-bottom: 3px;
             page-break-after: avoid;
         }
@@ -156,7 +150,7 @@ h3 {
     </style>
 </head>
 <body>
-    <img id="page-header" src="{{ asset('images/Signature/certifie.png') }}" alt="Certifié">
+    <img src="{{ asset('images/Signature/certifie.png') }}" alt="Certifié" class="page-certifie">
     @php
         $estPersonneMorale = ($user->type ?? '') === 'organisation';
         $estAssociation = $estPersonneMorale && ($user->type_detail ?? '') === 'association';
