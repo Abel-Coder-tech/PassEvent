@@ -86,11 +86,12 @@
             margin-left: 40px;
         }
         .signature-label {
+            font-size: 14px;
             font-weight: bold;
             margin-top: 6px;
         }
         .signature-note {
-            font-size: 9.5px;
+            font-size: 14px;
             color: #666;
             margin-top: 3px;
         }
