@@ -71,7 +71,7 @@
             width: 7.40cm;
             height: 4.16cm;
             background: #ffffff;
-            border: 1.4px dashed #C6B7DA;
+            border: 1px dashed #C6B7DA;
             border-radius: 0.38cm;
             overflow: hidden;
             box-sizing: border-box;
@@ -212,8 +212,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 7.40cm;
-            height: 7.98cm;
+            background: #000000;
         }
 
         /* Voile noir opacité 80–90% */
@@ -417,10 +416,23 @@
         </div>
 
         {{-- ZONE QR (image événement + voile noir + QR) --}}
+        @php
+            $zoneW = 7.40;
+            $zoneH = 7.98;
+            $bgStyle = 'width:auto; height:auto;';
+            if ($eventImageDataUri && $eventImageW && $eventImageH) {
+                $scale = max($zoneW / $eventImageW, $zoneH / $eventImageH);
+                $dw = round($eventImageW * $scale, 3);
+                $dh = round($eventImageH * $scale, 3);
+                $dx = round(($zoneW - $dw) / 2, 3);
+                $dy = round(($zoneH - $dh) / 2, 3);
+                $bgStyle = "width:{$dw}cm; height:{$dh}cm; left:{$dx}cm; top:{$dy}cm;";
+            }
+        @endphp
         <div class="qr-zone">
 
             @if($eventImageDataUri)
-                <img src="{{ $eventImageDataUri }}" alt="" class="qr-zone-bg">
+                <img src="{{ $eventImageDataUri }}" alt="" class="qr-zone-bg" style="{{ $bgStyle }}">
             @endif
             <div class="qr-zone-overlay"></div>
 
