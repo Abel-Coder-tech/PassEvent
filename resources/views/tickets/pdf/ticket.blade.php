@@ -329,11 +329,11 @@
             margin-top: -2.225cm;
             margin-left: -1.90cm;
             z-index: 3;
-            width: 3.80cm;
-            height: 3.80cm;
+            width: 3.78cm;
+            height: 3.78cm;
             background: #ffffff;
             border-radius: 0.30cm;
-            padding: 0.10cm 0.05cm 0.06cm 0.05cm;
+            padding: 0.10cm 0.02cm 0.06cm 0.02cm;
             box-sizing: border-box;
         }
 
