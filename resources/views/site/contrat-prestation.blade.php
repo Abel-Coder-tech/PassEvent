@@ -9,20 +9,13 @@
             margin: 25mm 20mm 20mm 20mm;
         }
         #certifie-header {
-            position: running(certifie-header);
+            position: fixed;
+            top: 4mm;
+            right: 4mm;
             width: 45mm;
             height: auto;
             opacity: 0.85;
-        }
-        @page :first {
-            @top-right {
-                content: element(certifie-header);
-            }
-        }
-        @page {
-            @top-right {
-                content: element(certifie-header);
-            }
+            z-index: 10;
         }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
