@@ -69,6 +69,7 @@
 
         .info-card {
             width: 7.40cm;
+            height: 4.16cm;
             background: #ffffff;
             border: 1.4px dashed #C6B7DA;
             border-radius: 0.38cm;
@@ -119,6 +120,7 @@
             padding: 0.05cm 0.28cm 0.05cm;
             vertical-align: top;
             overflow: hidden;
+            text-align: left;
         }
 
         .info-grid td:first-child {
@@ -195,11 +197,10 @@
         ========================================================= */
 
         .qr-zone {
-            position: absolute;
-            top: 3.55cm;
-            left: 0.30cm;
+            position: relative;
+            margin-top: 0.26cm;
             width: 7.40cm;
-            height: 9.15cm;
+            height: 7.98cm;
             border-radius: 0.42cm;
             overflow: hidden;
             background: #000000;
@@ -211,7 +212,7 @@
             top: 0;
             left: 0;
             width: 7.40cm;
-            height: 9.15cm;
+            height: 7.98cm;
         }
 
         /* Voile noir opacité 80–90% */
@@ -220,7 +221,7 @@
             top: 0;
             left: 0;
             width: 7.40cm;
-            height: 9.15cm;
+            height: 7.98cm;
             background: rgba(0, 0, 0, 0.85);
             z-index: 1;
         }
@@ -233,14 +234,14 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            margin-left: -1.90cm;
-            margin-top: -2.20cm;
+            margin-left: -1.68cm;
+            margin-top: -1.90cm;
             z-index: 3;
-            width: 3.80cm;
-            height: 4.40cm;
+            width: 3.36cm;
+            height: 3.80cm;
             background: #ffffff;
             border-radius: 0.32cm;
-            padding-top: 0.14cm;
+            padding: 0.08cm;
             text-align: center;
             box-sizing: border-box;
         }
@@ -277,7 +278,7 @@
 
         .code-pass-value {
             display: block;
-            margin-top: 0.10cm;
+            margin-top: 0.08cm;
             font-size: 10pt;
             font-weight: 700;
             color: #000000;
@@ -299,7 +300,7 @@
             bottom: 0.26cm;
             z-index: 3;
             text-align: center;
-            font-size: 7pt;
+            font-size: 12pt;
             font-weight: 300;
             letter-spacing: 0.015cm;
             color: rgba(255, 255, 255, 0.9);
