@@ -295,10 +295,7 @@
             background: #ffffff;
             overflow: hidden;
             z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: block;
         }
 
         /* Image de l'événement au fond de la zone basse + voile noir 80% */
@@ -326,35 +323,33 @@
         ========================================================= */
 
         .qr-card {
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -2.10cm;
+            margin-left: -2.00cm;
             z-index: 3;
-            width: 5cm;
-            height: 5cm;
+            width: 4.00cm;
+            height: 4.20cm;
             background: #ffffff;
-            border-radius: 0.35cm;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0.1cm 0.1cm 0.1cm 0.1cm;
+            border-radius: 0.30cm;
+            padding: 0.16cm 0.10cm 0.12cm 0.10cm;
             box-sizing: border-box;
         }
 
         .qr-wrap {
             position: relative;
-            width: 4.00cm;
-            height: 4.00cm;
+            width: 3.40cm;
+            height: 3.40cm;
             margin: 0 auto;
-            flex-shrink: 0;
         }
 
         .qr-wrap .qr-img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 4.00cm;
-            height: 4.00cm;
+            width: 3.40cm;
+            height: 3.40cm;
             background: #ffffff;
         }
 
@@ -362,23 +357,23 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 0.85cm;
-            height: 0.85cm;
-            margin-top: -0.425cm;
-            margin-left: -0.425cm;
+            width: 0.68cm;
+            height: 0.68cm;
+            margin-top: -0.34cm;
+            margin-left: -0.34cm;
             border-radius: 50%;
             background: #ffffff;
-            padding: 0.08cm;
+            padding: 0.06cm;
             box-sizing: border-box;
         }
 
         .code-pass-value {
             display: block;
-            margin-top: 0.15cm;
+            margin-top: 0.08cm;
             font-size: 11pt;
             font-weight: 700;
             color: #000000;
-            letter-spacing: 0.04cm;
+            letter-spacing: 0.02cm;
             text-transform: uppercase;
             line-height: 1;
             text-align: center;
