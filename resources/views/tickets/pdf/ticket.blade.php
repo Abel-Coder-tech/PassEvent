@@ -124,12 +124,20 @@
         }
 
         .info-grid td:first-child {
+            width: 34%;
             padding-right: 0.10cm;
         }
 
         .info-grid td:last-child {
+            width: 66%;
             padding-left: 0.10cm;
             text-align: right;
+        }
+
+        .info-grid td:last-child .info-val {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
         }
 
         .info-label {
