@@ -234,11 +234,11 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            margin-left: -1.68cm;
-            margin-top: -1.90cm;
+            margin-left: -2.10cm;
+            margin-top: -2.10cm;
             z-index: 3;
-            width: 3.36cm;
-            height: 3.80cm;
+            width: 4.20cm;
+            height: 4.20cm;
             background: #ffffff;
             border-radius: 0.32cm;
             padding: 0.08cm;
@@ -248,8 +248,8 @@
 
         .qr-wrap {
             position: relative;
-            width: 3.20cm;
-            height: 3.20cm;
+            width: 3.61cm;
+            height: 3.61cm;
             margin: 0 auto;
         }
 
@@ -257,8 +257,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 3.20cm;
-            height: 3.20cm;
+            width: 3.61cm;
+            height: 3.61cm;
             background: #ffffff;
         }
 
@@ -266,10 +266,10 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 0.64cm;
-            height: 0.64cm;
-            margin-top: -0.32cm;
-            margin-left: -0.32cm;
+            width: 0.72cm;
+            height: 0.72cm;
+            margin-top: -0.36cm;
+            margin-left: -0.36cm;
             border-radius: 50%;
             background: #ffffff;
             padding: 0.05cm;
