@@ -10,8 +10,8 @@
         }
         #certifie-header {
             position: fixed;
-            top: 4mm;
-            right: 4mm;
+            top: 1.5mm;
+            right: 1.5mm;
             width: 45mm;
             height: auto;
             opacity: 0.85;
