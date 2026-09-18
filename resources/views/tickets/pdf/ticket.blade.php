@@ -328,16 +328,16 @@
         .qr-card {
             position: relative;
             z-index: 3;
-            width: 5.60cm;
-            height: 5.60cm;
+            width: 5cm;
+            height: 5cm;
             background: #ffffff;
             border-radius: 0.35cm;
-            margin: 1.5cm auto;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.1cm 0.1cm 0.2cm 0.1cm;
+            padding: 0.1cm 0.1cm 0.1cm 0.1cm;
             box-sizing: border-box;
         }
 
