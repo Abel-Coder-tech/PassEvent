@@ -326,21 +326,21 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            margin-top: -2.10cm;
-            margin-left: -2.00cm;
+            margin-top: -2.225cm;
+            margin-left: -1.90cm;
             z-index: 3;
-            width: 4.00cm;
-            height: 4.20cm;
+            width: 3.80cm;
+            height: 3.80cm;
             background: #ffffff;
             border-radius: 0.30cm;
-            padding: 0.16cm 0.10cm 0.12cm 0.10cm;
+            padding: 0.10cm 0.05cm 0.06cm 0.05cm;
             box-sizing: border-box;
         }
 
         .qr-wrap {
             position: relative;
-            width: 3.40cm;
-            height: 3.40cm;
+            width: 3.20cm;
+            height: 3.20cm;
             margin: 0 auto;
         }
 
@@ -348,8 +348,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 3.40cm;
-            height: 3.40cm;
+            width: 3.20cm;
+            height: 3.20cm;
             background: #ffffff;
         }
 
@@ -357,20 +357,20 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 0.68cm;
-            height: 0.68cm;
-            margin-top: -0.34cm;
-            margin-left: -0.34cm;
+            width: 0.64cm;
+            height: 0.64cm;
+            margin-top: -0.32cm;
+            margin-left: -0.32cm;
             border-radius: 50%;
             background: #ffffff;
-            padding: 0.06cm;
+            padding: 0.05cm;
             box-sizing: border-box;
         }
 
         .code-pass-value {
             display: block;
-            margin-top: 0.08cm;
-            font-size: 11pt;
+            margin-top: 0.06cm;
+            font-size: 10pt;
             font-weight: 700;
             color: #000000;
             letter-spacing: 0.02cm;
