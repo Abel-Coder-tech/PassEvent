@@ -16,7 +16,10 @@ class TicketPdfService
         $largeur = 8 * 28.3465;   // 226.772 pt
         $hauteur = 13 * 28.3465;  // 368.5045 pt
 
-        $eventImageDataUri = self::eventImageDataUri($ticket);
+        $eventImageInfo = self::eventImageInfo($ticket);
+        $eventImageDataUri = $eventImageInfo['uri'] ?? null;
+        $eventImageW = $eventImageInfo['w'] ?? null;
+        $eventImageH = $eventImageInfo['h'] ?? null;
         $faviconDataUri = self::faviconDataUri();
 
         // Sur le fond sombre du bas, on utilise le logo blanc pour rester lisible.
@@ -29,6 +32,8 @@ class TicketPdfService
             'qrCodeDataUri',
             'logoDataUri',
             'eventImageDataUri',
+            'eventImageW',
+            'eventImageH',
             'faviconDataUri'
         ));
         $pdf->setPaper([0, 0, $largeur, $hauteur], 'portrait');
@@ -37,23 +42,32 @@ class TicketPdfService
         return $pdf;
     }
 
-    // Image importée par l'organisateur pour l'événement, en data-URI (ou null).
-    protected static function eventImageDataUri(Ticket $ticket): ?string
+    // Image importée par l'organisateur pour l'événement : data-URI + dimensions.
+    protected static function eventImageInfo(Ticket $ticket): array
     {
         $path = $ticket->evenement?->image;
+        $result = ['uri' => null, 'w' => null, 'h' => null];
 
         if (!$path) {
-            return null;
+            return $result;
         }
 
         $abs = Storage::disk('public')->path($path);
         if (!is_file($abs)) {
-            return null;
+            return $result;
         }
 
         $mime = @mime_content_type($abs) ?: 'image/jpeg';
 
-        return 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($abs));
+        $result['uri'] = 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($abs));
+
+        $size = @getimagesize($abs);
+        if ($size !== false) {
+            $result['w'] = (int) $size[0];
+            $result['h'] = (int) $size[1];
+        }
+
+        return $result;
     }
 
     // Favicon PaxEvent (incrusté au centre du QR code), en data-URI (ou null).
