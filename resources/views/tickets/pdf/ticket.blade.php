@@ -34,20 +34,18 @@
             height: 13cm;
             margin: 0;
             padding: 0;
-            background: #f5f5f5;
+            background: #ffffff;
             overflow: hidden;
         }
 
         /* =========================================================
-            TICKET GLOBAL
+           TICKET GLOBAL — remplit toute la surface
         ========================================================= */
 
         .ticket {
             position: relative;
             width: 8cm;
             height: 13cm;
-            margin: 0;
-            padding: 0;
             background: #ffffff;
             overflow: hidden;
             page-break-inside: avoid;
@@ -55,301 +53,206 @@
             page-break-after: avoid;
         }
 
-        /* =========================================================
-           CONTENEUR BLANC
-        ========================================================= */
-
-        .ticket-inner {
+        .ticket-body {
             position: absolute;
-            top: 0.69cm;
-            left: 0.585cm;
-            width: 6.83cm;
-            height: 11.62cm;
-            background: #ffffff;
-            border-radius: 0.5cm;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-
-        /* =========================================================
-           ZONE HAUTE
-        ========================================================= */
-
-        .zone-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4.16cm;
-            background: #f5f5f5;
-            padding: 0 0.30cm 0.10cm 0.30cm;
-            overflow: hidden;
-            z-index: 2;
-            box-sizing: border-box;
+            inset: 0;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-        }
-
-        /* =========================================================
-           TITRE : TICKET D'ENTRÉE - CORRIGÉ (centré horizontalement)
-        ========================================================= */
-
-        .ticket-title {
-            width: 6.83cm;
-            margin-left: -0.30cm;
-            margin-right: -0.30cm;
-            padding: 0.15cm 0 0.10cm 0;
-            text-align: center;
-            font-size: 10pt;
-            font-weight: 700;
-            color: #333333;
-            letter-spacing: 0;
-            text-transform: uppercase;
-            background: #e0e0e0;
-            line-height: 1.2;
+            padding: 0.30cm;
+            gap: 0.28cm;
             box-sizing: border-box;
         }
 
         /* =========================================================
-           NOM DE L'ÉVÉNEMENT
+           CARTE D'INFOS — fond blanc, bordure pointillée, coins arrondis
         ========================================================= */
 
-        .event-name {
+        .info-card {
+            flex: 0 0 auto;
             width: 100%;
-            font-size: 11pt;
+            background: #ffffff;
+            border: 1.4px dashed #C6B7DA;
+            border-radius: 0.38cm;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* Bandeau "TICKET D'ENTRÉE" — violet/bleu PaxEvent, texte blanc */
+        .info-header {
+            width: 100%;
+            background: linear-gradient(135deg, #5C2D91 0%, #3949AB 100%);
+            color: #ffffff;
+            text-align: center;
+            font-size: 9.5pt;
             font-weight: 700;
-            color: #602183;
+            letter-spacing: 0.03cm;
             text-transform: uppercase;
-            letter-spacing: 0.015cm;
-            margin: 0.12cm 0 0.10cm 0;
-            line-height: 1.1;
+            padding: 0.20cm 0;
+            line-height: 1.2;
+        }
+
+        .event-name {
+            padding: 0.16cm 0.28cm 0.04cm;
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #5C2D91;
+            text-transform: uppercase;
+            letter-spacing: 0.01cm;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         /* =========================================================
-           GRILLE DES INFORMATIONS - CORRIGÉE
+           GRILLE D'INFOS AVEC ICÔNES
         ========================================================= */
 
         .info-grid {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-            padding: 0;
-            table-layout: fixed;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.14cm 0.16cm;
+            padding: 0.06cm 0.28cm 0.14cm;
         }
 
-        .info-grid td {
-            width: 50%;
-            padding: 0.03cm 0;
-            vertical-align: top;
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.14cm;
             overflow: hidden;
         }
 
-        /* Colonne de gauche : alignée à gauche */
-        .info-grid td:first-child {
-            text-align: left;
-            padding-right: 0.10cm;
+        .info-icon {
+            flex: 0 0 auto;
+            width: 0.40cm;
+            height: 0.40cm;
+            color: #5C2D91;
         }
 
-        /* Colonne de droite : alignée à droite avec marge de 0.30cm */
-        .info-grid td:last-child {
-            text-align: right;
-            padding-right: 0.8cm;  /* AJOUTÉ : marge à droite de 0.30cm */
-        }
-
-        /* =========================================================
-           LABELS
-        ========================================================= */
-
-        .info-grid .lbl {
-            display: block;
-            font-size: 5.6pt;
-            font-weight: 500;
-            color: #767683;
-            text-transform: uppercase;
-            letter-spacing: 0.02cm;
-            margin-bottom: 0.05cm;
-            line-height: 1.1;
-        }
-
-        /* =========================================================
-           VALEURS
-        ========================================================= */
-
-        .info-grid .val {
-            display: block;
+        .info-val {
             font-size: 7pt;
             font-weight: 600;
             color: #393B3D;
             line-height: 1.15;
-            max-width: 100%;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         /* =========================================================
-           ENTRÉE GRATUITE
+           MONTANT / GRATUIT
         ========================================================= */
 
-        .gratuit {
-            font-size: 8pt;
-            font-weight: 700;
-            color: #e53935;
-            text-transform: uppercase;
-            letter-spacing: 0.035cm;
-            margin: 0.02cm 0;
-            line-height: 1.1;
+        .amount-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.16cm;
+            padding: 0.06cm 0.28cm 0.16cm;
         }
 
-        /* =========================================================
-           MONTANT
-        ========================================================= */
-
-        .montant-block {
-            margin-top: 0.08cm;
+        .amount-icon {
+            width: 0.42cm;
+            height: 0.42cm;
+            color: #5C2D91;
+            flex: 0 0 auto;
         }
 
-        .montant-label {
-            display: inline-block;
-            font-size: 0.17cm;
-            font-weight: 600;
-            color: #aaaaaa;
-            text-transform: uppercase;
-            letter-spacing: 0.02cm;
-        }
-
-        .montant-value {
-            font-size: 0.22cm;
+        .amount-value {
+            font-size: 9pt;
             font-weight: 800;
             color: #1a1a1a;
         }
 
-        .montant-reduction {
-            font-size: 0.17cm;
-            color: #2E7D4F;
+        .amount-reduction {
+            font-size: 7.5pt;
             font-weight: 700;
+            color: #2E7D4F;
+        }
+
+        .gratuit-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.14cm;
+            font-size: 8pt;
+            font-weight: 700;
+            color: #E53935;
+            text-transform: uppercase;
+            letter-spacing: 0.02cm;
+            padding: 0.06cm 0.28cm 0.16cm;
+        }
+
+        .gratuit-badge .amount-icon {
+            color: #E53935;
         }
 
         /* =========================================================
-           SÉPARATEUR
+           ZONE QR — coins arrondis, sans contour visible
         ========================================================= */
 
-        .separator {
-            position: absolute;
-            top: 4.16cm;
-            left: 0;
+        .qr-zone {
+            flex: 1 1 auto;
+            position: relative;
             width: 100%;
-            height: 0;
-            z-index: 20;
-            pointer-events: none;
-        }
-
-        .separator-line {
-            position: absolute;
-            top: 0;
-            left: 0.22cm;
-            right: 0.22cm;
-            height: 0;
-            border-top: 2px dashed rgba(92, 57, 121, 0.8);
-        }
-
-        .sep-circle-left {
-            position: absolute;
-            left: -0.14cm;
-            top: 0;
-            width: 0.28cm;
-            height: 0.28cm;
-            transform: translateY(-50%);
-            background: #ffffff;
-            border-radius: 50%;
-        }
-
-        .sep-circle-right {
-            position: absolute;
-            right: -0.14cm;
-            top: 0;
-            width: 0.28cm;
-            height: 0.28cm;
-            transform: translateY(-50%);
-            background: #ffffff;
-            border-radius: 50%;
-        }
-
-        /* =========================================================
-           ZONE INFÉRIEURE
-        ========================================================= */
-
-        .zone-bottom {
-            position: absolute;
-            top: 4.16cm;
-            left: 0;
-            width: 100%;
-            height: 7.46cm;
-            background: #ffffff;
+            border-radius: 0.42cm;
             overflow: hidden;
-            z-index: 1;
-            display: block;
+            background: #000000;
         }
 
-        /* Image de l'événement au fond de la zone basse + voile noir 80% */
-        .zone-bottom-bg {
+        /* Image de l'événement — recouvre toute la zone sans déformation */
+        .qr-zone-bg {
             position: absolute;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
+            object-fit: cover;
+            object-position: center;
         }
 
-        .zone-bottom-overlay {
+        /* Voile noir opacité 80–90% */
+        .qr-zone-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        .qr-zone-content {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         /* =========================================================
-           CODE UNIQUE / PAX-XXXXXX
+           CARTE QR / CODE UNIQUE
         ========================================================= */
 
-.qr-card {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            margin-top: -2.225cm;
-            margin-left: -1.80cm;
-            z-index: 3;
-            width: 3.60cm;
-            height: 3.80cm;
+        .qr-card {
             background: #ffffff;
             border-radius: 0.30cm;
-            padding: 0.10cm 0.05cm 0.06cm 0.05cm;
+            padding: 0.20cm 0.14cm 0.14cm;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 3.60cm;
         }
 
         .qr-wrap {
             position: relative;
-            width: 3.20cm;
-            height: 3.20cm;
-            margin: 0 auto;
+            width: 3.00cm;
+            height: 3.00cm;
         }
 
         .qr-wrap .qr-img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 3.20cm;
-            height: 3.20cm;
+            width: 100%;
+            height: 100%;
             background: #ffffff;
         }
 
@@ -357,10 +260,10 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 0.64cm;
-            height: 0.64cm;
-            margin-top: -0.32cm;
-            margin-left: -0.32cm;
+            width: 0.60cm;
+            height: 0.60cm;
+            margin-top: -0.30cm;
+            margin-left: -0.30cm;
             border-radius: 50%;
             background: #ffffff;
             padding: 0.05cm;
@@ -369,8 +272,8 @@
 
         .code-pass-value {
             display: block;
-            margin-top: 0.06cm;
-            font-size: 10pt;
+            margin-top: 0.10cm;
+            font-size: 9.5pt;
             font-weight: 700;
             color: #000000;
             letter-spacing: 0.02cm;
@@ -381,23 +284,20 @@
         }
 
         /* =========================================================
-           FOOTER
+           FOOTER — juste © www.paxevent.com, police légère
         ========================================================= */
 
-.ticket-footer {
+        .qr-footer {
             position: absolute;
-            bottom: 0.69cm;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6.83cm;
+            left: 0;
+            right: 0;
+            bottom: 0.26cm;
+            z-index: 3;
             text-align: center;
-            font-size: 10pt;
-            font-weight: 700;
-            color: #333333;
-            letter-spacing: 0;
-            background: #e0e0e0;
-            padding: 0.15cm 0;
-            border-radius: 0 0 0.35cm 0.35cm;
+            font-size: 7pt;
+            font-weight: 300;
+            letter-spacing: 0.015cm;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         /* =========================================================
@@ -405,10 +305,8 @@
         ========================================================= */
 
         .ticket,
-        .ticket-inner,
-        .zone-top,
-        .zone-bottom,
-        .separator {
+        .info-card,
+        .qr-zone {
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -441,92 +339,125 @@
 @php $textes = $ticket->evenement?->getTextes() ?? ['billet' => 'Billet']; @endphp
 
 <div class="ticket">
-    <div class="ticket-inner">
+    <div class="ticket-body">
 
-        {{-- ZONE HAUTE --}}
-        <div class="zone-top">
-            <div class="ticket-title">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
+        {{-- CARTE D'INFOS --}}
+        <div class="info-card">
+
+            <div class="info-header">{{ strtoupper($textes['pdf_titre'] ?? 'Ticket d\'entrée') }}</div>
 
             <div class="event-name">{{ $ticket->evenement?->titre ?? 'Événement' }}</div>
 
-            <table class="info-grid" cellpadding="0" cellspacing="0">
-                <tr>
-                    <td>
-                        <span class="lbl">Tarif</span>
-                        <span class="val">{{ strtoupper($ticket->nom_tarif ?? '—') }}</span>
-                        <span class="lbl" style="margin-top:0.05cm;">ID</span>
-                        <span class="val" style="font-size:8px;">{{ $ticket->transaction_id ?? '---' }}</span>
-                    </td>
-                    <td>
-                        <span class="lbl">Date et heure</span>
-                        <span class="val">
-                            @php
-                                $datesTicket = $ticket->evenement?->dates ?? collect();
-                            @endphp
-                            @if($datesTicket->count() > 1)
-                                @foreach($datesTicket as $d)
-                                    {{ $d->date_debut->isoFormat('D MMM') }} - {{ $d->date_debut->format('H\hi') }}{{ !$loop->last ? ', ' : '' }}
-                                @endforeach
-                            @else
-                                {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
-                                @if($ticket->evenement?->date_event)
-                                    - {{ $ticket->evenement->date_event->format('H\hi') }}
-                                @endif
+            <div class="info-grid">
+
+                {{-- TARIF --}}
+                <div class="info-item">
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.59 13.41 12 22l-9-9V4a2 2 0 0 1 2-2h9l9 9a2 2 0 0 1 0 2.41z"/>
+                        <circle cx="8" cy="8" r="1.4" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="info-val">{{ strtoupper($ticket->nom_tarif ?? '—') }}</span>
+                </div>
+
+                {{-- DATE / HEURE --}}
+                <div class="info-item">
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span class="info-val">
+                        @php
+                            $datesTicket = $ticket->evenement?->dates ?? collect();
+                        @endphp
+                        @if($datesTicket->count() > 1)
+                            @foreach($datesTicket as $d)
+                                {{ $d->date_debut->isoFormat('D MMM') }} - {{ $d->date_debut->format('H\hi') }}{{ !$loop->last ? ', ' : '' }}
+                            @endforeach
+                        @else
+                            {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
+                            @if($ticket->evenement?->date_event)
+                                - {{ $ticket->evenement->date_event->format('H\hi') }}
                             @endif
-                        </span>
-                        <span class="lbl" style="margin-top:0.05cm;">Lieu</span>
-                        <span class="val">{{ $ticket->evenement?->lieu ?? '---' }}</span>
-                    </td>
-                </tr>
-            </table>
-
-            @if($ticket->montant > 0)
-                <div style="margin-top:0.05cm;">
-                    <span class="lbl" style="font-size:7px;color:#aaaaaa;text-transform:uppercase;letter-spacing:0.8px;">Montant</span>
-                    <span style="font-size:10px;font-weight:800;color:#1a1a1a;"> {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
-                    @if($ticket->montant_reduction > 0)
-                        <span style="font-size:8px;color:#2E7D4F;font-weight:700;"> (-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA)</span>
-                    @endif
-                </div>
-            @else
-                <div class="gratuit">Entrée gratuite</div>
-            @endif
-        </div>
-
-        {{-- SÉPARATEUR --}}
-        <div class="separator">
-            <div class="sep-circle-left"></div>
-            <div class="separator-line"></div>
-            <div class="sep-circle-right"></div>
-        </div>
-
-        {{-- ZONE BASSE --}}
-        <div class="zone-bottom">
-
-            @if($eventImageDataUri)
-                <img src="{{ $eventImageDataUri }}" alt="" class="zone-bottom-bg">
-                <div class="zone-bottom-overlay"></div>
-            @endif
-
-            <div class="qr-card">
-
-                <div class="qr-wrap">
-                    <img src="{{ $qrCodeDataUri }}" alt="QR Code" class="qr-img">
-                    @if($faviconDataUri)
-                        <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon">
-                    @endif
+                        @endif
+                    </span>
                 </div>
 
-                @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
-                <div class="code-pass-value">{{ $ticket->code_unique }}</div>
-                @endif
+                {{-- ID TRANSACTION --}}
+                <div class="info-item">
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="9" x2="20" y2="9"/>
+                        <line x1="4" y1="15" x2="20" y2="15"/>
+                        <line x1="10" y1="3" x2="8" y2="21"/>
+                        <line x1="16" y1="3" x2="14" y2="21"/>
+                    </svg>
+                    <span class="info-val" style="font-size:6.5pt;">{{ $ticket->transaction_id ?? '---' }}</span>
+                </div>
+
+                {{-- LIEU --}}
+                <div class="info-item">
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span class="info-val">{{ $ticket->evenement?->lieu ?? '---' }}</span>
+                </div>
 
             </div>
 
-        </div>
-    </div>
+            {{-- MONTANT / GRATUIT --}}
+            @if($ticket->montant > 0)
+                <div class="amount-row">
+                    <svg class="amount-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    <span class="amount-value">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</span>
+                    @if($ticket->montant_reduction > 0)
+                        <span class="amount-reduction">(-{{ number_format($ticket->montant_reduction, 0, ',', ' ') }} FCFA)</span>
+                    @endif
+                </div>
+            @else
+                <div class="gratuit-badge">
+                    <svg class="amount-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Entrée gratuite
+                </div>
+            @endif
 
-    <div class="ticket-footer">Merci d'utiliser PaxEvent !</div>
+        </div>
+
+        {{-- ZONE QR (image événement + voile noir + QR) --}}
+        <div class="qr-zone">
+
+            @if($eventImageDataUri)
+                <img src="{{ $eventImageDataUri }}" alt="" class="qr-zone-bg">
+            @endif
+            <div class="qr-zone-overlay"></div>
+
+            <div class="qr-zone-content">
+                <div class="qr-card">
+                    <div class="qr-wrap">
+                        <img src="{{ $qrCodeDataUri }}" alt="QR Code" class="qr-img">
+                        @if($faviconDataUri)
+                            <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon">
+                        @endif
+                    </div>
+
+                    @if($ticket->statut_paiement === 'payé' || $ticket->statut_paiement === 'physique')
+                        <div class="code-pass-value">{{ $ticket->code_unique }}</div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="qr-footer">© www.paxevent.com</div>
+
+        </div>
+
+    </div>
 </div>
 
 </body>
