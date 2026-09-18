@@ -129,6 +129,7 @@
 
         .info-grid td:last-child {
             padding-left: 0.10cm;
+            text-align: right;
         }
 
         .info-label {
@@ -183,7 +184,7 @@
         }
 
         .gratuit-badge {
-            text-align: center;
+            text-align: left;
             padding: 0.06cm 0.28cm 0.16cm;
             font-size: 8.5pt;
             font-weight: 700;
