@@ -322,18 +322,18 @@
            CODE UNIQUE / PAX-XXXXXX
         ========================================================= */
 
-        .qr-card {
+.qr-card {
             position: absolute;
             top: 50%;
             left: 50%;
             margin-top: -2.225cm;
-            margin-left: -1.90cm;
+            margin-left: -1.80cm;
             z-index: 3;
-            width: 3.78cm;
-            height: 3.78cm;
+            width: 3.60cm;
+            height: 3.80cm;
             background: #ffffff;
             border-radius: 0.30cm;
-            padding: 0.10cm 0.02cm 0.06cm 0.02cm;
+            padding: 0.10cm 0.05cm 0.06cm 0.05cm;
             box-sizing: border-box;
         }
 
