@@ -75,6 +75,12 @@ class EvenementPublicController extends Controller
     // Affiche la page publique d'un événement avec tarifs et disponibilité
     public function show(Evenement $evenement)
     {
+        // SEO : redirection 301 de l'ancien format /evenements/{id} vers /evenements/{slug}
+        $segment = (string) request()->route('evenement');
+        if ($segment !== $evenement->slug) {
+            return redirect()->route('evenements.public.show', $evenement)->setStatusCode(301);
+        }
+
         if (! in_array($evenement->statut, ['publié', 'terminé'], true)) {
             abort(404); // Seuls les événements publiés ou passés sont visibles
         }

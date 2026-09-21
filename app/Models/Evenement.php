@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Evenement extends Model
 {
@@ -19,6 +20,7 @@ class Evenement extends Model
     protected $fillable = [
         'user_id',
         'titre',
+        'slug',
         'description',
         'date_event',
         'lieu',
@@ -48,6 +50,57 @@ class Evenement extends Model
             'a_la_une' => 'boolean',
             'a_la_une_ordre' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $evenement) {
+            if (empty($evenement->slug)) {
+                $evenement->slug = self::genererSlugUnique($evenement->titre ?? '', $evenement->id);
+            }
+        });
+
+        static::updating(function (self $evenement) {
+            if ($evenement->isDirty('titre') || empty($evenement->slug)) {
+                $evenement->slug = self::genererSlugUnique($evenement->titre ?? '', $evenement->id);
+            }
+        });
+    }
+
+    // URL par slug (le nom de l'événement), les anciens liens par id restent acceptés
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $evenement = $this->newQuery()->where('slug', $value)->first();
+        if ($evenement) {
+            return $evenement;
+        }
+
+        if (ctype_digit((string) $value)) {
+            return $this->newQuery()->whereKey($value)->first();
+        }
+
+        return null;
+    }
+
+    public static function genererSlugUnique(string $titre, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($titre) ?: 'evenement';
+        $slug = $base;
+        $i = 2;
+
+        while (static::where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = $base . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     // Scope : événements mis à la une, triés par ordre

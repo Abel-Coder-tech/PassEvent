@@ -69,7 +69,7 @@
                         $textes = $evenement->getTextes();
                     @endphp
                     <div class="ev-grid-col">
-                        <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">
+                        <a href="{{ route('evenements.public.show', $evenement) }}" class="ev-card">
                             <div class="ev-card-img">
                                 @if($evenement->image)
                                     <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}">
@@ -176,7 +176,7 @@
                     $textes = $evenement->getTextes();
                 @endphp
                 <div class="ev-grid-col">
-                    <a href="{{ route('evenements.public.show', $evenement->id) }}" class="ev-card">
+                    <a href="{{ route('evenements.public.show', $evenement) }}" class="ev-card">
                         <div class="ev-card-img">
                             @if($evenement->image)
                                 <img src="{{ asset('storage/' . $evenement->image) }}" alt="{{ $evenement->titre }}">
