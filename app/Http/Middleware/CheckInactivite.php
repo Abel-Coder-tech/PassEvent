@@ -30,18 +30,22 @@ class CheckInactivite
                 $derniere = $request->session()->get($cle);
 
                 if ($derniere && abs(now()->diffInMinutes($derniere)) > $dureeMinutes) {
+                    $urlIntended = $request->fullUrl();
+
                     Auth::guard($guard)->logout();
                     $request->session()->invalidate();
                     $request->session()->regenerateToken();
 
                     if ($request->expectsJson()) {
-                        return response()->json(['message' => 'Session expirée suite à une inactivité.'], 401);
+                        return response()->json(['message' => 'Session expirée. Reconnectez-vous.'], 401);
                     }
+
+                    $request->session()->put('url.intended', $urlIntended);
 
                     $route = $guard === 'superadmin' ? 'superadmin.login' : 'login';
 
                     return redirect()->route($route)
-                        ->with('error', 'Votre session a expiré après '.$dureeMinutes.' minutes d\'inactivité. Veuillez vous reconnecter.');
+                        ->with('error', 'Session expirée. Reconnectez-vous.');
                 }
 
                 $request->session()->put($cle, now());

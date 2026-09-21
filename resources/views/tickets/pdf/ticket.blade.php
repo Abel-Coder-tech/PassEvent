@@ -302,6 +302,7 @@
         ========================================================= */
 
         .qr-footer {
+            font-family: 'Montserrat', sans-serif;
             position: absolute;
             left: 0;
             width: 100%;

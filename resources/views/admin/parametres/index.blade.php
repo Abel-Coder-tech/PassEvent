@@ -658,6 +658,10 @@ function showSection(sectionId, el) {
 
     document.getElementById('section-' + sectionId).classList.add('active');
     if (el) el.classList.add('active');
+
+    if ((location.hash || '').replace('#', '') !== sectionId) {
+        location.hash = sectionId;
+    }
 }
 
 function openSectionByName(name) {
