@@ -96,7 +96,7 @@
                         <hr class="my-3">
 
                         @if($evenement->gratuit)
-                        <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
+                        <form action="{{ route('evenements.achat', $evenement) }}" method="POST">
                             @csrf
                             <input type="hidden" name="gratuit" value="1">
                             <input type="hidden" name="quantite" id="hiddenQuantiteG" value="1">
@@ -156,7 +156,7 @@
                             </div>
                         </div>
                         <hr>
-                        <form action="{{ route('evenements.achat', $evenement->id) }}" method="POST">
+                        <form action="{{ route('evenements.achat', $evenement) }}" method="POST">
                             @csrf
                             <input type="hidden" name="tarif_id" id="hiddenTarifId">
                             <input type="hidden" name="quantite" id="hiddenQuantite" value="1">
@@ -245,7 +245,7 @@
                         <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
                         <div class="d-flex flex-column gap-3">
                             @foreach($autresEvenements as $autre)
-                                <a href="{{ route('evenements.public.show', $autre->id) }}" class="show-other-card">
+                                <a href="{{ route('evenements.public.show', $autre) }}" class="show-other-card">
                                     @if($autre->image)
                                         <img src="{{ asset('storage/' . $autre->image) }}" alt="">
                                     @else
@@ -278,7 +278,7 @@
                 <p style="color:#6c757d; font-size:0.85rem; margin-bottom:1rem;">
                     Votre message sera envoyé à <strong>{{ $evenement->user->nom }}</strong> (organisateur de <strong>{{ $evenement->titre }}</strong>).
                 </p>
-                <form action="{{ route('evenements.contacter-organisateur', $evenement->id) }}" method="POST">
+                <form action="{{ route('evenements.contacter-organisateur', $evenement) }}" method="POST">
                     @csrf
                     <div class="mb-3">
                         <label class="show-label">Votre nom <span class="text-danger">*</span></label>

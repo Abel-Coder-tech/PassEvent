@@ -6,7 +6,7 @@
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('accueil') }}">Accueil</a></li>
     <li class="breadcrumb-item"><a href="{{ route('evenements.public') }}">Evenements</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('evenements.public.show', $ticket->evenement->id) }}">{{ Str::limit($ticket->evenement->titre, 30) }}</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('evenements.public.show', $ticket->evenement) }}">{{ Str::limit($ticket->evenement->titre, 30) }}</a></li>
     <li class="breadcrumb-item active" aria-current="page">Paiement</li>
 @endsection
 

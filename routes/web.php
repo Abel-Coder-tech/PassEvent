@@ -243,7 +243,10 @@ Route::middleware('auth')->get('/generate-sitemap', function () {
         ->add(Url::create(url('/contrat-prestation')));
 
     Evenement::where('statut', '=', 'publié', 'and')->get()->each(function ($evenement) use ($sitemap) {
-        $sitemap->add(Url::create(url('/evenements/'.$evenement->id)));
+        $sitemap->add(
+            Url::create(url('/evenements/'.$evenement->slug))
+                ->setLastModificationDate($evenement->updated_at ? \Carbon\Carbon::parse($evenement->updated_at) : \Carbon\Carbon::now())
+        );
     });
 
     $sitemap->writeToFile(public_path('sitemap.xml'));
