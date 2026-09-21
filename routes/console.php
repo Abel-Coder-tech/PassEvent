@@ -10,6 +10,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('evenements:terminer')->hourly();
-Schedule::command('tickets:purger-en-attente')->hourly();
+Schedule::command('tickets:purger-en-attente')->everyFifteenMinutes();
 Schedule::command('tickets:reconcilier')->hourly();
 Schedule::command('tickets:corriger-operateurs')->hourly();
