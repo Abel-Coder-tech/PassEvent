@@ -27,6 +27,7 @@
                             <option value="reduction_commission">Réduction Commission</option>
                             <option value="augmentation_agents">Augmentation des agents</option>
                             <option value="evenement_a_la_une">Événement à la une</option>
+                            <option value="booster_promouvoir">Booster ou promouvoir un événement</option>
                             <option value="probleme_technique">Problème technique</option>
                         </select>
                     </div>
@@ -53,6 +54,34 @@
                         <input type="number" name="commission_pourcentage" id="demande_commission" class="form-control form-control-sm" min="0" max="100" step="0.01" placeholder="Ex : 5">
                     </div>
 
+                    {{-- Campagne marketing ciblée (booster / promouvoir) --}}
+                    <div class="mb-2" id="demande_campagne_group" style="display:none;">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" style="font-size:0.82rem;">Public ciblé</label>
+                                <select name="cible_persona" id="demande_persona" class="form-select form-select-sm">
+                                    <option value="">-- Choisir le public ciblé --</option>
+                                    <option value="tous">Tous publics</option>
+                                    <option value="jeunes">Étudiants / jeunes</option>
+                                    <option value="professionnels">Professionnels</option>
+                                    <option value="local">Public local de la ville</option>
+                                    <option value="fideles">Fidèles de l'organisateur</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" style="font-size:0.82rem;">Canal souhaité</label>
+                                <select name="canal_souhaite" id="demande_canal" class="form-select form-select-sm">
+                                    <option value="">-- Choisir le canal --</option>
+                                    <option value="site">Mise en avant sur le site (une / bannière)</option>
+                                    <option value="newsletter">Newsletter PaxEvent</option>
+                                    <option value="reseaux">Réseaux sociaux</option>
+                                    <option value="whatsapp">WhatsApp / SMS</option>
+                                    <option value="mixte">Mixte</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-1">
                         <label class="form-label fw-semibold" style="font-size:0.82rem;">Message</label>
                         <textarea name="message" id="demande_message" class="form-control form-control-sm" rows="3" maxlength="2000" placeholder="Décrivez votre demande..." required></textarea>
@@ -62,7 +91,7 @@
                     <div id="demande_info_commission" class="mt-2" style="display:none;">
                         <div class="alert alert-info py-2 px-3 mb-0" style="border-radius:8px;font-size:0.78rem;background:#f0f7ff;border:1px solid #d6e6ff;color:#1c5ba8;">
                             <i class="bi bi-info-circle me-1"></i>
-                            Le pourcentage de commission sur les tickets physiques (QR Code) est de <strong>5 %</strong>.
+                            Le pourcentage de commission sur les tickets physiques (QR Code) est de <strong>5 % à 10 %</strong>.
                         </div>
                     </div>
                 </div>
@@ -86,16 +115,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const demandeQuantites = document.getElementById('demande_quantites');
     const demandeCommissionGroup = document.getElementById('demande_commission_group');
     const demandeInfoCommission = document.getElementById('demande_info_commission');
+    const demandeCampagneGroup = document.getElementById('demande_campagne_group');
 
     if (!demandeObjet) return;
 
-    const OBJET_EVENEMENT = ['ticket_physique', 'reduction_commission', 'augmentation_agents', 'evenement_a_la_une'];
+    const OBJET_EVENEMENT = ['ticket_physique', 'reduction_commission', 'augmentation_agents', 'evenement_a_la_une', 'booster_promouvoir'];
 
     function resetDemande() {
         demandeEvenementGroup.style.display = 'none';
         demandeQuantitesGroup.style.display = 'none';
         demandeCommissionGroup.style.display = 'none';
         demandeInfoCommission.style.display = 'none';
+        demandeCampagneGroup.style.display = 'none';
         demandeEvenement.value = '';
         demandeQuantites.innerHTML = '';
     }
@@ -114,6 +145,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (objet === 'reduction_commission') {
             demandeCommissionGroup.style.display = '';
+        }
+
+        if (objet === 'booster_promouvoir') {
+            demandeCampagneGroup.style.display = '';
         }
 
         if (objet === 'ticket_physique') {

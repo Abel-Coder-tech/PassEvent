@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\DemandeSuperAdminController;
 use App\Mail\NewsletterMassEmail;
 use App\Mail\RegistrationApproved;
 use App\Mail\RegistrationCorrections;
@@ -22,6 +23,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Withdrawal;
 use App\Services\ReconciliationService;
+use App\Services\ContratService;
 use App\Support\PerPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -678,12 +680,30 @@ class SuperAdminController extends Controller
         return view('superadmin.securite', compact('logsSuspects'));
     }
 
-    // Notifications non lues (messages système)
+    // Notifications non lues (messages système, hors campagnes marketing)
     public function notifications()
     {
-        $messages = Message::with('evenement')->whereNull('user_id')->orderByDesc('created_at')->paginate(PerPage::resolve());
+        $messages = Message::with('evenement')
+            ->whereNull('user_id')
+            ->where('objet', '!=', DemandeSuperAdminController::OBJET_CAMPAGNE)
+            ->orderByDesc('created_at')
+            ->paginate(PerPage::resolve());
 
         return view('superadmin.notifications', compact('messages'));
+    }
+
+    // Demandes de campagnes marketing ciblées (Booster / promouvoir un événement) - réservé aux super admins
+    public function campagnesMarketing()
+    {
+        abort_unless(auth('superadmin')->user()?->estSuperAdmin(), 403, 'Acces non autorise.');
+
+        $messages = Message::with('evenement')
+            ->whereNull('user_id')
+            ->where('objet', DemandeSuperAdminController::OBJET_CAMPAGNE)
+            ->orderByDesc('created_at')
+            ->paginate(PerPage::resolve());
+
+        return view('superadmin.campagnes', compact('messages'));
     }
 
     // Marque une notification comme lue
@@ -1846,6 +1866,18 @@ class SuperAdminController extends Controller
                 'organisateur_approuve', 'organisateur_rejete', 'organisateur_suspendu',
                 'organisateur_reactive', 'organisateur_corrections', 'organisateur_supprime',
             ])->orderBy('created_at', 'desc')->limit(12)->get()]);
+    }
+
+    // Aperçu du contrat de prestation d'un organisateur (avant validation du compte)
+    public function voirContrat(User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $nomFichier = 'Contrat-Prestation-PaxEvent-' . $user->id . '.pdf';
+
+        return app(ContratService::class)->pdf($user)->stream($nomFichier);
     }
 
     // Liste des demandes de retrait

@@ -85,4 +85,44 @@ class DemandeSuperAdminLogiqueTest extends TestCase
 
         $this->assertSame('La page ne charge pas.', $resultat);
     }
+
+    public function test_campagne_marketing_prefixe_cible_et_canal(): void
+    {
+        $resultat = DemandeSuperAdminController::formaterMessage(
+            DemandeSuperAdminController::OBJETS['booster_promouvoir'],
+            'Nous aimerions booster notre événement du mois prochain.',
+            null,
+            ['cible_persona' => 'jeunes', 'canal_souhaite' => 'reseaux'],
+        );
+
+        $this->assertStringContainsString('Public ciblé : Étudiants / jeunes', $resultat);
+        $this->assertStringContainsString('Canal souhaité : Réseaux sociaux', $resultat);
+        $this->assertStringContainsString('Nous aimerions booster notre événement du mois prochain.', $resultat);
+    }
+
+    public function test_campagne_marketing_sans_detail_ni_prefixe(): void
+    {
+        $resultat = DemandeSuperAdminController::formaterMessage(
+            DemandeSuperAdminController::OBJETS['booster_promouvoir'],
+            'Besoin d\'aide pour promouvoir un événement.',
+            null,
+            ['cible_persona' => '', 'canal_souhaite' => null],
+        );
+
+        $this->assertSame('Besoin d\'aide pour promouvoir un événement.', $resultat);
+    }
+
+    public function test_campagne_marketing_ignore_les_valeurs_inconnues(): void
+    {
+        $resultat = DemandeSuperAdminController::formaterMessage(
+            DemandeSuperAdminController::OBJETS['booster_promouvoir'],
+            'Message libre.',
+            null,
+            ['cible_persona' => 'inconnu', 'canal_souhaite' => 'folk'],
+        );
+
+        $this->assertStringNotContainsString('Public ciblé', $resultat);
+        $this->assertStringNotContainsString('Canal souhaité', $resultat);
+        $this->assertSame('Message libre.', $resultat);
+    }
 }

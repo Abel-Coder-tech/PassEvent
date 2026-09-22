@@ -63,6 +63,11 @@
                                 </a>
                             </div>
                         @endif
+                        <div class="mt-2">
+                            <a href="{{ route('superadmin.organisateurs.contrat', $user) }}" target="_blank" class="btn btn-sm text-white fw-semibold" style="background:#2e7d4f;border-radius:6px;text-decoration:none;">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Voir le contrat
+                            </a>
+                        </div>
                     </div>
                 @endif
                 @if($user->signature)

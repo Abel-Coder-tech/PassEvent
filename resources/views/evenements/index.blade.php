@@ -17,6 +17,9 @@
         <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('evenement_a_la_une')">
             <i class="bi bi-star me-1"></i> Mettre un événement à la une
         </button>
+        <button type="button" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('booster_promouvoir')">
+            <i class="bi bi-megaphone me-1"></i> Booster / promouvoir
+        </button>
     </p>
 
     <!-- Stat Cards -->
