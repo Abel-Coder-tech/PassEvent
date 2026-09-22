@@ -272,14 +272,14 @@ h3 {
 
     <h3>ARTICLE 6 : COMMISSIONS</h3>
     <ul>
-        <li>Pour chaque e-ticket vendu, PaxEvent prélève des frais de commission d'un taux de <strong>10%</strong> de la valeur nominale du ticket ;</li>
-        <li>Pour chaque ticket physique généré, PaxEvent prélève des frais de commission d'un taux de <strong>5%</strong> de la valeur nominale du ticket.</li>
+        <li>Pour chaque e-ticket vendu, PaxEvent prélève des frais de commission d'un taux de <strong>5% à 10%</strong> de la valeur nominale du ticket ;</li>
+        <li>Pour chaque ticket physique généré, PaxEvent prélève des frais de commission d'un taux de <strong>5% à 10%</strong> de la valeur nominale du ticket.</li>
     </ul>
 
     <h3>ARTICLE 7 : RETRAIT DES AVOIRS</h3>
     <ul>
-        <li><strong>Retrait standard :</strong> Les recettes nettes issues des ventes de tickets (déduction faite des commissions de PaxEvent) sont versées à l'Organisateur dans un délai de 24h à 72h après la tenue de l'événement.</li>
-        <li><strong>Retrait anticipé :</strong> L'organisateur peut demander un retrait des fonds disponibles avant la tenue de l'événement, avec un délai de traitement maximal de 3 jours ouvrés. Le solde minimum disponible autorisé est de 1 000 FCFA.</li>
+        <li><strong>Retrait standard :</strong> Les recettes nettes issues des ventes de tickets (déduction faite des commissions de PaxEvent) sont versées à l'Organisateur dans un délai de 0 à 72h après la tenue de l'événement.</li>
+        <li><strong>Retrait anticipé :</strong> L'organisateur peut demander un retrait des fonds disponibles avant la tenue de l'événement, avec un délai de traitement maximal de 72h. Le solde minimum disponible autorisé est de 1 000 FCFA.</li>
         <li><strong>Frais de retrait (PAYOUT) :</strong> Les demandes de reversement des avoirs de l'Organisateur vers son compte Mobile Money s'effectuent depuis son interface d'administration. Conformément au barème technique des agrégateurs partenaires, des frais de transaction s'appliquent selon les tranches et/ou conditions suivantes :
             <ul>
                 <li>Tout retrait de fonds d'une balance mobile money vers un compte mobile money du même opérateur n'est assujetti à aucun frais (Ex : Balance MTN Benin vers N° MTN Benin) : <strong>0 FCFA</strong>.</li>

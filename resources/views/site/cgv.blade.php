@@ -57,7 +57,7 @@
                             <h6 class="fw-bold mt-4 mb-2">5. Prix et modalités de paiement</h6>
                             <p>Les prix affichés sur PaxEvent sont indiqués en Francs CFA (XOF), toutes taxes comprises (TTC). Les frais de transaction ne sont pas inclus et sont à la charge de l'acheteur. Les transactions sont traitées et sécurisées via les passerelles de paiement partenaires (FedaPay, Kkiapay). Le débit est immédiat dès la confirmation de la transaction.</p>
                             <p class="mb-1 fw-semibold">5.1. Commissions et frais de services</p>
-                            <p>PaxEvent prélève aux organisateurs une commission de 10% seulement sur chaque ticket vendu.</p>
+                            <p>PaxEvent prélève aux organisateurs une commission de 5% à 10% sur chaque ticket vendu.</p>
                             <p>A la demande, PaxEvent facture également aux organisateurs des frais de fourniture de services additionnels (Marketing, APK, Terminaux, membres). Ces frais sont clairement indiqués au moment de la validation de la commande, avant le paiement final.</p>
                             <p>En cas d'annulation de l'événement ou de remboursement du billet, les frais de commission ou de service de la Plateforme restent définitivement acquis à PaxEvent et ne feront l'objet d'aucun remboursement, car ils rémunèrent un service de traitement de commande déjà intégralement exécuté.</p>
                             <p class="mb-1 fw-semibold">5.2. Incidents de réseau et bugs liés au mobile money</p>
@@ -71,19 +71,19 @@
                             <p><strong>Principes de non-remboursement :</strong> les billets achetés ne sont ni remboursables ni échangeables sur PaxEvent ni auprès des organisateurs.</p>
                             <p><strong>Principes de remboursement :</strong></p>
                             <ul>
-                                <li>En cas d'annulation de l'événement, les tickets achetés ne sont remboursés aux acheteurs qu'à hauteur de 90% du montant, les frais de service de la plateforme PaxEvent (10% sur les tickets vendus) restent non remboursables.</li>
+                                <li>En cas d'annulation de l'événement, les tickets achetés ne sont remboursés aux acheteurs qu'à hauteur de 90% à 95% du montant, les frais de service de la plateforme PaxEvent (5% à 10% sur les tickets vendus) restent non remboursables.</li>
                                 <li>En cas d'erreurs techniques avérées imputables à PaxEvent (double facturation, non émission de tickets) : les tickets non émis sont régénérés, les doublons de facture sont annulés et les sommes rétrocédées automatiquement et intégralement aux acheteurs.</li>
                             </ul>
                             <p class="mb-1">Les remboursements sont gérés par les acteurs suivants :</p>
                             <ul>
                                 <li>Par PaxEvent, entièrement ou en partie à hauteur des fonds disponibles à son niveau.</li>
                                 <li>Par les organisateurs, intégralement ou en partie selon les circonstances de l'annulation de l'événement et à hauteur des fonds déjà retirés.</li>
-                                <li>Conjointement par PaxEvent et l'organisateur à hauteur de 90% du prix de chaque ticket et selon les fonds disponibles auprès de chacun d'eux.</li>
+                                <li>Conjointement par PaxEvent et l'organisateur à hauteur de 90% à 95% du prix de chaque ticket et selon les fonds disponibles auprès de chacun d'eux.</li>
                             </ul>
                             <p class="mb-1 fw-semibold">6.1. Politique de remboursement spécifique (à l'attention des organisateurs et des acheteurs)</p>
                             <p>PaxEvent agit uniquement comme intermédiaire de vente. La décision d'annuler un événement relève de la responsabilité exclusive de l'organisateur de l'événement.</p>
-                            <p><strong>Annulation de l'événement :</strong> Si l'Organisateur annule son événement, il est légalement tenu de rembourser 90% du prix facial des billets aux Acheteurs. L'Organisateur doit alors procéder directement au remboursement ou ordonner à PaxEvent l'exécution technique des remboursements.</p>
-                            <p><strong>Frais non remboursables :</strong> Conformément à l'article 5.1., les commissions et frais de service prélevés par PaxEvent restent définitivement acquis à la plateforme. Seule 90% de la valeur nette du billet fixée par l'Organisateur sera reversée à l'Acheteur.</p>
+                            <p><strong>Annulation de l'événement :</strong> Si l'Organisateur annule son événement, il est légalement tenu de rembourser 90% à 95% du prix facial des billets aux Acheteurs. L'Organisateur doit alors procéder directement au remboursement ou ordonner à PaxEvent l'exécution technique des remboursements.</p>
+                            <p><strong>Frais non remboursables :</strong> Conformément à l'article 5.1., les commissions et frais de service prélevés par PaxEvent restent définitivement acquis à la plateforme. Seule 90% à 95% de la valeur nette du billet fixée par l'Organisateur sera reversée à l'Acheteur.</p>
                             <p><strong>Processus technique :</strong> Les remboursements approuvés par l'Organisateur sont re-crédités directement sur le compte Mobile Money (MTN, Moov, Celtiis, etc.) ayant servi à l'achat initial. Les délais de traitement dépendent des agrégateurs de paiement et des opérateurs télécoms (généralement entre 24 heures et 5 jours ouvrés).</p>
 
                             <h6 class="fw-bold mt-4 mb-2">7. Récupération d'un ticket perdu</h6>

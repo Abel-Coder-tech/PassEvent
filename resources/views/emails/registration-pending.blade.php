@@ -22,7 +22,7 @@
         <div class="body">
             <p>Bonjour <strong>{{ $user->nom }}</strong>,</p>
             <p>Nous avons bien reçu votre demande de création de compte organisateur sur PaxEvent.</p>
-            <p>Votre compte est en cours de validation par notre équipe. Vous recevrez un email de confirmation sous <strong>24 heures</strong>.</p>
+            <p>Votre compte est en cours de validation par notre équipe. Vous recevrez un email de confirmation sous <strong>2 heures maximum</strong>.</p>
             <p>En attendant, si vous avez la moindre question, n'hésitez pas à contacter notre support à <a href="mailto:contact@paxevent.com">contact@paxevent.com</a>.</p>
             <p style="margin-top: 20px; font-size: 13px; color: #6c757d;">L'équipe PaxEvent</p>
         </div>

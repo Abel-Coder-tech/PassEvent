@@ -284,7 +284,7 @@
                         <i class="bi bi-file-earmark-text" style="color:var(--violet);"></i>
                     </div>
                     <h5 class="aide-card-title" style="font-size:1rem;">Soumettre votre profil organisateur</h5>
-                    <p class="aide-card-text">Dans votre tableau de bord, complétez les informations liées à votre profil (particulier, université, entreprise), importez vos justificatifs (CIP/IFU/RCCM/RÉCÉPISSÉ ONG) et patientez 24 heures pour l'approbation de l'équipe.</p>
+                    <p class="aide-card-text">Dans votre tableau de bord, complétez les informations liées à votre profil (particulier, université, entreprise), importez vos justificatifs (CIP/IFU/RCCM/RÉCÉPISSÉ ONG) et patientez 2 heures maximum pour l'approbation de l'équipe.</p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -325,7 +325,7 @@
                                 <ol style="padding-left:1.2rem;margin:0;">
                                     <li>Cliquez sur le bouton <strong>"Devenir organisateur"</strong> ou <strong>"Se connecter"</strong> pour créer un compte.</li>
                                     <li>Complétez et soumettez votre profil depuis votre tableau de bord.</li>
-                                    <li>Attendez 24h pour la validation de votre profil par notre équipe.</li>
+                                    <li>Attendez 2h maximum pour la validation de votre profil par notre équipe.</li>
                                     <li>Connectez-vous à nouveau et commencez à publier vos événements.</li>
                                 </ol>
                             </div>
@@ -479,7 +479,7 @@
                                 <ul style="padding-left:1.2rem;margin:0 0 1rem;">
                                     <li>Accéder à un événement sur paxevent.com est <strong>gratuit</strong>.</li>
                                     <li>Publier un événement sur paxevent.com est <strong>entièrement gratuit</strong>.</li>
-                                    <li>PaxEvent perçoit <strong>10% de commission</strong> sur chaque ticket vendu. (ex : Sur un ticket de 1 000 FCFA, PaxEvent perçoit 100 FCFA et vous recevez 900 FCFA net).</li>
+                                    <li>PaxEvent perçoit une commission de <strong>5% à 10%</strong> sur chaque ticket vendu. (ex : Sur un ticket de 1 000 FCFA, PaxEvent perçoit 50 à 100 FCFA et vous recevez 900 à 950 FCFA net).</li>
                                     <li>PaxEvent ne perçoit aucune commission sur les événements gratuits, toutefois le nombre de tickets gratuits générés par événement pourrait être limité.</li>
                                     <li>PaxEvent facture à la demande l'utilisation des services additionnels suivants :<br>
                                         - la création de plus de 2 comptes Agents (scan et vente)<br>
@@ -494,8 +494,8 @@
 
                                 <h6 style="color:var(--violet);font-weight:700;margin-bottom:0.5rem;">Quand et comment retirer mes revenus ?</h6>
                                 <ul style="padding-left:1.2rem;margin:0 0 1rem;">
-                                    <li>Les revenus sont principalement versés à l'organisateur <strong>24h à 72h après la tenue de l'événement</strong>.</li>
-                                    <li>Avant la tenue de l'événement, un organisateur peut à tout moment demander un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 03 jours ouvrés.</li>
+                                    <li>Les revenus sont principalement versés à l'organisateur <strong>0 à 72h après la tenue de l'événement</strong>.</li>
+                                    <li>Avant la tenue de l'événement, un organisateur peut à tout moment demander un retrait des fonds disponibles depuis la section <strong>"Retrait"</strong> de son tableau de bord, en considérant un délai de traitement de 72h maximum.</li>
                                     
                                      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;margin-bottom:0.75rem;">
                                     <i class="bi bi-exclamation-triangle me-1"></i> <strong> Attention : </strong> À partir du moment où un retrait est validé avant la tenue de l'événement, l'organisateur ne pourra plus annuler cet événement. S'il tient à l'annuler en cas de force majeure, il devra assurer lui-même le remboursement des tickets à hauteur du montant retiré.
@@ -523,7 +523,7 @@
                     <div class="aide-organiser-grid">
                         <div class="aide-org-item">
                             <i class="bi bi-percent"></i>
-                            <span>Commission 10%</span>
+                            <span>Commission 5% à 10%</span>
                         </div>
                         <div class="aide-org-item">
                             <i class="bi bi-phone"></i>
