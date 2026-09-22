@@ -145,7 +145,7 @@
             </div>
 
             <p style="font-size:12px; color:#8a7a8e; text-align:center; margin:0;">
-                Rappel : Les retraits sont effectués sous un délai minimum de 72 heures.
+                Rappel : Les retraits sont effectués dans un délai de 0 à 72 heures.
             </p>
         </div>
 

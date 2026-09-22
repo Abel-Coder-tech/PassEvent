@@ -41,7 +41,7 @@
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <i class="bi bi-clock-history" style="color: var(--violet); font-size: 1.25rem;"></i>
                         <span style="font-size: 0.9rem; color: var(--sombre); font-weight: 600;">
-                            Délai estimé : 12h à 24h
+                            Délai estimé : 0 à 2h maximum
                         </span>
                     </div>
                 </div>
@@ -125,7 +125,7 @@
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <i class="bi bi-clock-history" style="color: var(--violet); font-size: 1.25rem;"></i>
                         <span style="font-size: 0.9rem; color: var(--sombre); font-weight: 600;">
-                            Délai estimé : 12h à 24h
+                            Délai estimé : 0 à 2h maximum
                         </span>
                     </div>
                 </div>

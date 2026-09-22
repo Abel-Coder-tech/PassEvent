@@ -114,12 +114,12 @@
                             <p class="mb-1 fw-semibold">9.1. Inscription, profil et validation</p>
                             <ul>
                                 <li>La création de compte organisateur se fait via email ou compte Google.</li>
-                                <li>L'organisateur doit soumettre son profil (Particulier, Université, Entreprise, ONG) accompagné des justificatifs requis (CIP, IFU, RCCM ou Récépissé). Un délai de 24 heures est requis pour l'approbation du profil par l'équipe PaxEvent avant de pouvoir publier un événement.</li>
+                                <li>L'organisateur doit soumettre son profil (Particulier, Université, Entreprise, ONG) accompagné des justificatifs requis (CIP, IFU, RCCM ou Récépissé). Un délai de 2 heures maximum est requis pour l'approbation du profil par l'équipe PaxEvent avant de pouvoir publier un événement.</li>
                             </ul>
                             <p class="mb-1 fw-semibold">9.2. Tarifs et commissions de PaxEvent</p>
                             <ul>
                                 <li><strong>Événements gratuits :</strong> L'accès à la plateforme et la billetterie à 0 FCFA sont 100% gratuits (sans commission, sous réserve de quotas).</li>
-                                <li><strong>Événements payants :</strong> PaxEvent prélève une commission automatique de 10% sur chaque ticket vendu.</li>
+                                <li><strong>Événements payants :</strong> PaxEvent prélève une commission automatique de 5% à 10% sur chaque ticket vendu.</li>
                                 <li>Les services additionnels (campagnes marketing SMS/WhatsApp/Mail, terminaux physiques, agents supplémentaires) font l'objet d'une facturation à la demande.</li>
                             </ul>
                             <p class="mb-1 fw-semibold">9.3. Gestion du personnel et des ventes sur place</p>
@@ -130,8 +130,8 @@
                             </ul>
                             <p class="mb-1 fw-semibold">9.4. Reversement des revenus</p>
                             <ul>
-                                <li><strong>Retrait standard :</strong> Les revenus des ventes (nets de commission) sont versés à l'organisateur dans un délai de 24h à 72h après la tenue de l'événement.</li>
-                                <li><strong>Retrait anticipé :</strong> L'organisateur peut demander un retrait des fonds disponibles avant l'événement (traitement sous 4 jours ouvrés), sous réserve d'un solde minimum disponible de 1 000 FCFA.</li>
+                                <li><strong>Retrait standard :</strong> Les revenus des ventes (nets de commission) sont versés à l'organisateur dans un délai de 0 à 72h après la tenue de l'événement.</li>
+                                <li><strong>Retrait anticipé :</strong> L'organisateur peut demander un retrait des fonds disponibles avant l'événement (traitement sous 72h maximum), sous réserve d'un solde minimum disponible de 1 000 FCFA.</li>
                                 <li><strong>Blocage de sécurité :</strong> Tout retrait anticipé bloque la possibilité d'annuler l'événement via la plateforme. Dès qu'un retrait par anticipation est validé, l'organisateur ne peut plus annuler son événement. En cas de force majeure l'obligeant à annuler, l'organisateur devra assumer seul la responsabilité juridique et financière du remboursement intégral des acheteurs. Autrement dit, l'organisateur assume lui-même et à ses frais, les remboursements à hauteur des montants retirés.</li>
                             </ul>
 

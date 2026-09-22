@@ -139,7 +139,7 @@
                     <h5 class="fw-bold mb-2" style="color:#1a1a2e;">Demande envoyée !</h5>
                     <p style="color:#6c757d;font-size:0.9rem;margin-bottom:1rem;" id="successMessage"></p>
                     <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:0.85rem;border-radius:8px;text-align:left;">
-                        <i class="bi bi-info-circle me-1"></i> <strong>Rappel :</strong> Les retraits sont effectués sous un délai minimum de <strong>72 heures</strong> après la demande. Vous recevrez une notification une fois votre retrait traité.
+                        <i class="bi bi-info-circle me-1"></i> <strong>Rappel :</strong> Les retraits sont effectués dans un délai de <strong>0 à 72 heures</strong> après la demande. Vous recevrez une notification une fois votre retrait traité.
                     </div>
                     <button type="button" class="btn w-100 py-2 fw-bold text-white mt-3" style="background: var(--vert); border: none; border-radius: 8px;" data-bs-dismiss="modal">
                         Compris

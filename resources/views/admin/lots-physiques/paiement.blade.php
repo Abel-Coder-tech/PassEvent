@@ -58,7 +58,7 @@
 
                     <div class="alert alert-light border py-2 mb-3" style="font-size:.78rem;">
                         <i class="bi bi-info-circle me-1"></i>
-                        Commission de génération (5 % du prix des billets), payée d'avance et non remboursable.
+                        Commission de génération (5 % à 10 % du prix des billets), payée d'avance et non remboursable.
                         Vos planches PDF seront disponibles immédiatement après confirmation du paiement.
                         Réception envoyée à <strong>{{ $lots->first()->email_reception }}</strong>.
                     </div>
