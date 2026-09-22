@@ -634,8 +634,15 @@
             @if($saUser->peut('notifications.consulter'))
             <a href="{{ route($saPref.'notifications') }}" class="sa-nav-link {{ request()->routeIs($saPref.'notifications*') ? 'active' : '' }}">
                 <i class="bi bi-bell-fill"></i> Notifications
-                @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
+                @php $unreadMsgs = \App\Models\Message::where('lu',false)->whereNull('user_id')->where('objet','!=',\App\Http\Controllers\Admin\DemandeSuperAdminController::OBJET_CAMPAGNE)->count(); @endphp
                 @if($unreadMsgs > 0)<span class="sa-nav-badge">{{ $unreadMsgs }}</span>@endif
+            </a>
+            @endif
+            @if(!$estEquipe)
+            <a href="{{ route('superadmin.campagnes-marketing') }}" class="sa-nav-link {{ request()->routeIs('superadmin.campagnes-marketing') ? 'active' : '' }}">
+                <i class="bi bi-megaphone-fill"></i> Campagnes marketing
+                @php $unreadCampagnes = \App\Models\Message::where('lu',false)->whereNull('user_id')->where('objet',\App\Http\Controllers\Admin\DemandeSuperAdminController::OBJET_CAMPAGNE)->count(); @endphp
+                @if($unreadCampagnes > 0)<span class="sa-nav-badge">{{ $unreadCampagnes }}</span>@endif
             </a>
             @endif
             @if(!$estEquipe)
@@ -675,7 +682,7 @@
             <div class="sa-topbar-right">
                 <a href="{{ route($saPref.'notifications') }}" class="sa-notif-btn" title="Notifications">
                     <i class="bi bi-bell-fill"></i>
-                    @php $headerUnread = \App\Models\Message::where('lu',false)->whereNull('user_id')->count(); @endphp
+                    @php $headerUnread = \App\Models\Message::where('lu',false)->whereNull('user_id')->where('objet','!=',\App\Http\Controllers\Admin\DemandeSuperAdminController::OBJET_CAMPAGNE)->count(); @endphp
                     @if($headerUnread > 0)<span class="sa-notif-dot">{{ $headerUnread > 99 ? '99+' : $headerUnread }}</span>@endif
                 </a>
                 <span class="sa-topbar-badge"><i class="bi bi-shield-fill-check"></i> {{ $estEquipe ? 'Equipe PaxEvent' : 'Super Admin' }}</span>

@@ -126,6 +126,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/supprimer', [SuperAdminController::class, 'supprimerOrganisateur'])->name('organisateurs.supprimer');
         Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
         Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
+        Route::get('/organisateurs/{user}/contrat', [SuperAdminController::class, 'voirContrat'])->name('organisateurs.contrat');
         Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');
         Route::post('/evenements/{evenement}/suspendre', [SuperAdminController::class, 'suspendreEvenement'])->name('evenements.suspendre');
         Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');
@@ -162,6 +163,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
+        Route::get('/campagnes-marketing', [SuperAdminController::class, 'campagnesMarketing'])->name('campagnes-marketing');
         Route::post('/notifications/{message}/lire', [SuperAdminController::class, 'lireNotification'])->name('notifications.lire');
         Route::post('/notifications/{message}/repondre', [SuperAdminController::class, 'repondreNotification'])->name('notifications.repondre');
         Route::delete('/notifications/{message}', [SuperAdminController::class, 'supprimerNotification'])->name('notifications.supprimer');

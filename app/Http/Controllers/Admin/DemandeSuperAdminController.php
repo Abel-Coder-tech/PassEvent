@@ -16,6 +16,28 @@ class DemandeSuperAdminController extends Controller
         'augmentation_agents' => 'Augmentation des agents',
         'evenement_a_la_une' => 'Événement à la une',
         'probleme_technique' => 'Problème technique',
+        'booster_promouvoir' => 'Booster ou promouvoir un événement',
+    ];
+
+    // Objet complet stocké en base pour les demandes de campagnes marketing ciblées
+    public const OBJET_CAMPAGNE = '[Demande] Booster ou promouvoir un événement';
+
+    // Publics ciblés disponibles pour une campagne marketing
+    public const PERSONAS = [
+        'tous' => 'Tous publics',
+        'jeunes' => 'Étudiants / jeunes',
+        'professionnels' => 'Professionnels',
+        'local' => 'Public local de la ville',
+        'fideles' => 'Fidèles de l\'organisateur',
+    ];
+
+    // Canaux de diffusion souhaités pour une campagne marketing
+    public const CANAUX = [
+        'site' => 'Mise en avant sur le site (une / bannière)',
+        'newsletter' => 'Newsletter PaxEvent',
+        'reseaux' => 'Réseaux sociaux',
+        'whatsapp' => 'WhatsApp / SMS',
+        'mixte' => 'Mixte',
     ];
 
     // Enregistre une demande de l'organisateur vers le super admin (notification système)
@@ -28,11 +50,18 @@ class DemandeSuperAdminController extends Controller
             'commission_pourcentage' => 'nullable|numeric|min:0|max:100',
             'quantites' => 'nullable|array',
             'quantites.*' => 'nullable|integer|min:0|max:5000',
+            'cible_persona' => ['nullable', 'in:'.implode(',', array_keys(self::PERSONAS))],
+            'canal_souhaite' => ['nullable', 'in:'.implode(',', array_keys(self::CANAUX))],
         ]);
 
         $user = $request->user();
         $objet = self::OBJETS[$validated['objet']];
         $evenement = null;
+
+        // Une campagne marketing ciblée concerne forcément un événement
+        if ($objet === self::OBJETS['booster_promouvoir'] && empty($validated['evenement_id'])) {
+            return back()->with('error', 'Sélectionnez l\'événement que vous souhaitez booster ou promouvoir.');
+        }
 
         if (! empty($validated['evenement_id'])) {
             $evenement = Evenement::where('user_id', $user->id)->findOrFail($validated['evenement_id']);
@@ -116,6 +145,20 @@ class DemandeSuperAdminController extends Controller
             && $donnees['commission_pourcentage'] !== null
             && $donnees['commission_pourcentage'] !== '') {
             $message = "Commission demandée : {$donnees['commission_pourcentage']} %\n\n".$message;
+        }
+
+        // Détail de la campagne marketing ciblée (demande « Booster ou promouvoir un événement »)
+        if ($objet === self::OBJETS['booster_promouvoir']) {
+            $lignes = [];
+            if (! empty($donnees['cible_persona']) && isset(self::PERSONAS[$donnees['cible_persona']])) {
+                $lignes[] = 'Public ciblé : '.self::PERSONAS[$donnees['cible_persona']];
+            }
+            if (! empty($donnees['canal_souhaite']) && isset(self::CANAUX[$donnees['canal_souhaite']])) {
+                $lignes[] = 'Canal souhaité : '.self::CANAUX[$donnees['canal_souhaite']];
+            }
+            if (! empty($lignes)) {
+                $message = implode("\n", $lignes)."\n\n".$message;
+            }
         }
 
         return $message;
