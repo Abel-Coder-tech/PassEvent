@@ -1,5 +1,7 @@
 @extends('superadmin.layouts.master')
 
+@php $nlPrefill = []; @endphp
+
 @section('title', 'Campagnes marketing - Super Admin')
 @section('page-title', 'Campagnes marketing')
 
@@ -39,17 +41,69 @@
                         @endif
                     </td>
                     <td style="font-size:0.75rem;">{{ $msg->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
-                    <td style="white-space:nowrap;">
-                        <button class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;"
-                            onclick="voirNotification({{ $msg->id }})" title="Voir">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <form action="{{ route('superadmin.notifications.supprimer', $msg) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette demande ?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="sa-btn sa-btn-sm" style="background:transparent;border:1px solid #e74c3c;color:#e74c3c;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;" title="Supprimer">
-                                <i class="bi bi-trash"></i>
+                    <td style="white-space:nowrap;vertical-align:top;">
+                        <div style="display:flex;gap:0.3rem;margin-bottom:0.35rem;">
+                            <button class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;"
+                                onclick="voirNotification({{ $msg->id }})" title="Voir">
+                                <i class="bi bi-eye"></i>
                             </button>
-                        </form>
+                            <form action="{{ route('superadmin.notifications.supprimer', $msg) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette demande ?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="sa-btn sa-btn-sm" style="background:transparent;border:1px solid #e74c3c;color:#e74c3c;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        @php
+                            $ev = $msg->evenement;
+                            $nlObjet = $ev ? ('🎉 '.$ev->titre.' — réservez vos billets !') : '';
+                            $nlMessage = $ev
+                                ? ('🎉 '.$ev->titre." arrive bientôt !\n\n"
+                                    .($ev->date_event ? '📅 '.$ev->date_event->isoFormat('D MMM YYYY HH:mm')."\n" : '')
+                                    .($ev->lieu ? '📍 '.$ev->lieu."\n" : '')
+                                    ."\nRéservez vos billets dès maintenant sur PaxEvent :\n"
+                                    .route('evenements.public.show', $ev)."\n\nÉquipe PaxEvent")
+                                : '';
+                            $nlPrefill[$msg->id] = ['objet' => $nlObjet, 'message' => $nlMessage];
+                        @endphp
+                        <div id="quick-{{ $msg->id }}" class="quick-actions" style="{{ $msg->lu ? '' : 'display:none;' }}">
+                            @if($ev)
+                                <a href="{{ route('superadmin.evenements.voir', $ev) }}" class="sa-btn sa-btn-sm sa-btn-outline" style="text-decoration:none;margin-bottom:0.2rem;">
+                                    <i class="bi bi-calendar-event"></i> Voir l'événement
+                                </a>
+                                @if($ev->statut !== 'publié')
+                                    <form action="{{ route('superadmin.evenements.mettre-en-avant', $ev) }}" method="POST" class="d-inline-block" style="margin-bottom:0.2rem;margin-right:0.2rem;">
+                                        @csrf
+                                        <button type="submit" class="sa-btn sa-btn-sm" style="background:var(--sa-success);color:#fff;border:none;" title="Publier / remettre en avant">
+                                            <i class="bi bi-check-lg"></i> Publier
+                                        </button>
+                                    </form>
+                                @endif
+                                <form action="{{ route('superadmin.evenements.a-la-une', $ev) }}" method="POST" class="d-inline-block" style="margin-bottom:0.2rem;margin-right:0.2rem;">
+                                    @csrf
+                                    <button type="submit" class="sa-btn sa-btn-sm {{ $ev->a_la_une ? 'sa-btn-danger' : 'sa-btn-outline' }}" title="{{ $ev->a_la_une ? 'Retirer de la une' : 'Mettre à la une' }}">
+                                        <i class="bi bi-{{ $ev->a_la_une ? 'star-fill' : 'star' }}"></i>
+                                        {{ $ev->a_la_une ? 'Retirer de la une' : 'Mettre à la une' }}
+                                    </button>
+                                </form>
+                                @if($ev->a_la_une)
+                                    <form action="{{ route('superadmin.evenements.a-la-une.ordre', [$ev, 'haut']) }}" method="POST" class="d-inline-block" style="margin-bottom:0.2rem;margin-right:0.2rem;">
+                                        @csrf
+                                        <button type="submit" class="sa-btn sa-btn-sm sa-btn-outline" title="Monter dans la une"><i class="bi bi-arrow-up"></i></button>
+                                    </form>
+                                    <form action="{{ route('superadmin.evenements.a-la-une.ordre', [$ev, 'bas']) }}" method="POST" class="d-inline-block" style="margin-bottom:0.2rem;margin-right:0.2rem;">
+                                        @csrf
+                                        <button type="submit" class="sa-btn sa-btn-sm sa-btn-outline" title="Descendre dans la une"><i class="bi bi-arrow-down"></i></button>
+                                    </form>
+                                @endif
+                                <button type="button" class="sa-btn sa-btn-sm" style="background:#7B3FA0;color:#fff;border:none;margin-bottom:0.2rem;"
+                                    data-prefill-id="{{ $msg->id }}" onclick="ouvrirNewsletter(this)" title="Envoyer une newsletter">
+                                    <i class="bi bi-send-fill"></i> Newsletter
+                                </button>
+                            @else
+                                <small class="text-muted" style="font-size:0.7rem;">Aucun événement lié</small>
+                            @endif
+                        </div>
                     </td>
                 </tr>
                 @endforeach
@@ -92,6 +146,11 @@
                 <span class="org-detail-value" id="modalMessage" style="white-space:pre-wrap;"></span>
             </div>
 
+            <div id="modalQuickSection" style="display:none;margin-top:1rem;border-top:1px solid #f5f5f5;padding-top:1rem;">
+                <span class="org-detail-label" style="display:block;margin-bottom:0.4rem;"><i class="bi bi-lightning-charge-fill me-1" style="color:var(--sa-primary);"></i>Actions rapides (booster)</span>
+                <div id="modalQuickActions" style="display:flex;flex-wrap:wrap;gap:0.4rem;"></div>
+            </div>
+
             <form id="repondreNotifForm" action="" method="POST" style="margin-top:1rem;border-top:1px solid #f5f5f5;padding-top:1rem;">
                 @csrf
                 <label class="org-detail-label" style="display:block;margin-bottom:0.4rem;">Envoyer une note</label>
@@ -106,6 +165,8 @@
         </div>
     </div>
 </div>
+
+@include('superadmin.partials.newsletter-modal')
 
 <style>
 .org-detail-row { display:flex;gap:1rem;padding:0.5rem 0;border-bottom:1px solid #f5f5f5;font-size:0.85rem; }
@@ -127,6 +188,7 @@
 @push('scripts')
 <script>
 const notifs = @json($messages->items());
+const NEWSLETTER_PREFILL = @json($nlPrefill);
 
 function voirNotification(id) {
     const msg = notifs.find(n => n.id === id);
@@ -152,6 +214,16 @@ function voirNotification(id) {
 
     document.getElementById('repondreNotifForm').action = '{{ url("/superadmin/notifications") }}/' + id + '/repondre';
     document.getElementById('modalNote').value = "Bonjour " + (msg.nom_complet || 'cher organisateur') + ",\n\nNous avons bien reçu votre demande de campagne marketing et nous revenons vers vous rapidement.\n\nCordialement,\nL'équipe PaxEvent";
+
+    const quick = document.getElementById('quick-' + id);
+    if (quick) quick.style.display = '';
+
+    const quickSection = document.getElementById('modalQuickSection');
+    const quickActions = document.getElementById('modalQuickActions');
+    if (quick && quickActions) {
+        quickActions.innerHTML = quick.innerHTML;
+        quickSection.style.display = quick.innerHTML.trim() ? '' : 'none';
+    }
 
     document.getElementById('notifModal').style.display = 'flex';
 

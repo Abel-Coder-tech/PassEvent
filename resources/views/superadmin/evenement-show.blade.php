@@ -172,6 +172,21 @@
                             </form>
                         @endif
                     @endif
+                    @php
+                        $nlObjet = '🎉 '.$evenement->titre.' — réservez vos billets !';
+                        $nlMessage = '🎉 '.$evenement->titre." arrive bientôt !\n\n"
+                            .($evenement->date_event ? '📅 '.$evenement->date_event->isoFormat('D MMM YYYY HH:mm')."\n" : '')
+                            .($evenement->lieu ? '📍 '.$evenement->lieu."\n" : '')
+                            ."\nRéservez vos billets dès maintenant sur PaxEvent :\n"
+                            .route('evenements.public.show', $evenement)."\n\nÉquipe PaxEvent";
+                    @endphp
+                    <button type="button" class="sa-btn" style="background:var(--sa-primary);color:#fff;border:none;"
+                        data-prefill-id="single" onclick="ouvrirNewsletter(this)" title="Envoyer une newsletter">
+                        <i class="bi bi-send-fill"></i> Newsletter
+                    </button>
+                    <a href="{{ route('superadmin.campagnes-marketing') }}" class="sa-btn sa-btn-outline" style="text-decoration:none;" title="Voir les demandes de campagne">
+                        <i class="bi bi-megaphone-fill"></i> Campagnes
+                    </a>
                     <form action="{{ route('superadmin.evenements.supprimer', $evenement) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $evenement->titre }} ? Cette action est irréversible.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-trash-fill"></i> Supprimer</button>
@@ -380,4 +395,12 @@
         @endif
     </div>
 </div>
+
+@include('superadmin.partials.newsletter-modal')
+
+@push('scripts')
+<script>
+const NEWSLETTER_PREFILL = { single: @json(['objet' => $nlObjet, 'message' => $nlMessage]) };
+</script>
+@endpush
 @endsection
