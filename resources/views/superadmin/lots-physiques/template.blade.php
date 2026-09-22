@@ -357,12 +357,30 @@
                             @if($format['orientation'] === 'landscape') (paysage) @else (portrait) @endif
                             — {{ $format['largeur'] }}×{{ $format['hauteur'] }} mm.
                         </div>
-                        <select name="format" id="formatSelect" class="form-select form-select-sm">
-                            @foreach($formats as $key => $label)
-                                <option value="{{ $key }}" @selected(($lot->format ?? 's1') === $key)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        <div class="step-hint mt-1">Le QR passe automatiquement au centre du nouveau format. L'image doit respecter son ratio.</div>
+<select name="format" id="formatSelect" class="form-select form-select-sm">
+                                @foreach($formats as $key => $label)
+                                    <option value="{{ $key }}" @selected(($lot->format ?? 's1') === $key)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+
+                            <div id="customDims" class="mt-3" style="display:none;">
+                                <label class="form-label" style="font-size:0.8rem;">Dimensions du ticket (mm)</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="number" name="largeur_personnalisee" id="largeurPersoInput" class="form-control form-control-sm" min="30" max="200" step="1" placeholder="Largeur" value="{{ old('largeur_personnalisee', $lot->largeur_personnalisee ?? '') }}">
+                                    <span class="fw-semibold text-muted" style="font-size:0.85rem;">×</span>
+                                    <input type="number" name="hauteur_personnalisee" id="hauteurPersoInput" class="form-control form-control-sm" min="30" max="200" step="1" placeholder="Hauteur" value="{{ old('hauteur_personnalisee', $lot->hauteur_personnalisee ?? '') }}">
+                                    <span class="text-muted" style="font-size:0.8rem;">mm</span>
+                                </div>
+                                @error('largeur_personnalisee')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('hauteur_personnalisee')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div class="step-hint mt-1">30 à 200 mm par côté. L'orientation, la répartition sur l'A4 et le QR par défaut sont recalculés automatiquement.</div>
+                            </div>
+
+                            <div class="step-hint mt-1">Le QR passe automatiquement au centre du nouveau format. L'image doit respecter son ratio.</div>
                     </div>
 
                     <div class="mb-3">
@@ -458,7 +476,7 @@
                 <div id="saCollapseSteps" class="accordion-collapse collapse show" data-bs-parent="#saHelpAccordion">
                     <div class="accordion-body">
                         <ol class="ps-3 mb-0" style="line-height:1.9;">
-                            <li><strong>Choisissez le format</strong> : taille du ticket, nombre de tickets par A4 et orientation (Standard 14×5, Standard 2 14×7, VIP 18×7, VIP 2 9,9×7).</li>
+                            <li><strong>Choisissez le format</strong> : taille du ticket, nombre de tickets par A4 et orientation (Standard 14×5, Standard 2 14×7, VIP 18×7, VIP 2 9,9×7), ou définissez vos <strong>dimensions personnalisées</strong> (30 à 200 mm par côté) : la répartition et le QR par défaut sont recalculés.</li>
                             <li><strong>Importez l'image PNG</strong> (max 10 Mo) de votre ticket. Elle est placée à la taille exacte du ticket sans déformation. Ratio différent ? Ajustez le zoom avec la poignée en bas à droite de l'aperçu (70–150 %) : le débordement est coupé.</li>
                             <li><strong>Positionnez le QR code</strong> : glissez le cadre rouge pour le déplacer, ou tirez la poignée pour le redimensionner.</li>
                             <li><strong>Visualisez puis enregistrez</strong> : le bouton « Visualiser » ouvre le rendu exact (PDF) dans un nouvel onglet.</li>
@@ -594,7 +612,31 @@
         };
     }
 
-    function fmt(key) { return FORMATS[key] || FORMATS.s1; }
+    function fmt(key) {
+        if (key === 'custom') {
+            var c = customFmt();
+            if (c) return c;
+            return { label: 'Personnalisé (invalide)', largeur: 140, hauteur: 50, orientation: 'landscape', colonnes: 2, lignes: 4, qr_defaut: 40 };
+        }
+        return FORMATS[key] || FORMATS.s1;
+    }
+
+    // Gabarit du ticket sur mesure : mêmes constantes que le serveur (marge 4, gouttière 2)
+    function customFmt() {
+        var wInput = document.getElementById('largeurPersoInput');
+        var hInput = document.getElementById('hauteurPersoInput');
+        var w = wInput ? Math.round(parseFloat(wInput.value) || 0) : 0;
+        var h = hInput ? Math.round(parseFloat(hInput.value) || 0) : 0;
+        if (w < 30 || w > 200 || h < 30 || h > 200) return null;
+        var orientation = w >= h ? 'landscape' : 'portrait';
+        var pageW = orientation === 'landscape' ? 297 : 210;
+        var pageH = orientation === 'landscape' ? 210 : 297;
+        var marge = 4, gouttiere = 2;
+        var cols = Math.max(1, Math.floor((pageW - 2 * marge + gouttiere) / (w + gouttiere)));
+        var rows = Math.max(1, Math.floor((pageH - 2 * marge + gouttiere) / (h + gouttiere)));
+        var qr = Math.max(30, Math.min(48, Math.round(Math.min(w, h) * 0.3)));
+        return { label: 'Personnalisé (' + w + '×' + h + ')', largeur: w, hauteur: h, orientation: orientation, colonnes: cols, lignes: rows, qr_defaut: qr };
+    }
 
     var canvas = document.getElementById('canvasArea');
     var overlay = document.getElementById('qrOverlay');
@@ -877,23 +919,67 @@
         return true;
     }
 
-    if (formatSelect) {
-        formatSelect.addEventListener('change', function() {
-            var f = fmt(this.value);
-            TICKET_MM_W = f.largeur;
-            TICKET_MM_H = f.hauteur;
-            var qrMM = f.qr_defaut;
+    function applyFormat(f) {
+        TICKET_MM_W = f.largeur;
+        TICKET_MM_H = f.hauteur;
+        var qrMM = f.qr_defaut;
+        qrSizeInput.value = qrMM;
+        qrSizeHidden.value = qrMM;
+        qrXInput.value = Math.round((f.largeur - qrMM) / 2);
+        qrYInput.value = Math.round((f.hauteur - qrMM) / 2);
+        qrXHidden.value = qrXInput.value;
+        qrYHidden.value = qrYInput.value;
+        syncFormatHint(f);
+        if (img && img.naturalWidth) checkRatio(f, img.naturalWidth, img.naturalHeight);
+        updateOverlay();
+    }
+
+    function syncCustomDims() {
+        var block = document.getElementById('customDims');
+        if (!block || !formatSelect) return;
+        block.style.display = formatSelect.value === 'custom' ? '' : 'none';
+    }
+
+    function applyCustomFormat(resetQr) {
+        var c = customFmt();
+        if (!c) {
+            if (formatHint) formatHint.textContent = 'Dimensions personnalisées invalides (entre 30 et 200 mm).';
+            if (formatBadgeLabel) formatBadgeLabel.textContent = 'Personnalisé (invalide)';
+            return;
+        }
+        TICKET_MM_W = c.largeur;
+        TICKET_MM_H = c.hauteur;
+        if (resetQr) {
+            var qrMM = c.qr_defaut;
             qrSizeInput.value = qrMM;
             qrSizeHidden.value = qrMM;
-            qrXInput.value = Math.round((f.largeur - qrMM) / 2);
-            qrYInput.value = Math.round((f.hauteur - qrMM) / 2);
+            qrXInput.value = Math.round((c.largeur - qrMM) / 2);
+            qrYInput.value = Math.round((c.hauteur - qrMM) / 2);
             qrXHidden.value = qrXInput.value;
             qrYHidden.value = qrYInput.value;
-            syncFormatHint(f);
-            if (img && img.naturalWidth) checkRatio(f, img.naturalWidth, img.naturalHeight);
-            updateOverlay();
+        }
+        syncFormatHint(c);
+        if (img && img.naturalWidth) checkRatio(c, img.naturalWidth, img.naturalHeight);
+        updateOverlay();
+    }
+
+    if (formatSelect) {
+        formatSelect.addEventListener('change', function() {
+            syncCustomDims();
+            if (this.value === 'custom') { applyCustomFormat(true); }
+            else { applyFormat(fmt(this.value)); }
         });
     }
+
+    var largeurPersoInput = document.getElementById('largeurPersoInput');
+    var hauteurPersoInput = document.getElementById('hauteurPersoInput');
+    [largeurPersoInput, hauteurPersoInput].forEach(function(el) {
+        if (!el) return;
+        el.addEventListener('input', function() {
+            if (formatSelect && formatSelect.value === 'custom') applyCustomFormat(false);
+        });
+    });
+    syncCustomDims();
 
     function showRemoveBtn() { if (btnRemoveImg) btnRemoveImg.style.display = 'flex'; }
     function hideRemoveBtn() { if (btnRemoveImg) btnRemoveImg.style.display = 'none'; }

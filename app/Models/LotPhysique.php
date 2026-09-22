@@ -13,6 +13,9 @@ class LotPhysique extends Model
     // Taux de commission fixe et non négociable pour l'auto-génération
     public const TAUX_AUTO = 5.0;
 
+    // Format de ticket sur mesure (dimensions personnalisées en mm)
+    public const FORMAT_CUSTOM = 'custom';
+
     protected $fillable = [
         'user_id',
         'evenement_id',
@@ -35,6 +38,8 @@ class LotPhysique extends Model
         'qr_size',
         'pdf_par_page',
         'format',
+        'largeur_personnalisee',
+        'hauteur_personnalisee',
     ];
 
     // Formats de tickets physiques (taille nominale → slot A4 avec marges/gouttières)
@@ -92,15 +97,61 @@ class LotPhysique extends Model
             'template_zoom' => 'integer',
             'pdf_par_page' => 'integer',
             'format' => 'string',
+            'largeur_personnalisee' => 'integer',
+            'hauteur_personnalisee' => 'integer',
         ];
     }
 
     // Détails du format choisi (fallback s1)
     public function formatDetails(): array
     {
+        if ($this->format === self::FORMAT_CUSTOM) {
+            $def = self::formatPersonnalise(
+                (float) ($this->largeur_personnalisee ?? 0),
+                (float) ($this->hauteur_personnalisee ?? 0)
+            );
+            if ($def !== null) {
+                return $def;
+            }
+        }
+
         $format = isset(self::FORMATS[$this->format]) ? $this->format : 's1';
 
         return self::FORMATS[$format];
+    }
+
+    // Construit le gabarit d'un ticket aux dimensions personnalisées (mm), calé sur une page A4
+    public static function formatPersonnalise(float $largeur, float $hauteur): ?array
+    {
+        $largeur = round($largeur);
+        $hauteur = round($hauteur);
+
+        if ($largeur < 30 || $largeur > 200 || $hauteur < 30 || $hauteur > 200) {
+            return null;
+        }
+
+        $orientation = $largeur >= $hauteur ? 'landscape' : 'portrait';
+        $pageLargeur = $orientation === 'landscape' ? 297 : 210;
+        $pageHauteur = $orientation === 'landscape' ? 210 : 297;
+
+        // Mêmes marges / gouttières que le service PDF (MARGE 4 mm, GOUTTIERE 2 mm)
+        $marge = 4;
+        $gouttiere = 2;
+        $colonnes = max(1, (int) floor(($pageLargeur - 2 * $marge + $gouttiere) / ($largeur + $gouttiere)));
+        $lignes = max(1, (int) floor(($pageHauteur - 2 * $marge + $gouttiere) / ($hauteur + $gouttiere)));
+
+        $qr = (int) round(min($largeur, $hauteur) * 0.3);
+        $qr = max(30, min(48, $qr));
+
+        return [
+            'label' => 'Personnalisé ('.(int) $largeur.'×'.(int) $hauteur.')',
+            'largeur' => $largeur,
+            'hauteur' => $hauteur,
+            'orientation' => $orientation,
+            'colonnes' => $colonnes,
+            'lignes' => $lignes,
+            'qr_defaut' => $qr,
+        ];
     }
 
     // Commission effective du lot : spécifique (lot) > événement > organisateur > global 10 %

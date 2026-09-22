@@ -303,6 +303,7 @@ class LotPhysiqueController extends Controller
         $qrX = $lot->qr_x ?? round(($format['largeur'] - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($format['hauteur'] - $qrSize) / 2);
         $formats = array_map(fn ($f) => $f['label'], LotPhysique::FORMATS);
+        $formats[LotPhysique::FORMAT_CUSTOM] = 'Personnalisé (dimensions sur mesure)';
 
         return view('admin.lots-physiques.template', compact('lot', 'tickets', 'format', 'qrX', 'qrY', 'qrSize', 'formats'))->with('zoom', $lot->template_zoom ?? 100);
     }
@@ -317,7 +318,9 @@ class LotPhysiqueController extends Controller
         $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);
 
         $rules = [
-            'format' => ['required', 'in:s1,s2,v1,v2'],
+            'format' => ['required', 'in:s1,s2,v1,v2,custom'],
+            'largeur_personnalisee' => 'nullable|integer|min:30|max:200',
+            'hauteur_personnalisee' => 'nullable|integer|min:30|max:200',
             'qr_x' => 'nullable|numeric|min:0',
             'qr_y' => 'nullable|numeric|min:0',
             'qr_size' => ['nullable', 'numeric', 'min:10', 'max:80'],
@@ -345,7 +348,26 @@ class LotPhysiqueController extends Controller
             'template_zoom.max' => 'Le zoom ne peut pas dépasser 150 %.',
         ]);
 
-        $formatDef = LotPhysique::FORMATS[$validated['format']];
+        if ($validated['format'] === LotPhysique::FORMAT_CUSTOM) {
+            $validated = array_merge($validated, $request->validate([
+                'largeur_personnalisee' => 'required|integer|min:30|max:200',
+                'hauteur_personnalisee' => 'required|integer|min:30|max:200',
+            ], [
+                'largeur_personnalisee.required' => 'Renseignez la largeur personnalisée du ticket (mm).',
+                'hauteur_personnalisee.required' => 'Renseignez la hauteur personnalisée du ticket (mm).',
+                'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 30 mm.',
+                'largeur_personnalisee.max' => 'La largeur ne doit pas dépasser 200 mm.',
+                'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 30 mm.',
+                'hauteur_personnalisee.max' => 'La hauteur ne doit pas dépasser 200 mm.',
+            ]));
+
+            $formatDef = LotPhysique::formatPersonnalise((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee']);
+            if ($formatDef === null) {
+                return back()->withInput()->with('error', 'Dimensions personnalisées invalides (entre 30 et 200 mm).');
+            }
+        } else {
+            $formatDef = LotPhysique::FORMATS[$validated['format']];
+        }
 
         // Suppression du template demandée (croix ✕)
         if ($request->boolean('supprimer_template')) {
@@ -372,6 +394,8 @@ class LotPhysiqueController extends Controller
 
         $lot->update([
             'format' => $validated['format'],
+            'largeur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) $validated['largeur_personnalisee'] : null,
+            'hauteur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) $validated['hauteur_personnalisee'] : null,
             'qr_x' => $qrX,
             'qr_y' => $qrY,
             'qr_size' => $qrSize,
