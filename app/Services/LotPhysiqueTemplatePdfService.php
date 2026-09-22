@@ -41,15 +41,11 @@ class LotPhysiqueTemplatePdfService
     public const ZOOM_MAX = 150;
 
     /**
-     * Détails du format d'un lot (ou du format par défaut).
+     * Détails du format d'un lot (prédéfini ou sur mesure, sinon format par défaut).
      */
     public static function formatDetails(LotPhysique $lot): array
     {
-        $nom = $lot->format && isset(LotPhysique::FORMATS[$lot->format])
-            ? $lot->format
-            : 's1';
-
-        return LotPhysique::FORMATS[$nom];
+        return $lot->formatDetails();
     }
 
     /**
