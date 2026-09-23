@@ -12,6 +12,7 @@ use App\Services\TicketPdfService;
 use App\Support\PerPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class TicketController extends Controller
@@ -237,7 +238,7 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).'); // Anti-abus
         }
 
-        $ticket->increment('download_count', 1, []); // Incrémente le compteur
+        $this->incrementerTelechargement($ticket); // Incrémente le compteur (sans toucher updated_at)
 
         $reste = $max - $ticket->download_count;
         if ($reste === 1) {
@@ -269,7 +270,7 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).');
         }
 
-        $ticket->increment('download_count', 1, []);
+        $this->incrementerTelechargement($ticket); // Incrémente le compteur (sans toucher updated_at)
 
         $reste = $max - $ticket->download_count;
         if ($reste === 1) {
@@ -295,7 +296,8 @@ class TicketController extends Controller
             return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.');
         }
 
-        $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
+        $groupTickets = Ticket::with('evenement', 'tarif')
+            ->where('transaction_id', $ticket->transaction_id)
             ->where('statut_paiement', 'payé')
             ->get();
 
@@ -310,7 +312,7 @@ class TicketController extends Controller
         }
 
         foreach ($groupTickets as $gt) {
-            $gt->increment('download_count', 1, []);
+            $this->incrementerTelechargement($gt); // Sans toucher updated_at pour garder le cache PDF valide
         }
 
         $zip = new \ZipArchive();
@@ -320,12 +322,13 @@ class TicketController extends Controller
             abort(500, 'Impossible de créer l\'archive.');
         }
 
-        $logoDataUri = Ticket::logoVioletDataUri();
+        // Données communes à l'événement calculées une seule fois (image, favicon, logo)
+        $shared = TicketPdfService::sharedForTicket($groupTickets->first());
 
         foreach ($groupTickets as $t) {
             $qrCodeDataUri = QrCodeService::generateDataUri($t->code_unique, 170, 'H');
-            $pdf = TicketPdfService::generer($t, $qrCodeDataUri, $logoDataUri);
-            $zip->addFromString('PaxEvent-'.$t->code_unique.'.pdf', $pdf->output());
+            $pdfBytes = TicketPdfService::renduTicket($t, $qrCodeDataUri, $shared);
+            $zip->addFromString('PaxEvent-'.$t->code_unique.'.pdf', $pdfBytes);
         }
 
         $zip->close();
@@ -449,6 +452,17 @@ class TicketController extends Controller
     public function destroy(int $id)
     {
         return back();
+    }
+
+    // Incrémente le compteur de téléchargements sans modifier updated_at
+    // (updated_at sert de clé d'invalidation du cache PDF).
+    private function incrementerTelechargement(Ticket $ticket): void
+    {
+        DB::table('tickets')
+            ->where('id', $ticket->id)
+            ->update(['download_count' => $ticket->download_count + 1]);
+
+        $ticket->download_count += 1;
     }
 
     // Vérifie que le ticket appartient à un événement de l'organisateur connecté
