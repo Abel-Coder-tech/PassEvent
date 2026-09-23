@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Consentement;
 use App\Models\Evenement;
 use App\Models\Message;
 use App\Models\User;
@@ -162,6 +163,28 @@ class SitePublicController extends Controller
 
         return redirect()->route('contact')
             ->with('success', 'Votre message a ete envoye avec succes. Nous vous repondrons dans les plus brefs delais.');
+    }
+
+    // Enregistre la décision de consentement cookies d'un visiteur
+    public function inscrireConsentement(Request $request)
+    {
+        $validated = $request->validate([
+            'statut' => 'required|string|in:accepte,refuse,personnalise',
+            'services' => 'nullable|array',
+            'services.*' => 'string|max:50',
+            'version' => 'nullable|string|max:50',
+        ]);
+
+        Consentement::create([
+            'user_id' => $request->user()?->id,
+            'session_id' => $request->session()->getId(),
+            'statut' => $validated['statut'],
+            'services' => $validated['services'] ?? [],
+            'version_politique' => $validated['version'] ?? null,
+            'ip_visiteur' => $request->ip(),
+        ]);
+
+        return response()->json(['ok' => true]);
     }
 
     // Page de politique de confidentialité

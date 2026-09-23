@@ -13,6 +13,7 @@ use App\Mail\TicketEmail;
 use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\AttributionAgent;
+use App\Models\Consentement;
 use App\Models\DemandeRemboursement;
 use App\Models\DemandeModificationTarif;
 use App\Models\ParametreSite;
@@ -1163,6 +1164,30 @@ class SuperAdminController extends Controller
         ParametreSite::definir($validated);
 
         return redirect()->route('superadmin.parametres')->with('success', 'Paramètres de suivi mis à jour avec succès.');
+    }
+
+    // Traçabilité des consentements cookies des visiteurs
+    public function consentements(Request $request)
+    {
+        $query = Consentement::with('user')->latest();
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->input('statut'));
+        }
+
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $users = User::where('email', 'like', "%{$q}%")->orWhere('nom', 'like', "%{$q}%")->pluck('id');
+            $query->where(function ($sub) use ($q, $users) {
+                $sub->whereIn('user_id', $users)
+                    ->orWhere('ip_visiteur', 'like', "%{$q}%")
+                    ->orWhere('session_id', 'like', "%{$q}%");
+            });
+        }
+
+        $consentements = $query->paginate(PerPage::resolve())->withQueryString();
+
+        return view('superadmin.consentements', compact('consentements'));
     }
 
     // Logs système complets
