@@ -582,6 +582,86 @@
             .public-footer .brand img { height: 70px; }
             .footer-social { justify-content: flex-start; }
         }
+
+        /* ========== PANNEAU COOKIES (modal Tarteaucitron) ========== */
+        html body #tarteaucitronRoot div#tarteaucitron {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            width: 520px !important;
+            max-width: 94vw !important;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(33, 28, 49, 0.35);
+            font-size: 13px;
+        }
+
+        /* Fond sombre derriere la modale */
+        html body.tarteaucitron-modal-open div#tarteaucitronRoot::before {
+            background: rgba(33, 28, 49, 0.55) !important;
+        }
+
+        /* En-tete violet */
+        html body #tarteaucitronRoot #tarteaucitron div#tarteaucitronMainLineOffset {
+            background: linear-gradient(135deg, #542680 0%, #3d1a5c 100%) !important;
+            color: #fff;
+            border-radius: 0;
+        }
+        #tarteaucitronMainLineOffset .tarteaucitronH1,
+        #tarteaucitronMainLineOffset .tarteaucitronH2,
+        #tarteaucitronMainLineOffset #tarteaucitronInfo,
+        #tarteaucitronMainLineOffset #tarteaucitronInfo * {
+            color: #fff !important;
+        }
+        #tarteaucitronInfo #tarteaucitronPrivacyUrlDialog {
+            color: #FED514 !important;
+            font-weight: 600;
+        }
+        #tarteaucitronClosePanel {
+            color: #fff !important;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+        }
+
+        /* Boutons Tout accepter / Tout refuser du panneau */
+        #tarteaucitronMainLineOffset .tarteaucitronAsk #tarteaucitronAllAllowed {
+            background: #fff;
+            color: #542680;
+            border-radius: 8px;
+        }
+        #tarteaucitronMainLineOffset .tarteaucitronAsk #tarteaucitronAllDenied {
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            border-radius: 8px;
+        }
+
+        /* Categorias */
+        html body #tarteaucitronRoot #tarteaucitron #tarteaucitronServices .tarteaucitronTitle {
+            background: #f4effb !important;
+            border-left: 4px solid #542680 !important;
+            color: #542680 !important;
+            font-weight: 700;
+        }
+        #tarteaucitronServices #tarteaucitronServicesTitle_mandatory .tarteaucitronTitle {
+            background: #f4effb !important;
+            border-left: 4px solid #FED514 !important;
+            color: #542680 !important;
+        }
+
+        /* Lignes de services */
+        #tarteaucitronServices .tarteaucitronLine .tarteaucitronName .tarteaucitronH3 {
+            color: #211C31;
+        }
+
+        /* Boutons Autoriser / Interdire + Enregistrer */
+        html body #tarteaucitronRoot #tarteaucitron .tarteaucitronAsk button {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        #tarteaucitronRoot #tarteaucitron #tarteaucitronSaveButton {
+            background: linear-gradient(135deg, #542680, #3d1a5c);
+            color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(84, 38, 128, 0.35);
+        }
     </style>
     @yield('styles')
 </head>
