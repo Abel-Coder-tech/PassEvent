@@ -164,6 +164,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
         Route::get('/campagnes-marketing', [SuperAdminController::class, 'campagnesMarketing'])->name('campagnes-marketing');
+        Route::get('/campagnes-marketing/{message}', [SuperAdminController::class, 'voirCampagne'])->name('campagnes-marketing.show');
         Route::post('/notifications/{message}/lire', [SuperAdminController::class, 'lireNotification'])->name('notifications.lire');
         Route::post('/notifications/{message}/repondre', [SuperAdminController::class, 'repondreNotification'])->name('notifications.repondre');
         Route::delete('/notifications/{message}', [SuperAdminController::class, 'supprimerNotification'])->name('notifications.supprimer');

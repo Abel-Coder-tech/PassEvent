@@ -706,6 +706,24 @@ class SuperAdminController extends Controller
         return view('superadmin.campagnes', compact('messages'));
     }
 
+    // Page détail d'une demande de campagne marketing (actions rapides + réponse pré-remplie)
+    public function voirCampagne(Message $message)
+    {
+        abort_unless(auth('superadmin')->user()?->estSuperAdmin(), 403, 'Acces non autorise.');
+
+        if ($message->user_id !== null || $message->objet !== DemandeSuperAdminController::OBJET_CAMPAGNE) {
+            abort(404);
+        }
+
+        $message->load('evenement');
+
+        if (! $message->lu) {
+            $message->update(['lu' => true]);
+        }
+
+        return view('superadmin.campagne-show', compact('message'));
+    }
+
     // Marque une notification comme lue
     public function lireNotification(Message $message)
     {
