@@ -15,6 +15,7 @@ use App\Models\AgentVente;
 use App\Models\AttributionAgent;
 use App\Models\DemandeRemboursement;
 use App\Models\DemandeModificationTarif;
+use App\Models\ParametreSite;
 use App\Models\Evenement;
 use App\Models\Log;
 use App\Models\Message;
@@ -801,8 +802,9 @@ class SuperAdminController extends Controller
         $user = auth('superadmin')->user();
         $equipe = User::where('role', 'equipe')->orderBy('created_at', 'desc')->get();
         $rolesEquipe = User::ROLES_EQUIPE;
+        $suivi = ParametreSite::suivi();
 
-        return view('superadmin.parametres', compact('user', 'equipe', 'rolesEquipe'));
+        return view('superadmin.parametres', compact('user', 'equipe', 'rolesEquipe', 'suivi'));
     }
 
     // ==================== GESTION DE L'EQUIPE (super_admin uniquement) ====================
@@ -1142,6 +1144,25 @@ class SuperAdminController extends Controller
         $user->update($validated);
 
         return redirect()->route('superadmin.parametres')->with('success', 'Réseaux sociaux mis à jour avec succès.');
+    }
+
+    // Mise à jour du suivi (GTM + pixels) injecté sur le site public
+    public function updateParametresSuivi(Request $request)
+    {
+        $this->exigerSuperAdmin();
+
+        $validated = $request->validate([
+            'tracking_gtm_id' => 'nullable|string|max:40|regex:/^GTM-[A-Z0-9]{3,}$/',
+            'tracking_meta_pixel_id' => 'nullable|string|max:40|regex:/^[0-9]{6,20}$/',
+            'tracking_tiktok_pixel_id' => 'nullable|string|max:40',
+        ], [
+            'tracking_gtm_id.regex' => 'L\'ID GTM doit ressembler à GTM-XXXXXXX.',
+            'tracking_meta_pixel_id.regex' => 'L\'ID Meta Pixel est une suite de chiffres.',
+        ]);
+
+        ParametreSite::definir($validated);
+
+        return redirect()->route('superadmin.parametres')->with('success', 'Paramètres de suivi mis à jour avec succès.');
     }
 
     // Logs système complets

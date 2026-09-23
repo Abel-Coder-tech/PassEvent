@@ -8,6 +8,43 @@
     <link rel="apple-touch-icon" href="{{ asset_v('images/logo-header.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @php $paxSuivi = \App\Models\ParametreSite::suivi(); @endphp
+    @if(!empty($paxSuivi['gtm_id']))
+    @once
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',@js($paxSuivi['gtm_id']));</script>
+    @endonce
+    @endif
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tarteaucitronjs/1.17.0/tarteaucitron.js"></script>
+    <script>
+    tarteaucitron.init({
+        "privacyUrl": @js(route('confidentialite')),
+        "bodyPosition": "top",
+        "hashtag": "#tarteaucitron",
+        "cookieName": "tarteaucitron",
+        "orientation": "middle",
+        "groupServices": false,
+        "showIcon": true,
+        "iconPosition": "BottomRight",
+        "showAlertSmall": false,
+        "cookieslist": false,
+        "closePopup": false,
+        "showUzbBar": false,
+        "showComment": false,
+        "acceptAllCta": true,
+        "highPrivacy": true,
+        "handleBrowserDNTRequest": false,
+        "removeCredit": false,
+        "moreInfoLink": true,
+        "useExternalCss": false,
+        "useExternalJs": false,
+        "readMoreLink": @js(route('confidentialite'))
+    });
+    @if(!empty($paxSuivi['gtm_id']))
+    tarteaucitron.user.googletagmanagerId = @js($paxSuivi['gtm_id']);
+    (tarteaucitron.job = tarteaucitron.job || []).push('googletagmanager');
+    @endif
+    </script>
     <title>@yield('title', 'PaxEvent — Billetterie en ligne 100% Bénin')</title>
     <meta name="description" content="@yield('description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     
@@ -502,6 +539,11 @@
     @yield('styles')
 </head>
 <body>
+    @if(!empty($paxSuivi['gtm_id']))
+    @once
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $paxSuivi['gtm_id'] }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    @endonce
+    @endif
     <!-- Sticky Header -->
     <header class="public-header">
         <div class="container header-inner position-relative">
@@ -698,6 +740,7 @@
     </script>
     <script>function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}</script>
     @yield('scripts')
+
     <script>document.documentElement.classList.remove('fouc');</script>
 </body>
 </html>
