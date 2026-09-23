@@ -649,6 +649,89 @@ class SuperAdminController extends Controller
         return view('superadmin.tickets', compact('allTickets'));
     }
 
+    // Liste des acheteurs (nom, email, WhatsApp) avec filtres et export CSV
+    public function acheteurs(Request $request)
+    {
+        $acheteurs = $this->acheteursQuery($request)
+            ->orderBy('date_achat', 'desc')
+            ->paginate(PerPage::resolve())
+            ->withQueryString();
+
+        $evenements = Evenement::orderByDesc('created_at')->get(['id', 'titre']);
+
+        return view('superadmin.acheteurs', compact('acheteurs', 'evenements'));
+    }
+
+    // Export CSV des acheteurs (mêmes filtres que la page)
+    public function acheteursExport(Request $request)
+    {
+        $acheteurs = $this->acheteursQuery($request)->orderBy('date_achat', 'desc')->get();
+
+        $filename = 'acheteurs-'.date('Y-m-d-Hi').'.csv';
+
+        return response()->streamDownload(function () use ($acheteurs) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'Nom', 'Email', 'WhatsApp', 'Telephone', 'Evenement',
+                'Date achat', 'Montant (FCFA)', 'Statut', 'Reference',
+            ], ';');
+
+            foreach ($acheteurs as $t) {
+                fputcsv($out, [
+                    $t->nom_acheteur ?? '-',
+                    $t->email_acheteur ?? '-',
+                    $t->whatsapp_acheteur ?? '-',
+                    $t->telephone_paiement ?? $t->telephone_acheteur ?? '-',
+                    $t->evenement?->titre ?? '-',
+                    $t->date_achat?->format('d/m/Y H:i'),
+                    number_format((float) $t->montant, 0, ',', ' '),
+                    $t->statut_paiement,
+                    $t->code_unique,
+                ], ';');
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    // Requête commune à la liste et à l'export (recherche, événement, période)
+    private function acheteursQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $q = trim((string) $request->input('q'));
+        $evenementId = (int) $request->input('evenement_id');
+        $debut = $request->input('debut');
+        $fin = $request->input('fin');
+
+        $query = Ticket::with('evenement');
+
+        if ($q !== '') {
+            $query->where(function ($b) use ($q) {
+                $b->where('email_acheteur', 'like', "%{$q}%")
+                    ->orWhere('nom_acheteur', 'like', "%{$q}%")
+                    ->orWhere('whatsapp_acheteur', 'like', "%{$q}%")
+                    ->orWhere('telephone_acheteur', 'like', "%{$q}%")
+                    ->orWhere('telephone_paiement', 'like', "%{$q}%")
+                    ->orWhere('code_unique', 'like', "%{$q}%");
+            });
+        }
+
+        if ($evenementId > 0) {
+            $query->where('evenement_id', $evenementId);
+        }
+
+        if ($debut && strtotime($debut) !== false) {
+            $query->whereDate('date_achat', '>=', Carbon::parse($debut)->startOfDay());
+        }
+
+        if ($fin && strtotime($fin) !== false) {
+            $query->whereDate('date_achat', '<=', Carbon::parse($fin)->endOfDay());
+        }
+
+        return $query;
+    }
+
     // Historique des scans
     public function scans()
     {
