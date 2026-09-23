@@ -171,6 +171,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/parametres', [SuperAdminController::class, 'parametres'])->name('parametres');
         Route::put('/parametres/profil', [SuperAdminController::class, 'updateParametresProfil'])->name('parametres.profil.update');
         Route::put('/parametres/reseaux', [SuperAdminController::class, 'updateParametresReseaux'])->name('parametres.reseaux.update');
+        Route::put('/parametres/suivi', [SuperAdminController::class, 'updateParametresSuivi'])->name('parametres.suivi.update');
         Route::get('/retraits', [SuperAdminController::class, 'retraits'])->name('retraits');
         Route::post('/retraits/{withdrawal}/approuver', [SuperAdminController::class, 'approuverRetrait'])->name('retraits.approuver');
         Route::post('/retraits/{withdrawal}/confirmer', [SuperAdminController::class, 'confirmerRetrait'])->name('retraits.confirmer');

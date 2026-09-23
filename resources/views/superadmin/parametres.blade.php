@@ -237,6 +237,53 @@
         </div>
     </div>
 
+    {{-- Suivi & Pixels marketing --}}
+    <div class="col-lg-6">
+        <div class="sa-card">
+            <div class="sa-card-header"><span><i class="bi bi-broadcast-pin me-2" style="color: var(--sa-primary);"></i>Suivi &amp; pixels marketing</span></div>
+            <div class="sa-card-body">
+                <p class="text-muted" style="font-size:0.82rem;">
+                    Le conteneur Google Tag Manager est injecté sur le site public. Les pixels Meta et TikTok se configurent dans
+                    GTM (balises + déclencheur <code>tarteaucitron_googletagmanager</code>) et ne se déclenchent qu'après
+                    acceptation du bandeau cookies (Tarteaucitron).
+                </p>
+                <form action="{{ route('superadmin.parametres.suivi.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.82rem;">
+                            <i class="bi bi-google me-1" style="color:#ea4335;"></i> Google Tag Manager
+                        </label>
+                        <input type="text" name="tracking_gtm_id" class="form-control" value="{{ old('tracking_gtm_id', $suivi['gtm_id'] ?? '') }}" placeholder="GTM-XXXXXXX" maxlength="40">
+                        <small class="text-muted" style="font-size:0.72rem;">Vide = conteneur non injecté.</small>
+                        @error('tracking_gtm_id')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.82rem;">
+                            <i class="bi bi-meta me-1" style="color:#1877f2;"></i> Meta Pixel (Facebook / Instagram)
+                        </label>
+                        <input type="text" name="tracking_meta_pixel_id" class="form-control" value="{{ old('tracking_meta_pixel_id', $suivi['meta_pixel_id'] ?? '') }}" placeholder="1234567890123456" maxlength="40">
+                        @error('tracking_meta_pixel_id')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.82rem;">
+                            <i class="bi bi-tiktok me-1" style="color:#000;"></i> TikTok Pixel
+                        </label>
+                        <input type="text" name="tracking_tiktok_pixel_id" class="form-control" value="{{ old('tracking_tiktok_pixel_id', $suivi['tiktok_pixel_id'] ?? '') }}" placeholder="C1XXXXXXXABCDE" maxlength="40">
+                        @error('tracking_tiktok_pixel_id')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
+                    </div>
+
+                    <button type="submit" class="btn" style="background: var(--sa-primary); color: white; border-radius: 8px; font-size: 0.85rem;">
+                        <i class="bi bi-check-lg me-1"></i> Enregistrer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     {{-- Configuration plateforme --}}
     <div class="col-lg-6">
         <div class="sa-card">
