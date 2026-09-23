@@ -37,6 +37,61 @@
     (tarteaucitron.job = tarteaucitron.job || []).push('googletagmanager');
     @endif
     </script>
+    <script>
+    (function () {
+        var consigneAuChargement = false;
+
+        function statutDecision() {
+            var t = window.tarteaucitron || {};
+            var jobs = t.job || [];
+            var acceptes = [];
+            var tousAcceptes = true, tousRefuses = true;
+            for (var i = 0; i < jobs.length; i++) {
+                var ok = t.state && t.state[jobs[i]] === true;
+                if (ok) { acceptes.push(jobs[i]); } else { tousAcceptes = false; }
+                if (ok) { tousRefuses = false; }
+            }
+            if (jobs.length === 0) { return null; }
+            return {
+                statut: tousRefuses ? 'refuse' : (tousAcceptes ? 'accepte' : 'personnalise'),
+                services: acceptes
+            };
+        }
+
+        function enregistrer() {
+            consigneAuChargement = true;
+            var decision = statutDecision();
+            if (!decision) { return; }
+            fetch(@js(route('consentement.inscrire')), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    statut: decision.statut,
+                    services: decision.services,
+                    version: '2026-09-23'
+                })
+            });
+        }
+
+        document.addEventListener('tac.consent_updated', enregistrer);
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (consigneAuChargement) { return; }
+                var t = window.tarteaucitron || {};
+                if (!t.job || !t.state || t.job.length === 0) { return; }
+                for (var i = 0; i < t.job.length; i++) {
+                    if (t.state[t.job[i]] === undefined) { return; }
+                }
+                consigneAuChargement = true;
+                enregistrer();
+            }, 1500);
+        });
+    })();
+    </script>
     <title>@yield('title', 'PaxEvent — Billetterie en ligne 100% Bénin')</title>
     <meta name="description" content="@yield('description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     

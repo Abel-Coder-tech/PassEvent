@@ -63,6 +63,7 @@ Route::get('/aide', [SitePublicController::class, 'aide'])->name('aide');
 Route::get('/contact', [SitePublicController::class, 'contact'])->name('contact');
 Route::post('/contact', [SitePublicController::class, 'contactStore'])->name('contact.store')->middleware('throttle:3,10');
 Route::get('/confidentialite', [SitePublicController::class, 'confidentialite'])->name('confidentialite');
+Route::post('/consentement', [SitePublicController::class, 'inscrireConsentement'])->name('consentement.inscrire');
 Route::get('/cgu', [SitePublicController::class, 'cgu'])->name('cgu');
 Route::get('/mentions-legales', [SitePublicController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueRemboursement'])->name('politique-remboursement');
@@ -162,6 +163,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::delete('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'destroy'])->name('tickets-physiques.supprimer');
         Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
+        Route::get('/consentements', [SuperAdminController::class, 'consentements'])->name('consentements');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
         Route::get('/campagnes-marketing', [SuperAdminController::class, 'campagnesMarketing'])->name('campagnes-marketing');
         Route::get('/campagnes-marketing/{message}', [SuperAdminController::class, 'voirCampagne'])->name('campagnes-marketing.show');
