@@ -42,7 +42,7 @@ class LoginController extends Controller
             return back()->withErrors(['mot_de_passe' => 'Mot de passe incorrect.'])->onlyInput('email');
         }
 
-        // Pas de cookie "remember me" : la session expire aphe 30 min d'inactivite (regle de securite PaxEvent)
+        // Pas de cookie "remember me" : la session expire apres 1h d'inactivite (regle de securite PaxEvent)
         Auth::login($user);
         $request->session()->regenerate();
 
