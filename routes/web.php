@@ -193,6 +193,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/support/recreer', [SuperAdminController::class, 'supportRecreer'])->name('support.recreer');
         Route::post('/support/supprimer', [SuperAdminController::class, 'supportSupprimer'])->name('support.supprimer');
         Route::post('/support/renvoyer-email', [SuperAdminController::class, 'supportRenvoyerEmail'])->name('support.renvoyer-email');
+        Route::post('/support/renvoyer-apercu', [SuperAdminController::class, 'supportApercuEmail'])->name('support.renvoyer-apercu');
         Route::post('/support/rembourser', [SuperAdminController::class, 'supportRembourser'])->name('support.rembourser');
         Route::post('/support/tarifs', [SuperAdminController::class, 'supportTarifs'])->name('support.tarifs');
         Route::post('/support/incident-message', [SuperAdminController::class, 'supportVoirIncident'])->name('support.incident-message');

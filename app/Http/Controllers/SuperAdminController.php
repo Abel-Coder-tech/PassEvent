@@ -9,6 +9,7 @@ use App\Mail\RegistrationCorrections;
 use App\Mail\RegistrationRejected;
 use App\Mail\TarifDemandeApprouvee;
 use App\Mail\TarifDemandeRefusee;
+use App\Mail\TicketEmail;
 use App\Models\Agent;
 use App\Models\AgentVente;
 use App\Models\AttributionAgent;
@@ -2640,6 +2641,33 @@ class SuperAdminController extends Controller
             $resultat['success'] ? 'success' : 'error',
             $resultat['message']
         );
+    }
+
+    // Aperçu de l'email qui sera renvoyé à l'acheteur (avant envoi)
+    public function supportApercuEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_id' => 'required|integer|exists:ticket,id',
+        ]);
+
+        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($validated['ticket_id']);
+
+        try {
+            $mailable = new TicketEmail(collect([$ticket]));
+            $html = $mailable->render();
+            $subject = $mailable->envelope()->subject;
+        } catch (\Throwable $e) {
+            return response()->json(
+                ['error' => 'Impossible de générer l\'aperçu : '.$e->getMessage()],
+                422
+            );
+        }
+
+        return response()->json([
+            'to' => $ticket->email_acheteur,
+            'subject' => $subject,
+            'html' => $html,
+        ]);
     }
 
     /**

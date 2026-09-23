@@ -58,7 +58,7 @@
                 <button type="button" class="sa-btn sa-btn-sm" style="background:#8b5cf6;border:none;color:#fff;" onclick="supportVoirIncident({{ $ticket->id }})" title="Voir la notification (incident)">
                     <i class="bi bi-eye"></i>
                 </button>
-                <button type="button" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;" onclick="supportRenvoyer({{ $ticket->id }})" title="Renvoyer l'email">
+                <button type="button" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;" onclick="supportApercu({{ $ticket->id }})" title="Lire le mail puis renvoyer">
                     <i class="bi bi-envelope"></i>
                 </button>
             </td>
@@ -102,6 +102,36 @@
     </div>
 </div>
 
+{{-- Modal Aperçu de l'email avant renvoi --}}
+<div id="apercuModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="max-width:760px;">
+        <div class="modal-header">
+            <h5><i class="bi bi-envelope-paper me-2" style="color:#3b82f6;"></i>Aperçu de l'email à renvoyer</h5>
+            <button class="modal-close" onclick="document.getElementById('apercuModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="apercuLoading" class="text-muted" style="font-size:0.85rem;padding:1rem 0;">
+                <i class="bi bi-arrow-repeat spin me-2"></i>Génération de l'aperçu…
+            </div>
+            <div id="apercuError" style="display:none;font-size:0.85rem;color:#e74c3c;padding:1rem 0;"></div>
+            <div id="apercuBody" style="display:none;">
+                <div style="font-size:0.82rem;margin-bottom:0.75rem;">
+                    <div><strong>À :</strong> <span id="apercuTo" style="word-break:break-all;"></span></div>
+                    <div style="margin-top:0.25rem;"><strong>Objet :</strong> <span id="apercuSubject" style="font-weight:600;"></span></div>
+                </div>
+                <iframe id="apercuIframe" style="width:100%;height:360px;border:1px solid #eee;border-radius:8px;background:#fff;"></iframe>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="sa-btn-secondary" onclick="document.getElementById('apercuModal').style.display='none'">Annuler</button>
+            <button id="apercuSend" type="button" class="sa-btn" style="background:#3b82f6;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;"
+                    onclick="if (confirm('Envoyer ce mail à l\'acheteur ?')) supportEnvoyer();">
+                <i class="bi bi-send me-1"></i>Envoyer le mail
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
 .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center; }
 .modal-box { background:#fff;border-radius:14px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:modalIn 0.2s ease; }
@@ -114,6 +144,8 @@
 .sa-btn-secondary { background:#6c757d;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer; }
 .incident-msg { padding:0.75rem 0;border-bottom:1px solid #f5f5f5;font-size:0.85rem; }
 .incident-msg:last-child { border-bottom:none; }
+.spin { animation: spin 1s linear infinite; display:inline-block; }
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 </style>
 
 <script>
@@ -178,6 +210,49 @@ function supportRenvoyer(ticketId) {
     const form = document.getElementById('support-form-renvoyer');
     form.querySelector('input[name="ticket_id"]').value = ticketId;
     form.submit();
+}
+function supportApercu(ticketId) {
+    document.getElementById('apercuTo').textContent = '';
+    document.getElementById('apercuSubject').textContent = '';
+    document.getElementById('apercuIframe').srcdoc = '';
+    document.getElementById('apercuError').style.display = 'none';
+    document.getElementById('apercuBody').style.display = 'none';
+    document.getElementById('apercuLoading').style.display = 'block';
+    document.getElementById('apercuModal').style.display = 'flex';
+    document.getElementById('apercuSend').setAttribute('data-ticket-id', ticketId);
+
+    fetch('{{ route('superadmin.support.renvoyer-apercu') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ ticket_id: ticketId })
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        document.getElementById('apercuLoading').style.display = 'none';
+        if (!ok || data.error) {
+            document.getElementById('apercuError').textContent = data.error || 'Erreur lors de la génération de l\'aperçu.';
+            document.getElementById('apercuError').style.display = 'block';
+            return;
+        }
+        document.getElementById('apercuTo').textContent = data.to;
+        document.getElementById('apercuSubject').textContent = data.subject;
+        document.getElementById('apercuIframe').srcdoc = data.html;
+        document.getElementById('apercuBody').style.display = 'block';
+    })
+    .catch(() => {
+        document.getElementById('apercuLoading').style.display = 'none';
+        document.getElementById('apercuError').textContent = 'Erreur lors du chargement de l\'aperçu.';
+        document.getElementById('apercuError').style.display = 'block';
+    });
+}
+function supportEnvoyer() {
+    const ticketId = document.getElementById('apercuSend').getAttribute('data-ticket-id');
+    supportRenvoyer(parseInt(ticketId, 10));
+    document.getElementById('apercuModal').style.display = 'none';
 }
 function supportVoirIncident(ticketId) {
     fetch('{{ route('superadmin.support.incident-message') }}', {
