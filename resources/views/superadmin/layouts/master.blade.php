@@ -627,6 +627,9 @@
             <a href="{{ route('superadmin.tickets') }}" class="sa-nav-link {{ request()->routeIs('superadmin.tickets') ? 'active' : '' }}">
                 <i class="bi bi-ticket-perforated-fill"></i> Tickets
             </a>
+            <a href="{{ route('superadmin.acheteurs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.acheteurs') ? 'active' : '' }}">
+                <i class="bi bi-person-lines-fill"></i> Acheteurs
+            </a>
             <a href="{{ route('superadmin.scans') }}" class="sa-nav-link {{ request()->routeIs('superadmin.scans') ? 'active' : '' }}">
                 <i class="bi bi-qr-code"></i> Scans
             </a>

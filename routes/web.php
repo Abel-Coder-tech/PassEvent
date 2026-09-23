@@ -145,6 +145,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/controle-reset', [SuperAdminController::class, 'reinitialiserControle'])->name('organisateurs.controle-reset');
         Route::get('/transactions', [SuperAdminController::class, 'transactions'])->name('transactions');
         Route::get('/tickets', [SuperAdminController::class, 'tickets'])->name('tickets');
+        Route::get('/acheteurs', [SuperAdminController::class, 'acheteurs'])->name('acheteurs');
+        Route::get('/acheteurs/export', [SuperAdminController::class, 'acheteursExport'])->name('acheteurs.export');
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
         Route::get('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'index'])->name('tickets-physiques');
         Route::get('/tickets-physiques/creer', [SuperAdminLotPhysiqueController::class, 'create'])->name('tickets-physiques.creer');
