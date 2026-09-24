@@ -23,7 +23,7 @@
         "cookieName": "tarteaucitron",
         "orientation": "bottom",
         "groupServices": false,
-        "showIcon": true,
+        "showIcon": false,
         "iconPosition": "BottomRight",
         "showAlertSmall": false,
         "acceptAllCta": true,
@@ -675,6 +675,168 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(84, 38, 128, 0.35);
         }
+
+        /* Ne plus afficher le bandeau du bas : remplace par la modale plein ecran */
+        html body #tarteaucitronRoot #tarteaucitronAlertBig {
+            display: none !important;
+        }
+
+        /* ========== MODALE CONSENTEMENT PLEIN ECRAN ========== */
+        #paxConsentOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(11, 16, 32, 0.84);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        #paxConsentOverlay.pax-hidden {
+            display: none;
+        }
+        .pax-consent-card {
+            background: #ffffff;
+            width: 440px;
+            max-width: 100%;
+            border-radius: 18px;
+            padding: 26px 26px 22px;
+            box-shadow: 0 30px 70px rgba(8, 12, 24, 0.45);
+            box-sizing: border-box;
+        }
+        .pax-consent-card h2 {
+            margin: 0 0 6px;
+            font-size: 19px;
+            font-weight: 700;
+            color: #1E293B;
+        }
+        .pax-consent-sub {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #64748B;
+        }
+        .pax-consent-more {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #542680;
+            text-decoration: underline;
+        }
+        .pax-consent-divider {
+            border: none;
+            border-top: 1px solid #E8EDF2;
+            margin: 18px 0 8px;
+        }
+        .pax-consent-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid #F0F3F7;
+        }
+        .pax-consent-section-text {
+            min-width: 0;
+        }
+        .pax-consent-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1E293B;
+        }
+        .pax-consent-section-desc {
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: #64748B;
+            margin-top: 2px;
+        }
+        .pax-consent-icon-lock {
+            flex: 0 0 auto;
+            color: #B0B8C4;
+            font-size: 16px;
+        }
+
+        /* Interrupteur */
+        .pax-toggle {
+            position: relative;
+            display: inline-block;
+            flex: 0 0 auto;
+            width: 44px;
+            height: 24px;
+        }
+        .pax-toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            z-index: 1;
+        }
+        .pax-toggle-track {
+            position: absolute;
+            inset: 0;
+            background: #D3DAE3;
+            border-radius: 999px;
+            transition: background 0.2s ease;
+        }
+        .pax-toggle-track::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+        .pax-toggle input:checked + .pax-toggle-track {
+            background: #542680;
+        }
+        .pax-toggle input:checked + .pax-toggle-track::after {
+            transform: translateX(20px);
+        }
+
+        .pax-consent-btn-accept,
+        .pax-consent-btn-save {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.15s ease;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .pax-consent-btn-accept {
+            background: #542680;
+            color: #fff;
+            border: none;
+            margin-top: 18px;
+        }
+        .pax-consent-btn-accept:hover {
+            filter: brightness(0.94);
+        }
+        .pax-consent-btn-save {
+            background: #F1F5F9;
+            color: #374151;
+            border: 1px solid #E2E8F0;
+            margin-top: 10px;
+        }
+        .pax-consent-btn-save:hover {
+            background: #E9EEF4;
+        }
+        @media (max-width: 480px) {
+            .pax-consent-card {
+                padding: 22px 18px;
+            }
+        }
     </style>
     @yield('styles')
 </head>
@@ -880,6 +1042,118 @@
     </script>
     <script>function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}</script>
     @yield('scripts')
+
+    {{-- Modale consentement cookies plein ecran --}}
+    <div id="paxConsentOverlay" class="pax-hidden" role="dialog" aria-modal="true" aria-labelledby="paxConsentTitle">
+        <div class="pax-consent-card">
+            <h2 id="paxConsentTitle">Paramètres des cookies</h2>
+            <p class="pax-consent-sub">Nous utilisons des cookies, certains sont essentiels, d&rsquo;autres facultatifs.</p>
+            <a class="pax-consent-more" href="{{ route('confidentialite') }}">En savoir plus</a>
+            <hr class="pax-consent-divider">
+            <div class="pax-consent-section">
+                <div class="pax-consent-section-text">
+                    <div class="pax-consent-section-title">Strictement nécessaires</div>
+                    <div class="pax-consent-section-desc">Ces cookies sont nécessaires au fonctionnement du site et ne peuvent pas être désactivés.</div>
+                </div>
+                <i class="bi bi-lock pax-consent-icon-lock"></i>
+            </div>
+            <div class="pax-consent-section">
+                <div class="pax-consent-section-text">
+                    <div class="pax-consent-section-title">Marketing &amp; analyse</div>
+                    <div class="pax-consent-section-desc">Ces cookies peuvent être déposés par nos partenaires publicitaires via notre site.</div>
+                </div>
+                <label class="pax-toggle">
+                    <input type="checkbox" id="paxToggleMarketing" checked>
+                    <span class="pax-toggle-track"></span>
+                </label>
+            </div>
+            <div class="pax-consent-section">
+                <div class="pax-consent-section-text">
+                    <div class="pax-consent-section-title">Préférences</div>
+                    <div class="pax-consent-section-desc">Pour personnaliser votre contenu, nous utilisons des outils qui adaptent votre expérience.</div>
+                </div>
+                <label class="pax-toggle">
+                    <input type="checkbox" id="paxTogglePrefs">
+                    <span class="pax-toggle-track"></span>
+                </label>
+            </div>
+            <button type="button" id="paxConsentAccept" class="pax-consent-btn-accept">Tout accepter</button>
+            <button type="button" id="paxConsentSave" class="pax-consent-btn-save">Enregistrer mes choix</button>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var overlay = document.getElementById('paxConsentOverlay');
+        if (!overlay) { return; }
+
+        function aucunElementTarte() { return typeof window.tarteaucitron === 'undefined' || !tarteaucitron.job || tarteaucitron.job.length === 0; }
+
+        function decisionFaite() {
+            var t = window.tarteaucitron || {};
+            var jobs = t.job || [];
+            if (jobs.length === 0) { return true; }
+            var cookie = (t.cookie && t.cookie.read) ? t.cookie.read() : '';
+            for (var i = 0; i < jobs.length; i++) {
+                var k = jobs[i];
+                if (cookie.indexOf(k + '=true') === -1 && cookie.indexOf(k + '=false') === -1) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function cacher() {
+            overlay.classList.add('pax-hidden');
+            document.body.style.overflow = '';
+        }
+
+        function montrer() {
+            overlay.classList.remove('pax-hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function appliquerStats(autorise) {
+            if (typeof window.tarteaucitron === 'undefined' || !tarteaucitron.userInterface || !tarteaucitron.userInterface.respondAll) { return; }
+            try {
+                tarteaucitron.userInterface.respondAll(autorise);
+            } catch (e) {}
+        }
+
+        document.getElementById('paxConsentAccept').addEventListener('click', function () {
+            if (typeof window.tarteaucitron !== 'undefined' && tarteaucitron.userInterface) {
+                try {
+                    tarteaucitron.userInterface.respondAll(true);
+                    tarteaucitron.userInterface.closeAlert();
+                } catch (e) {}
+            }
+            cacher();
+        });
+
+        document.getElementById('paxConsentSave').addEventListener('click', function () {
+            var marketing = document.getElementById('paxToggleMarketing').checked;
+            var prefs = document.getElementById('paxTogglePrefs').checked;
+            appliquerStats(marketing);
+            try { localStorage.setItem('pax_prefs_cookies', prefs ? '1' : '0'); } catch (e) {}
+            cacher();
+        });
+
+        document.addEventListener('tac.consent_updated', function () {
+            if (aucunElementTarte() || decisionFaite()) { cacher(); }
+        });
+
+        function attendreEtDecider(retries) {
+            if (aucunElementTarte()) { return; }
+            if (decisionFaite()) { cacher(); return; }
+            montrer();
+            if (retries > 0) { setTimeout(function () { attendreEtDecider(retries - 1); }, 300); }
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(function () { attendreEtDecider(60); }, 300);
+        });
+    })();
+    </script>
 
     <script>document.documentElement.classList.remove('fouc');</script>
 </body>
