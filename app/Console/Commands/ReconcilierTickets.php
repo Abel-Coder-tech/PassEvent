@@ -44,13 +44,16 @@ class ReconcilierTickets extends Command
                 $mode = is_array($mode) ? ($mode['provider'] ?? $mode['name'] ?? null) : $mode;
                 $res = $this->reconciliation->confirmerTickets($groupe, $txId, PaiementMapper::operateur($mode), null, false);
                 $confirmees += $res['confirmes'] ?? 0;
-            } elseif ($verification['ok'] && in_array(
-                $verification['statut'],
-                ['declined', 'canceled', 'cancelled', 'cancel'],
-                true
-            )) {
-                // Paiement définitivement échoué : nettoyage
-                $this->reconciliation->supprimerGroupe($groupe, 'Paiement décliné (réconciliation automatique)');
+            } elseif ($verification['ok'] && ($this->reconciliation->estStatutEchec($verification['statut'])
+                    || $this->reconciliation->estPendingAbandonne($verification['statut'], $groupe->first()->reservation_expire_le))) {
+                // Paiement définitivement non abouti / abandonné : pour une réservation en ligne,
+                // on libère la place (le quota a été pré-compté) ; pour une vente manuelle, on supprime
+                // (le quota n'est compté qu'à la confirmation).
+                if ($groupe->first()->source === 'vente_manuelle') {
+                    $this->reconciliation->supprimerGroupe($groupe, 'Paiement non abouti (réconciliation automatique)');
+                } else {
+                    $this->reconciliation->libererGroupe($groupe, 'Paiement non abouti (réconciliation automatique)');
+                }
                 $supprimes += $groupe->count();
             } else {
                 // Statut indéterminé : conservé pour le support

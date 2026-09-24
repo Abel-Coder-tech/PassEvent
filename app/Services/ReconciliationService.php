@@ -7,17 +7,96 @@ use App\Models\DemandeRemboursement;
 use App\Models\Evenement;
 use App\Models\Log as LogModel;
 use App\Models\Ticket;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;class ReconciliationService
+use Illuminate\Support\Str;
+
+class ReconciliationService
 {
+    /**
+     * Statuts FedaPay considérés comme un paiement définitivement non abouti.
+     */
+    public const STATUTS_ECHEC = ['declined', 'canceled', 'cancelled', 'cancel', 'expired'];
+
+    /**
+     * Délai de grâce après expiration d'une réservation : au-delà, un paiement
+     * resté "pending" est considéré comme abandonné et sa place est libérée.
+     */
+    public const GRACE_PENDING_HEURES = 24;
+
     protected FedapayService $fedapay;
 
     public function __construct(FedapayService $fedapay)
     {
         $this->fedapay = $fedapay;
+    }
+
+    /**
+     * Un statut FedaPay correspond-il à un paiement définitivement non abouti ?
+     */
+    public function estStatutEchec(?string $statut): bool
+    {
+        return in_array($statut, self::STATUTS_ECHEC, true);
+    }
+
+    /**
+     * Un paiement resté "pending" est-il abandonné (réservation expirée depuis la grâce) ?
+     */
+    public function estPendingAbandonne(?string $statut, ?Carbon $reservationExpireLe): bool
+    {
+        return $statut === 'pending'
+            && $reservationExpireLe !== null
+            && $reservationExpireLe->lt(now()->subHours(self::GRACE_PENDING_HEURES));
+    }
+
+    /**
+     * Libère les places d'un groupe de tickets en attente : restaure le quota
+     * (déjà compté à la réservation) et marque les tickets comme échoués.
+     */
+    public function libererGroupe(Collection $tickets, ?string $motif = null): array
+    {
+        DB::beginTransaction();
+        try {
+            $liberes = 0;
+            $ignores = 0;
+
+            foreach ($tickets as $ticket) {
+                $locked = Ticket::whereKey($ticket->id)->lockForUpdate()->first();
+                if (! $locked || $locked->statut_paiement !== 'en_attente') {
+                    $ignores++;
+                    continue;
+                }
+
+                $evenement = $locked->evenement()->lockForUpdate()->first();
+                if ($evenement) {
+                    $evenement->decrement('quota_vendu', max(1, (int) $locked->quantite));
+                }
+
+                $this->log('liberation_ticket', $locked, ['motif' => $motif, 'par' => $this->acteur()]);
+
+                $locked->update([
+                    'statut_paiement' => 'échoué',
+                    'reservation_expire_le' => null,
+                ]);
+                $liberes++;
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'liberes' => $liberes,
+                'message' => "{$liberes} ticket(s) marqué(s) échoué(s) et place(s) libérée(s)" . ($ignores ? ", {$ignores} ignoré(s)" : '') . '.',
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Reconciliation - libération tickets : ' . $e->getMessage());
+
+            return ['success' => false, 'message' => 'Une erreur est survenue lors de la libération des places.'];
+        }
     }
 
     /**

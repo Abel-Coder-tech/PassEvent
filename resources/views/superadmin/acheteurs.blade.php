@@ -23,11 +23,18 @@
             <option value="{{ $ev->id }}" {{ (string) request('evenement_id') === (string) $ev->id ? 'selected' : '' }}>{{ $ev->titre }}</option>
             @endforeach
         </select>
+        <select name="statut" class="form-select form-select-sm" style="border-radius:10px; width:auto;">
+            <option value="">Tous les statuts</option>
+            <option value="payé" {{ request('statut') === 'payé' ? 'selected' : '' }}>Payé</option>
+            <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
+            <option value="échoué" {{ request('statut') === 'échoué' ? 'selected' : '' }}>Échoué</option>
+            <option value="remboursé" {{ request('statut') === 'remboursé' ? 'selected' : '' }}>Remboursé</option>
+        </select>
         <input type="date" name="debut" class="form-control form-control-sm" style="border-radius:10px; width:auto;" value="{{ request('debut') }}">
         <span class="text-muted">→</span>
         <input type="date" name="fin" class="form-control form-control-sm" style="border-radius:10px; width:auto;" value="{{ request('fin') }}">
         <button type="submit" class="sa-btn sa-btn-sm sa-btn-primary">Filtrer</button>
-        @if(request('q') || request('evenement_id') || request('debut') || request('fin'))
+        @if(request('q') || request('evenement_id') || request('debut') || request('fin') || request('statut'))
         <a href="{{ route('superadmin.acheteurs') }}" class="sa-btn sa-btn-sm" style="background:#e74c3c;border:none;color:#fff;border-radius:6px;text-decoration:none;">Réinitialiser</a>
         @endif
     </form>

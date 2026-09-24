@@ -703,6 +703,7 @@ class SuperAdminController extends Controller
         $evenementId = (int) $request->input('evenement_id');
         $debut = $request->input('debut');
         $fin = $request->input('fin');
+        $statut = $request->input('statut');
 
         $query = Ticket::with('evenement');
 
@@ -727,6 +728,10 @@ class SuperAdminController extends Controller
 
         if ($fin && strtotime($fin) !== false) {
             $query->whereDate('date_achat', '<=', Carbon::parse($fin)->endOfDay());
+        }
+
+        if ($statut !== '' && $statut !== null) {
+            $query->where('statut_paiement', $statut);
         }
 
         return $query;
