@@ -52,7 +52,7 @@ class PurgeReservationsTest extends TestCase
         $this->simulerFedaPay('pending');
 
         $evenement = $this->creerEvenement(quotaVendu: 1);
-        $ticket = $this->creerTicket($evenement, 'T-PEND-1', now()->subHours(25));
+        $ticket = $this->creerTicket($evenement, 'T-PEND-1', now()->subHour());
 
         $this->artisan('tickets:purger-en-attente')->assertSuccessful();
 
@@ -62,7 +62,7 @@ class PurgeReservationsTest extends TestCase
         $this->assertSame(0, $evenement->refresh()->quota_vendu);
     }
 
-    public function test_pending_recent_est_conserve_pendant_la_grace(): void
+    public function test_pending_expiree_est_liberee_des_lexpiration(): void
     {
         if (! $this->tablesDisponibles()) {
             $this->markTestSkipped('Tables indisponibles sur ce driver.');
@@ -71,13 +71,14 @@ class PurgeReservationsTest extends TestCase
         $this->simulerFedaPay('pending');
 
         $evenement = $this->creerEvenement(quotaVendu: 1);
-        $ticket = $this->creerTicket($evenement, 'T-PEND-2', now()->subHours(2));
+        $ticket = $this->creerTicket($evenement, 'T-PEND-2', now()->subMinutes(10));
 
         $this->artisan('tickets:purger-en-attente')->assertSuccessful();
 
         $ticket->refresh();
-        $this->assertSame('en_attente', $ticket->statut_paiement);
-        $this->assertSame(1, $evenement->refresh()->quota_vendu);
+        $this->assertSame('échoué', $ticket->statut_paiement);
+        $this->assertNull($ticket->reservation_expire_le);
+        $this->assertSame(0, $evenement->refresh()->quota_vendu);
     }
 
     // ---------- Aides ----------

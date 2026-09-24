@@ -22,10 +22,11 @@ class ReconciliationService
     public const STATUTS_ECHEC = ['declined', 'canceled', 'cancelled', 'cancel', 'expired'];
 
     /**
-     * Délai de grâce après expiration d'une réservation : au-delà, un paiement
-     * resté "pending" est considéré comme abandonné et sa place est libérée.
+     * Délai de grâce après expiration d'une réservation : zéro. Dès que la réservation
+     * (15 min) expire, un paiement resté "pending" est considéré comme abandonné :
+     * aucun tiers ne peut reprendre une transaction FedaPay en cours.
      */
-    public const GRACE_PENDING_HEURES = 24;
+    public const GRACE_PENDING_MINUTES = 0;
 
     protected FedapayService $fedapay;
 
@@ -43,13 +44,14 @@ class ReconciliationService
     }
 
     /**
-     * Un paiement resté "pending" est-il abandonné (réservation expirée depuis la grâce) ?
+     * Un paiement resté "pending" avec une réservation déjà expirée est abandonné
+     * (aucun délai de grâce : la réservation de 15 min écoulée suffit).
      */
     public function estPendingAbandonne(?string $statut, ?Carbon $reservationExpireLe): bool
     {
         return $statut === 'pending'
             && $reservationExpireLe !== null
-            && $reservationExpireLe->lt(now()->subHours(self::GRACE_PENDING_HEURES));
+            && $reservationExpireLe->lt(now()->subMinutes(self::GRACE_PENDING_MINUTES));
     }
 
     /**
