@@ -586,7 +586,7 @@
         /* ========== PANNEAU COOKIES (modal Tarteaucitron) ========== */
         html body #tarteaucitronRoot div#tarteaucitron {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            width: 520px !important;
+            width: 560px !important;
             max-width: 94vw !important;
             border-radius: 14px;
             overflow: hidden;
@@ -616,8 +616,8 @@
             font-weight: 600;
         }
         #tarteaucitronClosePanel {
-            color: #fff !important;
-            background: rgba(255, 255, 255, 0.12);
+            color: #211C31 !important;
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 8px;
         }
 
@@ -648,6 +648,19 @@
 
         /* Lignes de services */
         #tarteaucitronServices .tarteaucitronLine .tarteaucitronName .tarteaucitronH3 {
+            color: #211C31;
+        }
+
+        /* Texte "Cookies obligatoires" : cellule en pleine largeur, va jusqu'au bout */
+        #tarteaucitronServices #tarteaucitronServices_mandatory .tarteaucitronLine .tarteaucitronName {
+            width: 100% !important;
+            max-width: 100% !important;
+            float: none !important;
+            display: block !important;
+            margin-left: 0 !important;
+            box-sizing: border-box;
+        }
+        #tarteaucitronServices #tarteaucitronServices_mandatory .tarteaucitronLine .tarteaucitronName .tarteaucitronH3 {
             color: #211C31;
         }
 
