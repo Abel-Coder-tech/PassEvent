@@ -47,6 +47,8 @@ class ParametreSite extends Model
             'gtm_id' => $ensemble['tracking_gtm_id'] ?? null,
             'meta_pixel_id' => $ensemble['tracking_meta_pixel_id'] ?? null,
             'tiktok_pixel_id' => $ensemble['tracking_tiktok_pixel_id'] ?? null,
+            'consentement_cookie' => $ensemble['consentement_cookie'] ?? 'tarteaucitron',
+            'consentement_version' => $ensemble['consentement_version'] ?? '2026-09-23',
         ];
     }
 }
