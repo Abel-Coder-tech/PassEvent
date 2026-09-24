@@ -27,6 +27,7 @@
         "iconPosition": "BottomRight",
         "showAlertSmall": false,
         "acceptAllCta": true,
+        "DenyAllCta": true,
         "highPrivacy": true,
         "handleBrowserDNTRequest": false,
         "removeCredit": false,
@@ -676,59 +677,188 @@
             box-shadow: 0 4px 12px rgba(84, 38, 128, 0.35);
         }
 
-        /* Ne plus afficher le bandeau du bas : remplace par la modale plein ecran */
+        /* ========== BANDEAU TAC AUX COULEURS PAXEVENT ========== */
         html body #tarteaucitronRoot #tarteaucitronAlertBig {
-            display: none !important;
+            background: #ffffff !important;
+            border: 1px solid #E8EDF2 !important;
+            border-radius: 0 !important;
+            color: #542680 !important;
+        }
+        html body #tarteaucitronRoot #tarteaucitronAlertBig #tarteaucitronDisclaimerAlert {
+            color: #542680 !important;
+        }
+        html body #tarteaucitronRoot #tarteaucitronAlertBig button {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        html body #tarteaucitronRoot #tarteaucitronAlertBig #tarteaucitronPersonalize2 {
+            background: #FED514 !important;
+            color: #542680 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            font-weight: 800;
+        }
+        html body #tarteaucitronRoot #tarteaucitronAlertBig #tarteaucitronAllDenied2 {
+            background: #ffffff !important;
+            color: #542680 !important;
+            border: 1px solid #542680 !important;
+            border-radius: 0 !important;
+            font-weight: 700;
+        }
+        html body #tarteaucitronRoot #tarteaucitronAlertBig #tarteaucitronCloseAlert {
+            background: transparent !important;
+            color: #542680 !important;
+            border: none !important;
+            text-decoration: underline;
         }
 
-        /* ========== MODALE CONSENTEMENT PLEIN ECRAN ========== */
+        /* ========== POPUP CONSENTEMENT COOKIES (carte basse) ========== */
+        /* Le bandeau TAC du bas reste affiche ; la popup s'ouvre via Personnaliser */
         #paxConsentOverlay {
             position: fixed;
             inset: 0;
             z-index: 2147483000;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            padding: 20px;
-            background: rgba(11, 16, 32, 0.84);
+            padding: 0 24px 32px;
+            background: rgba(11, 16, 32, 0.55);
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            box-sizing: border-box;
         }
         #paxConsentOverlay.pax-hidden {
             display: none;
         }
         .pax-consent-card {
             background: #ffffff;
-            width: 440px;
+            width: 400px;
             max-width: 100%;
             border-radius: 18px;
-            padding: 26px 26px 22px;
-            box-shadow: 0 30px 70px rgba(8, 12, 24, 0.45);
+            padding: 26px 30px 24px;
+            box-shadow: 0 24px 60px rgba(8, 12, 24, 0.35);
             box-sizing: border-box;
         }
-        .pax-consent-card h2 {
-            margin: 0 0 6px;
-            font-size: 19px;
-            font-weight: 700;
-            color: #1E293B;
+        .pax-consent-card.pax-hidden {
+            display: none;
         }
-        .pax-consent-sub {
-            margin: 0;
-            font-size: 13px;
-            line-height: 1.5;
-            color: #64748B;
+        .pax-continuer {
+            display: block;
+            text-align: right;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #1D4ED8;
+            text-decoration: underline;
+            margin-bottom: 8px;
         }
-        .pax-consent-more {
+        .pax-retour {
             display: inline-block;
-            margin-top: 8px;
+            margin-bottom: 10px;
             font-size: 13px;
             font-weight: 600;
-            color: #542680;
+            color: #1D4ED8;
+            text-decoration: none;
+        }
+        .pax-retour:hover {
             text-decoration: underline;
         }
-        .pax-consent-divider {
+        .pax-consent-card h2 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0F1B3D;
+            line-height: 1.25;
+        }
+        .pax-lead {
+            margin: 0 0 12px;
+            font-size: 14px;
+            line-height: 1.55;
+            color: #334155;
+        }
+        .pax-interest {
+            margin: 0 0 16px;
+            font-size: 13px;
+            line-height: 1.55;
+            color: #64748B;
+        }
+        .pax-interest strong {
+            color: #0F1B3D;
+        }
+        .pax-finalites {
+            margin: 0 0 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0F1B3D;
+        }
+        .pax-liste {
+            margin: 0;
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: #64748B;
+        }
+        .pax-voir-plus {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 10px 0 16px;
+            padding: 0;
             border: none;
-            border-top: 1px solid #E8EDF2;
-            margin: 18px 0 8px;
+            background: none;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1D4ED8;
+            cursor: pointer;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .pax-voir-plus .pax-chevron {
+            display: inline-block;
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+        .pax-voir-plus.pax-ouvert .pax-chevron {
+            transform: rotate(180deg);
+        }
+        .pax-voir-plus-contenu {
+            margin: 0 0 16px;
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: #475569;
+            background: #F8FAFC;
+            border: 1px solid #EEF2F7;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .pax-voir-plus-contenu.pax-hidden {
+            display: none;
+        }
+        .pax-btn {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 15px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: filter 0.15s ease, background 0.15s ease;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .pax-btn-primary {
+            background: #0F2A5F;
+            color: #fff;
+            border: none;
+        }
+        .pax-btn-primary:hover {
+            filter: brightness(1.15);
+        }
+        .pax-btn-secondary {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #CBD2DC;
+            margin-top: 10px;
+        }
+        .pax-btn-secondary:hover {
+            background: #F1F5F9;
         }
         .pax-consent-section {
             display: flex;
@@ -801,40 +931,12 @@
             transform: translateX(20px);
         }
 
-        .pax-consent-btn-accept,
-        .pax-consent-btn-save {
-            display: block;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 13px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: filter 0.15s ease;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-        .pax-consent-btn-accept {
-            background: #542680;
-            color: #fff;
-            border: none;
-            margin-top: 18px;
-        }
-        .pax-consent-btn-accept:hover {
-            filter: brightness(0.94);
-        }
-        .pax-consent-btn-save {
-            background: #F1F5F9;
-            color: #374151;
-            border: 1px solid #E2E8F0;
-            margin-top: 10px;
-        }
-        .pax-consent-btn-save:hover {
-            background: #E9EEF4;
-        }
         @media (max-width: 480px) {
+            #paxConsentOverlay {
+                padding: 0 12px 16px;
+            }
             .pax-consent-card {
-                padding: 22px 18px;
+                padding: 22px 20px 18px;
             }
         }
     </style>
@@ -1043,13 +1145,26 @@
     <script>function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}</script>
     @yield('scripts')
 
-    {{-- Modale consentement cookies plein ecran --}}
+    {{-- Popup consentement cookies (carte basse) --}}
     <div id="paxConsentOverlay" class="pax-hidden" role="dialog" aria-modal="true" aria-labelledby="paxConsentTitle">
-        <div class="pax-consent-card">
-            <h2 id="paxConsentTitle">Paramètres des cookies</h2>
-            <p class="pax-consent-sub">Nous utilisons des cookies, certains sont essentiels, d&rsquo;autres facultatifs.</p>
-            <a class="pax-consent-more" href="{{ route('confidentialite') }}">En savoir plus</a>
-            <hr class="pax-consent-divider">
+        <div class="pax-consent-card" id="paxCardPopup">
+            <a href="#" id="paxContinuerSansAccepter" class="pax-continuer">Continuer sans accepter</a>
+            <h2 id="paxConsentTitle">Faites un choix pour vos données</h2>
+            <p class="pax-lead">Nous et nos partenaires traitons vos données afin de diffuser des publicités et du contenu personnalisés, mesurer leurs performances, en apprendre davantage sur leur audience, développer et améliorer les produits de nos partenaires.</p>
+            <p class="pax-interest">Nos partenaires et nous collectons et traitons certaines de vos données sur la base de notre <strong>intérêt légitime</strong>. Vous pouvez vous opposer à ce traitement à tout moment en utilisant le bouton «&nbsp;RÉGLAGES&nbsp;».</p>
+            <h3 class="pax-finalites">Finalités de traitement de vos données</h3>
+            <p class="pax-liste">publicités et contenu personnalisés, mesure de performance, études d&rsquo;audience, développement de services, stockage et accès à l&rsquo;information sur votre appareil, géolocalisation précise, identification des appareils.</p>
+            <button type="button" id="paxVoirPlus" class="pax-voir-plus">Voir plus <span class="pax-chevron">&#9660;</span></button>
+            <div id="paxVoirPlusContenu" class="pax-voir-plus-contenu pax-hidden">
+                Vous pouvez à tout moment retirer votre consentement ou vous opposer aux traitements fondés sur notre intérêt légitime depuis les réglages. Les cookies strictement nécessaires restent activés pour garantir le fonctionnement du site.
+            </div>
+            <button type="button" id="paxConsentAccept" class="pax-btn pax-btn-primary">Tout accepter</button>
+            <button type="button" id="paxConsentReglages" class="pax-btn pax-btn-secondary">Réglages</button>
+        </div>
+
+        <div class="pax-consent-card pax-hidden" id="paxCardReglages">
+            <a href="#" id="paxReglagesRetour" class="pax-retour">&larr; Retour</a>
+            <h2 id="paxReglagesTitle">Réglages des cookies</h2>
             <div class="pax-consent-section">
                 <div class="pax-consent-section-text">
                     <div class="pax-consent-section-title">Strictement nécessaires</div>
@@ -1077,8 +1192,7 @@
                     <span class="pax-toggle-track"></span>
                 </label>
             </div>
-            <button type="button" id="paxConsentAccept" class="pax-consent-btn-accept">Tout accepter</button>
-            <button type="button" id="paxConsentSave" class="pax-consent-btn-save">Enregistrer mes choix</button>
+            <button type="button" id="paxConsentSave" class="pax-btn pax-btn-primary" style="margin-top:18px;">Enregistrer mes choix</button>
         </div>
     </div>
 
@@ -1086,6 +1200,8 @@
     (function () {
         var overlay = document.getElementById('paxConsentOverlay');
         if (!overlay) { return; }
+        var cardPopup = document.getElementById('paxCardPopup');
+        var cardReglages = document.getElementById('paxCardReglages');
 
         function aucunElementTarte() { return typeof window.tarteaucitron === 'undefined' || !tarteaucitron.job || tarteaucitron.job.length === 0; }
 
@@ -1108,7 +1224,20 @@
             document.body.style.overflow = '';
         }
 
+        function afficherPopup() {
+            cardPopup.classList.remove('pax-hidden');
+            cardReglages.classList.add('pax-hidden');
+        }
+
+        function afficherReglages() {
+            cardReglages.classList.remove('pax-hidden');
+            cardPopup.classList.add('pax-hidden');
+        }
+
         function montrer() {
+            if (!overlay.classList.contains('pax-hidden')) { return; }
+            synchroniserToggles();
+            afficherPopup();
             overlay.classList.remove('pax-hidden');
             document.body.style.overflow = 'hidden';
         }
@@ -1120,10 +1249,40 @@
             } catch (e) {}
         }
 
+        function synchroniserToggles() {
+            var marketing = document.getElementById('paxToggleMarketing');
+            var prefs = document.getElementById('paxTogglePrefs');
+            if (typeof window.tarteaucitron !== 'undefined' && tarteaucitron.state) {
+                var cles = Object.keys(tarteaucitron.state).filter(function (k) { return k !== 'privacy' && k !== 'refuse'; });
+                var vrai = 0, faux = 0;
+                cles.forEach(function (k) {
+                    if (tarteaucitron.state[k] === true) { vrai++; }
+                    if (tarteaucitron.state[k] === false) { faux++; }
+                });
+                if (vrai === 0 && faux === 0) { marketing.checked = true; }
+                else { marketing.checked = vrai >= faux; }
+            }
+            try {
+                var p = localStorage.getItem('pax_prefs_cookies');
+                prefs.checked = p === null ? true : p === '1';
+            } catch (e) {}
+        }
+
         document.getElementById('paxConsentAccept').addEventListener('click', function () {
             if (typeof window.tarteaucitron !== 'undefined' && tarteaucitron.userInterface) {
                 try {
                     tarteaucitron.userInterface.respondAll(true);
+                    tarteaucitron.userInterface.closeAlert();
+                } catch (e) {}
+            }
+            cacher();
+        });
+
+        document.getElementById('paxContinuerSansAccepter').addEventListener('click', function (e) {
+            e.preventDefault();
+            if (typeof window.tarteaucitron !== 'undefined' && tarteaucitron.userInterface) {
+                try {
+                    tarteaucitron.userInterface.respondAll(false);
                     tarteaucitron.userInterface.closeAlert();
                 } catch (e) {}
             }
@@ -1138,19 +1297,45 @@
             cacher();
         });
 
-        document.addEventListener('tac.consent_updated', function () {
-            if (aucunElementTarte() || decisionFaite()) { cacher(); }
+        document.getElementById('paxConsentReglages').addEventListener('click', afficherReglages);
+
+        document.getElementById('paxReglagesRetour').addEventListener('click', function (e) {
+            e.preventDefault();
+            afficherPopup();
         });
 
-        function attendreEtDecider(retries) {
+        document.getElementById('paxVoirPlus').addEventListener('click', function () {
+            var contenu = document.getElementById('paxVoirPlusContenu');
+            var ouvert = !contenu.classList.contains('pax-hidden');
+            if (ouvert) {
+                contenu.classList.add('pax-hidden');
+                this.classList.remove('pax-ouvert');
+                this.innerHTML = 'Voir plus <span class="pax-chevron">&#9660;</span>';
+            } else {
+                contenu.classList.remove('pax-hidden');
+                this.classList.add('pax-ouvert');
+                this.innerHTML = 'Voir moins <span class="pax-chevron">&#9650;</span>';
+            }
+        });
+
+        function ouvrirPersonnalisation() {
             if (aucunElementTarte()) { return; }
-            if (decisionFaite()) { cacher(); return; }
+            if (typeof window.tarteaucitron !== 'undefined' && tarteaucitron.userInterface) {
+                try { tarteaucitron.userInterface.closePanel(); } catch (e) {}
+            }
             montrer();
-            if (retries > 0) { setTimeout(function () { attendreEtDecider(retries - 1); }, 300); }
         }
 
-        window.addEventListener('load', function () {
-            setTimeout(function () { attendreEtDecider(60); }, 300);
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest('#tarteaucitronCloseAlert')) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                ouvrirPersonnalisation();
+            }
+        }, true);
+
+        document.addEventListener('tac.consent_updated', function () {
+            if (aucunElementTarte() || decisionFaite()) { cacher(); }
         });
     })();
     </script>
