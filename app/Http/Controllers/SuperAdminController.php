@@ -676,20 +676,22 @@ class SuperAdminController extends Controller
             fputcsv($out, [
                 'Nom', 'Email', 'WhatsApp', 'Telephone', 'Evenement',
                 'Date achat', 'Montant (FCFA)', 'Statut', 'Reference',
-            ], ';');
+            ], ';', '"', '\\');
 
             foreach ($acheteurs as $t) {
+                $dateAchat = $t->date_achat ?? $t->created_at;
+
                 fputcsv($out, [
                     $t->nom_acheteur ?? '-',
                     $t->email_acheteur ?? '-',
                     $t->whatsapp_acheteur ?? '-',
                     $t->telephone_paiement ?? $t->telephone_acheteur ?? '-',
                     $t->evenement?->titre ?? '-',
-                    $t->date_achat?->format('d/m/Y H:i'),
+                    "\t".($dateAchat?->format('d/m/Y H:i') ?? '-'),
                     number_format((float) $t->montant, 0, ',', ' '),
                     $t->statut_paiement,
                     $t->code_unique,
-                ], ';');
+                ], ';', '"', '\\');
             }
 
             fclose($out);

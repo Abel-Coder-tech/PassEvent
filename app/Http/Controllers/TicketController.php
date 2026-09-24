@@ -79,9 +79,11 @@ class TicketController extends Controller
                 'Reference', 'Participant', 'WhatsApp', 'N transaction', 'Email', 'Evenement',
                 'Tarif', 'Montant (FCFA)', 'Statut', 'Moyen de paiement',
                 'Operateur', 'Transaction ID', 'Date achat',
-            ], ';');
+            ], ';', '"', '\\');
 
             foreach ($tickets as $ticket) {
+                $dateAchat = $ticket->date_achat ?? $ticket->created_at;
+
                 fputcsv($out, [
                     $ticket->code_unique,
                     $ticket->nom_acheteur,
@@ -95,8 +97,8 @@ class TicketController extends Controller
                     PaiementMapper::moyenLabel(PaiementMapper::moyenPaiement($ticket->methode_paiement)),
                     PaiementMapper::operateurLabel(PaiementMapper::operateur($ticket->methode_paiement)),
                     $ticket->transaction_id,
-                    $ticket->date_achat?->format('d/m/Y H:i'),
-                ], ';');
+                    "\t".($dateAchat?->format('d/m/Y H:i') ?? '-'),
+                ], ';', '"', '\\');
             }
 
             fclose($out);
