@@ -27,15 +27,13 @@ class ReconciliationStatutTest extends TestCase
         $this->assertFalse($this->service->estStatutEchec(null));
     }
 
-    public function test_pending_abandonne_apres_grace(): void
+    public function test_pending_abandonne_apres_expiration_de_la_reservation(): void
     {
-        $ancien = Carbon::now()->subHours(25);
-        $recent = Carbon::now()->subHours(2);
+        $depasse = Carbon::now()->subMinutes(1);
 
-        $this->assertTrue($this->service->estPendingAbandonne('pending', $ancien));
-        $this->assertFalse($this->service->estPendingAbandonne('pending', $recent));
-        $this->assertFalse($this->service->estPendingAbandonne('approved', $ancien));
-        $this->assertFalse($this->service->estPendingAbandonne('expired', $ancien));
+        $this->assertTrue($this->service->estPendingAbandonne('pending', $depasse));
+        $this->assertFalse($this->service->estPendingAbandonne('approved', $depasse));
+        $this->assertFalse($this->service->estPendingAbandonne('expired', $depasse));
         $this->assertFalse($this->service->estPendingAbandonne('pending', null));
     }
 }
