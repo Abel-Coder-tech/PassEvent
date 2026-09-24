@@ -73,18 +73,18 @@ class PurgerTicketsEnAttente extends Command
                         continue;
                     }
 
-                    if ($verification['ok'] && in_array(
-                        $verification['statut'],
-                        ['declined', 'canceled', 'cancelled', 'cancel'],
-                        true
-                    )) {
+                    $abandonnee = $verification['ok']
+                        && ($this->reconciliation->estStatutEchec($verification['statut'])
+                            || $this->reconciliation->estPendingAbandonne($verification['statut'], $groupeTickets->first()->reservation_expire_le));
+
+                    if ($abandonnee) {
                         $this->libererGroupe($groupeTickets);
                         $liberees += $groupeTickets->count();
                         $promotionNecessaire = true;
                         continue;
                     }
 
-                    // Statut indéterminé : on garde pour le support
+                    // Statut indéterminé ou pending encore dans la grâce : on garde pour le support
                     Log::warning('Purge réservation en ligne - statut indéterminé, conservé', [
                         'transaction_id' => $fedapayId,
                         'statut' => $verification['statut'] ?? null,

@@ -46,6 +46,19 @@ class AcheteurTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
     }
 
+    public function test_filtre_par_statut_des_acheteurs(): void
+    {
+        if (! $this->tablesDisponibles()) {
+            $this->markTestSkipped('Tables ticket/users indisponibles sur ce driver.');
+        }
+
+        $this->creerSuperAdmin();
+        $this->actingAs($this->superAdmin(), 'superadmin')
+            ->get('/superadmin/acheteurs?statut=échoué')
+            ->assertOk()
+            ->assertSee('Contacts des acheteurs');
+    }
+
     private function creerSuperAdmin(): void
     {
         if ($this->userId !== null) {
