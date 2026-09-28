@@ -682,20 +682,35 @@ class SuperAdminController extends Controller
                 $dateAchat = $t->date_achat ?? $t->created_at;
 
                 fputcsv($out, [
-                    $t->nom_acheteur ?? '-',
-                    $t->email_acheteur ?? '-',
-                    $t->whatsapp_acheteur ?? '-',
-                    $t->telephone_paiement ?? $t->telephone_acheteur ?? '-',
-                    $t->evenement?->titre ?? '-',
-                    "\t".($dateAchat?->format('d/m/Y H:i') ?? '-'),
+                    $this->neutraliserCelluleCsv($t->nom_acheteur ?? '-'),
+                    $this->neutraliserCelluleCsv($t->email_acheteur ?? '-'),
+                    $this->neutraliserCelluleCsv($t->whatsapp_acheteur ?? '-'),
+                    $this->neutraliserCelluleCsv($t->telephone_paiement ?? $t->telephone_acheteur ?? '-'),
+                    $this->neutraliserCelluleCsv($t->evenement?->titre ?? '-'),
+                    "\t".$this->neutraliserCelluleCsv($dateAchat?->format('d/m/Y H:i') ?? '-'),
                     number_format((float) $t->montant, 0, ',', ' '),
-                    $t->statut_paiement,
-                    $t->code_unique,
+                    $this->neutraliserCelluleCsv($t->statut_paiement),
+                    $this->neutraliserCelluleCsv($t->code_unique),
                 ], ';', '"', '\\');
             }
 
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    // Empêche l'injection de formule Excel (CSV) : préfixe par ' les cellules commençant
+    // par = + - @ ou une tabulation (interprétés comme formules par Excel/Calc).
+    private function neutraliserCelluleCsv(mixed $valeur): mixed
+    {
+        if (! is_string($valeur) || $valeur === '') {
+            return $valeur;
+        }
+
+        if (preg_match('/^[\s]*[=+\-@\r\t]/', $valeur)) {
+            return "'".$valeur;
+        }
+
+        return $valeur;
     }
 
     // Requête commune à la liste et à l'export (recherche, événement, période)
@@ -915,7 +930,7 @@ class SuperAdminController extends Controller
             'prenom' => 'required|string|max:100',
             'email' => 'required|email|max:191|unique:users,email',
             'pseudo' => 'required|string|min:3|max:50|unique:users,pseudo|regex:/^[a-zA-Z0-9_.-]+$/',
-            'mot_de_passe' => 'required|min:8',
+            'mot_de_passe' => 'required|string|min:8|max:255',
         ], [
             'pseudo.unique' => 'Ce pseudo est deja utilise.',
             'pseudo.regex' => 'Le pseudo ne peut contenir que des lettres, chiffres, points, tirets et underscores.',
@@ -1025,7 +1040,7 @@ class SuperAdminController extends Controller
         abort_unless($membre->estEquipe(), 404);
 
         $donnees = $request->validate([
-            'mot_de_passe' => 'nullable|min:8',
+            'mot_de_passe' => 'nullable|string|min:8|max:255',
         ]);
         $mdp = $donnees['mot_de_passe'] ?: substr(bin2hex(random_bytes(6)), 0, 10);
 
@@ -1169,7 +1184,7 @@ class SuperAdminController extends Controller
         }
 
         $donnees = $request->validate([
-            'mot_de_passe' => 'required|min:8|confirmed',
+            'mot_de_passe' => 'required|string|min:8|max:255|confirmed',
         ], [
             'mot_de_passe.required' => 'Le nouveau mot de passe est requis.',
             'mot_de_passe.min' => 'Le mot de passe doit contenir au moins 8 caracteres.',
@@ -1259,10 +1274,63 @@ class SuperAdminController extends Controller
     // Traçabilité des consentements cookies des visiteurs
     public function consentements(Request $request)
     {
-        $query = Consentement::with('user')->latest();
+        $query = $this->consentementsQuery($request);
+
+        $consentements = $query->paginate(PerPage::resolve())->withQueryString();
+
+        $stats = $this->statsConsentements($query);
+
+        return view('superadmin.consentements', compact('consentements', 'stats'));
+    }
+
+    // Export CSV des consentements (tenant compte des filtres appliqués)
+    public function consentementsExport(Request $request)
+    {
+        $consentements = $this->consentementsQuery($request)->limit(10000)->get();
+
+        $filename = 'consentements-'.date('Y-m-d-Hi').'.csv';
+
+        return response()->streamDownload(function () use ($consentements) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'Date', 'Statut', 'Personne', 'Email', 'Session', 'Services acceptes',
+                'Version politique', 'IP',
+            ], ';', '"', '\\');
+
+            foreach ($consentements as $c) {
+                fputcsv($out, [
+                    $this->neutraliserCelluleCsv($c->created_at?->format('d/m/Y H:i') ?? '-'),
+                    $this->neutraliserCelluleCsv($c->statut),
+                    $this->neutraliserCelluleCsv($c->user?->nom ?? ($c->user_id ? 'Compte #'.$c->user_id : 'Anonyme')),
+                    $this->neutraliserCelluleCsv($c->user?->email ?? '-'),
+                    $this->neutraliserCelluleCsv($c->session_id ?? '-'),
+                    $this->neutraliserCelluleCsv(implode(', ', $c->services ?? []) ?: '-'),
+                    $this->neutraliserCelluleCsv($c->version_politique ?? '-'),
+                    $this->neutraliserCelluleCsv($c->ip_visiteur ?? '-'),
+                ], ';', '"', '\\');
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    // Requête commune (filtres recherche, statut, période) à la liste, aux stats et à l'export
+    private function consentementsQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Consentement::with('user');
 
         if ($request->filled('statut')) {
             $query->where('statut', $request->input('statut'));
+        }
+
+        if ($request->filled('debut')) {
+            $query->whereDate('created_at', '>=', $request->input('debut'));
+        }
+
+        if ($request->filled('fin')) {
+            $query->whereDate('created_at', '<=', $request->input('fin'));
         }
 
         if ($request->filled('q')) {
@@ -1275,9 +1343,61 @@ class SuperAdminController extends Controller
             });
         }
 
-        $consentements = $query->paginate(PerPage::resolve())->withQueryString();
+        return $query->latest();
+    }
 
-        return view('superadmin.consentements', compact('consentements'));
+    // Statistiques agrégées sur la requête filtrée (KPI + graphes)
+    private function statsConsentements($query): array
+    {
+        $total = (clone $query)->count();
+        $acceptes = (clone $query)->where('statut', 'accepte')->count();
+        $refuses = (clone $query)->where('statut', 'refuse')->count();
+        $personnalises = (clone $query)->where('statut', 'personnalise')->count();
+        $connectes = (clone $query)->whereNotNull('user_id')->count();
+
+        // Évolution quotidienne (décisions totales vs acceptées)
+        $parJour = (clone $query)
+            ->selectRaw('DATE(created_at) as jour, statut, COUNT(*) as n')
+            ->groupBy('jour', 'statut')
+            ->orderBy('jour')
+            ->get();
+
+        $evolution = $parJour->groupBy('jour')->map(function ($g) {
+            return [
+                'jour' => \Carbon\Carbon::parse($g->first()->jour)->format('d/m'),
+                'total' => (int) $g->sum('n'),
+                'accepte' => (int) $g->where('statut', 'accepte')->sum('n'),
+            ];
+        })->values();
+
+        // Répartition par version de politique
+        $parVersion = (clone $query)
+            ->selectRaw('COALESCE(version_politique, \'—\') as version, COUNT(*) as n')
+            ->groupBy('version_politique')
+            ->orderByDesc('n')
+            ->get()
+            ->map(fn ($v) => ['version' => $v->version, 'n' => (int) $v->n]);
+
+        // Fréquence des services acceptés (sur un échantillon récent pour la performance)
+        $services = collect((clone $query)->select('services')->limit(10000)->get()->pluck('services')->flatten()->filter())
+            ->countBy()
+            ->sortDesc()
+            ->take(6)
+            ->map(fn ($n, $cle) => ['service' => $cle, 'n' => (int) $n])
+            ->values();
+
+        return [
+            'total' => $total,
+            'acceptes' => $acceptes,
+            'refuses' => $refuses,
+            'personnalises' => $personnalises,
+            'connectes' => $connectes,
+            'anonymes' => max(0, $total - $connectes),
+            'taux_acceptation' => $total > 0 ? round($acceptes / $total * 100, 1) : 0,
+            'evolution' => $evolution,
+            'par_version' => $parVersion,
+            'services' => $services,
+        ];
     }
 
     // Logs système complets
@@ -1795,7 +1915,7 @@ class SuperAdminController extends Controller
         $data = $request->validate([
             'nom' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'mot_de_passe' => 'required|min:8',
+            'mot_de_passe' => 'required|string|min:8|max:255',
             'telephone' => 'nullable|string|max:20',
             'organisation' => 'nullable|string|max:255',
             'type' => 'nullable|string|in:universitaire,professionnel',
