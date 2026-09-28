@@ -47,15 +47,15 @@ Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show']
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat')->middleware('throttle:5,1');
 Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur')->middleware('throttle:5,10');
 
-Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
-Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook');
+Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback')->middleware('throttle:20,5');
+Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook')->middleware('throttle:120,1');
 
 Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
 Route::get('/paiement/lien/{ticket}', [PaiementController::class, 'accederDepuisLien'])->name('paiement.acces-lien')->middleware('signed');
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
 
 Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
-Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher');
+Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher')->middleware('throttle:10,1');
 Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTicket'])->name('tickets.telecharger')->middleware('signed');
 Route::get('/ticket/{ticket}/telecharger-tous', [TicketController::class, 'downloadAll'])->name('tickets.telecharger-tous')->middleware('signed');
 
@@ -166,6 +166,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
         Route::get('/consentements', [SuperAdminController::class, 'consentements'])->name('consentements');
+        Route::get('/consentements/export', [SuperAdminController::class, 'consentementsExport'])->name('consentements.export');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');
         Route::get('/campagnes-marketing', [SuperAdminController::class, 'campagnesMarketing'])->name('campagnes-marketing');
         Route::get('/campagnes-marketing/{message}', [SuperAdminController::class, 'voirCampagne'])->name('campagnes-marketing.show');
@@ -385,8 +386,8 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::get('/tickets/export/csv', [TicketController::class, 'exportCsv'])->name('tickets.export-csv');
 
     Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
-    Route::post('/scan/verifier', [ScanController::class, 'verifier'])->name('scan.verifier');
-    Route::post('/scan/access-code', [ScanController::class, 'verifierAccessCode'])->name('scan.access-code');
+    Route::post('/scan/verifier', [ScanController::class, 'verifier'])->name('scan.verifier')->middleware('throttle:60,1');
+    Route::post('/scan/access-code', [ScanController::class, 'verifierAccessCode'])->name('scan.access-code')->middleware('throttle:30,1');
     Route::get('/scan/clear', [ScanController::class, 'clearAccess'])->name('scan.clear');
     Route::get('/scan/historique', [ScanController::class, 'historiqueJson'])->name('scan.historique');
 

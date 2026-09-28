@@ -25,7 +25,7 @@ class LoginController extends Controller
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
-            'mot_de_passe' => ['required'],
+            'mot_de_passe' => ['required', 'max:255'],
         ]);
 
         $user = \App\Models\User::where('email', $credentials['email'])->first();

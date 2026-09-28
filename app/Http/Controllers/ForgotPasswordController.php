@@ -29,8 +29,11 @@ class ForgotPasswordController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        $token = Str::random(60); // Token de réinitialisation
-        $user->remember_token = $token;
+        // Sécurité : le token en clair n'est JAMAIS stocké en base ; seul son empreinte
+        // SHA-256 l'est, avec une expiration de 60 minutes.
+        $token = Str::random(60);
+        $user->password_reset_token = hash('sha256', $token);
+        $user->password_reset_expires_at = now()->addMinutes(60);
         $user->save();
 
         $url = route('password.reset', ['token' => $token]); // Lien de réinitialisation
@@ -52,18 +55,20 @@ class ForgotPasswordController extends Controller
         $validated = $request->validate([
             'token' => 'required',
             'email' => 'required|email|exists:users,email',
-            'mot_de_passe' => 'required|min:8|confirmed',
+            'mot_de_passe' => 'required|string|min:8|max:255|confirmed',
         ], [
             'token.required' => 'Token invalide.',
             'email.required' => 'Veuillez entrer votre email.',
             'email.exists' => 'Aucun compte trouvé avec cet email.',
             'mot_de_passe.required' => 'Le mot de passe est obligatoire.',
             'mot_de_passe.min' => 'Minimum 8 caractères.',
+            'mot_de_passe.max' => 'Mot de passe trop long.',
             'mot_de_passe.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);
 
         $user = User::where('email', $validated['email'])
-            ->where('remember_token', $validated['token'])
+            ->where('password_reset_token', hash('sha256', $validated['token']))
+            ->where('password_reset_expires_at', '>', now())
             ->first();
 
         if (!$user) {
@@ -71,7 +76,8 @@ class ForgotPasswordController extends Controller
         }
 
         $user->mot_de_passe = bcrypt($validated['mot_de_passe']);
-        $user->remember_token = null; // Invalide le token après utilisation
+        $user->password_reset_token = null; // Invalide le token après utilisation
+        $user->password_reset_expires_at = null;
         $user->save();
 
         return redirect()->route('login')->with('success', 'Mot de passe réinitialisé. Connectez-vous avec votre nouveau mot de passe.');

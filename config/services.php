@@ -44,6 +44,7 @@ return [
     'fedapay' => [
         'public_key' => env('FEDAPAY_PUBLIC_KEY'),
         'secret_key' => env('FEDAPAY_SECRET_KEY'),
+        'webhook_secret' => env('FEDAPAY_WEBHOOK_SECRET'), // Endpoint secret (Workbench → Webhooks)
         'sandbox' => env('FEDAPAY_SANDBOX', true),
     ],
 

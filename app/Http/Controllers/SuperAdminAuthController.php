@@ -97,7 +97,7 @@ class SuperAdminAuthController extends Controller
     {
         $credentials = $request->validate([
             'pseudo' => 'required|string|max:50',
-            'mot_de_passe' => 'required|min:8',
+            'mot_de_passe' => 'required|string|min:8|max:255',
         ], [
             'pseudo.required' => 'Le pseudo est requis.',
             'mot_de_passe.required' => 'Le mot de passe est requis.',

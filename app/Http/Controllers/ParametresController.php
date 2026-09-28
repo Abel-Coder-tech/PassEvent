@@ -84,7 +84,7 @@ class ParametresController extends Controller
     {
         $validated = $request->validate([
             'mot_de_passe_actuel' => 'required',
-            'mot_de_passe' => 'required|min:8|confirmed',
+            'mot_de_passe' => 'required|string|min:8|max:255|confirmed',
         ]);
 
         if (!Hash::check($validated['mot_de_passe_actuel'], Auth::user()->mot_de_passe)) {

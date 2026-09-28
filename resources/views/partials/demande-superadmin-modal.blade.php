@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tarifs.forEach(t => {
             const div = document.createElement('div');
             div.className = 'd-flex align-items-center justify-content-between gap-2';
-            div.innerHTML = '<span style="font-size:0.8rem;color:#444;flex:1;">' + t.nom + '</span>' +
+            div.innerHTML = '<span style="font-size:0.8rem;color:#444;flex:1;">' + escapeHtml(t.nom) + '</span>' +
                 '<input type="number" class="form-control form-control-sm" style="width:110px;" ' +
                 'name="quantites[' + t.id + ']" min="0" max="5000" step="1" placeholder="Qté">';
             demandeQuantites.appendChild(div);

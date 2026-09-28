@@ -37,6 +37,50 @@ class PaiementController extends Controller
         }
     }
 
+    // Vérifie que la transaction FedaPay a été créée pour CETTE commande (custom_metadata).
+    // Le montant ne doit JAMAIS servir de lien transaction <-> commande : cela permettrait de
+    // réutiliser une même transaction approuvée pour confirmer plusieurs commandes différentes.
+    private function verifierLiaisonTransaction(?array $txData, Ticket $ticket): bool
+    {
+        if (! is_array($txData)) {
+            return false;
+        }
+
+        $metadata = $txData['custom_metadata'] ?? null;
+        if (! is_array($metadata)) {
+            return false;
+        }
+
+        $metadataGroup = trim((string) ($metadata['group_transaction_id'] ?? ''));
+        $metadataTicketId = trim((string) ($metadata['ticket_id'] ?? ''));
+
+        // 1. Commande (groupe GRP-...) : la transaction doit référencer le même groupe.
+        $transactionGroup = (string) $ticket->transaction_id;
+        if ($transactionGroup !== '' && str_starts_with($transactionGroup, 'GRP-')) {
+            return $metadataGroup !== '' && hash_equals($transactionGroup, $metadataGroup);
+        }
+
+        // 2. Ticket isolé sans groupe (vente agent, lots) : la transaction doit référencer ce ticket.
+        if ($metadataGroup === '' && $metadataTicketId !== '') {
+            return hash_equals((string) $ticket->id, $metadataTicketId);
+        }
+
+        return false;
+    }
+
+    // Extrait uniquement un identifiant de transaction d'un payload (pour journaliser sans PII)
+    private function extraireTrace(string $payload): array
+    {
+        try {
+            $data = json_decode($payload, true);
+            $tx = $data['data']['transaction'] ?? $data['transaction'] ?? $data['data'] ?? $data;
+
+            return ['transaction_id' => $tx['id'] ?? $data['id'] ?? null];
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
     // Affiche la page de paiement FedaPay pour un ticket
     public function show($ticketId)
     {
@@ -163,6 +207,24 @@ class PaiementController extends Controller
             return redirect()->to($fallback);
         }
 
+        // Sécurité : un ticket annulé, remboursé ou échoué ne peut jamais être (re)confirmé.
+        if ($ticket->statut_paiement !== 'en_attente') {
+            FacadesLog::warning('FedaPay callback - tentative de confirmation d\'un ticket non confirmable', [
+                'ticket' => $ticket->id,
+                'statut' => $ticket->statut_paiement,
+                'transaction_id' => $transactionId,
+            ]);
+
+            $fallback = match ($source) {
+                'agent_vente' => route('agent-vente.dashboard'),
+                'vente_manuelle' => route('ventes-manuelles.create'),
+                default => route('paiement.show', $ticket->id),
+            };
+
+            return redirect()->to($fallback)
+                ->with('error', 'Cette commande ne peut plus être confirmée.');
+        }
+
         // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance aux query params)
         $txData = $this->fedapay->getTransaction($transactionId);
         $status = $txData['status'] ?? null;
@@ -220,6 +282,24 @@ class PaiementController extends Controller
         }
 
         // Paiement vérifié via API — traitement
+        // Sécurité : la transaction doit avoir été créée pour CETTE commande (custom_metadata),
+        // jamais uniquement pour un montant équivalent.
+        if (! $this->verifierLiaisonTransaction($txData, $ticket)) {
+            FacadesLog::warning('FedaPay callback - transaction non liée à cette commande (metadata)', [
+                'ticket' => $ticket->id,
+                'transaction_id' => $transactionId,
+            ]);
+
+            $fallback = match ($source) {
+                'agent_vente' => route('agent-vente.dashboard'),
+                'vente_manuelle' => route('ventes-manuelles.create'),
+                default => route('paiement.show', $ticket->id),
+            };
+
+            return redirect()->to($fallback)
+                ->with('error', 'Impossible de rattacher cette transaction à votre commande. Contactez le support.');
+        }
+
         $paymentMethod = $request->query('payment_method', 'mobile_money');
         $paymentPhone = $request->query('phone', $ticket->telephone_acheteur);
 
@@ -342,6 +422,19 @@ class PaiementController extends Controller
                 ->with('qr_attente', 'Le statut du paiement est en cours de vérification. Si il est confirmé, vos planches apparaîtront automatiquement dans la liste ci-dessous.');
         }
 
+        // Sécurité : la commande doit correspondre à la référence des QR codes auto-générés.
+        $metadata = $txData['custom_metadata'] ?? [];
+        $metadataReference = trim((string) (is_array($metadata) ? ($metadata['reference'] ?? '') : ''));
+        if ($metadataReference !== '' && ! hash_equals($metadataReference, (string) $reference)) {
+            FacadesLog::warning('FedaPay callback lot - transaction non liée à la commande (metadata)', [
+                'reference' => $reference,
+                'transaction_id' => $transactionId,
+            ]);
+
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Impossible de rattacher cette transaction à votre commande.');
+        }
+
         // Sécurité : le montant payé doit correspondre à la commission totale de la commande
         $montantAttendu = round((float) $lots->sum('montant_commission'), 2);
         $montantTx = (float) ($txData['amount'] ?? 0);
@@ -375,10 +468,27 @@ class PaiementController extends Controller
     // Webhook FedaPay : notification serveur à serveur
     public function webhook(Request $request)
     {
-        $data = $request->all();
+        $payload = $request->getContent();
+        $signature = $request->header('x-fedapay-signature');
+        $secret = config('services.fedapay.webhook_secret');
 
-        // Log complet du payload pour diagnostic
-        FacadesLog::info('FedaPay webhook payload complet', $data);
+        // Sécurité : seule une signature FedaPay valide (HMAC, horodatée) est acceptée.
+        if ($secret) {
+            try {
+                \FedaPay\Webhook::constructEvent($payload, $signature, $secret);
+            } catch (\Throwable $e) {
+                FacadesLog::warning('FedaPay webhook - signature invalide', [
+                    'ip' => $request->ip(),
+                    'trace' => $this->extraireTrace($payload),
+                ]);
+
+                return response()->json(['error' => 'Invalid signature'], 400);
+            }
+        } else {
+            FacadesLog::warning('FedaPay webhook - Aucun endpoint secret configuré, signature non vérifiée');
+        }
+
+        $data = $request->all();
 
         // L'événement peut être direct (transaction) ou enveloppé (Event.data.transaction)
         $tx = $data['data']['transaction'] ?? $data['transaction'] ?? $data['data'] ?? $data;
@@ -443,38 +553,22 @@ class PaiementController extends Controller
                 ->first();
         }
 
-        // Dernier recours : recherche par email client + montant de la transaction (callback/webhook perdus)
-        $customer = $tx['customer'] ?? $data['customer'] ?? null;
-        $customerEmail = is_array($customer) || is_object($customer)
-            ? (data_get($customer, 'email') ?? null)
-            : $customer;
-        $montantTx = (float) ($tx['amount'] ?? $data['amount'] ?? 0);
+        // Sécurité : la transaction doit avoir été créée pour CETTE commande (custom_metadata).
+        // Supprimé : la recherche par email + montant (appariement non fiable et source de détournement).
+        if ($ticket && ! $this->verifierLiaisonTransaction($txData, $ticket)) {
+            FacadesLog::warning('FedaPay webhook - transaction non liée à la commande (metadata)', [
+                'ticket' => $ticket->id,
+                'transaction_id' => $transactionId,
+            ]);
 
-        if (! $ticket && $customerEmail) {
-            $candidats = Ticket::where('email_acheteur', $customerEmail)
-                ->where('statut_paiement', 'en_attente')
-                ->with('evenement', 'tarif')
-                ->get();
-
-            if ($montantTx > 0) {
-                foreach ($candidats->groupBy('transaction_id') as $groupe) {
-                    if (abs($groupe->sum('montant') - $montantTx) < 1) {
-                        $ticket = $groupe->first();
-                        break;
-                    }
-                }
-            }
-            if (! $ticket && $candidats->count() === 1) {
-                $ticket = $candidats->first();
-            }
+            return response()->json(['status' => 'ignored', 'reason' => 'transaction_not_linked']);
         }
 
         if (! $ticket) {
             // Paiement approuvé mais aucun billet retrouvé : incident journalisé pour le support
             FacadesLog::warning('FedaPay webhook - paiement approuvé sans ticket trouvé', [
                 'transaction_id' => $transactionId,
-                'customer_email' => $customerEmail,
-                'amount' => $montantTx,
+                'amount' => (float) ($txData['amount'] ?? 0),
             ]);
             LogModel::create([
                 'type_operation' => 'reconciliation',
@@ -482,8 +576,7 @@ class PaiementController extends Controller
                 'details' => [
                     'action' => 'webhook_incident_ticket_non_trouve',
                     'transaction_id' => $transactionId,
-                    'email' => $customerEmail ?? null,
-                    'montant' => $montantTx,
+                    'montant' => (float) ($txData['amount'] ?? 0),
                 ],
                 'ip' => $request->ip(),
             ]);
@@ -519,9 +612,9 @@ class PaiementController extends Controller
         $moyenPaiement = PaiementMapper::moyenPaiement($paymentMethodRaw);
         $operateur = PaiementMapper::operateur($paymentMethodRaw);
 
-        // Vérifie la cohérence montant ↔ tickets avant de confirmer (billets retrouvés hors metadata)
+        // Vérifie la cohérence montant ↔ tickets (montant issu des données API re-vérifiées)
         $montantAttendu = (float) $groupTickets->sum('montant');
-        $montantTx = (float) ($txData['amount'] ?? $montantTx);
+        $montantTx = (float) ($txData['amount'] ?? 0);
         if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
             FacadesLog::warning('FedaPay webhook - montant incohérent avec le groupe de tickets', [
                 'ticket' => $ticket->id,
@@ -585,6 +678,18 @@ class PaiementController extends Controller
             return response()->json(['status' => 'ignored', 'reason' => 'status_not_verified']);
         }
 
+        // Sécurité : la transaction doit référencer la commande de QR codes auto-générés.
+        $metadata = $txData['custom_metadata'] ?? [];
+        $metadataReference = trim((string) (is_array($metadata) ? ($metadata['reference'] ?? '') : ''));
+        if ($metadataReference !== '' && ! hash_equals($metadataReference, (string) $reference)) {
+            FacadesLog::warning('FedaPay webhook lot - transaction non liée à la commande (metadata)', [
+                'reference' => $reference,
+                'transaction_id' => $txData['id'] ?? null,
+            ]);
+
+            return response()->json(['status' => 'ignored', 'reason' => 'transaction_not_linked']);
+        }
+
         // Sécurité : cohérence du montant payé avec la commission totale de la commande
         $montantAttendu = round((float) $lots->sum('montant_commission'), 2);
         $montantTx = (float) ($txData['amount'] ?? 0);
@@ -629,8 +734,10 @@ class PaiementController extends Controller
             foreach ($groupTickets as $t) {
                 // Verrouillage pessimiste : bloque le ticket pendant la mise à jour pour éviter les doubles confirmations
                 $locked = Ticket::whereKey($t->id)->lockForUpdate()->first();
-                if (! $locked || $locked->statut_paiement === 'payé') {
-                    continue; // Déjà payé (callback + webhook simultanés)
+                // Seuls les tickets en attente sont confirmables : un ticket payé (idempotence),
+                // annulé, remboursé ou échoué ne repasse jamais à 'payé'.
+                if (! $locked || $locked->statut_paiement !== 'en_attente') {
+                    continue;
                 }
 
                 $evenement = $locked->evenement()->lockForUpdate()->first();

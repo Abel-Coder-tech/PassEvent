@@ -579,7 +579,7 @@ majBouton();
 @if($errors->any() && old('evenement_id'))
 document.addEventListener('DOMContentLoaded', function () {
     ouvrirModal();
-    const evId = {{ old('evenement_id') }};
+    const evId = {{ (int) old('evenement_id') }};
     const carte = document.querySelector('.event-card[data-id="' + evId + '"]');
     if (carte) {
         selectionnerEvenement(evId, carte);

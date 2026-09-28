@@ -23,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'no_cache' => \App\Http\Middleware\NoCache::class,
         ]);
 
+        // En-têtes de sécurité sur toutes les réponses
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
+        // Le site est servi derrière un proxy/Apache : autoriser X-Forwarded-* (HTTPS, IP)
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             \App\Http\Middleware\CheckInactivite::class, // Deconnexion aphe 30 min d'inactivite
         ]);
