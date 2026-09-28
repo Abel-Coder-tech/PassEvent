@@ -1196,7 +1196,7 @@
             </div>
             <div class="pax-consent-section">
                 <div class="pax-consent-section-text">
-                    <div class="pax-consent-section-title">Marketing &amp; analyse</div>
+                    <div class="pax-consent-section-title">Marketing </div>
                     <div class="pax-consent-section-desc">Ces cookies peuvent être déposés par nos partenaires publicitaires via notre site.</div>
                 </div>
                 <label class="pax-toggle">
@@ -1206,7 +1206,7 @@
             </div>
             <div class="pax-consent-section">
                 <div class="pax-consent-section-text">
-                    <div class="pax-consent-section-title">Préférences</div>
+                    <div class="pax-consent-section-title">Préférences &amp; analyse</div>
                     <div class="pax-consent-section-desc">Pour personnaliser votre contenu, nous utilisons des outils qui adaptent votre expérience.</div>
                 </div>
                 <label class="pax-toggle">
