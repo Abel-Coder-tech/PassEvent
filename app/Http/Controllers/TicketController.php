@@ -85,19 +85,19 @@ class TicketController extends Controller
                 $dateAchat = $ticket->date_achat ?? $ticket->created_at;
 
                 fputcsv($out, [
-                    $ticket->code_unique,
-                    $ticket->nom_acheteur,
-                    $ticket->whatsapp_acheteur ?? $ticket->telephone_acheteur ?? '-',
-                    $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '-',
-                    $ticket->email_acheteur,
-                    $ticket->evenement?->titre ?? '-',
-                    $ticket->nom_tarif ?? '-',
+                    $this->neutraliserCelluleCsv($ticket->code_unique),
+                    $this->neutraliserCelluleCsv($ticket->nom_acheteur),
+                    $this->neutraliserCelluleCsv($ticket->whatsapp_acheteur ?? $ticket->telephone_acheteur ?? '-'),
+                    $this->neutraliserCelluleCsv($ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '-'),
+                    $this->neutraliserCelluleCsv($ticket->email_acheteur),
+                    $this->neutraliserCelluleCsv($ticket->evenement?->titre ?? '-'),
+                    $this->neutraliserCelluleCsv($ticket->nom_tarif ?? '-'),
                     number_format((float) $ticket->montant, 0, ',', ' '),
-                    $ticket->statut_paiement,
+                    $this->neutraliserCelluleCsv($ticket->statut_paiement),
                     PaiementMapper::moyenLabel(PaiementMapper::moyenPaiement($ticket->methode_paiement)),
                     PaiementMapper::operateurLabel(PaiementMapper::operateur($ticket->methode_paiement)),
-                    $ticket->transaction_id,
-                    "\t".($dateAchat?->format('d/m/Y H:i') ?? '-'),
+                    $this->neutraliserCelluleCsv($ticket->transaction_id),
+                    "\t".$this->neutraliserCelluleCsv($dateAchat?->format('d/m/Y H:i') ?? '-'),
                 ], ';', '"', '\\');
             }
 
@@ -465,6 +465,21 @@ class TicketController extends Controller
             ->update(['download_count' => $ticket->download_count + 1]);
 
         $ticket->download_count += 1;
+    }
+
+    // Empêche l'injection de formule Excel (CSV) : préfixe par ' les cellules commençant
+    // par = + - @ ou une tabulation/retour (interprétés comme formules par Excel/Calc).
+    private function neutraliserCelluleCsv(mixed $valeur): mixed
+    {
+        if (! is_string($valeur) || $valeur === '') {
+            return $valeur;
+        }
+
+        if (preg_match('/^[\s]*[=+\-@\r\t]/', $valeur)) {
+            return "'".$valeur;
+        }
+
+        return $valeur;
     }
 
     // Vérifie que le ticket appartient à un événement de l'organisateur connecté

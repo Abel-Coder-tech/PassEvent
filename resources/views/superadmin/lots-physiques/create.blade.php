@@ -134,7 +134,7 @@
             }
             selTar.innerHTML = '<option value="">-- Choisir un tarif --</option>' + tarifs.map(t => {
                 var etat = (t.statut && t.statut !== 'actif') ? ' (' + t.statut + ')' : '';
-                return '<option value="' + t.id + '">' + t.nom + ' - ' + t.prix + ' FCFA' + etat + '</option>';
+                return '<option value="' + t.id + '">' + escapeHtml(t.nom) + ' - ' + escapeHtml(t.prix) + ' FCFA' + escapeHtml(etat) + '</option>';
             }).join('');
             selTar.disabled = false;
             if (data.commission) inpCommission.value = data.commission;
@@ -165,7 +165,7 @@
                 return;
             }
             selEvt.innerHTML = evenements.map(e =>
-                '<option value="' + e.id + '">' + e.titre + '</option>'
+                '<option value="' + e.id + '">' + escapeHtml(e.titre) + '</option>'
             ).join('');
             selEvt.disabled = false;
             // La première option est présélectionnée par le navigateur (surtout si un seul

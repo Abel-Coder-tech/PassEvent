@@ -119,18 +119,12 @@ class FedapayService
                 // L'API FedaPay enveloppe la ressource : {"v1/transaction": {...}}
                 $transaction = $data['v1/transaction'] ?? $data['transaction'] ?? $data;
 
-                Log::info('FedapayService::getTransaction - Payload complet', [
-                    'transaction_id' => $transactionId,
-                    'payload' => $transaction,
-                ]);
-
                 return $transaction;
             }
 
             Log::warning('FedapayService::getTransaction - Échec HTTP', [
                 'transaction_id' => $transactionId,
                 'status' => $response->status(),
-                'body' => $response->body(),
             ]);
 
             return null;

@@ -33,7 +33,7 @@ class AgentController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:agents,email',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|max:255',
             'evenement_id' => ['required', Rule::exists('evenement', 'id')->where(function ($q) {
                 $q->where('user_id', auth()->id());
             })],

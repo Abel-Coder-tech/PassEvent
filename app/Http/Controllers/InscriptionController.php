@@ -145,7 +145,7 @@ class InscriptionController extends Controller
         ];
 
         if (!($reg['from_google'] ?? false)) {
-            $rules['mot_de_passe'] = 'required|string|min:8|confirmed';
+            $rules['mot_de_passe'] = 'required|string|min:8|max:255|confirmed';
         }
 
         $validated = $request->validate($rules);

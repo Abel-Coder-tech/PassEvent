@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
 
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
+
+            // Cookies de session uniquement en HTTPS (défaut durci en production)
+            config()->set('session.secure', env('SESSION_SECURE_COOKIE', true));
         }
     }
 }
