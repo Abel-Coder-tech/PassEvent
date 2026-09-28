@@ -460,7 +460,7 @@ class TicketController extends Controller
     // (updated_at sert de clé d'invalidation du cache PDF).
     private function incrementerTelechargement(Ticket $ticket): void
     {
-        DB::table('tickets')
+        DB::table($ticket->getTable())
             ->where('id', $ticket->id)
             ->update(['download_count' => $ticket->download_count + 1]);
 
