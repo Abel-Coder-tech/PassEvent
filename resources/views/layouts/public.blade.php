@@ -691,9 +691,9 @@
             inset: 0;
             z-index: 2147482900;
             display: flex;
-            align-items: flex-end;
-            justify-content: flex-start;
-            padding: 0 0 28px 28px;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
             background: rgba(11, 16, 32, 0.35);
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             box-sizing: border-box;
@@ -705,6 +705,8 @@
             background: #ffffff;
             width: 440px;
             max-width: 100%;
+            max-height: calc(100vh - 40px);
+            overflow: auto;
             border-radius: 16px;
             padding: 26px 28px 24px;
             box-shadow: 0 20px 50px rgba(8, 12, 24, 0.25);
@@ -768,6 +770,12 @@
             background: #F8FAFC;
         }
         @media (max-width: 480px) {
+            #paxConsentBanner {
+                padding: 12px;
+            }
+            .pax-banner-card {
+                padding: 22px 18px 20px;
+            }
             .pax-banner-actions {
                 flex-direction: column;
             }
@@ -1196,7 +1204,7 @@
             </div>
             <div class="pax-consent-section">
                 <div class="pax-consent-section-text">
-                    <div class="pax-consent-section-title">Marketing </div>
+                    <div class="pax-consent-section-title">Marketing</div>
                     <div class="pax-consent-section-desc">Ces cookies peuvent être déposés par nos partenaires publicitaires via notre site.</div>
                 </div>
                 <label class="pax-toggle">
