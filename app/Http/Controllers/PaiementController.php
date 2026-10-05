@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\LotAutoConfirme;
 use App\Mail\PaymentErrorAlert;
 use App\Mail\TicketEmail;
 use App\Models\AgentVente;
@@ -381,13 +380,14 @@ class PaiementController extends Controller
         $reference = $request->query('reference');
         $lots = LotPhysique::with('tarif')
             ->where('reference_paiement', $reference)
-            ->where('auto_genere', true)
             ->get();
 
         if ($lots->isEmpty()) {
             return redirect()->route('admin.lots-physiques.index')
                 ->with('error', 'Commande introuvable.');
         }
+
+        $estDemande = $lots->first()->estUneDemande();
 
         // Déjà confirmé (par le webhook par exemple) : simple redirection
         if ($lots->first()->statut !== 'en_attente_paiement') {
@@ -454,11 +454,13 @@ class PaiementController extends Controller
         $confirme = LotAutoService::confirmerLots($lots, $transactionId);
 
         if ($confirme) {
-            try {
-                Mail::to($lots->first()->email_reception)->send(new LotAutoConfirme($lots));
-            } catch (\Exception $e) {
-                FacadesLog::error('Email lot auto non envoye : '.$e->getMessage());
-            }
+            LotAutoService::notifierPaiementAccepte($lots);
+        }
+
+        // Demande au super admin : la génération est prise en charge par le super admin
+        if ($estDemande) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('success', 'Paiement confirmé. Votre demande est transmise : le super admin génère vos QR codes et vous les transmettra.');
         }
 
         return redirect()->route('admin.lots-physiques.index')
@@ -527,7 +529,9 @@ class PaiementController extends Controller
         // Commande de QR codes auto-générés : flux dédié, traité AVANT toute recherche de ticket
         // (aucun ticket n'existe encore tant que le paiement n'est pas confirmé)
         $metadataType = $metadata['type'] ?? null;
-        if ($metadataType === 'lot_physique' || str_starts_with((string) $externalRef, 'LOTAUTO-')) {
+        if ($metadataType === 'lot_physique'
+            || str_starts_with((string) $externalRef, 'LOTAUTO-')
+            || str_starts_with((string) $externalRef, LotPhysique::PREFIXE_DEMANDE)) {
             $referenceLot = (string) ($metadata['reference'] ?? $externalRef);
             $transactionIdPayload = (string) ($tx['id'] ?? $data['id'] ?? '');
 
@@ -651,7 +655,6 @@ class PaiementController extends Controller
 
         $lots = LotPhysique::with('tarif')
             ->where('reference_paiement', $reference)
-            ->where('auto_genere', true)
             ->get();
 
         if ($lots->isEmpty()) {
@@ -713,11 +716,7 @@ class PaiementController extends Controller
         $confirme = LotAutoService::confirmerLots($lots, $transactionId);
 
         if ($confirme) {
-            try {
-                Mail::to($lots->first()->email_reception)->send(new LotAutoConfirme($lots));
-            } catch (\Exception $e) {
-                FacadesLog::error('Webhook - email lot auto non envoye : '.$e->getMessage());
-            }
+            LotAutoService::notifierPaiementAccepte($lots);
         }
 
         return response()->json(['status' => 'ok']);

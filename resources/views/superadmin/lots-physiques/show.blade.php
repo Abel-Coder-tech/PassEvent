@@ -16,10 +16,13 @@
         <div class="sa-card">
             <div class="sa-card-header">
                 <span><i class="bi bi-ticket-perforated-fill me-2" style="color: var(--sa-primary);"></i>{{ $lot->nom }}</span>
+                @if($lot->estUneDemande())
+                    <span class="sa-badge sa-badge-warning" style="font-size:0.65rem;">DEMANDE ORGANISATEUR</span>
+                @endif
                 @if($lot->estTransmis)
                     <span class="sa-badge sa-badge-success">Transmis le {{ $lot->transmis_at?->format('d/m/Y H:i') }}</span>
                 @else
-                    <span class="sa-badge sa-badge-warning">Genere</span>
+                    <span class="sa-badge sa-badge-warning" style="background:{{ $lot->statutCouleur() }};color:#fff;">{{ $lot->statutLibelle() }}</span>
                 @endif
             </div>
             <div class="sa-card-body">
@@ -111,6 +114,20 @@
                 </div>
             </div>
             <div class="sa-card-body" style="border-top:1px solid #f1f2f6;">
+                @if($lot->estUneDemande() && ! $lot->estTransmis)
+                    <div class="alert py-2 px-3 mb-2" style="font-size:0.8rem;background:#fff8e6;border:1px solid #ffe1a8;color:#8a5b00;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        @if($lot->statut === \App\Models\LotPhysique::STATUT_ATTENTE_PAIEMENT)
+                            Demande en attente de paiement : le super admin sera notifié dès la confirmation du règlement.
+                        @elseif(! $lot->templatePresent())
+                            Template manquant : contactez l'organisateur pour qu'il fournisse son visuel de ticket.
+                        @elseif(! $lot->aUnTemplate())
+                            Template fourni : positionnez le QR code sur l'image de l'organisateur avant de transmettre.
+                        @else
+                            Template et QR code en place : la planche peut être transmise à l'organisateur.
+                        @endif
+                    </div>
+                @endif
                 <div class="d-flex gap-2 flex-wrap">
                     @unless($lot->estTransmis)
                         <button type="button" class="sa-btn sa-btn-success" data-bs-toggle="modal" data-bs-target="#transmettreModal">
@@ -125,7 +142,7 @@
                     <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="sa-btn" style="background:#3b82f6;border:none;color:#fff;" title="Télécharger la planche PDF de ce lot">
                         <i class="bi bi-file-earmark-pdf"></i> Planche PDF
                     </a>
-                    <a href="{{ route('superadmin.tickets-physiques.template', $lot) }}" class="sa-btn" style="background:var(--sa-primary);border:none;color:#fff;" title="Configurer le template du ticket physique">
+                    <a href="{{ route('superadmin.tickets-physiques.template', $lot) }}" class="sa-btn" style="background:var(--sa-primary);border:none;color:#fff;" title="{{ $lot->estUneDemande() ? 'Positionner le QR code sur le template de l\'organisateur' : 'Configurer le template du ticket physique' }}">
                         <i class="bi bi-image"></i> Template
                     </a>
                 </div>
