@@ -176,6 +176,7 @@
 @endsection
 
 @push('scripts')
+@include('partials.scan-sound')
 <script>
 // Charge la lib depuis 2 CDN : sur certains reseaux (forfait data bloque en
 // salle d'evenement) unpkg seul echoue et la camera devient inutilisable.
@@ -469,6 +470,7 @@ function submitScan(code) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
+            window.ScanSound.success();
             let txn = data.ticket?.transaction_id
                 ? '<small class="d-block mt-1 text-muted"> <strong class="text-dark">' + escapeHtml(data.ticket.transaction_id) + '</strong></small>'
                 : '';
@@ -480,6 +482,7 @@ function submitScan(code) {
                 txn +
                 '</div>';
         } else {
+            window.ScanSound.failure();
             let extra = '';
             if (data.ticket) {
                 extra = '<div class="mt-2 p-2 bg-light rounded small">' +
@@ -497,6 +500,7 @@ function submitScan(code) {
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     })
     .catch(() => {
+        window.ScanSound.failure();
         resultDiv.innerHTML = '<div class="result-invalid"><p class="mb-0 text-danger">Erreur de connexion.</p></div>';
         resultDiv.style.display = 'block';
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
