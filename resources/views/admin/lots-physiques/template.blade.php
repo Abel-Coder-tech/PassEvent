@@ -436,7 +436,7 @@
                                     <label class="form-label">Taille</label>
                                     <div class="input-group input-group-sm">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-1" aria-label="Diminuer la taille">−</button>
-                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrSizeInput" data-min="{{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN - \App\Services\LotPhysiqueTemplatePdfService::QR_TOP - \App\Services\LotPhysiqueTemplatePdfService::PAX_GAP - \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT - \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }}" data-max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrSizeInput" data-min="{{ \App\Services\LotPhysiqueTemplatePdfService::qrMin() }}" data-max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
                                         <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="1" aria-label="Augmenter la taille">+</button>
                                         <span class="input-group-text">mm</span>
                                     </div>
@@ -557,11 +557,11 @@
                                 </div>
                                 <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                     <i class="bi bi-qr-code" style="color:#542680;"></i>
-                                    <span><strong>QR code :</strong> marges identiques (0,25 mm) en haut, à gauche et à droite autour du QR code, et 2 mm sous le code pass.</span>
+                                    <span><strong>QR code :</strong> carré blanc de marges identiques (0,25 mm) autour du QR code.</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                     <i class="bi bi-upc-scan" style="color:#542680;"></i>
-                                    <span><strong>Code PAX :</strong> imprimé sous le QR code.</span>
+                                    <span><strong>Code PAX :</strong> imprimé sous le carré blanc, en 3 mm de haut.</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                     <i class="bi bi-ticket-perforated" style="color:#542680;"></i>
@@ -592,31 +592,24 @@
         line: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT }},
         bottom: {{ \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }},
         min: {{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN }},
-        qrMin: {{ \App\Services\LotPhysiqueTemplatePdfService::ZONE_MIN - \App\Services\LotPhysiqueTemplatePdfService::QR_TOP - \App\Services\LotPhysiqueTemplatePdfService::PAX_GAP - \App\Services\LotPhysiqueTemplatePdfService::PAX_LINE_HEIGHT - \App\Services\LotPhysiqueTemplatePdfService::PAX_BOTTOM }},
+        qrMin: {{ \App\Services\LotPhysiqueTemplatePdfService::qrMin() }},
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : hauteur 2 cm minimum (20),
-    // largeur = QR + 2 marges. Les marges (haut 0,25 / côtés 0,2 / écart 0,1 /
-    // bas 0,35) sont des minimums ; l'écart QR↔code reste fixe à 0,1, le
-    // surplus vertical se partage entre haut et bas, et les marges gauche et
-    // droite valent exactement la marge du haut.
+    // Zone blanche carrée autour du QR : côté = QR + 2 marges (haut 0,25, côtés
+    // 0,25). Le code pass est imprimé sous le carré : écart 0,1 mm, puis la
+    // hauteur de ligne, puis 1,65 mm en dessous.
     function zoneDims(qrMm) {
-        var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
-        var gap = ZONE.gap;
-        var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
-        var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
-        var bottom = Math.round((ZONE.bottom + extraV - extraV / 2) * 100) / 100;
-        var padX = Math.max(ZONE.side, padTop); // côtés = marge du haut
+        var padX = Math.max(ZONE.side, ZONE.top); // côtés = marge du haut
         var w = Math.round((qrMm + padX * 2) * 100) / 100;
         return {
             w: w,
-            h: h,
+            h: w, // carré
             padX: padX,
-            padTop: padTop,
-            gap: gap,
-            bandTop: padTop + qrMm,
-            bandH: gap + ZONE.line + bottom
+            padTop: ZONE.top,
+            gap: ZONE.gap,
+            bandTop: w, // le bandeau démarre sous le carré
+            bandH: ZONE.gap + ZONE.line + ZONE.bottom
         };
     }
 

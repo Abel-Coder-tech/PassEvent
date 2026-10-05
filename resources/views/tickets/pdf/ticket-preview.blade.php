@@ -25,7 +25,6 @@
             background: #fff;
             border-radius: 1.5mm;
             overflow: hidden;
-            text-align: center;
         }
         .qr-zone img {
             position: absolute;
@@ -34,11 +33,10 @@
         .pax-band {
             position: absolute;
             top: {{ $bandTop }}mm;
-            left: 0;
-            width: 100%;
+            left: {{ $zoneX }}mm;
+            width: {{ $zoneW }}mm;
             height: {{ $paxBandH }}mm;
             padding: {{ $gap }}mm 0 {{ $paxBottom }}mm;
-            background: #fff;
             text-align: center;
             overflow: hidden;
             box-sizing: border-box;
@@ -60,9 +58,9 @@
 @endif
     <div class="qr-zone">
         <img src="{{ $qrDataUri }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
-        <div class="pax-band">
-            <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
-        </div>
+    </div>
+    <div class="pax-band">
+        <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
     </div>
 </div>
 </body>

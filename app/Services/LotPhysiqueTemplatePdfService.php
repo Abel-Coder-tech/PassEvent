@@ -16,29 +16,90 @@ class LotPhysiqueTemplatePdfService
     // Gouttière (zone de découpe) entre les tickets
     public const GOUTTIERE = 2; // mm
 
-    // Marges internes de la zone blanche : haut 0,25 — gauche/droite = marge du haut
-    // (0,2 au minimum) — écart QR↔code 0,1 — bas 2 mm sous le code pass pour
-    // l'isoler de la bordure basse de la zone.
+    // Marges internes du carré blanc qui entoure le QR : haut 0,25 — gauche/droite
+    // = marge du haut (0,2 au minimum). Le code pass n'est plus dans le carré :
+    // il est imprimé sous la zone, écarté de 0,1 mm, avec 1,65 mm en dessous.
     public const QR_TOP = 0.25; // mm  marge entre le bord haut de la zone et le QR
     public const QR_SIDE = 0.2; // mm   marge gauche/droite entre le bord de la zone et le QR
-    public const PAX_GAP = 0.1; // mm  écart entre le QR et le code pass
-    public const PAX_BOTTOM = 2; // mm   marge entre le code pass et le bord bas de la zone
+    public const PAX_GAP = 0.1; // mm  écart entre le bas de la zone et le code pass
+    public const PAX_BOTTOM = 1.65; // mm   marge sous le code pass
 
-    // Taille du texte du code pass
-    public const PAX_FONT = 10; // px
+    // Taille du texte du code pass : 11,34 px = 3 mm à l'impression (96 px = 1 pouce)
+    public const PAX_FONT = 11.34; // px
 
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
     public const PAX_LINE_HEIGHT = 3.3; // mm
 
-    // Côté minimal de la zone blanche (QR + code pass) : 2 cm → zone carrée 20×20.
-    // Quand le QR choisi est plus petit, on l'agrandit automatiquement à la taille
-    // qui remplit exactement la zone : 20 - (haut + écart + ligne + bas) = 16 mm.
-    // Au-dessus, le QR choisi grandit la zone (agrandissable librement).
+    // Côté minimal du carré blanc : 2 cm → carré 20×20. Un QR plus petit est
+    // agrandi automatiquement pour remplir le carré (voir qrMin()).
     public const ZONE_MIN = 20; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
     public const ZOOM_MIN = 70;
     public const ZOOM_MAX = 150;
+
+    /**
+     * Marge gauche/droite du carré blanc : jamais plus petite que la marge du haut.
+     */
+    public static function padX(): float
+    {
+        return round(max(self::QR_SIDE, self::QR_TOP), 2);
+    }
+
+    /**
+     * Plus petit QR qui remplit exactement le carré de ZONE_MIN de côté (20 mm).
+     * Un QR plus petit est automatiquement agrandi à cette taille.
+     */
+    public static function qrMin(): float
+    {
+        return round(self::ZONE_MIN - 2 * self::padX(), 2);
+    }
+
+    /**
+     * Géométrie (mm, relative au ticket) du carré blanc et du code pass.
+     *
+     * Le carré entoure le QR avec des marges identiques (0,25 mm) ; le code pass
+     * est imprimé sous le carré, jamais dedans. Les positions sont bornées pour
+     * que le carré et le code restent dans le ticket.
+     *
+     * @param  float|null  $qrSize  taille demandée (agrandie au minimum si trop petite)
+     * @param  float|null  $qrX  position du QR, ou null pour centrer
+     * @param  float|null  $qrY  position du QR, ou null pour centrer
+     * @return array<string, float>
+     */
+    public static function geometry(?float $qrSize, ?float $qrX, ?float $qrY, float $slotW, float $slotH): array
+    {
+        $padX = self::padX();
+        $padTop = self::QR_TOP;
+        $gap = self::PAX_GAP;
+
+        // Un QR plus petit que qrMin() est agrandi : il remplit alors le carré de 2 cm.
+        $qrSize = round(max($qrSize, self::qrMin()), 2);
+
+        // Carré blanc : côté = QR + 2 marges (haut = côtés).
+        $zoneW = round($qrSize + 2 * $padX, 2);
+        $zoneH = $zoneW;
+        $paxBandH = round($gap + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM, 2);
+
+        $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));
+        $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - ($zoneH + $paxBandH), 0.0));
+
+        return [
+            'qrSize' => $qrSize,
+            'padX' => $padX,
+            'padTop' => $padTop,
+            'zoneX' => $zoneX,
+            'zoneY' => $zoneY,
+            'zoneW' => $zoneW,
+            'zoneH' => $zoneH,
+            'gap' => $gap,
+            'bandTop' => round($zoneY + $zoneH, 2),
+            'paxBandH' => $paxBandH,
+            'paxLineH' => self::PAX_LINE_HEIGHT,
+            'paxFont' => self::PAX_FONT,
+            'paxBottom' => self::PAX_BOTTOM,
+        ];
+    }
 
     /**
      * Détails du format d'un lot (prédéfini ou sur mesure, sinon format par défaut).
@@ -130,31 +191,7 @@ class LotPhysiqueTemplatePdfService
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
-        $padTop = self::QR_TOP;
-        $qrSide = self::QR_SIDE;
-        $paxGap = self::PAX_GAP;
-        $paxLineH = self::PAX_LINE_HEIGHT;
-        $paxFont = self::PAX_FONT;
-        $paxBottom = self::PAX_BOTTOM;
-
-        // QR minimum : celui qui remplit exactement la zone réservée de 2 cm (20×20).
-        // Un petit QR choisi est automatiquement agrandi → densité et marges réduites.
-        $qrSize = round(max($qrSize, self::ZONE_MIN - ($padTop + $paxGap + $paxLineH + $paxBottom)), 2);
-
-        // Zone blanche ajustée au QR : hauteur 2 cm minimum (20), largeur = QR + 2 marges.
-        // Marges haut 0,25 / côtés 0,2 / écart QR↔code 0,1 / bas 0,35 : ce sont des
-        // minimums. Les marges gauche et droite valent exactement la marge du haut.
-        $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
-        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé (0,1)
-        $extraV = round($zoneH - ($padTop + $qrSize + $gap + $paxLineH + $paxBottom), 2);
-        $padTop = round($padTop + $extraV / 2, 2);        // surplus → haut
-        $paxBottom = round($paxBottom + $extraV - $extraV / 2, 2); // surplus → bas
-        $padX = round(max($qrSide, $padTop), 2);          // côtés = marge du haut
-        $zoneW = round($qrSize + 2 * $padX, 2);           // zone non carrée, elle suit le QR
-        $bandTop = round($padTop + $qrSize, 2);
-        $paxBandH = round($gap + $paxLineH + $paxBottom, 2);
-        $zoneX = min(max($qrX - $padX, 0.0), max($layout['slot_largeur'] - $zoneW, 0.0));
-        $zoneY = min(max($qrY - $padTop, 0.0), max($layout['slot_hauteur'] - $zoneH, 0.0));
+        $geo = self::geometry($qrSize, $qrX, $qrY, $layout['slot_largeur'], $layout['slot_hauteur']);
 
         // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
         $imgW = $layout['slot_largeur'] * $zoom / 100;
@@ -171,14 +208,12 @@ class LotPhysiqueTemplatePdfService
 
         $pages = $tickets->chunk($layout['par_page'])->values();
 
-        $pdf = Pdf::loadView('tickets.pdf.template', compact(
+        $pdf = Pdf::loadView('tickets.pdf.template', array_merge(compact(
             'lot', 'pages', 'qrs', 'templateUrl',
-            'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
-            'padX', 'padTop', 'bandTop', 'gap',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
             'signBottom', 'signFont', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
-        ));
+        ), $geo));
         $pdf->setPaper('a4', $layout['orientation']);
         $pdf->render();
 
@@ -208,42 +243,15 @@ class LotPhysiqueTemplatePdfService
         $imgLeft = ($slotW - $imgW) / 2;
         $imgTop = ($slotH - $imgH) / 2;
 
-$qrSize = $lot->qr_size ?? $format['qr_defaut'];
+        $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($slotW - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($slotH - $qrSize) / 2);
-        $padTop = self::QR_TOP;
-        $qrSide = self::QR_SIDE;
-        $paxGap = self::PAX_GAP;
-        $paxLineH = self::PAX_LINE_HEIGHT;
-        $paxFont = self::PAX_FONT;
-        $paxBottom = self::PAX_BOTTOM;
+        $geo = self::geometry($qrSize, $qrX, $qrY, $slotW, $slotH);
 
-        // QR minimum : celui qui remplit exactement la zone réservée de 2 cm (20×20).
-        $qrSize = round(max($qrSize, self::ZONE_MIN - ($padTop + $paxGap + $paxLineH + $paxBottom)), 2);
-
-        // Zone blanche ajustée au QR : hauteur 2 cm minimum (20), largeur = QR + 2 marges.
-        // Les marges demandées sont des minimums : écart QR↔code à 0,1, surplus
-        // vertical partagé entre haut et bas, et marges gauche/droite identiques
-        // à la marge du haut.
-        $zoneH = round(max($qrSize + $padTop + $paxGap + $paxLineH + $paxBottom, self::ZONE_MIN), 2);
-        $gap = $paxGap; // écart QR↔code : toujours au minimum demandé (0,1)
-        $extraV = round($zoneH - ($padTop + $qrSize + $gap + $paxLineH + $paxBottom), 2);
-        $padTop = round($padTop + $extraV / 2, 2);        // surplus → haut
-        $paxBottom = round($paxBottom + $extraV - $extraV / 2, 2); // surplus → bas
-        $padX = round(max($qrSide, $padTop), 2);          // côtés = marge du haut
-        $zoneW = round($qrSize + 2 * $padX, 2);           // zone non carrée, elle suit le QR
-        $bandTop = round($padTop + $qrSize, 2);
-        $paxBandH = round($gap + $paxLineH + $paxBottom, 2);
-        $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));
-        $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - $zoneH, 0.0));
-
-        $html = view('tickets.pdf.ticket-preview', compact(
-            'templateUrl', 'qrDataUri',
-            'zoneX', 'zoneY', 'zoneW', 'zoneH', 'qrSize', 'paxBandH', 'paxLineH', 'paxFont', 'paxBottom',
-            'padX', 'padTop', 'bandTop', 'gap',
-            'slotW', 'slotH', 'zoom',
+        $html = view('tickets.pdf.ticket-preview', array_merge(compact(
+            'templateUrl', 'qrDataUri', 'slotW', 'slotH', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop'
-        ))->with('codeUnique', $ticket->code_unique)->render();
+        ), $geo))->with('codeUnique', $ticket->code_unique)->render();
 
         $pdf = Pdf::loadHtml($html);
         $pdf->setPaper([0, 0, $slotW * 2.835, $slotH * 2.835], 'portrait');
