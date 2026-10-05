@@ -24,7 +24,10 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Permissions navigateur minimales
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+        // La caméra reste interdite partout, sauf sur le scan agent (/agent/scan)
+        // qui en a besoin, et uniquement en same-origin (camera=(self)).
+        $camera = $request->is('agent/scan') ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "geolocation=(), microphone=(), camera={$camera}");
 
         // HSTS : uniquement sur HTTPS
         if ($request->secure()) {

@@ -104,7 +104,7 @@
                 <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
                     <h6 class="fw-bold mb-0"><i class="bi bi-camera me-2" style="color:var(--violet-clair);"></i>Scanner QR Code</h6>
                     <button type="button" class="btn btn-violet btn-sm" id="btnToggleCamera">
-                        <i class="bi bi-camera me-1"></i><span id="cameraBtnText">Activer</span>
+                        <i class="bi bi-camera me-1" id="cameraBtnIcon"></i><span id="cameraBtnText">Activer</span>
                     </button>
                 </div>
                 <div class="p-0">
@@ -123,6 +123,7 @@
                         </div>
                     </div>
                 </div>
+                <div id="cameraStatus" class="px-3 py-2 text-center small" style="display:none;"></div>
             </div>
         </div>
 
@@ -175,11 +176,32 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+// Charge la lib depuis 2 CDN : sur certains reseaux (forfait data bloque en
+// salle d'evenement) unpkg seul echoue et la camera devient inutilisable.
+(function () {
+    var sources = [
+        'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+        'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+    ];
+    var index = 0;
+    function loadNext() {
+        if (index >= sources.length) { return; }
+        var script = document.createElement('script');
+        script.src = sources[index++];
+        script.onerror = loadNext;
+        document.head.appendChild(script);
+    }
+    loadNext();
+})();
+</script>
 <script>
 let html5QrCode = null;
 let isScanning = false;
+let isStarting = false;
+let isReleasing = false;
 let scanTimeout = null;
+let lastCameraError = null;
 
 const SCAN_CONFIG = {
     fps: 15,
@@ -207,119 +229,200 @@ const CAMERA_ATTEMPTS = [
 document.getElementById('btnToggleCamera')?.addEventListener('click', toggleCamera);
 
 function toggleCamera() {
-    if (isScanning) { stopCamera(); }
+    if (isScanning || isStarting) { stopCamera(); }
     else { startCamera(); }
 }
 
-function startCamera() {
-    const btn = document.getElementById('btnToggleCamera');
+function setCameraButton(active) {
+    const icon = document.getElementById('cameraBtnIcon');
+    const text = document.getElementById('cameraBtnText');
+    if (icon) icon.className = 'bi ' + (active ? 'bi-stop-circle' : 'bi-camera') + ' me-1';
+    if (text) text.textContent = active ? 'Arrêter' : 'Activer';
+}
+
+function setCameraStatus(message, isError) {
+    const status = document.getElementById('cameraStatus');
+    if (!status) return;
+    if (!message) {
+        status.style.display = 'none';
+        status.textContent = '';
+        return;
+    }
+    status.style.display = 'block';
+    status.className = 'px-3 py-2 text-center small ' + (isError ? 'text-danger' : 'text-muted');
+    status.textContent = message;
+}
+
+function showScannerChrome(active) {
+    const reader = document.getElementById('reader');
     const placeholder = document.getElementById('cameraPlaceholder');
     const corners = document.getElementById('scanCorners');
     const frame = document.getElementById('scanFrame');
-    const reader = document.getElementById('reader');
-    if (!reader) return;
-
-    reader.style.display = 'block';
-    if (placeholder) placeholder.style.display = 'none';
-    if (corners) corners.style.display = 'block';
-    if (frame) frame.style.display = 'block';
-
-    tryStartCamera(0);
+    if (reader) reader.style.display = active ? 'block' : 'none';
+    if (placeholder) placeholder.style.display = active ? 'none' : 'flex';
+    if (corners) corners.style.display = active ? 'block' : 'none';
+    if (frame) frame.style.display = active ? 'block' : 'none';
 }
 
-function tryStartCamera(attemptIndex) {
-    if (attemptIndex < CAMERA_ATTEMPTS.length) {
-        const instance = createScannerInstance();
+// Verifie les prerequis AVANT d'appeler getUserMedia : sinon le navigateur
+// echoue silencieusement et l'agent ne comprend pas la cause du refus.
+function preflightCamera() {
+    if (!window.isSecureContext) {
+        return "Connexion non securisee : la camera n'est accessible qu'en HTTPS. Recharge la page avec une adresse https://.";
+    }
+    if (typeof Html5Qrcode === 'undefined') {
+        return "Le lecteur de QR codes n'a pas pu etre charge. Verifie la connexion internet puis recharge la page.";
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return "Ce navigateur ne supporte pas l'acces camera. Essaie avec Chrome ou Safari.";
+    }
+    return null;
+}
+
+async function cameraPermissionState() {
+    try {
+        if (navigator.permissions && navigator.permissions.query) {
+            const status = await navigator.permissions.query({ name: 'camera' });
+            return status.state;
+        }
+    } catch (e) {
+        // Safari iOS ne supporte pas la requete 'camera'.
+    }
+    return 'unknown';
+}
+
+function delay(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+// Libere completement la session camera : stop() + clear() + purge du DOM.
+// stop() rejette souvent (scanner jamais demarre ou deja arrete) : sans ce
+// try/catch la <video> reste dans #reader et la prochaine activation echoue
+// avec un NotReadableError.
+async function releaseScanner() {
+    isReleasing = true;
+    const instance = html5QrCode;
+    html5QrCode = null;
+    if (instance) {
+        try { await instance.stop(); } catch (e) {}
+        try { instance.clear(); } catch (e) {}
+    }
+    const reader = document.getElementById('reader');
+    if (reader) {
+        while (reader.firstChild) { reader.removeChild(reader.firstChild); }
+    }
+    isReleasing = false;
+}
+
+async function tryStartScanner(constraints) {
+    const instance = createScannerInstance();
+    try {
+        await instance.start(constraints, SCAN_CONFIG, onScanSuccess);
         html5QrCode = instance;
-        instance.start(
-            CAMERA_ATTEMPTS[attemptIndex],
-            SCAN_CONFIG,
-            onScanSuccess
-        ).then(() => {
-            onCameraStarted();
-        }).catch(() => {
-            try { instance.clear(); } catch (e) {}
-            html5QrCode = null;
-            // Petit delai entre 2 tentatives : sur certains telephones la
-            // camera n'est pas encore liberee (NotReadableError) si on
-            // redemarre immediatement.
-            setTimeout(() => tryStartCamera(attemptIndex + 1), 400);
-        });
+        return true;
+    } catch (err) {
+        lastCameraError = err;
+        try { await instance.stop(); } catch (e) {}
+        try { instance.clear(); } catch (e) {}
+        const reader = document.getElementById('reader');
+        if (reader) {
+            while (reader.firstChild) { reader.removeChild(reader.firstChild); }
+        }
+        return false;
+    }
+}
+
+async function startCamera() {
+    if (isScanning || isStarting || isReleasing) { return; }
+
+    const blocker = preflightCamera();
+    if (blocker) { showCameraError(blocker); return; }
+
+    if (await cameraPermissionState() === 'denied') {
+        showCameraError("Acces camera refuse pour ce site. Autorise la camera dans les reglages du navigateur (icone cadenas a gauche de l'URL), puis recharge la page.");
         return;
     }
 
-    Html5Qrcode.getCameras()
-        .then((cameras) => {
-            if (cameras && cameras.length > 0) {
-                const back = cameras.find(function (c) {
-                    return /back|rear|environment/i.test(c.label || '');
-                }) || cameras[0];
-                const instance = createScannerInstance();
-                html5QrCode = instance;
-                instance.start(back.id, SCAN_CONFIG, onScanSuccess)
-                    .then(onCameraStarted)
-                    .catch(onCameraFailed);
-            } else {
-                onCameraFailed();
-            }
-        })
-        .catch(onCameraFailed);
+    isStarting = true;
+    lastCameraError = null;
+    showScannerChrome(true);
+    setCameraStatus('Demarrage de la camera...', false);
+
+    // API navigateur d'abord : le deviceId de la camera arriere est plus
+    // fiable que les contraintes facingMode sur Android.
+    let cameras = [];
+    try {
+        cameras = await Html5Qrcode.getCameras();
+    } catch (err) {
+        lastCameraError = err;
+        cameras = [];
+    }
+
+    if (cameras && cameras.length > 0) {
+        const back = cameras.find(function (camera) {
+            return /back|rear|environment|arriere/i.test(camera.label || '');
+        }) || cameras[cameras.length - 1];
+
+        if (await tryStartScanner(back.id)) { onCameraStarted(); return; }
+    }
+
+    for (const attempt of CAMERA_ATTEMPTS) {
+        if (await tryStartScanner(attempt)) { onCameraStarted(); return; }
+        // Delai entre 2 tentatives : sur certains telephones la camera
+        // n'est pas encore liberee (NotReadableError) si on redemarre
+        // immediatement.
+        await delay(600);
+    }
+
+    isStarting = false;
+    showScannerChrome(false);
+    setCameraButton(false);
+    setCameraStatus(describeCameraError(lastCameraError), true);
 }
 
 function describeCameraError(err) {
-    const message = String((err && err.message) || (err && err.name) || err || '');
-    if (/NotAllowedError|Permission/i.test(message)) {
-        return "Acces camera refuse. Autorisez la camera dans les reglages du navigateur puis reessayez.";
+    const text = String((err && (err.name + ' ' + err.message)) || err || '');
+
+    if (/NotAllowedError|PermissionDeniedError/i.test(text)) {
+        return "Acces camera refuse par le navigateur. Autorise la camera pour ce site dans les reglages du navigateur puis reessaie.";
     }
-    if (/NotFoundError/i.test(message)) {
+    if (/NotFoundError|DevicesNotFoundError/i.test(text)) {
         return "Aucune camera trouvee sur cet appareil.";
     }
-    if (/NotReadableError|in use|busy/i.test(message)) {
-        return "La camera est deja utilisee par une autre application. Fermez-la puis reessayez.";
+    if (/NotReadableError|TrackStartError|AbortError|in use|busy/i.test(text)) {
+        return "La camera est deja utilisee par une autre application. Ferme les autres apps puis reessaie.";
     }
-    if (/NotSupportedError|secure context|https/i.test(message)) {
-        return "La camera necessite une connexion securisée (HTTPS).";
+    if (/SecurityError|NotSupportedError|secure context|https/i.test(text)) {
+        return "La camera necessite une connexion securisee (HTTPS).";
     }
-    return "Impossible d'activer la camera. Verifiez que le site est en HTTPS et autorisez la camera dans votre navigateur.";
+    return "Impossible d'activer la camera. Verifie que le site est en HTTPS et que la camera est autorisee dans ton navigateur.";
 }
 
 function onCameraStarted() {
+    isStarting = false;
     isScanning = true;
-    const btn = document.getElementById('btnToggleCamera');
-    if (btn) btn.innerHTML = '<i class="bi bi-stop-circle me-1"></i>Arrêter';
+    lastCameraError = null;
+    scanTimeout = null;
+    setCameraButton(true);
+    setCameraStatus('Camera active. Pointez le QR code du ticket.', false);
 }
 
-function onCameraFailed(err) {
-    const btn = document.getElementById('btnToggleCamera');
-    const placeholder = document.getElementById('cameraPlaceholder');
-    const corners = document.getElementById('scanCorners');
-    const frame = document.getElementById('scanFrame');
-    const reader = document.getElementById('reader');
-    if (placeholder) placeholder.style.display = 'flex';
-    if (reader) reader.style.display = 'none';
-    if (corners) corners.style.display = 'none';
-    if (frame) frame.style.display = 'none';
-    if (btn) btn.innerHTML = '<i class="bi bi-camera me-1"></i>Activer';
-    alert(describeCameraError(err));
-}
-
-function stopCamera() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-        });
-    }
+function showCameraError(message) {
+    isStarting = false;
     isScanning = false;
-    const btn = document.getElementById('btnToggleCamera');
-    if (btn) btn.innerHTML = '<i class="bi bi-camera me-1"></i>Activer';
-    const placeholder = document.getElementById('cameraPlaceholder');
-    const corners = document.getElementById('scanCorners');
-    const frame = document.getElementById('scanFrame');
-    const reader = document.getElementById('reader');
-    if (placeholder) placeholder.style.display = 'flex';
-    if (reader) reader.style.display = 'none';
-    if (corners) corners.style.display = 'none';
-    if (frame) frame.style.display = 'none';
+    showScannerChrome(false);
+    setCameraButton(false);
+    setCameraStatus(message, true);
+    if (lastCameraError) { console.warn('Scan agent - erreur camera :', lastCameraError); }
+}
+
+async function stopCamera() {
+    isScanning = false;
+    isStarting = false;
+    await releaseScanner();
+    showScannerChrome(false);
+    setCameraButton(false);
+    setCameraStatus('', false);
     clearScanOk();
 }
 
