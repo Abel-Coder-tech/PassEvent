@@ -9,8 +9,10 @@ use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 
 class InscriptionController extends Controller
 {
@@ -43,6 +45,21 @@ class InscriptionController extends Controller
         session(['registration' => $reg]);
     }
 
+    /**
+     * Traduit un échec technique d'envoi en message compréhensible.
+     * Sans cela, l'utilisateur reçoit une page 404/500 sans savoir si le code
+     * a été envoyé ou non.
+     */
+    private function messageEnvoiEchoue(Throwable $e): string
+    {
+        // Message volontairement generique pour l'utilisateur : aucun detail
+        // technique ne doit lui exposer. La cause reelle est conservee dans
+        // les logs via report($e) et reste consultable par l'administrateur.
+        Log::warning('Echec envoi du code OTP : ' . $e->getMessage());
+
+        return "Échec d'envoi du code de vérification.";
+    }
+
     // Étape 0 : Formulaire de saisie de l'email
     public function step0()
     {
@@ -59,7 +76,17 @@ class InscriptionController extends Controller
             return back()->withErrors(['email' => 'Un compte existe déjà avec cet email. Connectez-vous.'])->withInput();
         }
 
-        $this->otp->generateAndSend($request->email);
+        // L'envoi peut échouer (SMTP, file d'attente) : on le dit explicitement
+        // plutot que de renvoyer une page d'erreur technique.
+        try {
+            $this->otp->generateAndSend($request->email);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()
+                ->withErrors(['email' => $this->messageEnvoiEchoue($e)])
+                ->withInput();
+        }
 
         $this->putReg(['email' => $request->email, 'email_verified' => false, 'step' => 1]);
 
@@ -95,7 +122,10 @@ class InscriptionController extends Controller
             return back()->withErrors(['code' => 'Ce code a expiré. Cliquez sur Renvoyer le code pour en recevoir un nouveau.']);
         }
 
-        $this->putReg(['email_verified' => true, 'from_google' => $request->has('from_google')]);
+        // from_google n'est jamais choisi par le client : uniquement Google
+        // le positionne dans la session. Le recopier depuis la requete
+        // permettrait de contourner la saisie du mot de passe.
+        $this->putReg(['email_verified' => true]);
 
         return redirect()->route('inscriptions.identity');
     }
@@ -110,7 +140,17 @@ class InscriptionController extends Controller
                 : redirect()->route('inscriptions.organisateur');
         }
 
-        $this->otp->generateAndSend($reg['email']);
+        try {
+            $this->otp->generateAndSend($reg['email']);
+        } catch (Throwable $e) {
+            report($e);
+
+            $message = $this->messageEnvoiEchoue($e);
+
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => $message])
+                : back()->withErrors(['code' => $message]);
+        }
 
         return $request->expectsJson()
             ? response()->json(['success' => true])
@@ -169,11 +209,22 @@ class InscriptionController extends Controller
             $userData['mot_de_passe'] = Hash::make($validated['mot_de_passe']);
         }
 
+        // Filet de securite : l'email a pu etre enregistre entre-temps
+        // (ex. inscription Google concurrente) sinon on leve une 500.
+        if (User::where('email', $reg['email'])->exists()) {
+            $this->regen();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Un compte existe déjà avec cet email. Connectez-vous.',
+            ]);
+        }
+
         $user = User::create($userData);
 
         $this->regen();
 
         Auth::login($user);
+        $request->session()->regenerate(); // Anti fixation de session
 
         return redirect()->route('dashboard');
     }

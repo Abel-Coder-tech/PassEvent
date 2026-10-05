@@ -5,9 +5,10 @@ namespace App\Mail;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class OtpEmail extends Mailable implements ShouldQueue
+// Volontairement sans ShouldQueue : l'utilisateur attend ce code sur l'écran,
+// l'envoi est donc direct. Il ne doit dépendre d'aucun worker sur le serveur.
+class OtpEmail extends Mailable
 {
     public string $code;
 
