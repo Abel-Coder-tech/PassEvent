@@ -29,8 +29,19 @@
         .card-body { padding: 3rem 2rem; }
         .icon { font-size: 3.5rem; color: #7B3FA0; }
         h1 { font-size: 4rem; font-weight: 800; color: #7B3FA0; margin: 0; line-height: 1; }
-        h2 { font-size: 1.2rem; color: #333; margin: 0.5rem 0 1rem; }
+        h2 { font-size: 1.2rem; font-weight: 600; color: #333; margin: 0.5rem 0 1rem; }
         p { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .details {
+            background: #f5f5f7;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+        .details dt { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #86868b; }
+        .details dd { margin: 0 0 0.5rem; font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #333; word-break: break-all; }
+        .details dd:last-child { margin-bottom: 0; }
+        .hint { font-size: 0.8rem; color: #86868b; }
         .btn-primary {
             background: #7B3FA0; border: none; border-radius: 8px;
             padding: 0.6rem 1.5rem; font-weight: 600;
@@ -44,7 +55,22 @@
             <div class="icon"><i class="bi bi-search"></i></div>
             <h1>404</h1>
             <h2>Page introuvable</h2>
-            <p>La page que vous cherchez n'existe pas ou a été déplacée.</p>
+            <p>La page demandée n'existe pas sur ce serveur.</p>
+            @php
+                $chemin = request()->path();
+                $methode = request()->method();
+            @endphp
+            <dl class="details">
+                <dt>Adresse demandée</dt>
+                <dd>{{ $methode }} /{{ $chemin }}</dd>
+                @if (request()->query())
+                    <dt>Paramètres</dt>
+                    <dd>{{ http_build_query(request()->query()) }}</dd>
+                @endif
+                <dt>Serveur</dt>
+                <dd>{{ request()->getHost() }}</dd>
+            </dl>
+            <p class="hint">Si cette page devrait exister, signalez-nous l'adresse ci-dessus.</p>
             <a href="{{ url('/') }}" class="btn btn-primary"><i class="bi bi-house me-1"></i> Retour à l'accueil</a>
         </div>
     </div>

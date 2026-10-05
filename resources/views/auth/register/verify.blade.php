@@ -60,19 +60,35 @@ Un code de vérification a été envoyé à&nbsp;:
         }
     }, 1000);
 
+    function afficherErreurResend(message) {
+        const box = document.createElement('div');
+        box.id = 'resend-error';
+        box.className = 'alert-danger';
+        box.textContent = message;
+        document.querySelector('.card-register').prepend(box);
+    }
+
     function resendCode() {
         btnEl.classList.add('disabled');
         textEl.style.display = 'inline';
         seconds = 60;
         timerEl.textContent = seconds;
 
+        const alertBox = document.getElementById('resend-error');
+        if (alertBox) alertBox.remove();
+
         fetch('{{ route("inscriptions.resend-otp") }}', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         }).then(r => r.json()).then(d => {
-            if (d.success) location.reload();
+            if (d.success) {
+                location.reload();
+                return;
+            }
+            // Erreur renvoyee par le serveur (SMTP...) : on l'affiche.
+            afficherErreurResend(d.message || "Le renvoi du code a échoué.");
         }).catch(() => {
-            location.reload();
+            afficherErreurResend("Le renvoi du code a échoué : aucune réponse du serveur.");
         });
 
         const interval2 = setInterval(() => {

@@ -25,7 +25,10 @@ class OtpService
             'expires_at' => Carbon::now()->addMinutes(10),
         ]);
 
-        Mail::to($email)->queue(new OtpEmail($code));
+        // Envoi direct : le code est attendu immédiatement par l'utilisateur.
+        // Ne pas passer par la file d'attente, sinon l'email reste en base
+        // jusqu'a ce qu'un worker soit lance sur le serveur.
+        Mail::to($email)->send(new OtpEmail($code));
     }
 
     public function verify(string $email, string $code): string
