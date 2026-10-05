@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Paiement QR codes - Billetterie')
-@section('page-title', 'Paiement de votre commande')
+@section('page-title', $estDemande ? 'Paiement de votre demande' : 'Paiement de votre commande')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('admin.lots-physiques.index') }}">Vente physique</a></li>
@@ -27,7 +27,7 @@
     <div class="steps-bar">
         <div class="step-item done"><span class="step-dot"><i class="bi bi-check"></i></span><span class="step-label">Événement</span><span class="step-line"></span></div>
         <div class="step-item active"><span class="step-dot">2</span><span class="step-label">Paiement</span><span class="step-line"></span></div>
-        <div class="step-item"><span class="step-dot">3</span><span class="step-label">Téléchargement</span></div>
+        <div class="step-item"><span class="step-dot">3</span><span class="step-label">{{ $estDemande ? 'Génération' : 'Téléchargement' }}</span></div>
     </div>
 
     @if(session('error'))
@@ -58,8 +58,12 @@
 
                     <div class="alert alert-light border py-2 mb-3" style="font-size:.78rem;">
                         <i class="bi bi-info-circle me-1"></i>
-                        Commission de génération (5 % à 10 % du prix des billets), payée d'avance et non remboursable.
-                        Vos planches PDF seront disponibles immédiatement après confirmation du paiement.
+                        Commission de génération (5 % du prix des billets), payée d'avance et non remboursable.
+                        @if($estDemande)
+                            Votre template est déjà envoyé avec la demande : après le paiement, le super admin positionne les QR codes dessus puis vous transmet la planche.
+                        @else
+                            Vos planches PDF seront disponibles immédiatement après confirmation du paiement.
+                        @endif
                         Réception envoyée à <strong>{{ $lots->first()->email_reception }}</strong>.
                     </div>
 
@@ -102,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         environment: '{{ $sandbox ? 'sandbox' : 'live' }}',
         transaction: {
             amount: {{ (int) ceil($total) }},
-            description: 'QR codes physiques - {{ $lots->first()->evenement?->titre ?? 'PaxEvent' }}',
+            description: '{{ $estDemande ? 'Demande de QR codes' : 'QR codes physiques' }} - {{ $lots->first()->evenement?->titre ?? 'PaxEvent' }}',
             external_id: '{{ $reference }}',
             custom_metadata: {
                 type: 'lot_physique',

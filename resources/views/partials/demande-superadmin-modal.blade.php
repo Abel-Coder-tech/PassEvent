@@ -48,6 +48,38 @@
                         <div id="demande_quantites" class="vstack gap-2"></div>
                     </div>
 
+                    {{-- Template du ticket (demande de QR codes) --}}
+                    <div class="mb-3" id="demande_template_group" style="display:none;">
+                        <label class="form-label fw-semibold" style="font-size:0.82rem;">
+                            Template de votre ticket <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="template_image" id="demande_template_image" class="form-control form-control-sm" accept="image/png">
+                        <div class="form-text" style="font-size:0.72rem;">
+                            Image PNG de votre ticket (fond, logo, texte), 10 Mo maximum. Le QR code est positionné par notre équipe.
+                        </div>
+
+                        <div class="row g-2 mt-1">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" style="font-size:0.82rem;">Format du ticket</label>
+                                <select name="format" id="demande_format" class="form-select form-select-sm">
+                                    <option value="s1">Standard (14×5)</option>
+                                    <option value="s2">Standard 2 (14×7)</option>
+                                    <option value="v1">VIP (18×7)</option>
+                                    <option value="v2">VIP 2 (9,9×7)</option>
+                                    <option value="custom">Personnalisé (dimensions sur mesure)</option>
+                                </select>
+                            </div>
+                            <div class="col-6" id="demande_largeur_group" style="display:none;">
+                                <label class="form-label fw-semibold" style="font-size:0.82rem;">Largeur (mm)</label>
+                                <input type="number" name="largeur_personnalisee" id="demande_largeur" class="form-control form-control-sm" min="30" max="200">
+                            </div>
+                            <div class="col-6" id="demande_hauteur_group" style="display:none;">
+                                <label class="form-label fw-semibold" style="font-size:0.82rem;">Hauteur (mm)</label>
+                                <input type="number" name="hauteur_personnalisee" id="demande_hauteur" class="form-control form-control-sm" min="30" max="200">
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Pourcentage de commission (réduction commission) --}}
                     <div class="mb-3" id="demande_commission_group" style="display:none;">
                         <label class="form-label fw-semibold" style="font-size:0.82rem;">Pourcentage demandé (%)</label>
@@ -91,7 +123,9 @@
                     <div id="demande_info_commission" class="mt-2" style="display:none;">
                         <div class="alert alert-info py-2 px-3 mb-0" style="border-radius:8px;font-size:0.78rem;background:#f0f7ff;border:1px solid #d6e6ff;color:#1c5ba8;">
                             <i class="bi bi-info-circle me-1"></i>
-                            Le pourcentage de commission sur les tickets physiques (QR Code) est de <strong>5 % à 10 %</strong>.
+                            La commission sur les tickets physiques (QR Code) est de <strong>5 %</strong>.
+                            Votre demande est envoyée avec votre template, puis vous êtes redirigé vers le paiement de la commission.
+                            Après le paiement, notre équipe positionne les QR codes sur votre template et vous transmet la planche.
                         </div>
                     </div>
                 </div>
@@ -113,6 +147,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const demandeEvenement = document.getElementById('demande_evenement');
     const demandeQuantitesGroup = document.getElementById('demande_quantites_group');
     const demandeQuantites = document.getElementById('demande_quantites');
+    const demandeTemplateGroup = document.getElementById('demande_template_group');
+    const demandeTemplateImage = document.getElementById('demande_template_image');
+    const demandeFormat = document.getElementById('demande_format');
+    const demandeLargeurGroup = document.getElementById('demande_largeur_group');
+    const demandeHauteurGroup = document.getElementById('demande_hauteur_group');
+    const demandeLargeur = document.getElementById('demande_largeur');
+    const demandeHauteur = document.getElementById('demande_hauteur');
     const demandeCommissionGroup = document.getElementById('demande_commission_group');
     const demandeInfoCommission = document.getElementById('demande_info_commission');
     const demandeCampagneGroup = document.getElementById('demande_campagne_group');
@@ -127,6 +168,12 @@ document.addEventListener('DOMContentLoaded', function () {
         demandeCommissionGroup.style.display = 'none';
         demandeInfoCommission.style.display = 'none';
         demandeCampagneGroup.style.display = 'none';
+        demandeTemplateGroup.style.display = 'none';
+        demandeTemplateImage.required = false;
+        demandeFormat.required = false;
+        demandeTemplateImage.value = '';
+        demandeLargeur.required = false;
+        demandeHauteur.required = false;
         demandeEvenement.value = '';
         demandeQuantites.innerHTML = '';
     }
@@ -153,8 +200,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (objet === 'ticket_physique') {
             demandeInfoCommission.style.display = '';
+            demandeTemplateGroup.style.display = '';
+            demandeTemplateImage.required = true;
+            demandeFormat.required = true;
+            syncDimensionsTemplate();
         }
     });
+
+    // Dimensions personnalisées : affichées uniquement si le format « custom » est choisi
+    function syncDimensionsTemplate() {
+        const custom = demandeFormat.value === 'custom';
+        demandeLargeurGroup.style.display = custom ? '' : 'none';
+        demandeHauteurGroup.style.display = custom ? '' : 'none';
+        demandeLargeur.required = custom;
+        demandeHauteur.required = custom;
+    }
+
+    demandeFormat.addEventListener('change', syncDimensionsTemplate);
 
     demandeEvenement.addEventListener('change', function () {
         demandeQuantites.innerHTML = '';

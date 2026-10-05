@@ -56,13 +56,16 @@
                     <th class="text-center">Annués</th>
                     <th class="text-center">Scannés</th>
                     <th>Statut</th>
+                <th class="text-center">Template</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($lots as $lot)
                 <tr>
-                    <td><strong>{{ $lot->nom }}</strong></td>
+                    <td><strong>{{ $lot->nom }}</strong>
+                        @if($lot->estUneDemande())<br><span class="sa-badge sa-badge-warning" style="font-size:0.65rem;">DEMANDE</span>@endif
+                    </td>
                     <td>{{ $lot->user?->nom ?? '---' }}</td>
                     <td>{{ $lot->evenement?->titre ?? '---' }}</td>
                     <td>{{ $lot->tarif?->nom ?? '---' }}
@@ -77,7 +80,14 @@
                         @if($lot->estTransmis)
                             <span class="sa-badge sa-badge-success">Transmis {{ $lot->transmis_at?->format('d/m') }}</span>
                         @else
-                            <span class="sa-badge sa-badge-warning">Genere</span>
+                            <span class="sa-badge sa-badge-warning" style="background:{{ $lot->statutCouleur() }};color:#fff;">{{ $lot->statutLibelle() }}</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        @if($lot->templatePresent())
+                            <span class="sa-badge sa-badge-success" title="Template fourni par l'organisateur"><i class="bi bi-check-circle-fill"></i> Validé</span>
+                        @else
+                            <span class="sa-badge sa-badge-danger" title="Aucun template"><i class="bi bi-x-circle"></i></span>
                         @endif
                     </td>
                     <td class="text-end" style="white-space:nowrap;">
@@ -85,11 +95,11 @@
                             <a href="{{ route('superadmin.tickets-physiques.voir', $lot) }}" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Voir le lot">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{{ route('superadmin.tickets-physiques.template', $lot) }}" class="sa-btn sa-btn-sm" style="background:var(--sa-primary);border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Configurer le template du ticket">
+                            <a href="{{ route('superadmin.tickets-physiques.template', $lot) }}" class="sa-btn sa-btn-sm" style="background:var(--sa-primary);border:none;color:#fff;padding:0.25rem 0.45rem;border-radius:6px;font-size:0.7rem;line-height:1;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="{{ $lot->estUneDemande() ? 'Positionner le QR code sur le template de l\'organisateur' : 'Configurer le template du ticket' }}">
                                 <i class="bi bi-image"></i>
                             </a>
                             @unless($lot->estTransmis)
-                                <button type="button" class="sa-btn sa-btn-sm sa-btn-success" title="Transmettre"
+                                <button type="button" class="sa-btn sa-btn-sm sa-btn-success" title="{{ $lot->estUneDemande() && ! $lot->aUnTemplate() ? 'Template et QR code obligatoires avant transmission' : 'Transmettre' }}"
                                     data-bs-toggle="modal" data-bs-target="#transmettreModal"
                                     data-action="{{ route('superadmin.tickets-physiques.transmettre', $lot) }}"
                                     data-organisateur="{{ $lot->user?->nom }}"

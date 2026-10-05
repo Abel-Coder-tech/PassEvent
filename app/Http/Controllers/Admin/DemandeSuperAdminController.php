@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Evenement;
+use App\Models\LotPhysique;
 use App\Models\Message;
+use App\Services\LotAutoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class DemandeSuperAdminController extends Controller
 {
@@ -74,6 +78,11 @@ class DemandeSuperAdminController extends Controller
 
         $message = trim($validated['message']);
 
+        // Demande de QR codes : template fourni dans le formulaire, puis paiement de la commission
+        if ($objet === self::OBJETS['ticket_physique']) {
+            return $this->demanderQrCodes($user, $evenement, $message, $validated, $request);
+        }
+
         $tarifsNoms = $evenement ? $evenement->tarifs()->pluck('nom', 'id')->all() : null;
 
         $message = self::formaterMessage($objet, $message, $tarifsNoms, $validated);
@@ -93,6 +102,137 @@ class DemandeSuperAdminController extends Controller
         $this->notifierSupport($user, $objet, $message, $evenement);
 
         return back()->with('success', 'Votre demande a été envoyée à l\'équipe PaxEvent. Vous serez notifié(e) de la suite.');
+    }
+
+    // Demande de QR codes : le template est fourni dans le formulaire, puis l'organisateur
+    // règle la commission. Le super admin n'est notifié qu'une fois le paiement confirmé.
+    private function demanderQrCodes($user, ?Evenement $evenement, string $message, array $validated, Request $request)
+    {
+        $objet = self::OBJETS['ticket_physique'];
+
+        if (! $evenement) {
+            return back()->with('error', 'Sélectionnez l\'événement concerné par votre demande de QR codes.');
+        }
+
+        $lignes = [];
+        foreach ((array) ($validated['quantites'] ?? []) as $tarifId => $qte) {
+            $qte = (int) $qte;
+            if ($qte <= 0) {
+                continue;
+            }
+
+            $tarif = $evenement->tarifs()->where('statut', 'actif')->where('id', $tarifId)->first();
+            if (! $tarif) {
+                return back()->with('error', 'Un tarif sélectionné n\'est plus disponible.');
+            }
+
+            $lignes[] = ['tarif' => $tarif, 'quantite' => $qte];
+        }
+
+        if (empty($lignes)) {
+            return back()->with('error', 'Indiquez au moins une quantité de QR codes.');
+        }
+
+        $format = $this->validerTemplateDemande($request);
+
+        if ($format === null) {
+            return back();
+        }
+
+        $tarifsNoms = $evenement->tarifs()->pluck('nom', 'id')->all();
+        $message = self::formaterMessage($objet, $message, $tarifsNoms, $validated);
+
+        $reference = LotPhysique::PREFIXE_DEMANDE.strtoupper(Str::random(10));
+
+        // Le visuel du ticket est enregistré une seule fois et appliqué à tous les lots de la demande
+        $templatePath = 'lot-templates/demande_'.$reference.'.'.$request->file('template_image')->getClientOriginalExtension();
+        $request->file('template_image')->storeAs('', $templatePath, 'public');
+
+        $total = DB::transaction(function () use ($lignes, $evenement, $user, $reference, $format, $templatePath) {
+            $total = 0;
+
+            foreach ($lignes as $ligne) {
+                $commission = round((float) $ligne['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $ligne['quantite'], 2);
+                $total += $commission;
+
+                LotPhysique::create([
+                    'user_id' => $user->id,
+                    'evenement_id' => $evenement->id,
+                    'tarif_id' => $ligne['tarif']->id,
+                    'commission_pourcentage' => null,
+                    'nom' => mb_substr('QR Code - '.$ligne['tarif']->nom, 0, 100),
+                    'quantite' => $ligne['quantite'],
+                    'statut' => LotPhysique::STATUT_ATTENTE_PAIEMENT,
+                    'auto_genere' => false, // Génération manuelle : QR positionnés par le super admin
+                    'montant_commission' => $commission,
+                    'email_reception' => $user->email,
+                    'reference_paiement' => $reference,
+                    'template_path' => $templatePath,
+                    'format' => $format['format'],
+                    'largeur_personnalisee' => $format['largeur_personnalisee'],
+                    'hauteur_personnalisee' => $format['hauteur_personnalisee'],
+                ]);
+            }
+
+            return $total;
+        });
+
+        // Commande gratuite (tarifs à 0 F) : la demande est considered payée immédiatement
+        if ($total <= 0) {
+            $lots = LotPhysique::where('reference_paiement', $reference)->get();
+            LotAutoService::confirmerLots($lots, 'GRATUIT-'.$reference);
+            LotAutoService::notifierPaiementAccepte($lots);
+
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('success', 'Votre demande a été envoyée. Le super admin génère vos QR codes et vous les transmettra.');
+        }
+
+        return redirect()->route('admin.lots-physiques.checkout', $reference)
+            ->with('success', 'Votre demande est enregistrée. Réglez la commission pour lancer la génération de vos QR codes.');
+    }
+
+    // Template de la demande : image PNG du ticket + format (obligatoire, fourni dès la demande)
+    private function validerTemplateDemande(Request $request): ?array
+    {
+        $validated = $request->validate([
+            'template_image' => ['required', 'image', 'mimes:png', 'max:10240'],
+            'format' => ['required', 'in:s1,s2,v1,v2,custom'],
+            'largeur_personnalisee' => 'nullable|integer|min:30|max:200',
+            'hauteur_personnalisee' => 'nullable|integer|min:30|max:200',
+        ], [
+            'template_image.required' => 'Veuillez joindre votre image de ticket.',
+            'template_image.image' => 'Le fichier doit être une image.',
+            'template_image.mimes' => 'Format accepté : PNG uniquement.',
+            'template_image.max' => 'L\'image ne doit pas dépasser 10 Mo.',
+            'format.required' => 'Veuillez choisir un format.',
+            'format.in' => 'Format invalide.',
+        ]);
+
+        $largeur = null;
+        $hauteur = null;
+
+        if ($validated['format'] === LotPhysique::FORMAT_CUSTOM) {
+            $validated = array_merge($validated, $request->validate([
+                'largeur_personnalisee' => 'required|integer|min:30|max:200',
+                'hauteur_personnalisee' => 'required|integer|min:30|max:200',
+            ], [
+                'largeur_personnalisee.required' => 'Renseignez la largeur de votre ticket (mm).',
+                'hauteur_personnalisee.required' => 'Renseignez la hauteur de votre ticket (mm).',
+            ]));
+
+            if (LotPhysique::formatPersonnalise((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee']) === null) {
+                return null;
+            }
+
+            $largeur = (int) $validated['largeur_personnalisee'];
+            $hauteur = (int) $validated['hauteur_personnalisee'];
+        }
+
+        return [
+            'format' => $validated['format'],
+            'largeur_personnalisee' => $largeur,
+            'hauteur_personnalisee' => $hauteur,
+        ];
     }
 
     // Envoie un email de notification à la boîte support technique

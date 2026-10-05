@@ -16,6 +16,23 @@ class LotPhysique extends Model
     // Format de ticket sur mesure (dimensions personnalisées en mm)
     public const FORMAT_CUSTOM = 'custom';
 
+    // Préfixe de référence des commandes issues d'une demande au super admin
+    public const PREFIXE_DEMANDE = 'LOTDEM-';
+
+    // Cycle de vie d'un lot « demande au super admin » (génération manuelle)
+    public const STATUT_ATTENTE_PAIEMENT = 'en_attente_paiement';
+    public const STATUT_PAYE = 'paye';
+    public const STATUT_PRET = 'pret';
+    public const STATUT_TRANSMIS = 'transmis';
+
+    // Libellés et couleurs des statuts (espace organisateur + super admin)
+    public const STATUTS = [
+        self::STATUT_ATTENTE_PAIEMENT => ['label' => 'Paiement en attente', 'couleur' => '#f59e0b'],
+        self::STATUT_PAYE => ['label' => 'Payé — QR à générer', 'couleur' => '#6f42c1'],
+        self::STATUT_PRET => ['label' => 'Prêt à transmettre', 'couleur' => '#0d6efd'],
+        self::STATUT_TRANSMIS => ['label' => 'Transmis', 'couleur' => '#198754'],
+    ];
+
     protected $fillable = [
         'user_id',
         'evenement_id',
@@ -201,7 +218,30 @@ class LotPhysique extends Model
 
     public function getEstTransmisAttribute(): bool
     {
-        return $this->statut === 'transmis' && $this->transmis_at !== null;
+        return $this->statut === self::STATUT_TRANSMIS && $this->transmis_at !== null;
+    }
+
+    // Lot issu d'une demande au super admin : génération manuelle (template fourni par l'organisateur,
+// QR positionné par le super admin). Les commandes « Générer mes QR codes » restent en auto_genere = true.
+    public function estUneDemande(): bool
+    {
+        return ! $this->auto_genere;
+    }
+
+    // Le visuel du ticket a-t-il été fourni par l'organisateur ?
+    public function templatePresent(): bool
+    {
+        return $this->template_path !== null && file_exists(storage_path("app/public/{$this->template_path}"));
+    }
+
+    public function statutLibelle(): string
+    {
+        return self::STATUTS[$this->statut]['label'] ?? ucfirst(str_replace('_', ' ', (string) $this->statut));
+    }
+
+    public function statutCouleur(): string
+    {
+        return self::STATUTS[$this->statut]['couleur'] ?? '#6c757d';
     }
 
     public function aUnTemplate(): bool

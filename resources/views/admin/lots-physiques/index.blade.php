@@ -83,7 +83,7 @@
                 <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
                 <div class="metric-label">Commission attendue</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionPhysique, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">A verser a PaxEvent @if($commissionAutoPayee > 0)— {{ number_format($commissionAutoPayee, 0, ',', ' ') }} F deja payes (QR auto)@endif</div>
+                <div class="metric-subtitle">A verser a PaxEvent @if($commissionAutoPayee > 0)— {{ number_format($commissionAutoPayee, 0, ',', ' ') }} F deja payes (QR codes)@endif</div>
             </div>
         </div>
     </div>
@@ -133,7 +133,8 @@
                     <tr>
                         <td class="ps-3 fw-medium">
                             {{ $lot->nom }}
-                            @if($lot->auto_genere)<span class="badge" style="background:#7c3aed;font-size:.62rem;">AUTO</span>@endif
+                            @if($lot->auto_genere)<span class="badge" style="background:#7c3aed;font-size:.62rem;">AUTO</span>
+                            @else<span class="badge" style="background:#7B3FA0;font-size:.62rem;">DEMANDE</span>@endif
                         </td>
                         <td>
                             @if($lot->evenement)
@@ -151,35 +152,32 @@
                             @if($lot->nb_scannes > 0)<span class="badge bg-success">{{ $lot->nb_scannes }}</span>@else 0 @endif
                         </td>
                         <td>
-                            @if($lot->statut === 'en_attente_paiement')
-                                <span class="badge bg-warning text-dark">En paiement</span>
-                            @elseif($lot->estTransmis)
-                                <span class="badge bg-success">Transmis</span>
-                            @else
-                                <span class="badge bg-warning text-dark">En attente</span>
-                            @endif
+                            <span class="badge text-white" style="background:{{ $lot->statutCouleur() }};">{{ $lot->statutLibelle() }}</span>
                         </td>
                         <td class="text-center">{{ $lot->download_count }}/{{ config('app.max_downloads') }}</td>
                         <td class="text-end pe-3">
                             <div class="d-inline-flex gap-1 align-items-center">
-                            @if($lot->statut === 'en_attente_paiement' && $lot->reference_paiement)
+                            @if($lot->statut === \App\Models\LotPhysique::STATUT_ATTENTE_PAIEMENT && $lot->reference_paiement)
                                 <a href="{{ route('admin.lots-physiques.checkout', $lot->reference_paiement) }}" class="btn btn-sm text-white" style="background:#f59e0b;">
                                     <i class="bi bi-credit-card"></i> Payer
                                 </a>
-                                
+
                             @elseif($lot->estTransmis && $lot->nb_tickets - $lot->nb_annules > 0)
                                 <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm text-white" style="background:#7c3aed;">
                                     <i class="bi bi-download"></i> Planche PDF
                                 </a>
+                                {{-- Sur une demande, le QR est positionné par le super admin : pas d'éditeur ici --}}
+                                @unless($lot->estUneDemande())
                                 <a href="{{ route('admin.lots-physiques.template', $lot) }}" class="btn btn-sm btn-outline-primary" title="Configurer le template du ticket">
                                     <i class="bi bi-image"></i>
                                 </a>
+                                @endunless
                             @else
                                 <span class="text-muted" style="font-size:0.78rem;">
-                                    @if(!$lot->estTransmis) En attente de transmission @else Aucun ticket valide @endif
+                                    @if($lot->estTransmis) Aucun ticket valide @else En attente de transmission @endif
                                 </span>
                             @endif
-                            @if($lot->nb_scannes == 0)
+                            @if($lot->nb_scannes == 0 && !($lot->estUneDemande() && $lot->statut !== \App\Models\LotPhysique::STATUT_ATTENTE_PAIEMENT))
                             <form action="{{ route('admin.lots-physiques.destroy', $lot) }}"
                                   method="POST" class="d-inline"
                                   onsubmit="return confirm('Supprimer ce lot et ses tickets définitivement ?')">

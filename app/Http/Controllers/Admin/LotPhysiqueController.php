@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\LotAutoConfirme;
 use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Tarif;
@@ -17,7 +16,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log as FacadesLog;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -49,27 +47,28 @@ class LotPhysiqueController extends Controller
         $nbScannes = (clone $ticketsPhysiques)->where('utilise', true)->count();
         $recettesPhysiques = (float) (clone $ticketsPhysiquesValides)->sum('montant');
 
-        // Commission attendue sur le physique (hors lots auto-générés : leur commission de 5 %
-        // est payée d'avance via FedaPay et n'a aucun rapport avec les stats financières)
+        // Commission attendue sur le physique (hors lots payés d'avance : leur commission de 5 %
+        // est réglée via FedaPay et n'a aucun rapport avec les stats financières)
         $lotsCharges = LotPhysique::where('user_id', $user->id)->get()->keyBy('id');
         $evenements = Evenement::whereIn('id', $evenementIds)->get()->keyBy('id');
         $commissionPhysique = 0.0;
         foreach ($ticketsPhysiquesValides->get() as $ticket) {
             $lot = $ticket->lot_physique_id ? $lotsCharges->get($ticket->lot_physique_id) : null;
-            if ($lot?->auto_genere) {
-                continue; // Commission déjà réglée à la génération
+            if ($lot && ($lot->auto_genere || $lot->estUneDemande())) {
+                continue; // Commission déjà réglée à la commande
             }
             $taux = $lot?->commissionEffective() ?? $evenements->get($ticket->evenement_id)?->commissionEffective() ?? 10;
             $commissionPhysique += (float) $ticket->montant * $taux / 100;
         }
         $commissionPhysique = round($commissionPhysique, 2);
 
-        // Commissions auto déjà payées (frais de génération 5 %, affiché dans ce seul dashboard).
+        // Commissions déjà payées (frais de génération 5 %, affiché dans ce seul dashboard) :
+        // commandes « Générer mes QR codes » et demandes au super admin.
         // Seuls les lots transmis comptent : un paiement non confirmé n'est pas une commission payée.
         $commissionAutoPayee = round(
             (float) LotPhysique::where('user_id', $user->id)
-                ->where('auto_genere', true)
-                ->where('statut', 'transmis')
+                ->whereNotNull('reference_paiement')
+                ->where('statut', LotPhysique::STATUT_TRANSMIS)
                 ->sum('montant_commission'),
             2
         );
@@ -171,7 +170,7 @@ class LotPhysiqueController extends Controller
                     'commission_pourcentage' => null,
                     'nom' => mb_substr('QR Auto - '.$ligne['tarif']->nom, 0, 100),
                     'quantite' => $ligne['quantite'],
-                    'statut' => 'en_attente_paiement',
+                    'statut' => LotPhysique::STATUT_ATTENTE_PAIEMENT,
                     'auto_genere' => true,
                     'montant_commission' => round((float) $ligne['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $ligne['quantite'], 2),
                     'email_reception' => $emailReception,
@@ -186,7 +185,7 @@ class LotPhysiqueController extends Controller
         if ($total <= 0) {
             $lots = LotPhysique::where('reference_paiement', $reference)->get();
             LotAutoService::confirmerLots($lots, 'GRATUIT-'.$reference);
-            $this->envoyerConfirmation($lots);
+            LotAutoService::notifierPaiementAccepte($lots);
 
             return redirect()->route('admin.lots-physiques.index')
                 ->with('qr_succes', LotAutoService::donneesResultat($reference));
@@ -196,12 +195,12 @@ class LotPhysiqueController extends Controller
     }
 
     // Checkout FedaPay de la commande (récap + bouton payer)
+    // Commun aux deux parcours : commande « Générer mes QR codes » et demande au super admin.
     public function checkout(string $reference)
     {
         $lots = LotPhysique::with('tarif')
             ->where('reference_paiement', $reference)
             ->where('user_id', Auth::id())
-            ->where('auto_genere', true)
             ->get();
 
         if ($lots->isEmpty()) {
@@ -209,7 +208,15 @@ class LotPhysiqueController extends Controller
                 ->with('error', 'Commande introuvable.');
         }
 
-        if ($lots->first()->statut !== 'en_attente_paiement') {
+        $premier = $lots->first();
+
+        if ($premier->statut !== LotPhysique::STATUT_ATTENTE_PAIEMENT) {
+            // Demande déjà payée : le super admin prend en charge la génération
+            if ($premier->estUneDemande()) {
+                return redirect()->route('admin.lots-physiques.index')
+                    ->with('success', 'Cette demande est déjà payée. Le super admin génère vos QR codes et vous les transmettra.');
+            }
+
             return redirect()->route('admin.lots-physiques.index')
                 ->with('success', 'Cette commande a déjà été payée. Vos planches sont disponibles ci-dessous.');
         }
@@ -217,18 +224,9 @@ class LotPhysiqueController extends Controller
         $total = round((float) $lots->sum('montant_commission'), 2);
         $publicKey = app(\App\Services\FedapayService::class)->getPublicKey();
         $sandbox = app(\App\Services\FedapayService::class)->isSandbox();
+        $estDemande = $premier->estUneDemande();
 
-        return view('admin.lots-physiques.paiement', compact('lots', 'total', 'reference', 'publicKey', 'sandbox'));
-    }
-
-    // Email de confirmation vers l'adresse de réception (silencieux en cas d'échec SMTP)
-    private function envoyerConfirmation($lots): void
-    {
-        try {
-            Mail::to($lots->first()->email_reception ?? Auth::user()->email)->send(new LotAutoConfirme($lots));
-        } catch (\Exception $e) {
-            FacadesLog::error('Email lot auto non envoye : '.$e->getMessage());
-        }
+        return view('admin.lots-physiques.paiement', compact('lots', 'total', 'reference', 'publicKey', 'sandbox', 'estDemande'));
     }
 
     // Télécharge la planche de QR codes (3 téléchargements max, lot transmis requis)
@@ -271,6 +269,12 @@ class LotPhysiqueController extends Controller
     {
         if ($lot->user_id !== Auth::id()) {
             abort(403);
+        }
+
+        // Lot « demande » déjà payé : la suppression relève du super admin (commission réglée)
+        if ($lot->estUneDemande() && $lot->statut !== LotPhysique::STATUT_ATTENTE_PAIEMENT) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Cette demande est payée : elle ne peut plus être supprimée. Contactez le support PaxEvent si nécessaire.');
         }
 
         $nbScannes = $lot->tickets()->where('utilise', true)->count();

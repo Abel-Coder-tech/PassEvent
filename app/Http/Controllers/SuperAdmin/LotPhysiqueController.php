@@ -259,6 +259,12 @@ class LotPhysiqueController extends Controller
             return back()->with('error', 'Ce lot a déjà été transmis à l\'organisateur.');
         }
 
+        // Lot issu d'une demande : le template de l'organisateur est obligatoire
+        // et le QR code doit être positionné avant transmission.
+        if ($lot->estUneDemande() && ! $lot->aUnTemplate()) {
+            return back()->with('error', 'Impossible de transmettre : le QR code doit d\'être positionné sur le template fourni par l\'organisateur.');
+        }
+
         $note = trim((string) $request->input('note'));
         $emailDest = trim((string) $request->input('email'));
         if ($emailDest !== '' && ! filter_var($emailDest, FILTER_VALIDATE_EMAIL)) {
@@ -276,7 +282,7 @@ class LotPhysiqueController extends Controller
             $corps .= "\n\nNote du super admin :\n{$note}";
         }
 
-        $lot->update(['statut' => 'transmis', 'transmis_at' => now()]);
+        $lot->update(['statut' => LotPhysique::STATUT_TRANSMIS, 'transmis_at' => now()]);
 
         Message::create([
             'user_id' => $lot->user_id,
@@ -531,6 +537,10 @@ class LotPhysiqueController extends Controller
             'qr_y' => $qrY,
             'qr_size' => $qrSize,
             'template_zoom' => $zoom,
+            // Lot « demande » : le template est reçu et le QR positionné, la planche peut être transmise
+            'statut' => $lot->estUneDemande() && $lot->statut === LotPhysique::STATUT_PAYE
+                ? LotPhysique::STATUT_PRET
+                : $lot->statut,
         ]);
 
         return back()->with('success', 'Template enregistré. Le prochain téléchargement utilisera ce design.');
