@@ -327,6 +327,7 @@
 @endsection
 
 @section('scripts')
+@include('partials.scan-sound')
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 let html5QrcodeScanner = null;
@@ -565,16 +566,19 @@ function showResult(data) {
     card.className = 'result-card';
 
     if (data.success) {
+        window.ScanSound.success();
         card.classList.add('result-valid', 'pulse-success');
         icon.innerHTML = '<i class="bi bi-check-circle" style="color: var(--vert);"></i>';
         title.textContent = 'Ticket Valide';
         title.style.color = 'var(--vert)';
     } else if (data.type === 'already_used') {
+        window.ScanSound.failure();
         card.classList.add('result-warning');
         icon.innerHTML = '<i class="bi bi-arrow-repeat" style="color: #f39c12;"></i>';
         title.textContent = 'Ticket Déjà Utilisé';
         title.style.color = '#f39c12';
     } else {
+        window.ScanSound.failure();
         card.classList.add('result-invalid');
         icon.innerHTML = '<i class="bi bi-x-circle" style="color: var(--danger);"></i>';
         title.textContent = 'Ticket Invalide';
