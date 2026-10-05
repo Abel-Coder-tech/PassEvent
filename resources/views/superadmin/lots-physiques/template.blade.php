@@ -548,7 +548,7 @@
                             </div>
                             <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                 <i class="bi bi-qr-code" style="color:var(--sa-primary);"></i>
-                                <span><strong>QR code :</strong> zone blanche de 4 mm (quiet zone) pour garantir la lecture.</span>
+                                <span><strong>QR code :</strong> marges identiques (0,25 mm) en haut, à gauche et à droite autour du QR code, et 2 mm sous le code pass.</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                 <i class="bi bi-upc-scan" style="color:var(--sa-primary);"></i>
@@ -589,18 +589,19 @@
         qrMax: 80
     };
 
-    // Dimensions de la zone blanche (QR + code pass) : carrée, 2 cm minimum (20×20),
-    // en grandissant si le QR est grand. Les marges (haut 0,25 / côtés 0,2 / écart
-    // 0,1 / bas 0,35) sont des minimums ; l'écart QR↔code reste fixe à 0,1, le
-    // surplus vertical se partage entre haut et bas, le surplus horizontal va aux côtés.
+    // Dimensions de la zone blanche (QR + code pass) : hauteur 2 cm minimum (20),
+    // largeur = QR + 2 marges. Les marges (haut 0,25 / côtés 0,2 / écart 0,1 /
+    // bas 0,35) sont des minimums ; l'écart QR↔code reste fixe à 0,1, le
+    // surplus vertical se partage entre haut et bas, et les marges gauche et
+    // droite valent exactement la marge du haut.
     function zoneDims(qrMm) {
         var h = Math.max(qrMm + ZONE.top + ZONE.gap + ZONE.line + ZONE.bottom, ZONE.min);
-        var w = h; // zone carrée
-        var padX = Math.max(ZONE.side, (w - qrMm) / 2);
         var gap = ZONE.gap;
         var extraV = Math.max(0, h - (ZONE.top + qrMm + gap + ZONE.line + ZONE.bottom));
         var padTop = Math.round((ZONE.top + extraV / 2) * 100) / 100;
         var bottom = Math.round((ZONE.bottom + extraV - extraV / 2) * 100) / 100;
+        var padX = Math.max(ZONE.side, padTop); // côtés = marge du haut
+        var w = Math.round((qrMm + padX * 2) * 100) / 100;
         return {
             w: w,
             h: h,
