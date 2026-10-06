@@ -15,6 +15,7 @@ use App\Services\LotPhysiquePdfService;
 use App\Services\LotPhysiqueTemplatePdfService;
 use App\Services\QrCodeService;
 use App\Support\PerPage;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log as FacadesLog;
@@ -142,60 +143,94 @@ class LotPhysiqueController extends Controller
             ? (float) $validated['commission_pourcentage']
             : null;
 
-        $lot = DB::transaction(function () use ($validated, $evenement, $tarif, $commission) {
-            $lot = LotPhysique::create([
-                'user_id' => $validated['user_id'],
-                'evenement_id' => $evenement->id,
-                'tarif_id' => $tarif->id,
-                'commission_pourcentage' => $commission,
-                'nom' => $validated['nom'],
-                'quantite' => $validated['quantite'],
-                'statut' => 'genere',
-                'download_count' => 0,
-            ]);
+        // Les codes uniques sont générés AVANT l'insertion : écrire un
+        // placeholder 'TMP' dans la colonne UNIQUE code_unique posait des
+        // verrous en conflit et provoquait des deadlocks (1213) dès que deux
+        // générations tournaient en parallèle. L'insertion en une seule
+        // requête limite la durée des verrous ; un deadlock (1213), un
+        // dépassement de verrou (1205) ou une collision de code (1062) fait
+        // tout réessayer (codes et numéros régénérés à chaque tentative).
+        $lot = null;
+        $derniereErreur = null;
 
-            for ($i = 0; $i < $validated['quantite']; $i++) {
-                $ticket = Ticket::create([
-                    'evenement_id' => $evenement->id,
-                    'tarif_id' => $tarif->id,
-                    'lot_physique_id' => $lot->id,
-                    'source' => 'physique',
-                    'code_unique' => 'TMP',
-                    'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
-                    'email_acheteur' => null,
-                    'telephone_acheteur' => null,
-                    'nom_acheteur' => null,
-                    'nom_tarif' => $tarif->nom,
-                    'montant' => (float) $tarif->prix,
-                    'montant_reduction' => 0,
-                    'quantite' => 1,
-                    'statut_paiement' => 'payé',
-                    'methode_paiement' => 'especes',
-                    'type_paiement' => 'especes',
-                    'transaction_id' => 'PHYS-'.strtoupper(Str::random(8)),
-                    'utilise' => false,
-                    'date_achat' => now(),
-                ]);
-                $ticket->update([
-                    'code_unique' => Ticket::genererCodeSecurise(),
-                ]);
+        for ($essai = 1; $essai <= 3; $essai++) {
+            try {
+                $lot = DB::transaction(function () use ($validated, $evenement, $tarif, $commission) {
+                    $lot = LotPhysique::create([
+                        'user_id' => $validated['user_id'],
+                        'evenement_id' => $evenement->id,
+                        'tarif_id' => $tarif->id,
+                        'commission_pourcentage' => $commission,
+                        'nom' => $validated['nom'],
+                        'quantite' => $validated['quantite'],
+                        'statut' => 'genere',
+                        'download_count' => 0,
+                    ]);
+
+                    $codes = [];
+                    $lignes = [];
+                    for ($i = 0; $i < $validated['quantite']; $i++) {
+                        do {
+                            $code = Ticket::genererCodeSecurise();
+                        } while (in_array($code, $codes, true));
+                        $codes[] = $code;
+
+                        $lignes[] = [
+                            'evenement_id' => $evenement->id,
+                            'tarif_id' => $tarif->id,
+                            'lot_physique_id' => $lot->id,
+                            'source' => 'physique',
+                            'code_unique' => $code,
+                            'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
+                            'email_acheteur' => null,
+                            'telephone_acheteur' => null,
+                            'nom_acheteur' => null,
+                            'nom_tarif' => $tarif->nom,
+                            'montant' => (float) $tarif->prix,
+                            'montant_reduction' => 0,
+                            'quantite' => 1,
+                            'statut_paiement' => 'payé',
+                            'methode_paiement' => 'especes',
+                            'type_paiement' => 'especes',
+                            'transaction_id' => 'PHYS-'.strtoupper(Str::random(8)),
+                            'utilise' => false,
+                            'date_achat' => now(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
+                    DB::table('ticket')->insert($lignes);
+
+                    Log::create([
+                        'type_operation' => 'lot_physique',
+                        'ticket_id' => null,
+                        'details' => [
+                            'lot_id' => $lot->id,
+                            'user_id' => $validated['user_id'],
+                            'evenement_id' => $evenement->id,
+                            'quantite' => $validated['quantite'],
+                            'commission_pourcentage' => $commission,
+                        ],
+                        'ip' => request()->ip(),
+                    ]);
+
+                    return $lot;
+                });
+
+                break;
+            } catch (QueryException $e) {
+                $derniereErreur = $e;
+                if (! in_array((int) ($e->errorInfo[1] ?? -1), [1205, 1213, 1062], true)) {
+                    throw $e;
+                }
+                usleep(150_000 * $essai);
             }
+        }
 
-            Log::create([
-                'type_operation' => 'lot_physique',
-                'ticket_id' => null,
-                'details' => [
-                    'lot_id' => $lot->id,
-                    'user_id' => $validated['user_id'],
-                    'evenement_id' => $evenement->id,
-                    'quantite' => $validated['quantite'],
-                    'commission_pourcentage' => $commission,
-                ],
-                'ip' => request()->ip(),
-            ]);
-
-            return $lot;
-        });
+        if (! $lot) {
+            throw $derniereErreur;
+        }
 
         return redirect()
             ->route('superadmin.tickets-physiques.voir', $lot)
