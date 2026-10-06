@@ -26,6 +26,15 @@
         .ticket-bg {
             position: absolute;
             display: block;
+            left: {{ $imgLeft }}mm;
+            top: {{ $imgTop }}mm;
+            width: {{ $imgW }}mm;
+            height: {{ $imgH }}mm;
+            @if ($templateUrl)
+            background-image: url('{{ $templateUrl }}');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            @endif
         }
         .qr-zone {
             position: absolute;
@@ -78,7 +87,7 @@
             @php $pos = $layout['positions'][$slotIdx % $layout['par_page']]; @endphp
             <div class="slot" style="left: {{ $pos['x'] }}mm; top: {{ $pos['y'] }}mm; width: {{ $layout['slot_largeur'] }}mm; height: {{ $layout['slot_hauteur'] }}mm;">
                 @if ($templateUrl)
-                    <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
+                    <div class="ticket-bg"></div>
                 @endif
                 <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
                     <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
