@@ -4,7 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -39,11 +39,27 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Session expirée / token CSRF invalide (419) : on redirige au lieu de laisser la page morte.
-        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+        // Session expirée / token CSRF invalide (419) : on redirige au lieu de
+        // laisser la page morte. Attention : Laravel convertit TokenMismatchException
+        // en HttpException(419) dans prepareException AVANT de consulter les
+        // callbacks de rendu, donc on matche HttpException, pas TokenMismatchException.
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null; // laisser les autres erreurs HTTP suivre leur cours
+            }
+
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Votre session a expiré. Veuillez rafraîchir la page.'], 419);
             }
+
+            // L'utilisateur reviendra sur la page d'ou il venait apres sa
+            // reconnexion (sauf si le formulaire arrivait d'une page de login).
+            $retour = $request->headers->get('referer');
+            $chemin = $retour ? parse_url($retour, PHP_URL_PATH) : null;
+            if ($retour && $chemin && ! in_array($chemin, ['/login', '/superadmin/login', '/connexion'], true)) {
+                $request->session()->put('url.intended', $retour);
+            }
+
             return redirect()->back()->with('error', 'Votre session a expiré. Le formulaire a été rechargé, veuillez réessayer.');
         });
     })->create();
