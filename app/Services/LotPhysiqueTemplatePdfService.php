@@ -16,13 +16,13 @@ class LotPhysiqueTemplatePdfService
     // Gouttière (zone de découpe) entre les tickets
     public const GOUTTIERE = 2; // mm
 
-    // Marges internes du carré blanc qui entoure le QR : haut 0,25 — gauche/droite
-    // = marge du haut (0,2 au minimum). Le code pass n'est plus dans le carré :
-    // il est imprimé sous la zone, écarté de 0,1 mm, avec 1,65 mm en dessous.
+    // Marges internes de la zone blanche qui entoure le QR : haut 0,25 — gauche/droite
+    // = marge du haut (0,2 au minimum). Le code pass est dans la zone, sous le QR :
+    // écarté de 0,1 mm, avec 1,65 mm en dessous avant le bord bas de la zone.
     public const QR_TOP = 0.25; // mm  marge entre le bord haut de la zone et le QR
     public const QR_SIDE = 0.2; // mm   marge gauche/droite entre le bord de la zone et le QR
-    public const PAX_GAP = 0.1; // mm  écart entre le bas de la zone et le code pass
-    public const PAX_BOTTOM = 1.65; // mm   marge sous le code pass
+    public const PAX_GAP = 0.1; // mm   écart entre le bas du QR et le code pass
+    public const PAX_BOTTOM = 1.65; // mm   marge entre le code pass et le bord bas de la zone
 
     // Taille du texte du code pass : 11,34 px = 3 mm à l'impression (96 px = 1 pouce)
     public const PAX_FONT = 11.34; // px
@@ -30,8 +30,8 @@ class LotPhysiqueTemplatePdfService
     // Hauteur de ligne du texte du code pass (assez haute pour rester lisible dans DomPDF)
     public const PAX_LINE_HEIGHT = 3.3; // mm
 
-    // Côté minimal du carré blanc : 2 cm → carré 20×20. Un QR plus petit est
-    // agrandi automatiquement pour remplir le carré (voir qrMin()).
+    // Hauteur minimale de la zone blanche : 2 cm. Un QR plus petit est agrandi
+    // automatiquement pour que la zone fasse au moins 20 mm de haut (voir qrMin()).
     public const ZONE_MIN = 20; // mm
 
     // Bornes du zoom de l'image du template (70 % → 150 %)
@@ -39,7 +39,7 @@ class LotPhysiqueTemplatePdfService
     public const ZOOM_MAX = 150;
 
     /**
-     * Marge gauche/droite du carré blanc : jamais plus petite que la marge du haut.
+     * Marge gauche/droite de la zone blanche : jamais plus petite que la marge du haut.
      */
     public static function padX(): float
     {
@@ -47,20 +47,21 @@ class LotPhysiqueTemplatePdfService
     }
 
     /**
-     * Plus petit QR qui remplit exactement le carré de ZONE_MIN de côté (20 mm).
-     * Un QR plus petit est automatiquement agrandi à cette taille.
+     * Plus petit QR qui remplit exactement la hauteur minimale de la zone (20 mm)
+     * en gardant le code pass à l'intérieur. Un QR plus petit est agrandi
+     * automatiquement à cette taille.
      */
     public static function qrMin(): float
     {
-        return round(self::ZONE_MIN - 2 * self::padX(), 2);
+        return round(self::ZONE_MIN - (self::QR_TOP + self::PAX_GAP + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM), 2);
     }
 
     /**
-     * Géométrie (mm, relative au ticket) du carré blanc et du code pass.
+     * Géométrie (mm, relative au ticket) de la zone blanche et du code pass.
      *
-     * Le carré entoure le QR avec des marges identiques (0,25 mm) ; le code pass
-     * est imprimé sous le carré, jamais dedans. Les positions sont bornées pour
-     * que le carré et le code restent dans le ticket.
+     * La zone entoure le QR avec des marges identiques (0,25 mm) et le code pass
+     * est imprimé dedans, sous le QR. La zone est donc plus haute que large.
+     * Les positions sont bornées pour que la zone reste dans le ticket.
      *
      * @param  float|null  $qrSize  taille demandée (agrandie au minimum si trop petite)
      * @param  float|null  $qrX  position du QR, ou null pour centrer
@@ -73,16 +74,15 @@ class LotPhysiqueTemplatePdfService
         $padTop = self::QR_TOP;
         $gap = self::PAX_GAP;
 
-        // Un QR plus petit que qrMin() est agrandi : il remplit alors le carré de 2 cm.
+        // Un QR plus petit que qrMin() est agrandi : la zone atteint au moins ZONE_MIN de haut.
         $qrSize = round(max($qrSize, self::qrMin()), 2);
 
-        // Carré blanc : côté = QR + 2 marges (haut = côtés).
         $zoneW = round($qrSize + 2 * $padX, 2);
-        $zoneH = $zoneW;
-        $paxBandH = round($gap + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM, 2);
+        $bandH = round(self::PAX_LINE_HEIGHT + self::PAX_BOTTOM, 2);
+        $zoneH = round(max($qrSize + $padTop + $gap + $bandH, self::ZONE_MIN), 2);
 
         $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));
-        $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - ($zoneH + $paxBandH), 0.0));
+        $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - $zoneH, 0.0));
 
         return [
             'qrSize' => $qrSize,
@@ -93,8 +93,9 @@ class LotPhysiqueTemplatePdfService
             'zoneW' => $zoneW,
             'zoneH' => $zoneH,
             'gap' => $gap,
-            'bandTop' => round($zoneY + $zoneH, 2),
-            'paxBandH' => $paxBandH,
+            // Position relative au haut de la zone : le code est à l'intérieur.
+            'bandTop' => round($padTop + $qrSize + $gap, 2),
+            'paxBandH' => $bandH,
             'paxLineH' => self::PAX_LINE_HEIGHT,
             'paxFont' => self::PAX_FONT,
             'paxBottom' => self::PAX_BOTTOM,

@@ -5,10 +5,11 @@ namespace Tests\Unit;
 use App\Services\LotPhysiqueTemplatePdfService as S;
 use PHPUnit\Framework\TestCase;
 
-// Regression : la zone blanche autour du QR est un carre aux marges identiques
-// (haut = gauche = droite), et le code pass est imprime sous le carre, jamais
-// dedans. Avant, la zone etait plus haute que large et le code pass etait
-// dans le carre, ce qui laissait 2 mm de blanc de chaque cote du QR.
+/**
+ * Regression : la zone blanche entoure le QR avec des marges identiques
+ * (haut = gauche = droite) et le code pass est imprime DANS la zone, sous le
+ * QR. La zone est donc plus haute que large.
+ */
 class LotTemplateGeometrieTest extends TestCase
 {
     private const SLOT_W = 137.0; // format s1 : 137 x 49
@@ -34,38 +35,53 @@ class LotTemplateGeometrieTest extends TestCase
         $this->assertEqualsWithDelta(10.0, $geo['zoneY'] + $geo['padTop'], 0.005);
     }
 
-    public function test_zone_carree(): void
+    public function test_zone_plus_haute_que_large(): void
     {
-        foreach ([19.5, 20.0, 30.0, 40.0, 60.0, 80.0] as $qr) {
+        foreach ([20.0, 30.0, 40.0, 60.0, 80.0] as $qr) {
             $geo = S::geometry($qr, null, null, self::SLOT_W, self::SLOT_H);
 
-            $this->assertEqualsWithDelta($geo['zoneW'], $geo['zoneH'], 0.005, "Zone carree pour un QR de {$qr} mm.");
+            $this->assertEqualsWithDelta(
+                $geo['qrSize'] + $geo['padTop'] + $geo['gap'] + $geo['paxBandH'],
+                $geo['zoneH'],
+                0.005,
+                "Hauteur de zone pour un QR de {$qr} mm."
+            );
+            $this->assertGreaterThan($geo['zoneW'], $geo['zoneH'], "Zone plus haute que large pour {$qr} mm.");
         }
     }
 
-    public function test_code_pass_imprime_sous_le_carre(): void
+    public function test_code_pass_imprime_dans_la_zone(): void
     {
         $geo = S::geometry(30.0, 54.0, 10.0, self::SLOT_W, self::SLOT_H);
 
-        // Le bandeau du code commence exactement sous le carre, pas dedans.
-        $this->assertEqualsWithDelta($geo['zoneY'] + $geo['zoneH'], $geo['bandTop'], 0.005);
-
-        // Hauteur du bandeau : ecart + ligne + marge basse.
+        // Le bandeau du code commence dans la zone, 0,1 mm sous le QR.
         $this->assertEqualsWithDelta(
-            S::PAX_GAP + S::PAX_LINE_HEIGHT + S::PAX_BOTTOM,
-            $geo['paxBandH'],
-            0.005
+            $geo['padTop'] + $geo['qrSize'] + $geo['gap'],
+            $geo['bandTop'],
+            0.005,
+            'Le code commence dans la zone, pas sous elle.'
         );
+
+        // Hauteur du bandeau : hauteur de ligne + marge basse (l'ecart est deja
+        // dans bandTop).
+        $this->assertEqualsWithDelta(S::PAX_LINE_HEIGHT + S::PAX_BOTTOM, $geo['paxBandH'], 0.005);
+
+        // Le bas du code + sa marge reste dans la zone (+ tolerance flottante).
+        $this->assertLessThanOrEqual($geo['zoneH'] + 0.005, $geo['bandTop'] + $geo['paxBandH']);
     }
 
-    public function test_qr_minimum_remplit_le_carre_de_2_cm(): void
+    public function test_qr_minimum_pour_une_zone_de_2_cm_de_haut(): void
     {
-        $this->assertEqualsWithDelta(S::ZONE_MIN, S::qrMin() + 2 * S::padX(), 0.005);
+        $this->assertEqualsWithDelta(
+            S::ZONE_MIN,
+            S::qrMin() + S::QR_TOP + S::PAX_GAP + S::PAX_LINE_HEIGHT + S::PAX_BOTTOM,
+            0.005
+        );
 
-        // Un QR trop petit est agrandi pour remplir le carre de 2 cm.
+        // Un QR trop petit est agrandi pour que la zone fasse 2 cm de haut.
         $geo = S::geometry(10.0, null, null, self::SLOT_W, self::SLOT_H);
         $this->assertEquals(S::qrMin(), $geo['qrSize']);
-        $this->assertEquals(S::ZONE_MIN, $geo['zoneW']);
+        $this->assertEquals(S::ZONE_MIN, $geo['zoneH']);
 
         // Au-dessus du minimum, la taille demandee est conservee.
         $this->assertEquals(30.0, S::geometry(30.0, null, null, self::SLOT_W, self::SLOT_H)['qrSize']);
@@ -80,17 +96,40 @@ class LotTemplateGeometrieTest extends TestCase
         $this->assertGreaterThan(S::PAX_FONT / 96 * 25.4, S::PAX_LINE_HEIGHT);
     }
 
-    public function test_carre_et_code_pass_restent_dans_le_ticket(): void
+    public function test_zone_et_code_pass_restent_dans_le_ticket(): void
     {
-        // QR colle en bas a droite : le groupe est remonte pour rester entier.
+        // QR colle en bas a droite : la zone est remontee pour rester entiere.
         $geo = S::geometry(30.0, self::SLOT_W, self::SLOT_H, self::SLOT_W, self::SLOT_H);
 
         $this->assertLessThanOrEqual(self::SLOT_W, $geo['zoneX'] + $geo['zoneW']);
+        $this->assertLessThanOrEqual(self::SLOT_H, $geo['zoneY'] + $geo['zoneH']);
         $this->assertLessThanOrEqual(self::SLOT_H, $geo['bandTop'] + $geo['paxBandH']);
 
         // QR colle en haut a gauche : aucune marge forcee.
         $geo = S::geometry(30.0, 0.0, 0.0, self::SLOT_W, self::SLOT_H);
         $this->assertEquals(0.0, $geo['zoneX']);
         $this->assertEquals(0.0, $geo['zoneY']);
+    }
+
+    public function test_geometrie_alignee_avec_les_editeurs_web(): void
+    {
+        // Meme calcul que zoneDims() dans les vues Blade admin et superadmin.
+        foreach ([15.0, 30.0, 48.0] as $qr) {
+            $geo = S::geometry($qr, null, null, self::SLOT_W, self::SLOT_H);
+
+            $padX = max(S::QR_SIDE, S::QR_TOP);
+            $w = round($qr + $padX * 2, 2);
+            $bandH = round(S::PAX_LINE_HEIGHT + S::PAX_BOTTOM, 2);
+            $h = max(round($qr + S::QR_TOP + S::PAX_GAP + $bandH, 2), S::ZONE_MIN);
+
+            $this->assertEqualsWithDelta($w, $geo['zoneW'], 0.005, "Largeur JS pour {$qr} mm.");
+            $this->assertEqualsWithDelta($h, $geo['zoneH'], 0.005, "Hauteur JS pour {$qr} mm.");
+            $this->assertEqualsWithDelta(
+                round(S::QR_TOP + $qr + S::PAX_GAP, 2),
+                $geo['bandTop'],
+                0.005,
+                "Position du code JS pour {$qr} mm."
+            );
+        }
     }
 }

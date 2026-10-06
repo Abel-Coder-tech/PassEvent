@@ -557,11 +557,11 @@
                                 </div>
                                 <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                     <i class="bi bi-qr-code" style="color:#542680;"></i>
-                                    <span><strong>QR code :</strong> carré blanc de marges identiques (0,25 mm) autour du QR code.</span>
+                                    <span><strong>QR code :</strong> zone blanche de marges identiques (0,25 mm) autour du QR code.</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                     <i class="bi bi-upc-scan" style="color:#542680;"></i>
-                                    <span><strong>Code PAX :</strong> imprimé sous le carré blanc, en 3 mm de haut.</span>
+                                    <span><strong>Code PAX :</strong> imprimé dans la zone blanche, sous le QR, en 3 mm de haut.</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 p-2 rounded-3 help-line small">
                                     <i class="bi bi-ticket-perforated" style="color:#542680;"></i>
@@ -596,20 +596,23 @@
         qrMax: 80
     };
 
-    // Zone blanche carrée autour du QR : côté = QR + 2 marges (haut 0,25, côtés
-    // 0,25). Le code pass est imprimé sous le carré : écart 0,1 mm, puis la
-    // hauteur de ligne, puis 1,65 mm en dessous.
+    // Zone blanche autour du QR : largeur = QR + 2 marges (haut 0,25, côtés
+    // 0,25), hauteur = QR + haut + code pass. Le code pass est imprimé dans la
+    // zone, sous le QR : écart 0,1 mm, puis la hauteur de ligne, puis 1,65 mm
+    // en dessous avant le bord bas de la zone.
     function zoneDims(qrMm) {
         var padX = Math.max(ZONE.side, ZONE.top); // côtés = marge du haut
         var w = Math.round((qrMm + padX * 2) * 100) / 100;
+        var bandH = Math.round((ZONE.line + ZONE.bottom) * 100) / 100;
+        var h = Math.max(Math.round((qrMm + ZONE.top + ZONE.gap + bandH) * 100) / 100, ZONE.min);
         return {
             w: w,
-            h: w, // carré
+            h: h, // plus haute que large : le code pass est dedans
             padX: padX,
             padTop: ZONE.top,
             gap: ZONE.gap,
-            bandTop: w, // le bandeau démarre sous le carré
-            bandH: ZONE.gap + ZONE.line + ZONE.bottom
+            bandTop: Math.round((ZONE.top + qrMm + ZONE.gap) * 100) / 100, // le code commence dans la zone
+            bandH: bandH
         };
     }
 
