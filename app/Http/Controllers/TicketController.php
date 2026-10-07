@@ -240,17 +240,17 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).'); // Anti-abus
         }
 
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
+        $logoDataUri = Ticket::logoVioletDataUri();
+
+        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
+
         $this->incrementerTelechargement($ticket); // Incrémente le compteur (sans toucher updated_at)
 
         $reste = $max - $ticket->download_count;
         if ($reste === 1) {
             session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
-
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
-        $logoDataUri = Ticket::logoVioletDataUri();
-
-        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
         $filename = 'PaxEvent-'.$ticket->code_unique.'.pdf';
 
@@ -272,17 +272,17 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum).');
         }
 
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
+        $logoDataUri = Ticket::logoVioletDataUri();
+
+        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
+
         $this->incrementerTelechargement($ticket); // Incrémente le compteur (sans toucher updated_at)
 
         $reste = $max - $ticket->download_count;
         if ($reste === 1) {
             session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
-
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
-        $logoDataUri = Ticket::logoVioletDataUri();
-
-        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
 
         $filename = 'PaxEvent-'.$ticket->code_unique.'.pdf';
 
@@ -313,10 +313,6 @@ class TicketController extends Controller
             return back()->with('error', 'Limite de téléchargements atteinte ('.$max.' maximum par billet).');
         }
 
-        foreach ($groupTickets as $gt) {
-            $this->incrementerTelechargement($gt); // Sans toucher updated_at pour garder le cache PDF valide
-        }
-
         $zip = new \ZipArchive();
         $zipName = tempnam(sys_get_temp_dir(), 'pax').'.zip';
 
@@ -334,6 +330,10 @@ class TicketController extends Controller
         }
 
         $zip->close();
+
+        foreach ($groupTickets as $gt) {
+            $this->incrementerTelechargement($gt); // Sans toucher updated_at pour garder le cache PDF valide
+        }
 
         $evenementTitre = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', ($ticket->evenement->titre ?? 'tickets'));
         $response = response()->download($zipName, 'PaxEvent-'.$evenementTitre.'.zip')->deleteFileAfterSend(true);

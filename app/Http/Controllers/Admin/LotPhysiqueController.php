@@ -252,14 +252,14 @@ class LotPhysiqueController extends Controller
             return back()->with('error', 'Aucun ticket valide à imprimer dans ce lot.');
         }
 
-        $lot->increment('download_count');
-
         // Si un template est configuré, génère le PDF avec le template
         if ($lot->aUnTemplate()) {
             $pdf = LotPhysiqueTemplatePdfService::generer($lot, $tickets);
         } else {
             $pdf = LotPhysiquePdfService::generer($lot, $tickets);
         }
+
+        $lot->increment('download_count');
 
         return $pdf->download('Planche-'.$lot->nom.'-'.$lot->evenement?->titre.'.pdf');
     }

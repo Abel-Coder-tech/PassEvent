@@ -299,6 +299,10 @@ class AuthController extends Controller
             abort(403, 'Limite de téléchargements atteinte ('.$max.' maximum).'); // Limite anti-abus
         }
 
+        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
+        $logoDataUri = Ticket::logoVioletDataUri();
+        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
+
         $ticket->increment('download_count', 1, []); // Incrémente le compteur de téléchargements
 
         $reste = $max - $ticket->download_count;
@@ -306,9 +310,6 @@ class AuthController extends Controller
             session()->flash('warning', "Attention : il ne vous reste plus qu'1 téléchargement sur les {$max} autorisés.");
         }
 
-        $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
-        $logoDataUri = Ticket::logoVioletDataUri();
-        $pdf = TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri);
         $filename = 'ticket-'.$ticket->code_unique.'.pdf';
 
         return $pdf->download($filename);
