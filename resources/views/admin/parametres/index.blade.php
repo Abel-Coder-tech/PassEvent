@@ -142,7 +142,7 @@
                     <i class="bi bi-person"></i> Profil
                 </button>
                 <button class="settings-nav-link" data-section="securite" onclick="showSection('securite', this)">
-                    <i class="bi bi-shield-lock"></i> Securite
+                    <i class="bi bi-shield-lock"></i> Securité
                 </button>
                 <button class="settings-nav-link" data-section="notifications" onclick="showSection('notifications', this)">
                     <i class="bi bi-bell"></i> Notifications
