@@ -12,7 +12,7 @@
         .body { padding: 28px 32px; }
         .body p { font-size: 14px; color: #1d1d1f; margin: 0 0 12px; line-height: 1.6; }
         .reason { background: #fef2f2; border-left: 4px solid #e74c3c; padding: 12px 16px; border-radius: 8px; margin: 16px 0; font-size: 14px; color: #991b1b; }
-        .footer { padding: 18px 32px; text-align: center; border-top: 1px solid #eeedeb; font-size: 11px; color: #8a7a8e; }
+        .footer { padding: 18px 32px; text-align: center; font-size: 11px; color: #fff; background: linear-gradient(135deg, #542680, #3d1a5c); }
     </style>
 </head>
 <body>

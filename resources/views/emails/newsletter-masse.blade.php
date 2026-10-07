@@ -44,9 +44,9 @@
         .footer {
             padding: 18px 32px;
             text-align: center;
-            border-top: 1px solid #eeedeb;
             font-size: 11px;
-            color: #8a7a8e;
+            color: #fff;
+            background: linear-gradient(135deg, #542680, #3d1a5c);
         }
     </style>
 </head>

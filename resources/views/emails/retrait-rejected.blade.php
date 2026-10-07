@@ -21,14 +21,14 @@
         .detail-row:last-child{border-bottom:none}
         .detail-label{color:#6c757d}
         .detail-value{font-weight:600;color:#211C31}
-        .footer{background:#f8f6f9;padding:18px 36px;text-align:center;border-top:1px solid #eeedeb}
-        .footer p{margin:0;font-size:11px;color:#8a7a8e}
+        .footer{background:linear-gradient(135deg,#542680,#3d1a5c);padding:18px 36px;text-align:center}
+        .footer p{margin:0;font-size:11px;color:#fff}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
+            <img src="{{ asset_v('images/logo_paxevent_blanc.png') }}" alt="PaxEvent" height="60">
         </div>
         <div class="content">
             <p class="greeting">Bonjour <strong>{{ $nomOrganisateur }}</strong>,</p>
@@ -56,7 +56,7 @@
         </div>
         <div class="footer">
             <p>PaxEvent — Billetterie en ligne 100% Bénin</p>
-            <p style="margin-top:4px;"><a href="mailto:contact@paxevent.com" style="color:#7B3FA0;text-decoration:none;">contact@paxevent.com</a></p>
+            <p style="margin-top:4px;"><a href="mailto:contact@paxevent.com" style="color:#fff;text-decoration:none;">contact@paxevent.com</a></p>
         </div>
     </div>
 </body>

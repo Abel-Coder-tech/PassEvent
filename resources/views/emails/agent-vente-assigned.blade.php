@@ -12,7 +12,7 @@
         .info p { margin: 8px 0; }
         .label { font-weight: bold; color: #6b7280; }
         .btn { display: inline-block; padding: 12px 24px; background: #522680; color: white; text-decoration: none; border-radius: 6px; margin-top: 16px; }
-        .footer { text-align: center; padding: 16px; color: #9ca3af; font-size: 0.875rem; }
+        .footer { text-align: center; padding: 16px; color: #fff; font-size: 0.875rem; background: linear-gradient(135deg, #542680, #3d1a5c); }
     </style>
 </head>
 <body>

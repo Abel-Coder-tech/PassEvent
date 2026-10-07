@@ -8,7 +8,7 @@
     <div style="max-width:600px;margin:0 auto;padding:20px;">
         <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
             <div style="background:linear-gradient(135deg,#542680,#3d1a5c);padding:2rem;text-align:center;">
-                <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" style="height:60px;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
+                <img src="{{ asset_v('images/logo_paxevent_blanc.png') }}" alt="PaxEvent" style="height:60px;">
                 <h1 style="color:#fff;font-size:1.3rem;margin:1rem 0 0;">
                     {{ $reinitialisation ? 'Votre mot de passe a été réinitialisé' : 'Bienvenue dans l\'équipe PaxEvent !' }}
                 </h1>
@@ -49,8 +49,10 @@
                     </a>
                 </div>
 
-                <p style="font-size:0.8rem;color:#999;border-top:1px solid #eee;padding-top:1rem;margin-top:1rem;">
-                    Cet email a été envoyé par l'équipe de PaxEvent. Si vous ne reconnaissez pas cette action, <a href="mailto:contact@paxevent.com" style="color:#542680;text-decoration:underline;">contactez l'administrateur</a>.<br>
+            </div>
+            <div style="background:linear-gradient(135deg,#542680,#3d1a5c);padding:1.25rem;text-align:center;">
+                <p style="margin:0;font-size:0.8rem;color:#fff;">
+                    Cet email a été envoyé par l'équipe de PaxEvent. Si vous ne reconnaissez pas cette action, <a href="mailto:contact@paxevent.com" style="color:#fff;text-decoration:underline;">contactez l'administrateur</a>.<br>
                     PaxEvent – Billetterie en ligne.
                 </p>
             </div>
