@@ -37,7 +37,6 @@
         }
         .header img {
             display: inline-block;
-            filter: brightness(0) invert(1);
         }
         .content {
             padding: 28px 36px 20px;
@@ -112,18 +111,17 @@
             font-weight: 600;
         }
         .footer {
-            background: #f8f6f9;
+            background: linear-gradient(135deg, #542680, #3d1a5c);
             padding: 18px 36px;
             text-align: center;
-            border-top: 1px solid #eeedeb;
         }
         .footer p {
             margin: 0;
             font-size: 11px;
-            color: #8a7a8e;
+            color: #fff;
         }
         .footer a {
-            color: #7B3FA0;
+            color: #fff;
             text-decoration: none;
         }
     </style>
@@ -131,7 +129,7 @@
 <body>
     <div class="container">
         <div class="header" style="text-align:center;">
-            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60" style="display:inline-block;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);">
+            <img src="{{ asset_v('images/logo_paxevent_blanc.png') }}" alt="PaxEvent" height="60" style="display:inline-block;">
         </div>
 
         <div class="content">

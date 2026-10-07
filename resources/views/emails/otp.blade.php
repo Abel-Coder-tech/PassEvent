@@ -13,7 +13,7 @@
         .body p { font-size: 14px; color: #1d1d1f; margin: 0 0 16px; line-height: 1.6; }
         .code { font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #542680; background: #f5f2f7; padding: 16px; border-radius: 12px; display: inline-block; margin: 8px 0 16px; }
         .expire { font-size: 13px; color: #6c757d; margin-top: 8px; }
-        .footer { padding: 18px 32px; text-align: center; border-top: 1px solid #eeedeb; font-size: 11px; color: #8a7a8e; }
+        .footer { padding: 18px 32px; text-align: center; font-size: 11px; color: #fff; background: linear-gradient(135deg, #542680, #3d1a5c); }
     </style>
 </head>
 <body>

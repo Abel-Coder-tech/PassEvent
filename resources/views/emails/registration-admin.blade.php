@@ -15,7 +15,7 @@
         .info p { margin: 4px 0; font-size: 13px; }
         .info strong { color: #542680; }
         .btn { display: inline-block; background: #542680; color: #fff !important; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; margin: 8px 0; }
-        .footer { padding: 18px 32px; text-align: center; border-top: 1px solid #eeedeb; font-size: 11px; color: #8a7a8e; }
+        .footer { padding: 18px 32px; text-align: center; font-size: 11px; color: #fff; background: linear-gradient(135deg, #542680, #3d1a5c); }
     </style>
 </head>
 <body>
