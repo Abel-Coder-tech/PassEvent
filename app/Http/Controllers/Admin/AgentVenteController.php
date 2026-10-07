@@ -116,7 +116,10 @@ class AgentVenteController extends Controller
                 ->count(),
         ];
 
-        return view('admin.agents-vente.show', compact('agentVente', 'tickets', 'stats'));
+        $statsGlobales = $agentVente->statsGlobales();
+        $ticketsGlobaux = $agentVente->ticketsGlobaux()->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_tickets');
+
+        return view('admin.agents-vente.show', compact('agentVente', 'tickets', 'stats', 'statsGlobales', 'ticketsGlobaux'));
     }
 
     // Active ou désactive un agent de vente

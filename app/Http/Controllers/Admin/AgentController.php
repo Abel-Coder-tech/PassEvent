@@ -107,7 +107,10 @@ class AgentController extends Controller
 
         $logs = $agent->logs()->latest()->paginate(\App\Support\PerPage::resolve());
 
-        return view('admin.agents.show', compact('agent', 'stats', 'logs'));
+        $statsGlobales = $agent->statsGlobales();
+        $logsGlobaux = $agent->logsGlobaux()->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_logs');
+
+        return view('admin.agents.show', compact('agent', 'stats', 'logs', 'statsGlobales', 'logsGlobaux'));
     }
 
     // Active ou désactive un agent de scan
