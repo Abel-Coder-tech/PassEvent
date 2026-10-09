@@ -14,6 +14,10 @@
     <div class="alert alert-success py-2 small">{{ session('success') }}</div>
     @endif
 
+    @if ($errors->any())
+    <div class="alert alert-danger py-2 small">{{ $errors->all()[0] }}</div>
+    @endif
+
     {{-- Carte agent --}}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -36,37 +40,66 @@
                     </p>
                     <div class="text-start small mt-3 pt-2 border-top">
                         <div class="mb-1"><strong>Code d'accès :</strong> <code>{{ $agent->code_acces }}</code></div>
-                        <div class="mb-1"><strong>Dernier accès :</strong> {{ $stats['dernier_acces'] ? $stats['dernier_acces']->format('d/m/Y H:i') : 'Jamais' }}</div>
+                        <div class="mb-1"><strong>Dernier accès :</strong> {{ $agent->dernier_acces ? $agent->dernier_acces->format('d/m/Y H:i') : 'Jamais' }}</div>
                         <div class="mb-1"><strong>Créé le :</strong> {{ $agent->created_at->format('d/m/Y H:i') }}</div>
                     </div>
-                    <form action="{{ route('admin.agents.toggle-actif', $agent) }}" method="POST" class="mt-2">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-{{ $agent->actif ? 'warning' : 'success' }}">
-                            <i class="bi bi-{{ $agent->actif ? 'pause' : 'play' }}"></i>
-                            {{ $agent->actif ? 'Désactiver' : 'Réactiver' }}
-                        </button>
-                    </form>
+                    <div class="d-flex justify-content-center gap-2 mt-2">
+                        <form action="{{ route('admin.agents.toggle-actif', $agent) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-{{ $agent->actif ? 'warning' : 'success' }}">
+                                <i class="bi bi-{{ $agent->actif ? 'pause' : 'play' }}"></i>
+                                {{ $agent->actif ? 'Désactiver' : 'Réactiver' }}
+                            </button>
+                        </form>
+                        <a href="{{ route('admin.agents.edit', $agent) }}"
+                            class="btn btn-sm btn-outline-{{ $agent->peutEtreReaffecte() ? 'primary' : 'secondary' }}">
+                            <i class="bi bi-{{ $agent->peutEtreReaffecte() ? 'arrow-repeat' : 'pencil-square' }}"></i>
+                            {{ $agent->peutEtreReaffecte() ? 'Réaffecter' : 'Modifier' }}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-8">
+            {{-- Onglets : statistiques par événement / global --}}
+            @php $ongletGlobal = request('onglet') === 'global'; @endphp
+            @php
+                $s = $ongletGlobal ? $statsGlobales : $stats;
+                $liste = $ongletGlobal ? $logsGlobaux : $logs;
+            @endphp
+
+            <ul class="nav nav-pills mb-2">
+                <li class="nav-item">
+                    <a class="nav-link py-1 px-3 {{ $ongletGlobal ? '' : 'active' }}"
+                        href="{{ request()->fullUrlWithQuery(['onglet' => null]) }}">
+                        <i class="bi bi-calendar-event me-1"></i> Cet événement
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-1 px-3 {{ $ongletGlobal ? 'active' : '' }}"
+                        href="{{ request()->fullUrlWithQuery(['onglet' => 'global']) }}">
+                        <i class="bi bi-globe me-1"></i> Tous les événements
+                    </a>
+                </li>
+            </ul>
+
             <div class="row g-2">
                 <div class="col-4">
                     <div class="card border-0 shadow-sm bg-purple-50 text-center py-3">
-                        <div class="fw-bold fs-4 text-purple-700">{{ $stats['total_scans'] }}</div>
+                        <div class="fw-bold fs-4 text-purple-700">{{ $s['total_scans'] }}</div>
                         <small class="text-muted">Scans effectués</small>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="card border-0 shadow-sm bg-green-50 text-center py-3">
-                        <div class="fw-bold fs-4 text-green-700">{{ $stats['scans_ajd'] }}</div>
+                        <div class="fw-bold fs-4 text-green-700">{{ $s['scans_ajd'] }}</div>
                         <small class="text-muted">Aujourd'hui</small>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="card border-0 shadow-sm bg-blue-50 text-center py-3">
-                        <div class="fw-bold fs-4 text-blue-700">{{ $stats['valides'] }}</div>
+                        <div class="fw-bold fs-4 text-blue-700">{{ $s['valides'] }}</div>
                         <small class="text-muted">Validés</small>
                     </div>
                 </div>
@@ -80,15 +113,15 @@
                             <h6 class="fw-bold small mb-2"><i class="bi bi-check-circle"></i> Par résultat</h6>
                             <div class="d-flex justify-content-between small">
                                 <span class="text-success">Validés</span>
-                                <span class="fw-medium">{{ $stats['valides'] }}</span>
+                                <span class="fw-medium">{{ $s['valides'] }}</span>
                             </div>
                             <div class="d-flex justify-content-between small">
                                 <span class="text-warning">Déjà utilisés</span>
-                                <span class="fw-medium">{{ $stats['deja_utilises'] }}</span>
+                                <span class="fw-medium">{{ $s['deja_utilises'] }}</span>
                             </div>
                             <div class="d-flex justify-content-between small">
                                 <span class="text-danger">Invalides</span>
-                                <span class="fw-medium">{{ $stats['invalides'] }}</span>
+                                <span class="fw-medium">{{ $s['invalides'] }}</span>
                             </div>
                         </div>
                     </div>
@@ -103,7 +136,11 @@
                             </div>
                             <div class="d-flex justify-content-between small">
                                 <span>Dernier accès</span>
-                                <span class="fw-medium">{{ $stats['dernier_acces'] ? $stats['dernier_acces']->diffForHumans() : 'Jamais' }}</span>
+                                <span class="fw-medium">{{ $s['dernier_acces'] ? $s['dernier_acces']->diffForHumans() : 'Jamais' }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span>Périmètre</span>
+                                <span class="fw-medium">{{ $ongletGlobal ? 'Tous les événements' : 'Cet événement' }}</span>
                             </div>
                         </div>
                     </div>
@@ -115,7 +152,10 @@
     {{-- Historique des scans --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-2">
-            <h6 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Historique des scans</h6>
+            <h6 class="fw-bold mb-0">
+                <i class="bi bi-clock-history"></i> Historique des scans
+                <span class="text-muted fw-normal small ms-1">— {{ $ongletGlobal ? 'tous les événements' : 'cet événement' }}</span>
+            </h6>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 small">
@@ -123,11 +163,12 @@
                     <tr>
                         <th class="ps-3">Date</th>
                         <th>Ticket</th>
+                        @if ($ongletGlobal)<th>Événement</th>@endif
                         <th>Résultat</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($logs as $log)
+                    @forelse ($liste as $log)
                     <tr>
                         <td class="ps-3">{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
                         <td>
@@ -137,6 +178,9 @@
                                 <code>{{ $log->details['code'] ?? 'N/A' }}</code>
                             @endif
                         </td>
+                        @if ($ongletGlobal)
+                        <td>{{ $log->ticket?->evenement?->titre ?? '—' }}</td>
+                        @endif
                         <td>
                             @php $resultat = $log->details['resultat'] ?? ''; @endphp
                             @if($resultat === 'valide')
@@ -153,15 +197,15 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-3">Aucun scan effectué</td>
+                        <td colspan="{{ $ongletGlobal ? 4 : 3 }}" class="text-center text-muted py-3">Aucun scan effectué</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        @if ($logs->hasPages())
+        @if ($liste->hasPages())
         <div class="card-footer bg-white">
-            {{ $logs->links() }}
+            {{ $liste->links() }}
         </div>
         @endif
     </div>

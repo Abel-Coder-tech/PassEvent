@@ -75,7 +75,8 @@ class AgentVente extends Authenticatable
     // Tous les tickets de cet agent (global)
     public function ticketsGlobaux()
     {
-        return Ticket::where('agent_vente_id', $this->id)->latest('date_achat');
+        return Ticket::where('agent_vente_id', $this->id)
+            ->with(['tarif', 'evenement'])->latest('date_achat');
     }
 
     // Stats globales de cet agent de vente

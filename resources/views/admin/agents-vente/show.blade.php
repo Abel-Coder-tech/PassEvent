@@ -14,6 +14,10 @@
     <div class="alert alert-success py-2 small">{{ session('success') }}</div>
     @endif
 
+    @if ($errors->any())
+    <div class="alert alert-danger py-2 small">{{ $errors->all()[0] }}</div>
+    @endif
+
     {{-- Carte agent --}}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -34,34 +38,63 @@
                             {{ $agentVente->evenement->titre }}
                         </a>
                     </p>
-                    <form action="{{ route('admin.agents-vente.toggle-actif', $agentVente) }}" method="POST" class="mt-2">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-{{ $agentVente->actif ? 'warning' : 'success' }}">
-                            <i class="bi bi-{{ $agentVente->actif ? 'pause' : 'play' }}"></i>
-                            {{ $agentVente->actif ? 'Désactiver' : 'Réactiver' }}
-                        </button>
-                    </form>
+                    <div class="d-flex justify-content-center gap-2 mt-2">
+                        <form action="{{ route('admin.agents-vente.toggle-actif', $agentVente) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-{{ $agentVente->actif ? 'warning' : 'success' }}">
+                                <i class="bi bi-{{ $agentVente->actif ? 'pause' : 'play' }}"></i>
+                                {{ $agentVente->actif ? 'Désactiver' : 'Réactiver' }}
+                            </button>
+                        </form>
+                        <a href="{{ route('admin.agents-vente.edit', $agentVente) }}"
+                            class="btn btn-sm btn-outline-{{ $agentVente->peutEtreReaffecte() ? 'primary' : 'secondary' }}">
+                            <i class="bi bi-{{ $agentVente->peutEtreReaffecte() ? 'arrow-repeat' : 'pencil-square' }}"></i>
+                            {{ $agentVente->peutEtreReaffecte() ? 'Réaffecter' : 'Modifier' }}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-8">
+            {{-- Onglets : statistiques par événement / global --}}
+            @php $ongletGlobal = request('onglet') === 'global'; @endphp
+            @php
+                $s = $ongletGlobal ? $statsGlobales : $stats;
+                $liste = $ongletGlobal ? $ticketsGlobaux : $tickets;
+            @endphp
+
+            <ul class="nav nav-pills mb-2">
+                <li class="nav-item">
+                    <a class="nav-link py-1 px-3 {{ $ongletGlobal ? '' : 'active' }}"
+                        href="{{ request()->fullUrlWithQuery(['onglet' => null]) }}">
+                        <i class="bi bi-calendar-event me-1"></i> Cet événement
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-1 px-3 {{ $ongletGlobal ? 'active' : '' }}"
+                        href="{{ request()->fullUrlWithQuery(['onglet' => 'global']) }}">
+                        <i class="bi bi-globe me-1"></i> Tous les événements
+                    </a>
+                </li>
+            </ul>
+
             <div class="row g-2">
                 <div class="col-4">
                     <div class="card border-0 shadow-sm bg-purple-50 text-center py-3">
-                        <div class="fw-bold fs-4 text-purple-700">{{ $stats['total_tickets'] }}</div>
+                        <div class="fw-bold fs-4 text-purple-700">{{ $s['total_tickets'] }}</div>
                         <small class="text-muted">Tickets vendus</small>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="card border-0 shadow-sm bg-green-50 text-center py-3">
-                        <div class="fw-bold fs-4 text-green-700">{{ number_format($stats['montant_total'], 0, ',', ' ') }} F</div>
+                        <div class="fw-bold fs-4 text-green-700">{{ number_format($s['montant_total'], 0, ',', ' ') }} F</div>
                         <small class="text-muted">Montant total</small>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="card border-0 shadow-sm bg-blue-50 text-center py-3">
-                        <div class="fw-bold fs-4 text-blue-700">{{ $stats['aujourd_hui'] }}</div>
+                        <div class="fw-bold fs-4 text-blue-700">{{ $s['aujourd_hui'] }}</div>
                         <small class="text-muted">Aujourd'hui</small>
                     </div>
                 </div>
@@ -73,10 +106,10 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-3">
                             <h6 class="fw-bold small mb-2"><i class="bi bi-tag"></i> Par tarif</h6>
-                            @forelse ($stats['par_tarif'] as $s)
+                            @forelse ($s['par_tarif'] as $ligne)
                             <div class="d-flex justify-content-between small">
-                                <span>{{ $s->tarif?->getLabel() ?? 'N/A' }}</span>
-                                <span class="fw-medium">{{ $s->total }} ({{ number_format($s->montant, 0, ',', ' ') }} F)</span>
+                                <span>{{ $ligne->tarif?->getLabel() ?? 'N/A' }}</span>
+                                <span class="fw-medium">{{ $ligne->total }} ({{ number_format($ligne->montant, 0, ',', ' ') }} F)</span>
                             </div>
                             @empty
                             <small class="text-muted">Aucune donnée</small>
@@ -88,14 +121,18 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-3">
                             <h6 class="fw-bold small mb-2"><i class="bi bi-credit-card"></i> Par méthode</h6>
-                            @forelse ($stats['par_methode'] as $s)
+                            @forelse ($s['par_methode'] as $ligne)
                             <div class="d-flex justify-content-between small">
-                                <span>{{ \App\Models\Ticket::methodePaiementLabel($s->methode_paiement) }}</span>
-                                <span class="fw-medium">{{ $s->total }}</span>
+                                <span>{{ \App\Models\Ticket::methodePaiementLabel($ligne->methode_paiement) }}</span>
+                                <span class="fw-medium">{{ $ligne->total }}</span>
                             </div>
                             @empty
                             <small class="text-muted">Aucune donnée</small>
                             @endforelse
+                            <div class="d-flex justify-content-between small pt-1 mt-1 border-top">
+                                <span class="text-muted">Périmètre</span>
+                                <span class="fw-medium">{{ $ongletGlobal ? 'Tous les événements' : 'Cet événement' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,7 +143,10 @@
     {{-- Historique des ventes --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-2">
-            <h6 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Historique des ventes</h6>
+            <h6 class="fw-bold mb-0">
+                <i class="bi bi-clock-history"></i> Historique des ventes
+                <span class="text-muted fw-normal small ms-1">— {{ $ongletGlobal ? 'tous les événements' : 'cet événement' }}</span>
+            </h6>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 small">
@@ -118,13 +158,14 @@
                         <th>WhatsApp</th>
                         <th>N° paiement</th>
                         <th>Tarif</th>
+                        @if ($ongletGlobal)<th>Événement</th>@endif
                         <th class="text-end">Montant</th>
                         <th>Paiement</th>
                         <th class="pe-3">PDF</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($tickets as $ticket)
+                    @forelse ($liste as $ticket)
                     <tr>
                         <td class="ps-3">{{ $ticket->date_achat->format('d/m/Y H:i') }}</td>
                         <td>{{ $ticket->nom_acheteur }}</td>
@@ -132,6 +173,7 @@
                         <td>{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
                         <td>{{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</td>
                         <td>{{ optional($ticket->tarif)->getLabel() ?? 'N/A' }}</td>
+                        @if ($ongletGlobal)<td>{{ $ticket->evenement?->titre ?? '—' }}</td>@endif
                         @if($ticket->montant > 0)
                         <td class="text-end fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
                         <td>{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}</td>
@@ -148,15 +190,15 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-3">Aucune vente</td>
+                        <td colspan="{{ $ongletGlobal ? 10 : 9 }}" class="text-center text-muted py-3">Aucune vente</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        @if ($tickets->hasPages())
+        @if ($liste->hasPages())
         <div class="card-footer bg-white">
-            {{ $tickets->links() }}
+            {{ $liste->links() }}
         </div>
         @endif
     </div>

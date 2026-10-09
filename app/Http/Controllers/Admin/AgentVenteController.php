@@ -94,32 +94,101 @@ class AgentVenteController extends Controller
             abort(403); // Vérification de propriété
         }
 
+        // Ventes et historique limités à l'événement actuellement assigné
         $tickets = $agentVente->tickets()
+            ->where('evenement_id', $agentVente->evenement_id)
             ->with('tarif')
             ->latest('date_achat')
-            ->paginate(\App\Support\PerPage::resolve());
+            ->paginate(\App\Support\PerPage::resolve())
+            ->appends(request()->query());
 
-        $stats = [
-            'total_tickets' => $agentVente->tickets_count,
-            'montant_total' => $agentVente->montant_total,
-            'par_tarif' => $agentVente->tickets()
-                ->selectRaw('tarif_id, COUNT(*) as total, SUM(montant) as montant')
-                ->groupBy('tarif_id')
-                ->with('tarif')
-                ->get(),
-            'par_methode' => $agentVente->tickets()
-                ->selectRaw('methode_paiement, COUNT(*) as total')
-                ->groupBy('methode_paiement')
-                ->get(),
-            'aujourd_hui' => $agentVente->tickets()
-                ->whereDate('date_achat', today())
-                ->count(),
-        ];
+        $stats = $agentVente->statsParEvenement($agentVente->evenement_id);
 
         $statsGlobales = $agentVente->statsGlobales();
-        $ticketsGlobaux = $agentVente->ticketsGlobaux()->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_tickets');
+        $ticketsGlobaux = $agentVente->ticketsGlobaux()
+            ->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_tickets')
+            ->appends(request()->query());
 
         return view('admin.agents-vente.show', compact('agentVente', 'tickets', 'stats', 'statsGlobales', 'ticketsGlobaux'));
+    }
+
+    // Affiche le formulaire de modification / réaffectation d'un agent de vente
+    public function edit(AgentVente $agentVente): View
+    {
+        if ($agentVente->evenement->user_id !== auth()->id()) {
+            abort(403); // Vérification de propriété
+        }
+
+        $reaffectable = $agentVente->peutEtreReaffecte();
+
+        // Cibles de réaffectation : événements à venir de l'organisateur, hors annulation
+        $evenements = Evenement::where('user_id', auth()->id())
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->where('statut', '!=', 'annulé')
+            ->orderBy('date_event')
+            ->get();
+
+        return view('admin.agents-vente.edit', compact('agentVente', 'evenements', 'reaffectable'));
+    }
+
+    // Met à jour l'agent (identité, éventuellement réaffectation à un autre événement)
+    public function update(Request $request, AgentVente $agentVente): RedirectResponse
+    {
+        if ($agentVente->evenement->user_id !== auth()->id()) {
+            abort(403); // Vérification de propriété
+        }
+
+        $reaffectable = $agentVente->peutEtreReaffecte();
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('agents_vente', 'email')->ignore($agentVente->id)],
+            'evenement_id' => ['required', \Illuminate\Validation\Rule::exists('evenement', 'id')->where(function ($q) {
+                $q->where('user_id', auth()->id());
+            })],
+        ]);
+
+        $changementEvenement = (int) $validated['evenement_id'] !== (int) $agentVente->evenement_id;
+
+        if ($changementEvenement) {
+            if (! $reaffectable) {
+                return back()->withErrors(['evenement_id' => 'Cet agent est actif sur un événement à venir : désactivez-le avant de le réaffecter.']);
+            }
+
+            $cible = Evenement::findOrFail($validated['evenement_id']);
+
+            if ($cible->date_event && $cible->date_event->isPast()) {
+                return back()->withErrors(['evenement_id' => 'Cet événement est déjà passé : impossible d\'y affecter un agent de vente.']);
+            }
+
+            if (in_array($cible->statut, ['annulé', 'terminé'], true)) {
+                return back()->withErrors(['evenement_id' => 'Cet événement n\'accepte plus d\'agents de vente.']);
+            }
+
+            if ($agentVente->actif) {
+                $nbActifs = $cible->agentsVentes()->where('actif', true)->count();
+                $limite = $cible->limiteAgentsVente();
+                if ($limite !== null && $nbActifs >= $limite) {
+                    return back()->withErrors(['evenement_id' => "Maximum de {$limite} agents de vente atteint pour cet événement. Désactivez d'abord un agent existant."]);
+                }
+            }
+        }
+
+        $emailScan = \App\Models\Agent::where('email', $validated['email'])->exists();
+        if ($emailScan) { // Un email ne peut pas servir pour scan et vente à la fois
+            return back()->withErrors(['email' => 'Cet email est déjà utilisé par un agent de scan. Un agent ne peut pas être à la fois scan et vente.']);
+        }
+
+        $agentVente->update([
+            'nom' => $validated['nom'],
+            'email' => $validated['email'],
+            'evenement_id' => $validated['evenement_id'],
+        ]);
+
+        return redirect()->route('admin.agents-vente.show', $agentVente)
+            ->with('success', $changementEvenement
+                ? 'Agent de vente réaffecté avec succès.'
+                : 'Agent de vente mis à jour avec succès.');
     }
 
     // Active ou désactive un agent de vente

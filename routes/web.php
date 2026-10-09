@@ -352,6 +352,8 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');
             Route::get('/creer', [AdminAgentController::class, 'create'])->name('create')->middleware('profil_verifie');
             Route::post('/', [AdminAgentController::class, 'store'])->name('store')->middleware('profil_verifie');
+            Route::get('/{agent}/modifier', [AdminAgentController::class, 'edit'])->name('edit');
+            Route::put('/{agent}', [AdminAgentController::class, 'update'])->name('update');
             Route::get('/{agent}', [AdminAgentController::class, 'show'])->name('show');
             Route::post('/{agent}/toggle-actif', [AdminAgentController::class, 'toggleActif'])->name('toggle-actif');
             Route::delete('/{agent}', [AdminAgentController::class, 'destroy'])->name('destroy');
@@ -361,6 +363,8 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
             Route::get('/', [AdminAgentVenteController::class, 'index'])->name('index');
             Route::get('/creer', [AdminAgentVenteController::class, 'create'])->name('create')->middleware('profil_verifie');
             Route::post('/', [AdminAgentVenteController::class, 'store'])->name('store')->middleware('profil_verifie');
+            Route::get('/{agentVente}/modifier', [AdminAgentVenteController::class, 'edit'])->name('edit');
+            Route::put('/{agentVente}', [AdminAgentVenteController::class, 'update'])->name('update');
             Route::get('/{agentVente}', [AdminAgentVenteController::class, 'show'])->name('show');
             Route::post('/{agentVente}/toggle-actif', [AdminAgentVenteController::class, 'toggleActif'])->name('toggle-actif');
             Route::delete('/{agentVente}', [AdminAgentVenteController::class, 'destroy'])->name('destroy');

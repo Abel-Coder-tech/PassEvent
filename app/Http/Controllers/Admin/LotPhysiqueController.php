@@ -301,6 +301,11 @@ class LotPhysiqueController extends Controller
             abort(403);
         }
 
+        if ($lot->estUneDemande()) {
+            return redirect()->route('admin.lots-physiques.index')
+                ->with('error', 'Le QR code de ce lot est positionné par l\'équipe PaxEvent.');
+        }
+
         $tickets = $lot->tickets()->where('annule', false)->count();
         $format = $lot->formatDetails();
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
@@ -317,6 +322,10 @@ class LotPhysiqueController extends Controller
     {
         if ($lot->user_id !== Auth::id()) {
             abort(403);
+        }
+
+        if ($lot->estUneDemande()) {
+            return back()->with('error', 'Le QR code de ce lot est positionné par l\'équipe PaxEvent.');
         }
 
         $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);
@@ -338,7 +347,7 @@ class LotPhysiqueController extends Controller
         $validated = $request->validate($rules, [
             'format.required' => 'Veuillez choisir un format.',
             'format.in' => 'Format invalide.',
-            'template_image.required' => 'Veuillez importez une image de template.',
+            'template_image.required' => 'Veuillez importer une image de template.',
             'template_image.image' => 'Le fichier doit être une image.',
             'template_image.mimes' => 'Format accepté : PNG uniquement.',
             'template_image.max' => 'L\'image ne doit pas dépasser 10 Mo.',
@@ -413,6 +422,10 @@ class LotPhysiqueController extends Controller
     public function previewTemplate(LotPhysique $lot)
     {
         if ($lot->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($lot->estUneDemande()) {
             abort(403);
         }
 

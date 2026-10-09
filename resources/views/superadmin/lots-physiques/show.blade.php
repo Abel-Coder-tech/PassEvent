@@ -120,7 +120,7 @@
                         @if($lot->statut === \App\Models\LotPhysique::STATUT_ATTENTE_PAIEMENT)
                             Demande en attente de paiement : le super admin sera notifié dès la confirmation du règlement.
                         @elseif(! $lot->templatePresent())
-                            Template manquant : contactez l'organisateur pour qu'il fournisse son visuel de ticket.
+                            Aucun visuel fourni : la planche standard (grille de QR codes) sera utilisée. Vous pouvez configurer un template ci-dessous.
                         @elseif(! $lot->aUnTemplate())
                             Template fourni : positionnez le QR code sur l'image de l'organisateur avant de transmettre.
                         @else
@@ -257,14 +257,23 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small text-muted">Adresse email de l'organisateur</label>
-                        <input type="email" name="email" class="form-control" value="{{ $lot->user?->email }}" required>
+                        <input type="email" name="email" id="emailOrganisateur" class="form-control" value="{{ $lot->user?->email }}" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="hidden" name="notifier" value="0">
+                        <input class="form-check-input" type="checkbox" name="notifier" id="notifierOrganisateur" value="1" checked
+                            onchange="var e=document.getElementById('emailOrganisateur');if(e){e.required=this.checked;e.disabled=!this.checked;}">
+                        <label class="form-check-label small" for="notifierOrganisateur">
+                            Notifier l'organisateur par email
+                            <span class="text-muted d-block" style="font-size:0.72rem;">La planche PDF du ticket est jointe automatiquement à cet email.</span>
+                        </label>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small text-muted">Note (facultative)</label>
                         <textarea name="note" class="form-control" rows="3" placeholder="Un petit message pour l'organisateur..."></textarea>
                     </div>
                     <div class="small text-muted">
-                        Le lot sera transmis : l'organisateur recevra un email et une notification dans son espace. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
+                        Le lot sera transmis : l'organisateur recevra une notification dans son espace. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -76,13 +76,37 @@ class Agent extends Authenticatable
     // Récupère tous les logs de scan de cet agent (global, tous événements confondus)
     public function logsGlobaux()
     {
-        return Log::where('agent_id', $this->id)->where('type_operation', 'scan')->latest('created_at');
+        return Log::where('agent_id', $this->id)->where('type_operation', 'scan')
+            ->with(['ticket.evenement'])->latest('created_at');
+    }
+
+    // Logs de scan rattachés à un événement précis (via le ticket scanné)
+    public function logsEvenement(int $evenementId)
+    {
+        return Log::where('agent_id', $this->id)->where('type_operation', 'scan')
+            ->with('ticket')
+            ->whereHas('ticket', fn ($q) => $q->where('evenement_id', $evenementId));
     }
 
     // Stats globales de cet agent
     public function statsGlobales(): array
     {
         $logsBase = Log::where('agent_id', $this->id)->where('type_operation', 'scan');
+
+        return [
+            'total_scans' => $logsBase->count(),
+            'scans_ajd' => $logsBase->clone()->whereDate('created_at', today())->count(),
+            'valides' => $logsBase->clone()->where('details->resultat', 'valide')->count(),
+            'deja_utilises' => $logsBase->clone()->where('details->resultat', 'deja_utilise')->count(),
+            'invalides' => $logsBase->clone()->where('details->resultat', '!=', 'valide')->count(),
+            'dernier_acces' => $this->dernier_acces,
+        ];
+    }
+
+    // Stats des scans effectués pour un événement précis
+    public function statsParEvenement(int $evenementId): array
+    {
+        $logsBase = $this->logsEvenement($evenementId);
 
         return [
             'total_scans' => $logsBase->count(),

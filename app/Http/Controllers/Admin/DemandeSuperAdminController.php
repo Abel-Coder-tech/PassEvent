@@ -50,7 +50,7 @@ class DemandeSuperAdminController extends Controller
         $validated = $request->validate([
             'objet' => 'required|string|in:'.implode(',', array_keys(self::OBJETS)),
             'evenement_id' => 'nullable|integer|exists:evenement,id',
-            'message' => 'required|string|min:10|max:2000',
+            'message' => 'nullable|string|max:2000',
             'commission_pourcentage' => 'nullable|numeric|min:0|max:100',
             'quantites' => 'nullable|array',
             'quantites.*' => 'nullable|integer|min:0|max:5000',
@@ -64,7 +64,8 @@ class DemandeSuperAdminController extends Controller
 
         // Une campagne marketing ciblée concerne forcément un événement
         if ($objet === self::OBJETS['booster_promouvoir'] && empty($validated['evenement_id'])) {
-            return back()->with('error', 'Sélectionnez l\'événement que vous souhaitez booster ou promouvoir.');
+            return back()->withInput($request->input())
+                ->withErrors(['evenement_id' => 'Sélectionnez l\'événement que vous souhaitez booster ou promouvoir.']);
         }
 
         if (! empty($validated['evenement_id'])) {
@@ -72,11 +73,12 @@ class DemandeSuperAdminController extends Controller
 
             // Règle métier : les demandes liées à un événement se font avant sa date
             if ($evenement->date_event && $evenement->date_event->isPast()) {
-                return back()->with('error', 'Cet événement est déjà passé : les demandes le concernant ne sont plus possibles.');
+                return back()->withInput($request->input())
+                    ->withErrors(['evenement_id' => 'Cet événement est déjà passé : les demandes le concernant ne sont plus possibles.']);
             }
         }
 
-        $message = trim($validated['message']);
+        $message = trim((string) ($validated['message'] ?? ''));
 
         // Demande de QR codes : template fourni dans le formulaire, puis paiement de la commission
         if ($objet === self::OBJETS['ticket_physique']) {
@@ -111,7 +113,8 @@ class DemandeSuperAdminController extends Controller
         $objet = self::OBJETS['ticket_physique'];
 
         if (! $evenement) {
-            return back()->with('error', 'Sélectionnez l\'événement concerné par votre demande de QR codes.');
+            return back()->withInput($request->input())
+                ->withErrors(['evenement_id' => 'Sélectionnez l\'événement concerné par votre demande de QR codes.']);
         }
 
         $lignes = [];
@@ -123,20 +126,23 @@ class DemandeSuperAdminController extends Controller
 
             $tarif = $evenement->tarifs()->where('statut', 'actif')->where('id', $tarifId)->first();
             if (! $tarif) {
-                return back()->with('error', 'Un tarif sélectionné n\'est plus disponible.');
+                return back()->withInput($request->input())
+                    ->withErrors(['quantites' => 'Un tarif sélectionné n\'est plus disponible.']);
             }
 
             $lignes[] = ['tarif' => $tarif, 'quantite' => $qte];
         }
 
         if (empty($lignes)) {
-            return back()->with('error', 'Indiquez au moins une quantité de QR codes.');
+            return back()->withInput($request->input())
+                ->withErrors(['quantites' => 'Indiquez au moins une quantité de QR codes.']);
         }
 
         $format = $this->validerTemplateDemande($request);
 
         if ($format === null) {
-            return back();
+            return back()->withInput($request->input())
+                ->withErrors(['format' => 'Les dimensions personnalisées doivent être comprises entre 30 et 200 mm.']);
         }
 
         $tarifsNoms = $evenement->tarifs()->pluck('nom', 'id')->all();

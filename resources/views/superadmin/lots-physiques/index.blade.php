@@ -99,7 +99,7 @@
                                 <i class="bi bi-image"></i>
                             </a>
                             @unless($lot->estTransmis)
-                                <button type="button" class="sa-btn sa-btn-sm sa-btn-success" title="{{ $lot->estUneDemande() && ! $lot->aUnTemplate() ? 'Template et QR code obligatoires avant transmission' : 'Transmettre' }}"
+                                <button type="button" class="sa-btn sa-btn-sm sa-btn-success" title="{{ $lot->estUneDemande() && $lot->templatePresent() && ! $lot->aUnTemplate() ? 'QR code à positionner avant transmission' : 'Transmettre' }}"
                                     data-bs-toggle="modal" data-bs-target="#transmettreModal"
                                     data-action="{{ route('superadmin.tickets-physiques.transmettre', $lot) }}"
                                     data-organisateur="{{ $lot->user?->nom }}"
@@ -142,12 +142,21 @@
                         <label class="form-label small text-muted">Adresse email de l'organisateur</label>
                         <input type="email" id="modalEmail" name="email" class="form-control" required>
                     </div>
+                    <div class="form-check mb-3">
+                        <input type="hidden" name="notifier" value="0">
+                        <input class="form-check-input" type="checkbox" name="notifier" id="modalNotifier" value="1" checked
+                            onchange="var e=document.getElementById('modalEmail');if(e){e.required=this.checked;e.disabled=!this.checked;}">
+                        <label class="form-check-label small" for="modalNotifier">
+                            Notifier l'organisateur par email
+                            <span class="text-muted d-block" style="font-size:0.72rem;">La planche PDF du ticket est jointe automatiquement à cet email.</span>
+                        </label>
+                    </div>
                     <div class="mb-2">
                         <label class="form-label small text-muted">Note (facultative)</label>
                         <textarea name="note" id="modalNote" class="form-control" rows="3" placeholder="Un petit message pour l'organisateur..."></textarea>
                     </div>
                     <div class="small text-muted">
-                        Le lot sera transmis : l'organisateur recevra un email et une notification dans son espace organisateur. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
+                        Le lot sera transmis : l'organisateur recevra une notification dans son espace organisateur. Il pourra ensuite télécharger la planche de QR codes (3 téléchargements maximum).
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -167,7 +176,12 @@ document.querySelectorAll('[data-bs-toggle="modal"][data-target="#transmettreMod
         const form = document.getElementById('transmettreForm');
         form.setAttribute('action', btn.getAttribute('data-action'));
         document.getElementById('modalOrganisateur').value = btn.getAttribute('data-organisateur') || '';
-        document.getElementById('modalEmail').value = btn.getAttribute('data-email') || '';
+        var email = document.getElementById('modalEmail');
+        email.value = btn.getAttribute('data-email') || '';
+        email.required = true;
+        email.disabled = false;
+        var notifier = document.getElementById('modalNotifier');
+        if (notifier) { notifier.checked = true; }
         document.getElementById('modalNote').value = '';
     });
 });
