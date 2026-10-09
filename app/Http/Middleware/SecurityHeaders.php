@@ -24,9 +24,10 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Permissions navigateur minimales
-        // La caméra reste interdite partout, sauf sur le scan agent (/agent/scan)
-        // qui en a besoin, et uniquement en same-origin (camera=(self)).
-        $camera = $request->is('agent/scan') ? '(self)' : '()';
+        // La caméra reste interdite partout, sauf sur les pages de scan
+        // (/scan pour l'organisateur, /agent/scan pour l'agent) qui en ont
+        // besoin, et uniquement en same-origin (camera=(self)).
+        $camera = ($request->is('agent/scan') || $request->is('scan')) ? '(self)' : '()';
         $response->headers->set('Permissions-Policy', "geolocation=(), microphone=(), camera={$camera}");
 
         // HSTS : uniquement sur HTTPS

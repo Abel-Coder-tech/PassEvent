@@ -214,6 +214,8 @@
         </div>
     </div>
 </div>
+
+@include('partials.camera-onboarding')
 @endsection
 
 @push('scripts')
@@ -458,6 +460,7 @@ function onCameraStarted() {
     lastCameraError = null;
     resetScanHold();
     setScanning(true);
+    if (window.cameraHint) { window.cameraHint.hide(); }
     setCameraButton(true);
     setCameraStatus('Camera active. Pointez le QR code du ticket.', false);
 }

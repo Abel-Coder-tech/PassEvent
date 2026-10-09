@@ -365,11 +365,31 @@
         </div>
     </div>
 </div>
+
+@include('partials.camera-onboarding')
 @endsection
 
 @section('scripts')
 @include('partials.scan-sound')
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+// Charge la lib depuis 2 CDN : sur certains reseaux (forfait data bloque en
+// salle d'evenement) unpkg seul echoue et la camera devient inutilisable.
+(function () {
+    var sources = [
+        'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+        'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+    ];
+    var index = 0;
+    function loadNext() {
+        if (index >= sources.length) { return; }
+        var script = document.createElement('script');
+        script.src = sources[index++];
+        script.onerror = loadNext;
+        document.head.appendChild(script);
+    }
+    loadNext();
+})();
+</script>
 <script>
 let html5QrcodeScanner = null;
 let isCameraActive = false;
@@ -420,10 +440,34 @@ document.getElementById('btnToggleCamera').addEventListener('click', function() 
 function startCamera() {
     const status = document.getElementById('cameraStatus');
 
+    const blocker = preflightCamera();
+    if (blocker) {
+        isCameraActive = false;
+        status.textContent = 'Erreur camera';
+        status.style.color = 'var(--danger)';
+        alert(blocker);
+        return;
+    }
+
     status.textContent = 'Activation...';
     resetScanHold();
 
     tryStartCamera(0);
+}
+
+// Verifie les prerequis AVANT d'appeler getUserMedia : sinon le navigateur
+// echoue silencieusement et l'organisateur ne comprend pas la cause du refus.
+function preflightCamera() {
+    if (!window.isSecureContext) {
+        return "Connexion non securisee : la camera n'est accessible qu'en HTTPS. Recharge la page avec une adresse https://.";
+    }
+    if (typeof Html5Qrcode === 'undefined') {
+        return "Le lecteur de QR codes n'a pas pu etre charge. Verifie la connexion internet puis recharge la page.";
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return "Ce navigateur ne supporte pas l'acces camera. Essaie avec Chrome ou Safari.";
+    }
+    return null;
 }
 
 function tryStartCamera(attemptIndex) {
@@ -581,6 +625,7 @@ function onCameraStarted() {
 
     isCameraActive = true;
     resetScanHold();
+    if (window.cameraHint) { window.cameraHint.hide(); }
     document.getElementById('scannerContainer').classList.add('scanning');
     status.textContent = 'Camera active';
     status.style.color = 'var(--vert)';
