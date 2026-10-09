@@ -65,6 +65,45 @@
     .scanner-area.scan-ok .scan-corners .corner-bl,
     .scanner-area.scan-ok .scan-corners .corner-br { border-color: #28a745; }
     .scan-region-highlight { opacity: 0; }
+    .scan-line {
+        position: absolute;
+        left: 6%; right: 6%;
+        height: 2px;
+        top: 20%;
+        z-index: 11;
+        pointer-events: none;
+        border-radius: 2px;
+        display: none;
+        background: linear-gradient(90deg, transparent, var(--vert), transparent);
+        box-shadow: 0 0 8px var(--vert);
+        animation: scanSweep 1.8s linear infinite;
+    }
+    .scanner-area.scanning .scan-line { display: block; }
+    .scanner-area.detecting .scan-line {
+        background: linear-gradient(90deg, transparent, #28a745, transparent);
+        box-shadow: 0 0 10px #28a745;
+    }
+    @keyframes scanSweep {
+        0% { top: 18%; }
+        50% { top: 82%; }
+        100% { top: 18%; }
+    }
+    .scan-progress {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 4px;
+        z-index: 12;
+        display: none;
+        background: rgba(255,255,255,0.08);
+    }
+    .scanner-area.scanning .scan-progress { display: block; }
+    .scan-progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: #28a745;
+        transition: width 0.1s linear;
+    }
     .scan-corners {
         position: absolute;
         top: 50%;
@@ -222,6 +261,8 @@
                                 <div class="corner-bl"></div>
                                 <div class="corner-br"></div>
                             </div>
+                            <div class="scan-line" id="scanLine"></div>
+                            <div class="scan-progress"><span id="scanProgressFill"></span></div>
                             <div class="d-flex align-items-center justify-content-center" style="height: 300px;" id="cameraPlaceholder">
                                 <div class="text-center text-muted">
                                     <i class="bi bi-camera" style="font-size: 3rem; opacity: 0.3;"></i>
@@ -332,7 +373,18 @@
 <script>
 let html5QrcodeScanner = null;
 let isCameraActive = false;
-let scanInProgress = false;
+
+// Stabilisation : le QR doit rester lisible ~0,8 s avant d'etre valide, pour
+// que l'agent voie la confirmation (ligne verte + barre) et evite un scan
+// accidentel. Apres validation : cooldown court, la camera reste active.
+const HOLD_MS = 800;
+const LOST_MS = 400;
+const COOLDOWN_MS = 1000;
+let pendingCode = null;
+let pendingSince = 0;
+let lastDetectAt = 0;
+let blockedCode = null;
+let cooldownUntil = 0;
 
 const SCAN_CONFIG = {
     fps: 15,
@@ -369,7 +421,7 @@ function startCamera() {
     const status = document.getElementById('cameraStatus');
 
     status.textContent = 'Activation...';
-    scanInProgress = false;
+    resetScanHold();
 
     tryStartCamera(0);
 }
@@ -447,14 +499,68 @@ function describeCameraError(err) {
 }
 
 function onScanSuccess(decodedText) {
-    if (scanInProgress) return;
-    scanInProgress = true;
-    flashScanOk();
-    document.getElementById('codeInput').value = decodedText;
-    verifyCode(decodedText);
-    stopCamera();
-    setTimeout(() => { scanInProgress = false; }, 3000);
+    const now = Date.now();
+    lastDetectAt = now;
+
+    if (now < cooldownUntil) return;
+    if (blockedCode === decodedText) return;
+
+    if (pendingCode !== decodedText) {
+        pendingCode = decodedText;
+        pendingSince = now;
+        const area = document.getElementById('scannerContainer');
+        if (area) area.classList.add('detecting');
+    }
+
+    updateProgress((now - pendingSince) / HOLD_MS);
+
+    if (now - pendingSince >= HOLD_MS) {
+        validatePending();
+    }
 }
+
+function validatePending() {
+    if (!pendingCode) return;
+    const code = pendingCode;
+    blockedCode = code;
+    cooldownUntil = Date.now() + COOLDOWN_MS;
+    cancelPending();
+    flashScanOk();
+    document.getElementById('codeInput').value = code;
+    verifyCode(code);
+}
+
+function updateProgress(ratio) {
+    const fill = document.getElementById('scanProgressFill');
+    if (fill) fill.style.width = Math.round(Math.max(0, Math.min(1, ratio)) * 100) + '%';
+}
+
+function cancelPending() {
+    pendingCode = null;
+    pendingSince = 0;
+    const area = document.getElementById('scannerContainer');
+    if (area) area.classList.remove('detecting');
+    updateProgress(0);
+}
+
+function resetScanHold() {
+    pendingCode = null;
+    pendingSince = 0;
+    lastDetectAt = 0;
+    blockedCode = null;
+    cooldownUntil = 0;
+    cancelPending();
+}
+
+// Surveille la continuite de lecture : si le QR disparait du cadre, on annule
+// la stabilisation en cours et on oublie le dernier code valide.
+setInterval(function () {
+    if (!lastDetectAt) return;
+    if (Date.now() - lastDetectAt > LOST_MS) {
+        if (pendingCode) { cancelPending(); }
+        blockedCode = null;
+    }
+}, 100);
 
 function flashScanOk() {
     const container = document.getElementById('scannerContainer');
@@ -474,6 +580,8 @@ function onCameraStarted() {
     const scanCorners = document.getElementById('scanCorners');
 
     isCameraActive = true;
+    resetScanHold();
+    document.getElementById('scannerContainer').classList.add('scanning');
     status.textContent = 'Camera active';
     status.style.color = 'var(--vert)';
     placeholder.style.display = 'none';
@@ -487,6 +595,8 @@ function onCameraFailed(err) {
     const placeholder = document.getElementById('cameraPlaceholder');
 
     isCameraActive = false;
+    document.getElementById('scannerContainer').classList.remove('scanning');
+    cancelPending();
     status.textContent = 'Erreur camera';
     status.style.color = 'var(--danger)';
     placeholder.style.display = 'flex';
@@ -503,6 +613,8 @@ function stopCamera() {
     if (html5QrcodeScanner && isCameraActive) {
         html5QrcodeScanner.stop().then(() => {
             isCameraActive = false;
+            document.getElementById('scannerContainer').classList.remove('scanning');
+            cancelPending();
             status.textContent = 'Camera inactive';
             status.style.color = '';
             placeholder.style.display = 'flex';
