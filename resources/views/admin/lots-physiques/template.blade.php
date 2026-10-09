@@ -67,6 +67,27 @@
     }
     .remove-img:hover { background: #c0392b; transform: scale(1.1); }
 
+    .change-img {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        border: none;
+        border-radius: 999px;
+        background: #542680;
+        color: #fff;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .35rem .75rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        z-index: 20;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,.25);
+        transition: transform .15s, background .15s;
+    }
+    .change-img:hover { background: #3d1a5c; transform: scale(1.05); }
+
     .zoom-bar {
         display: flex;
         align-items: center;
@@ -324,6 +345,9 @@
                 @endif
                 <button type="button" id="btnRemoveImg" class="remove-img" title="Supprimer l'image" style="display:none;">
                     <i class="bi bi-x-lg"></i>
+                </button>
+                <button type="button" id="btnChangeImg" class="change-img" title="Remplacer l'image (le QR code reste à sa place)" style="display:none;">
+                    <i class="bi bi-image"></i> Changer l'image
                 </button>
                 </div>
 
@@ -660,6 +684,7 @@
     var btnSaveSpinner = document.getElementById('btnSaveSpinner');
     var qrTooltip = document.getElementById('qrTooltip');
     var btnRemoveImg = document.getElementById('btnRemoveImg');
+    var btnChangeImg = document.getElementById('btnChangeImg');
     var formatSelect = document.getElementById('formatSelect');
     var formatHint = document.getElementById('formatHint');
     var formatBadgeLabel = document.getElementById('formatBadgeLabel');
@@ -990,8 +1015,14 @@
     syncCustomDims();
 
     // Remove image (✕)
-    function showRemoveBtn() { if (btnRemoveImg) btnRemoveImg.style.display = 'flex'; }
-    function hideRemoveBtn() { if (btnRemoveImg) btnRemoveImg.style.display = 'none'; }
+    function showRemoveBtn() {
+        if (btnRemoveImg) btnRemoveImg.style.display = 'flex';
+        if (btnChangeImg) btnChangeImg.style.display = 'flex';
+    }
+    function hideRemoveBtn() {
+        if (btnRemoveImg) btnRemoveImg.style.display = 'none';
+        if (btnChangeImg) btnChangeImg.style.display = 'none';
+    }
     function clearCanvas() {
         canvas.classList.remove('has-image');
         canvas.innerHTML = '';
@@ -1001,6 +1032,7 @@
         empty.innerHTML = '<i class="bi bi-cloud-arrow-up"></i><p class="mb-1 fw-semibold">Glissez l\'image de votre ticket ici</p><p class="small mb-2">ou cliquez pour parcourir</p><p class="small text-muted">PNG max 10 Mo</p>';
         canvas.appendChild(empty);
         canvas.appendChild(btnRemoveImg);
+        canvas.appendChild(btnChangeImg);
         hideRemoveBtn();
         img = null;
         overlay = null;
@@ -1012,6 +1044,14 @@
             supprimerTemplate.value = '1';
             clearCanvas();
             hideFileError();
+        });
+    }
+
+    // Changer l'image : ouvre le sélecteur, remplace le visuel sans toucher au QR
+    if (btnChangeImg) {
+        btnChangeImg.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (fileInput) fileInput.click();
         });
     }
 
@@ -1064,6 +1104,7 @@
             ov.appendChild(rh);
             canvas.appendChild(ov);
             canvas.appendChild(btnRemoveImg);
+            canvas.appendChild(btnChangeImg);
             showRemoveBtn();
             img = imgEl;
             overlay = ov;

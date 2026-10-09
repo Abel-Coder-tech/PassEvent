@@ -30,6 +30,22 @@
             position: absolute;
             display: block;
         }
+        .qr-wrap {
+            position: absolute;
+            left: {{ $padX }}mm;
+            top: {{ $padTop }}mm;
+            width: {{ $qrSize }}mm;
+            height: {{ $qrSize }}mm;
+        }
+        .qr-favicon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            background: #fff;
+            padding: 0.3mm;
+            box-sizing: border-box;
+        }
         .pax-band {
             position: absolute;
             top: {{ $bandTop }}mm;
@@ -57,7 +73,12 @@
     <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
 @endif
     <div class="qr-zone">
-        <img src="{{ $qrDataUri }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+        <div class="qr-wrap">
+            <img src="{{ $qrDataUri }}" alt="QR" style="left: 0; top: 0; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+            @if(!empty($faviconDataUri))
+                <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon" style="width: {{ $faviconSize }}mm; height: {{ $faviconSize }}mm; margin-top: -{{ $faviconSize / 2 }}mm; margin-left: -{{ $faviconSize / 2 }}mm;">
+            @endif
+        </div>
         <div class="pax-band">
             <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
         </div>

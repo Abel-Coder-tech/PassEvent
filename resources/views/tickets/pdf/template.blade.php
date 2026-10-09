@@ -46,6 +46,18 @@
             position: absolute;
             display: block;
         }
+        .qr-wrap {
+            position: absolute;
+        }
+        .qr-favicon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            background: #fff;
+            padding: 0.3mm;
+            box-sizing: border-box;
+        }
 
         .pax-band {
             position: absolute;
@@ -54,7 +66,7 @@
             box-sizing: border-box;
         }
         .pax-band .pax-code {
-            font-size: {{ $paxFont }}px;
+            font-size: {{ $paxFontPt }}pt;
             font-weight: 700;
             letter-spacing: 0;
             color: #000;
@@ -90,7 +102,12 @@
                     <div class="ticket-bg"></div>
                 @endif
                 <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
-                    <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                    <div class="qr-wrap" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                        <img src="{{ $qrs[$ticket->id] }}" alt="QR" style="left: 0; top: 0; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
+                        @if($faviconDataUri)
+                            <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon" style="width: {{ $faviconSize }}mm; height: {{ $faviconSize }}mm; margin-top: -{{ $faviconSize / 2 }}mm; margin-left: -{{ $faviconSize / 2 }}mm;">
+                        @endif
+                    </div>
                     <div class="pax-band" style="top: {{ $bandTop }}mm; left: 0; width: 100%; height: {{ $paxBandH }}mm; padding: 0 0 {{ $paxBottom }}mm;">
                         <div class="pax-code">{{ $ticket->code_unique }}</div>
                     </div>
@@ -115,8 +132,8 @@
                 $tarif && $tarif->prix !== null ? number_format((float) $tarif->prix, 0, ',', ' ').' FCFA' : null,
             ]));
         @endphp
-        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">{{ implode(' — ', $legendParts) }}</span>
-        <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFont }}px;">© {{ date('Y') }} PaxEvent · Billetterie en ligne 100% Bénin</span>
+        <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFontPt }}pt;">{{ implode(' — ', $legendParts) }}</span>
+        <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFontPt }}pt;">© {{ date('Y') }} PaxEvent · Billetterie en ligne 100% Bénin</span>
     </div>
 @endforeach
 </body>

@@ -182,7 +182,7 @@ class LotPhysiqueTemplatePdfService
         $layout = self::layoutPage($format);
 
         $qrs = $tickets->mapWithKeys(fn (Ticket $t) => [
-            $t->id => QrCodeService::generateDataUri($t->code_unique, 300),
+            $t->id => QrCodeService::generateDataUri($t->code_unique, 300, 'H'),
         ]);
 
         $templateUrl = self::templateToDataUri($lot);
@@ -193,6 +193,10 @@ class LotPhysiqueTemplatePdfService
         $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
         $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
         $geo = self::geometry($qrSize, $qrX, $qrY, $layout['slot_largeur'], $layout['slot_hauteur']);
+
+        // Favicon PaxEvent incrusté au centre du QR (même principe que le ticket en ligne).
+        $faviconDataUri = TicketPdfService::faviconDataUri();
+        $faviconSize = round($geo['qrSize'] * 0.20, 2);
 
         // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
         $imgW = $layout['slot_largeur'] * $zoom / 100;
@@ -207,15 +211,24 @@ class LotPhysiqueTemplatePdfService
         $signBottom = $layout['marge_bas'] >= 8 ? 2.0 : 0.5;
         $signFont = $layout['marge_bas'] >= 8 ? 9 : 6.5;
 
+        // La résolution des images de fond DomPDF dépend uniquement de l'option `dpi`
+        // (voir config/dompdf.php). À 96 dpi l'image est sous-échantillonnée et pixelise
+        // à l'impression : on rend à 300 dpi. Les tailles en px des textes deviennent
+        // alors trop petites, on les exprime donc en points (1 px = 0,75 pt).
+        $paxFontPt = round(self::PAX_FONT * 0.75, 3);
+        $signFontPt = round($signFont * 0.75, 3);
+
         $pages = $tickets->chunk($layout['par_page'])->values();
 
         $pdf = Pdf::loadView('tickets.pdf.template', array_merge(compact(
             'lot', 'pages', 'qrs', 'templateUrl',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
-            'signBottom', 'signFont', 'zoom',
-            'imgW', 'imgH', 'imgLeft', 'imgTop'
+            'signBottom', 'signFont', 'signFontPt', 'paxFontPt', 'zoom',
+            'imgW', 'imgH', 'imgLeft', 'imgTop',
+            'faviconDataUri', 'faviconSize'
         ), $geo));
         $pdf->setPaper('a4', $layout['orientation']);
+        $pdf->setOption('dpi', 300);
         $pdf->render();
 
         return $pdf;
@@ -229,7 +242,7 @@ class LotPhysiqueTemplatePdfService
     {
         @ini_set('memory_limit', '1024M');
 
-        $qrDataUri = QrCodeService::generateDataUri($ticket->code_unique, 300);
+        $qrDataUri = QrCodeService::generateDataUri($ticket->code_unique, 300, 'H');
         $templateUrl = self::templateToDataUri($lot);
         [$templateW, $templateH] = self::templateSize($lot);
         $zoom = self::zoomEffectif($lot);
@@ -249,9 +262,13 @@ class LotPhysiqueTemplatePdfService
         $qrY = $lot->qr_y ?? round(($slotH - $qrSize) / 2);
         $geo = self::geometry($qrSize, $qrX, $qrY, $slotW, $slotH);
 
+        $faviconDataUri = TicketPdfService::faviconDataUri();
+        $faviconSize = round($geo['qrSize'] * 0.20, 2);
+
         $html = view('tickets.pdf.ticket-preview', array_merge(compact(
             'templateUrl', 'qrDataUri', 'slotW', 'slotH', 'zoom',
-            'imgW', 'imgH', 'imgLeft', 'imgTop'
+            'imgW', 'imgH', 'imgLeft', 'imgTop',
+            'faviconDataUri', 'faviconSize'
         ), $geo))->with('codeUnique', $ticket->code_unique)->render();
 
         $pdf = Pdf::loadHtml($html);
@@ -309,8 +326,8 @@ class LotPhysiqueTemplatePdfService
 
         // Images trop grandes (ex. PNG 2400×2400) : dompdf décode l'image entière
         // et fait exploser la mémoire sur de grandes planches. On réduit donc à la
-        // volée à ~300 dpi pour l'impression d'un ticket (max 1600 px de côté).
-        $maxSide = 1600;
+        // volée à ~300 dpi pour l'impression d'un ticket (max 2400 px de côté).
+        $maxSide = 2400;
         $info = @getimagesize($path);
         if ($info && max($info[0], $info[1]) > $maxSide && function_exists('imagecreatefromstring')) {
             $src = @imagecreatefromstring($raw);
