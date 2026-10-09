@@ -27,7 +27,14 @@ class PermissionsPolicyCameraTest extends TestCase
         $this->assertStringContainsString('camera=(self)', $this->permissionsPolicy('/agent/scan'));
     }
 
-    public function test_camera_bloquee_hors_scan_agent(): void
+    // Regression : /scan (menu "Scan QR" de l'organisateur) etait bloque par
+    // camera=(), la camera ne s'activait donc jamais sur cette page.
+    public function test_camera_autorisee_sur_le_scan_organisateur(): void
+    {
+        $this->assertStringContainsString('camera=(self)', $this->permissionsPolicy('/scan'));
+    }
+
+    public function test_camera_bloquee_hors_scan(): void
     {
         $this->assertStringContainsString('camera=()', $this->permissionsPolicy('/agent/dashboard'));
         $this->assertStringContainsString('camera=()', $this->permissionsPolicy('/'));
