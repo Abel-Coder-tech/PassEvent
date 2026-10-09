@@ -53,6 +53,45 @@
     .scanner-area.scan-ok .scan-corners::after,
     .scanner-area.scan-ok .scan-corners .corner-bl,
     .scanner-area.scan-ok .scan-corners .corner-br { border-color: #28a745; }
+    .scan-line {
+        position: absolute;
+        left: 6%; right: 6%;
+        height: 2px;
+        top: 20%;
+        z-index: 11;
+        pointer-events: none;
+        border-radius: 2px;
+        display: none;
+        background: linear-gradient(90deg, transparent, var(--violet-clair), transparent);
+        box-shadow: 0 0 8px var(--violet-clair);
+        animation: scanSweep 1.8s linear infinite;
+    }
+    .scanner-area.scanning .scan-line { display: block; }
+    .scanner-area.detecting .scan-line {
+        background: linear-gradient(90deg, transparent, #28a745, transparent);
+        box-shadow: 0 0 10px #28a745;
+    }
+    @keyframes scanSweep {
+        0% { top: 18%; }
+        50% { top: 82%; }
+        100% { top: 18%; }
+    }
+    .scan-progress {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 4px;
+        z-index: 12;
+        display: none;
+        background: rgba(255,255,255,0.08);
+    }
+    .scanner-area.scanning .scan-progress { display: block; }
+    .scan-progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: #28a745;
+        transition: width 0.1s linear;
+    }
     .scan-region-highlight { opacity: 0; }
     .result-valid {
         background: #d4edda;
@@ -115,6 +154,8 @@
                             <div class="corner-br"></div>
                         </div>
                         <div class="scan-frame" id="scanFrame" style="display:none;"></div>
+                        <div class="scan-line" id="scanLine"></div>
+                        <div class="scan-progress"><span id="scanProgressFill"></span></div>
                         <div class="d-flex align-items-center justify-content-center" style="height:300px;" id="cameraPlaceholder">
                             <div class="text-center text-muted">
                                 <i class="bi bi-camera" style="font-size:3rem;opacity:0.3;"></i>
@@ -201,8 +242,19 @@ let html5QrCode = null;
 let isScanning = false;
 let isStarting = false;
 let isReleasing = false;
-let scanTimeout = null;
 let lastCameraError = null;
+
+// Stabilisation : le QR doit rester lisible ~0,8 s avant d'etre valide, pour
+// que l'agent voie la confirmation (ligne verte + barre) et evite un scan
+// accidentel. Apres validation : cooldown court, la camera reste active.
+const HOLD_MS = 800;
+const LOST_MS = 400;
+const COOLDOWN_MS = 1000;
+let pendingCode = null;
+let pendingSince = 0;
+let lastDetectAt = 0;
+let blockedCode = null;
+let cooldownUntil = 0;
 
 const SCAN_CONFIG = {
     fps: 15,
@@ -263,6 +315,7 @@ function showScannerChrome(active) {
     if (placeholder) placeholder.style.display = active ? 'none' : 'flex';
     if (corners) corners.style.display = active ? 'block' : 'none';
     if (frame) frame.style.display = active ? 'block' : 'none';
+    setScanning(active);
 }
 
 // Verifie les prerequis AVANT d'appeler getUserMedia : sinon le navigateur
@@ -403,7 +456,8 @@ function onCameraStarted() {
     isStarting = false;
     isScanning = true;
     lastCameraError = null;
-    scanTimeout = null;
+    resetScanHold();
+    setScanning(true);
     setCameraButton(true);
     setCameraStatus('Camera active. Pointez le QR code du ticket.', false);
 }
@@ -438,12 +492,77 @@ function clearScanOk() {
     if (container) container.classList.remove('scan-ok');
 }
 
+function scannerArea() {
+    return document.getElementById('scannerContainer');
+}
+
+function setScanning(active) {
+    const area = scannerArea();
+    if (area) area.classList.toggle('scanning', active);
+    if (!active) { cancelPending(); }
+}
+
+function updateProgress(ratio) {
+    const fill = document.getElementById('scanProgressFill');
+    if (fill) fill.style.width = Math.round(Math.max(0, Math.min(1, ratio)) * 100) + '%';
+}
+
+function cancelPending() {
+    pendingCode = null;
+    pendingSince = 0;
+    const area = scannerArea();
+    if (area) area.classList.remove('detecting');
+    updateProgress(0);
+}
+
+function resetScanHold() {
+    pendingCode = null;
+    pendingSince = 0;
+    lastDetectAt = 0;
+    blockedCode = null;
+    cooldownUntil = 0;
+    cancelPending();
+}
+
+// Surveille la continuite de lecture : si le QR disparait du cadre, on annule
+// la stabilisation en cours et on oublie le dernier code valide.
+setInterval(function () {
+    if (!lastDetectAt) return;
+    if (Date.now() - lastDetectAt > LOST_MS) {
+        if (pendingCode) { cancelPending(); }
+        blockedCode = null;
+    }
+}, 100);
+
 function onScanSuccess(decodedText) {
-    if (scanTimeout) return;
-    scanTimeout = setTimeout(() => { scanTimeout = null; }, 4000);
+    const now = Date.now();
+    lastDetectAt = now;
+
+    if (now < cooldownUntil) return;
+    if (blockedCode === decodedText) return;
+
+    if (pendingCode !== decodedText) {
+        pendingCode = decodedText;
+        pendingSince = now;
+        const area = scannerArea();
+        if (area) area.classList.add('detecting');
+    }
+
+    updateProgress((now - pendingSince) / HOLD_MS);
+
+    if (now - pendingSince >= HOLD_MS) {
+        validatePending();
+    }
+}
+
+function validatePending() {
+    if (!pendingCode) return;
+    const code = pendingCode;
+    blockedCode = code;
+    cooldownUntil = Date.now() + COOLDOWN_MS;
+    cancelPending();
     flashScanOk();
-    submitScan(decodedText);
-    stopCamera();
+    submitScan(code);
 }
 
 document.getElementById('manualScanForm')?.addEventListener('submit', function(e) {
