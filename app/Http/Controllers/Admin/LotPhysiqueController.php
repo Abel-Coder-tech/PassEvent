@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Tarif;
 use App\Models\Ticket;
@@ -39,48 +38,21 @@ class LotPhysiqueController extends Controller
             ->whereNotNull('lot_physique_id')
             ->where('statut_paiement', 'payé');
 
-        // Tickets valides uniquement (les annulés n'ont pas de valeur : pas de recette ni de commission)
-        $ticketsPhysiquesValides = (clone $ticketsPhysiques)->where('annule', false);
-
         $nbTickets = (clone $ticketsPhysiques)->count();
         $nbAnnules = (clone $ticketsPhysiques)->where('annule', true)->count();
         $nbScannes = (clone $ticketsPhysiques)->where('utilise', true)->count();
-        $recettesPhysiques = (float) (clone $ticketsPhysiquesValides)->sum('montant');
 
-        // Commission attendue sur le physique (hors lots payés d'avance : leur commission de 5 %
-        // est réglée via FedaPay et n'a aucun rapport avec les stats financières)
-        $lotsCharges = LotPhysique::where('user_id', $user->id)->get()->keyBy('id');
-        $evenements = Evenement::whereIn('id', $evenementIds)->get()->keyBy('id');
-        $commissionPhysique = 0.0;
-        foreach ($ticketsPhysiquesValides->get() as $ticket) {
-            $lot = $ticket->lot_physique_id ? $lotsCharges->get($ticket->lot_physique_id) : null;
-            if ($lot && ($lot->auto_genere || $lot->estUneDemande())) {
-                continue; // Commission déjà réglée à la commande
-            }
-            $taux = $lot?->commissionEffective() ?? $evenements->get($ticket->evenement_id)?->commissionEffective() ?? 10;
-            $commissionPhysique += (float) $ticket->montant * $taux / 100;
-        }
-        $commissionPhysique = round($commissionPhysique, 2);
-
-        // Commissions déjà payées (frais de génération 5 %, affiché dans ce seul dashboard) :
-        // commandes « Générer mes QR codes » et demandes au super admin.
-        // Seuls les lots transmis comptent : un paiement non confirmé n'est pas une commission payée.
-        $commissionAutoPayee = round(
-            (float) LotPhysique::where('user_id', $user->id)
-                ->whereNotNull('reference_paiement')
-                ->where('statut', LotPhysique::STATUT_TRANSMIS)
-                ->sum('montant_commission'),
-            2
-        );
+        // Statistiques des tickets physiques valides (hors annulés) :
+        // valeur, commission attendue (guichet) et commission déjà réglée (QR codes/demandes)
+        $physique = $user->statsPhysiques();
 
         return view('admin.lots-physiques.index', [
             'lots' => $lots,
             'nbTickets' => $nbTickets,
             'nbAnnules' => $nbAnnules,
             'nbScannes' => $nbScannes,
-            'recettesPhysiques' => $recettesPhysiques,
-            'commissionPhysique' => $commissionPhysique,
-            'commissionAutoPayee' => $commissionAutoPayee,
+            'recettesPhysiques' => $physique['valeur'],
+            'commissionTotale' => $physique['commissionTotale'],
             'evenementsAuto' => $this->evenementsAuto($user),
             'tauxCommission' => LotPhysique::TAUX_AUTO,
             'emailDefaut' => $user->email,

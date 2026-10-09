@@ -44,7 +44,48 @@ class LotPhysiqueController extends Controller
             ->paginate(PerPage::resolve())
             ->withQueryString();
 
-        return view('superadmin.lots-physiques.index', compact('lots', 'q'));
+        return view('superadmin.lots-physiques.index', [
+            'lots' => $lots,
+            'q' => $q,
+            'statsPhysiques' => $this->statistiquesPhysiques(),
+        ]);
+    }
+
+    // Statistiques globales des tickets physiques + répartition par organisateur.
+    // S'appuie sur User::statsPhysiques() pour rester cohérent avec les dashboards
+    // organisateur et la fiche organisateur du super admin.
+    private function statistiquesPhysiques(): array
+    {
+        $userIds = LotPhysique::query()->distinct()->pluck('user_id');
+
+        $global = ['quantite' => 0, 'valeur' => 0.0, 'commission' => 0.0];
+        $organisateurs = [];
+
+        foreach (User::whereIn('id', $userIds)->orderBy('nom')->get(['id', 'nom']) as $user) {
+            $stats = $user->statsPhysiques();
+
+            if ($stats['quantite'] === 0 && $stats['commissionPayee'] <= 0) {
+                continue;
+            }
+
+            $organisateurs[] = [
+                'nom' => $user->nom,
+                'quantite' => $stats['quantite'],
+                'valeur' => $stats['valeur'],
+                'commission' => $stats['commissionTotale'],
+            ];
+
+            $global['quantite'] += $stats['quantite'];
+            $global['valeur'] += $stats['valeur'];
+            $global['commission'] += $stats['commissionTotale'];
+        }
+
+        usort($organisateurs, fn ($a, $b) => $b['commission'] <=> $a['commission']);
+
+        $global['valeur'] = round($global['valeur'], 2);
+        $global['commission'] = round($global['commission'], 2);
+
+        return ['global' => $global, 'organisateurs' => $organisateurs];
     }
 
     // Formulaire de création d'un lot

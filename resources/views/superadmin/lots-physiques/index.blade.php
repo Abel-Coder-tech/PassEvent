@@ -33,6 +33,65 @@
     </div>
 </div>
 
+{{-- Mini-dashboard physique (global) --}}
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="font-size:1.35rem;color:var(--sa-primary);">{{ number_format($statsPhysiques['global']['quantite'], 0, ',', ' ') }}</div>
+            <small class="text-muted">Tickets générés</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="font-size:1.35rem;color:#7B3FA0;">{{ number_format($statsPhysiques['global']['valeur'], 0, ',', ' ') }} F</div>
+            <small class="text-muted">Valeur totale</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="font-size:1.35rem;color:#e67e22;">{{ number_format($statsPhysiques['global']['commission'], 0, ',', ' ') }} F</div>
+            <small class="text-muted">Commission</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="font-size:1.35rem;color:#27ae60;">{{ count($statsPhysiques['organisateurs']) }}</div>
+            <small class="text-muted">Organisateurs</small>
+        </div>
+    </div>
+</div>
+
+@if(!empty($statsPhysiques['organisateurs']))
+<div class="sa-card mb-3">
+    <div class="sa-card-header">
+        <span><i class="bi bi-people-fill me-2" style="color: var(--sa-primary);"></i>Commission par organisateur</span>
+        <span class="text-muted ms-auto" style="font-size:0.8rem;">Tickets générés hors annulés</span>
+    </div>
+    <div class="sa-card-body p-0">
+        <table class="sa-table">
+            <thead>
+                <tr>
+                    <th>Organisateur</th>
+                    <th class="text-center">Tickets générés</th>
+                    <th class="text-end">Valeur</th>
+                    <th class="text-end">Commission</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($statsPhysiques['organisateurs'] as $ligne)
+                <tr>
+                    <td>{{ $ligne['nom'] }}</td>
+                    <td class="text-center">{{ number_format($ligne['quantite'], 0, ',', ' ') }}</td>
+                    <td class="text-end">{{ number_format($ligne['valeur'], 0, ',', ' ') }} F</td>
+                    <td class="text-end"><strong style="color:#e67e22;">{{ number_format($ligne['commission'], 0, ',', ' ') }} F</strong></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 <div class="sa-card">
     <div class="sa-card-header">
         <span><i class="bi bi-ticket-perforated-fill me-2" style="color: var(--sa-primary);"></i>Lots</span>

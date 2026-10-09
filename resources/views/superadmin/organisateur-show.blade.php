@@ -162,18 +162,24 @@
         </div>
     </div>
 
-    @if($physiqueRecettes > 0 || $commissionPhysique > 0)
+    @if($physiqueRecettes > 0 || $commissionPhysiqueTotale > 0 || $physiqueQuantite > 0)
     <div class="row g-2 mb-3">
-        <div class="col-6">
+        <div class="col-6 col-md-4">
             <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
-                <div class="fw-bold" style="color:#7B3FA0;">{{ number_format($physiqueRecettes, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Recettes tickets physiques (guichet)</small>
+                <div class="fw-bold" style="color:#7B3FA0;">{{ number_format($physiqueQuantite, 0, ',', ' ') }}</div>
+                <small class="text-muted">Tickets physiques générés</small>
             </div>
         </div>
-        <div class="col-6">
+        <div class="col-6 col-md-4">
             <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
-                <div class="fw-bold" style="color:#e67e22;">{{ number_format($commissionPhysique, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Commission physique attendue</small>
+                <div class="fw-bold" style="color:#7B3FA0;">{{ number_format($physiqueRecettes, 0, ',', ' ') }} F</div>
+                <small class="text-muted">Valeur totale (guichet)</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
+                <div class="fw-bold" style="color:#e67e22;">{{ number_format($commissionPhysiqueTotale, 0, ',', ' ') }} F</div>
+                <small class="text-muted">Commission</small>
             </div>
         </div>
     </div>

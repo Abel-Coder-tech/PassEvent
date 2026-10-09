@@ -53,16 +53,16 @@
     @endif
 
     <!-- Mini-dashboard -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
+    <div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
+        <div class="col">
             <div class="metric-card" style="border-top-color: var(--violet);">
                 <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-ticket-perforated" style="color: var(--violet);"></i></div>
-                <div class="metric-label">Tickets physiques</div>
+                <div class="metric-label">Tickets generes</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ $nbTickets }}</div>
                 <div class="metric-subtitle">Dont {{ $nbAnnules }} annule(s)</div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col">
             <div class="metric-card" style="border-top-color: var(--vert);">
                 <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-upc-scan" style="color: var(--vert);"></i></div>
                 <div class="metric-label">Scannes a l'entree</div>
@@ -70,20 +70,20 @@
                 <div class="metric-subtitle">{{ max(0, $nbTickets - $nbAnnules - $nbScannes) }} restant(s)</div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col">
             <div class="metric-card" style="border-top-color: var(--orange);">
                 <div class="metric-icon" style="background: rgba(241,159,29,0.1);"><i class="bi bi-cash-coin" style="color: var(--orange);"></i></div>
-                <div class="metric-label">Recettes physiques</div>
+                <div class="metric-label">Valeur totale</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ number_format($recettesPhysiques, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">Encaissées au guichet</div>
+                <div class="metric-subtitle">Valeur faciale generee</div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col">
             <div class="metric-card" style="border-top-color: var(--gris);">
                 <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
-                <div class="metric-label">Commission attendue</div>
-                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionPhysique, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">A verser a PaxEvent @if($commissionAutoPayee > 0)— {{ number_format($commissionAutoPayee, 0, ',', ' ') }} F deja payes (QR codes)@endif</div>
+                <div class="metric-label">Commission</div>
+                <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionTotale, 0, ',', ' ') }} F</div>
+                <div class="metric-subtitle">Reglee avant generation / demande</div>
             </div>
         </div>
     </div>
