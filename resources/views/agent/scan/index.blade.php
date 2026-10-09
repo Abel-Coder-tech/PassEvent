@@ -71,6 +71,7 @@
         background: linear-gradient(90deg, transparent, #28a745, transparent);
         box-shadow: 0 0 10px #28a745;
     }
+    .scanner-area.verifying .scan-line { animation-play-state: paused; }
     @keyframes scanSweep {
         0% { top: 18%; }
         50% { top: 82%; }
@@ -216,6 +217,7 @@
 </div>
 
 @include('partials.camera-onboarding')
+@include('partials.scan-modal')
 @endsection
 
 @push('scripts')
@@ -257,6 +259,7 @@ let pendingSince = 0;
 let lastDetectAt = 0;
 let blockedCode = null;
 let cooldownUntil = 0;
+let isVerifying = false;
 
 const SCAN_CONFIG = {
     fps: 15,
@@ -502,7 +505,17 @@ function scannerArea() {
 function setScanning(active) {
     const area = scannerArea();
     if (area) area.classList.toggle('scanning', active);
-    if (!active) { cancelPending(); }
+    if (!active) {
+        cancelPending();
+        setVerifying(false);
+        isVerifying = false;
+        if (window.scanModal) { window.scanModal.close(); }
+    }
+}
+
+function setVerifying(on) {
+    const area = scannerArea();
+    if (area) area.classList.toggle('verifying', on);
 }
 
 function updateProgress(ratio) {
@@ -541,6 +554,7 @@ function onScanSuccess(decodedText) {
     const now = Date.now();
     lastDetectAt = now;
 
+    if (isVerifying) return;
     if (now < cooldownUntil) return;
     if (blockedCode === decodedText) return;
 
@@ -559,27 +573,39 @@ function onScanSuccess(decodedText) {
 }
 
 function validatePending() {
-    if (!pendingCode) return;
+    if (!pendingCode || isVerifying) return;
     const code = pendingCode;
     blockedCode = code;
     cooldownUntil = Date.now() + COOLDOWN_MS;
     cancelPending();
     flashScanOk();
+    startVerification(code);
+}
+
+function startVerification(code) {
+    isVerifying = true;
+    setVerifying(true);
+    if (window.scanModal) { window.scanModal.verifying({ message: code }); }
     submitScan(code);
 }
+
+window.scanModal = window.scanModal || {};
+window.scanModal.onContinue = function () {
+    isVerifying = false;
+    setVerifying(false);
+    cancelPending();
+    cooldownUntil = Date.now() + 600;
+};
 
 document.getElementById('manualScanForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const code = document.getElementById('codeInput').value.trim();
     if (!code) return;
-    submitScan(code);
+    startVerification(code);
     this.reset();
 });
 
 function submitScan(code) {
-    const resultDiv = document.getElementById('scanResult');
-    resultDiv.style.display = 'none';
-
     fetch('{{ route("agent.scan.verifier") }}', {
         method: 'POST',
         headers: {
@@ -593,39 +619,27 @@ function submitScan(code) {
     .then(data => {
         if (data.success) {
             window.ScanSound.success();
-            let txn = data.ticket?.transaction_id
-                ? '<small class="d-block mt-1 text-muted"> <strong class="text-dark">' + escapeHtml(data.ticket.transaction_id) + '</strong></small>'
-                : '';
-            resultDiv.innerHTML = '<div class="result-valid">' +
-                '<i class="bi bi-check-circle-fill" style="font-size:2.5rem;color:#28a745;"></i>' +
-                '<h5 class="mt-2 mb-1 text-success">Ticket validé !</h5>' +
-                '<p class="mb-1 fw-semibold">' + escapeHtml(data.ticket?.nom || '') + '</p>' +
-                '<small class="text-muted">' + escapeHtml(data.ticket?.nom_tarif || '') + ' | ' + escapeHtml(data.ticket?.montant || '') + '</small>' +
-                txn +
-                '</div>';
+            let details = '';
+            if (data.ticket) {
+                if (data.ticket.nom) details += '<div><strong>Porteur :</strong> ' + escapeHtml(data.ticket.nom) + '</div>';
+                if (data.ticket.nom_tarif) details += '<div><strong>Tarif :</strong> ' + escapeHtml(data.ticket.nom_tarif) + '</div>';
+                if (data.ticket.montant) details += '<div><strong>Montant :</strong> ' + escapeHtml(data.ticket.montant) + '</div>';
+                if (data.ticket.transaction_id) details += '<div><strong>Transaction :</strong> ' + escapeHtml(data.ticket.transaction_id) + '</div>';
+            }
+            window.scanModal.success({ title: 'Ticket validé !', message: '', details: details });
+        } else if (data.ticket) {
+            window.ScanSound.failure();
+            let details = '<div><strong>Déjà scanné par :</strong> ' + escapeHtml(data.ticket.nom || '') + '</div>';
+            if (data.ticket.date) details += '<div><strong>Le :</strong> ' + escapeHtml(data.ticket.date) + '</div>';
+            window.scanModal.warning({ title: 'Ticket déjà scanné', message: data.message || '', details: details });
         } else {
             window.ScanSound.failure();
-            let extra = '';
-            if (data.ticket) {
-                extra = '<div class="mt-2 p-2 bg-light rounded small">' +
-                    'Déjà scanné par : <strong>' + escapeHtml(data.ticket.nom || '') + '</strong>' +
-                    ' le ' + escapeHtml(data.ticket.date || '') +
-                    '</div>';
-            }
-            resultDiv.innerHTML = '<div class="result-invalid">' +
-                '<i class="bi bi-x-circle-fill" style="font-size:2.5rem;color:#dc3545;"></i>' +
-                '<h5 class="mt-2 mb-1 text-danger">' + escapeHtml(data.message) + '</h5>' +
-                extra +
-                '</div>';
+            window.scanModal.failure({ title: 'Ticket invalide', message: data.message || 'Ce ticket n\'est pas valide.', details: '' });
         }
-        resultDiv.style.display = 'block';
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     })
     .catch(() => {
         window.ScanSound.failure();
-        resultDiv.innerHTML = '<div class="result-invalid"><p class="mb-0 text-danger">Erreur de connexion.</p></div>';
-        resultDiv.style.display = 'block';
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        window.scanModal.failure({ title: 'Erreur de connexion', message: 'Réessayez.', details: '' });
     });
 }
 
