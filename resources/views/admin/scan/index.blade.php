@@ -756,7 +756,7 @@ function showResult(data) {
     if (data.success) {
         window.ScanSound.success();
         window.scanModal.success({ title: 'Ticket Valide', message: data.message || '', details: detailsHtml });
-    } else if (data.type === 'already_used') {
+    } else if (data.type === 'already_used' || data.type === 'already_used_today') {
         window.ScanSound.failure();
         window.scanModal.warning({ title: 'Ticket Déjà Utilisé', message: data.message || '', details: detailsHtml });
     } else {
