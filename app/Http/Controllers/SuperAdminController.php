@@ -2085,7 +2085,8 @@ class SuperAdminController extends Controller
         $commission = $statsFinancieres['commissionTotale'];
         $recettesNettes = $totalRecettes - $commission;
         $physiqueRecettes = $statsFinancieres['physiqueRecettes'];
-        $commissionPhysique = $statsFinancieres['commissionPhysique'];
+        $physiqueQuantite = $statsFinancieres['physiqueQuantite'];
+        $commissionPhysiqueTotale = $statsFinancieres['commissionPhysiqueTotale'];
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
@@ -2134,7 +2135,7 @@ class SuperAdminController extends Controller
             'agentsScan', 'agentsVente', 'attributions', 'tickets',
             'mobileRecettes', 'cashRecettes', 'commissionPct',
             'commission', 'recettesNettes', 'retirable',
-            'physiqueRecettes', 'commissionPhysique',
+            'physiqueRecettes', 'commissionPhysiqueTotale', 'physiqueQuantite',
             'historique'
         ) + ['interventions' => Log::where('details', 'like', '%"user_id":'.$user->id.'%')
             ->whereIn('type_operation', [

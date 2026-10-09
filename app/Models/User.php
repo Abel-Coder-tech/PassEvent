@@ -273,13 +273,6 @@ class User extends Authenticatable
             ->whereNull('lot_physique_id')
             ->get(['evenement_id', 'montant', 'methode_paiement']);
 
-        // Tickets physiques (lots) : comptés à part, commission attendue séparée (tickets annulés exclus)
-        $physiques = Ticket::query()->whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNotNull('lot_physique_id')
-            ->where('annule', false)
-            ->get(['evenement_id', 'montant', 'methode_paiement']);
-
         $totalTickets = (float) $tickets->sum('montant');
         $mobileRecettes = (float) $tickets->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
         $cashRecettes = $totalTickets - $mobileRecettes;
@@ -298,13 +291,8 @@ class User extends Authenticatable
             $commissionCash += $evCash * $taux / 100;
         }
 
-        // Commission attendue sur les ventes physiques (recouvrée à part, hors balance)
-        $physiqueRecettes = (float) $physiques->sum('montant');
-        $commissionPhysique = 0.0;
-        foreach ($evenements as $evenement) {
-            $evPhysique = (float) $physiques->where('evenement_id', $evenement->id)->sum('montant');
-            $commissionPhysique += $evPhysique * $evenement->commissionEffective() / 100;
-        }
+        // Tickets physiques (lots) : comptés à part, commission attendue séparée
+        $physique = $this->statsPhysiques();
 
         return [
             'totalTickets' => round($totalTickets, 2),
@@ -313,8 +301,67 @@ class User extends Authenticatable
             'commissionTotale' => round($commissionTotale, 2),
             'commissionMobile' => round($commissionMobile, 2),
             'commissionCash' => round($commissionCash, 2),
-            'physiqueRecettes' => round($physiqueRecettes, 2),
-            'commissionPhysique' => round($commissionPhysique, 2),
+            'physiqueRecettes' => $physique['valeur'],
+            'commissionPhysique' => $physique['commissionAttendue'],
+            'physiqueQuantite' => $physique['quantite'],
+            'commissionPhysiquePayee' => $physique['commissionPayee'],
+            'commissionPhysiqueTotale' => $physique['commissionTotale'],
+        ];
+    }
+
+    // Statistiques des tickets physiques (lots) de l'organisateur.
+    // Seuls les tickets valides (payés, hors annulés) comptent. La commission
+    // « attendue » exclut les lots prépayés (auto-génération / demande) dont la
+    // commission a déjà été réglée via FedaPay, comptée séparément en « payée ».
+    public function statsPhysiques(): array
+    {
+        $evenementIds = $this->evenements()->pluck('id');
+
+        $tickets = Ticket::whereIn('evenement_id', $evenementIds)
+            ->whereNotNull('lot_physique_id')
+            ->where('statut_paiement', 'payé')
+            ->where('annule', false)
+            ->get(['evenement_id', 'montant', 'lot_physique_id', 'utilise']);
+
+        $lots = LotPhysique::with('evenement.user')
+            ->where('user_id', $this->id)
+            ->get()
+            ->keyBy('id');
+
+        $valeur = 0.0;
+        $commissionAttendue = 0.0;
+
+        foreach ($tickets as $ticket) {
+            $valeur += (float) $ticket->montant;
+
+            $lot = $lots->get($ticket->lot_physique_id);
+
+            // Lot prépayé : commission de génération déjà réglée (FedaPay)
+            if ($lot && $lot->reference_paiement !== null) {
+                continue;
+            }
+
+            $taux = $lot?->commissionEffective() ?? 10;
+            $commissionAttendue += (float) $ticket->montant * $taux / 100;
+        }
+
+        // Commission déjà réglée : tout lot dont le paiement FedaPay est confirmé
+        // (auto-génération comme demande). Le paiement précède toujours la génération.
+        $commissionPayee = round(
+            (float) LotPhysique::where('user_id', $this->id)
+                ->whereNotNull('reference_paiement')
+                ->whereNotNull('fedapay_transaction_id')
+                ->sum('montant_commission'),
+            2
+        );
+
+        return [
+            'quantite' => $tickets->count(),
+            'scannes' => (int) $tickets->where('utilise', true)->count(),
+            'valeur' => round($valeur, 2),
+            'commissionAttendue' => round($commissionAttendue, 2),
+            'commissionPayee' => $commissionPayee,
+            'commissionTotale' => round($commissionAttendue + $commissionPayee, 2),
         ];
     }
 }
