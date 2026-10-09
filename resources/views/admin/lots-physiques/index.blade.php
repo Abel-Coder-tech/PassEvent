@@ -202,7 +202,7 @@
 
     <div class="alert alert-light border mt-3 py-2 small text-muted">
         <i class="bi bi-info-circle me-1"></i>
-        Les tickets physiques ne comptent pas dans la capacite de vos evenements. Ils sont scannables a l'entree comme les tickets en ligne. La commission y afferente est suivie separement (rubrique ci-dessus).
+        Les tickets physiques ne comptent pas dans la capacité de vos événements. Ils sont scannables a l'entrée comme les tickets en ligne. La commission y afferente est suivie separement (rubrique ci-dessus).
     </div>
 </div>
 
@@ -223,7 +223,7 @@
                 </div>
 
                 <div class="modal-body px-3">
-                    @if($errors->any())
+                    @if($errors->any() && !old('objet'))
                     <div class="alert alert-danger py-2 small">{{ $errors->all()[0] }}</div>
                     @endif
 
@@ -574,7 +574,7 @@ construireBarre(['Événement', 'Paiement', 'Téléchargement']);
 majBouton();
 
 // Réouverture automatique avec restauration si erreurs de validation
-@if($errors->any() && old('evenement_id'))
+@if($errors->any() && old('evenement_id') && !old('objet'))
 document.addEventListener('DOMContentLoaded', function () {
     ouvrirModal();
     const evId = {{ (int) old('evenement_id') }};

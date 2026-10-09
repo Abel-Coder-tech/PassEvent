@@ -163,7 +163,7 @@ class LotPhysiqueController extends Controller
                         'commission_pourcentage' => $commission,
                         'nom' => $validated['nom'],
                         'quantite' => $validated['quantite'],
-                        'statut' => 'genere',
+                        'statut' => LotPhysique::STATUT_GENERE,
                         'download_count' => 0,
                     ]);
 
@@ -294,19 +294,20 @@ class LotPhysiqueController extends Controller
             return back()->with('error', 'Ce lot a déjà été transmis à l\'organisateur.');
         }
 
-        // Lot issu d'une demande : le template de l'organisateur est obligatoire
-        // et le QR code doit être positionné avant transmission.
-        if ($lot->estUneDemande() && ! $lot->aUnTemplate()) {
-            return back()->with('error', 'Impossible de transmettre : le QR code doit d\'être positionné sur le template fourni par l\'organisateur.');
+        // Un visuel fourni doit recevoir son QR code avant transmission.
+        // Sans visuel, la planche standard (grille de QR codes) est utilisée.
+        if ($lot->estUneDemande() && $lot->templatePresent() && ! $lot->aUnTemplate()) {
+            return back()->with('error', 'Impossible de transmettre : le QR code doit être positionné sur le template fourni par l\'organisateur.');
         }
 
         $note = trim((string) $request->input('note'));
+        $notifier = $request->boolean('notifier', true);
         $emailDest = trim((string) $request->input('email'));
-        if ($emailDest !== '' && ! filter_var($emailDest, FILTER_VALIDATE_EMAIL)) {
-            return back()->with('error', 'L\'adresse email saisie n\'est pas valide.');
-        }
         if ($emailDest === '') {
             $emailDest = $lot->user?->email;
+        }
+        if ($notifier && $emailDest !== '' && ! filter_var($emailDest, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'L\'adresse email saisie n\'est pas valide.');
         }
 
         $corps = "Bonjour {$lot->user?->nom},\n\n"
@@ -322,17 +323,19 @@ class LotPhysiqueController extends Controller
         Message::create([
             'user_id' => $lot->user_id,
             'evenement_id' => $lot->evenement_id,
-            'nom_complet' => $lot->user?->nom,
-            'email' => $emailDest,
+            'nom_complet' => 'PaxEvent',
+            'email' => 'contact@paxevent.com',
             'objet' => 'Tickets physiques disponibles',
             'message' => $corps,
             'lu' => false,
         ]);
 
-        try {
-            Mail::to($emailDest)->send(new LotPhysiqueTransmis($lot, $note));
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Lot physique - Erreur email transmission : '.$e->getMessage());
+        if ($notifier) {
+            try {
+                Mail::to($emailDest)->send(new LotPhysiqueTransmis($lot, $note));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Lot physique - Erreur email transmission : '.$e->getMessage());
+            }
         }
 
         Log::create([

@@ -20,6 +20,7 @@ class LotPhysique extends Model
     public const PREFIXE_DEMANDE = 'LOTDEM-';
 
     // Cycle de vie d'un lot « demande au super admin » (génération manuelle)
+    public const STATUT_GENERE = 'genere'; // Lot créé par le super admin, pas encore préparé
     public const STATUT_ATTENTE_PAIEMENT = 'en_attente_paiement';
     public const STATUT_PAYE = 'paye';
     public const STATUT_PRET = 'pret';
@@ -27,6 +28,7 @@ class LotPhysique extends Model
 
     // Libellés et couleurs des statuts (espace organisateur + super admin)
     public const STATUTS = [
+        self::STATUT_GENERE => ['label' => 'Généré — à préparer', 'couleur' => '#6c757d'],
         self::STATUT_ATTENTE_PAIEMENT => ['label' => 'Paiement en attente', 'couleur' => '#f59e0b'],
         self::STATUT_PAYE => ['label' => 'Payé — QR à générer', 'couleur' => '#6f42c1'],
         self::STATUT_PRET => ['label' => 'Prêt à transmettre', 'couleur' => '#0d6efd'],

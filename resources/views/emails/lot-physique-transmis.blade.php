@@ -70,6 +70,7 @@
             <div class="info-box">
                 <h3>À savoir</h3>
                 <p>La planche de QR codes est téléchargeable dans votre espace organisateur, rubrique « Vente physique » (3 téléchargements maximum). Chaque ticket dispose d'un code unique scannable à l'entrée.</p>
+                <p style="margin-top:8px;">Vous trouverez également cette planche en pièce jointe de cet email, au format PDF.</p>
             </div>
 
             <p style="font-size:12px;color:#8a7a8e;text-align:center;margin:0;">Merci pour votre confiance !</p>
