@@ -171,6 +171,9 @@
                                 <div class="d-flex align-items-center gap-2 min-w-0">
                                     <i class="bi bi-key" style="color: {{ $sac->actif ? 'var(--vert)' : '#ccc' }}; font-size: 0.9rem;"></i>
                                     <code style="font-size: 0.82rem; letter-spacing: 1px;">{{ $sac->code }}</code>
+                                    <button type="button" class="js-copier-code btn btn-sm p-0" data-code="{{ $sac->code }}" title="Copier le code" style="color: #999; font-size: 0.8rem; line-height: 1;">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
                                     @if(!$sac->actif)
                                         <span class="badge bg-secondary" style="font-size: 0.6rem;">Inactif</span>
                                     @endif

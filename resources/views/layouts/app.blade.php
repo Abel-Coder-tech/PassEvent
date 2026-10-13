@@ -1129,6 +1129,32 @@ document.addEventListener('DOMContentLoaded', function() {
 function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.textContent=str;return d.innerHTML;}
 function showToast(type,message){var c=document.getElementById('toast-container');if(!c||!message)return;var i=type==='success'?'bi-check-circle-fill':'bi-x-circle-fill';var cl=type==='success'?'#27ae60':'#e74c3c';var t=document.createElement('div');t.className='toast-item toast-'+type;var msg=document.createElement('span');msg.className='toast-msg';msg.textContent=message;t.innerHTML='<i class="bi '+i+'" style="color:'+cl+';font-size:1.3rem"></i>';t.appendChild(msg);if(type==='error'){var a=document.createElement('div');a.className='toast-actions';a.innerHTML='<button class="toast-btn toast-btn-retry" onclick="location.reload()">Réessayer</button><button class="toast-btn toast-btn-cancel" onclick="this.closest(\'.toast-item\').remove()">Annuler</button>';t.appendChild(a)}else{var b=document.createElement('button');b.className='toast-close';b.innerHTML='&times;';b.onclick=function(){t.remove()};t.appendChild(b)}c.appendChild(t);if(type!=='error'){setTimeout(function(){t.style.animation='toastOut 0.3s ease forwards';setTimeout(function(){t.remove()},300)},4000)}}
 </script>
+<script>
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-copier-code');
+    if (!btn || !btn.dataset.code) return;
+    const code = btn.dataset.code;
+    const confirmer = function () {
+        if (typeof showToast === 'function') showToast('success', 'Code copié : ' + code);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(code).then(confirmer).catch(function () { copierTexte(code, confirmer); });
+    } else {
+        copierTexte(code, confirmer);
+    }
+});
+
+function copierTexte(texte, apres) {
+    const zone = document.createElement('textarea');
+    zone.value = texte;
+    zone.style.position = 'fixed';
+    zone.style.opacity = '0';
+    document.body.appendChild(zone);
+    zone.select();
+    try { document.execCommand('copy'); apres(); } catch (err) {}
+    document.body.removeChild(zone);
+}
+</script>
 @yield('scripts')
 
 @auth

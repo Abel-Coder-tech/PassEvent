@@ -38,6 +38,9 @@
                                 @foreach ($codes as $sac)
                                 <div class="d-flex align-items-center gap-1 mb-1">
                                     <code style="font-size:0.78rem;letter-spacing:1px;">{{ $sac->code }}</code>
+                                    <button type="button" class="js-copier-code btn btn-sm p-0 text-secondary" data-code="{{ $sac->code }}" title="Copier le code" style="font-size:0.72rem;line-height:1;">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
                                     @if(!$sac->actif)
                                     <span class="badge bg-secondary" style="font-size:0.6rem;">Inactif</span>
                                     @endif
