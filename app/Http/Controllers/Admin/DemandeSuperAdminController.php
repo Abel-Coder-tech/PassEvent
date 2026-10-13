@@ -7,10 +7,12 @@ use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Message;
 use App\Services\LotAutoService;
+use App\Support\UploadError;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class DemandeSuperAdminController extends Controller
 {
@@ -200,6 +202,10 @@ class DemandeSuperAdminController extends Controller
     // Template de la demande : image PNG du ticket + format (obligatoire, fourni dès la demande)
     private function validerTemplateDemande(Request $request): ?array
     {
+        if ($erreur = UploadError::pour($request, 'template_image')) {
+            throw ValidationException::withMessages(['template_image' => $erreur]);
+        }
+
         $validated = $request->validate([
             'template_image' => ['required', 'image', 'mimes:png', 'max:10240'],
             'format' => ['required', 'in:s1,s2,v1,v2,custom'],
