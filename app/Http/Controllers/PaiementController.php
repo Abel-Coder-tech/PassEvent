@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendTicketEmailJob;
 use App\Mail\PaymentErrorAlert;
-use App\Mail\TicketEmail;
 use App\Models\AgentVente;
 use App\Models\CodePromo;
 use App\Models\Log as LogModel;
@@ -117,11 +117,7 @@ class PaiementController extends Controller
                 }
             }
 
-            try {
-                Mail::to($ticket->email_acheteur)->queue(new TicketEmail($freeTickets));
-            } catch (\Exception $e) {
-                FacadesLog::error('Email gratuit non envoye pour ticket '.$ticket->id.' : '.$e->getMessage());
-            }
+            SendTicketEmailJob::dispatchAfterResponse($freeTickets->pluck('id')->all(), $ticket->email_acheteur);
 
             return redirect()->route('confirmation.show', $ticket->id)
                 ->with('success', 'Participation confirmée ! Votre billet a été envoyé par email.');
@@ -351,11 +347,7 @@ class PaiementController extends Controller
             return redirect()->to($fallback);
         }
 
-        try {
-            Mail::to($ticket->email_acheteur)->queue(new TicketEmail($groupTickets));
-        } catch (\Exception $e) {
-            FacadesLog::error('Email non envoye pour ticket '.$ticket->id.' : '.$e->getMessage());
-        }
+        SendTicketEmailJob::dispatchAfterResponse($groupTickets->pluck('id')->all(), $ticket->email_acheteur);
 
         if ($source === 'agent_vente') {
             session()->flash('ticket_created', $ticket->id);
@@ -633,11 +625,7 @@ class PaiementController extends Controller
         $confirme = $this->confirmerTickets($groupTickets, $transactionId, $moyenPaiement, $operateur, $tx['phone'] ?? $data['phone'] ?? $ticket->telephone_acheteur, $request->input('source'), $request->ip(), $request->userAgent());
 
         if ($confirme) {
-            try {
-                Mail::to($ticket->email_acheteur)->queue(new TicketEmail($groupTickets));
-            } catch (\Exception $e) {
-                FacadesLog::error('Webhook - email ticket non envoyé : '.$e->getMessage());
-            }
+            SendTicketEmailJob::dispatchAfterResponse($groupTickets->pluck('id')->all(), $ticket->email_acheteur);
         }
 
         return response()->json(['status' => 'ok']);
