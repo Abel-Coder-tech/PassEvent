@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\TicketEmail;
+use App\Jobs\SendTicketEmailJob;
 use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\EventWaitlist;
@@ -285,11 +285,7 @@ class EvenementPublicController extends Controller
             }
             // quota_vendu a déjà été incrémenté lors de la réservation atomique ci-dessus.
             $tarif->increment('quantite_vendue', $quantite);
-            try {
-                Mail::to($tickets[0]->email_acheteur)->queue(new TicketEmail($tickets));
-            } catch (\Exception $e) {
-                Log::error('Email gratuit non envoyé : '.$e->getMessage());
-            }
+            SendTicketEmailJob::dispatchAfterResponse(collect($tickets)->pluck('id')->all(), $tickets[0]->email_acheteur);
 
             return redirect()->route('confirmation.show', $tickets[0]->id)
                 ->with('success', $quantite > 1 ? "{$quantite} places réservées." : 'Votre place est réservée.');
