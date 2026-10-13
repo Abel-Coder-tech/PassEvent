@@ -258,7 +258,7 @@ class EvenementController extends Controller
     // Liste les codes d'accès scan par événement
     public function scanCodesIndex()
     {
-        $evenements = auth()->user()->evenements()->orderByDesc('created_at')->get();
+        $evenements = auth()->user()->evenements()->with('scanAccessCodes')->orderByDesc('created_at')->get();
 
         return view('admin.scan-codes.index', compact('evenements'));
     }
