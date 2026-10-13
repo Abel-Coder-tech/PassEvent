@@ -47,20 +47,24 @@ class DashboardController extends Controller
         // Tickets vendus et payés uniquement
         $ticketsVendus = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
             ->count();
 
         $recettesTotales = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
             ->sum('montant');
 
         // Recettes par canal de paiement (mobile vs espèces)
         $mobileRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
             ->whereNotIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
 
         $cashRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
             ->whereIn('methode_paiement', ['cash', 'especes'])
             ->sum('montant');
 
@@ -107,6 +111,7 @@ class DashboardController extends Controller
             $date = $today->copy()->subDays($i);
             $count = Ticket::whereIn('evenement_id', $evenementsIds)
                 ->where('statut_paiement', 'payé')
+                ->whereNull('lot_physique_id')
                 ->whereDate('date_achat', $date->format('Y-m-d'))
                 ->count();
             $ventes7Jours[] = $count;
@@ -198,6 +203,7 @@ class DashboardController extends Controller
         // Statistiques par opérateur mobile (uniquement les paiements mobile money)
         $operateursRaw = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
             ->where('type_paiement', 'mobile_money')
             ->select('methode_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
             ->groupBy('methode_paiement')
@@ -236,6 +242,7 @@ class DashboardController extends Controller
         // Répartition par moyen de paiement (mobile money / carte bancaire / espèces)
         $moyensPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
             ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
             ->select('type_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
             ->groupBy('type_paiement')
             ->get()
