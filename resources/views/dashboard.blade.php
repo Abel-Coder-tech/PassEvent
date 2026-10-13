@@ -80,10 +80,12 @@
                     @php
                         $thisMonth = App\Models\Ticket::whereHas('evenement', fn($q) => $q->where('user_id', auth()->id()))
                             ->where('statut_paiement', 'payé')
+                            ->whereNull('lot_physique_id')
                             ->where('date_achat', '>=', now()->startOfMonth())
                             ->count();
                         $lastMonth = App\Models\Ticket::whereHas('evenement', fn($q) => $q->where('user_id', auth()->id()))
                             ->where('statut_paiement', 'payé')
+                            ->whereNull('lot_physique_id')
                             ->whereBetween('date_achat', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
                             ->count();
                         $pct = $lastMonth > 0 ? round((($thisMonth - $lastMonth) / $lastMonth) * 100) : 0;
@@ -315,6 +317,7 @@
                     @php
                         $recentTickets = App\Models\Ticket::whereHas('evenement', fn($q) => $q->where('user_id', auth()->id()))
                             ->where('statut_paiement', 'payé')
+                            ->whereNull('lot_physique_id')
                             ->latest('date_achat')
                             ->take(5)
                             ->get();
