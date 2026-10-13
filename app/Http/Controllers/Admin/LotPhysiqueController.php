@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Tarif;
 use App\Models\Ticket;
@@ -10,6 +11,7 @@ use App\Services\LotAutoService;
 use App\Services\LotPhysiquePdfService;
 use App\Services\LotPhysiqueTemplatePdfService;
 use App\Support\PerPage;
+use App\Support\UploadError;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -298,6 +300,10 @@ class LotPhysiqueController extends Controller
 
         if ($lot->estUneDemande()) {
             return back()->with('error', 'Le QR code de ce lot est positionné par l\'équipe PaxEvent.');
+        }
+
+        if ($erreur = UploadError::pour($request, 'template_image')) {
+            return back()->withInput()->withErrors(['template_image' => $erreur]);
         }
 
         $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);

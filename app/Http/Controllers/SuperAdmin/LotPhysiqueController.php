@@ -15,6 +15,7 @@ use App\Services\LotPhysiquePdfService;
 use App\Services\LotPhysiqueTemplatePdfService;
 use App\Services\QrCodeService;
 use App\Support\PerPage;
+use App\Support\UploadError;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -531,6 +532,10 @@ class LotPhysiqueController extends Controller
 
     public function saveTemplate(Request $request, LotPhysique $lot)
     {
+        if ($erreur = UploadError::pour($request, 'template_image')) {
+            return back()->withInput()->withErrors(['template_image' => $erreur]);
+        }
+
         $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);
 
         $rules = [
