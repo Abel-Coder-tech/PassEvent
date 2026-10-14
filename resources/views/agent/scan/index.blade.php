@@ -174,7 +174,10 @@
                 <h6 class="fw-bold mb-3"><i class="bi bi-keyboard me-2" style="color:var(--violet);"></i>Saisie manuelle</h6>
                 <form id="manualScanForm">
                     <div class="mb-3">
-                        <input type="text" id="codeInput" name="code" class="form-control text-center py-2" value="PAX-" placeholder="Saisissez la suite du code (ex: GRH5S)" autocomplete="off" style="text-transform:uppercase;" required>
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold" aria-hidden="true">PAX-</span>
+                            <input type="text" id="codeInput" name="code" class="form-control text-center py-2" placeholder="Saisissez la suite du code (ex: GRH5S)" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-violet w-100 py-2" id="btnVerify">
                         <i class="bi bi-search me-1"></i> Vérifier

@@ -102,7 +102,7 @@
                                 <li><strong>Livraison :</strong> Après validation, le e-ticket contenant un QR code unique accompagné d'un code Pax est délivré en pdf instantanément par email et également téléchargeable directement sur la page de confirmation d'achat. Vous pourriez aussi recevoir le code Pax via SMS ou WhatsApp.</li>
                             </ul>
                             <p class="mb-1 fw-semibold">8.2. Récupération des tickets</p>
-                            <p>En cas de perte ou de non-réception, l'acheteur peut récupérer son e-ticket au format PDF via l'onglet « Récupérer mon ticket » en saisissant son email et l'ID de transaction (10 chiffres).</p>
+                            <p>En cas de perte ou de non-réception, l'acheteur peut récupérer son e-ticket au format PDF via l'onglet « Récupérer mon ticket » en saisissant l'ID de transaction de son achat et une adresse email de récupération (qui peut être différente de celle utilisée lors de l'achat). Les billets confirmés y sont renvoyés.</p>
                             <p class="mb-1 fw-semibold">8.3. Politique de remboursement</p>
                             <ul>
                                 <li><strong>Principe :</strong> Les tickets ne sont ni échangeables ni remboursables.</li>

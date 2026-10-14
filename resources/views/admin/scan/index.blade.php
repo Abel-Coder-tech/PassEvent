@@ -293,7 +293,10 @@
 
                         <form id="manualScanForm">
                             <div class="mb-3">
-                                <input type="text" id="codeInput" name="code" class="form-control code-input py-3 text-center" value="PAX-" placeholder="Saisissez la suite du code (ex: GRH5S)" autocomplete="off" required>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold" aria-hidden="true" style="font-family:'Courier New', monospace; letter-spacing:2px;">PAX-</span>
+                                    <input type="text" id="codeInput" name="code" class="form-control code-input py-3 text-center" placeholder="Saisissez la suite du code (ex: GRH5S)" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-vert w-100 py-3" id="btnVerify" style="border-radius: 8px;">
                                 <i class="bi bi-search me-1"></i> Vérifier le ticket
@@ -735,7 +738,7 @@ function verifyCode(code) {
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-search me-1"></i> Vérifier le ticket';
-        document.getElementById('codeInput').value = 'PAX-';
+        document.getElementById('codeInput').value = '';
     });
 }
 
