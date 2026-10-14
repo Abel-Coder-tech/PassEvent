@@ -87,7 +87,7 @@
                             <p><strong>Processus technique :</strong> Les remboursements approuvés par l'Organisateur sont re-crédités directement sur le compte Mobile Money (MTN, Moov, Celtiis, etc.) ayant servi à l'achat initial. Les délais de traitement dépendent des agrégateurs de paiement et des opérateurs télécoms (généralement entre 24 heures et 5 jours ouvrés).</p>
 
                             <h6 class="fw-bold mt-4 mb-2">7. Récupération d'un ticket perdu</h6>
-                            <p>En cas de perte du mail contenant le e-ticket, PaxEvent met à disposition une interface dédiée permettant à l'Acheteur de récupérer son ticket en fournissant les informations d'achat initiales depuis la page de récupération du site.</p>
+                            <p>En cas de perte du mail contenant le e-ticket, PaxEvent met à disposition une interface dédiée permettant à l'Acheteur de récupérer son ticket en renseignant l'ID de sa transaction d'achat et une adresse email de récupération, qui peut être différente de celle utilisée lors de l'achat. Les billets confirmés (hors billets gratuits) sont renvoyés par email à l'adresse ainsi indiquée.</p>
 
                             <h6 class="fw-bold mt-4 mb-2">8. Protection des données personnelles</h6>
                             <p>Les données collectées lors de la commande (notamment le nom et l'adresse e-mail) sont nécessaires au traitement de la commande et à l'envoi du e-ticket. Elles peuvent être transmises à l'Organisateur de l'événement à des fins de gestion des accès. PaxEvent s'engage à respecter la réglementation béninoise en vigueur sur la protection des données personnelles.</p>

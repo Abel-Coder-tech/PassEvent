@@ -23,7 +23,7 @@
                             </div>
                             <h4 class="fw-bold mb-2">Récupérer mon ticket</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                Entrez les informations utilisées lors de l'achat
+                                Entrez votre ID de transaction : vos billets seront renvoyés à l'adresse email de votre choix.
                             </p>
                         </div>
 
@@ -31,17 +31,21 @@
                             @csrf
 
                             <div class="mb-3 text-start">
-                                <label for="transaction_id" class="form-label fw-semibold">ID de transaction</label>
-                                <input type="text" class="form-control" id="transaction_id" name="transaction_id" placeholder="Ex: PENDING-FEDAPAY-XXXXXX" value="{{ old('transaction_id') }}" required>
+                                <label for="transaction_id" class="form-label fw-bold">ID de transaction</label>
+                                <input type="text" class="form-control @error('transaction_id') is-invalid @enderror" id="transaction_id" name="transaction_id" placeholder="ex : 2847331" value="{{ old('transaction_id') }}" required>
+                                <small class="text-muted">Il figure sur le SMS ou le reçu de paiement FedaPay.</small>
+                                @error('transaction_id')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
                             </div>
 
                             <div class="mb-4 text-start">
-                                <label for="email" class="form-label fw-semibold">Email de l'acheteur</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="votre@email.com" value="{{ old('email') }}" required>
+                                <label for="email" class="form-label fw-bold">Email de récupération</label>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="vous@exemple.com" value="{{ old('email') }}" required>
+                                <small class="text-muted">Vous recevrez vos billets à cette adresse. Elle peut être différente de l'email utilisé lors de l'achat.</small>
+                                @error('email')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
                             </div>
 
                             <button type="submit" class="btn btn-violet w-100 py-3" style="border-radius: 8px;">
-                                <i class="bi bi-search me-2"></i> Rechercher mon ticket
+                                <i class="bi bi-envelope-arrow-up me-2"></i> Renvoyer mes billets
                             </button>
                         </form>
 

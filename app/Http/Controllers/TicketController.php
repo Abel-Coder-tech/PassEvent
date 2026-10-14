@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendTicketEmailJob;
 use App\Mail\TicketEmail;
 use App\Models\Evenement;
 use App\Models\Log;
@@ -347,7 +348,9 @@ class TicketController extends Controller
         return view('site.recuperer');
     }
 
-    // Recherche de tickets par ID de transaction et email
+    // Recherche de tickets par ID de transaction, puis renvoi à l'email de récupération.
+    // L'email n'est plus une clé de recherche : c'est le destinataire des billets
+    // (celui utilisé à l'achat ou n'importe quelle autre adresse valide).
     public function rechercher(Request $request)
     {
         $request->validate([
@@ -357,18 +360,45 @@ class TicketController extends Controller
             'transaction_id.required' => 'L\'ID de transaction est requis.',
             'transaction_id.string' => 'L\'ID de transaction doit être une chaîne de caractères.',
             'transaction_id.max' => 'L\'ID de transaction ne peut pas dépasser 255 caractères.',
-            'email.required' => 'L\'email est requis.',
-            'email.email' => 'L\'email doit être une adresse email valide.',
+            'email.required' => 'L\'email de récupération est requis.',
+            'email.email' => 'L\'email de récupération doit être une adresse email valide.',
         ]);
 
+        $transactionId = trim((string) $request->transaction_id);
+        $emailRecuperation = trim((string) $request->email);
+
         $tickets = Ticket::with('evenement', 'tarif')
-            ->where('transaction_id', $request->transaction_id)
-            ->where('email_acheteur', strtolower($request->email))
+            ->where('transaction_id', $transactionId)
             ->orderBy('date_achat', 'desc')
             ->get();
 
         if ($tickets->isEmpty()) {
-            return back()->with('error', 'Aucun billet trouvé avec ces informations. Vérifiez l\'ID de transaction et l\'email saisis lors de l\'achat.');
+            return back()->with('error', 'Aucun billet trouvé pour cet ID de transaction. Vérifiez la référence saisie (elle figure sur le SMS ou le reçu FedaPay).');
+        }
+
+        // Seuls les billets payants et confirmés peuvent être renvoyés (gratuits exclus).
+        $aRenvoyer = $tickets
+            ->where('statut_paiement', 'payé')
+            ->where('montant', '>', 0);
+
+        if ($aRenvoyer->isNotEmpty()) {
+            SendTicketEmailJob::dispatchAfterResponse($aRenvoyer->pluck('id')->all(), $emailRecuperation);
+
+            foreach ($aRenvoyer as $ticket) {
+                Log::create([
+                    'ticket_id' => $ticket->id,
+                    'type_operation' => 'recuperation',
+                    'details' => ['email_recuperation' => strtolower($emailRecuperation)],
+                    'ip' => $request->ip(),
+                    'user_agent' => (string) $request->userAgent(),
+                ]);
+            }
+
+            session()->flash('success', $aRenvoyer->count() > 1
+                ? "Vos {$aRenvoyer->count()} billets ont été renvoyés à {$emailRecuperation}."
+                : "Votre billet a été renvoyé à {$emailRecuperation}.");
+        } else {
+            session()->flash('error', 'Aucun billet confirmé à récupérer pour cette transaction (billets non payés ou gratuits exclus).');
         }
 
         return view('site.resultats', compact('tickets'));
