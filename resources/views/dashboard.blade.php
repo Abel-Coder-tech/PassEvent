@@ -319,33 +319,42 @@
                             ->where('statut_paiement', 'payé')
                             ->whereNull('lot_physique_id')
                             ->latest('date_achat')
-                            ->take(5)
+                            ->take(8)
                             ->get();
                     @endphp
 
                     @if($recentTickets->isNotEmpty())
-                        @foreach($recentTickets as $ticket)
-                            <div class="d-flex align-items-center px-3 py-2" style="border-bottom:1px solid #f5f5f5;">
-                                <div style="width:28px;height:28px;background:rgba(18,151,110,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-right:0.75rem;flex-shrink:0;">
-                                    <i class="bi bi-ticket" style="color:var(--vert);font-size:0.75rem;"></i>
-                                </div>
-                                <div style="flex:1;min-width:0;">
-                                    <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);">
-                                        {{ $ticket->nom_acheteur ?? 'Anonyme' }}
-                                    </div>
-                                    <div style="font-size:0.68rem;color:var(--gris);">
-                                        {{ $ticket->evenement->titre ?? '—' }} · {{ $ticket->date_achat?->format('d/m H:i') }}
-                                        @if($ticket->whatsapp_acheteur || $ticket->telephone_paiement || $ticket->telephone_acheteur)
-                                            <span class="d-block"><i class="bi bi-whatsapp me-1"></i>WhatsApp : {{ $ticket->whatsapp_acheteur ?? '—' }}</span>
-                                            <span class="d-block"><i class="bi bi-cash-coin me-1"></i>Paiement : {{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div style="font-size:0.85rem;font-weight:700;color:var(--vert);white-space:nowrap;flex-shrink:0;">
-                                    @if($ticket->montant > 0){{ number_format($ticket->montant, 0, ',', ' ') }} F @else <span style="color:var(--gris);">Gratuit</span> @endif
-                                </div>
-                            </div>
-                        @endforeach
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0" style="font-size:0.82rem;">
+                                <thead>
+                                    <tr style="background:#faf8fd;">
+                                        <th class="ps-3" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Acheteur</th>
+                                        <th style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Événement</th>
+                                        <th style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Date</th>
+                                        <th class="text-end pe-3" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recentTickets as $ticket)
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="fw-semibold" style="color:var(--sombre);">{{ $ticket->nom_acheteur ?? 'Anonyme' }}</div>
+                                                @if($ticket->whatsapp_acheteur || $ticket->telephone_paiement || $ticket->telephone_acheteur)
+                                                    <div class="text-muted" style="font-size:0.72rem;">
+                                                        <i class="bi bi-whatsapp me-1"></i>{{ $ticket->whatsapp_acheteur ?? $ticket->telephone_paiement ?? $ticket->telephone_acheteur }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td style="color:var(--gris);">{{ $ticket->evenement->titre ?? '—' }}</td>
+                                            <td style="color:var(--gris);white-space:nowrap;">{{ $ticket->date_achat?->format('d/m/Y H:i') }}</td>
+                                            <td class="text-end pe-3 fw-bold" style="color:var(--vert);white-space:nowrap;">
+                                                @if($ticket->montant > 0){{ number_format($ticket->montant, 0, ',', ' ') }} F @else <span style="color:var(--gris);">Gratuit</span> @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @else
                         <div class="text-center py-4" style="color:var(--gris);">
                             <i class="bi bi-cart-x d-block mb-2" style="font-size:1.5rem;"></i>
