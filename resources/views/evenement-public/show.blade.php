@@ -70,6 +70,24 @@
                     @endif
                 </div>
 
+                @if($evenement->co_parrainage_actif && !$evenement->gratuit)
+                    <!-- Bandeau co-parrainage -->
+                    <div class="show-card co-parrain-banner">
+                        <div class="co-parrain-icon"><i class="bi bi-share-fill"></i></div>
+                        <div class="co-parrain-body">
+                            <h5 class="co-parrain-title">Cet événement est ouvert au co-parrainage</h5>
+                            <p class="co-parrain-text">
+                                Devenez co-parrain et touchez
+                                <strong>{{ rtrim(rtrim(number_format((float) $evenement->co_parrainage_pourcentage, 2, ',', ' '), '0'), ',') }} %</strong>
+                                du prix de chaque billet vendu via votre lien personnel.
+                            </p>
+                        </div>
+                        <a href="{{ auth('affiliate')->check() ? route('affiliate.liens') : route('affiliate.register') }}" class="co-parrain-btn">
+                            <i class="bi bi-person-plus-fill"></i> Devenir co-parrain
+                        </a>
+                    </div>
+                @endif
+
                 <!-- Achat -->
                 <div class="show-purchase-wrap">
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
@@ -662,6 +680,66 @@
 .share-native:hover {
     opacity: 0.9;
     transform: scale(1.1);
+}
+
+/* ===== BANDEAU CO-PARRAINAGE ===== */
+.co-parrain-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(254,213,20,0.14), rgba(84,38,128,0.06));
+    border: 1px solid rgba(254,213,20,0.55) !important;
+}
+.co-parrain-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #542680, #9972B0);
+    color: #fff;
+    font-size: 1.2rem;
+}
+.co-parrain-body { flex: 1; min-width: 200px; }
+.co-parrain-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #211C31;
+    margin: 0 0 0.2rem;
+}
+.co-parrain-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.6;
+}
+.co-parrain-text strong { color: #542680; }
+.co-parrain-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #542680, #9972B0);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.25s;
+}
+.co-parrain-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(84,38,128,0.35);
+    color: #fff;
+}
+@media (max-width: 575px) {
+    .co-parrain-banner { flex-direction: column; align-items: flex-start; }
+    .co-parrain-btn { width: 100%; justify-content: center; }
 }
 @media (max-width: 767px) {
     .show-hero { padding: 2.5rem 0 2rem; }

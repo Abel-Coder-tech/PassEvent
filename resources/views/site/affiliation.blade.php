@@ -206,9 +206,9 @@
                 <p class="lead mb-4">
                     <strong>Parrainez un organisateur</strong> ou <strong>co-parrainez des événements</strong> sur PaxEvent, et touchez une commission sur chaque vente.
                 </p>
-                <button type="button" class="btn btn-violet btn-lg px-4 fw-bold" style="background: var(--accent); border-color: var(--accent); color: var(--sombre);">
+                <a href="{{ route('affiliate.register') }}" class="btn btn-violet btn-lg px-4 fw-bold" style="background: var(--accent); border-color: var(--accent); color: var(--sombre);">
                     Rejoindre le programme gratuitement <i class="bi bi-arrow-right ms-1"></i>
-                </button>
+                </a>
                 <p class="micro mt-3 mb-0">Inscription gratuite &bull; Aucun coût d'entrée &bull; Tableau de bord en temps réel</p>
             </div>
         </div>
@@ -371,7 +371,7 @@
                 <div class="aff-step-num">1</div>
                 <div class="aff-step-ico mb-2"><i class="bi bi-person-plus"></i></div>
                 <h6 class="fw-bold">Créez votre compte affilié</h6>
-                <p class="text-muted small mb-0">L'inscription est gratuite et sans engagement. Votre code de parrainage et votre tableau de bord sont générés automatiquement. Vous êtes organisateur ? Activez votre profil affilié en un clic.</p>
+                <p class="text-muted small mb-0">L'inscription est gratuite et sans engagement. Le compte affilié est un compte à part, réservé aux personnes qui ne sont pas organisateurs sur PaxEvent. Votre code de parrainage et votre tableau de bord personnalisé sont générés automatiquement.</p>
             </div>
             <div class="col-12 col-md-4 step-card">
                 <div class="aff-step-num">2</div>
@@ -413,8 +413,8 @@
             <div class="col-12 col-md-4">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-shop"></i></div>
-                    <h6 class="fw-bold mb-2">Organisateurs</h6>
-                    <p class="text-muted small mb-0">Vous organisez déjà ? Devenez affilié, parrainez d'autres organisateurs et co-parrainez des événements pour générer des revenus complémentaires.</p>
+                    <h6 class="fw-bold mb-2">Revendeurs &amp; billetteries locales</h6>
+                    <p class="text-muted small mb-0">Proposez PaxEvent à votre réseau et co-parrainez les événements ouverts pour toucher une commission sur chaque billet vendu via votre lien.</p>
                 </div>
             </div>
         </div>
@@ -475,7 +475,7 @@
                             </button>
                         </h2>
                         <div id="affFaq2d" class="accordion-collapse collapse" data-bs-parent="#affFaq">
-                            <div class="accordion-body text-muted small">Oui, tout organisateur peut activer un profil affilié. En revanche, un organisateur ne peut pas être le parrain direct d'un autre organisateur : il participe via le co-parrainage des événements.</div>
+                            <div class="accordion-body text-muted small">Non. Le programme est réservé aux personnes qui ne sont pas organisateurs sur PaxEvent : un organisateur ne peut pas ouvrir de compte affilié. Côté organisateur, vous pouvez en revanche ouvrir vos événements au co-parrainage pour rémunérer les affiliés.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
@@ -504,9 +504,9 @@
                 <div class="aff-final h-100">
                     <h2 class="h3 fw-bold mb-2">Prêt à monétiser votre réseau événementiel ?</h2>
                     <p class="mb-4" style="color: rgba(255,255,255,0.8);">Rejoignez les créateurs, agences et partenaires qui génèrent déjà des revenus récurrents avec PaxEvent.</p>
-                    <button type="button" class="btn btn-lg fw-bold px-4" style="background: var(--accent); color: var(--sombre);">
+                    <a href="{{ route('affiliate.register') }}" class="btn btn-lg fw-bold px-4" style="background: var(--accent); color: var(--sombre);">
                         Créer mon compte affilié maintenant <i class="bi bi-arrow-right ms-1"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -539,7 +539,7 @@
                                     Dans tous les cas, aucune commission n'est due en l'absence de vente tracée et intégralement payée.</p>
 
                                     <h6 class="fw-bold mt-4 mb-2">1. Définitions</h6>
-                                    <p><strong>Affilié :</strong> toute personne inscrite au Programme.<br>
+                                    <p>                                    <strong>Affilié :</strong> toute personne non-organisateur inscrite au Programme au moyen d'un compte affilié dédié.<br>
                                     <strong>Organisateur :</strong> utilisateur publiant des événements sur PaxEvent.<br>
                                     <strong>Parrain direct :</strong> l'Affilié dont le lien a permis l'inscription d'un Organisateur.<br>
                                     <strong>Co-parrain :</strong> l'Affilié qui promeut un événement ouvert au co-parrainage.<br>
@@ -548,7 +548,7 @@
 
                                     <h6 class="fw-bold mt-4 mb-2">2. Inscription et éligibilité</h6>
                                     <p><strong>Adhésion :</strong> L'inscription au Programme est gratuite et s'effectue via un espace dédié de la plateforme. PaxEvent se réserve le droit d'accepter, de refuser ou de suspendre toute candidature sans obligation de justification.</p>
-                                    <p><strong>Organisateurs affiliés :</strong> Un Organisateur peut activer un profil affilié. Toutefois, un Organisateur ne peut pas être le parrain direct (mécanisme A) d'un autre Organisateur ; il participe au Programme via le co-parrainage d'événements (mécanisme B).</p>
+                                    <p><strong>Exclusion des Organisateurs :</strong> Le Programme est réservé aux personnes qui ne détiennent pas de compte Organisateur sur PaxEvent. Un Organisateur ne peut ni ouvrir ni détenir un compte Affilié. Côté organisateur, il peut en revanche ouvrir ses événements au co-parrainage afin de rémunérer les Affiliés (mécanisme B).</p>
                                     <p><strong>Capacité légale :</strong> L'Affilié certifie être majeur et disposer de la capacité juridique ou des statuts professionnels nécessaires au Bénin pour percevoir des revenus d'apport d'affaires.</p>
 
                                     <h6 class="fw-bold mt-4 mb-2">3. Mécanisme A — Parrainage direct d'un organisateur</h6>

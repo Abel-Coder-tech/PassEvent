@@ -8,6 +8,7 @@ use App\Services\ContratService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\ValidationException;
 
 class EvenementController extends Controller
 {
@@ -45,7 +46,8 @@ class EvenementController extends Controller
         if (Auth::user()->statut !== 'actif') { // Seuls les profils vérifiés peuvent créer
             return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
         }
-        return view('evenements.create');
+        $maxCoParrainage = max(0, 100 - Auth::user()->commissionPourcentage());
+        return view('evenements.create', compact('maxCoParrainage'));
     }
 
     // Crée un événement avec tarifs personnalisés
@@ -56,6 +58,14 @@ class EvenementController extends Controller
         }
 
         $gratuit = $request->boolean('gratuit');
+
+        // Co-parrainage : commission offerte aux affiliés, plafonnée à (100 % − commission PaxEvent)
+        $commissionPax = Auth::user()->commissionPourcentage();
+        $maxCoParrainage = max(0, 100 - $commissionPax);
+
+        // Capacité : borne haute appliquée à chaque champ de places
+        $capaciteInput = (int) $request->input('capacite');
+        $maxCapaciteRule = $capaciteInput > 0 ? "|max:{$capaciteInput}|lte:{$capaciteInput}" : '';
 
         $rules = [
             'titre' => 'required|string|max:255',
@@ -71,22 +81,24 @@ class EvenementController extends Controller
             'gratuit' => 'nullable|boolean',
             'tarif_nom_1' => 'required_without:gratuit|string|max:100',
             'tarif_prix_1' => 'required_without:gratuit|numeric|min:0',
-            'tarif_qte_1' => 'nullable|integer|min:1',
+            'tarif_qte_1' => "required_without:gratuit|integer|min:1{$maxCapaciteRule}",
             'tarif_nom_2' => 'nullable|string|max:100',
             'tarif_prix_2' => 'nullable|numeric|min:0',
-            'tarif_qte_2' => 'nullable|integer|min:1',
+            'tarif_qte_2' => "required_with:tarif_nom_2|integer|min:1{$maxCapaciteRule}",
             'tarif_nom_3' => 'nullable|string|max:100',
             'tarif_prix_3' => 'nullable|numeric|min:0',
-            'tarif_qte_3' => 'nullable|integer|min:1',
+            'tarif_qte_3' => "required_with:tarif_nom_3|integer|min:1{$maxCapaciteRule}",
             'tarif_nom_4' => 'nullable|string|max:100',
             'tarif_prix_4' => 'nullable|numeric|min:0',
-            'tarif_qte_4' => 'nullable|integer|min:1',
+            'tarif_qte_4' => "required_with:tarif_nom_4|integer|min:1{$maxCapaciteRule}",
             'generer_vip' => 'nullable|boolean',
+            'co_parrainage_actif' => 'nullable|boolean',
+            'co_parrainage_pourcentage' => "nullable|numeric|min:1|max:{$maxCoParrainage}|required_if:co_parrainage_actif,1",
         ];
 
         if ($gratuit) {
             foreach ($rules as $key => $rule) {
-                if (str_starts_with($key, 'tarif_')) {
+                if (str_starts_with($key, 'tarif_') || str_starts_with($key, 'co_parrainage')) {
                     unset($rules[$key]);
                 }
             }
@@ -112,6 +124,15 @@ class EvenementController extends Controller
             'tarif_prix_1.required_without' => 'Le prix du tarif est obligatoire.',
             'tarif_prix_1.numeric' => 'Le prix du tarif doit être un nombre.',
             'tarif_prix_1.min' => 'Le prix du tarif ne peut pas être négatif.',
+            'tarif_qte_1.required_without' => 'Indiquez le nombre de places pour ce tarif.',
+            'tarif_qte_1.min' => 'Le nombre de places doit être d\'au moins 1.',
+            'tarif_qte_1.max' => "Le nombre de places d'un tarif ne peut pas dépasser la capacité de l'événement ({$capaciteInput} places).",
+            'tarif_qte_2.required_with' => 'Indiquez le nombre de places pour ce tarif.',
+            'tarif_qte_3.required_with' => 'Indiquez le nombre de places pour ce tarif.',
+            'tarif_qte_4.required_with' => 'Indiquez le nombre de places pour ce tarif.',
+            'co_parrainage_pourcentage.required_if' => 'Indiquez la commission à reverser aux affiliés.',
+            'co_parrainage_pourcentage.min' => 'La commission de co-parrainage doit être d\'au moins 1 %.',
+            'co_parrainage_pourcentage.max' => "La commission de co-parrainage ne peut pas dépasser {$maxCoParrainage} % (100 % moins votre commission PaxEvent de {$commissionPax} %).",
         ]);
 
         if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
@@ -157,6 +178,14 @@ class EvenementController extends Controller
                     'quantite_disponible' => null,
                 ];
             }
+
+            // La somme des places des tarifs ne peut pas dépasser la capacité de l'événement
+            $totalPlacesTarifs = array_sum(array_map(fn ($t) => (int) ($t['quantite_disponible'] ?? 0), $tarifsData));
+            if ($totalPlacesTarifs > (int) $validated['capacite']) {
+                throw ValidationException::withMessages([
+                    'tarifs' => "La somme des places des tarifs ({$totalPlacesTarifs} places) ne peut pas dépasser la capacité totale de l'événement ({$validated['capacite']} places).",
+                ]);
+            }
         }
 
         // Nettoyer les champs tarif du validated
@@ -166,6 +195,12 @@ class EvenementController extends Controller
             }
         }
         unset($validated['generer_vip']);
+
+        // Normalise le co-parrainage : impossible sur un événement gratuit, null si désactivé
+        $validated['co_parrainage_actif'] = !$gratuit && $request->boolean('co_parrainage_actif');
+        $validated['co_parrainage_pourcentage'] = $validated['co_parrainage_actif']
+            ? (float) $validated['co_parrainage_pourcentage']
+            : null;
 
         $evenement = Evenement::create($validated);
 
@@ -270,13 +305,19 @@ class EvenementController extends Controller
 
         $evenement->load('tarifs');
 
-        return view('evenements.edit', compact('evenement'));
+        $maxCoParrainage = max(0, 100 - $evenement->commissionEffective());
+
+        return view('evenements.edit', compact('evenement', 'maxCoParrainage'));
     }
 
     // Met à jour un événement existant
     public function update(Request $request, Evenement $evenement)
     {
         abort_if($evenement->user_id !== Auth::id(), 403);
+
+        // Co-parrainage : commission offerte aux affiliés, plafonnée à (100 % − commission PaxEvent)
+        $commissionPax = $evenement->commissionEffective();
+        $maxCoParrainage = max(0, 100 - $commissionPax);
 
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
@@ -290,6 +331,8 @@ class EvenementController extends Controller
             'statut' => 'required|in:brouillon,publié',
             'type_evenement' => 'required|in:spectacle,formation,conference',
             'gratuit' => 'nullable|boolean',
+            'co_parrainage_actif' => 'nullable|boolean',
+            'co_parrainage_pourcentage' => "nullable|numeric|min:1|max:{$maxCoParrainage}|required_if:co_parrainage_actif,1",
             
         ], [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
@@ -306,6 +349,9 @@ class EvenementController extends Controller
             'image.image' => 'Le fichier doit être une image.',
             'image.max' => 'L\'image ne doit pas dépasser 512 Ko.',
             'statut.required' => 'Le statut est obligatoire.',
+            'co_parrainage_pourcentage.required_if' => 'Indiquez la commission à reverser aux affiliés.',
+            'co_parrainage_pourcentage.min' => 'La commission de co-parrainage doit être d\'au moins 1 %.',
+            'co_parrainage_pourcentage.max' => "La commission de co-parrainage ne peut pas dépasser {$maxCoParrainage} % (100 % moins votre commission PaxEvent de {$commissionPax} %).",
         ]);
 
         if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
@@ -314,6 +360,12 @@ class EvenementController extends Controller
         unset($validated['autre_categorie']);
 
         $validated['gratuit'] = $request->boolean('gratuit');
+
+        // Normalise le co-parrainage : impossible sur un événement gratuit, null si désactivé
+        $validated['co_parrainage_actif'] = !$validated['gratuit'] && $request->boolean('co_parrainage_actif');
+        $validated['co_parrainage_pourcentage'] = $validated['co_parrainage_actif']
+            ? (float) $validated['co_parrainage_pourcentage']
+            : null;
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('evenements', 'public');
@@ -351,6 +403,39 @@ class EvenementController extends Controller
 
         return redirect()->route('admin.evenements.show', $evenement->id)
             ->with('success', $message);
+    }
+
+    // Active / désactive le co-parrainage directement depuis la fiche de l'événement
+    public function toggleCoParrainage(Request $request, Evenement $evenement)
+    {
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
+        if ($evenement->gratuit) {
+            return back()->with('error', 'Le co-parrainage n\'est pas disponible pour un événement gratuit.');
+        }
+
+        if ($evenement->co_parrainage_actif) {
+            $evenement->update(['co_parrainage_actif' => false]);
+
+            return back()->with('success', 'Co-parrainage désactivé pour cet événement.');
+        }
+
+        $maxCoParrainage = max(0, 100 - $evenement->commissionEffective());
+
+        $validated = $request->validate([
+            'co_parrainage_pourcentage' => "required|numeric|min:1|max:{$maxCoParrainage}",
+        ], [
+            'co_parrainage_pourcentage.required' => 'Indiquez la commission à reverser aux affiliés.',
+            'co_parrainage_pourcentage.min' => 'La commission de co-parrainage doit être d\'au moins 1 %.',
+            'co_parrainage_pourcentage.max' => "La commission de co-parrainage ne peut pas dépasser {$maxCoParrainage} % (100 % moins votre commission PaxEvent).",
+        ]);
+
+        $evenement->update([
+            'co_parrainage_actif' => true,
+            'co_parrainage_pourcentage' => (float) $validated['co_parrainage_pourcentage'],
+        ]);
+
+        return back()->with('success', 'Co-parrainage activé pour cet événement.');
     }
 
     // Supprime définitivement un événement

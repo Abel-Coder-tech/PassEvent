@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'equipe_permission' => \App\Http\Middleware\CheckPermissionEquipe::class,
             'agent' => \App\Http\Middleware\CheckAgent::class,
             'agent_vente' => \App\Http\Middleware\CheckAgentVente::class,
+            'affiliate' => \App\Http\Middleware\CheckAffiliate::class,
             'profil_verifie' => \App\Http\Middleware\CheckProfilActif::class,
             'compte_actif' => \App\Http\Middleware\CheckCompteActif::class,
             'no_cache' => \App\Http\Middleware\NoCache::class,

@@ -54,6 +54,10 @@ return [
             'driver' => 'session',
             'provider' => 'agents_vente',
         ],
+        'affiliate' => [
+            'driver' => 'session',
+            'provider' => 'affiliates',
+        ],
     ],
 
     /*
@@ -85,6 +89,10 @@ return [
         'agents_vente' => [
             'driver' => 'eloquent',
             'model' => App\Models\AgentVente::class,
+        ],
+        'affiliates' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Affiliate::class,
         ],
     ],
 

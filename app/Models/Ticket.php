@@ -44,6 +44,7 @@ class Ticket extends Model
         'code_promo_utilise',
         'agent_vente_id',
         'lot_physique_id',
+        'affiliate_event_link_id',
         'annule',
     ];
 
@@ -106,6 +107,11 @@ class Ticket extends Model
     public function lotPhysique(): BelongsTo
     {
         return $this->belongsTo(LotPhysique::class, 'lot_physique_id');
+    }
+
+    public function affiliateEventLink(): BelongsTo
+    {
+        return $this->belongsTo(AffiliateEventLink::class, 'affiliate_event_link_id');
     }
 
     public function notifications(): HasMany

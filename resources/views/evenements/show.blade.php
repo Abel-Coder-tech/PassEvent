@@ -125,6 +125,51 @@
                 @endif
             </div>
         </div>
+
+        @if(!$evenement->gratuit)
+        <div class="panel-card mb-4">
+            <div class="panel-card-header">
+                <h5><i class="bi bi-share me-2" style="color: var(--violet);"></i>Co-parrainage</h5>
+            </div>
+            <div class="panel-card-body">
+                @if($evenement->co_parrainage_actif)
+                    <p class="mb-2" style="font-size:0.85rem;">
+                        <span class="badge bg-success">Activé</span>
+                        <span class="badge bg-light text-dark border">
+                            {{ rtrim(rtrim(number_format((float) $evenement->co_parrainage_pourcentage, 2, ',', ' '), '0'), ',') }} % / billet
+                        </span>
+                    </p>
+                    <p class="text-muted" style="font-size:0.82rem;">Les affiliés peuvent générer un lien dédié et touchent ce pourcentage sur chaque billet vendu via ce lien.</p>
+                    <form action="{{ route('admin.evenements.coparrainage', $evenement->id) }}" method="POST" onsubmit="return confirm('Désactiver le co-parrainage de cet événement ?')">
+                        @csrf
+                        <button type="submit" class="btn py-2 fw-semibold" style="border-radius:8px; border:1px solid var(--danger); color: var(--danger); background:transparent;">
+                            <i class="bi bi-x-circle me-1"></i> Désactiver le co-parrainage
+                        </button>
+                    </form>
+                @else
+                    <p class="text-muted" style="font-size:0.82rem;">Ouvrez cet événement aux affiliés : ils touchent un pourcentage du prix de chaque billet vendu via leur lien.</p>
+                    <form action="{{ route('admin.evenements.coparrainage', $evenement->id) }}" method="POST" class="d-flex gap-2 align-items-stretch" style="max-width: 420px;">
+                        @csrf
+                        <div class="input-group">
+                            <input type="number" name="co_parrainage_pourcentage" class="form-control @error('co_parrainage_pourcentage') is-invalid @enderror"
+                                   min="1" step="0.5" max="{{ max(0, 100 - $evenement->commissionEffective()) }}"
+                                   value="{{ old('co_parrainage_pourcentage') }}" placeholder="ex. 10">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <button type="submit" class="btn text-white fw-semibold flex-shrink-0 px-3" style="white-space:nowrap; border-radius:8px; background: var(--violet);">
+                            <i class="bi bi-share me-1"></i> Activer
+                        </button>
+                    </form>
+                    @error('co_parrainage_pourcentage') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                @endif
+
+                <div class="alert alert-warning d-flex align-items-start gap-2 mt-3 mb-0" style="border:none;background:#fff8e1;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #e0a800;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color:#8b6914;"></i>
+                    <small style="color:#6c5b3a;">La commission de co-parrainage est <strong style="color:#8b6914;">à votre charge</strong> (l'organisateur) : elle est prélevée sur vos recettes et s'ajoute à la commission PaxEvent. Elle n'est jamais facturée à l'acheteur du billet.</small>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 
     <div class="col-md-4">
