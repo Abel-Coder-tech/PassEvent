@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendTicketEmailJob;
+use App\Models\AffiliateEventLink;
 use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\EventWaitlist;
@@ -73,7 +74,7 @@ class EvenementPublicController extends Controller
     }
 
     // Affiche la page publique d'un événement avec tarifs et disponibilité
-    public function show(Evenement $evenement)
+    public function show(Evenement $evenement, Request $request)
     {
         // SEO : redirection 301 de l'ancien format /evenements/{id} vers /evenements/{slug}.
         // On lit le segment d'URL (et non request()->route('evenement') qui contient le modèle lié).
@@ -85,6 +86,8 @@ class EvenementPublicController extends Controller
         if (! in_array($evenement->statut, ['publié', 'terminé'], true)) {
             abort(404); // Seuls les événements publiés ou passés sont visibles
         }
+
+        $this->capturerAffiliation($evenement, $request);
 
         $evenement->load('user', 'dates');
         $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
@@ -236,6 +239,16 @@ class EvenementPublicController extends Controller
         // la place est libérée et proposée à la file d'attente.
         $reservationExpireLe = $estGratuit ? null : now()->addMinutes(self::DUREE_RESERVATION_MINUTES);
 
+        // Attribution co-parrainage (mécanisme B) : le visiteur est arrivé via un lien affilié
+        // ouvert sur la page de cet événement. On rattache le lien actif aux billets créés.
+        $affiliateLinkId = null;
+        if ($sessionLinkId = session('affiliate_event_link_'.$evenement->id)) {
+            $affiliateLinkId = AffiliateEventLink::whereKey($sessionLinkId)
+                ->where('evenement_id', $evenement->id)
+                ->where('actif', true)
+                ->value('id');
+        }
+
         // Création de N tickets avec un ID de transaction partagé
         for ($i = 0; $i < $quantite; $i++) {
             $t = $evenement->tickets()->create([
@@ -254,6 +267,7 @@ class EvenementPublicController extends Controller
                 'reservation_expire_le' => $reservationExpireLe,
                 'date_achat' => now(),
                 'code_promo_utilise' => $codePromoUtilise,
+                'affiliate_event_link_id' => $affiliateLinkId,
             ]);
 
             $t->update([
@@ -331,5 +345,33 @@ class EvenementPublicController extends Controller
         );
 
         return back()->with('success', 'Votre message a été envoyé à l\'organisateur. Vous recevrez une réponse sous peu.');
+    }
+
+    // Capture un éventuel lien de co-parrainage (?ref=CODE) sur la page de l'événement.
+    // Mémorise le lien en session pour l'attribution à l'achat et compte un clic unique.
+    private function capturerAffiliation(Evenement $evenement, Request $request): void
+    {
+        $code = $request->query('ref');
+        if (! $code) {
+            return;
+        }
+
+        $lien = AffiliateEventLink::where('code', $code)
+            ->where('evenement_id', $evenement->id)
+            ->where('actif', true)
+            ->first();
+
+        if (! $lien) {
+            return;
+        }
+
+        session(['affiliate_event_link_'.$evenement->id => $lien->id]);
+
+        // Un seul clic compté par session et par lien (évite l'inflation au rechargement).
+        $flag = 'affiliate_clic_'.$lien->id;
+        if (! session()->has($flag)) {
+            $lien->increment('clics');
+            session([$flag => true]);
+        }
     }
 }

@@ -206,6 +206,26 @@
                     </div>
                 </div>
 
+                <div class="mb-4" id="co-parrainage-section">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="co_parrainage_actif" name="co_parrainage_actif" value="1" {{ old('co_parrainage_actif', $evenement->co_parrainage_actif) ? 'checked' : '' }}>
+                        <label class="form-check-label fw-semibold" for="co_parrainage_actif">
+                            <i class="bi bi-share me-1"></i>Ouvrir le co-parrainage
+                        </label>
+                    </div>
+                    <small class="text-muted d-block">Autorisez des affiliés à promouvoir cet événement : ils touchent un pourcentage du prix de chaque billet vendu via leur lien.</small>
+
+                    <div id="co-parrainage-fields" class="mt-3" style="max-width:280px; {{ old('co_parrainage_actif', $evenement->co_parrainage_actif) ? '' : 'display:none;' }}">
+                        <label class="form-label fw-semibold" for="co_parrainage_pourcentage">Commission par billet <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="0.5" min="1" max="{{ $maxCoParrainage }}" class="form-control @error('co_parrainage_pourcentage') is-invalid @enderror" id="co_parrainage_pourcentage" name="co_parrainage_pourcentage" value="{{ old('co_parrainage_pourcentage', $evenement->co_parrainage_pourcentage) }}" placeholder="ex. 10">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        @error('co_parrainage_pourcentage') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <small class="text-muted">Maximum {{ $maxCoParrainage }} % (100 % moins votre commission PaxEvent).</small>
+                    </div>
+                </div>
+
                 <div class="mb-4">
                     <label class="form-label fw-semibold d-block">Statut <span class="text-danger">*</span></label>
                     <div class="d-flex gap-3">
@@ -261,6 +281,28 @@ document.getElementById('categorie')?.addEventListener('change', function() {
 if (document.getElementById('categorie')?.value === 'Autre') {
     document.getElementById('autre-categorie-wrapper').style.display = 'block';
 }
+
+const coParrainageToggle = document.getElementById('co_parrainage_actif');
+const coParrainageFields = document.getElementById('co-parrainage-fields');
+coParrainageToggle?.addEventListener('change', function() {
+    coParrainageFields.style.display = this.checked ? 'block' : 'none';
+});
+
+const gratuitToggle = document.getElementById('gratuit');
+const coParrainageSection = document.getElementById('co-parrainage-section');
+function majSectionGratuit() {
+    if (coParrainageSection) {
+        coParrainageSection.style.display = gratuitToggle?.checked ? 'none' : 'block';
+    }
+}
+gratuitToggle?.addEventListener('change', function() {
+    if (this.checked && coParrainageToggle) {
+        coParrainageToggle.checked = false;
+        if (coParrainageFields) coParrainageFields.style.display = 'none';
+    }
+    majSectionGratuit();
+});
+majSectionGratuit();
 
 let dateSuppCount = document.querySelectorAll('#dates-supplementaires-container .date-supp-row').length || 0;
 const maxDatesSupp = 6;

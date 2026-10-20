@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Agent\AuthController as AgentAuthController;
 use App\Http\Controllers\Agent\ScanController as AgentScanController;
 use App\Http\Controllers\AgentVente\AuthController as AgentVenteAuthController;
+use App\Http\Controllers\Affiliate\AuthController as AffiliateAuthController;
+use App\Http\Controllers\Affiliate\DashboardController as AffiliateDashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CodePromoController;
 use App\Http\Controllers\DashboardController;
@@ -303,6 +305,32 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
 });
 
 // ============================================================
+// Routes espace affilie (compte distinct, organisateurs exclus)
+// ============================================================
+Route::prefix('affilie')->name('affiliate.')->group(function () {
+    Route::get('/connexion', [AffiliateAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/connexion', [AffiliateAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::get('/inscription', [AffiliateAuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/inscription', [AffiliateAuthController::class, 'register'])->name('register.post')->middleware('throttle:5,1');
+
+    Route::middleware(['affiliate', 'no_cache'])->group(function () {
+        Route::post('/deconnexion', [AffiliateAuthController::class, 'logout'])->name('logout');
+
+        Route::get('/dashboard', [AffiliateDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/filleuls', [AffiliateDashboardController::class, 'filleuls'])->name('filleuls');
+        Route::get('/liens', [AffiliateDashboardController::class, 'liens'])->name('liens');
+        Route::post('/liens/{evenement}/generer', [AffiliateDashboardController::class, 'genererLien'])->name('liens.generer');
+        Route::post('/liens/{link}/toggle', [AffiliateDashboardController::class, 'toggleLien'])->name('liens.toggle');
+        Route::get('/commissions', [AffiliateDashboardController::class, 'commissions'])->name('commissions');
+        Route::get('/paiements', [AffiliateDashboardController::class, 'paiements'])->name('paiements');
+        Route::post('/paiements', [AffiliateDashboardController::class, 'demanderPaiement'])->name('paiements.demander');
+        Route::get('/profil', [AffiliateDashboardController::class, 'profil'])->name('profil');
+        Route::post('/profil', [AffiliateDashboardController::class, 'majProfil'])->name('profil.update');
+        Route::post('/profil/mot-de-passe', [AffiliateDashboardController::class, 'majMotDePasse'])->name('profil.password');
+    });
+});
+
+// ============================================================
 // Routes protégées (admin)
 // ============================================================
 Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
@@ -347,6 +375,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
         Route::post('/evenements/{evenement}/fermer-vente', [EvenementController::class, 'fermerVente'])->name('evenements.fermer-vente');
+        Route::post('/evenements/{evenement}/coparrainage', [EvenementController::class, 'toggleCoParrainage'])->name('evenements.coparrainage');
 
         Route::prefix('agents')->name('agents.')->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\RegistrationAdminNotification;
+use App\Models\Affiliate;
+use App\Models\AffiliateReferral;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\OtpService;
@@ -61,8 +63,16 @@ class InscriptionController extends Controller
     }
 
     // Étape 0 : Formulaire de saisie de l'email
-    public function step0()
+    public function step0(Request $request)
     {
+        // Mémorise le parrain si l'inscription arrive via un lien d'affiliation (?ref=CODE)
+        if ($code = $request->query('ref')) {
+            $affiliate = Affiliate::where('code_parrainage', $code)->where('actif', true)->first();
+            if ($affiliate) {
+                session(['affiliate_ref_id' => $affiliate->id]);
+            }
+        }
+
         return view('auth.register.step0');
     }
 
@@ -220,6 +230,19 @@ class InscriptionController extends Controller
         }
 
         $user = User::create($userData);
+
+        // Enregistre le parrainage direct (mécanisme A) si l'inscription est issue d'un lien affilié
+        if (($affiliateId = session('affiliate_ref_id')) && $affiliate = Affiliate::find($affiliateId)) {
+            if (AffiliateReferral::where('organisateur_id', $user->id)->doesntExist()) {
+                AffiliateReferral::create([
+                    'affiliate_id' => $affiliate->id,
+                    'organisateur_id' => $user->id,
+                    'code_parrainage' => $affiliate->code_parrainage,
+                    'statut' => 'en_attente',
+                ]);
+            }
+        }
+        session()->forget('affiliate_ref_id');
 
         $this->regen();
 

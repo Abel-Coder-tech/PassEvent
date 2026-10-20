@@ -34,6 +34,8 @@ class Evenement extends Model
         'ventes_fermees',
         'ventes_especes',
         'commission_pourcentage',
+        'co_parrainage_actif',
+        'co_parrainage_pourcentage',
         'max_agents_vente',
         'a_la_une',
         'a_la_une_ordre',
@@ -46,6 +48,8 @@ class Evenement extends Model
             'gratuit' => 'boolean',
             'ventes_fermees' => 'boolean',
             'commission_pourcentage' => 'float',
+            'co_parrainage_actif' => 'boolean',
+            'co_parrainage_pourcentage' => 'float',
             'max_agents_vente' => 'integer',
             'a_la_une' => 'boolean',
             'a_la_une_ordre' => 'integer',
@@ -173,6 +177,11 @@ class Evenement extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function affiliateEventLinks(): HasMany
+    {
+        return $this->hasMany(AffiliateEventLink::class, 'evenement_id');
     }
 
     public function lotsPhysiques(): HasMany
