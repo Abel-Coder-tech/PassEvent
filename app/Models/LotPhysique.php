@@ -100,9 +100,9 @@ class LotPhysique extends Model
             'qr_defaut' => 42,
         ],
         'a5' => [
-            'label' => 'A5 (14,8 × 21)',
-            'largeur' => 148,
-            'hauteur' => 210,
+            'label' => 'A5 (21 × 14,8)',
+            'largeur' => 210,
+            'hauteur' => 148,
             'orientation' => 'landscape',
             'colonnes' => 2,
             'lignes' => 1,
