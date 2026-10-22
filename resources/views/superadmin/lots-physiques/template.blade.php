@@ -980,7 +980,7 @@
     function applyCustomFormat(resetQr) {
         var c = customFmt();
         if (!c) {
-            if (formatHint) formatHint.textContent = 'Dimensions personnalisées invalides (entre 30 et 200 mm).';
+            if (formatHint) formatHint.textContent = 'Dimensions personnalisées invalides.';
             if (formatBadgeLabel) formatBadgeLabel.textContent = 'Personnalisé (invalide)';
             return;
         }
