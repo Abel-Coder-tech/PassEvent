@@ -78,12 +78,12 @@ class LotTemplateGeometrieTest extends TestCase
             0.005
         );
 
-        // Un QR trop petit est agrandi pour que la zone fasse 2 cm de haut.
+        // La taille du QR est entièrement personnalisable (plus d'agrandissement forcé).
         $geo = S::geometry(10.0, null, null, self::SLOT_W, self::SLOT_H);
-        $this->assertEquals(S::qrMin(), $geo['qrSize']);
-        $this->assertEquals(S::ZONE_MIN, $geo['zoneH']);
+        $this->assertEquals(10.0, $geo['qrSize']);
+        $this->assertEqualsWithDelta(10.0 + S::QR_TOP + S::PAX_GAP + S::PAX_LINE_HEIGHT + S::PAX_BOTTOM, $geo['zoneH'], 0.005);
 
-        // Au-dessus du minimum, la taille demandee est conservee.
+        // Au-dessus, la taille demandee est conservee.
         $this->assertEquals(30.0, S::geometry(30.0, null, null, self::SLOT_W, self::SLOT_H)['qrSize']);
     }
 

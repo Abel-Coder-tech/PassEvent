@@ -74,12 +74,15 @@ class LotPhysiqueTemplatePdfService
         $padTop = self::QR_TOP;
         $gap = self::PAX_GAP;
 
-        // Un QR plus petit que qrMin() est agrandi : la zone atteint au moins ZONE_MIN de haut.
-        $qrSize = round(max($qrSize, self::qrMin()), 2);
+        // QR entièrement personnalisable : on conserve la taille choisie, avec un plancher minimal.
+        if ($qrSize === null) {
+            $qrSize = self::qrMin();
+        }
+        $qrSize = round(max((float) $qrSize, 2), 2);
 
         $zoneW = round($qrSize + 2 * $padX, 2);
         $bandH = round(self::PAX_LINE_HEIGHT + self::PAX_BOTTOM, 2);
-        $zoneH = round(max($qrSize + $padTop + $gap + $bandH, self::ZONE_MIN), 2);
+        $zoneH = round($qrSize + $padTop + $gap + $bandH, 2);
 
         $zoneX = min(max($qrX - $padX, 0.0), max($slotW - $zoneW, 0.0));
         $zoneY = min(max($qrY - $padTop, 0.0), max($slotH - $zoneH, 0.0));

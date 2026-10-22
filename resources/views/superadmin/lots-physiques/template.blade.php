@@ -389,11 +389,11 @@
                             </select>
 
                             <div id="customDims" class="mt-3" style="display:none;">
-                                <label class="form-label" style="font-size:0.8rem;">Dimensions du ticket (mm)</label>
+                                <label class="form-label" style="font-size:0.8rem;">Dimensions du ticket (calculées depuis l'image)</label>
                                 <div class="d-flex align-items-center gap-2">
-                                    <input type="number" name="largeur_personnalisee" id="largeurPersoInput" class="form-control form-control-sm" min="30" max="200" step="1" placeholder="Largeur" value="{{ old('largeur_personnalisee', $lot->largeur_personnalisee ?? '') }}">
+                                    <input type="number" name="largeur_personnalisee" id="largeurPersoInput" class="form-control form-control-sm" min="10" max="500" step="0.1" placeholder="Largeur" value="{{ old('largeur_personnalisee', $lot->largeur_personnalisee ?? '') }}" readonly>
                                     <span class="fw-semibold text-muted" style="font-size:0.85rem;">×</span>
-                                    <input type="number" name="hauteur_personnalisee" id="hauteurPersoInput" class="form-control form-control-sm" min="30" max="200" step="1" placeholder="Hauteur" value="{{ old('hauteur_personnalisee', $lot->hauteur_personnalisee ?? '') }}">
+                                    <input type="number" name="hauteur_personnalisee" id="hauteurPersoInput" class="form-control form-control-sm" min="10" max="500" step="0.1" placeholder="Hauteur" value="{{ old('hauteur_personnalisee', $lot->hauteur_personnalisee ?? '') }}" readonly>
                                     <span class="text-muted" style="font-size:0.8rem;">mm</span>
                                 </div>
                                 @error('largeur_personnalisee')
@@ -402,7 +402,7 @@
                                 @error('hauteur_personnalisee')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
-                                <div class="step-hint mt-1">30 à 200 mm par côté. L'orientation, la répartition sur l'A4 et le QR par défaut sont recalculés automatiquement.</div>
+                                <div class="step-hint mt-1">Les dimensions sont automatiquement reprises de l'image importée. L'orientation, la répartition sur l'A4 et le QR par défaut sont recalculés automatiquement.</div>
                             </div>
 
                             <div class="step-hint mt-1">Le QR passe automatiquement au centre du nouveau format. L'image doit respecter son ratio.</div>
@@ -449,13 +449,14 @@
                                 @enderror
                             </div>
                             <div class="col-6 col-md-4">
-                                <label class="form-label">Taille</label>
+                                <label class="form-label">Taille QR</label>
                                 <div class="input-group input-group-sm">
                                     <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-1" aria-label="Diminuer la taille">−</button>
-                                    <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrSizeInput" data-min="{{ \App\Services\LotPhysiqueTemplatePdfService::qrMin() }}" data-max="80" step="1" value="{{ old('qr_size', $qrSize ?? 40) }}">
+                                    <input type="number" class="form-control text-center" id="qrSizeInput" name="qr_size" min="5" max="150" step="0.1" value="{{ old('qr_size', $qrSize ?? ($format['qr_defaut'] ?? 40)) }}">
                                     <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="1" aria-label="Augmenter la taille">+</button>
                                     <span class="input-group-text">mm</span>
                                 </div>
+                                <div class="step-hint">Taille entièrement personnalisable.</div>
                             </div>
                         </div>
                     </div>
@@ -702,6 +703,16 @@
     var TICKET_MM_W = fmt(fmtKey).largeur;
     var TICKET_MM_H = fmt(fmtKey).hauteur;
 
+    function imageToMm(wPx, hPx) {
+        if (!wPx || !hPx) return null;
+        var mmPerPx = 25.4 / 96;
+        var wMm = Math.max(1, wPx * mmPerPx);
+        var hMm = Math.max(1, hPx * mmPerPx);
+        wMm = Math.round(wMm * 10) / 10;
+        hMm = Math.round(hMm * 10) / 10;
+        return { largeur: wMm, hauteur: hMm };
+    }
+
     function currentFmt() { return fmt(formatSelect ? formatSelect.value : fmtKey); }
 
     function syncFormatHint(f) {
@@ -765,9 +776,10 @@
         var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
         var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
 
-        // QR : piloté par le champ Taille (minimum plancher remplissant la zone, maximum 80).
-        var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
-        qrMm = Math.max(ZONE.qrMin, Math.min(ZONE.qrMax, qrMm));
+        // QR : piloté par le champ Taille
+        var qrMm = parseFloat(qrSizeInput.value) || currentFmt().qr_defaut;
+        qrMm = Math.max(1, Math.min(500, qrMm));
+        qrMm = Math.round(qrMm * 10) / 10;
         qrSizeInput.value = qrMm;
         if (qrSizeHidden) qrSizeHidden.value = qrMm;
         var zone = zoneDims(qrMm);
@@ -899,9 +911,9 @@
 
     [qrXInput, qrYInput, qrSizeInput].forEach(function(el) {
         el.addEventListener('input', function() {
-            qrXHidden.value = qrXInput.value;
-            qrYHidden.value = qrYInput.value;
-            qrSizeHidden.value = qrSizeInput.value;
+            if (qrXHidden) qrXHidden.value = qrXInput.value;
+            if (qrYHidden) qrYHidden.value = qrYInput.value;
+            if (qrSizeHidden) qrSizeHidden.value = qrSizeInput.value;
             updateOverlay();
         });
     });
@@ -918,6 +930,8 @@
                 var val = (parseFloat(input.value) || 0) + delta;
                 if (min !== null && val < min) val = min;
                 if (max !== null && val > max) val = max;
+                if (input.id === 'qrXInput' || input.id === 'qrYInput') val = Math.round(val);
+                else val = Math.round(val * 10) / 10;
                 input.value = val;
                 input.dispatchEvent(new Event('input', { bubbles: true }));
             });
@@ -974,22 +988,39 @@
         TICKET_MM_H = c.hauteur;
         if (resetQr) {
             var qrMM = c.qr_defaut;
-            qrSizeInput.value = qrMM;
-            qrSizeHidden.value = qrMM;
-            qrXInput.value = Math.round((c.largeur - qrMM) / 2);
-            qrYInput.value = Math.round((c.hauteur - qrMM) / 2);
-            qrXHidden.value = qrXInput.value;
-            qrYHidden.value = qrYInput.value;
+            if (qrSizeInput) { qrSizeInput.value = qrMM; }
+            if (qrSizeHidden) { qrSizeHidden.value = qrMM; }
+            if (qrXInput) { qrXInput.value = Math.round((c.largeur - qrMM) / 2); }
+            if (qrYInput) { qrYInput.value = Math.round((c.hauteur - qrMM) / 2); }
+            if (qrXHidden) { qrXHidden.value = qrXInput ? qrXInput.value : qrXHidden.value; }
+            if (qrYHidden) { qrYHidden.value = qrYInput ? qrYInput.value : qrYHidden.value; }
         }
         syncFormatHint(c);
         if (img && img.naturalWidth) checkRatio(c, img.naturalWidth, img.naturalHeight);
         updateOverlay();
     }
 
+    function applyCustomFromImage(imgEl, resetQr) {
+        if (!imgEl || !imgEl.naturalWidth || !imgEl.naturalHeight) return;
+        var mm = imageToMm(imgEl.naturalWidth, imgEl.naturalHeight);
+        if (!mm) return;
+        var wInput = document.getElementById('largeurPersoInput');
+        var hInput = document.getElementById('hauteurPersoInput');
+        if (wInput) { wInput.value = Math.round(mm.largeur * 10) / 10; }
+        if (hInput) { hInput.value = Math.round(mm.hauteur * 10) / 10; }
+        applyCustomFormat(resetQr);
+    }
+
     if (formatSelect) {
         formatSelect.addEventListener('change', function() {
             syncCustomDims();
-            if (this.value === 'custom') { applyCustomFormat(true); }
+            if (this.value === 'custom') {
+                if (img && img.naturalWidth && img.naturalHeight) {
+                    applyCustomFromImage(img, true);
+                } else {
+                    applyCustomFormat(true);
+                }
+            }
             else { applyFormat(fmt(this.value)); }
         });
     }
@@ -1100,8 +1131,12 @@
             qrTooltip = tt;
             supprimerTemplate.value = '0';
             imgEl.onload = function() {
-                TICKET_MM_W = currentFmt().largeur;
-                TICKET_MM_H = currentFmt().hauteur;
+                if (formatSelect && formatSelect.value === 'custom') {
+                    applyCustomFromImage(imgEl, false);
+                } else {
+                    TICKET_MM_W = currentFmt().largeur;
+                    TICKET_MM_H = currentFmt().hauteur;
+                }
                 setZoom(currentZoom);
                 checkRatio(currentFmt(), imgEl.naturalWidth, imgEl.naturalHeight);
                 updateOverlay();
@@ -1151,6 +1186,9 @@
         btnSave.disabled = true;
     });
 
+    if (formatSelect && formatSelect.value === 'custom' && img && img.naturalWidth && img.naturalHeight) {
+        applyCustomFromImage(img, false);
+    }
     syncFormatHint(currentFmt());
     if (overlay) { updateOverlay(); bindOverlayEvents(); }
     if (img && hasStored) { showRemoveBtn(); setZoom(currentZoom); }
