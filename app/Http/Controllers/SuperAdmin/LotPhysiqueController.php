@@ -619,9 +619,9 @@ class LotPhysiqueController extends Controller
         }
 
         // QR code : garde les valeurs du lot si le format n'a pas changé, sinon défauts du format
-        $qrSize = isset($validated['qr_size']) ? (int) $validated['qr_size'] : ($lot->qr_size ?? $formatDef['qr_defaut']);
-        $qrX = isset($validated['qr_x']) ? (int) $validated['qr_x'] : ($lot->qr_x ?? round(($formatDef['largeur'] - $qrSize) / 2));
-        $qrY = isset($validated['qr_y']) ? (int) $validated['qr_y'] : ($lot->qr_y ?? round(($formatDef['hauteur'] - $qrSize) / 2));
+        $qrSize = array_key_exists('qr_size', $validated) && $validated['qr_size'] !== null ? (float) $validated['qr_size'] : ($lot->qr_size ?? $formatDef['qr_defaut']);
+        $qrX = array_key_exists('qr_x', $validated) && $validated['qr_x'] !== null ? (int) $validated['qr_x'] : ($lot->qr_x ?? round(($formatDef['largeur'] - $qrSize) / 2));
+        $qrY = array_key_exists('qr_y', $validated) && $validated['qr_y'] !== null ? (int) $validated['qr_y'] : ($lot->qr_y ?? round(($formatDef['hauteur'] - $qrSize) / 2));
         $zoom = isset($validated['template_zoom']) ? (int) $validated['template_zoom'] : ($lot->template_zoom ?? 100);
 
         $lot->update([
