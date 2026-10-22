@@ -309,7 +309,7 @@ class LotPhysiqueController extends Controller
         $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);
 
         $rules = [
-            'format' => ['required', 'in:s1,s2,v1,v2,custom'],
+            'format' => ['required', 'in:s1,s2,v1,v2,a5,custom'],
             'largeur_personnalisee' => 'nullable|numeric|min:1|max:10000',
             'hauteur_personnalisee' => 'nullable|numeric|min:1|max:10000',
             'qr_x' => 'nullable|numeric|min:0',
