@@ -145,7 +145,7 @@ class LotPhysique extends Model
         $largeur = round($largeur);
         $hauteur = round($hauteur);
 
-        if ($largeur < 30 || $largeur > 200 || $hauteur < 30 || $hauteur > 200) {
+        if ($largeur < 10 || $largeur > 500 || $hauteur < 10 || $hauteur > 500) {
             return null;
         }
 

@@ -570,21 +570,30 @@ class LotPhysiqueController extends Controller
         ]);
 
         if ($validated['format'] === LotPhysique::FORMAT_CUSTOM) {
+            if ($request->filled('largeur_personnalisee')) {
+                $request->merge(['largeur_personnalisee' => round((float) $request->input('largeur_personnalisee'), 1)]);
+            }
+            if ($request->filled('hauteur_personnalisee')) {
+                $request->merge(['hauteur_personnalisee' => round((float) $request->input('hauteur_personnalisee'), 1)]);
+            }
+
             $validated = array_merge($validated, $request->validate([
-                'largeur_personnalisee' => 'required|integer|min:30|max:200',
-                'hauteur_personnalisee' => 'required|integer|min:30|max:200',
+                'largeur_personnalisee' => 'required|numeric|min:10|max:500',
+                'hauteur_personnalisee' => 'required|numeric|min:10|max:500',
             ], [
-                'largeur_personnalisee.required' => 'Renseignez la largeur personnalisée du ticket (mm).',
-                'hauteur_personnalisee.required' => 'Renseignez la hauteur personnalisée du ticket (mm).',
-                'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 30 mm.',
-                'largeur_personnalisee.max' => 'La largeur ne doit pas dépasser 200 mm.',
-                'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 30 mm.',
-                'hauteur_personnalisee.max' => 'La hauteur ne doit pas dépasser 200 mm.',
+                'largeur_personnalisee.required' => 'Les dimensions du ticket personnalisé n\'ont pas été calculées depuis l\'image. Veuillez réimporter l\'image du ticket.',
+                'hauteur_personnalisee.required' => 'Les dimensions du ticket personnalisé n\'ont pas été calculées depuis l\'image. Veuillez réimporter l\'image du ticket.',
+                'largeur_personnalisee.numeric' => 'La largeur personnalisée doit être un nombre.',
+                'hauteur_personnalisee.numeric' => 'La hauteur personnalisée doit être un nombre.',
+                'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 10 mm.',
+                'largeur_personnalisee.max' => 'La largeur ne doit pas dépasser 500 mm.',
+                'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 10 mm.',
+                'hauteur_personnalisee.max' => 'La hauteur ne doit pas dépasser 500 mm.',
             ]));
 
             $formatDef = LotPhysique::formatPersonnalise((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee']);
             if ($formatDef === null) {
-                return back()->withInput()->with('error', 'Dimensions personnalisées invalides (entre 30 et 200 mm).');
+                return back()->withInput()->with('error', 'Dimensions personnalisées invalides.');
             }
         } else {
             $formatDef = LotPhysique::FORMATS[$validated['format']];
@@ -615,8 +624,8 @@ class LotPhysiqueController extends Controller
 
         $lot->update([
             'format' => $validated['format'],
-            'largeur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) $validated['largeur_personnalisee'] : null,
-            'hauteur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) $validated['hauteur_personnalisee'] : null,
+            'largeur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) round((float) $validated['largeur_personnalisee']) : null,
+            'hauteur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) round((float) $validated['hauteur_personnalisee']) : null,
             'qr_x' => $qrX,
             'qr_y' => $qrY,
             'qr_size' => $qrSize,
