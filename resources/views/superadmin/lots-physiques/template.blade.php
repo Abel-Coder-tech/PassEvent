@@ -1188,6 +1188,9 @@
 
     if (formatSelect && formatSelect.value === 'custom' && img && img.naturalWidth && img.naturalHeight) {
         applyCustomFromImage(img, false);
+    } else {
+        TICKET_MM_W = currentFmt().largeur;
+        TICKET_MM_H = currentFmt().hauteur;
     }
     syncFormatHint(currentFmt());
     if (overlay) { updateOverlay(); bindOverlayEvents(); }
