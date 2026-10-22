@@ -99,6 +99,15 @@ class LotPhysique extends Model
             'lignes' => 3,
             'qr_defaut' => 42,
         ],
+        'a5' => [
+            'label' => 'A5 (14,8 × 21)',
+            'largeur' => 148,
+            'hauteur' => 210,
+            'orientation' => 'landscape',
+            'colonnes' => 2,
+            'lignes' => 1,
+            'qr_defaut' => 50,
+        ],
     ];
 
     protected function casts(): array
