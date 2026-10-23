@@ -99,13 +99,17 @@ class LotPhysique extends Model
             'lignes' => 3,
             'qr_defaut' => 42,
         ],
+        // A5 paysage (21 × 14,8) : 2 tickets empilés sur une page A4 portrait,
+        // avec une ligne de découpe horizontale au milieu. Le slot est très
+        // légèrement réduit pour rester dans la marge de 4 mm et la gouttière.
         'a5' => [
-            'label' => 'A5 (14,8 × 21)',
-            'largeur' => 148,
-            'hauteur' => 210,
-            'orientation' => 'portrait',
-            'colonnes' => 2,
-            'lignes' => 1,
+            'label' => 'A5 (21 × 14,8)',
+            'largeur' => 202,
+            'hauteur' => 143,
+            'orientation' => 'landscape',
+            'page_orientation' => 'portrait',
+            'colonnes' => 1,
+            'lignes' => 2,
             'qr_defaut' => 50,
         ],
     ];
@@ -176,6 +180,7 @@ class LotPhysique extends Model
             'largeur' => $largeur,
             'hauteur' => $hauteur,
             'orientation' => $orientation,
+            'page_orientation' => $orientation,
             'colonnes' => $colonnes,
             'lignes' => $lignes,
             'qr_defaut' => $qr,
