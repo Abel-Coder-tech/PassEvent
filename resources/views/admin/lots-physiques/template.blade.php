@@ -656,7 +656,7 @@
         var hInput = document.getElementById('hauteurPersoInput');
         var w = wInput ? Math.round(parseFloat(wInput.value) || 0) : 0;
         var h = hInput ? Math.round(parseFloat(hInput.value) || 0) : 0;
-        if (w < 30 || w > 200 || h < 30 || h > 200) return null;
+        if (w < 1 || h < 1) return null;
         var orientation = w >= h ? 'landscape' : 'portrait';
         var pageW = orientation === 'landscape' ? 297 : 210;
         var pageH = orientation === 'landscape' ? 210 : 297;
@@ -664,7 +664,7 @@
         var cols = Math.max(1, Math.floor((pageW - 2 * marge + gouttiere) / (w + gouttiere)));
         var rows = Math.max(1, Math.floor((pageH - 2 * marge + gouttiere) / (h + gouttiere)));
         var qr = Math.max(30, Math.min(48, Math.round(Math.min(w, h) * 0.3)));
-        return { label: 'Personnalisé (' + w + '×' + h + ')', largeur: w, hauteur: h, orientation: orientation, colonnes: cols, lignes: rows, qr_defaut: qr };
+        return { label: 'Personnalisé (' + w + '×' + h + ')', largeur: w, hauteur: h, orientation: orientation, page_orientation: orientation, colonnes: cols, lignes: rows, qr_defaut: qr };
     }
 
     var canvas = document.getElementById('canvasArea');
