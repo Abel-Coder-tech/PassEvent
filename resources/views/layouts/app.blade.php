@@ -990,6 +990,9 @@
             <a href="{{ route('admin.retraits.index') }}" class="nav-link {{ request()->routeIs('admin.retraits.*') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Retraits
             </a>
+            <a href="{{ route('admin.affiliations.index') }}" class="nav-link {{ request()->routeIs('admin.affiliations.*') ? 'active' : '' }}">
+                <i class="bi bi-share"></i> Affiliation
+            </a>
 
             <div class="sidebar-section-label">Analyse</div>
             <a href="{{ route('statistiques.index') }}" class="nav-link {{ request()->routeIs('statistiques.*') ? 'active' : '' }}">

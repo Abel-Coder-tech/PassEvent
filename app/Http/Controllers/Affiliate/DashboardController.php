@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AffiliateCommission;
 use App\Models\AffiliateEventLink;
 use App\Models\Evenement;
+use App\Services\AffiliationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -200,7 +201,7 @@ class DashboardController extends Controller
     }
 
     // Cree une demande de reversement
-    public function demanderPaiement(Request $request)
+    public function demanderPaiement(Request $request, AffiliationService $affiliation)
     {
         $affiliate = Auth::guard('affiliate')->user();
 
@@ -215,21 +216,19 @@ class DashboardController extends Controller
             return back()->with('error', 'Renseignez d\'abord vos coordonnées de paiement dans votre profil.');
         }
 
-        if ($data['montant'] > (float) $affiliate->solde_disponible) {
-            return back()->with('error', 'Le montant demandé dépasse votre solde disponible.');
+        try {
+            $payout = $affiliation->creerDemandeReversement($affiliate, (float) $data['montant']);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
-        $affiliate->payouts()->create([
-            'montant' => $data['montant'],
-            'operateur' => $affiliate->operateur_paiement,
-            'numero_paiement' => $affiliate->numero_paiement,
-            'titulaire' => $affiliate->titulaire_paiement,
-            'statut' => 'demande',
-        ]);
+        $message = 'Votre demande de retrait a été enregistrée.';
+        if ((float) $payout->montant > (float) $data['montant']) {
+            $message .= ' Le montant a été arrondi à '.number_format((float) $payout->montant, 0, ',', ' ')
+                .' FCFA pour couvrir vos commissions disponibles.';
+        }
 
-        $affiliate->decrement('solde_disponible', $data['montant']);
-
-        return back()->with('success', 'Votre demande de retrait a été enregistrée.');
+        return back()->with('success', $message);
     }
 
     // Profil

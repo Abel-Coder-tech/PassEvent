@@ -71,23 +71,37 @@
                 <div class="row g-3">
                     @foreach($evenementsOuverts as $ev)
                         <div class="col-12 col-md-6">
-                            <div class="border rounded-3 p-3 h-100 d-flex flex-column">
-                                <div class="fw-semibold">{{ $ev->titre }}</div>
-                                <div class="text-muted small mb-2">
-                                    <i class="bi bi-person me-1"></i>{{ $ev->user?->nom ?? 'Organisateur' }}
-                                    @if($ev->date_event) · <i class="bi bi-calendar-event me-1"></i>{{ $ev->date_event->format('d/m/Y') }}@endif
+                            <div class="border rounded-3 h-100 d-flex flex-column overflow-hidden">
+                                <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="aff-offer-cover" title="Voir l'événement">
+                                    @if($ev->image)
+                                        <img src="{{ asset('storage/' . $ev->image) }}" alt="{{ $ev->titre }}" loading="lazy">
+                                    @else
+                                        <i class="bi bi-calendar-event"></i>
+                                    @endif
+                                </a>
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="fw-semibold text-decoration-none" style="color:inherit;">{{ $ev->titre }}</a>
+                                    <div class="text-muted small mb-2">
+                                        <i class="bi bi-person me-1"></i>{{ $ev->user?->nom ?? 'Organisateur' }}
+                                        @if($ev->date_event) · <i class="bi bi-calendar-event me-1"></i>{{ $ev->date_event->format('d/m/Y') }}@endif
+                                    </div>
+                                    <div class="mb-3">
+                                        <span class="badge bg-success-subtle text-success-emphasis">
+                                            Commission : {{ rtrim(rtrim(number_format((float) $ev->co_parrainage_pourcentage, 2, ',', ' '), '0'), ',') }} % du billet
+                                        </span>
+                                    </div>
+                                    <div class="mt-auto d-flex flex-column gap-2">
+                                        <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm w-100">
+                                            <i class="bi bi-eye me-1"></i> Détails de l'événement
+                                        </a>
+                                        <form action="{{ route('affiliate.liens.generer', $ev) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-violet btn-sm w-100">
+                                                <i class="bi bi-link-45deg"></i> Générer mon lien
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div class="mb-3">
-                                    <span class="badge bg-success-subtle text-success-emphasis">
-                                        Commission : {{ rtrim(rtrim(number_format((float) $ev->co_parrainage_pourcentage, 2, ',', ' '), '0'), ',') }} % du billet
-                                    </span>
-                                </div>
-                                <form action="{{ route('affiliate.liens.generer', $ev) }}" method="POST" class="mt-auto">
-                                    @csrf
-                                    <button type="submit" class="btn btn-violet btn-sm w-100">
-                                        <i class="bi bi-link-45deg"></i> Générer mon lien
-                                    </button>
-                                </form>
                             </div>
                         </div>
                     @endforeach
