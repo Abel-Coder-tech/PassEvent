@@ -124,6 +124,37 @@
             padding: 0.35rem 0.6rem; border-radius: 8px; font-weight: 700;
             letter-spacing: 0.04em;
         }
+        /* Visuel des offres de co-parrainage */
+        .aff-ev-thumb {
+            width: 96px;
+            height: 96px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0ecf6;
+            color: var(--violet-clair);
+        }
+        .aff-ev-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .aff-ev-thumb i { font-size: 1.6rem; }
+        .aff-offer-cover {
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            background: #f0ecf6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--violet-clair);
+        }
+        .aff-offer-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .aff-offer-cover i { font-size: 2rem; }
+        @media (max-width: 575.98px) {
+            .aff-ev-thumb { width: 72px; height: 72px; }
+            .aff-offer-cover { height: 120px; }
+        }
     </style>
     @stack('styles')
 </head>

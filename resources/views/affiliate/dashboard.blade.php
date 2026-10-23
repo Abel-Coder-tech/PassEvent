@@ -50,20 +50,32 @@
                         <p class="text-muted small mb-3">Générez votre lien personnel et touchez un pourcentage sur chaque billet vendu via celui-ci.</p>
                         <div class="d-flex flex-column gap-2">
                             @foreach($evenementsOuverts as $ev)
-                                <div class="d-flex flex-wrap align-items-center gap-2 justify-content-between p-2 rounded" style="border:1px solid #e2e0e4;">
-                                    <div class="min-w-0">
-                                        <div class="small fw-semibold text-truncate">{{ $ev->titre }}</div>
+                                <div class="d-flex flex-wrap align-items-center gap-3 p-2 rounded" style="border:1px solid #e2e0e4;">
+                                    <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="aff-ev-thumb" title="Voir l'événement">
+                                        @if($ev->image)
+                                            <img src="{{ asset('storage/' . $ev->image) }}" alt="{{ $ev->titre }}" loading="lazy">
+                                        @else
+                                            <i class="bi bi-calendar-event"></i>
+                                        @endif
+                                    </a>
+                                    <div class="min-w-0 flex-grow-1">
+                                        <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="small fw-semibold text-truncate d-block text-decoration-none" style="color:inherit;">{{ $ev->titre }}</a>
                                         <div class="text-muted" style="font-size:0.75rem;">
                                             {{ $ev->date_event?->format('d/m/Y') }}@if($ev->lieu) · {{ $ev->lieu }}@endif ·
                                             <strong style="color:var(--violet);">{{ rtrim(rtrim(number_format((float) $ev->co_parrainage_pourcentage, 2), '0'), '.') }} %</strong>/billet
                                         </div>
                                     </div>
-                                    <form action="{{ route('affiliate.liens.generer', $ev) }}" method="POST" class="flex-shrink-0">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm text-white fw-semibold" style="border-radius:8px; background: var(--violet);">
-                                            <i class="bi bi-link me-1"></i> Générer mon lien
-                                        </button>
-                                    </form>
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
+                                        <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;" title="Détails de l'événement">
+                                            <i class="bi bi-eye"></i><span class="d-none d-sm-inline ms-1">Détails</span>
+                                        </a>
+                                        <form action="{{ route('affiliate.liens.generer', $ev) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm text-white fw-semibold" style="border-radius:8px; background: var(--violet);">
+                                                <i class="bi bi-link me-1"></i> Générer mon lien
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

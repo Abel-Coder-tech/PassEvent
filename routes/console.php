@@ -14,3 +14,4 @@ Schedule::command('tickets:purger-en-attente')->everyFifteenMinutes();
 Schedule::command('tickets:envoyer-emails')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('tickets:reconcilier')->hourly();
 Schedule::command('tickets:corriger-operateurs')->hourly();
+Schedule::command('affiliations:liberer-commissions')->hourly();

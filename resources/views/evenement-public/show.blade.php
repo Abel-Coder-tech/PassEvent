@@ -77,13 +77,13 @@
                         <div class="co-parrain-body">
                             <h5 class="co-parrain-title">Cet événement est ouvert au co-parrainage</h5>
                             <p class="co-parrain-text">
-                                Devenez co-parrain et touchez
+                                Devenez affilié et touchez
                                 <strong>{{ rtrim(rtrim(number_format((float) $evenement->co_parrainage_pourcentage, 2, ',', ' '), '0'), ',') }} %</strong>
                                 du prix de chaque billet vendu via votre lien personnel.
                             </p>
                         </div>
                         <a href="{{ auth('affiliate')->check() ? route('affiliate.liens') : route('affiliate.register') }}" class="co-parrain-btn">
-                            <i class="bi bi-person-plus-fill"></i> Devenir co-parrain
+                            <i class="bi bi-person-plus-fill"></i> Devenir affilié
                         </a>
                     </div>
                 @endif

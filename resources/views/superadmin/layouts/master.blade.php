@@ -604,6 +604,19 @@
                 @if($pendingDemandes > 0)<span class="sa-nav-badge">{{ $pendingDemandes }}</span>@endif
             </a>
             @endif
+            @if(!$estEquipe)
+            <a href="{{ route('superadmin.affiliations.index') }}" class="sa-nav-link {{ request()->routeIs('superadmin.affiliations.index') || request()->routeIs('superadmin.affiliations.show') ? 'active' : '' }}">
+                <i class="bi bi-people-fill"></i> Affiliés
+            </a>
+            <a href="{{ route('superadmin.affiliations.commissions') }}" class="sa-nav-link {{ request()->routeIs('superadmin.affiliations.commissions*') ? 'active' : '' }}">
+                <i class="bi bi-cash-stack"></i> Commissions affiliation
+            </a>
+            <a href="{{ route('superadmin.affiliations.reversements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.affiliations.reversements*') ? 'active' : '' }}">
+                <i class="bi bi-cash-coin"></i> Reversements affiliation
+                @php $pendingPayouts = \App\Models\AffiliatePayout::whereIn('statut', ['demande','en_cours'])->count(); @endphp
+                @if($pendingPayouts > 0)<span class="sa-nav-badge">{{ $pendingPayouts }}</span>@endif
+            </a>
+            @endif
             @if($saUser->peut('remboursements.consulter'))
             <a href="{{ route($saPref.'remboursements.demandes') }}" class="sa-nav-link {{ request()->routeIs($saPref.'remboursements*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-return-left"></i> Remboursements

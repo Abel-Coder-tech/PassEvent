@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AffiliationController as AdminAffiliationController;
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
 use App\Http\Controllers\Admin\AgentVenteController as AdminAgentVenteController;
 use App\Http\Controllers\Admin\DemandeSuperAdminController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\RetraitController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\SitePublicController;
 use App\Http\Controllers\StatistiqueController;
+use App\Http\Controllers\SuperAdmin\AffiliationController as SuperAdminAffiliationController;
 use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
 use App\Http\Controllers\SuperAdminAuthController;
 use App\Http\Controllers\SuperAdminController;
@@ -183,6 +185,19 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/retraits/{withdrawal}/approuver', [SuperAdminController::class, 'approuverRetrait'])->name('retraits.approuver');
         Route::post('/retraits/{withdrawal}/confirmer', [SuperAdminController::class, 'confirmerRetrait'])->name('retraits.confirmer');
         Route::post('/retraits/{withdrawal}/rejeter', [SuperAdminController::class, 'rejeterRetrait'])->name('retraits.rejeter');
+
+        // Programme d'affiliation : comptes, commissions et reversements
+        Route::prefix('affiliations')->name('affiliations.')->group(function () {
+            Route::get('/', [SuperAdminAffiliationController::class, 'index'])->name('index');
+            Route::get('/commissions', [SuperAdminAffiliationController::class, 'commissions'])->name('commissions');
+            Route::post('/commissions/{commission}/annuler', [SuperAdminAffiliationController::class, 'annulerCommission'])->name('commissions.annuler');
+            Route::get('/reversements', [SuperAdminAffiliationController::class, 'reversements'])->name('reversements');
+            Route::post('/reversements/{payout}/approuver', [SuperAdminAffiliationController::class, 'approuverReversement'])->name('reversements.approuver');
+            Route::post('/reversements/{payout}/confirmer', [SuperAdminAffiliationController::class, 'confirmerReversement'])->name('reversements.confirmer');
+            Route::post('/reversements/{payout}/rejeter', [SuperAdminAffiliationController::class, 'rejeterReversement'])->name('reversements.rejeter');
+            Route::get('/{affiliate}', [SuperAdminAffiliationController::class, 'show'])->name('show');
+            Route::post('/{affiliate}/statut', [SuperAdminAffiliationController::class, 'basculerStatut'])->name('statut');
+        });
         Route::get('/demandes-modification-tarifs', [SuperAdminController::class, 'demandesModificationTarifs'])->name('demandes-modification-tarifs');
         Route::post('/demandes-modification-tarifs/{demande}/approuver', [SuperAdminController::class, 'approuverDemandeModificationTarif'])->name('demandes-modification-tarifs.approuver');
         Route::post('/demandes-modification-tarifs/{demande}/refuser', [SuperAdminController::class, 'refuserDemandeModificationTarif'])->name('demandes-modification-tarifs.refuser');
@@ -410,6 +425,9 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
             Route::get('/{lot}/apercu', [AdminLotPhysiqueController::class, 'previewTemplate'])->name('template.preview');
             Route::delete('/{lot}', [AdminLotPhysiqueController::class, 'destroy'])->name('destroy');
         });
+
+        // Affiliation : affiliés et commissions de co-parrainage des événements
+        Route::get('/affiliations', [AdminAffiliationController::class, 'index'])->name('affiliations.index');
     });
 
     Route::resource('tickets', TicketController::class);
