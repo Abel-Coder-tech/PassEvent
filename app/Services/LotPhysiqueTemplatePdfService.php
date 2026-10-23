@@ -118,7 +118,11 @@ class LotPhysiqueTemplatePdfService
      */
     public static function layoutPage(array $format): array
     {
-        $orientation = $format['orientation'];
+        // L'orientation de la page peut différer de celle du ticket : un ticket
+        // A5 paysage se pose sur une page A4 portrait (2 tickets empilés).
+        $ticketOrientation = $format['orientation'] ?? 'landscape';
+        $orientation = $format['page_orientation'] ?? $ticketOrientation;
+
         $pageW = $orientation === 'landscape' ? 297 : 210;
         $pageH = $orientation === 'landscape' ? 210 : 297;
 
@@ -152,7 +156,8 @@ class LotPhysiqueTemplatePdfService
         }
 
         return [
-            'orientation' => $orientation,
+            'orientation' => $orientation, // orientation de la page (pour le PDF)
+            'ticket_orientation' => $ticketOrientation,
             'page_largeur' => $pageW,
             'page_hauteur' => $pageH,
             'slot_largeur' => $slotW,

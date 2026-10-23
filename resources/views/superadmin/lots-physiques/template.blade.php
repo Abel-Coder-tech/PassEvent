@@ -379,8 +379,8 @@
                         </div>
                         <div class="step-hint mb-2" id="formatHint">
                             {{ $format['colonnes'] }}×{{ $format['lignes'] }} tickets par page A4
-                            @if($format['orientation'] === 'landscape') (paysage) @else (portrait) @endif
-                            — {{ $format['largeur'] }}×{{ $format['hauteur'] }} mm.
+                            @if(($format['page_orientation'] ?? $format['orientation']) === 'landscape') (page paysage) @else (page portrait) @endif
+                            — ticket {{ $format['largeur'] }}×{{ $format['hauteur'] }} mm.
                         </div>
 <select name="format" id="formatSelect" class="form-select form-select-sm">
                                 @foreach($formats as $key => $label)
@@ -716,7 +716,8 @@
     function currentFmt() { return fmt(formatSelect ? formatSelect.value : fmtKey); }
 
     function syncFormatHint(f) {
-        if (formatHint) formatHint.textContent = f.colonnes + '×' + f.lignes + ' tickets par page A4 ' + (f.orientation === 'landscape' ? '(paysage)' : '(portrait)') + ' — ' + f.largeur + '×' + f.hauteur + ' mm.';
+        var pageOri = f.page_orientation || f.orientation;
+        if (formatHint) formatHint.textContent = f.colonnes + '×' + f.lignes + ' tickets par page A4 ' + (pageOri === 'landscape' ? '(page paysage)' : '(page portrait)') + ' — ticket ' + f.largeur + '×' + f.hauteur + ' mm.';
         if (formatBadgeLabel) formatBadgeLabel.textContent = f.label;
     }
 
