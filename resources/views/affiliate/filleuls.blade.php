@@ -41,19 +41,25 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-3">
             <div class="stat-card card h-100">
                 <div class="label">Filleuls</div>
                 <div class="value">{{ $stats['total'] }}</div>
             </div>
         </div>
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-3">
             <div class="stat-card card h-100">
                 <div class="label">Filleuls validés</div>
                 <div class="value">{{ $stats['valides'] }}</div>
             </div>
         </div>
-        <div class="col-12 col-lg-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card card h-100">
+                <div class="label">Clics sur votre lien</div>
+                <div class="value">{{ number_format((int) $stats['clics'], 0, ',', ' ') }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
             <div class="stat-card card h-100">
                 <div class="label">Commissions générées</div>
                 <div class="value">{{ number_format((float) $stats['commissions'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>

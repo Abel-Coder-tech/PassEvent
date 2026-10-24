@@ -605,6 +605,10 @@
             </a>
             @endif
             @if(!$estEquipe)
+            <div class="sa-nav-section">Affiliation</div>
+            <a href="{{ route('superadmin.affiliations.dashboard') }}" class="sa-nav-link {{ request()->routeIs('superadmin.affiliations.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i> Tableau de bord affiliation
+            </a>
             <a href="{{ route('superadmin.affiliations.index') }}" class="sa-nav-link {{ request()->routeIs('superadmin.affiliations.index') || request()->routeIs('superadmin.affiliations.show') ? 'active' : '' }}">
                 <i class="bi bi-people-fill"></i> Affiliés
             </a>

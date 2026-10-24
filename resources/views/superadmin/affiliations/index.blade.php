@@ -58,7 +58,8 @@
                     <a href="{{ route('superadmin.affiliations.index') }}" class="sa-btn sa-btn-outline">Réinitialiser</a>
                 @endif
             </form>
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('superadmin.affiliations.dashboard') }}" class="sa-btn sa-btn-outline"><i class="bi bi-speedometer2"></i> Tableau de bord</a>
                 <a href="{{ route('superadmin.affiliations.commissions') }}" class="sa-btn sa-btn-outline"><i class="bi bi-list-columns"></i> Commissions</a>
                 <a href="{{ route('superadmin.affiliations.reversements') }}" class="sa-btn sa-btn-outline">
                     <i class="bi bi-cash-coin"></i> Reversements
@@ -84,6 +85,7 @@
                         <tr>
                             <th>Affilié</th>
                             <th>Code</th>
+                            <th>Événements co-parrainés</th>
                             <th class="text-center">Filleuls</th>
                             <th class="text-center">Liens</th>
                             <th class="text-end">En attente</th>
@@ -101,11 +103,39 @@
                                     <br><small style="color:var(--sa-text-muted);">{{ $affilie->email }}</small>
                                 </td>
                                 <td><code style="font-size:0.72rem;">{{ $affilie->code_parrainage }}</code></td>
+                                <td style="min-width:220px;">
+                                    @php($evenementsAffilie = $affilie->eventLinks->pluck('evenement')->filter()->unique('id'))
+                                    @if($evenementsAffilie->count() > 0)
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach($evenementsAffilie->take(2) as $evenementAffilie)
+                                                <a href="{{ route('superadmin.evenements.voir', $evenementAffilie) }}"
+                                                   class="sa-badge sa-badge-info text-decoration-none"
+                                                   style="font-size:0.65rem;"
+                                                   title="{{ $evenementAffilie->titre }}">
+                                                    {{ \Illuminate\Support\Str::limit($evenementAffilie->titre, 24) }}
+                                                </a>
+                                            @endforeach
+                                            @if($evenementsAffilie->count() > 2)
+                                                <a href="{{ route('superadmin.affiliations.show', $affilie) }}"
+                                                   class="sa-badge sa-badge-secondary text-decoration-none"
+                                                   style="font-size:0.65rem;"
+                                                   title="Voir tous les événements co-parrainés">
+                                                    +{{ $evenementsAffilie->count() - 2 }}
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span style="color:var(--sa-text-muted);">—</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">{{ $affilie->referrals_count }}</td>
                                 <td class="text-center">{{ $affilie->event_links_count }}</td>
                                 <td class="text-end">{{ number_format((float) $affilie->solde_en_attente, 0, ',', ' ') }} F</td>
                                 <td class="text-end"><strong>{{ number_format((float) $affilie->solde_disponible, 0, ',', ' ') }} F</strong></td>
-                                <td class="text-end">{{ number_format((float) $affilie->total_gagne, 0, ',', ' ') }} F</td>
+                                <td class="text-end">
+                                    {{ number_format((float) $affilie->total_gagne, 0, ',', ' ') }} F
+                                    <br><small style="color:var(--sa-text-muted);">{{ $affilie->commissions_count }} commission(s)</small>
+                                </td>
                                 <td class="text-center">
                                     @if($affilie->actif)
                                         <span class="sa-badge sa-badge-success">Actif</span>

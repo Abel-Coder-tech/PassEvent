@@ -189,6 +189,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // Programme d'affiliation : comptes, commissions et reversements
         Route::prefix('affiliations')->name('affiliations.')->group(function () {
             Route::get('/', [SuperAdminAffiliationController::class, 'index'])->name('index');
+            Route::get('/dashboard', [SuperAdminAffiliationController::class, 'dashboard'])->name('dashboard');
             Route::get('/commissions', [SuperAdminAffiliationController::class, 'commissions'])->name('commissions');
             Route::post('/commissions/{commission}/annuler', [SuperAdminAffiliationController::class, 'annulerCommission'])->name('commissions.annuler');
             Route::get('/reversements', [SuperAdminAffiliationController::class, 'reversements'])->name('reversements');
@@ -334,6 +335,7 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
         Route::get('/dashboard', [AffiliateDashboardController::class, 'index'])->name('dashboard');
         Route::get('/filleuls', [AffiliateDashboardController::class, 'filleuls'])->name('filleuls');
         Route::get('/liens', [AffiliateDashboardController::class, 'liens'])->name('liens');
+        Route::get('/evenements/{evenement}', [AffiliateDashboardController::class, 'evenement'])->name('evenements.show');
         Route::post('/liens/{evenement}/generer', [AffiliateDashboardController::class, 'genererLien'])->name('liens.generer');
         Route::post('/liens/{link}/toggle', [AffiliateDashboardController::class, 'toggleLien'])->name('liens.toggle');
         Route::get('/commissions', [AffiliateDashboardController::class, 'commissions'])->name('commissions');

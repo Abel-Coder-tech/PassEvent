@@ -82,6 +82,7 @@ class AffiliationCommissionTest extends TestCase
             $table->string('pays', 2)->default('BJ');
             $table->string('password');
             $table->string('code_parrainage', 20)->unique();
+            $table->unsignedInteger('clics_parrainage')->default(0);
             $table->string('operateur_paiement')->nullable();
             $table->string('numero_paiement')->nullable();
             $table->string('titulaire_paiement')->nullable();

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateCommission;
+use App\Models\AffiliateEventLink;
 use App\Models\AffiliatePayout;
 use App\Models\AffiliateReferral;
+use App\Models\Evenement;
 use App\Services\AffiliationService;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
@@ -21,13 +23,109 @@ class AffiliationController extends Controller
     {
     }
 
+    // Tableau de bord global du programme d'affiliation
+    public function dashboard()
+    {
+        $stats = [
+            'affilies' => Affiliate::count(),
+            'affilies_actifs' => Affiliate::where('actif', true)->count(),
+            'evenements_ouverts' => Evenement::where('co_parrainage_actif', true)
+                ->where('gratuit', false)
+                ->count(),
+            'evenements_coparaines' => AffiliateEventLink::query()
+                ->distinct('evenement_id')
+                ->count('evenement_id'),
+            'liens' => AffiliateEventLink::count(),
+            'liens_actifs' => AffiliateEventLink::where('actif', true)->count(),
+            'clics' => (int) AffiliateEventLink::sum('clics'),
+            'commissions_total' => (float) AffiliateCommission::where('statut', '!=', 'annule')->sum('montant'),
+            'commissions_count' => AffiliateCommission::where('statut', '!=', 'annule')->count(),
+            'commissions_co' => (float) AffiliateCommission::where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+                ->where('statut', '!=', 'annule')
+                ->sum('montant'),
+            'commissions_par' => (float) AffiliateCommission::where('type', AffiliateCommission::TYPE_PARRAINAGE)
+                ->where('statut', '!=', 'annule')
+                ->sum('montant'),
+            'en_attente' => (float) AffiliateCommission::where('statut', 'en_attente')->sum('montant'),
+            'en_attente_count' => AffiliateCommission::where('statut', 'en_attente')->count(),
+            'disponible' => (float) AffiliateCommission::where('statut', 'disponible')
+                ->whereNull('affiliate_payout_id')
+                ->sum('montant'),
+            'disponible_count' => AffiliateCommission::where('statut', 'disponible')
+                ->whereNull('affiliate_payout_id')
+                ->count(),
+            'paye' => (float) AffiliateCommission::where('statut', 'paye')->sum('montant'),
+            'paye_count' => AffiliateCommission::where('statut', 'paye')->count(),
+            'reversements_demandes' => AffiliatePayout::whereIn('statut', ['demande', 'en_cours'])->count(),
+            'reversements_demandes_montant' => (float) AffiliatePayout::whereIn('statut', ['demande', 'en_cours'])->sum('montant'),
+            'reversements_payes' => (float) AffiliatePayout::where('statut', 'paye')->sum('montant'),
+            'parrainages' => AffiliateReferral::count(),
+            'parrainages_valides' => AffiliateReferral::where('statut', 'valide')->count(),
+        ];
+
+        // Agrégats de commissions de co-parrainage par événement.
+        $commissionsParEvenement = AffiliateCommission::query()
+            ->select('evenement_id')
+            ->selectRaw('COUNT(*) as commissions_count')
+            ->selectRaw('COALESCE(SUM(montant), 0) as commissions_total')
+            ->selectRaw('COALESCE(SUM(CASE WHEN statut = ? THEN montant ELSE 0 END), 0) as commissions_en_attente', ['en_attente'])
+            ->selectRaw('COALESCE(SUM(CASE WHEN statut = ? THEN montant ELSE 0 END), 0) as commissions_payees', ['paye'])
+            ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+            ->where('statut', '!=', 'annule')
+            ->groupBy('evenement_id')
+            ->get()
+            ->keyBy('evenement_id');
+
+        // Tous les événements auxquels au moins un affilié est co-parrainé.
+        $parEvenement = Evenement::query()
+            ->whereHas('affiliateEventLinks')
+            ->with(['user', 'affiliateEventLinks.affiliate'])
+            ->orderByDesc('date_event')
+            ->get()
+            ->map(function (Evenement $evenement) use ($commissionsParEvenement) {
+                $commission = $commissionsParEvenement->get($evenement->id);
+
+                return [
+                    'evenement' => $evenement,
+                    'affilies' => $evenement->affiliateEventLinks->pluck('affiliate_id')->unique()->count(),
+                    'liens' => $evenement->affiliateEventLinks->count(),
+                    'liens_actifs' => $evenement->affiliateEventLinks->where('actif', true)->count(),
+                    'clics' => (int) $evenement->affiliateEventLinks->sum('clics'),
+                    'commissions_count' => (int) ($commission->commissions_count ?? 0),
+                    'commissions' => (float) ($commission->commissions_total ?? 0),
+                    'en_attente' => (float) ($commission->commissions_en_attente ?? 0),
+                    'paye' => (float) ($commission->commissions_payees ?? 0),
+                ];
+            });
+
+        // Aperçu des affiliés les plus performants et de leurs événements.
+        $topAffilies = Affiliate::query()
+            ->with(['eventLinks.evenement'])
+            ->withCount('eventLinks')
+            ->orderByDesc('total_gagne')
+            ->orderByDesc('solde_disponible')
+            ->limit(8)
+            ->get();
+
+        $dernieresCommissions = AffiliateCommission::query()
+            ->with(['affiliate', 'evenement'])
+            ->where('statut', '!=', 'annule')
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        return view('superadmin.affiliations.dashboard', compact('stats', 'parEvenement', 'topAffilies', 'dernieresCommissions'));
+    }
+
     // Liste des affiliés
     public function index(Request $request)
     {
         $recherche = trim((string) $request->query('q'));
         $statut = $request->query('statut');
 
-        $query = Affiliate::query()->withCount(['referrals', 'eventLinks', 'commissions', 'payouts']);
+        $query = Affiliate::query()
+            ->with(['eventLinks.evenement'])
+            ->withCount(['referrals', 'eventLinks', 'commissions', 'payouts']);
 
         if ($recherche !== '') {
             $query->where(function ($q) use ($recherche) {
@@ -71,8 +169,24 @@ class AffiliationController extends Controller
         $liens = $affiliate->eventLinks()
             ->with('evenement')
             ->latest()
-            ->limit(20)
             ->get();
+
+        // Commissions de co-parrainage agrégées par événement pour la fiche affilié.
+        $commissionsParEvenement = $affiliate->commissions()
+            ->select('evenement_id')
+            ->selectRaw('COUNT(*) as commissions_count')
+            ->selectRaw('COALESCE(SUM(montant), 0) as commissions_total')
+            ->selectRaw('COALESCE(SUM(CASE WHEN statut = ? THEN montant ELSE 0 END), 0) as commissions_en_attente', ['en_attente'])
+            ->selectRaw('COALESCE(SUM(CASE WHEN statut = ? THEN montant ELSE 0 END), 0) as commissions_payees', ['paye'])
+            ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+            ->where('statut', '!=', 'annule')
+            ->groupBy('evenement_id')
+            ->get()
+            ->keyBy('evenement_id');
+
+        $evenementsCoparaines = $affiliate->eventLinks()
+            ->distinct('evenement_id')
+            ->count('evenement_id');
 
         $commissions = $affiliate->commissions()
             ->with(['evenement', 'ticket', 'eventLink'])
@@ -84,7 +198,15 @@ class AffiliationController extends Controller
             ->latest()
             ->get();
 
-        return view('superadmin.affiliations.show', compact('affiliate', 'referrals', 'liens', 'commissions', 'payouts'));
+        return view('superadmin.affiliations.show', compact(
+            'affiliate',
+            'referrals',
+            'liens',
+            'commissionsParEvenement',
+            'evenementsCoparaines',
+            'commissions',
+            'payouts'
+        ));
     }
 
     // Active / désactive un compte affilié

@@ -70,6 +70,14 @@ class InscriptionController extends Controller
             $affiliate = Affiliate::where('code_parrainage', $code)->where('actif', true)->first();
             if ($affiliate) {
                 session(['affiliate_ref_id' => $affiliate->id]);
+
+                // Compte un clic unique par session sur le lien d'inscription
+                // organisateur, pour que l'affilie puisse suivre ses conversions.
+                $flag = 'affiliate_ref_clic_'.$affiliate->id;
+                if (! session()->has($flag)) {
+                    $affiliate->increment('clics_parrainage');
+                    session([$flag => true]);
+                }
             }
         }
 

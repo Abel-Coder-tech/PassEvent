@@ -72,7 +72,7 @@
                     @foreach($evenementsOuverts as $ev)
                         <div class="col-12 col-md-6">
                             <div class="border rounded-3 h-100 d-flex flex-column overflow-hidden">
-                                <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="aff-offer-cover" title="Voir l'événement">
+                                <a href="{{ route('affiliate.evenements.show', $ev) }}" class="aff-offer-cover" title="Voir le détail de l'événement">
                                     @if($ev->image)
                                         <img src="{{ asset('storage/' . $ev->image) }}" alt="{{ $ev->titre }}" loading="lazy">
                                     @else
@@ -80,10 +80,13 @@
                                     @endif
                                 </a>
                                 <div class="p-3 d-flex flex-column flex-grow-1">
-                                    <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="fw-semibold text-decoration-none" style="color:inherit;">{{ $ev->titre }}</a>
+                                    <a href="{{ route('affiliate.evenements.show', $ev) }}" class="fw-semibold text-decoration-none" style="color:inherit;">{{ $ev->titre }}</a>
                                     <div class="text-muted small mb-2">
                                         <i class="bi bi-person me-1"></i>{{ $ev->user?->nom ?? 'Organisateur' }}
                                         @if($ev->date_event) · <i class="bi bi-calendar-event me-1"></i>{{ $ev->date_event->format('d/m/Y') }}@endif
+                                        @if($ev->tarifs->isNotEmpty())
+                                            · À partir de {{ number_format((float) $ev->tarifs->min('prix'), 0, ',', ' ') }} F
+                                        @endif
                                     </div>
                                     <div class="mb-3">
                                         <span class="badge bg-success-subtle text-success-emphasis">
@@ -91,8 +94,8 @@
                                         </span>
                                     </div>
                                     <div class="mt-auto d-flex flex-column gap-2">
-                                        <a href="{{ route('evenements.public.show', $ev) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm w-100">
-                                            <i class="bi bi-eye me-1"></i> Détails de l'événement
+                                        <a href="{{ route('affiliate.evenements.show', $ev) }}" class="btn btn-outline-secondary btn-sm w-100">
+                                            <i class="bi bi-eye me-1"></i> Voir le détail
                                         </a>
                                         <form action="{{ route('affiliate.liens.generer', $ev) }}" method="POST">
                                             @csrf
@@ -122,48 +125,76 @@
                         : 'Vous n\'avez encore généré aucun lien.',
                 ])
             @else
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr class="small text-muted">
-                                <th>Événement</th>
-                                <th>Commission</th>
-                                <th>Lien</th>
-                                <th class="text-center">Clics</th>
-                                <th class="text-center">Statut</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($liens as $lien)
-                                @php $url = route('evenements.public.show', $lien->evenement).'?ref='.$lien->code; @endphp
-                                <tr>
-                                    <td class="small">{{ $lien->evenement?->titre ?? '—' }}</td>
-                                    <td class="small">{{ rtrim(rtrim(number_format((float) $lien->pourcentage, 2), '0'), '.') }} %</td>
-                                    <td>
-                                        <div class="input-group input-group-sm" style="min-width: 220px;">
-                                            <input type="text" class="form-control" value="{{ $url }}" readonly onclick="this.select()">
-                                            <button class="btn btn-outline-secondary" type="button" onclick="copier(this)"><i class="bi bi-clipboard"></i></button>
-                                        </div>
-                                    </td>
-                                    <td class="text-center small">{{ $lien->clics }}</td>
-                                    <td class="text-center">
-                                        <span class="badge {{ $lien->actif ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' }}">
+                <div class="row g-3">
+                    @foreach($liens as $lien)
+                        @php
+                            $detailUrl = $lien->evenement ? route('affiliate.evenements.show', $lien->evenement) : null;
+                            $url = $lien->evenement ? route('evenements.public.show', $lien->evenement).'?ref='.$lien->code : null;
+                        @endphp
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="border rounded-3 h-100 d-flex flex-column overflow-hidden bg-white">
+                                @if($detailUrl)
+                                    <a href="{{ $detailUrl }}" class="aff-offer-cover" style="height:130px;" title="Voir le détail de l'événement">
+                                        @if($lien->evenement->image)
+                                            <img src="{{ asset('storage/' . $lien->evenement->image) }}" alt="{{ $lien->evenement->titre }}" loading="lazy">
+                                        @else
+                                            <i class="bi bi-calendar-event"></i>
+                                        @endif
+                                    </a>
+                                @endif
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                        @if($detailUrl)
+                                            <a href="{{ $detailUrl }}" class="fw-semibold text-decoration-none" style="color:inherit;">{{ $lien->evenement->titre }}</a>
+                                        @else
+                                            <span class="fw-semibold">—</span>
+                                        @endif
+                                        <span class="badge flex-shrink-0 {{ $lien->actif ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' }}">
                                             {{ $lien->actif ? 'Actif' : 'Inactif' }}
                                         </span>
-                                    </td>
-                                    <td class="text-end">
-                                        <form method="POST" action="{{ route('affiliate.liens.toggle', $lien) }}">
+                                    </div>
+                                    <div class="text-muted small mb-2">
+                                        @if($lien->evenement?->user)
+                                            <i class="bi bi-person me-1"></i>{{ $lien->evenement->user->nom }}
+                                        @endif
+                                        @if($lien->evenement?->date_event)
+                                            · <i class="bi bi-calendar-event me-1"></i>{{ $lien->evenement->date_event->format('d/m/Y') }}
+                                        @endif
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-3 small text-muted mb-2">
+                                        <span>
+                                            <i class="bi bi-percent me-1"></i>{{ rtrim(rtrim(number_format((float) $lien->pourcentage, 2, ',', ' '), '0'), ',') }} %
+                                        </span>
+                                        <span><i class="bi bi-cursor me-1"></i>{{ $lien->clics }} clic(s)</span>
+                                    </div>
+                                    @if($url)
+                                        <div class="input-group input-group-sm mb-2">
+                                            <input type="text" class="form-control" value="{{ $url }}" readonly onclick="this.select()">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="copier(this)" title="Copier le lien">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <a href="{{ $url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary" title="Tester le lien tracé">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        </div>
+                                    @endif
+                                    <div class="mt-auto d-flex gap-2">
+                                        @if($detailUrl)
+                                            <a href="{{ $detailUrl }}" class="btn btn-outline-secondary btn-sm flex-grow-1">
+                                                <i class="bi bi-eye me-1"></i> Détails
+                                            </a>
+                                        @endif
+                                        <form method="POST" action="{{ route('affiliate.liens.toggle', $lien) }}" class="flex-shrink-0">
                                             @csrf
                                             <button type="submit" class="btn btn-sm {{ $lien->actif ? 'btn-outline-danger' : 'btn-outline-success' }}">
                                                 {{ $lien->actif ? 'Désactiver' : 'Réactiver' }}
                                             </button>
                                         </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
                 <div class="mt-3 d-flex justify-content-center">{{ $liens->links() }}</div>
             @endif

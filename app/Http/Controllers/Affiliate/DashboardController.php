@@ -36,7 +36,7 @@ class DashboardController extends Controller
             ->get();
 
         $liens = $affiliate->eventLinks()
-            ->with('evenement')
+            ->with(['evenement.user', 'evenement.tarifs'])
             ->latest()
             ->limit(5)
             ->get();
@@ -47,9 +47,9 @@ class DashboardController extends Controller
             ->where('statut', 'publié')
             ->where('date_event', '>=', now())
             ->whereNotIn('id', $affiliate->eventLinks()->pluck('evenement_id'))
-            ->with('user')
+            ->with(['user', 'tarifs'])
             ->orderBy('date_event')
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts'));
@@ -68,6 +68,7 @@ class DashboardController extends Controller
         $stats = [
             'total' => $referrals->count(),
             'valides' => $referrals->where('statut', 'valide')->count(),
+            'clics' => (int) $affiliate->clics_parrainage,
             'commissions' => $affiliate->commissions()
                 ->where('type', AffiliateCommission::TYPE_PARRAINAGE)->sum('montant'),
         ];
@@ -85,7 +86,7 @@ class DashboardController extends Controller
         $statut = in_array($request->query('statut'), ['actif', 'inactif'], true) ? $request->query('statut') : null;
         $recherche = trim((string) $request->query('q'));
 
-        $liensQuery = $affiliate->eventLinks()->with('evenement');
+        $liensQuery = $affiliate->eventLinks()->with(['evenement.user', 'evenement.tarifs']);
         if ($statut !== null) {
             $liensQuery->where('actif', $statut === 'actif');
         }
@@ -101,7 +102,7 @@ class DashboardController extends Controller
             ->where('statut', 'publié')
             ->where('date_event', '>=', now())
             ->whereNotIn('id', $affiliate->eventLinks()->pluck('evenement_id'))
-            ->with('user');
+            ->with(['user', 'tarifs']);
         if ($recherche !== '') {
             $evenementsOuvertsQuery->where('titre', 'like', "%{$recherche}%");
         }
@@ -121,6 +122,91 @@ class DashboardController extends Controller
         ];
 
         return view('affiliate.liens', compact('affiliate', 'liens', 'evenementsOuverts', 'stats', 'statut', 'recherche'));
+    }
+
+    // Detail interne d'un evenement co-parraine (sans redirection vers la page publique)
+    public function evenement(Evenement $evenement)
+    {
+        $affiliate = Auth::guard('affiliate')->user();
+
+        $lien = $affiliate->eventLinks()
+            ->where('evenement_id', $evenement->id)
+            ->first();
+
+        // Un evenement est consultable s'il est ouvert au co-parrainage ou si
+        // l'affilie possede deja un lien dessus (meme si l'evenement est passe).
+        $accessible = $lien !== null
+            || ($evenement->co_parrainage_actif && !$evenement->gratuit && $evenement->statut === 'publié');
+
+        if (!$accessible) {
+            abort(404);
+        }
+
+        $evenement->load([
+            'user',
+            'dates',
+            'tarifs' => fn ($q) => $q->where('statut', 'actif')->orderBy('prix'),
+        ]);
+
+        $commissionPax = $evenement->commissionEffective();
+        $commissionAffilie = (float) ($lien?->pourcentage ?? $evenement->co_parrainage_pourcentage ?? 0);
+
+        // Note detaillee PaxEvent : pour chaque tarif, on decompose le prix du
+        // billet entre commission PaxEvent, commission de co-parrainage et net
+        // organiseur. La commission de co-parrainage est a la charge de
+        // l'organisateur et s'ajoute a la commission PaxEvent.
+        $noteLignes = $evenement->tarifs->map(function ($tarif) use ($commissionPax, $commissionAffilie) {
+            $prix = (float) $tarif->prix;
+            $partPax = round($prix * $commissionPax / 100, 2);
+            $partAffilie = round($prix * $commissionAffilie / 100, 2);
+
+            return [
+                'nom' => $tarif->nom,
+                'prix' => $prix,
+                'part_pax' => $partPax,
+                'part_affilie' => $partAffilie,
+                'part_organisateur' => round($prix - $partPax - $partAffilie, 2),
+            ];
+        });
+
+        $commissions = $affiliate->commissions()
+            ->where('evenement_id', $evenement->id)
+            ->where('statut', '!=', 'annule')
+            ->get();
+
+        $statsCommissions = [
+            'nombre' => $commissions->count(),
+            'total' => (float) $commissions->sum('montant'),
+            'en_attente' => (float) $commissions->where('statut', 'en_attente')->sum('montant'),
+            'disponible' => (float) $commissions->where('statut', 'disponible')->sum('montant'),
+            'paye' => (float) $commissions->where('statut', 'paye')->sum('montant'),
+        ];
+
+        $organisateur = $evenement->user;
+        $nbEvenementsOrganisateur = $organisateur
+            ? $organisateur->evenements()->where('statut', 'publié')->count()
+            : 0;
+
+        // Liens traces : achat/inscription a l'evenement (mecanisme B) et
+        // inscription organisateur (mecanisme A).
+        $lienAchat = $lien
+            ? route('evenements.public.show', $evenement).'?ref='.$lien->code
+            : null;
+        $lienInscription = route('inscriptions.organisateur').'?ref='.$affiliate->code_parrainage;
+
+        return view('affiliate.evenements.show', compact(
+            'affiliate',
+            'evenement',
+            'lien',
+            'commissionPax',
+            'commissionAffilie',
+            'noteLignes',
+            'statsCommissions',
+            'organisateur',
+            'nbEvenementsOrganisateur',
+            'lienAchat',
+            'lienInscription'
+        ));
     }
 
     // Genere (ou retrouve) le lien de co-parrainage d'un evenement
