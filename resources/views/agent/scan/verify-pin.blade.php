@@ -5,8 +5,8 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-6 col-lg-5">
-            <div class="card-agent p-3 p-sm-4 text-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card-agent p-4 text-center">
                 <div class="mb-3">
                     <div style="width:70px;height:70px;border-radius:50%;background:rgba(84,38,128,0.08);display:flex;align-items:center;justify-content:center;margin:0 auto;">
                         <i class="bi bi-shield-lock" style="font-size:1.8rem;color:var(--violet);"></i>
