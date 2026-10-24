@@ -24,7 +24,7 @@
         .agent-header {
             background: linear-gradient(135deg, var(--violet), #3d1a5c);
             color: #fff;
-            padding: 0.875rem 0;
+            padding: 1rem 0;
         }
         .agent-header .brand {
             color: #fff;
@@ -33,21 +33,7 @@
             font-size: 1.1rem;
         }
         .agent-header .brand i { margin-right: 0.4rem; }
-        .agent-header .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: nowrap;
-        }
-        .agent-header .header-user {
-            opacity: 0.9;
-            font-size: 0.85rem;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .agent-body { padding: 1.5rem 0; }
+        .agent-body { padding: 2rem 0; }
         .card-agent {
             background: #fff;
             border-radius: 16px;
@@ -69,13 +55,12 @@
         .btn-outline-violet:hover { background: var(--violet); color: #fff; }
         .stat-card {
             text-align: center;
-            padding: 1rem 0.75rem;
+            padding: 1.25rem;
             border-radius: 12px;
             background: #fff;
-            height: 100%;
         }
-        .stat-card .value { font-size: 1.4rem; font-weight: 800; color: var(--violet); }
-        .stat-card .label { font-size: 0.75rem; color: #6c757d; }
+        .stat-card .value { font-size: 1.5rem; font-weight: 800; color: var(--violet); }
+        .stat-card .label { font-size: 0.78rem; color: #6c757d; }
         .scan-result-valid {
             background: #d4edda;
             border: 2px solid #28a745;
@@ -90,68 +75,20 @@
             padding: 1.5rem;
             text-align: center;
         }
-        .scan-card-mobile {
-            display: none;
-        }
-        @media (max-width: 576px) {
-            .agent-body { padding: 1rem 0; }
-            .agent-header { padding: 0.75rem 0; }
-            .agent-header .header-user { max-width: 90px; font-size: 0.8rem; }
-            .agent-header .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
-            .container { padding-left: 0.875rem; padding-right: 0.875rem; }
-            .stat-card { padding: 0.875rem 0.5rem; }
-            .stat-card .value { font-size: 1.25rem; }
-            .stat-card .label { font-size: 0.72rem; }
-            .card-agent { border-radius: 14px; }
-            .table-responsive { border-radius: 0 0 14px 14px; }
-            .w-100.w-md-auto { width: 100% !important; }
-            .scan-card-desktop { display: none; }
-            .scan-card-mobile {
-                display: block;
-            }
-            .scan-card-mobile .scan-item {
-                padding: 0.75rem 0.875rem;
-                border-bottom: 1px solid #f1f1f1;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 0.75rem;
-            }
-            .scan-card-mobile .scan-item:last-child { border-bottom: none; }
-            .scan-card-mobile .scan-info { flex: 1; min-width: 0; }
-            .scan-card-mobile .scan-code {
-                font-family: monospace;
-                font-size: 0.75rem;
-                color: #6c757d;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 140px;
-            }
-            .scan-card-mobile .scan-time {
-                font-size: 0.75rem;
-                color: #6c757d;
-            }
-        }
-        @media (max-width: 360px) {
-            .agent-header .header-user { max-width: 70px; }
-            .stat-card .value { font-size: 1.15rem; }
-            .btn-violet, .btn-outline-violet { font-size: 0.9rem; }
-        }
     </style>
     @stack('styles')
 </head>
 <body>
     <header class="agent-header">
-        <div class="container d-flex align-items-center justify-content-between gap-2">
-            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="44" style="filter: brightness(0) invert(1);">
-            <div class="header-actions">
+        <div class="container d-flex align-items-center justify-content-between">
+            <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="50" style="filter: brightness(0) invert(1);">
+            <div class="d-flex align-items-center gap-3">
                 @if(Auth::guard('agent')->check())
-                    <span class="header-user d-none d-sm-inline">
+                    <span style="opacity:0.8;font-size:0.85rem;">
                         <i class="bi bi-person-circle me-1"></i>{{ Auth::guard('agent')->user()->nom }}
                     </span>
                     <a href="{{ route('agent.logout') }}" class="btn btn-sm btn-outline-light" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                        <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Déconnecter</span>
+                        <i class="bi bi-box-arrow-right"></i> Déconnecter
                     </a>
                     <form id="logout-form" action="{{ route('agent.logout') }}" method="POST" class="d-none">@csrf</form>
                 @endif
