@@ -122,17 +122,17 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-2 mb-sm-3">
         <div>
-            <h5 class="fw-bold mb-0"><i class="bi bi-qr-code-scan me-2" style="color:var(--violet);"></i>Scan</h5>
-            <small class="text-muted">{{ $evenement->titre }}</small>
+            <h5 class="fw-bold mb-0 fs-6 fs-sm-5"><i class="bi bi-qr-code-scan me-2" style="color:var(--violet);"></i>Scan</h5>
+            <small class="text-muted d-block text-truncate" style="max-width: 200px;">{{ $evenement->titre }}</small>
         </div>
         <a href="{{ route('agent.scan.exit') }}" class="btn btn-outline-danger btn-sm">
-            <i class="bi bi-stop-circle me-1"></i>Quitter
+            <i class="bi bi-stop-circle me-1"></i><span class="d-none d-sm-inline">Quitter</span>
         </a>
     </div>
 
-    <div class="row g-2 mb-3">
+    <div class="row g-2 mb-2 mb-sm-3">
         <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" id="statTotal">{{ $stats['total'] }}</div><div class="label">Total</div></div></div>
         <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" id="statValides" style="color:#28a745;">{{ $stats['valides'] }}</div><div class="label">Validés</div></div></div>
         <div class="col-4"><div class="stat-scan card-agent p-2"><div class="value" id="statInvalides" style="color:#dc3545;">{{ $stats['invalides'] }}</div><div class="label">Invalides</div></div></div>
