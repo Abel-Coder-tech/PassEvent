@@ -14,18 +14,17 @@ use Illuminate\Support\Facades\DB;
 /**
  * Moteur de calcul des commissions d'affiliation.
  *
- * Mécanisme A (parrainage direct) : 20 % de la commission PaxEvent, sur chaque
- * vente payée du premier événement publié de l'organisateur parrainé.
- *
- * Mécanisme B (co-parrainage) : pourcentage fixé par l'organisateur, sur chaque
- * vente payée dont le billet est rattaché au lien de l'affilié.
+ * Seul le co-parrainage (mécanisme B) est conservé.
+ * Pourcentage fixé par l'organisateur pour chaque événement ouvert au co-parrainage,
+ * sur chaque vente payée dont le billet est rattaché au lien de l'affilié.
+ * Les frais sont à la charge de l'organisateur, comme avant.
  *
  * Sont exclus : événements gratuits, billets physiques (lots QR) et ventes dont
  * le montant est nul.
  */
 class AffiliationService
 {
-    // Part de la commission PaxEvent reversée à l'affilié (mécanisme A).
+    // Conservé pour compatibilité avec d'anciennes écritures si nécessaire.
     public const PART_PARRAINAGE_DIRECT = 20.0;
 
     // Délai de maturation après la date de l'événement (couvre les remboursements).
@@ -58,12 +57,11 @@ class AffiliationService
 
         DB::transaction(function () use ($ticket, $evenement, $base) {
             $this->creerCoParrainage($ticket, $evenement, $base);
-            $this->creerParrainageDirect($ticket, $evenement, $base);
         });
     }
 
     /**
-     * Mécanisme B : le billet a été acheté via le lien d'un affilié.
+     * Co-parrainage : le billet a été acheté via le lien d'un affilié.
      */
     private function creerCoParrainage(Ticket $ticket, Evenement $evenement, float $base): void
     {
@@ -95,57 +93,6 @@ class AffiliationService
             $evenement,
             $lien->id
         );
-    }
-
-    /**
-     * Mécanisme A : 20 % de la commission PaxEvent sur le premier événement payé
-     * de l'organisateur parrainé.
-     */
-    private function creerParrainageDirect(Ticket $ticket, Evenement $evenement, float $base): void
-    {
-        $referral = AffiliateReferral::where('organisateur_id', $evenement->user_id)
-            ->whereIn('statut', ['en_attente', 'valide'])
-            ->first();
-
-        if (! $referral) {
-            return;
-        }
-
-        $premierId = $referral->premier_evenement_id ?: $this->premierEvenementId($evenement->user_id, $evenement->id);
-        if ((int) $premierId !== (int) $evenement->id) {
-            return;
-        }
-
-        // Commission PaxEvent de la vente, puis part revenant à l'affilié.
-        $commissionPax = round($base * $evenement->commissionEffective() / 100, 2);
-        if ($commissionPax <= 0) {
-            return;
-        }
-
-        $montant = round($commissionPax * self::PART_PARRAINAGE_DIRECT / 100, 2);
-        if ($montant <= 0) {
-            return;
-        }
-
-        $this->creerCommission(
-            $ticket,
-            $referral->affiliate_id,
-            AffiliateCommission::TYPE_PARRAINAGE,
-            $commissionPax,
-            self::PART_PARRAINAGE_DIRECT,
-            $montant,
-            $evenement,
-            null
-        );
-
-        // Fige le premier événement couvert par le parrainage direct.
-        if (! $referral->premier_evenement_id) {
-            $referral->update([
-                'premier_evenement_id' => $evenement->id,
-                'statut' => 'valide',
-                'valide_le' => now(),
-            ]);
-        }
     }
 
     /**
@@ -209,31 +156,11 @@ class AffiliationService
     }
 
     /**
-     * Associe le premier événement publié de l'organisateur à son parrain.
+     * Plus utilisé : seul le co-parrainage est conservé.
      */
     public function lierPremierEvenement(Evenement $evenement): void
     {
-        $referral = AffiliateReferral::where('organisateur_id', $evenement->user_id)
-            ->whereNull('premier_evenement_id')
-            ->first();
-
-        if (! $referral) {
-            return;
-        }
-
-        $premier = Evenement::where('user_id', $evenement->user_id)
-            ->whereIn('statut', ['publié', 'terminé'])
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->first();
-
-        if ($premier && (int) $premier->id === (int) $evenement->id) {
-            $referral->update([
-                'premier_evenement_id' => $evenement->id,
-                'statut' => 'valide',
-                'valide_le' => now(),
-            ]);
-        }
+        // Conservé pour compatibilité, sans effet.
     }
 
     /**

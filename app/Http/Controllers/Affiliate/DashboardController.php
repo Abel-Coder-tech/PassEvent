@@ -187,12 +187,11 @@ class DashboardController extends Controller
             ? $organisateur->evenements()->where('statut', 'publié')->count()
             : 0;
 
-        // Liens traces : achat/inscription a l'evenement (mecanisme B) et
-        // inscription organisateur (mecanisme A).
+        // Seul le co-parrainage (mecanisme B) est conservé.
         $lienAchat = $lien
             ? route('evenements.public.show', $evenement).'?ref='.$lien->code
             : null;
-        $lienInscription = route('inscriptions.organisateur').'?ref='.$affiliate->code_parrainage;
+        $lienInscription = null;
 
         return view('affiliate.evenements.show', compact(
             'affiliate',
@@ -257,7 +256,7 @@ class DashboardController extends Controller
 
         $query = $affiliate->commissions()->with(['evenement', 'ticket']);
 
-        if (in_array($request->query('type'), ['parrainage_direct', 'co_parrainage'], true)) {
+        if (in_array($request->query('type'), ['co_parrainage'], true)) {
             $query->where('type', $request->query('type'));
         }
         if (in_array($request->query('statut'), ['en_attente', 'disponible', 'paye', 'annule'], true)) {

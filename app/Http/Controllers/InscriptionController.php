@@ -239,8 +239,8 @@ class InscriptionController extends Controller
 
         $user = User::create($userData);
 
-        // Enregistre le parrainage direct (mécanisme A) si l'inscription est issue d'un lien affilié
-        if (($affiliateId = session('affiliate_ref_id')) && $affiliate = Affiliate::find($affiliateId)) {
+        // Parrainage direct (mécanisme A) retiré : seul le co-parrainage est conservé.
+        if (false && ($affiliateId = session('affiliate_ref_id')) && $affiliate = Affiliate::find($affiliateId)) {
             if (AffiliateReferral::where('organisateur_id', $user->id)->doesntExist()) {
                 AffiliateReferral::create([
                     'affiliate_id' => $affiliate->id,

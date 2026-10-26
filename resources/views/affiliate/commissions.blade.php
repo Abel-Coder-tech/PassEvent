@@ -40,7 +40,6 @@
                     <label class="form-label small fw-semibold text-muted mb-1">Type</label>
                     <select name="type" class="form-select form-select-sm">
                         <option value="">Tous</option>
-                        <option value="parrainage_direct" @selected(request('type') === 'parrainage_direct')>Parrainage direct</option>
                         <option value="co_parrainage" @selected(request('type') === 'co_parrainage')>Co-parrainage</option>
                     </select>
                 </div>
@@ -83,7 +82,7 @@
                             @foreach($commissions as $commission)
                                 <tr>
                                     <td class="small">{{ $commission->created_at?->format('d/m/Y') }}</td>
-                                    <td class="small">{{ $commission->type === 'parrainage_direct' ? 'Parrainage direct' : 'Co-parrainage' }}</td>
+                                    <td class="small">Co-parrainage</td>
                                     <td class="small">{{ $commission->evenement?->titre ?? '—' }}</td>
                                     <td class="text-end small">{{ number_format((float) $commission->base_montant, 0, ',', ' ') }} F</td>
                                     <td class="text-end small">{{ rtrim(rtrim(number_format((float) $commission->pourcentage, 2), '0'), '.') }} %</td>

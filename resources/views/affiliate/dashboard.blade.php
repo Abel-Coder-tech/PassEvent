@@ -196,7 +196,7 @@
                                 <tr>
                                     <td class="small">{{ $commission->created_at?->format('d/m/Y') }}</td>
                                     <td class="small">
-                                        {{ $commission->type === 'parrainage_direct' ? 'Parrainage direct' : 'Co-parrainage' }}
+                                        Co-parrainage
                                     </td>
                                     <td class="small">{{ $commission->evenement?->titre ?? '—' }}</td>
                                     <td class="text-end fw-semibold">{{ number_format((float) $commission->montant, 0, ',', ' ') }} FCFA</td>
