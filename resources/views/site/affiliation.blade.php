@@ -554,7 +554,7 @@
                                     <h6 class="fw-bold mt-4 mb-2">3. Mécanisme A — Parrainage direct d'un organisateur</h6>
                                     <p><strong>Modalité :</strong> L'Affilié (non-Organisateur) parraine un Organisateur au moyen d'un lien de parrainage mis à disposition par PaxEvent.</p>
                                     <p><strong>Exclusivité :</strong> Un Organisateur ne peut avoir qu'<strong>un seul parrain direct</strong>. Le parrainage est attribué au premier lien de parrainage effectivement utilisé lors de l'inscription ; toute tentative concurrente est sans effet.</p>
-                                    <p><strong>Événement couvert :</strong> Le parrainage direct ouvre droit à commission sur <strong>le tout premier événement</strong> publié par l'Organisateur parrainé. Les ventes des événements suivants ne sont pas couvertes par ce mécanisme (elles peuvent l'être via le co-parrainage, mécanisme B).</p>
+                                    <p><strong>Événement couvert :</strong> Seul le co-parrainage est maintenu. L'organisateur choisit d'ouvrir ou non chaque événement au co-parrainage et fixe le pourcentage de commission à sa charge.</p>
                                     <p><strong>Rémunération :</strong> La commission est versée par <strong>PaxEvent</strong> et s'élève à <strong>20 % de la Commission PaxEvent</strong> de la vente concernée. Elle est automatiquement due sur chaque vente payée du premier événement, sans nécessité de lien ou de code de l'Affilié.</p>
                                     <p><strong>Validation :</strong> Le parrainage direct n'est efficient qu'à compter de la validation du compte de l'Organisateur par PaxEvent.</p>
 
@@ -563,7 +563,7 @@
                                     <p><strong>Financement :</strong> La commission de co-parrainage est <strong>à la charge de l'Organisateur</strong>. Elle n'est jamais prélevée sur la Commission PaxEvent.</p>
                                     <p><strong>Plafond :</strong> La commission de co-parrainage ne peut excéder la marge nette perçue par l'Organisateur sur le billet concerné (après déduction de la Commission PaxEvent). En conséquence, elle ne réduit jamais la Commission PaxEvent.</p>
                                     <p><strong>Pluralité :</strong> Plusieurs Co-parrains peuvent promouvoir un même événement. Une même vente ne génère qu'une seule commission de co-parrainage, au profit d'un seul Co-parrain.</p>
-                                    <p><strong>Cumul :</strong> Sur le premier événement d'un Organisateur, un même billet peut générer à la fois une commission de parrainage direct (mécanisme A) et une commission de co-parrainage (mécanisme B).</p>
+                                    <p><strong>Cumul :</strong> Seul le co-parrainage est conservé. Les commissions de co-parrainage sont gérées par l'organisateur, à sa charge, selon le pourcentage qu'il fixe pour l'événement.</p>
 
                                     <h6 class="fw-bold mt-4 mb-2">5. Liens, codes et traçabilité des ventes</h6>
                                     <p><strong>Génération :</strong> Après validation de son compte, l'Affilié dispose d'un code de parrainage et peut générer un lien de traçage dédié par événement ouvert au co-parrainage.</p>
