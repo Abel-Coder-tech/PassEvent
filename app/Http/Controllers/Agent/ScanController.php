@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
-use App\Models\Agent;
 use App\Models\Log;
-use App\Models\Ticket;
+use App\Services\TicketScanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -93,7 +92,7 @@ class ScanController extends Controller
     }
 
     // Vérifie un ticket par son code QR et valide l'entrée
-    public function verifier(Request $request)
+    public function verifier(Request $request, TicketScanService $service)
     {
         $agent = Auth::guard('agent')->user();
         if (session('agent_scan_ok') !== $agent->id) {
@@ -104,67 +103,9 @@ class ScanController extends Controller
             'code' => 'required|string|max:50',
         ]);
 
-        $ticket = Ticket::trouverParCodeSaisi($request->code);
+        $result = $service->verifier($agent, $request->code);
 
-        if (!$ticket) {
-            $this->logScan($agent, $request->code, 'invalide', 'Ticket introuvable'); // Log tentative invalide
-            return response()->json(['success' => false, 'message' => 'Ticket introuvable.']);
-        }
-
-        if ($ticket->evenement_id !== $agent->evenement_id) { // Vérifie l'appartenance à l'événement
-            $this->logScan($agent, $request->code, 'invalide', 'Événement non autorisé');
-            return response()->json(['success' => false, 'message' => 'Ce ticket ne correspond pas à cet événement.']);
-        }
-
-        if ($ticket->statut_paiement !== 'payé') { // Ticket non payé
-            $this->logScan($agent, $request->code, 'invalide', 'Paiement non confirmé');
-            return response()->json(['success' => false, 'message' => 'Ce ticket n\'a pas été payé.']);
-        }
-
-        if ($ticket->annule) { // Ticket annulé (billet physique invalidé)
-            $this->logScan($agent, $request->code, 'invalide', 'Ticket annulé');
-            return response()->json(['success' => false, 'message' => 'Ce ticket a été annulé et n\'est plus valide.']);
-        }
-
-        // Vérification du jour : l'événement doit avoir une session aujourd'hui
-        $jourScan = $agent->evenement->jourScanActuel();
-
-        if (! $jourScan) {
-            $this->logScan($agent, $request->code, 'invalide', 'Pas de session aujourd\'hui');
-            return response()->json(['success' => false, 'message' => 'L\'événement n\'a pas de session prévue aujourd\'hui.']);
-        }
-
-        // Vérification de l'heure : scan autorisé entre l'heure de début et +6h (tolérance)
-        $maintenant = now();
-        if ($maintenant->lt($jourScan->date_debut)) {
-            $this->logScan($agent, $request->code, 'invalide', 'Session pas commencée');
-            return response()->json(['success' => false, 'message' => 'La session d\'aujourd\'hui commence à '.$jourScan->date_debut->format('H:i').'. Revenez à cette heure.']);
-        }
-
-        if ($maintenant->gt($jourScan->finFenetreScan())) {
-            $this->logScan($agent, $request->code, 'invalide', 'Session terminée');
-            return response()->json(['success' => false, 'message' => 'La session d\'aujourd\'hui est terminée. Revenez un autre jour de l\'événement.']);
-        }
-
-        // 1 scan par jour civil : déjà scanné avec succès aujourd'hui ?
-        if ($ticket->dejaScanneAujourdhui()) {
-            $this->logScan($agent, $request->code, 'deja_utilise', 'Déjà scanné aujourd\'hui', $ticket->id);
-            return response()->json(['success' => false, 'message' => 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours.', 'ticket' => [
-                'nom' => $ticket->nom_acheteur,
-                'nom_tarif' => $ticket->nom_tarif,
-            ]]);
-        }
-
-        $this->logScan($agent, $request->code, 'valide', 'Scan réussi', $ticket->id); // Log scan réussi
-
-        return response()->json(['success' => true, 'message' => 'Ticket validé avec succès !', 'ticket' => [
-            'nom' => $ticket->nom_acheteur,
-            'email' => $ticket->email_acheteur,
-            'nom_tarif' => $ticket->nom_tarif,
-            'montant' => number_format($ticket->montant, 0, ',', ' '),
-            'transaction_id' => $ticket->transaction_id,
-            'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
-        ]]);
+        return response()->json($result);
     }
 
     // Quitte le mode scan et revient au dashboard
@@ -202,21 +143,5 @@ class ScanController extends Controller
         ]);
     }
 
-    // Enregistre un log de scan avec les détails de la tentative
-    private function logScan(Agent $agent, string $code, string $resultat, string $raison, ?int $ticketId = null): void
-    {
-        Log::create([
-            'ticket_id' => $ticketId,
-            'agent_id' => $agent->id,
-            'type_operation' => 'scan',
-            'details' => [
-                'code' => $code,
-                'resultat' => $resultat,
-                'raison' => $raison,
-                'evenement_id' => $agent->evenement_id,
-            ],
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-    }
+
 }
