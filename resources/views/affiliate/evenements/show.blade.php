@@ -292,7 +292,7 @@
                                 </button>
                             </form>
                         @else
-                            <p class="text-muted small">Générez votre lien personnel pour suivre les achats et inscriptions à cet événement.</p>
+                            <p class="text-muted small">Générez votre lien personnel pour suivre les visites et achats attribués à cet événement.</p>
                             <form action="{{ route('affiliate.liens.generer', $evenement) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-violet w-100">
@@ -302,26 +302,6 @@
                         @endif
                     </div>
 
-                    <hr>
-
-                    <div>
-                        <label class="form-label small fw-semibold text-muted mb-1">Lien d'inscription organisateur</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control" value="{{ $lienInscription }}" readonly onclick="this.select()">
-                            <button class="btn btn-outline-secondary" type="button" onclick="copierLien(this)" title="Copier le lien">
-                                <i class="bi bi-clipboard"></i>
-                            </button>
-                        </div>
-                        <div class="form-text">
-                            Code : <span class="fw-semibold">{{ $affiliate->code_parrainage }}</span>
-                            @if(isset($affiliate->clics_parrainage))
-                                · {{ $affiliate->clics_parrainage }} clic(s)
-                            @endif
-                        </div>
-                        <p class="text-muted small mb-0 mt-1">
-                            Partagez ce lien avec des organisateurs : chaque inscription est rattachée à votre code et vous ouvre 20 % de la commission PaxEvent sur leur premier événement.
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>

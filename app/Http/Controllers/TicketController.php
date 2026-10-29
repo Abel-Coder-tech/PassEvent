@@ -9,6 +9,7 @@ use App\Models\Log;
 use App\Models\Ticket;
 use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
+use App\Services\TicketStatisticsService;
 use App\Services\TicketPdfService;
 use App\Support\PerPage;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Mail;
 class TicketController extends Controller
 {
     // Liste les tickets de l'organisateur avec filtres et statistiques
-    public function index(Request $request)
+    public function index(Request $request, TicketStatisticsService $statistics)
     {
         $filtres = $this->filtres($request);
         $evenementsIds = $filtres['evenementsIds'];
@@ -33,23 +34,19 @@ class TicketController extends Controller
         $statsQuery = Ticket::whereIn('evenement_id', $evenementsIds);
         $this->appliquerFiltres($statsQuery, $filtres);
 
-        $totalTickets = $statsQuery->count();
-        $valides = (clone $statsQuery)->where('statut_paiement', 'payé')->where('utilise', false)->count();
-        $scannes = (clone $statsQuery)->where('utilise', true)->count();
-        $etudiants = (clone $statsQuery)->where('nom_tarif', 'like', '%tudiant%')->count();
-        $annules = (clone $statsQuery)->whereIn('statut_paiement', ['annulé', 'remboursé'])->count();
-
-        // Taux de réussite des transactions FedaPay (hors ventes manuelles et tickets gratuits)
-        $transactionsReussies = (clone $statsQuery)->where('statut_paiement', 'payé')
-            ->where('transaction_id', 'not like', 'MANUEL-%')
-            ->where('transaction_id', 'not like', 'GRATUIT-%')
-            ->count();
-        $transactionsEchouees = (clone $statsQuery)->where('statut_paiement', 'échoué')->count();
+        $ticketStats = $statistics->organisateur($statsQuery);
+        $totalTickets = $ticketStats['total_tickets'];
+        $valides = $ticketStats['valides'];
+        $scannes = $ticketStats['scannes'];
+        $etudiants = $ticketStats['etudiants'];
+        $annules = $ticketStats['annules'];
+        $transactionsReussies = $ticketStats['transactions_reussies'];
+        $transactionsEchouees = $ticketStats['transactions_echouees'];
         $transactionsTentees = $transactionsReussies + $transactionsEchouees;
         $tauxReussite = $transactionsTentees > 0 ? round($transactionsReussies / $transactionsTentees * 100, 1) : 0;
 
         // Alertes : transactions bloquées ou anormales
-        $alertes = $this->detecterAlertes($evenementsIds);
+        $alertes = $this->detecterAlertes($evenementsIds, $statistics);
 
         return view('tickets.index', compact(
             'tickets', 'totalTickets', 'valides', 'scannes', 'etudiants', 'annules',
@@ -109,7 +106,7 @@ class TicketController extends Controller
     // Extrait les paramètres de filtre communs (recherche, période, opérateur, statut)
     private function filtres(Request $request): array
     {
-        $user = auth()->user();
+        $user = $request->user();
         $evenementsIds = Evenement::where('user_id', $user->id)->pluck('id');
 
         $search = trim((string) $request->input('q'));
@@ -167,15 +164,13 @@ class TicketController extends Controller
     }
 
     // Détecte les transactions bloquées ou anormales pour l'organisateur
-    private function detecterAlertes(iterable $evenementsIds): array
+    private function detecterAlertes(iterable $evenementsIds, TicketStatisticsService $statistics): array
     {
         $alertes = [];
+        $stats = $statistics->alertes($evenementsIds);
 
         // 1. Transactions en attente depuis trop longtemps (bloquées)
-        $enAttente = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'en_attente')
-            ->where('date_achat', '<', now()->subMinutes(30))
-            ->count();
+        $enAttente = $stats['en_attente'];
         if ($enAttente > 0) {
             $alertes[] = [
                 'type' => 'warning',
@@ -185,10 +180,7 @@ class TicketController extends Controller
         }
 
         // 2. Tickets payés sans référence de transaction FedaPay (ventes manuelles exceptées)
-        $sansTransaction = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('transaction_id')
-            ->count();
+        $sansTransaction = $stats['sans_transaction'];
         if ($sansTransaction > 0) {
             $alertes[] = [
                 'type' => 'danger',
@@ -198,14 +190,8 @@ class TicketController extends Controller
         }
 
         // 3. Forte proportion d'échecs récents (7 derniers jours)
-        $reussies = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->where('date_achat', '>=', now()->subDays(7))
-            ->count();
-        $echouees = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'échoué')
-            ->where('date_achat', '>=', now()->subDays(7))
-            ->count();
+        $reussies = $stats['reussies'];
+        $echouees = $stats['echouees'];
         $total = $reussies + $echouees;
         if ($total >= 5 && $echouees / $total > 0.4) {
             $alertes[] = [
@@ -515,7 +501,7 @@ class TicketController extends Controller
     // Vérifie que le ticket appartient à un événement de l'organisateur connecté
     private function authoriserOrganisateur(Ticket $ticket): void
     {
-        $user = auth()->user();
+        $user = request()->user();
         if (! $user || $user->role === 'super_admin') {
             return; // Le super admin a accès à tout
         }

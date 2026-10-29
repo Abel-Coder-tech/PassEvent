@@ -208,7 +208,7 @@ class AffiliationCommissionTest extends TestCase
         $this->assertEquals(1500, (float) $affiliate->solde_en_attente);
     }
 
-    public function test_mecanisme_a_20_pourcent_commission_paxevent_premier_evenement(): void
+    public function test_parrainage_direct_historique_ne_cree_pas_de_nouvelle_commission(): void
     {
         $organisateur = User::create([
             'nom' => 'Org',
@@ -242,7 +242,6 @@ class AffiliationCommissionTest extends TestCase
             'statut' => 'en_attente',
         ]);
 
-        // Le billet est paye sur le premier evenement → mechanism A doit se declencher
         $ticket = Ticket::create([
             'evenement_id' => $evenement->id,
             'code_unique' => 'T2',
@@ -251,21 +250,14 @@ class AffiliationCommissionTest extends TestCase
             'statut_paiement' => 'payé',
         ]);
 
-        // Commission PaxEvent = 1000, part affilié = 200
-        $this->assertDatabaseHas('affiliate_commissions', [
+        $this->assertDatabaseMissing('affiliate_commissions', [
             'ticket_id' => $ticket->id,
-            'affiliate_id' => $affiliate->id,
             'type' => AffiliateCommission::TYPE_PARRAINAGE,
-            'base_montant' => 1000,
-            'pourcentage' => 20,
-            'montant' => 200,
-            'statut' => 'en_attente',
         ]);
-
         $this->assertDatabaseHas('affiliate_referrals', [
             'organisateur_id' => $organisateur->id,
-            'premier_evenement_id' => $evenement->id,
-            'statut' => 'valide',
+            'premier_evenement_id' => null,
+            'statut' => 'en_attente',
         ]);
     }
 
@@ -514,6 +506,8 @@ class AffiliationCommissionTest extends TestCase
             'date_event' => now()->addDay(),
             'statut' => 'publié',
             'gratuit' => false,
+            'co_parrainage_actif' => true,
+            'co_parrainage_pourcentage' => 10,
         ]);
         $affiliate = Affiliate::create([
             'nom' => 'Aff6',
@@ -523,10 +517,11 @@ class AffiliationCommissionTest extends TestCase
             'actif' => true,
         ]);
 
-        AffiliateReferral::create([
+        $lien = AffiliateEventLink::create([
+            'evenement_id' => $evenement->id,
             'affiliate_id' => $affiliate->id,
-            'organisateur_id' => $organisateur->id,
-            'code_parrainage' => $affiliate->code_parrainage,
+            'code' => 'LIEN-RMB',
+            'pourcentage' => 10,
         ]);
 
         $ticket = Ticket::create([
@@ -535,6 +530,7 @@ class AffiliationCommissionTest extends TestCase
             'nom_tarif' => 'X',
             'montant' => 5000,
             'statut_paiement' => 'payé',
+            'affiliate_event_link_id' => $lien->id,
         ]);
 
         $this->assertDatabaseHas('affiliate_commissions', [
@@ -570,6 +566,8 @@ class AffiliationCommissionTest extends TestCase
             'date_event' => now()->addDay(),
             'statut' => 'publié',
             'gratuit' => false,
+            'co_parrainage_actif' => true,
+            'co_parrainage_pourcentage' => 10,
         ]);
         $affiliate = Affiliate::create([
             'nom' => 'Aff7',
@@ -578,10 +576,11 @@ class AffiliationCommissionTest extends TestCase
             'code_parrainage' => 'PAXAFF-STU901',
             'actif' => true,
         ]);
-        AffiliateReferral::create([
+        $lien = AffiliateEventLink::create([
+            'evenement_id' => $evenement->id,
             'affiliate_id' => $affiliate->id,
-            'organisateur_id' => $organisateur->id,
-            'code_parrainage' => $affiliate->code_parrainage,
+            'code' => 'LIEN-DBL',
+            'pourcentage' => 10,
         ]);
         $ticket = Ticket::create([
             'evenement_id' => $evenement->id,
@@ -589,6 +588,7 @@ class AffiliationCommissionTest extends TestCase
             'nom_tarif' => 'X',
             'montant' => 1000,
             'statut_paiement' => 'payé',
+            'affiliate_event_link_id' => $lien->id,
         ]);
 
         $ticket->update(['statut_paiement' => 'en_attente']);

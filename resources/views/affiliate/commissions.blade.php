@@ -4,7 +4,7 @@
 
 @section('content')
     <h1 class="h4 fw-bold mb-1">Mes commissions</h1>
-    <p class="text-muted small mb-4">Détail de toutes vos commissions, parrainage direct et co-parrainage.</p>
+    <p class="text-muted small mb-4">Détail de vos commissions de co-parrainage et des éventuels parrainages historiques.</p>
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">

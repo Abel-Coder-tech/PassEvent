@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 class MessageController extends Controller
@@ -12,9 +13,9 @@ class MessageController extends Controller
     // Liste les messages reçus par l'organisateur avec compteur de non-lus
     public function index()
     {
-        $messages = Message::where('user_id', auth()->id())
+        $messages = Message::where('user_id', Auth::id())
             ->orderByDesc('created_at')->paginate(\App\Support\PerPage::resolve());
-        $nonLus = Message::where('user_id', auth()->id())->where('lu', false)->count();
+        $nonLus = Message::where('user_id', Auth::id())->where('lu', false)->count();
 
         return view('admin.messages.index', compact('messages', 'nonLus'));
     }
@@ -22,7 +23,7 @@ class MessageController extends Controller
     // Affiche un message et le marque comme lu
     public function show($id)
     {
-        $message = Message::where('user_id', auth()->id())->findOrFail($id);
+        $message = Message::where('user_id', Auth::id())->findOrFail($id);
 
         if (!$message->lu) {
             $message->update(['lu' => true]); // Marque comme lu lors de la consultation
@@ -36,9 +37,13 @@ class MessageController extends Controller
     {
         $validated = $request->validate([
             'reponse_admin' => 'required|string|min:10',
+        ], [
+            'reponse_admin.required' => 'La réponse est obligatoire.',
+            'reponse_admin.string' => 'La réponse doit être une chaîne de caractères.',
+            'reponse_admin.min' => 'La réponse doit contenir au moins 10 caractères.',
         ]);
 
-        $message = Message::where('user_id', auth()->id())->findOrFail($id);
+        $message = Message::where('user_id', Auth::id())->findOrFail($id);
 
         $message->update([
             'reponse_admin' => $validated['reponse_admin'],
@@ -57,16 +62,16 @@ class MessageController extends Controller
             }
         );
 
-        return back()->with('success', 'Reponse envoyee avec succes.');
+        return back()->with('success', 'Reponse envoyée avec succes.');
     }
 
     // Supprime un message
     public function destroy($id)
     {
-        $message = Message::where('user_id', auth()->id())->findOrFail($id);
+        $message = Message::where('user_id', Auth::id())->findOrFail($id);
         $message->delete();
 
         return redirect()->route('admin.messages.index')
-            ->with('success', 'Message supprime avec succes.');
+            ->with('success', 'Message supprimé avec succes.');
     }
 }

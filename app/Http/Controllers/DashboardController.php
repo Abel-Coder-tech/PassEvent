@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventStatus;
 use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Ticket;
 use App\Models\Withdrawal;
+use App\Services\CodePromoStatisticsService;
 use App\Services\PaiementMapper;
+use App\Services\TicketStatisticsService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     // Tableau de bord principal de l'organisateur avec toutes ses statistiques
-    public function index()
+    public function index(TicketStatisticsService $ticketStatistics, CodePromoStatisticsService $codePromoStatistics)
     {
         $user = Auth::user();
 
@@ -40,33 +42,15 @@ class DashboardController extends Controller
 
         $evenements = Evenement::where('user_id', $user->id)->get();
         $totalEvenements = $evenements->count();
-        $evenementsActifs = $evenements->where('statut', 'publié')->count();
+        $evenementsActifs = $evenements->where('statut', EventStatus::Published->value)->count();
 
         $evenementsIds = $evenements->pluck('id');
 
-        // Tickets vendus et payés uniquement
-        $ticketsVendus = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('lot_physique_id')
-            ->count();
-
-        $recettesTotales = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('lot_physique_id')
-            ->sum('montant');
-
-        // Recettes par canal de paiement (mobile vs espèces)
-        $mobileRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('lot_physique_id')
-            ->whereNotIn('methode_paiement', ['cash', 'especes'])
-            ->sum('montant');
-
-        $cashRecettes = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('lot_physique_id')
-            ->whereIn('methode_paiement', ['cash', 'especes'])
-            ->sum('montant');
+        $ticketStats = $ticketStatistics->tableauDeBord($evenementsIds);
+        $ticketsVendus = $ticketStats['tickets_vendus'];
+        $recettesTotales = $ticketStats['recettes_totales'];
+        $mobileRecettes = $ticketStats['recettes_mobile'];
+        $cashRecettes = $ticketStats['recettes_especes'];
 
         // Calcul de la commission et des recettes nettes
         $commissionPct = $user->commissionPourcentage();
@@ -80,41 +64,31 @@ class DashboardController extends Controller
         $retirable = max(0, $mobileRecettes - $commission - $totalRetraits); // Seuls les paiements mobiles sont retirable
 
         // Taux de scan (tickets utilisés / tickets vendus)
-        $ticketsScannes = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('utilise', true)
-            ->count();
+        $ticketsScannes = $ticketStats['tickets_scannes'];
 
         $tauxScan = $ticketsVendus > 0 ? round(($ticketsScannes / $ticketsVendus) * 100) : 0;
 
         $ticketsAbsents = $ticketsVendus - $ticketsScannes;
 
-        $evenementsRecents = Evenement::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->take(4)
-            ->get();
+        $evenementsRecents = $evenements->sortByDesc('created_at')->take(4);
 
         $codesPromos = CodePromo::whereIn('evenement_id', $evenementsIds)
             ->orderBy('created_at', 'desc')
             ->take(4)
             ->get();
 
-        $codesGeneres = CodePromo::whereIn('evenement_id', $evenementsIds)->count();
-        $codesUtilises = CodePromo::whereIn('evenement_id', $evenementsIds)
-            ->where('nb_utilisations', '>', 0)
-            ->count();
+        $promoStats = $codePromoStatistics->pourEvenements($evenementsIds);
+        $codesGeneres = $promoStats['total'];
+        $codesUtilises = $promoStats['utilises'];
 
         $joursLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
         $ventes7Jours = [];
-        $today = now();
+        $ventesParJour = $ticketStatistics->ventesParJour($evenementsIds);
+        $today = today();
 
         for ($i = 6; $i >= 0; $i--) {
             $date = $today->copy()->subDays($i);
-            $count = Ticket::whereIn('evenement_id', $evenementsIds)
-                ->where('statut_paiement', 'payé')
-                ->whereNull('lot_physique_id')
-                ->whereDate('date_achat', $date->format('Y-m-d'))
-                ->count();
-            $ventes7Jours[] = $count;
+            $ventes7Jours[] = (int) $ventesParJour->get($date->toDateString(), 0);
         }
 
         $ventesToday = $ventes7Jours[6];
@@ -173,9 +147,7 @@ class DashboardController extends Controller
             ];
         }
 
-        $eventAnnule = Evenement::where('user_id', $user->id)
-            ->where('statut', 'annulé')
-            ->first();
+        $eventAnnule = $evenements->firstWhere('statut', EventStatus::Cancelled->value);
 
         if ($eventAnnule) {
             $activiteRecents[] = [
@@ -201,14 +173,8 @@ class DashboardController extends Controller
         });
 
         // Statistiques par opérateur mobile (uniquement les paiements mobile money)
-        $operateursRaw = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('lot_physique_id')
-            ->where('type_paiement', 'mobile_money')
-            ->select('methode_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
-            ->groupBy('methode_paiement')
-            ->get()
-            ->keyBy('methode_paiement');
+        $paiementStats = $ticketStatistics->repartitionPaiements($evenementsIds);
+        $operateursRaw = $paiementStats['operateurs'];
 
         // Répartition par opérateur mobile : seuls MTN, Moov et Celtiis sont affichés,
         // tout autre réseau détecté (Orange, Wave, etc.) est regroupé dans « Autres / Indéterminé »
@@ -240,13 +206,7 @@ class DashboardController extends Controller
         }
 
         // Répartition par moyen de paiement (mobile money / carte bancaire / espèces)
-        $moyensPaiement = Ticket::whereIn('evenement_id', $evenementsIds)
-            ->where('statut_paiement', 'payé')
-            ->whereNull('lot_physique_id')
-            ->select('type_paiement', DB::raw('COUNT(*) as total'), DB::raw('SUM(montant) as montant'))
-            ->groupBy('type_paiement')
-            ->get()
-            ->keyBy('type_paiement');
+        $moyensPaiement = $paiementStats['moyens'];
 
         return view('dashboard', compact(
             'totalEvenements',

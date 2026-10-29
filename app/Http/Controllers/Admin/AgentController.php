@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Services\AgentScanStatisticsService;
 use App\Models\Evenement;
 use App\Mail\AgentAssigned;
 use Illuminate\Http\Request;
@@ -81,7 +82,7 @@ class AgentController extends Controller
     }
 
     // Affiche les détails et statistiques d'un agent de scan
-    public function show(Agent $agent)
+    public function show(Agent $agent, AgentScanStatisticsService $statisticsService)
     {
         if ($agent->evenement->user_id !== auth()->id()) {
             abort(403); // Vérification de propriété
@@ -90,14 +91,14 @@ class AgentController extends Controller
         $agent->load('evenement');
 
         // Stats et historique limités à l'événement actuellement assigné
-        $stats = $agent->statsParEvenement($agent->evenement_id);
+        $stats = $statisticsService->adminStats($agent, $agent->evenement_id);
 
         $logs = $agent->logsEvenement($agent->evenement_id)
             ->latest('created_at')
             ->paginate(\App\Support\PerPage::resolve())
             ->appends(request()->query());
 
-        $statsGlobales = $agent->statsGlobales();
+        $statsGlobales = $statisticsService->adminStats($agent);
         $logsGlobaux = $agent->logsGlobaux()
             ->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_logs')
             ->appends(request()->query());

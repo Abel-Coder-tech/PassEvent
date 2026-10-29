@@ -7,6 +7,7 @@ use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Ticket;
 use App\Services\FedapayService;
+use App\Services\AgentVenteStatisticsService;
 use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
@@ -93,7 +94,7 @@ class AuthController extends Controller
     }
 
     // Retourne l'historique des ventes en JSON pour rafraîchissement dynamique
-    public function historiqueJson(): JsonResponse
+    public function historiqueJson(AgentVenteStatisticsService $statistics): JsonResponse
     {
         $agent = Auth::guard('agent_vente')->user();
 
@@ -114,13 +115,15 @@ class AuthController extends Controller
                 'date' => $t->date_achat->format('H:i'),
             ]);
 
+        $ventesDuJour = $statistics->ventesDuJour($agent);
+
         return response()->json([
             'tickets' => $tickets,
             'total_tickets' => $agent->tickets_count,
             'montant_total' => number_format($agent->montant_total, 0, ',', ' ').' F',
-            'aujourd_hui' => $agent->tickets()->where('statut_paiement', 'payé')->whereDate('date_achat', today())->count(),
+            'aujourd_hui' => $ventesDuJour['aujourd_hui'],
             'montant_ajd' => number_format(
-                $agent->tickets()->where('statut_paiement', 'payé')->whereDate('date_achat', today())->sum('montant'), 0, ',', ' '
+                $ventesDuJour['montant_ajd'], 0, ',', ' '
             ).' F',
         ]);
     }

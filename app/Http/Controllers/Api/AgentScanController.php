@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Services\AgentScanStatisticsService;
 use App\Services\TicketScanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,9 @@ class AgentScanController extends Controller
 
         $request->validate([
             'code_acces' => ['required', 'digits:6'],
+        ], [
+            'code_acces.required' => 'Le code d\'accès est obligatoire.',
+            'code_acces.digits' => 'Le code d\'accès doit être un code à 6 chiffres.',
         ]);
 
         if ($agent->evenement && $agent->evenement->date_event < now()) {
@@ -83,12 +87,16 @@ class AgentScanController extends Controller
             'scan_token' => $token,
             'expires_at' => $tokenModel && $tokenModel->expires_at ? $tokenModel->expires_at->toIso8601String() : now()->addHours(8)->toIso8601String(),
             'evenement' => [
-                'titre' => $agent->evenement->titre ?? null,
+                'titre' => $agent->evenement?->titre,
             ],
         ], 200);
     }
 
-    public function verify(Request $request, TicketScanService $service): JsonResponse
+    public function verify(
+        Request $request,
+        TicketScanService $service,
+        AgentScanStatisticsService $statistics
+    ): JsonResponse
     {
         $agent = $request->user();
 
@@ -98,8 +106,9 @@ class AgentScanController extends Controller
 
         $result = $service->verifier($agent, $request->code);
 
-        $total = $agent->logs()->where('type_operation', 'scan')->count();
-        $valides = $agent->logs()->where('type_operation', 'scan')->where('details->resultat', 'valide')->count();
+        $stats = $statistics->apiCounters($agent);
+        $total = $stats['total'];
+        $valides = $stats['valides'];
         $invalides = $total - $valides;
 
         $result['stats'] = [
@@ -111,13 +120,13 @@ class AgentScanController extends Controller
         return response()->json($result, 200);
     }
 
-    public function history(Request $request): JsonResponse
+    public function history(Request $request, AgentScanStatisticsService $statistics): JsonResponse
     {
         $agent = $request->user();
 
-        $total = $agent->logs()->where('type_operation', 'scan')->count();
-        $valides = $agent->logs()->where('type_operation', 'scan')->where('details->resultat', 'valide')->count();
-        $dejaUtilises = $agent->logs()->where('type_operation', 'scan')->where('details->resultat', 'deja_utilise')->count();
+        $stats = $statistics->apiCounters($agent);
+        $total = $stats['total'];
+        $valides = $stats['valides'];
         $invalides = $total - $valides;
 
         $recent = $agent->logs()->where('type_operation', 'scan')->latest('created_at')->limit(20)->get();
@@ -127,7 +136,7 @@ class AgentScanController extends Controller
                 'total' => $total,
                 'valides' => $valides,
                 'invalides' => $invalides,
-                'deja_utilises' => $dejaUtilises,
+                'deja_utilises' => $stats['deja_utilises'],
             ],
             'recent' => $recent->map(function ($log) {
                 return [

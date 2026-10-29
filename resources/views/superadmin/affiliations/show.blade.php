@@ -81,9 +81,9 @@
     </div>
 </div>
 
-{{-- Filleuls (parrainage direct) --}}
+{{-- Filleuls --}}
 <div class="sa-card mb-4">
-    <div class="sa-card-header"><span><i class="bi bi-person-lines-fill me-2" style="color:var(--sa-primary);"></i>Filleuls — parrainage direct</span></div>
+    <div class="sa-card-header"><span><i class="bi bi-person-lines-fill me-2" style="color:var(--sa-primary);"></i>Filleuls</span></div>
     <div class="sa-card-body p-0">
         @if($referrals->count() > 0)
             <div class="table-responsive">
