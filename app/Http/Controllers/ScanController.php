@@ -6,13 +6,14 @@ use App\Models\Ticket;
 use App\Models\Evenement;
 use App\Models\ScanAccessCode;
 use App\Models\Log;
+use App\Services\AgentScanStatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ScanController extends Controller
 {
     // Page principale du scan : choix d'événement ou affichage des scans
-    public function index(Request $request)
+    public function index(Request $request, AgentScanStatisticsService $statistics)
     {
         $accessEvenementId = session('scan_access_evenement_id'); // Événement sélectionné via code d'accès
         $accessEvenement = null;
@@ -48,31 +49,7 @@ class ScanController extends Controller
 
         $scans = $scanQuery->orderByDesc('created_at')->limit(50)->get();
 
-        $stats = [
-            'total_scans' => Log::where('type_operation', '=', 'scan')
-                ->whereHas('ticket', function ($t) use ($selectedEvent) {
-                    return $t->where('evenement_id', '=', $selectedEvent);
-                })
-                ->count(),
-            'scans_today' => Log::where('type_operation', '=', 'scan')
-                ->whereDate('created_at', '=', today())
-                ->whereHas('ticket', function ($t) use ($selectedEvent) {
-                    return $t->where('evenement_id', '=', $selectedEvent);
-                })
-                ->count(),
-            'scans_valides' => Log::where('type_operation', '=', 'scan')
-                ->where('details->resultat', 'valide')
-                ->whereHas('ticket', function ($t) use ($selectedEvent) {
-                    return $t->where('evenement_id', '=', $selectedEvent);
-                })
-                ->count(),
-            'scans_invalides' => Log::where('type_operation', '=', 'scan')
-                ->where('details->resultat', 'invalide')
-                ->whereHas('ticket', function ($t) use ($selectedEvent) {
-                    return $t->where('evenement_id', '=', $selectedEvent);
-                })
-                ->count(),
-        ];
+        $stats = $statistics->evenement($selectedEvent);
 
         return view('admin.scan.index', compact('accessEvenement', 'scans', 'stats', 'selectedEvent'));
     }
@@ -136,7 +113,7 @@ class ScanController extends Controller
     }
 
     // Rafraîchit les stats et les scans récents de l'événement (AJAX polling)
-    public function historiqueJson(Request $request)
+    public function historiqueJson(Request $request, AgentScanStatisticsService $statistics)
     {
         $accessEvenementId = session('scan_access_evenement_id');
 
@@ -155,31 +132,7 @@ class ScanController extends Controller
 
         $scans = $scanQuery->orderByDesc('created_at')->limit(50)->get();
 
-        $stats = [
-            'total_scans' => Log::where('type_operation', '=', 'scan')
-                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
-                    return $t->where('evenement_id', '=', $accessEvenementId);
-                })
-                ->count(),
-            'scans_today' => Log::where('type_operation', '=', 'scan')
-                ->whereDate('created_at', '=', today())
-                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
-                    return $t->where('evenement_id', '=', $accessEvenementId);
-                })
-                ->count(),
-            'scans_valides' => Log::where('type_operation', '=', 'scan')
-                ->where('details->resultat', 'valide')
-                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
-                    return $t->where('evenement_id', '=', $accessEvenementId);
-                })
-                ->count(),
-            'scans_invalides' => Log::where('type_operation', '=', 'scan')
-                ->where('details->resultat', 'invalide')
-                ->whereHas('ticket', function ($t) use ($accessEvenementId) {
-                    return $t->where('evenement_id', '=', $accessEvenementId);
-                })
-                ->count(),
-        ];
+        $stats = $statistics->evenement((int) $accessEvenementId);
 
         return response()->json([
             'stats' => $stats,

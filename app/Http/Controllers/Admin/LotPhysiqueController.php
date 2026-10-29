@@ -7,6 +7,7 @@ use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Tarif;
 use App\Models\Ticket;
+use App\Services\TicketStatisticsService;
 use App\Services\LotAutoService;
 use App\Services\LotPhysiquePdfService;
 use App\Services\LotPhysiqueTemplatePdfService;
@@ -23,7 +24,7 @@ use Illuminate\Support\Str;
 class LotPhysiqueController extends Controller
 {
     // Page « Vente physique » de l'organisateur avec mini-dashboard
-    public function index()
+    public function index(TicketStatisticsService $ticketStatistics)
     {
         $user = Auth::user();
         $evenementIds = $user->evenements()->pluck('id');
@@ -40,9 +41,10 @@ class LotPhysiqueController extends Controller
             ->whereNotNull('lot_physique_id')
             ->where('statut_paiement', 'payé');
 
-        $nbTickets = (clone $ticketsPhysiques)->count();
-        $nbAnnules = (clone $ticketsPhysiques)->where('annule', true)->count();
-        $nbScannes = (clone $ticketsPhysiques)->where('utilise', true)->count();
+        $statsTicketsPhysiques = $ticketStatistics->physiques($ticketsPhysiques);
+        $nbTickets = $statsTicketsPhysiques['total'];
+        $nbAnnules = $statsTicketsPhysiques['annules'];
+        $nbScannes = $statsTicketsPhysiques['scannes'];
 
         // Statistiques des tickets physiques valides (hors annulés) :
         // valeur, commission attendue (guichet) et commission déjà réglée (QR codes/demandes)
@@ -97,11 +99,17 @@ class LotPhysiqueController extends Controller
         $data = $request->validate([
             'evenement_id' => 'required|integer',
             'quantites' => 'required|array|min:1',
-            'quantites.*' => 'integer|min:0|max:500',
+            'quantites.*' => 'integer|min:0|max:2000',
             'email_reception' => 'nullable|email|max:191',
         ], [
             'email_reception.email' => 'L\'email de réception doit être une adresse valide.',
-            'quantites.*.max' => 'Maximum 500 tickets par tarif.',
+            'quantites.*.max' => 'Maximum 2000 tickets par tarif.',
+            'quantites.*.min' => 'Quantité invalide.',
+            'quantites.*.required' => 'La quantité est obligatoire.',
+            'quantites.required' => 'Veuillez indiquer au moins une quantité.',
+            'evenement_id.required' => 'Veuillez sélectionner un événement.',
+            'evenement_id.integer' => 'Événement invalide.',
+
         ]);
 
         $evenement = Evenement::where('user_id', $user->id)->find($data['evenement_id']);

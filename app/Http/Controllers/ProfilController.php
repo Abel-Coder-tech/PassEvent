@@ -15,7 +15,7 @@ class ProfilController extends Controller
     // Vérifie si l'utilisateur a le droit d'accéder à la complétion du profil
     private function checkAccess()
     {
-        $user = auth()->user();
+        $user = request()->user();
         if (!$user || !in_array($user->statut, ['incomplet', 'corrections_demandees'])) {
             return false; // Accès refusé si le profil n'est pas dans le bon état
         }

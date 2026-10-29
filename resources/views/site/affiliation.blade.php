@@ -215,47 +215,21 @@
     </div>
 </section>
 
-{{-- ========== 2. LES DEUX MÉCANISMES ========== --}}
+{{-- ========== 2. LE CO-PARRAINAGE ========== --}}
 <section class="py-5">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="aff-section-title h3">Deux mécanismes, cumulables</h2>
+            <h2 class="aff-section-title h3">Le co-parrainage d'événement</h2>
             <p class="aff-sub mb-0 mx-auto" style="max-width: 640px;">
-                Vous pouvez activer les deux en même temps : les commissions s'additionnent sur vos ventes tracées.
+                Promouvez les événements ouverts au co-parrainage et gagnez une commission sur les ventes tracées.
             </p>
         </div>
         <div class="row g-4 align-items-stretch aff-mech-row">
-            <div class="col-12 col-lg-6">
-                <article class="aff-mech aff-mech-a">
-                    <header class="aff-mech-head">
-                        <span class="aff-mech-letter">A</span>
-                        <div>
-                            <span class="aff-mech-kicker"><i class="bi bi-person-plus me-1"></i>Mécanisme A</span>
-                            <h3 class="aff-mech-title">Parrainage direct d'un organisateur</h3>
-                        </div>
-                    </header>
-                    <div class="aff-mech-body">
-                        <div class="aff-mech-metric">
-                            <span class="aff-mech-metric-value">20<small>%</small></span>
-                            <span class="aff-mech-metric-label">de la commission PaxEvent
-                                <em>≈ 1 à 2 % du prix du billet</em>
-                            </span>
-                        </div>
-                        <p class="aff-mech-desc">Vous amenez un organisateur sur PaxEvent grâce à votre lien. Vous devenez son <strong>parrain direct</strong>.</p>
-                        <ul class="aff-mech-list">
-                            <li><i class="bi bi-check2-circle"></i><span>Sur <strong>toutes les ventes payées de son premier événement</strong>.</span></li>
-                            <li><i class="bi bi-check2-circle"></i><span>Un organisateur ne peut avoir qu'<strong>un seul parrain direct</strong>.</span></li>
-                        </ul>
-                        <span class="aff-mech-payer"><i class="bi bi-bank"></i> Rémunéré par PaxEvent</span>
-                    </div>
-                </article>
-            </div>
-            <div class="col-12 col-lg-6">
+            <div class="col-12 col-lg-8 mx-auto">
                 <article class="aff-mech aff-mech-b">
                     <header class="aff-mech-head">
-                        <span class="aff-mech-letter">B</span>
                         <div>
-                            <span class="aff-mech-kicker"><i class="bi bi-share me-1"></i>Mécanisme B</span>
+                            <span class="aff-mech-kicker"><i class="bi bi-share me-1"></i>Programme d'affiliation</span>
                             <h3 class="aff-mech-title">Co-parrainage d'un événement</h3>
                         </div>
                     </header>
@@ -290,7 +264,7 @@
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-cash-coin"></i></div>
                     <h6 class="fw-bold mb-2">Deux sources de revenus</h6>
-                    <p class="text-muted small mb-0">Cumulez la rémunération du parrainage direct et les commissions de co-parrainage d'événements. Sans plafond de gains.</p>
+                    <p class="text-muted small mb-0">Gagnez des commissions de co-parrainage sur les événements. Sans plafond de gains.</p>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-3">
@@ -324,22 +298,11 @@
         <div class="text-center mb-4">
             <h2 class="aff-section-title h3">Combien pouvez-vous gagner ?</h2>
             <p class="aff-sub mb-0 mx-auto" style="max-width: 640px;">
-                Le parrainage direct suit la commission de PaxEvent ; le co-parrainage suit la commission fixée par l'organisateur.
+                Le co-parrainage suit la commission fixée par l'organisateur.
             </p>
         </div>
         <div class="row justify-content-center g-4">
-            <div class="col-12 col-md-6 col-lg-5">
-                <div class="aff-gain-card">
-                    <span class="aff-gain-tag">Parrainage direct</span>
-                    <div class="aff-gain-pct"><span data-count="20">20</span><small>%</small></div>
-                    <p class="aff-gain-sub">de la commission PaxEvent (≈ 1 à 2 % du prix de chaque billet du 1er événement)</p>
-                    <div class="aff-gain-amount">
-                        <span data-count="200000" data-suffix=" FCFA">200 000 FCFA</span>
-                        <span class="aff-gain-amount-note">pour 1 000 billets à 10 000 FCFA (commission PaxEvent 10 %)</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-5">
+            <div class="col-12 col-md-8 col-lg-6 mx-auto">
                 <div class="aff-gain-card premium">
                     <span class="aff-gain-badge">Fixée par l'organisateur</span>
                     <span class="aff-gain-tag">Co-parrainage d'événement</span>
@@ -354,7 +317,7 @@
         </div>
         <div class="aff-gain-total">
             <i class="bi bi-lightning-charge-fill me-1"></i>
-            Cumulez parrainage direct et co-parrainage sur les événements de vos organisateurs et générez jusqu'à
+            Générez des commissions de co-parrainage sur les événements de vos organisateurs et générez jusqu'à
             <span class="aff-count" data-count="1000000" data-suffix=" FCFA">1 000 000 FCFA</span> de revenus complémentaires !
         </div>
     </div>
@@ -367,20 +330,14 @@
             <h2 class="aff-section-title h3">Comment fonctionne le programme ?</h2>
         </div>
         <div class="row g-4">
-            <div class="col-12 col-md-4 step-card">
+            <div class="col-12 col-md-6 step-card">
                 <div class="aff-step-num">1</div>
                 <div class="aff-step-ico mb-2"><i class="bi bi-person-plus"></i></div>
                 <h6 class="fw-bold">Créez votre compte affilié</h6>
-                <p class="text-muted small mb-0">L'inscription est gratuite et sans engagement. Le compte affilié est un compte à part, réservé aux personnes qui ne sont pas organisateurs sur PaxEvent. Votre code de parrainage et votre tableau de bord personnalisé sont générés automatiquement.</p>
+                <p class="text-muted small mb-0">L'inscription est gratuite et sans engagement. Le compte affilié est réservé aux personnes qui ne sont pas organisateurs sur PaxEvent. Votre tableau de bord personnalisé est activé après validation du compte.</p>
             </div>
-            <div class="col-12 col-md-4 step-card">
+            <div class="col-12 col-md-6 step-card">
                 <div class="aff-step-num">2</div>
-                <div class="aff-step-ico mb-2"><i class="bi bi-person-badge"></i></div>
-                <h6 class="fw-bold">Parrainez un organisateur</h6>
-                <p class="text-muted small mb-0">Partagez votre lien avec des organisateurs, agences, artistes ou promoteurs. Dès qu'un organisateur s'inscrit via votre lien, vous devenez son parrain direct : vous touchez 20 % de la commission PaxEvent sur toutes les ventes de son premier événement.</p>
-            </div>
-            <div class="col-12 col-md-4 step-card">
-                <div class="aff-step-num">3</div>
                 <div class="aff-step-ico mb-2"><i class="bi bi-share"></i></div>
                 <h6 class="fw-bold">Co-parrainez les événements ouverts</h6>
                 <p class="text-muted small mb-0">Quand un organisateur ouvre un événement au co-parrainage, il fixe la commission offerte. Générez votre lien dédié depuis votre dashboard, partagez-le et touchez la commission sur chaque billet vendu via votre lien.</p>
@@ -400,7 +357,7 @@
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-briefcase"></i></div>
                     <h6 class="fw-bold mb-2">Agences &amp; Event Planners</h6>
-                    <p class="text-muted small mb-0">Recommandez la meilleure billetterie à vos clients et créez une nouvelle marge financière sur chacun de vos projets.</p>
+                    <p class="text-muted small mb-0">Promouvez les événements de vos clients ouverts au co-parrainage et gagnez la commission fixée par l'organisateur.</p>
                 </div>
             </div>
             <div class="col-12 col-md-4">
@@ -414,7 +371,7 @@
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-shop"></i></div>
                     <h6 class="fw-bold mb-2">Revendeurs &amp; billetteries locales</h6>
-                    <p class="text-muted small mb-0">Proposez PaxEvent à votre réseau et co-parrainez les événements ouverts pour toucher une commission sur chaque billet vendu via votre lien.</p>
+                    <p class="text-muted small mb-0">Repérez les événements ouverts au co-parrainage et touchez une commission sur chaque billet vendu via votre lien.</p>
                 </div>
             </div>
         </div>
@@ -440,32 +397,12 @@
                     </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affFaq2">
-                                Comment fonctionne le parrainage direct ?
-                            </button>
-                        </h2>
-                        <div id="affFaq2" class="accordion-collapse collapse" data-bs-parent="#affFaq">
-                            <div class="accordion-body text-muted small">Vous partagez votre lien de parrainage. Dès qu'un organisateur s'inscrit via ce lien, vous devenez son parrain direct et vous percevez 20 % de la commission PaxEvent sur toutes les ventes payées de son premier événement. Au-delà de ce premier événement, il n'y a plus de commission de parrainage direct.</div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affFaq2b">
                                 Comment fonctionne le co-parrainage d'événement ?
                             </button>
                         </h2>
                         <div id="affFaq2b" class="accordion-collapse collapse" data-bs-parent="#affFaq">
                             <div class="accordion-body text-muted small">Les organisateurs peuvent ouvrir un événement au co-parrainage en fixant eux-mêmes la commission offerte (un pourcentage du prix du billet). Depuis votre dashboard, vous générez un lien dédié par événement ouvert et le partagez. Vous touchez la commission sur chaque billet vendu via votre lien. Plusieurs co-parrains peuvent promouvoir le même événement.</div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affFaq2c">
-                                Les deux mécanismes peuvent-ils se cumuler ?
-                            </button>
-                        </h2>
-                        <div id="affFaq2c" class="accordion-collapse collapse" data-bs-parent="#affFaq">
-                            <div class="accordion-body text-muted small">Oui. Sur le premier événement de l'organisateur que vous avez parrainé, un billet vendu via votre lien de co-parrainage peut vous rapporter à la fois la commission de parrainage direct (versée par PaxEvent) et la commission de co-parrainage (versée par l'organisateur).</div>
                         </div>
                     </div>
                     <div class="accordion-item">
@@ -531,87 +468,72 @@
 
                                 <div class="aff-scroll" style="font-size: 0.9rem; line-height: 1.7;">
                                     <p>Les présentes Conditions Générales régissent le programme d'affiliation (ci-après le « Programme ») mis en place par Noctam Communication (ci-après « PaxEvent ») sur sa plateforme https://paxevent.com.</p>
-                                    <p>Le Programme permet à des personnes physiques ou morales (ci-après les « Affiliés » ou « Apporteurs d'Affaires ») de percevoir une commission en lien avec les ventes de billets réalisées sur la plateforme, selon <strong>deux mécanismes distincts et cumulables</strong> :
-                                    <ol>
-                                        <li><strong>Le parrainage direct d'un organisateur</strong> — rémunéré par PaxEvent sur le premier événement de l'organisateur parrainé ;</li>
-                                        <li><strong>Le co-parrainage d'un événement</strong> — rémunéré par l'Organisateur, sur les ventes tracées via le lien de l'Affilié.</li>
-                                    </ol>
-                                    Dans tous les cas, aucune commission n'est due en l'absence de vente tracée et intégralement payée.</p>
+                                    <p>Le Programme permet à des personnes physiques ou morales (ci-après les « Affiliés » ou « Apporteurs d'Affaires ») de percevoir une commission sur les ventes de billets réalisées via leurs liens de co-parrainage, selon le pourcentage fixé par l'Organisateur. Aucune commission n'est due en l'absence de vente tracée et intégralement payée.</p>
 
                                     <h6 class="fw-bold mt-4 mb-2">1. Définitions</h6>
                                     <p>                                    <strong>Affilié :</strong> toute personne non-organisateur inscrite au Programme au moyen d'un compte affilié dédié.<br>
                                     <strong>Organisateur :</strong> utilisateur publiant des événements sur PaxEvent.<br>
-                                    <strong>Parrain direct :</strong> l'Affilié dont le lien a permis l'inscription d'un Organisateur.<br>
                                     <strong>Co-parrain :</strong> l'Affilié qui promeut un événement ouvert au co-parrainage.<br>
                                     <strong>Vente tracée :</strong> achat de billet réalisé au moyen du lien ou du code d'un Affilié et intégralement payé.<br>
                                     <strong>Commission PaxEvent :</strong> la commission perçue par PaxEvent sur une vente (de 5 % à 10 % selon l'Organisateur ou l'événement).</p>
 
                                     <h6 class="fw-bold mt-4 mb-2">2. Inscription et éligibilité</h6>
                                     <p><strong>Adhésion :</strong> L'inscription au Programme est gratuite et s'effectue via un espace dédié de la plateforme. PaxEvent se réserve le droit d'accepter, de refuser ou de suspendre toute candidature sans obligation de justification.</p>
-                                    <p><strong>Exclusion des Organisateurs :</strong> Le Programme est réservé aux personnes qui ne détiennent pas de compte Organisateur sur PaxEvent. Un Organisateur ne peut ni ouvrir ni détenir un compte Affilié. Côté organisateur, il peut en revanche ouvrir ses événements au co-parrainage afin de rémunérer les Affiliés (mécanisme B).</p>
+                                    <p><strong>Exclusion des Organisateurs :</strong> Le Programme est réservé aux personnes qui ne détiennent pas de compte Organisateur sur PaxEvent. Un Organisateur ne peut ni ouvrir ni détenir un compte Affilié. Il peut en revanche ouvrir ses événements au co-parrainage afin de rémunérer les Affiliés.</p>
                                     <p><strong>Capacité légale :</strong> L'Affilié certifie être majeur et disposer de la capacité juridique ou des statuts professionnels nécessaires au Bénin pour percevoir des revenus d'apport d'affaires.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">3. Mécanisme A — Parrainage direct d'un organisateur</h6>
-                                    <p><strong>Modalité :</strong> L'Affilié (non-Organisateur) parraine un Organisateur au moyen d'un lien de parrainage mis à disposition par PaxEvent.</p>
-                                    <p><strong>Exclusivité :</strong> Un Organisateur ne peut avoir qu'<strong>un seul parrain direct</strong>. Le parrainage est attribué au premier lien de parrainage effectivement utilisé lors de l'inscription ; toute tentative concurrente est sans effet.</p>
-                                    <p><strong>Événement couvert :</strong> Seul le co-parrainage est maintenu. L'organisateur choisit d'ouvrir ou non chaque événement au co-parrainage et fixe le pourcentage de commission à sa charge.</p>
-                                    <p><strong>Rémunération :</strong> La commission est versée par <strong>PaxEvent</strong> et s'élève à <strong>20 % de la Commission PaxEvent</strong> de la vente concernée. Elle est automatiquement due sur chaque vente payée du premier événement, sans nécessité de lien ou de code de l'Affilié.</p>
-                                    <p><strong>Validation :</strong> Le parrainage direct n'est efficient qu'à compter de la validation du compte de l'Organisateur par PaxEvent.</p>
-
-                                    <h6 class="fw-bold mt-4 mb-2">4. Mécanisme B — Co-parrainage d'un événement</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">3. Co-parrainage d'un événement</h6>
                                     <p><strong>Ouverture :</strong> Tout Organisateur peut ouvrir un de ses événements au co-parrainage et fixer librement la commission offerte au Co-parrain.</p>
                                     <p><strong>Financement :</strong> La commission de co-parrainage est <strong>à la charge de l'Organisateur</strong>. Elle n'est jamais prélevée sur la Commission PaxEvent.</p>
                                     <p><strong>Plafond :</strong> La commission de co-parrainage ne peut excéder la marge nette perçue par l'Organisateur sur le billet concerné (après déduction de la Commission PaxEvent). En conséquence, elle ne réduit jamais la Commission PaxEvent.</p>
                                     <p><strong>Pluralité :</strong> Plusieurs Co-parrains peuvent promouvoir un même événement. Une même vente ne génère qu'une seule commission de co-parrainage, au profit d'un seul Co-parrain.</p>
-                                    <p><strong>Cumul :</strong> Seul le co-parrainage est conservé. Les commissions de co-parrainage sont gérées par l'organisateur, à sa charge, selon le pourcentage qu'il fixe pour l'événement.</p>
+                                    <p><strong>Commission :</strong> La commission de co-parrainage est gérée par l'Organisateur, à sa charge, selon le pourcentage qu'il fixe pour l'événement.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">5. Liens, codes et traçabilité des ventes</h6>
-                                    <p><strong>Génération :</strong> Après validation de son compte, l'Affilié dispose d'un code de parrainage et peut générer un lien de traçage dédié par événement ouvert au co-parrainage.</p>
-                                    <p><strong>Vente tracée :</strong> Une commission de co-parrainage n'est due que si le lien ou le code de l'Affilié a été utilisé lors de l'achat et si le paiement a été intégralement confirmé. Sans utilisation du lien ou du code, aucune commission de co-parrainage n'est attribuée. La commission de parrainage direct, quant à elle, est due automatiquement sur les ventes payées du premier événement.</p>
+                                    <h6 class="fw-bold mt-4 mb-2">4. Liens, codes et traçabilité des ventes</h6>
+                                    <p><strong>Génération :</strong> Après validation de son compte, l'Affilié peut générer un lien de traçage dédié par événement ouvert au co-parrainage.</p>
+                                    <p><strong>Vente tracée :</strong> Une commission de co-parrainage n'est due que si le lien ou le code de l'Affilié a été utilisé lors de l'achat et si le paiement a été intégralement confirmé. Sans utilisation du lien ou du code, aucune commission de co-parrainage n'est attribuée.</p>
                                     <p><strong>Règle d'attribution :</strong> Pour le co-parrainage, l'attribution suit la règle du « dernier clic valide » : la commission revient au Co-parrain dont le lien ou le code a été utilisé au moment de l'achat.</p>
                                     <p><strong>Fenêtre de suivi :</strong> Le lien ouvre une session traçable de trente (30) jours à compter de sa première activation. Au-delà, l'attribution expire.</p>
                                     <p><strong>Exclusions :</strong> Sont hors du champ du Programme les événements gratuits (0 FCFA), les billets physiques (lots à codes QR) et toute vente n'ayant pas donné lieu à un paiement intégral et définitif.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">6. Calcul et taux de commission</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">5. Calcul et taux de commission</h6>
                                     <p><strong>Base de calcul :</strong> La commission est calculée exclusivement sur la valeur faciale nette du billet vendu (hors frais de service de la plateforme et taxes).</p>
-                                    <p><strong>Parrainage direct :</strong> 20 % de la Commission PaxEvent, soit un ordre de grandeur de 1 % à 2 % de la valeur faciale du billet selon le taux perçu par PaxEvent (5 % à 10 %).</p>
                                     <p><strong>Co-parrainage :</strong> Pourcentage fixé librement par l'Organisateur, dans la limite de sa marge nette. Le taux applicable à chaque événement est affiché à l'Affilié sur son tableau de bord <strong>avant le début de toute promotion</strong>.</p>
-                                    <p><em>Exemple : pour un billet à 10 000 FCFA vendu avec une Commission PaxEvent de 10 % (1 000 FCFA) et une commission de co-parrainage de 3 % (300 FCFA) : le Co-parrain perçoit 300 FCFA ; s'il s'agit du premier événement parrainé, le Parrain direct perçoit en outre 20 % de 1 000 FCFA, soit 200 FCFA ; PaxEvent conserve 1 000 FCFA ; l'Organisateur reçoit le solde.</em></p>
+                                    <p><em>Exemple : pour un billet à 10 000 FCFA vendu avec une Commission PaxEvent de 10 % (1 000 FCFA) et une commission de co-parrainage de 3 % (300 FCFA) : le Co-parrain perçoit 300 FCFA ; PaxEvent conserve 1 000 FCFA ; l'Organisateur reçoit le solde.</em></p>
                                     <p><strong>Plafond global :</strong> Sur une même vente, la Commission PaxEvent ne peut jamais être réduite par une commission d'affiliation.</p>
                                     <p><strong>Événement gratuit :</strong> Un événement gratuit (0 FCFA) ne génère aucune commission ni droit à rémunération.</p>
                                     <p><strong>Changement de taux :</strong> Tout nouveau taux ne s'applique qu'aux ventes tracées postérieures à sa publication. Les ventes déjà tracées conservent le taux affiché au moment de leur attribution.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">7. Maturation, paiement et reversement</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">6. Maturation, paiement et reversement</h6>
                                     <p><strong>Maturation :</strong> Une commission est comptabilisée en attente puis devient disponible <strong>à la fin de l'événement concerné</strong>. Ce délai couvre la fenêtre d'éventuels remboursements. Tant qu'une commission n'est pas disponible, elle ne peut pas être retirée.</p>
                                     <p><strong>Seuil de paiement :</strong> Les commissions disponibles sont payables dès que le solde de l'Affilié atteint un seuil minimum de 5 000 XOF.</p>
                                     <p><strong>Canaux de paiement :</strong> Les reversements s'effectuent directement sur le numéro Mobile Money (MTN, Moov, Wave) ou le compte bancaire renseigné par l'Affilié.</p>
                                     <p><strong>Frais techniques de reversement :</strong> Conformément à notre infrastructure FedaPay, les frais de transfert de masse (PAYOUT) s'appliquent selon le barème officiel en vigueur de la plateforme.</p>
                                     <p><strong>Vérification d'identité :</strong> PaxEvent peut demander un justificatif d'identité avant tout premier reversement.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">8. Annulation et remboursement</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">7. Annulation et remboursement</h6>
                                     <p><strong>Commission non encore disponible :</strong> Si un billet fait l'objet d'un remboursement (annulation de l'événement, transaction frauduleuse, rejet Mobile Money ou chargeback), la commission correspondante est automatiquement annulée.</p>
                                     <p><strong>Commission déjà versée :</strong> Si la commission a déjà été créditée ou versée, elle est reprise (clawback) sur le solde de l'Affilié. Le solde peut devenir négatif et être compensé par les commissions futures jusqu'à apurement. Chaque annulation ou reprise est visible dans l'historique du compte Affilié.</p>
                                     <p><strong>Responsabilité de l'Organisateur :</strong> En cas d'annulation d'un événement, la commission de co-parrainage non encore versée n'est pas due ; l'Organisateur n'est pas débité d'une commission qui n'était pas encore due.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">9. Règles de conduite et pratiques interdites</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">8. Règles de conduite et pratiques interdites</h6>
                                     <p>L'Affilié s'engage à préserver l'image de marque de PaxEvent et de l'Organisateur. Sont strictement interdits :</p>
                                     <ul>
                                         <li><strong>Le Spamming :</strong> l'envoi massif d'e-mails, de SMS ou de messages WhatsApp non sollicités contenant les liens d'affiliation.</li>
                                         <li><strong>Le « Self-Affiliation » :</strong> le fait d'utiliser son propre lien d'affiliation pour acheter ses propres billets dans le seul but de toucher une commission.</li>
                                         <li><strong>Publicité mensongère :</strong> divulguer de fausses informations sur l'événement (tarifs erronés, faux invités, fausses dates) pour forcer la vente.</li>
                                         <li><strong>Achat de mots-clés :</strong> l'achat de mots-clés sur Google Ads ou d'autres régies publicitaires contenant la marque « PaxEvent » ou le nom exact de l'événement sans accord écrit.</li>
-                                        <li><strong>Parrainage frauduleux :</strong> le parrainage d'un Organisateur dont l'Affilié est lui-même l'organisateur, un associé, un mandataire ou un proche, dans le but de détourner le Programme à son profit.</li>
                                         <li><strong>Co-parrainage fictif :</strong> toute collusion entre l'Organisateur et un Co-parrain visant à simuler des ventes ou à détourner des commissions.</li>
                                     </ul>
 
-                                    <h6 class="fw-bold mt-4 mb-2">10. Responsabilité et indépendance</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">9. Responsabilité et indépendance</h6>
                                     <p>L'Affilié exerce son activité en totale indépendance. Il n'existe aucun lien de subordination, de contrat de travail ou de mandat de représentation exclusif entre PaxEvent et l'Affilié. L'Affilié est seul responsable de la déclaration fiscale de ses gains auprès des autorités compétentes au Bénin.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">11. Modification et résiliation</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">10. Modification et résiliation</h6>
                                     <p><strong>Résiliation par l'Affilié :</strong> L'Affilié peut cesser sa participation au Programme à tout moment en cessant d'utiliser ses liens.</p>
                                     <p><strong>Bannissement pour fraude :</strong> En cas de non-respect constaté de l'Article 9, PaxEvent annulera immédiatement le compte de l'Affilié sans préavis. Toutes les commissions en attente de paiement seront définitivement confisquées au profit de PaxEvent ou de l'Organisateur pour réparer le préjudice causé.</p>
 
-                                    <h6 class="fw-bold mt-4 mb-2">12. Loi applicable</h6>
+                                    <h6 class="fw-bold mt-4 mb-2">11. Loi applicable</h6>
                                     <p>Les présentes conditions d'affiliation sont régies par le droit béninois (Code du numérique). Tout litige relatif à leur exécution ou leur interprétation relève de la compétence des tribunaux de Cotonou.</p>
                                 </div>
                             </div>

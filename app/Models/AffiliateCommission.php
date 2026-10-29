@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-// Commission d'affiliation (mecanisme A ou B) rattachee a un billet.
+// Le type parrainage_direct reste utile à la lecture des commissions historiques.
 class AffiliateCommission extends Model
 {
     public const TYPE_PARRAINAGE = 'parrainage_direct';

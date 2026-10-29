@@ -8,10 +8,6 @@
             <h1 class="h4 fw-bold mb-1">Bonjour {{ auth('affiliate')->user()->prenom ?: auth('affiliate')->user()->nom }}</h1>
             <p class="text-muted mb-0 small">Voici l'activité de votre programme d'affiliation.</p>
         </div>
-        <div class="text-end">
-            <div class="small text-muted mb-1">Votre code de parrainage</div>
-            <span class="code-chip">{{ $affiliate->code_parrainage }}</span>
-        </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -35,7 +31,7 @@
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card card h-100">
-                <div class="label">Organisateurs parrainés</div>
+                <div class="label">Parrainages historiques</div>
                 <div class="value">{{ $stats['filleuls'] }}</div>
             </div>
         </div>
@@ -98,7 +94,7 @@
     @endif
 
     <div class="row g-3 mb-4">
-        <div class="col-12 col-lg-6">
+        <div class="col-12">
             <div class="card aff-card h-100">
                 <div class="card-body">
                     <h2 class="h6 fw-bold mb-3"><i class="bi bi-link-45deg me-1"></i> Vos liens de co-parrainage</h2>
@@ -156,15 +152,6 @@
                             Voir tous mes liens <i class="bi bi-arrow-right"></i>
                         </a>
                     @endif
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-6">
-            <div class="card aff-card h-100">
-                <div class="card-body">
-                    <h2 class="h6 fw-bold mb-3"><i class="bi bi-person-plus me-1"></i> Parrainage direct</h2>
-                    <p class="text-muted small mb-2">Partagez votre code de parrainage avec des organisateurs :</p>
-                    <span class="code-chip">{{ $affiliate->code_parrainage }}</span>
                 </div>
             </div>
         </div>

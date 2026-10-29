@@ -279,7 +279,10 @@
                         <div class="row g-2 align-items-center mt-2">
                             <div class="col-auto" style="width:38px;"><i class="bi bi-envelope text-muted"></i></div>
                             <div class="col">
-                                <input type="email" name="email_reception" class="form-control form-control-sm" value="{{ old('email_reception', $emailDefaut) }}" placeholder="Email de réception des planches (optionnel)">
+                                <input type="email" name="email_reception" class="form-control form-control-sm @error('email_reception') is-invalid @enderror" value="{{ old('email_reception', $emailDefaut) }}" placeholder="Email de réception des planches (optionnel)">
+                                @error('email_reception')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -382,7 +385,7 @@ function selectionnerEvenement(id, el) {
               '<small class="text-muted">' + fmt(t.prix) + ' F / billet</small></div>' +
               '<div class="stepper">' +
                 '<button type="button" class="st-btn" onclick="ajuster(this, -1)">&minus;</button>' +
-                '<input type="number" min="0" max="500" value="0" data-tarif="' + t.id + '" data-prix="' + t.prix + '" oninput="recalc()">' +
+                '<input type="number" min="0" max="2000" value="0" data-tarif="' + t.id + '" data-prix="' + t.prix + '" oninput="recalc()">' +
                 '<button type="button" class="st-btn" onclick="ajuster(this, 1)">+</button>' +
               '</div>' +
             '</div>' +
@@ -403,7 +406,7 @@ function reinitialiserChoix() {
 
 function ajuster(btn, delta) {
     const input = btn.parentElement.querySelector('input');
-    input.value = Math.max(0, Math.min(500, (parseInt(input.value) || 0) + delta));
+    input.value = Math.max(0, Math.min(2000, (parseInt(input.value) || 0) + delta));
     recalc();
 }
 
@@ -411,7 +414,7 @@ function recalc() {
     let totalBillets = 0, totalCommission = 0;
     document.querySelectorAll('#tarifsListe .tarif-row').forEach(row => {
         const input = row.querySelector('input');
-        const qte = Math.max(0, Math.min(500, parseInt(input.value) || 0));
+        const qte = Math.max(0, Math.min(2000, parseInt(input.value) || 0));
         input.value = qte;
         const prix = parseFloat(input.dataset.prix);
         const valeur = qte * prix;

@@ -7,6 +7,7 @@ use App\Models\AffiliateCommission;
 use App\Models\AffiliateEventLink;
 use App\Models\Evenement;
 use App\Services\AffiliationService;
+use App\Services\AffiliateStatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -55,7 +56,7 @@ class DashboardController extends Controller
         return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts'));
     }
 
-    // Mecanisme A : organisateurs parraines
+    // Historique des organisateurs parrainés avant l'arrêt du parrainage direct.
     public function filleuls()
     {
         $affiliate = Auth::guard('affiliate')->user();
@@ -73,13 +74,11 @@ class DashboardController extends Controller
                 ->where('type', AffiliateCommission::TYPE_PARRAINAGE)->sum('montant'),
         ];
 
-        $lienParrainage = route('inscriptions.organisateur').'?ref='.$affiliate->code_parrainage;
-
-        return view('affiliate.filleuls', compact('affiliate', 'referrals', 'stats', 'lienParrainage'));
+        return view('affiliate.filleuls', compact('affiliate', 'referrals', 'stats'));
     }
 
     // Mecanisme B : liens de co-parrainage
-    public function liens(Request $request)
+    public function liens(Request $request, AffiliateStatisticsService $statistics)
     {
         $affiliate = Auth::guard('affiliate')->user();
 
@@ -109,23 +108,19 @@ class DashboardController extends Controller
 
         $evenementsOuverts = $evenementsOuvertsQuery->orderBy('date_event')->limit(30)->get();
 
-        $stats = [
-            'liens' => $affiliate->eventLinks()->count(),
-            'liens_actifs' => $affiliate->eventLinks()->where('actif', true)->count(),
-            'clics' => $affiliate->eventLinks()->sum('clics'),
-            'evenements_ouverts' => Evenement::query()
+        $stats = $statistics->links($affiliate);
+        $stats['evenements_ouverts'] = Evenement::query()
                 ->where('co_parrainage_actif', true)
                 ->where('gratuit', false)
                 ->where('statut', 'publié')
                 ->where('date_event', '>=', now())
-                ->count(),
-        ];
+                ->count();
 
         return view('affiliate.liens', compact('affiliate', 'liens', 'evenementsOuverts', 'stats', 'statut', 'recherche'));
     }
 
     // Detail interne d'un evenement co-parraine (sans redirection vers la page publique)
-    public function evenement(Evenement $evenement)
+    public function evenement(Evenement $evenement, AffiliateStatisticsService $statistics)
     {
         $affiliate = Auth::guard('affiliate')->user();
 
@@ -169,18 +164,7 @@ class DashboardController extends Controller
             ];
         });
 
-        $commissions = $affiliate->commissions()
-            ->where('evenement_id', $evenement->id)
-            ->where('statut', '!=', 'annule')
-            ->get();
-
-        $statsCommissions = [
-            'nombre' => $commissions->count(),
-            'total' => (float) $commissions->sum('montant'),
-            'en_attente' => (float) $commissions->where('statut', 'en_attente')->sum('montant'),
-            'disponible' => (float) $commissions->where('statut', 'disponible')->sum('montant'),
-            'paye' => (float) $commissions->where('statut', 'paye')->sum('montant'),
-        ];
+        $statsCommissions = $statistics->commissions($affiliate, $evenement->id, true);
 
         $organisateur = $evenement->user;
         $nbEvenementsOrganisateur = $organisateur
@@ -191,8 +175,6 @@ class DashboardController extends Controller
         $lienAchat = $lien
             ? route('evenements.public.show', $evenement).'?ref='.$lien->code
             : null;
-        $lienInscription = null;
-
         return view('affiliate.evenements.show', compact(
             'affiliate',
             'evenement',
@@ -203,8 +185,7 @@ class DashboardController extends Controller
             'statsCommissions',
             'organisateur',
             'nbEvenementsOrganisateur',
-            'lienAchat',
-            'lienInscription'
+            'lienAchat'
         ));
     }
 
@@ -250,7 +231,7 @@ class DashboardController extends Controller
     }
 
     // Mecanisme A + B : historique complet des commissions
-    public function commissions(Request $request)
+    public function commissions(Request $request, AffiliateStatisticsService $statistics)
     {
         $affiliate = Auth::guard('affiliate')->user();
 
@@ -265,12 +246,7 @@ class DashboardController extends Controller
 
         $commissions = $query->latest()->paginate(20)->withQueryString();
 
-        $totaux = [
-            'total' => $affiliate->commissions()->sum('montant'),
-            'en_attente' => $affiliate->commissions()->where('statut', 'en_attente')->sum('montant'),
-            'disponible' => $affiliate->commissions()->where('statut', 'disponible')->sum('montant'),
-            'paye' => $affiliate->commissions()->where('statut', 'paye')->sum('montant'),
-        ];
+        $totaux = $statistics->commissions($affiliate);
 
         return view('affiliate.commissions', compact('affiliate', 'commissions', 'totaux'));
     }

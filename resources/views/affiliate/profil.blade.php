@@ -93,14 +93,6 @@
         </div>
 
         <div class="col-12 col-lg-5">
-            <div class="card aff-card mb-4">
-                <div class="card-body">
-                    <h2 class="h6 fw-bold mb-3">Mon code de parrainage</h2>
-                    <p class="text-muted small mb-2">Partagez ce code : chaque organisateur inscrit vous rapporte 20 % de la commission PaxEvent sur son premier événement.</p>
-                    <span class="code-chip">{{ $affiliate->code_parrainage }}</span>
-                </div>
-            </div>
-
             <div class="card aff-card">
                 <div class="card-body">
                     <h2 class="h6 fw-bold mb-3">Mot de passe</h2>

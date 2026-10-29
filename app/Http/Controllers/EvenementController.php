@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Evenement;
 use App\Models\Tarif;
 use App\Services\ContratService;
+use App\Services\EvenementStatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -15,7 +16,7 @@ class EvenementController extends Controller
     use AuthorizesRequests;
 
     // Liste les événements de l'organisateur avec statistiques résumées
-    public function index()
+    public function index(EvenementStatisticsService $statistics)
     {
         $user = Auth::user();
 
@@ -24,11 +25,12 @@ class EvenementController extends Controller
             ->orderBy('date_event', 'asc')
             ->paginate(\App\Support\PerPage::resolve());
 
-        $totalEvenements = Evenement::where('user_id', $user->id)->count();
-        $enCours = Evenement::where('user_id', $user->id)->where('statut', 'publié')->count();
-        $aVenir = Evenement::where('user_id', $user->id)->where('statut', 'brouillon')->count();
-        $termines = Evenement::where('user_id', $user->id)->where('statut', 'terminé')->count();
-        $totalBilletsVendus = Evenement::where('user_id', $user->id)->sum('quota_vendu');
+        $stats = $statistics->pourOrganisateur($user->id);
+        $totalEvenements = $stats['total_evenements'];
+        $enCours = $stats['en_cours'];
+        $aVenir = $stats['a_venir'];
+        $termines = $stats['termines'];
+        $totalBilletsVendus = $stats['total_billets_vendus'];
 
         return view('evenements.index', compact(
             'evenements',
@@ -243,12 +245,13 @@ class EvenementController extends Controller
     }
 
     // Affiche les détails d'un événement avec statistiques de ventes
-    public function show(Evenement $evenement)
+    public function show(Evenement $evenement, TicketStatisticsService $ticketStatistics)
     {
         abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
-        $ventes = $evenement->tickets()->where('statut_paiement', 'payé')->count();
-        $revenus = $evenement->tickets()->where('statut_paiement', 'payé')->sum('montant');
+        $statsVentes = $ticketStatistics->ventesEvenement($evenement->id);
+        $ventes = $statsVentes['ventes'];
+        $revenus = $statsVentes['revenus'];
         $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
         $tauxRemplissage = $evenement->capacite > 0
             ? ($evenement->quota_vendu / $evenement->capacite) * 100

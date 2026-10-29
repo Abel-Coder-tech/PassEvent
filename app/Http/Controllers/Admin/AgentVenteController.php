@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\AgentVenteAssigned;
 use App\Models\AgentVente;
 use App\Models\Evenement;
+use App\Services\AgentVenteStatisticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -88,7 +89,7 @@ class AgentVenteController extends Controller
     }
 
     // Affiche les détails, ventes et statistiques d'un agent de vente
-    public function show(AgentVente $agentVente): View
+    public function show(AgentVente $agentVente, AgentVenteStatisticsService $statistics): View
     {
         if ($agentVente->evenement->user_id !== auth()->id()) {
             abort(403); // Vérification de propriété
@@ -102,9 +103,9 @@ class AgentVenteController extends Controller
             ->paginate(\App\Support\PerPage::resolve())
             ->appends(request()->query());
 
-        $stats = $agentVente->statsParEvenement($agentVente->evenement_id);
+        $stats = $statistics->pourAgent($agentVente, $agentVente->evenement_id);
 
-        $statsGlobales = $agentVente->statsGlobales();
+        $statsGlobales = $statistics->pourAgent($agentVente);
         $ticketsGlobaux = $agentVente->ticketsGlobaux()
             ->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_tickets')
             ->appends(request()->query());
@@ -225,7 +226,7 @@ class AgentVenteController extends Controller
     }
 
     // Affiche les statistiques agrégées de tous les agents de vente d'un événement
-    public function statsEvenement(Evenement $evenement): View
+    public function statsEvenement(Evenement $evenement, AgentVenteStatisticsService $statistics): View
     {
         if ($evenement->user_id !== auth()->id()) {
             abort(403); // Vérification de propriété
@@ -233,17 +234,16 @@ class AgentVenteController extends Controller
 
         $agents = $evenement->agentsVentes()
             ->withCount('tickets')
-            ->get()
-            ->each(function ($agent) {
-                $agent->montant = $agent->montant_total;
-                $agent->derniere_vente = $agent->tickets()
-                    ->latest('date_achat')
-                    ->value('date_achat');
-                $agent->par_methode = $agent->tickets()
-                    ->selectRaw('methode_paiement, COUNT(*) as total')
-                    ->groupBy('methode_paiement')
-                    ->pluck('total', 'methode_paiement');
-            });
+            ->get();
+        $statsParAgent = $statistics->pourEvenement($evenement, $agents->modelKeys());
+        $agents->each(function ($agent) use ($statsParAgent) {
+            $agent->montant = $agent->montant_total;
+            $ticketStats = $statsParAgent->get($agent->id, collect());
+            $agent->derniere_vente = $ticketStats->max('derniere_vente');
+            $agent->par_methode = $ticketStats->mapWithKeys(
+                fn ($stat) => [$stat->methode_paiement => $stat->total]
+            );
+        });
 
         $totalGeneral = [
             'tickets' => $agents->sum('tickets_count'),

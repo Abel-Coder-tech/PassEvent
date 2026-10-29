@@ -18,6 +18,11 @@ class AgentAuthController extends Controller
             $request->validate([
                 'email' => ['required', 'email'],
                 'password' => ['required', 'string'],
+            ], [
+                'email.required' => 'L\'adresse e-mail est obligatoire.',
+                'email.email' => 'L\'adresse e-mail doit être une adresse e-mail valide.',
+                'password.required' => 'Le mot de passe est obligatoire.',
+                'password.string' => 'Le mot de passe doit être une chaîne de caractères.',
             ]);
         } catch (ValidationException $e) {
             throw $e;
