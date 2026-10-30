@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
-@section('title', "Programme d'Affiliation PaxEvent — Parrainez & co-parrainez")
-@section('description', "Deux façons de gagner : parrainez un organisateur (rémunéré par PaxEvent) ou co-parrainez ses événements avec une commission fixée par l'organisateur. Inscription gratuite, tableau de bord en temps réel.")
+@section('title', "Programme d'affiliation PaxEvent — Co-parrainage d'événements")
+@section('description', "Promouvez les événements ouverts au co-parrainage sur PaxEvent et percevez une commission sur les ventes éligibles attribuées à votre lien. Inscription gratuite et suivi depuis votre tableau de bord.")
 
 @section('styles')
 <noscript><style>.aff-gain-card { opacity: 1 !important; transform: none !important; }</style></noscript>
@@ -9,7 +9,7 @@
     .aff-hero {
         background: linear-gradient(135deg, #542680 0%, #3d1a5c 100%);
         color: #fff;
-        padding: 4rem 0 3.5rem;
+        padding: 4.5rem 0;
         position: relative;
         overflow: hidden;
     }
@@ -21,9 +21,56 @@
         border-radius: 50%;
         background: radial-gradient(circle, rgba(254,213,20,0.18) 0%, rgba(254,213,20,0) 70%);
     }
-    .aff-hero h1 { font-weight: 800; line-height: 1.2; }
+    .aff-hero .container { position: relative; z-index: 1; }
+    .aff-hero-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+        align-items: center;
+        gap: clamp(2rem, 4vw, 4rem);
+    }
+    .aff-hero-copy { max-width: 640px; }
+    .aff-hero h1 { max-width: none; font-size: clamp(1.75rem, 3.5vw, 3rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.035em; }
+    .aff-hero h1 span { display: block; white-space: nowrap; }
     .aff-hero .lead { color: rgba(255,255,255,0.88); }
     .aff-hero .micro { color: rgba(255,255,255,0.65); font-size: 0.85rem; }
+    .aff-hero-visual { position: relative; width: min(100%, 380px); justify-self: center; }
+    .aff-hero-image {
+        display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+        border: 8px solid rgba(255,255,255,0.92); border-radius: 30px;
+        box-shadow: 0 28px 70px rgba(20,8,35,0.3);
+    }
+    .aff-hero-float {
+        position: absolute; display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.8rem 1rem; border: 1px solid rgba(255,255,255,0.8); border-radius: 14px;
+        color: var(--sombre); background: rgba(255,255,255,0.96);
+        box-shadow: 0 12px 30px rgba(20,8,35,0.2); font-size: 0.82rem; font-weight: 700;
+        animation: aff-float 4s ease-in-out infinite;
+    }
+    .aff-hero-float i { color: var(--violet); font-size: 1.1rem; }
+    .aff-hero-float-link { top: 16%; left: -9%; }
+    .aff-hero-float-sales { right: -7%; bottom: 17%; animation-delay: -2s; }
+    .aff-hero-float small { display: block; color: var(--gris); font-size: 0.68rem; font-weight: 500; }
+    @keyframes aff-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-9px); }
+    }
+    @media (max-width: 767.98px) {
+        .aff-hero { padding: 3.5rem 0 3rem; }
+        .aff-hero-layout { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+        .aff-hero-copy { margin: 0 auto; }
+        .aff-hero h1 { margin-left: auto; margin-right: auto; }
+        .aff-hero-visual { width: min(72%, 300px); }
+        .aff-hero-image { border-width: 6px; border-radius: 24px; }
+        .aff-hero-float { padding: 0.6rem 0.75rem; font-size: 0.72rem; }
+        .aff-hero-float-link { left: -13%; }
+        .aff-hero-float-sales { right: -12%; }
+    }
+    @media (max-width: 575.98px) {
+        .aff-hero h1 { font-size: clamp(1.45rem, 6.5vw, 2rem); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .aff-hero-float { animation: none; }
+    }
 
     .aff-soft { background: #faf8fd; }
     .aff-section-title { font-weight: 800; color: var(--sombre); }
@@ -105,18 +152,6 @@
         white-space: nowrap;
         box-shadow: 0 4px 12px rgba(254,213,20,0.4);
     }
-    .aff-gain-total {
-        margin-top: 2.25rem;
-        text-align: center;
-        font-weight: 700;
-        font-size: 1.05rem;
-        color: var(--sombre);
-        background: #f4effb;
-        border: 1px solid #e5dcf0;
-        border-radius: 16px;
-        padding: 1.5rem 1.25rem;
-    }
-    .aff-gain-total .aff-count { color: var(--violet); font-weight: 800; }
     @media (prefers-reduced-motion: reduce) {
         .aff-gain-card { opacity: 1; transform: none; transition: none; }
     }
@@ -143,48 +178,42 @@
     .aff-faq .accordion-body { color: var(--gris); }
     .aff-faq .accordion-button:not(.collapsed) { background: rgba(84,38,128,0.06); color: var(--violet); }
 
-    .aff-mech-row { position: relative; }
-
-    .aff-mech {
-        position: relative; background: #fff;
-        border: 1px solid #ece7f3; border-radius: 16px;
-        border-left: 4px solid var(--violet);
-        padding: 1.6rem 1.5rem; height: 100%;
-        display: flex; flex-direction: column;
-        transition: transform 0.2s, box-shadow 0.2s;
+    .aff-partnership-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+        align-items: stretch;
+        gap: 1.25rem;
     }
-    .aff-mech-b { border-left-color: #d9a400; }
-    .aff-mech:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(84,38,128,0.08); }
-    .aff-mech-head { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.25rem; }
-    .aff-mech-letter {
-        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 11px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.05rem; font-weight: 800;
-        background: rgba(84,38,128,0.08); color: var(--violet);
+    .aff-partnership {
+        display: flex; flex-direction: column; justify-content: center;
+        background: #fff;
+        border: 1px solid #ece7f3;
+        border-radius: 20px;
+        padding: clamp(1.5rem, 3vw, 2.5rem);
+        box-shadow: 0 14px 36px rgba(84,38,128,0.07);
     }
-    .aff-mech-b .aff-mech-letter { background: rgba(217,164,0,0.12); color: #9a7600; }
-    .aff-mech-kicker { display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris); }
-    .aff-mech-title { font-size: 1.08rem; font-weight: 800; margin: 0.1rem 0 0; line-height: 1.25; color: var(--sombre); }
-    .aff-mech-body { display: flex; flex-direction: column; flex: 1; }
-    .aff-mech-metric { display: flex; align-items: center; gap: 1rem; padding-bottom: 1.15rem; margin-bottom: 1.15rem; border-bottom: 1px solid #f0ecf6; }
-    .aff-mech-metric-value { font-size: 2.8rem; font-weight: 800; line-height: 1; color: var(--violet); }
-    .aff-mech-metric-value small { font-size: 1.4rem; margin-left: 0.05rem; }
-    .aff-mech-b .aff-mech-metric-value { color: #b98900; }
-    .aff-mech-metric-label { color: var(--sombre); font-size: 0.9rem; font-weight: 700; line-height: 1.25; }
-    .aff-mech-metric-label em { display: block; margin-top: 0.2rem; color: var(--gris); font-size: 0.78rem; font-weight: 500; font-style: normal; }
-    .aff-mech-desc { color: var(--gris); font-size: 0.9rem; margin-bottom: 1rem; }
-    .aff-mech-list { list-style: none; padding: 0; margin: 0 0 1.35rem; }
-    .aff-mech-list li { display: flex; gap: 0.55rem; color: var(--gris); font-size: 0.88rem; margin-bottom: 0.6rem; }
-    .aff-mech-list li i { color: var(--violet); flex: 0 0 auto; margin-top: 0.12rem; }
-    .aff-mech-b .aff-mech-list li i { color: #b98900; }
-    .aff-mech-payer {
-        margin-top: auto; align-self: flex-start;
-        display: inline-flex; align-items: center; gap: 0.45rem;
-        font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
-        color: var(--gris);
+    .aff-partnership-kicker {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        color: var(--violet); background: rgba(84,38,128,0.08);
+        border-radius: 999px; padding: 0.45rem 0.8rem;
+        font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
     }
-    .aff-mech-payer i { color: var(--violet); }
-    .aff-mech-b .aff-mech-payer i { color: #b98900; }
+    .aff-partnership-kicker i { font-size: 0.95rem; }
+    .aff-partnership-title { color: var(--sombre); font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; line-height: 1.2; margin: 1.1rem 0 0.75rem; }
+    .aff-partnership-desc { color: var(--gris); line-height: 1.7; margin: 0; }
+    .aff-partnership-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1.75rem; }
+    .aff-partnership-point {
+        display: flex; align-items: flex-start; gap: 0.65rem;
+        background: #faf8fd; border: 1px solid #f0ecf6; border-radius: 12px;
+        padding: 0.9rem; color: var(--sombre); font-size: 0.84rem; font-weight: 600; line-height: 1.45;
+    }
+    .aff-partnership-point i { color: var(--violet); font-size: 1.05rem; flex: 0 0 auto; }
+    .aff-gain-card { display: flex; flex-direction: column; justify-content: center; }
+    .aff-gain-example-note { color: var(--gris); font-size: 0.8rem; line-height: 1.5; margin: 1.1rem 0 0; }
+    @media (max-width: 767.98px) {
+        .aff-partnership-layout { grid-template-columns: 1fr; }
+        .aff-partnership-points { grid-template-columns: 1fr; }
+    }
 
     .aff-scroll { max-height: 520px; overflow-y: auto; padding-right: 0.5rem; }
     .aff-scroll::-webkit-scrollbar { width: 8px; }
@@ -197,58 +226,74 @@
 {{-- ========== 1. HERO ========== --}}
 <section class="aff-hero">
     <div class="container">
-        <div class="row justify-content-center text-center">
-            <div class="col-12 col-lg-9">
+        <div class="aff-hero-layout">
+            <div class="aff-hero-copy">
                 <span class="badge rounded-pill mb-3" style="background: rgba(254,213,20,0.15); color: var(--accent); font-weight: 700;">
                     <i class="bi bi-megaphone me-1"></i> Programme d'Affiliation
                 </span>
-                <h1 class="display-5 mb-3">Deux façons de gagner avec PaxEvent.</h1>
+                <h1 class="mb-3"><span>Partagez les événements.</span><span>Gagnez une commission.</span></h1>
                 <p class="lead mb-4">
-                    <strong>Parrainez un organisateur</strong> ou <strong>co-parrainez des événements</strong> sur PaxEvent, et touchez une commission sur chaque vente.
+                    Votre lien vous rapporte une commission sur chaque vente éligible.
                 </p>
                 <a href="{{ route('affiliate.register') }}" class="btn btn-violet btn-lg px-4 fw-bold" style="background: var(--accent); border-color: var(--accent); color: var(--sombre);">
                     Rejoindre le programme gratuitement <i class="bi bi-arrow-right ms-1"></i>
                 </a>
                 <p class="micro mt-3 mb-0">Inscription gratuite &bull; Aucun coût d'entrée &bull; Tableau de bord en temps réel</p>
             </div>
+            <div class="aff-hero-visual" aria-hidden="true">
+                <img class="aff-hero-image" src="{{ asset('images/image_heros.jpeg') }}" alt="" fetchpriority="high">
+                <div class="aff-hero-float aff-hero-float-link">
+                    <i class="bi bi-link-45deg"></i>
+                    <span>Votre lien affilié<small>À partager avec votre audience</small></span>
+                </div>
+                <div class="aff-hero-float aff-hero-float-sales">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Ventes suivies<small>Depuis votre tableau de bord</small></span>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-{{-- ========== 2. LE CO-PARRAINAGE ========== --}}
-<section class="py-5">
+{{-- ========== 2. LE CO-PARRAINAGE ET SON EXEMPLE DE GAINS ========== --}}
+<section class="py-5 aff-soft" id="affGains">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="aff-section-title h3">Le co-parrainage d'événement</h2>
             <p class="aff-sub mb-0 mx-auto" style="max-width: 640px;">
-                Promouvez les événements ouverts au co-parrainage et gagnez une commission sur les ventes tracées.
+                Partagez votre lien et percevez une commission sur les ventes éligibles qui vous sont attribuées.
             </p>
         </div>
-        <div class="row g-4 align-items-stretch aff-mech-row">
-            <div class="col-12 col-lg-8 mx-auto">
-                <article class="aff-mech aff-mech-b">
-                    <header class="aff-mech-head">
-                        <div>
-                            <span class="aff-mech-kicker"><i class="bi bi-share me-1"></i>Programme d'affiliation</span>
-                            <h3 class="aff-mech-title">Co-parrainage d'un événement</h3>
-                        </div>
-                    </header>
-                    <div class="aff-mech-body">
-                        <div class="aff-mech-metric">
-                            <span class="aff-mech-metric-value">x<small>%</small></span>
-                            <span class="aff-mech-metric-label">du prix de chaque billet
-                                <em>taux fixé par l'organisateur</em>
-                            </span>
-                        </div>
-                        <p class="aff-mech-desc">Les organisateurs peuvent <strong>ouvrir leurs événements au co-parrainage</strong> et fixer eux-mêmes la commission offerte.</p>
-                        <ul class="aff-mech-list">
-                            <li><i class="bi bi-check2-circle"></i><span>À la <strong>charge de l'organisateur</strong>, jamais prélevée sur la commission PaxEvent.</span></li>
-                            <li><i class="bi bi-check2-circle"></i><span><strong>Plusieurs co-parrains</strong> peuvent promouvoir le même événement.</span></li>
-                        </ul>
-                        <span class="aff-mech-payer"><i class="bi bi-person-badge"></i> Rémunéré par l'organisateur</span>
+        <div class="aff-partnership-layout">
+            <article class="aff-partnership">
+                <span class="aff-partnership-kicker"><i class="bi bi-share"></i> Programme d'affiliation</span>
+                <h3 class="aff-partnership-title">Votre audience, votre lien, votre commission.</h3>
+                <p class="aff-partnership-desc">
+                    Choisissez un événement ouvert au co-parrainage, partagez votre lien dédié et recevez une commission pour chaque billet éligible vendu grâce à vous. Le taux proposé par l'organisateur est affiché avant que vous ne commenciez à le promouvoir.
+                </p>
+                <div class="aff-partnership-points">
+                    <div class="aff-partnership-point">
+                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                        <span>La commission est financée par l'organisateur, sans réduire la commission PaxEvent.</span>
                     </div>
-                </article>
-            </div>
+                    <div class="aff-partnership-point">
+                        <i class="bi bi-people-fill" aria-hidden="true"></i>
+                        <span>Plusieurs affiliés peuvent partager le même événement.</span>
+                    </div>
+                </div>
+            </article>
+            <aside class="aff-gain-card premium" aria-label="Exemple indicatif de commission">
+                <span class="aff-gain-badge">Exemple indicatif</span>
+                <h3 class="h5 fw-bold mb-3">Combien pouvez-vous gagner&nbsp;?</h3>
+                <span class="aff-gain-tag">Votre commission par billet</span>
+                <div class="aff-gain-pct"><span data-count="3">3</span><small>%</small></div>
+                <p class="aff-gain-sub">Exemple de taux proposé par un organisateur</p>
+                <div class="aff-gain-amount">
+                    <span data-count="300000" data-suffix=" FCFA">300 000 FCFA</span>
+                    <span class="aff-gain-amount-note">1 000 billets × 10 000 FCFA × 3 %</span>
+                </div>
+                <p class="aff-gain-example-note">Simulation non garantie : le montant réel dépend des ventes éligibles attribuées à votre lien et du taux applicable à l'événement.</p>
+            </aside>
         </div>
     </div>
 </section>
@@ -263,8 +308,8 @@
             <div class="col-12 col-md-6 col-lg-3">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-cash-coin"></i></div>
-                    <h6 class="fw-bold mb-2">Deux sources de revenus</h6>
-                    <p class="text-muted small mb-0">Gagnez des commissions de co-parrainage sur les événements. Sans plafond de gains.</p>
+                    <h6 class="fw-bold mb-2">Une commission sur vos ventes</h6>
+                    <p class="text-muted small mb-0">Chaque vente éligible attribuée à votre lien peut générer une commission, selon le taux affiché pour l'événement.</p>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-3">
@@ -284,41 +329,10 @@
             <div class="col-12 col-md-6 col-lg-3">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-wallet2"></i></div>
-                    <h6 class="fw-bold mb-2">Paiements garantis</h6>
-                    <p class="text-muted small mb-0">Vos commissions se libèrent à la fin de l'événement concerné. Demandez le retrait de vos gains en quelques clics.</p>
+                    <h6 class="fw-bold mb-2">Des commissions suivies</h6>
+                    <p class="text-muted small mb-0">Après la tenue de l'événement et validation des ventes, vos commissions éligibles deviennent disponibles pour retrait.</p>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-{{-- ========== 3. COMBIEN POUVEZ-VOUS GAGNER ========== --}}
-<section class="py-5 aff-soft" id="affGains">
-    <div class="container">
-        <div class="text-center mb-4">
-            <h2 class="aff-section-title h3">Combien pouvez-vous gagner ?</h2>
-            <p class="aff-sub mb-0 mx-auto" style="max-width: 640px;">
-                Le co-parrainage suit la commission fixée par l'organisateur.
-            </p>
-        </div>
-        <div class="row justify-content-center g-4">
-            <div class="col-12 col-md-8 col-lg-6 mx-auto">
-                <div class="aff-gain-card premium">
-                    <span class="aff-gain-badge">Fixée par l'organisateur</span>
-                    <span class="aff-gain-tag">Co-parrainage d'événement</span>
-                    <div class="aff-gain-pct"><span data-count="3">3</span><small>%</small></div>
-                    <p class="aff-gain-sub">du prix de chaque billet vendu via votre lien (exemple : commission fixée à 3 % par l'organisateur)</p>
-                    <div class="aff-gain-amount">
-                        <span data-count="300000" data-suffix=" FCFA">300 000 FCFA</span>
-                        <span class="aff-gain-amount-note">pour 1 000 billets à 10 000 FCFA</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="aff-gain-total">
-            <i class="bi bi-lightning-charge-fill me-1"></i>
-            Générez des commissions de co-parrainage sur les événements de vos organisateurs et générez jusqu'à
-            <span class="aff-count" data-count="1000000" data-suffix=" FCFA">1 000 000 FCFA</span> de revenus complémentaires !
         </div>
     </div>
 </section>
@@ -402,17 +416,22 @@
                             </button>
                         </h2>
                         <div id="affFaq2b" class="accordion-collapse collapse" data-bs-parent="#affFaq">
-                            <div class="accordion-body text-muted small">Les organisateurs peuvent ouvrir un événement au co-parrainage en fixant eux-mêmes la commission offerte (un pourcentage du prix du billet). Depuis votre dashboard, vous générez un lien dédié par événement ouvert et le partagez. Vous touchez la commission sur chaque billet vendu via votre lien. Plusieurs co-parrains peuvent promouvoir le même événement.</div>
+                            <div class="accordion-body text-muted small">
+                                Une fois votre lien généré et partagé, les ventes éligibles qui lui sont attribuées donnent droit à la commission prévue. Plusieurs affiliés peuvent promouvoir le même événement.
+                                <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:0.6rem 0.75rem;font-size:0.82rem;color:#856404;margin-bottom:0.75rem;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> <strong>À noter :</strong> le taux de commission est défini par l'organisateur et peut varier selon l'événement. Consultez-le avant de partager votre lien.
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affFaq2d">
-                                Un organisateur peut-il être affilié ?
+                                Qui peut rejoindre le programme d'affiliation ?
                             </button>
                         </h2>
                         <div id="affFaq2d" class="accordion-collapse collapse" data-bs-parent="#affFaq">
-                            <div class="accordion-body text-muted small">Non. Le programme est réservé aux personnes qui ne sont pas organisateurs sur PaxEvent : un organisateur ne peut pas ouvrir de compte affilié. Côté organisateur, vous pouvez en revanche ouvrir vos événements au co-parrainage pour rémunérer les affiliés.</div>
+                            <div class="accordion-body text-muted small">Le programme est ouvert aux personnes qui ne détiennent pas de compte organisateur sur PaxEvent. Les organisateurs peuvent, de leur côté, ouvrir leurs événements au co-parrainage et proposer une commission aux affiliés.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
@@ -440,7 +459,7 @@
             <div class="col-12 col-lg-6">
                 <div class="aff-final h-100">
                     <h2 class="h3 fw-bold mb-2">Prêt à monétiser votre réseau événementiel ?</h2>
-                    <p class="mb-4" style="color: rgba(255,255,255,0.8);">Rejoignez les créateurs, agences et partenaires qui génèrent déjà des revenus récurrents avec PaxEvent.</p>
+                    <p class="mb-4" style="color: rgba(255,255,255,0.8);">Rejoignez les créateurs, agences et partenaires qui font connaître les événements ouverts au co-parrainage sur PaxEvent.</p>
                     <a href="{{ route('affiliate.register') }}" class="btn btn-lg fw-bold px-4" style="background: var(--accent); color: var(--sombre);">
                         Créer mon compte affilié maintenant <i class="bi bi-arrow-right ms-1"></i>
                     </a>
