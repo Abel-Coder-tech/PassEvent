@@ -58,11 +58,11 @@
         .aff-hero { padding: 3rem 0 2.5rem; }
         .aff-hero-layout { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
         .aff-hero-copy { margin: 0 auto; }
-        .aff-hero h1 { margin-left: auto; margin-right: auto; font-size: clamp(2.6rem, 12vw, 4.2rem); line-height: 1.05; }
-        .aff-hero h1 span { display: block; white-space: normal; }
-        .aff-hero .lead { font-size: 0.9rem; }
-        .aff-hero .micro { font-size: 0.72rem; }
-        .aff-hero .btn-lg { font-size: 0.95rem; padding: 0.5rem 1rem; }
+        .aff-hero h1 { margin-left: auto; margin-right: auto; font-size: clamp(2.4rem, 10vw, 3.6rem); line-height: 1.08; }
+        .aff-hero h1 br { display: block; }
+        .aff-hero .lead { font-size: 0.85rem; }
+        .aff-hero .micro { font-size: 0.7rem; }
+        .aff-hero .btn-lg { font-size: 0.9rem; padding: 0.45rem 0.9rem; }
         .aff-hero-visual { width: min(72%, 300px); }
         .aff-hero-image { border-width: 6px; border-radius: 24px; }
         .aff-hero-float { padding: 0.6rem 0.75rem; font-size: 0.72rem; }
@@ -70,7 +70,8 @@
         .aff-hero-float-sales { right: -12%; }
     }
     @media (max-width: 575.98px) {
-        .aff-hero h1 { font-size: clamp(2.4rem, 14vw, 3.6rem); line-height: 1.04; }
+        .aff-hero h1 { font-size: clamp(2.1rem, 11vw, 3.2rem); line-height: 1.08; }
+        .aff-hero h1 br { display: block; }
     }
     @media (prefers-reduced-motion: reduce) {
         .aff-hero-float { animation: none; }
@@ -235,7 +236,7 @@
                 <span class="badge rounded-pill mb-2 mb-md-3" style="background: rgba(254,213,20,0.15); color: var(--accent); font-weight: 700;">
                     <i class="bi bi-cash-stack me-1"></i> Programme d'affiliation
                 </span>
-                <h1 class="mb-2 mb-md-3"><span>Gagnez de l’argent</span><span>avec PaxEvent</span></h1>
+                <h1 class="mb-2 mb-md-3">Gagnez de l’argent<br>avec PaxEvent</h1>
                 <p class="lead mb-3 mb-md-4">
                     Co-parrainez des événements sur PaxEvent, et touchez une commission sur chaque vente de tickets.
                 </p>
