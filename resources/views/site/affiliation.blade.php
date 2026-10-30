@@ -59,6 +59,7 @@
         .aff-hero-layout { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
         .aff-hero-copy { margin: 0 auto; }
         .aff-hero h1 { margin-left: auto; margin-right: auto; font-size: clamp(2.6rem, 12vw, 4.2rem); line-height: 1.05; }
+        .aff-hero h1 span { display: block; white-space: normal; }
         .aff-hero .lead { font-size: 0.9rem; }
         .aff-hero .micro { font-size: 0.72rem; }
         .aff-hero .btn-lg { font-size: 0.95rem; padding: 0.5rem 1rem; }
