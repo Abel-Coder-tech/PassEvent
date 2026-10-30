@@ -61,9 +61,9 @@
         <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
             <span class="d-flex align-items-center gap-2"><i class="bi bi-person-badge-fill" style="color: var(--sa-primary);"></i>Organisateurs</span>
             <div class="d-flex align-items-center gap-2">
-                <div class="d-flex align-items-center" style="height: 34px;">
-                    <span class="input-group-text bg-transparent border-end-0 py-0 px-2 d-flex align-items-center" style="height: 34px;"><i class="bi bi-search"></i></span>
-                    <input type="text" id="organisateur-search" class="sa-form-control border-start-0 py-0" style="height: 34px; width: 280px;" placeholder="Rechercher par nom ou prénom" value="{{ request('q') }}" autocomplete="off">
+                <div class="position-relative" style="width: 280px;">
+                    <i class="bi bi-search position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                    <input type="text" id="organisateur-search" class="sa-form-control py-0 ps-4" style="height: 34px;" placeholder="Rechercher par nom ou prénom" value="{{ request('q') }}" autocomplete="off">
                 </div>
                 <select id="organisateur-statut" class="sa-form-control py-0" style="height: 34px; width: 200px;">
                     <option value="">Tous les statuts</option>
