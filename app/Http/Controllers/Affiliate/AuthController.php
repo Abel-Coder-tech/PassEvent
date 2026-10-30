@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Affiliate;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AffiliatePasswordResetOtp;
 use App\Models\Affiliate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -15,6 +18,82 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         return view('affiliate.auth.login');
+    }
+
+    public function showForgotPasswordForm()
+    {
+        return view('affiliate.auth.forgot-password');
+    }
+
+    public function sendPasswordResetCode(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|max:150',
+        ], [
+            'email.required' => 'Veuillez saisir votre adresse email.',
+            'email.email' => 'Veuillez saisir une adresse email valide.',
+        ]);
+
+        $email = Str::lower($validated['email']);
+        $request->session()->put('affiliate_password_reset_email', $email);
+
+        $affiliate = Affiliate::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if ($affiliate) {
+            $code = (string) random_int(100000, 999999);
+            $affiliate->forceFill([
+                'password_reset_code' => Hash::make($code),
+                'password_reset_expires_at' => now()->addMinutes(10),
+            ])->save();
+
+            Mail::to($affiliate->email)->send(new AffiliatePasswordResetOtp($code));
+        }
+
+        return back()->with('success', 'Si un compte affilié est associé à cette adresse, un code de réinitialisation vient de lui être envoyé.');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => 'required|digits:6',
+            'password' => 'required|string|min:8|max:255|confirmed',
+        ], [
+            'code.required' => 'Veuillez saisir le code reçu par email.',
+            'code.digits' => 'Le code doit contenir 6 chiffres.',
+            'password.required' => 'Veuillez saisir un nouveau mot de passe.',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
+        ]);
+
+        $email = $request->session()->get('affiliate_password_reset_email');
+        if (! is_string($email)) {
+            return redirect()->route('affiliate.password.request')
+                ->withErrors(['email' => 'Veuillez d’abord demander un code de réinitialisation.']);
+        }
+
+        $affiliate = Affiliate::whereRaw('LOWER(email) = ?', [$email])->first();
+        if (
+            ! $affiliate
+            || ! $affiliate->password_reset_code
+            || ! $affiliate->password_reset_expires_at
+            || $affiliate->password_reset_expires_at->isPast()
+            || ! Hash::check($validated['code'], $affiliate->password_reset_code)
+        ) {
+            return back()->withErrors([
+                'code' => 'Ce code est invalide ou expiré. Demandez un nouveau code.',
+            ]);
+        }
+
+        $affiliate->forceFill([
+            'password' => Hash::make($validated['password']),
+            'password_reset_code' => null,
+            'password_reset_expires_at' => null,
+        ])->save();
+
+        $request->session()->forget('affiliate_password_reset_email');
+
+        return redirect()->route('affiliate.login')
+            ->with('success', 'Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.');
     }
 
     // Authentifie un affilie
@@ -67,7 +146,7 @@ class AuthController extends Controller
             'nom.required' => 'Le nom est obligatoire.',
             'prenom.required' => 'Le prénom est obligatoire.',
             'email.required' => 'L\'email est obligatoire.',
-            'email.unique' => 'Cet email est déjà utilisé. Un compte organisateur ne peut pas devenir affilié : le programme est réservé aux non-organisateurs.',
+            'email.unique' => 'Cet email est déjà utilisé.',
             'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);

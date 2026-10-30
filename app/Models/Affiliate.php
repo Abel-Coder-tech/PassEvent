@@ -29,6 +29,7 @@ class Affiliate extends Authenticatable
 
     protected $hidden = [
         'password',
+        'password_reset_code',
         'remember_token',
     ];
 
@@ -37,6 +38,7 @@ class Affiliate extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'dernier_acces' => 'datetime',
+            'password_reset_expires_at' => 'datetime',
             'actif' => 'boolean',
             'clics_parrainage' => 'integer',
             'solde_en_attente' => 'decimal:2',

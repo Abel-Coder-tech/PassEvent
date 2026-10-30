@@ -22,6 +22,7 @@
         font-weight: 600; width: 100%; transition: 0.2s;
     }
     .card-auth .btn-primary:hover { background: #3d1a5c; transform: translateY(-1px); }
+    .password-toggle { right: 8px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5; }
 </style>
 @endsection
 
@@ -42,12 +43,15 @@
                 <label class="form-label small fw-semibold text-muted">Mot de passe</label>
                 <div class="position-relative">
                     <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required placeholder="Mot de passe" style="padding-right: 2.6rem;">
-                    <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 8px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                    <button type="button" class="btn position-absolute border-0 bg-transparent password-toggle" aria-label="Afficher le mot de passe" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true" style="color: #9a9a9a;"></i>
                     </button>
                 </div>
                 @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
+            <p class="text-end small mt-n2 mb-3">
+                <a href="{{ route('affiliate.password.request') }}" style="color: var(--violet);">Mot de passe oublié ?</a>
+            </p>
             <button type="submit" class="btn btn-primary">Se connecter</button>
         </form>
 
@@ -61,14 +65,17 @@
 
 @section('scripts')
 <script>
-document.querySelectorAll('.toggle-password').forEach(btn => {
+document.querySelectorAll('.password-toggle').forEach(btn => {
     btn.addEventListener('click', function() {
         const input = this.parentElement.querySelector('input');
         if (!input) return;
         const icon = this.querySelector('i');
-        input.type = input.type === 'password' ? 'text' : 'password';
-        icon.classList.toggle('bi-eye');
-        icon.classList.toggle('bi-eye-slash');
+        const isVisible = input.type === 'password';
+        input.type = isVisible ? 'text' : 'password';
+        this.setAttribute('aria-label', isVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+        this.setAttribute('aria-pressed', String(isVisible));
+        icon.classList.toggle('bi-eye', !isVisible);
+        icon.classList.toggle('bi-eye-slash', isVisible);
     });
 });
 </script>
