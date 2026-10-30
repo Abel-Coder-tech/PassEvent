@@ -229,16 +229,16 @@
         <div class="aff-hero-layout">
             <div class="aff-hero-copy">
                 <span class="badge rounded-pill mb-3" style="background: rgba(254,213,20,0.15); color: var(--accent); font-weight: 700;">
-                    <i class="bi bi-megaphone me-1"></i> Programme d'Affiliation
+                    <i class="bi bi-cash-stack me-1"></i> Programme d'affiliation
                 </span>
-                <h1 class="mb-3"><span>Partagez les événements.</span><span>Gagnez une commission.</span></h1>
+                <h1 class="mb-3">Gagnez de l’argent avec PaxEvent</h1>
                 <p class="lead mb-4">
-                    Votre lien vous rapporte une commission sur chaque vente éligible.
+                    Co-parrainez des événements sur PaxEvent, et touchez une commission sur chaque vente de tickets.
                 </p>
                 <a href="{{ route('affiliate.register') }}" class="btn btn-violet btn-lg px-4 fw-bold" style="background: var(--accent); border-color: var(--accent); color: var(--sombre);">
-                    Rejoindre le programme gratuitement <i class="bi bi-arrow-right ms-1"></i>
+                    Rejoindre le programme <i class="bi bi-arrow-right ms-1"></i>
                 </a>
-                <p class="micro mt-3 mb-0">Inscription gratuite &bull; Aucun coût d'entrée &bull; Tableau de bord en temps réel</p>
+                <p class="micro mt-3 mb-0">Gratuit • Aucun coût d'entrée • Tableau de bord dédié</p>
             </div>
             <div class="aff-hero-visual" aria-hidden="true">
                 <img class="aff-hero-image" src="{{ asset('images/image_heros.jpeg') }}" alt="" fetchpriority="high">
@@ -259,26 +259,25 @@
 <section class="py-5 aff-soft" id="affGains">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="aff-section-title h3">Le co-parrainage d'événement</h2>
-            <p class="aff-sub mb-0 mx-auto" style="max-width: 640px;">
-                Partagez votre lien et percevez une commission sur les ventes éligibles qui vous sont attribuées.
+            <h2 class="aff-section-title h3">Le Co-parrainage sur PaxEvent</h2>
+            <p class="aff-sub mb-0 mx-auto" style="max-width: 720px;">
+                Permet aux prescripteurs (agences, influenceurs et médias) de monétiser leur audience. Promouvez les événements à travers un lien de co-parrainage traçable et percevez une commission sur les ventes.
             </p>
         </div>
         <div class="aff-partnership-layout">
             <article class="aff-partnership">
                 <span class="aff-partnership-kicker"><i class="bi bi-share"></i> Programme d'affiliation</span>
-                <h3 class="aff-partnership-title">Votre audience, votre lien, votre commission.</h3>
+                <h3 class="aff-partnership-title">Co-parrainage d'un événement</h3>
                 <p class="aff-partnership-desc">
-                    Choisissez un événement ouvert au co-parrainage, partagez votre lien dédié et recevez une commission pour chaque billet éligible vendu grâce à vous. Le taux proposé par l'organisateur est affiché avant que vous ne commenciez à le promouvoir.
+                    <strong>x% sur chaque billet vendu</strong> – taux fixé par l'organisateur.
+                </p>
+                <p class="aff-partnership-desc mt-2">
+                    Les organisateurs ouvrent leurs événements au co-parrainage et fixent eux-mêmes la commission offerte. À la charge de l'organisateur, jamais prélevée sur la commission PaxEvent. Plusieurs co-parrains peuvent promouvoir le même événement.
                 </p>
                 <div class="aff-partnership-points">
                     <div class="aff-partnership-point">
-                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                        <span>La commission est financée par l'organisateur, sans réduire la commission PaxEvent.</span>
-                    </div>
-                    <div class="aff-partnership-point">
-                        <i class="bi bi-people-fill" aria-hidden="true"></i>
-                        <span>Plusieurs affiliés peuvent partager le même événement.</span>
+                        <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                        <span>Rémunéré par l'organisateur</span>
                     </div>
                 </div>
             </article>
@@ -302,35 +301,35 @@
 <section class="py-5 aff-soft">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="aff-section-title h3">Pourquoi devenir Affilié PaxEvent ?</h2>
+            <h2 class="aff-section-title h3">Pourquoi devenir Co-parrain ?</h2>
         </div>
         <div class="row g-4">
-            <div class="col-12 col-md-6 col-lg-3">
+            <div class="col-12 col-md-6 col-lg-4">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-cash-coin"></i></div>
-                    <h6 class="fw-bold mb-2">Une commission sur vos ventes</h6>
-                    <p class="text-muted small mb-0">Chaque vente éligible attribuée à votre lien peut générer une commission, selon le taux affiché pour l'événement.</p>
+                    <h6 class="fw-bold mb-2">Commissions Attractives</h6>
+                    <p class="text-muted small mb-0">Touchez un pourcentage compétitif sur les événements.</p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
+            <div class="col-12 col-md-6 col-lg-4">
                 <div class="aff-card">
-                    <div class="aff-ico"><i class="bi bi-sliders"></i></div>
-                    <h6 class="fw-bold mb-2">Des commissions fixées par l'organisateur</h6>
-                    <p class="text-muted small mb-0">Sur le co-parrainage, l'organisateur choisit la commission qu'il vous verse. Le taux est affiché avant toute promotion.</p>
+                    <div class="aff-ico"><i class="bi bi-infinity"></i></div>
+                    <h6 class="fw-bold mb-2">Sans plafond de gains</h6>
+                    <p class="text-muted small mb-0"></p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
+            <div class="col-12 col-md-6 col-lg-4">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-speedometer2"></i></div>
                     <h6 class="fw-bold mb-2">Dashboard en temps réel</h6>
                     <p class="text-muted small mb-0">Suivez vos liens, vos clics, le volume de billets vendus et vos commissions disponibles depuis un tableau de bord clair.</p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
+            <div class="col-12 col-md-6 col-lg-4 offset-lg-2">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-wallet2"></i></div>
-                    <h6 class="fw-bold mb-2">Des commissions suivies</h6>
-                    <p class="text-muted small mb-0">Après la tenue de l'événement et validation des ventes, vos commissions éligibles deviennent disponibles pour retrait.</p>
+                    <h6 class="fw-bold mb-2">Paiements garantis</h6>
+                    <p class="text-muted small mb-0">Vos commissions se libèrent à la fin de l'événement concerné. Demandez le retrait de vos gains en quelques clics.</p>
                 </div>
             </div>
         </div>
@@ -347,14 +346,14 @@
             <div class="col-12 col-md-6 step-card">
                 <div class="aff-step-num">1</div>
                 <div class="aff-step-ico mb-2"><i class="bi bi-person-plus"></i></div>
-                <h6 class="fw-bold">Créez votre compte affilié</h6>
-                <p class="text-muted small mb-0">L'inscription est gratuite et sans engagement. Le compte affilié est réservé aux personnes qui ne sont pas organisateurs sur PaxEvent. Votre tableau de bord personnalisé est activé après validation du compte.</p>
+                <h6 class="fw-bold">Inscrivez-vous gratuitement</h6>
+                <p class="text-muted small mb-0">Créez votre compte Affilié en quelques clics et accédez à votre tableau de bord après validation.</p>
             </div>
             <div class="col-12 col-md-6 step-card">
                 <div class="aff-step-num">2</div>
                 <div class="aff-step-ico mb-2"><i class="bi bi-share"></i></div>
-                <h6 class="fw-bold">Co-parrainez les événements ouverts</h6>
-                <p class="text-muted small mb-0">Quand un organisateur ouvre un événement au co-parrainage, il fixe la commission offerte. Générez votre lien dédié depuis votre dashboard, partagez-le et touchez la commission sur chaque billet vendu via votre lien.</p>
+                <h6 class="fw-bold">Co-parrainez les événements</h6>
+                <p class="text-muted small mb-0">Depuis votre tableau de bord, générez votre lien dédié dès qu'un organisateur active le co-parrainage, partagez-le, puis touchez une commission sur chaque billet vendu via votre lien.</p>
             </div>
         </div>
     </div>
@@ -364,21 +363,21 @@
 <section class="py-5 aff-soft">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="aff-section-title h3">Un programme pensé pour les acteurs de l'événementiel</h2>
+            <h2 class="aff-section-title h3">À qui s'adresse le programme ?</h2>
         </div>
         <div class="row g-4">
             <div class="col-12 col-md-4">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-briefcase"></i></div>
                     <h6 class="fw-bold mb-2">Agences &amp; Event Planners</h6>
-                    <p class="text-muted small mb-0">Promouvez les événements de vos clients ouverts au co-parrainage et gagnez la commission fixée par l'organisateur.</p>
+                    <p class="text-muted small mb-0">Promouvoir les événements de vos clients ouverts au co-parrainage et gagnez la commission fixée par l'organisateur.</p>
                 </div>
             </div>
             <div class="col-12 col-md-4">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-people"></i></div>
-                    <h6 class="fw-bold mb-2">Créateurs, artistes &amp; influenceurs</h6>
-                    <p class="text-muted small mb-0">Mettez votre audience à profit en co-parrainant les événements que vous recommandez, avec la commission fixée par l'organisateur.</p>
+                    <h6 class="fw-bold mb-2">Créateurs, influenceurs &amp; média</h6>
+                    <p class="text-muted small mb-0">Mettez votre audience à profit en co-parrainant les événements que vous recommandez</p>
                 </div>
             </div>
             <div class="col-12 col-md-4">
@@ -458,10 +457,10 @@
             </div>
             <div class="col-12 col-lg-6">
                 <div class="aff-final h-100">
-                    <h2 class="h3 fw-bold mb-2">Prêt à monétiser votre réseau événementiel ?</h2>
-                    <p class="mb-4" style="color: rgba(255,255,255,0.8);">Rejoignez les créateurs, agences et partenaires qui font connaître les événements ouverts au co-parrainage sur PaxEvent.</p>
+                    <h2 class="h3 fw-bold mb-2">Prêt à monétiser votre réseau ?</h2>
+                    <p class="mb-4" style="color: rgba(255,255,255,0.8);">Rejoignez nos partenaires qui génèrent déjà des revenus récurrents avec PaxEvent.</p>
                     <a href="{{ route('affiliate.register') }}" class="btn btn-lg fw-bold px-4" style="background: var(--accent); color: var(--sombre);">
-                        Créer mon compte affilié maintenant <i class="bi bi-arrow-right ms-1"></i>
+                        Devenez co-parrain <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
             </div>
