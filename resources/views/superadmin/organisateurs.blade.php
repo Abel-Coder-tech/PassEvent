@@ -57,24 +57,26 @@
 </div>
 
 <div class="sa-card">
-    <div class="sa-card-header d-flex align-items-center justify-content-between gap-2 flex-nowrap">
-        <span class="d-flex align-items-center gap-2"><i class="bi bi-person-badge-fill" style="color: var(--sa-primary);"></i>Organisateurs</span>
-        <div class="d-flex align-items-center gap-2 flex-nowrap">
-            <div class="input-group" style="width: 280px;">
-                <span class="input-group-text bg-transparent border-end-0 py-1 px-2"><i class="bi bi-search"></i></span>
-                <input type="text" id="organisateur-search" class="sa-form-control border-start-0 py-1" placeholder="Rechercher par nom ou prénom" value="{{ request('q') }}" autocomplete="off">
+    <div class="sa-card-header">
+        <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
+            <span class="d-flex align-items-center gap-2"><i class="bi bi-person-badge-fill" style="color: var(--sa-primary);"></i>Organisateurs</span>
+            <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center" style="height: 34px;">
+                    <span class="input-group-text bg-transparent border-end-0 py-0 px-2 d-flex align-items-center" style="height: 34px;"><i class="bi bi-search"></i></span>
+                    <input type="text" id="organisateur-search" class="sa-form-control border-start-0 py-0" style="height: 34px; width: 280px;" placeholder="Rechercher par nom ou prénom" value="{{ request('q') }}" autocomplete="off">
+                </div>
+                <select id="organisateur-statut" class="sa-form-control py-0" style="height: 34px; width: 200px;">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
+                    <option value="corrections_apportees" {{ request('statut') === 'corrections_apportees' ? 'selected' : '' }}>Corrections apportées</option>
+                    <option value="corrections_demandees" {{ request('statut') === 'corrections_demandees' ? 'selected' : '' }}>Corrections demandées</option>
+                    <option value="actif" {{ request('statut') === 'actif' ? 'selected' : '' }}>Actif</option>
+                    <option value="incomplet" {{ request('statut') === 'incomplet' ? 'selected' : '' }}>Incomplet</option>
+                    <option value="bloque" {{ request('statut') === 'bloque' ? 'selected' : '' }}>Bloqué</option>
+                    <option value="rejete" {{ request('statut') === 'rejete' ? 'selected' : '' }}>Rejeté</option>
+                </select>
+                <span class="text-muted text-nowrap" style="font-size:0.8rem;"><span id="organisateurs-count">{{ $organisateurs->total() }}</span> total</span>
             </div>
-            <select id="organisateur-statut" class="sa-form-control py-1" style="width: 200px;">
-                <option value="">Tous les statuts</option>
-                <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
-                <option value="corrections_apportees" {{ request('statut') === 'corrections_apportees' ? 'selected' : '' }}>Corrections apportées</option>
-                <option value="corrections_demandees" {{ request('statut') === 'corrections_demandees' ? 'selected' : '' }}>Corrections demandées</option>
-                <option value="actif" {{ request('statut') === 'actif' ? 'selected' : '' }}>Actif</option>
-                <option value="incomplet" {{ request('statut') === 'incomplet' ? 'selected' : '' }}>Incomplet</option>
-                <option value="bloque" {{ request('statut') === 'bloque' ? 'selected' : '' }}>Bloqué</option>
-                <option value="rejete" {{ request('statut') === 'rejete' ? 'selected' : '' }}>Rejeté</option>
-            </select>
-            <span class="text-muted text-nowrap" style="font-size:0.8rem;"><span id="organisateurs-count">{{ $organisateurs->total() }}</span> total</span>
         </div>
     </div>
     <div id="organisateurs-list">
