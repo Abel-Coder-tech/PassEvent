@@ -629,6 +629,13 @@ class SuperAdminController extends Controller
             ->paginate(PerPage::resolve())
             ->withQueryString();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('superadmin.partials.organisateurs-table', compact('organisateurs'))->render(),
+                'count' => $organisateurs->total(),
+            ]);
+        }
+
         return view('superadmin.organisateurs', compact('organisateurs'));
     }
 
