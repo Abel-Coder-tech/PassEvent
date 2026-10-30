@@ -55,10 +55,13 @@
         50% { transform: translateY(-9px); }
     }
     @media (max-width: 767.98px) {
-        .aff-hero { padding: 3.5rem 0 3rem; }
-        .aff-hero-layout { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+        .aff-hero { padding: 3rem 0 2.5rem; }
+        .aff-hero-layout { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
         .aff-hero-copy { margin: 0 auto; }
-        .aff-hero h1 { margin-left: auto; margin-right: auto; }
+        .aff-hero h1 { margin-left: auto; margin-right: auto; font-size: clamp(2.6rem, 12vw, 4.2rem); line-height: 1.05; }
+        .aff-hero .lead { font-size: 0.9rem; }
+        .aff-hero .micro { font-size: 0.72rem; }
+        .aff-hero .btn-lg { font-size: 0.95rem; padding: 0.5rem 1rem; }
         .aff-hero-visual { width: min(72%, 300px); }
         .aff-hero-image { border-width: 6px; border-radius: 24px; }
         .aff-hero-float { padding: 0.6rem 0.75rem; font-size: 0.72rem; }
@@ -66,7 +69,7 @@
         .aff-hero-float-sales { right: -12%; }
     }
     @media (max-width: 575.98px) {
-        .aff-hero h1 { font-size: clamp(1.45rem, 6.5vw, 2rem); }
+        .aff-hero h1 { font-size: clamp(2.4rem, 14vw, 3.6rem); line-height: 1.04; }
     }
     @media (prefers-reduced-motion: reduce) {
         .aff-hero-float { animation: none; }
@@ -228,17 +231,17 @@
     <div class="container">
         <div class="aff-hero-layout">
             <div class="aff-hero-copy">
-                <span class="badge rounded-pill mb-3" style="background: rgba(254,213,20,0.15); color: var(--accent); font-weight: 700;">
+                <span class="badge rounded-pill mb-2 mb-md-3" style="background: rgba(254,213,20,0.15); color: var(--accent); font-weight: 700;">
                     <i class="bi bi-cash-stack me-1"></i> Programme d'affiliation
                 </span>
-                <h1 class="mb-3">Gagnez de l’argent avec PaxEvent</h1>
-                <p class="lead mb-4">
+                <h1 class="mb-2 mb-md-3"><span>Gagnez de l’argent</span><span>avec PaxEvent</span></h1>
+                <p class="lead mb-3 mb-md-4">
                     Co-parrainez des événements sur PaxEvent, et touchez une commission sur chaque vente de tickets.
                 </p>
-                <a href="{{ route('affiliate.register') }}" class="btn btn-violet btn-lg px-4 fw-bold" style="background: var(--accent); border-color: var(--accent); color: var(--sombre);">
+                <a href="{{ route('affiliate.register') }}" class="btn btn-violet btn-lg px-3 px-md-4 fw-bold" style="background: var(--accent); border-color: var(--accent); color: var(--sombre);">
                     Rejoindre le programme <i class="bi bi-arrow-right ms-1"></i>
                 </a>
-                <p class="micro mt-3 mb-0">Gratuit • Aucun coût d'entrée • Tableau de bord dédié</p>
+                <p class="micro mt-2 mt-md-3 mb-0">Gratuit • Aucun coût d'entrée • Tableau de bord dédié</p>
             </div>
             <div class="aff-hero-visual" aria-hidden="true">
                 <img class="aff-hero-image" src="{{ asset('images/image_heros.jpeg') }}" alt="" fetchpriority="high">
@@ -304,27 +307,28 @@
             <h2 class="aff-section-title h3">Pourquoi devenir Co-parrain ?</h2>
         </div>
         <div class="row g-4">
-            <div class="col-12 col-md-6 col-lg-4">
+            <div class="col-12 col-md-6">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-cash-coin"></i></div>
                     <h6 class="fw-bold mb-2">Commissions Attractives</h6>
                     <p class="text-muted small mb-0">Touchez un pourcentage compétitif sur les événements.</p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-4">
+            <div class="col-12 col-md-6">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-infinity"></i></div>
                     <h6 class="fw-bold mb-2">Sans plafond de gains</h6>
+                    <p class="text-muted small mb-0">Plus vous partagez, plus vous gagnez. Il n'y a pas de limite au nombre d'événements que vous pouvez promouvoir.</p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-4">
+            <div class="col-12 col-md-6">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-speedometer2"></i></div>
                     <h6 class="fw-bold mb-2">Dashboard en temps réel</h6>
                     <p class="text-muted small mb-0">Suivez vos liens, vos clics, le volume de billets vendus et vos commissions disponibles depuis un tableau de bord clair.</p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 offset-lg-2">
+            <div class="col-12 col-md-6">
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-wallet2"></i></div>
                     <h6 class="fw-bold mb-2">Paiements garantis</h6>
