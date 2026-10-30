@@ -22,6 +22,7 @@
         font-weight: 600; width: 100%; transition: 0.2s;
     }
     .card-auth .btn-primary:hover { background: #3d1a5c; transform: translateY(-1px); }
+    .password-toggle { right: 8px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5; }
 </style>
 @endsection
 
@@ -56,12 +57,22 @@
             </div>
             <div class="mb-3">
                 <label class="form-label small fw-semibold text-muted">Mot de passe</label>
-                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required placeholder="8 caractères minimum">
-                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <div class="position-relative">
+                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required placeholder="8 caractères minimum" style="padding-right: 2.6rem;">
+                    <button type="button" class="btn position-absolute border-0 bg-transparent password-toggle" aria-label="Afficher le mot de passe" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true" style="color: #9a9a9a;"></i>
+                    </button>
+                </div>
+                @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
             <div class="mb-3">
                 <label class="form-label small fw-semibold text-muted">Confirmer le mot de passe</label>
-                <input type="password" name="password_confirmation" class="form-control" required>
+                <div class="position-relative">
+                    <input type="password" name="password_confirmation" class="form-control" required style="padding-right: 2.6rem;">
+                    <button type="button" class="btn position-absolute border-0 bg-transparent password-toggle" aria-label="Afficher la confirmation du mot de passe" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true" style="color: #9a9a9a;"></i>
+                    </button>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Créer mon compte affilié</button>
         </form>
@@ -72,4 +83,23 @@
         </p>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.querySelectorAll('.password-toggle').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input');
+        if (!input) return;
+        const icon = this.querySelector('i');
+        const isVisible = input.type === 'password';
+        input.type = isVisible ? 'text' : 'password';
+        const fieldName = input.name === 'password_confirmation' ? 'la confirmation du mot de passe' : 'le mot de passe';
+        this.setAttribute('aria-label', `${isVisible ? 'Masquer' : 'Afficher'} ${fieldName}`);
+        this.setAttribute('aria-pressed', String(isVisible));
+        icon.classList.toggle('bi-eye', !isVisible);
+        icon.classList.toggle('bi-eye-slash', isVisible);
+    });
+});
+</script>
 @endsection

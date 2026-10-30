@@ -326,6 +326,9 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
 Route::prefix('affilie')->name('affiliate.')->group(function () {
     Route::get('/connexion', [AffiliateAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/connexion', [AffiliateAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::get('/mot-de-passe-oublie', [AffiliateAuthController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/mot-de-passe-oublie', [AffiliateAuthController::class, 'sendPasswordResetCode'])->name('password.email')->middleware('throttle:3,1');
+    Route::post('/reinitialiser-mot-de-passe', [AffiliateAuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
     Route::get('/inscription', [AffiliateAuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/inscription', [AffiliateAuthController::class, 'register'])->name('register.post')->middleware('throttle:5,1');
 
