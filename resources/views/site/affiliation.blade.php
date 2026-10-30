@@ -315,7 +315,6 @@
                 <div class="aff-card">
                     <div class="aff-ico"><i class="bi bi-infinity"></i></div>
                     <h6 class="fw-bold mb-2">Sans plafond de gains</h6>
-                    <p class="text-muted small mb-0"></p>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-4">
