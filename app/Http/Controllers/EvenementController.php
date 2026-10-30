@@ -6,6 +6,7 @@ use App\Models\Evenement;
 use App\Models\Tarif;
 use App\Services\ContratService;
 use App\Services\EvenementStatisticsService;
+use App\Services\TicketStatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
