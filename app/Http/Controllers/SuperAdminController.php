@@ -46,7 +46,9 @@ class SuperAdminController extends Controller
     // Tableau de bord super admin avec statistiques globales de la plateforme
     public function dashboard(Request $request)
     {
+        /** @var User|null $user */
         $user = auth('superadmin')->user();
+        abort_unless($user instanceof User, 403);
 
         // Membre de l'equipe : tableau de bord restreint a son perimetre, sans chiffres d'affaires
         if ($user->estEquipe()) {
@@ -604,15 +606,28 @@ class SuperAdminController extends Controller
     }
 
     // Liste des organisateurs avec leurs statistiques
-    public function organisateurs()
+    public function organisateurs(Request $request)
     {
+        $q = trim((string) $request->input('q'));
+        $statut = $request->input('statut');
+
         $organisateurs = User::where('role', 'admin')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nom', 'like', "%{$q}%")
+                        ->orWhere('prenom', 'like', "%{$q}%")
+                        ->orWhereRaw("CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,'')) LIKE ?", ["%{$q}%"])
+                        ->orWhereRaw("CONCAT(COALESCE(nom,''), ' ', COALESCE(prenom,'')) LIKE ?", ["%{$q}%"]);
+                });
+            })
+            ->when($statut !== null && $statut !== '', fn ($query) => $query->where('statut', $statut))
             ->withCount('evenements')
             ->withSum(['evenements as tickets_vendus' => function ($q) {
                 $q->where('statut', 'publié');
             }], 'quota_vendu')
             ->orderByDesc('created_at')
-            ->paginate(PerPage::resolve());
+            ->paginate(PerPage::resolve())
+            ->withQueryString();
 
         return view('superadmin.organisateurs', compact('organisateurs'));
     }
@@ -803,7 +818,7 @@ class SuperAdminController extends Controller
     // Demandes de campagnes marketing ciblées (Booster / promouvoir un événement) - réservé aux super admins
     public function campagnesMarketing()
     {
-        abort_unless(auth('superadmin')->user()?->estSuperAdmin(), 403, 'Acces non autorise.');
+        $this->exigerSuperAdmin();
 
         $messages = Message::with('evenement')
             ->whereNull('user_id')
@@ -817,7 +832,7 @@ class SuperAdminController extends Controller
     // Page détail d'une demande de campagne marketing (actions rapides + réponse pré-remplie)
     public function voirCampagne(Message $message)
     {
-        abort_unless(auth('superadmin')->user()?->estSuperAdmin(), 403, 'Acces non autorise.');
+        $this->exigerSuperAdmin();
 
         if ($message->user_id !== null || $message->objet !== DemandeSuperAdminController::OBJET_CAMPAGNE) {
             abort(404);
@@ -917,7 +932,10 @@ class SuperAdminController extends Controller
 
     private function exigerSuperAdmin(): void
     {
-        abort_unless(auth('superadmin')->user()?->estSuperAdmin(), 403, 'Acces non autorise.');
+        /** @var User|null $user */
+        $user = auth('superadmin')->user();
+
+        abort_unless($user?->estSuperAdmin(), 403, 'Acces non autorise.');
     }
 
     // Ajout d'un membre de l'equipe : creation du compte avec mot de passe temporaire
@@ -1124,6 +1142,7 @@ class SuperAdminController extends Controller
     // Injecte l identite de l acteur dans les details de log quand c est un membre equipe
     private function avecActeur(array $details): array
     {
+        /** @var User|null $acteur */
         $acteur = auth('superadmin')->user();
 
         if ($acteur && $acteur->estEquipe()) {
@@ -1158,6 +1177,7 @@ class SuperAdminController extends Controller
     // Premiere connexion d'un membre : definition obligatoire d'un mot de passe personnel
     public function premiereConnexion()
     {
+        /** @var User|null $user */
         $user = auth('superadmin')->user();
 
         if (!$user) {
@@ -1177,6 +1197,7 @@ class SuperAdminController extends Controller
 
     public function enregistrerPremiereConnexion(Request $request)
     {
+        /** @var User|null $user */
         $user = auth('superadmin')->user();
 
         if (!$user || !$user->estEquipe()) {
@@ -1206,7 +1227,9 @@ class SuperAdminController extends Controller
     // Mise à jour du profil super admin (nom, email, téléphone)
     public function updateParametresProfil(Request $request)
     {
+        /** @var User|null $user */
         $user = auth('superadmin')->user();
+        abort_unless($user instanceof User, 403);
 
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
@@ -1227,7 +1250,9 @@ class SuperAdminController extends Controller
     // Mise à jour des réseaux sociaux du super admin
     public function updateParametresReseaux(Request $request)
     {
+        /** @var User|null $user */
         $user = auth('superadmin')->user();
+        abort_unless($user instanceof User, 403);
 
         $validated = $request->validate([
             'facebook_url' => 'nullable|url|max:500',

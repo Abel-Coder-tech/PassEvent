@@ -57,9 +57,29 @@
 </div>
 
 <div class="sa-card">
-    <div class="sa-card-header">
+    <div class="sa-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <span><i class="bi bi-person-badge-fill me-2" style="color: var(--sa-primary);"></i>Organisateurs</span>
-        <span class="text-muted" style="font-size:0.8rem;">{{ $organisateurs->total() }} total</span>
+        <form method="GET" action="{{ route('superadmin.organisateurs') }}" class="d-flex flex-wrap align-items-center gap-2">
+            <div class="input-group" style="max-width:320px;">
+                <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" class="sa-form-control border-start-0" placeholder="Rechercher par nom ou prénom..." value="{{ request('q') }}">
+            </div>
+            <select name="statut" class="sa-form-control" style="max-width:200px;">
+                <option value="">Tous les statuts</option>
+                <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
+                <option value="corrections_apportees" {{ request('statut') === 'corrections_apportees' ? 'selected' : '' }}>Corrections apportées</option>
+                <option value="corrections_demandees" {{ request('statut') === 'corrections_demandees' ? 'selected' : '' }}>Corrections demandées</option>
+                <option value="actif" {{ request('statut') === 'actif' ? 'selected' : '' }}>Actif</option>
+                <option value="incomplet" {{ request('statut') === 'incomplet' ? 'selected' : '' }}>Incomplet</option>
+                <option value="bloque" {{ request('statut') === 'bloque' ? 'selected' : '' }}>Bloqué</option>
+                <option value="rejete" {{ request('statut') === 'rejete' ? 'selected' : '' }}>Rejeté</option>
+            </select>
+            <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-funnel"></i> Filtrer</button>
+            @if(request()->filled('q') || request()->filled('statut'))
+                <a href="{{ route('superadmin.organisateurs') }}" class="sa-btn sa-btn-secondary"><i class="bi bi-x-lg"></i> Réinitialiser</a>
+            @endif
+            <span class="text-muted" style="font-size:0.8rem;">{{ $organisateurs->total() }} total</span>
+        </form>
     </div>
     <div class="sa-card-body p-0">
         <table class="sa-table">
