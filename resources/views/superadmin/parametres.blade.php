@@ -127,6 +127,16 @@
     </div>
 </div>
 
+<div class="sa-card mb-3">
+    <div class="sa-card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <strong><i class="bi bi-qr-code me-2" style="color: var(--sa-primary);"></i>Commission des tickets physiques</strong>
+            <p class="text-muted mb-0 mt-1" style="font-size:0.82rem;">Configurer le taux appliqué aux commandes d'organisateurs.</p>
+        </div>
+        <a href="{{ route('superadmin.parametres.commission-physique') }}" class="sa-btn sa-btn-outline">Modifier le taux</a>
+    </div>
+</div>
+
 <div class="row g-3">
 
     {{-- Profil super admin --}}

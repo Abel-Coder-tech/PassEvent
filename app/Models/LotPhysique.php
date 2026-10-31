@@ -10,7 +10,7 @@ class LotPhysique extends Model
 {
     protected $table = 'lots_physiques';
 
-    // Taux de commission fixe et non négociable pour l'auto-génération
+    // Taux de commission par défaut des tickets physiques
     public const TAUX_AUTO = 5.0;
 
     // Format de ticket sur mesure (dimensions personnalisées en mm)

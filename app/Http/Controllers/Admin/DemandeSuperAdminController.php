@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Message;
+use App\Models\Setting;
 use App\Services\LotAutoService;
 use App\Support\UploadError;
 use Illuminate\Http\Request;
@@ -156,18 +157,20 @@ class DemandeSuperAdminController extends Controller
         $templatePath = 'lot-templates/demande_'.$reference.'.'.$request->file('template_image')->getClientOriginalExtension();
         $request->file('template_image')->storeAs('', $templatePath, 'public');
 
-        $total = DB::transaction(function () use ($lignes, $evenement, $user, $reference, $format, $templatePath) {
+        $tauxPhysique = Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO);
+
+        $total = DB::transaction(function () use ($lignes, $evenement, $user, $reference, $format, $templatePath, $tauxPhysique) {
             $total = 0;
 
             foreach ($lignes as $ligne) {
-                $commission = round((float) $ligne['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $ligne['quantite'], 2);
+                $commission = round((float) $ligne['tarif']->prix * ($tauxPhysique / 100) * $ligne['quantite'], 2);
                 $total += $commission;
 
                 LotPhysique::create([
                     'user_id' => $user->id,
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $ligne['tarif']->id,
-                    'commission_pourcentage' => null,
+                    'commission_pourcentage' => $tauxPhysique,
                     'nom' => mb_substr('QR Code - '.$ligne['tarif']->nom, 0, 100),
                     'quantite' => $ligne['quantite'],
                     'statut' => LotPhysique::STATUT_ATTENTE_PAIEMENT,
