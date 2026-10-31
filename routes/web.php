@@ -31,6 +31,7 @@ use App\Http\Controllers\ScanController;
 use App\Http\Controllers\SitePublicController;
 use App\Http\Controllers\StatistiqueController;
 use App\Http\Controllers\SuperAdmin\AffiliationController as SuperAdminAffiliationController;
+use App\Http\Controllers\SuperAdmin\ParametresController as SuperAdminParametresController;
 use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
 use App\Http\Controllers\SuperAdminAuthController;
 use App\Http\Controllers\SuperAdminController;
@@ -178,6 +179,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/notifications/{message}/repondre', [SuperAdminController::class, 'repondreNotification'])->name('notifications.repondre');
         Route::delete('/notifications/{message}', [SuperAdminController::class, 'supprimerNotification'])->name('notifications.supprimer');
         Route::get('/parametres', [SuperAdminController::class, 'parametres'])->name('parametres');
+        Route::get('/parametres/commission-physique', [SuperAdminParametresController::class, 'index'])->name('parametres.commission-physique');
+        Route::put('/parametres/commission-physique', [SuperAdminParametresController::class, 'updateCommissionPhysique'])->name('parametres.commission-physique.update');
         Route::put('/parametres/profil', [SuperAdminController::class, 'updateParametresProfil'])->name('parametres.profil.update');
         Route::put('/parametres/reseaux', [SuperAdminController::class, 'updateParametresReseaux'])->name('parametres.reseaux.update');
         Route::put('/parametres/suivi', [SuperAdminController::class, 'updateParametresSuivi'])->name('parametres.suivi.update');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Evenement;
 use App\Models\LotPhysique;
+use App\Models\Setting;
 use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\TicketStatisticsService;
@@ -58,7 +59,7 @@ class LotPhysiqueController extends Controller
             'recettesPhysiques' => $physique['valeur'],
             'commissionTotale' => $physique['commissionTotale'],
             'evenementsAuto' => $this->evenementsAuto($user),
-            'tauxCommission' => LotPhysique::TAUX_AUTO,
+            'tauxCommission' => Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO),
             'emailDefaut' => $user->email,
         ]);
     }
@@ -143,25 +144,27 @@ class LotPhysiqueController extends Controller
         $reference = 'LOTAUTO-'.strtoupper(Str::random(10));
         $emailReception = trim($data['email_reception'] ?? '') !== '' ? $data['email_reception'] : $user->email;
 
-        DB::transaction(function () use ($lignes, $evenement, $user, $reference, $emailReception) {
+        $tauxAuto = Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO);
+
+        DB::transaction(function () use ($lignes, $evenement, $user, $reference, $emailReception, $tauxAuto) {
             foreach ($lignes as $ligne) {
                 LotPhysique::create([
                     'user_id' => $user->id,
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $ligne['tarif']->id,
-                    'commission_pourcentage' => null,
+                    'commission_pourcentage' => $tauxAuto,
                     'nom' => mb_substr('QR Auto - '.$ligne['tarif']->nom, 0, 100),
                     'quantite' => $ligne['quantite'],
                     'statut' => LotPhysique::STATUT_ATTENTE_PAIEMENT,
                     'auto_genere' => true,
-                    'montant_commission' => round((float) $ligne['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $ligne['quantite'], 2),
+                    'montant_commission' => round((float) $ligne['tarif']->prix * ($tauxAuto / 100) * $ligne['quantite'], 2),
                     'email_reception' => $emailReception,
                     'reference_paiement' => $reference,
                 ]);
             }
         });
 
-        $total = round(collect($lignes)->sum(fn ($l) => (float) $l['tarif']->prix * (LotPhysique::TAUX_AUTO / 100) * $l['quantite']), 2);
+        $total = round(collect($lignes)->sum(fn ($l) => (float) $l['tarif']->prix * ($tauxAuto / 100) * $l['quantite']), 2);
 
         // Événement gratuit ou tarifs à 0 F : rien à payer, génération immédiate
         if ($total <= 0) {
