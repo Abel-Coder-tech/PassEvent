@@ -313,15 +313,10 @@
 
             <form action="{{ route('superadmin.organisateurs.commission-physique', $user) }}" method="POST" class="mt-3 pt-3 border-top">
                 @csrf
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label for="commission_physique" class="form-label small fw-semibold mb-1">Commission des tickets physiques (%)</label>
-                        <input type="number" id="commission_physique" name="commission_physique" class="sa-form-control" min="0" max="100" step="0.01" value="{{ old('commission_physique', $user->commission_physique) }}" placeholder="Hériter du taux global">
-                        <small class="text-muted">Taux effectif actuel : {{ number_format($user->commissionPhysiquePourcentage(), 2, ',', ' ') }} %. Laisser vide pour hériter du taux global. Appliqué aux nouveaux lots.</small>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="sa-btn sa-btn-primary w-100"><i class="bi bi-check-lg"></i> Mettre à jour</button>
-                    </div>
+                <div class="d-flex flex-nowrap gap-3 align-items-center overflow-auto">
+                    <label for="commission_physique" class="form-label small fw-semibold mb-0 flex-shrink-0" style="white-space:nowrap;">Commission des tickets physiques (%)</label>
+                    <input type="number" id="commission_physique" name="commission_physique" class="sa-form-control" style="width:180px; min-width:180px; flex:0 0 180px;" min="0" max="100" step="0.01" value="{{ old('commission_physique', $user->commission_physique) }}" placeholder="Défaut : 5 %">
+                    <button type="submit" class="sa-btn sa-btn-primary flex-shrink-0"><i class="bi bi-check-lg"></i> Mettre à jour</button>
                 </div>
             </form>
 
