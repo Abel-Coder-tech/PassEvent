@@ -98,6 +98,7 @@ class User extends Authenticatable
         'contrat_telecharge_le',
         'ventes_especes',
         'commission_pourcentage',
+        'commission_physique',
     ];
 
     protected $hidden = [
@@ -114,6 +115,7 @@ class User extends Authenticatable
             'notif_email_paiement' => 'boolean',
             'notif_scan' => 'boolean',
             'commission_pourcentage' => 'float',
+            'commission_physique' => 'float',
             'permissions' => 'array',
             'must_change_password' => 'boolean',
         ];
@@ -262,6 +264,12 @@ class User extends Authenticatable
     public function commissionPourcentage(): float
     {
         return (float) ($this->commission_pourcentage ?? 10);
+    }
+
+    public function commissionPhysiquePourcentage(): float
+    {
+        return (float) ($this->commission_physique
+            ?? Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO));
     }
 
     // Statistiques financières de l'organisateur avec commissions effectives par événement

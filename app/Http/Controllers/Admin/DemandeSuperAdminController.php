@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Evenement;
 use App\Models\LotPhysique;
 use App\Models\Message;
-use App\Models\Setting;
 use App\Services\LotAutoService;
 use App\Support\UploadError;
 use Illuminate\Http\Request;
@@ -157,7 +156,7 @@ class DemandeSuperAdminController extends Controller
         $templatePath = 'lot-templates/demande_'.$reference.'.'.$request->file('template_image')->getClientOriginalExtension();
         $request->file('template_image')->storeAs('', $templatePath, 'public');
 
-        $tauxPhysique = Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO);
+        $tauxPhysique = $user->commissionPhysiquePourcentage();
 
         $total = DB::transaction(function () use ($lignes, $evenement, $user, $reference, $format, $templatePath, $tauxPhysique) {
             $total = 0;

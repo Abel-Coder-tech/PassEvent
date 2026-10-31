@@ -147,6 +147,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::delete('/organisateurs/attributions/{attribution}', [SuperAdminController::class, 'supprimerAttribution'])->name('organisateurs.attribution-supprimer');
         Route::post('/organisateurs/{user}/vente-especes', [SuperAdminController::class, 'definirVenteEspeces'])->name('organisateurs.vente-especes');
         Route::post('/organisateurs/{user}/commission', [SuperAdminController::class, 'definirCommission'])->name('organisateurs.commission');
+        Route::post('/organisateurs/{user}/commission-physique', [SuperAdminController::class, 'definirCommissionPhysique'])->name('organisateurs.commission-physique');
         Route::post('/organisateurs/{user}/controle-reset', [SuperAdminController::class, 'reinitialiserControle'])->name('organisateurs.controle-reset');
         Route::get('/transactions', [SuperAdminController::class, 'transactions'])->name('transactions');
         Route::get('/tickets', [SuperAdminController::class, 'tickets'])->name('tickets');

@@ -1767,6 +1767,32 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Commission mise à jour pour tout le dashboard.');
     }
 
+    public function definirCommissionPhysique(Request $request, User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'commission_physique' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $valeur = isset($validated['commission_physique']) && $validated['commission_physique'] !== ''
+            ? (float) $validated['commission_physique']
+            : null;
+        $ancien = $user->commission_physique;
+
+        $user->update(['commission_physique' => $valeur]);
+        $this->logAjustement('organisateur', [
+            'organisateur_id' => $user->id,
+            'organisateur_nom' => $user->nom,
+            'ancien' => ['commission_physique' => $ancien],
+            'nouveau' => ['commission_physique' => $valeur],
+        ]);
+
+        return back()->with('success', 'Commission des tickets physiques mise à jour pour cet organisateur.');
+    }
+
     // Notifie l'organisateur d'un changement de commission (ou réduction)
     protected function notifierCommission(User $user, ?Evenement $evenement, $ancien, $nouveau): void
     {

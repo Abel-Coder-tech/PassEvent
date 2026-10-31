@@ -16,7 +16,7 @@
             </div>
             <div class="sa-card-body">
                 <p class="text-muted mb-3" style="font-size:0.9rem;">
-                    Taux appliqué aux commandes de tickets physiques de l'organisateur, qu'il génère ses QR codes automatiquement ou fasse une demande au super admin.
+                    Taux global par défaut pour les commandes de tickets physiques. Un taux spécifique peut être défini dans la fiche de chaque organisateur.
                 </p>
 
                 <form action="{{ route('superadmin.parametres.commission-physique.update') }}" method="POST">

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Evenement;
 use App\Models\LotPhysique;
-use App\Models\Setting;
 use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\TicketStatisticsService;
@@ -59,7 +58,7 @@ class LotPhysiqueController extends Controller
             'recettesPhysiques' => $physique['valeur'],
             'commissionTotale' => $physique['commissionTotale'],
             'evenementsAuto' => $this->evenementsAuto($user),
-            'tauxCommission' => Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO),
+            'tauxCommission' => $user->commissionPhysiquePourcentage(),
             'emailDefaut' => $user->email,
         ]);
     }
@@ -144,7 +143,7 @@ class LotPhysiqueController extends Controller
         $reference = 'LOTAUTO-'.strtoupper(Str::random(10));
         $emailReception = trim($data['email_reception'] ?? '') !== '' ? $data['email_reception'] : $user->email;
 
-        $tauxAuto = Setting::getFloat('commission_physique', LotPhysique::TAUX_AUTO);
+        $tauxAuto = $user->commissionPhysiquePourcentage();
 
         DB::transaction(function () use ($lignes, $evenement, $user, $reference, $emailReception, $tauxAuto) {
             foreach ($lignes as $ligne) {
