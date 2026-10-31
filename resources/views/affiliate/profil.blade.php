@@ -42,7 +42,7 @@
                         @php
                             $missing = array_filter([
                                 'opérateur' => !$affiliate->operateur_paiement,
-                                'numéro / IBAN' => !$affiliate->numero_paiement,
+                                'numéro Mobile Money' => !$affiliate->numero_paiement,
                                 'titulaire' => !$affiliate->titulaire_paiement,
                             ]);
                         @endphp
@@ -66,16 +66,17 @@
                             <label class="form-label small fw-semibold text-muted mb-1">Opérateur</label>
                             <select name="operateur_paiement" class="form-select @error('operateur_paiement') is-invalid @enderror">
                                 <option value="">— Choisir —</option>
-                                @foreach(['Orange Money', 'MTN Mobile Money', 'Moov Money', 'Wave', 'Virement bancaire'] as $op)
+                                @foreach(['MTN MoMo', 'Moov Money', 'Celtiis Cash'] as $op)
                                     <option value="{{ $op }}" @selected(old('operateur_paiement', $affiliate->operateur_paiement) === $op)>{{ $op }}</option>
                                 @endforeach
                             </select>
                             @error('operateur_paiement')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold text-muted mb-1">Numéro / IBAN</label>
-                            <input type="text" name="numero_paiement" class="form-control @error('numero_paiement') is-invalid @enderror"
+                            <label for="numero_paiement" class="form-label small fw-semibold text-muted mb-1">Numéro Mobile Money</label>
+                            <input id="numero_paiement" type="text" name="numero_paiement" class="form-control @error('numero_paiement') is-invalid @enderror"
                                    value="{{ old('numero_paiement', $affiliate->numero_paiement) }}">
+                            <div class="form-text">Indiquez le numéro associé à votre compte chez l'opérateur choisi.</div>
                             @error('numero_paiement')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12 col-md-6">

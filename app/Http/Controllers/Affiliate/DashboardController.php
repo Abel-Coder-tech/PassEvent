@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Affiliate;
 
 use App\Http\Controllers\Controller;
+use App\Models\Affiliate;
 use App\Models\AffiliateCommission;
 use App\Models\AffiliateEventLink;
 use App\Models\Evenement;
@@ -19,7 +20,7 @@ class DashboardController extends Controller
     // Tableau de bord
     public function index()
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $stats = [
             'solde_disponible' => $affiliate->solde_disponible,
@@ -43,10 +44,10 @@ class DashboardController extends Controller
             ->get();
 
         $evenementsOuverts = Evenement::query()
+            ->withUpcomingDate()
             ->where('co_parrainage_actif', true)
             ->where('gratuit', false)
             ->where('statut', 'publié')
-            ->where('date_event', '>=', now())
             ->whereNotIn('id', $affiliate->eventLinks()->pluck('evenement_id'))
             ->with(['user', 'tarifs'])
             ->orderBy('date_event')
@@ -59,7 +60,7 @@ class DashboardController extends Controller
     // Historique des organisateurs parrainés avant l'arrêt du parrainage direct.
     public function filleuls()
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $referrals = $affiliate->referrals()
             ->with(['organisateur', 'premierEvenement'])
@@ -80,7 +81,7 @@ class DashboardController extends Controller
     // Mecanisme B : liens de co-parrainage
     public function liens(Request $request, AffiliateStatisticsService $statistics)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $statut = in_array($request->query('statut'), ['actif', 'inactif'], true) ? $request->query('statut') : null;
         $recherche = trim((string) $request->query('q'));
@@ -96,10 +97,10 @@ class DashboardController extends Controller
         $liens = $liensQuery->latest()->paginate(15)->withQueryString();
 
         $evenementsOuvertsQuery = Evenement::query()
+            ->withUpcomingDate()
             ->where('co_parrainage_actif', true)
             ->where('gratuit', false)
             ->where('statut', 'publié')
-            ->where('date_event', '>=', now())
             ->whereNotIn('id', $affiliate->eventLinks()->pluck('evenement_id'))
             ->with(['user', 'tarifs']);
         if ($recherche !== '') {
@@ -110,10 +111,10 @@ class DashboardController extends Controller
 
         $stats = $statistics->links($affiliate);
         $stats['evenements_ouverts'] = Evenement::query()
+                ->withUpcomingDate()
                 ->where('co_parrainage_actif', true)
                 ->where('gratuit', false)
                 ->where('statut', 'publié')
-                ->where('date_event', '>=', now())
                 ->count();
 
         return view('affiliate.liens', compact('affiliate', 'liens', 'evenementsOuverts', 'stats', 'statut', 'recherche'));
@@ -122,7 +123,7 @@ class DashboardController extends Controller
     // Detail interne d'un evenement co-parraine (sans redirection vers la page publique)
     public function evenement(Evenement $evenement, AffiliateStatisticsService $statistics)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $lien = $affiliate->eventLinks()
             ->where('evenement_id', $evenement->id)
@@ -192,7 +193,7 @@ class DashboardController extends Controller
     // Genere (ou retrouve) le lien de co-parrainage d'un evenement
     public function genererLien(Evenement $evenement)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         if (!$evenement->co_parrainage_actif || $evenement->gratuit || $evenement->statut !== 'publié') {
             return back()->with('error', 'Cet événement n\'est pas ouvert au co-parrainage.');
@@ -217,7 +218,7 @@ class DashboardController extends Controller
     // Active / desactive un lien de co-parrainage
     public function toggleLien(AffiliateEventLink $link)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         if ($link->affiliate_id !== $affiliate->id) {
             abort(403);
@@ -230,10 +231,24 @@ class DashboardController extends Controller
             : 'Lien désactivé.');
     }
 
+    public function supprimerLien(AffiliateEventLink $link)
+    {
+        $affiliate = $this->affiliateConnecte();
+
+        if ($link->affiliate_id !== $affiliate->id) {
+            abort(403);
+        }
+
+        $link->delete();
+
+        return redirect()->route('affiliate.liens')
+            ->with('success', 'L’événement a été retiré de vos liens. Vos commissions déjà générées restent conservées.');
+    }
+
     // Mecanisme A + B : historique complet des commissions
     public function commissions(Request $request, AffiliateStatisticsService $statistics)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $query = $affiliate->commissions()->with(['evenement', 'ticket']);
 
@@ -254,7 +269,7 @@ class DashboardController extends Controller
     // Demandes de reversement
     public function paiements()
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $payouts = $affiliate->payouts()->latest()->get();
 
@@ -264,7 +279,7 @@ class DashboardController extends Controller
     // Cree une demande de reversement
     public function demanderPaiement(Request $request, AffiliationService $affiliation)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $data = $request->validate([
             'montant' => 'required|numeric|min:5000',
@@ -295,7 +310,7 @@ class DashboardController extends Controller
     // Profil
     public function profil()
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         return view('affiliate.profil', compact('affiliate'));
     }
@@ -303,14 +318,14 @@ class DashboardController extends Controller
     // Met a jour les informations du compte
     public function majProfil(Request $request)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $data = $request->validate([
             'nom' => 'required|string|max:100',
             'prenom' => 'required|string|max:100',
             'email' => ['required', 'email', 'max:150', Rule::unique('affiliates', 'email')->ignore($affiliate->id)],
             'telephone' => 'nullable|string|max:30',
-            'operateur_paiement' => 'nullable|string|max:50',
+            'operateur_paiement' => ['nullable', Rule::in(['MTN MoMo', 'Moov Money', 'Celtiis Cash'])],
             'numero_paiement' => 'nullable|string|max:50',
             'titulaire_paiement' => 'nullable|string|max:100',
         ]);
@@ -323,7 +338,7 @@ class DashboardController extends Controller
     // Change le mot de passe
     public function majMotDePasse(Request $request)
     {
-        $affiliate = Auth::guard('affiliate')->user();
+        $affiliate = $this->affiliateConnecte();
 
         $data = $request->validate([
             'current_password' => 'required|string',
@@ -340,6 +355,15 @@ class DashboardController extends Controller
         $affiliate->update(['password' => Hash::make($data['password'])]);
 
         return back()->with('success', 'Votre mot de passe a été modifié.');
+    }
+
+    private function affiliateConnecte(): Affiliate
+    {
+        $affiliate = Auth::guard('affiliate')->user();
+
+        abort_unless($affiliate instanceof Affiliate, 403);
+
+        return $affiliate;
     }
 
     // Genere un code unique pour un lien de co-parrainage

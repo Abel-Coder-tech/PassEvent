@@ -11,6 +11,12 @@
 
 @section('content')
 <div class="page-content">
+    @if(session('evenement_suppression_bloquee'))
+        <div class="alert alert-warning" role="alert">
+            Cet événement ne peut pas être annulé car des billets payants ont déjà été vendus. Pour demander une assistance, <a href="{{ route('contact') }}" class="alert-link">contactez l’équipe PaxEvent</a>.
+        </div>
+    @endif
+
     <!-- Subtitle -->
     <p class="text-muted mb-4" style="font-size: 0.9rem; margin-top: -0.5rem;">
         {{ $totalEvenements }} événement{{ $totalEvenements > 1 ? 's' : '' }} · {{ number_format($totalBilletsVendus, 0, ',', ' ') }} billet{{ $totalBilletsVendus > 1 ? 's' : '' }} vendu{{ $totalBilletsVendus > 1 ? 's' : '' }}
@@ -73,6 +79,7 @@
                 $now = now();
                 $isPast = $evenement->date_event < $now;
                 $isToday = $evenement->date_event->isToday();
+                $suppressionBloquee = $evenement->suppressionOrganisateurBloquee();
 
                 $ventes = $evenement->tickets_count ?? $evenement->quota_vendu;
                 $capacite = $evenement->capacite;
@@ -157,8 +164,17 @@
                         </div>
                     </div>
 
+                    @if($suppressionBloquee)
+                        <div class="alert alert-warning py-2 px-3 small mb-3" role="alert">
+                            L’annulation est bloquée car des billets payants ont déjà été vendus. <a href="{{ route('contact') }}" class="alert-link">Contacter l’équipe PaxEvent</a>.
+                        </div>
+                    @endif
+
                     <!-- Action buttons -->
                     <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                        <a href="{{ route('admin.evenements.show', $evenement->id) }}#coparrainage" class="btn btn-sm {{ $evenement->co_parrainage_actif ? 'text-white' : '' }}" style="border-radius: 6px; {{ $evenement->co_parrainage_actif ? 'background:var(--violet);border:none;' : 'border:1px solid var(--violet);color:var(--violet);background:transparent;' }}" title="Gérer le co-parrainage">
+                            <i class="bi bi-share"></i> <span class="d-none d-sm-inline">{{ $evenement->co_parrainage_actif ? 'Co-parrainage actif' : 'Co-parrainage' }}</span>
+                        </a>
                         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
                             <form action="{{ route('admin.evenements.fermer-vente', $evenement->id) }}" method="POST" class="d-inline">
                                 @csrf
@@ -167,17 +183,19 @@
                                 </button>
                             </form>
                         @endif
-                        <a href="{{ route('admin.evenements.show', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;">
+                        <a href="{{ route('admin.evenements.show', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;" title="Voir">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet événement ? Cette action est irréversible.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
-                        <a href="{{ route('admin.evenements.edit', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;">
+                        @unless($suppressionBloquee)
+                            <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet événement ? Cette action est irréversible.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        @endunless
+                        <a href="{{ route('admin.evenements.edit', $evenement->id) }}" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;" title="Modifier">
                             <i class="bi bi-pencil"></i>
                         </a>
                         @if($evenement->statut === 'publié')
@@ -185,13 +203,15 @@
                                 <i class="bi bi-qr-code-scan me-1"></i>Scan
                             </a>
                         @elseif($evenement->statut === 'brouillon' || $evenement->statut === 'publié' && !$isPast)
-                            <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler cet événement ?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;">
-                                    <i class="bi bi-x-circle me-1"></i>Annuler
-                                </button>
-                            </form>
+                            @unless($suppressionBloquee)
+                                <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler cet événement ?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;">
+                                        <i class="bi bi-x-circle me-1"></i>Annuler
+                                    </button>
+                                </form>
+                            @endunless
                         @endif
                     </div>
                 </div>

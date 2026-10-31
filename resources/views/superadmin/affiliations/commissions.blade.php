@@ -45,27 +45,27 @@
 
 <div class="sa-card mb-4">
     <div class="sa-card-body">
-        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-            <form method="GET" action="{{ route('superadmin.affiliations.commissions') }}" class="d-flex flex-wrap gap-2 align-items-center">
-                <input type="text" name="q" value="{{ $recherche }}" class="sa-form-control" placeholder="Affilié ou événement..." style="min-width:220px;">
-                <select name="type" class="sa-form-control" style="min-width:160px;">
-                    <option value="">Tous les types</option>
-                    <option value="{{ \App\Models\AffiliateCommission::TYPE_PARRAINAGE }}" @selected($type === \App\Models\AffiliateCommission::TYPE_PARRAINAGE)>Parrainage direct</option>
-                    <option value="{{ \App\Models\AffiliateCommission::TYPE_CO_PARRAINAGE }}" @selected($type === \App\Models\AffiliateCommission::TYPE_CO_PARRAINAGE)>Co-parrainage</option>
-                </select>
-                <select name="statut" class="sa-form-control" style="min-width:150px;">
-                    <option value="">Tous les statuts</option>
-                    <option value="en_attente" @selected($statut === 'en_attente')>En attente</option>
-                    <option value="disponible" @selected($statut === 'disponible')>Disponible</option>
-                    <option value="paye" @selected($statut === 'paye')>Payée</option>
-                    <option value="annule" @selected($statut === 'annule')>Annulée</option>
-                </select>
-                <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-search"></i> Filtrer</button>
-                @if($recherche !== '' || $type || $statut)
-                    <a href="{{ route('superadmin.affiliations.commissions') }}" class="sa-btn sa-btn-outline">Réinitialiser</a>
-                @endif
-            </form>
-            <a href="{{ route('superadmin.affiliations.index') }}" class="sa-btn sa-btn-outline"><i class="bi bi-arrow-left"></i> Affiliés</a>
+        <div class="d-flex flex-nowrap gap-2 align-items-center overflow-auto justify-content-between">
+            <div class="d-flex flex-nowrap gap-2 align-items-center">
+                <form method="GET" action="{{ route('superadmin.affiliations.commissions') }}" id="commissionsFilterForm" class="d-flex flex-nowrap gap-2 align-items-center">
+                    <input type="text" name="q" id="commissionsSearch" value="{{ $recherche }}" class="sa-form-control" placeholder="Affilié ou événement..." style="min-width:220px;" autocomplete="off">
+                    <select name="statut" id="commissionsStatut" class="sa-form-control" style="min-width:150px;">
+                        <option value="">Tous les statuts</option>
+                        <option value="en_attente" @selected($statut === 'en_attente')>En attente</option>
+                        <option value="disponible" @selected($statut === 'disponible')>Disponible</option>
+                        <option value="paye" @selected($statut === 'paye')>Payée</option>
+                        <option value="annule" @selected($statut === 'annule')>Annulée</option>
+                    </select>
+                    @if($recherche !== '' || $statut)
+                        <a href="{{ route('superadmin.affiliations.commissions') }}" class="sa-btn sa-btn-outline">Réinitialiser</a>
+                    @endif
+                </form>
+            </div>
+            <div class="d-flex flex-nowrap gap-2 align-items-center ms-auto">
+                <a href="{{ route('superadmin.affiliations.index') }}" class="sa-btn sa-btn-outline"><i class="bi bi-people"></i> Affiliés</a>
+                <a href="{{ route('superadmin.affiliations.dashboard') }}" class="sa-btn sa-btn-outline"><i class="bi bi-speedometer2"></i> Tableau de bord</a>
+                <a href="{{ route('superadmin.affiliations.reversements') }}" class="sa-btn sa-btn-outline"><i class="bi bi-cash-coin"></i> Reversements</a>
+            </div>
         </div>
     </div>
 </div>
@@ -108,7 +108,7 @@
                                 </td>
                                 <td>
                                     @if($commission->type === \App\Models\AffiliateCommission::TYPE_PARRAINAGE)
-                                        <span class="sa-badge" style="background:rgba(84,38,128,0.1);color:var(--sa-primary);">Parrainage</span>
+                                        <span class="sa-badge" style="background:rgba(84,38,128,0.1);color:var(--sa-primary);">Parrainage direct</span>
                                     @else
                                         <span class="sa-badge" style="background:rgba(52,152,219,0.1);color:#3498db;">Co-parrainage</span>
                                     @endif
@@ -146,4 +146,30 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    (function() {
+        const form = document.getElementById('commissionsFilterForm');
+        const search = document.getElementById('commissionsSearch');
+        const statut = document.getElementById('commissionsStatut');
+        if (!form) return;
+
+        let timeout;
+        if (search) {
+            search.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    form.submit();
+                }, 400);
+            });
+        }
+        if (statut) {
+            statut.addEventListener('change', function() {
+                form.submit();
+            });
+        }
+    })();
+</script>
+@endpush
 @endsection

@@ -222,9 +222,6 @@ class AffiliationController extends Controller
     // Toutes les commissions
     public function commissions(Request $request)
     {
-        $type = in_array($request->query('type'), [AffiliateCommission::TYPE_PARRAINAGE, AffiliateCommission::TYPE_CO_PARRAINAGE], true)
-            ? $request->query('type')
-            : null;
         $statut = in_array($request->query('statut'), ['en_attente', 'disponible', 'paye', 'annule'], true)
             ? $request->query('statut')
             : null;
@@ -232,9 +229,6 @@ class AffiliationController extends Controller
 
         $query = AffiliateCommission::query()->with(['affiliate', 'evenement', 'ticket']);
 
-        if ($type) {
-            $query->where('type', $type);
-        }
         if ($statut) {
             $query->where('statut', $statut);
         }
@@ -257,7 +251,7 @@ class AffiliationController extends Controller
             'paye' => (float) AffiliateCommission::where('statut', 'paye')->sum('montant'),
         ];
 
-        return view('superadmin.affiliations.commissions', compact('commissions', 'stats', 'type', 'statut', 'recherche'));
+        return view('superadmin.affiliations.commissions', compact('commissions', 'stats', 'statut', 'recherche'));
     }
 
     // Annule une commission (litige)

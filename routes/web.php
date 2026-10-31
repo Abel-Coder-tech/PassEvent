@@ -341,6 +341,7 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
         Route::get('/evenements/{evenement}', [AffiliateDashboardController::class, 'evenement'])->name('evenements.show');
         Route::post('/liens/{evenement}/generer', [AffiliateDashboardController::class, 'genererLien'])->name('liens.generer');
         Route::post('/liens/{link}/toggle', [AffiliateDashboardController::class, 'toggleLien'])->name('liens.toggle');
+        Route::delete('/liens/{link}', [AffiliateDashboardController::class, 'supprimerLien'])->name('liens.destroy');
         Route::get('/commissions', [AffiliateDashboardController::class, 'commissions'])->name('commissions');
         Route::get('/paiements', [AffiliateDashboardController::class, 'paiements'])->name('paiements');
         Route::post('/paiements', [AffiliateDashboardController::class, 'demanderPaiement'])->name('paiements.demander');

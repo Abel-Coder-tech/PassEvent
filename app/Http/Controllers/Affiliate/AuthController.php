@@ -47,9 +47,11 @@ class AuthController extends Controller
             ])->save();
 
             Mail::to($affiliate->email)->send(new AffiliatePasswordResetOtp($code));
+
+            return back()->with('success', 'Un code de réinitialisation vient de vous être envoyé.');
         }
 
-        return back()->with('success', 'Si un compte affilié est associé à cette adresse, un code de réinitialisation vient de lui être envoyé.');
+        return back()->with('error', "Aucun compte affilié n'est associé à cet email. Veuillez réessayer.");
     }
 
     public function resetPassword(Request $request)

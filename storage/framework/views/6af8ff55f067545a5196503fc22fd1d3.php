@@ -1,0 +1,1 @@
+<?php /**PATH /home/abel/Projects/PassEvent/resources/views/inscriptions/index.blade.php ENDPATH**/ ?>

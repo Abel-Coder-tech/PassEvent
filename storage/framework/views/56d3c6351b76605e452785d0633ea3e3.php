@@ -1,0 +1,428 @@
+<?php $__env->startSection('title', 'Tableau de bord'); ?>
+<?php $__env->startSection('page-title', 'Tableau de Bord'); ?>
+
+<?php $__env->startSection('breadcrumb'); ?>
+    <li class="breadcrumb-item active" aria-current="page">Tableau de bord</li>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="page-content">
+
+    <?php if(Auth::user()->statut === 'incomplet'): ?>
+    <div class="alert alert-warning d-flex align-items-center gap-3 flex-wrap" style="border:none;background:#fff3e0;border-radius:12px;padding:0.75rem 1rem;">
+        <div style="flex:1;">
+            <strong style="color:#8b6914;"><i class="bi bi-exclamation-triangle-fill me-1"></i> Profil incomplet</strong>
+            <span style="color:#6c5b3a;font-size:0.85rem;"> — Finalisez la création de votre compte pour créer des événements</span>
+        </div>
+        <a href="<?php echo e(route('profil.step2')); ?>" class="btn btn-sm" style="background:#542680;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            <i class="bi bi-arrow-right-circle me-1"></i> Compléter mon profil
+        </a>
+    </div>
+    <?php elseif(Auth::user()->statut === 'corrections_demandees'): ?>
+    <div class="alert alert-warning d-flex align-items-center gap-3 flex-wrap" style="border:none;background:#fff8e1;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #e0a800;">
+        <div style="flex:1;">
+            <strong style="color:#8b6914;"><i class="bi bi-pencil-square me-1"></i> Corrections demandées</strong>
+            <span style="color:#6c5b3a;font-size:0.85rem;"> — Des modifications sont requises sur votre profil. Corrigez puis soumettez à nouveau.</span>
+        </div>
+        <a href="<?php echo e(route('profil.step2')); ?>" class="btn btn-sm" style="background:#542680;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            <i class="bi bi-arrow-right-circle me-1"></i> Modifier mon profil
+        </a>
+    </div>
+    <?php elseif(Auth::user()->statut === 'actif' && empty(Auth::user()->contrat_telecharge_le)): ?>
+    <div class="alert d-flex align-items-center gap-3 flex-wrap" style="border:none;background:#f0f7ee;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #2e7d4f;">
+        <div style="flex:1;">
+            <strong style="color:#2e7d4f;"><i class="bi bi-check-circle-fill me-1"></i> Compte valide</strong>
+        </div>
+        <a href="<?php echo e(route('contrat-prestation')); ?>" class="btn btn-sm" style="background:#2e7d4f;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;white-space:nowrap;">
+            <i class="bi bi-file-pdf me-1"></i> Télécharger mon contrat
+        </a>
+    </div>
+    <?php endif; ?>
+
+    
+    <div class="row g-2 mb-4 align-items-center">
+        <div class="col-md-6">
+            <span style="font-size:0.82rem;color:var(--gris);font-weight:500;">
+                <i class="bi bi-calendar3 me-1"></i> <?php echo e(now()->isoFormat('D MMM YYYY')); ?>
+
+            </span>
+        </div>
+        <div class="col-md-6 d-flex justify-content-md-end gap-2 flex-wrap">
+            <a href="<?php echo e(route('admin.evenements.create')); ?>" class="btn btn-sm flex-sm-fill flex-md-grow-0" style="background:var(--vert);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;">
+                <i class="bi bi-plus-lg me-1"></i> Nouvel événement
+            </a>
+            <a href="<?php echo e(route('admin.evenements.index')); ?>" class="btn btn-sm flex-sm-fill flex-md-grow-0" style="border:1px solid #e0dde3;border-radius:8px;font-weight:600;font-size:0.78rem;">
+                <i class="bi bi-calendar-week me-1"></i> Mes événements
+            </a>
+            <a href="<?php echo e(route('scan.index')); ?>" class="btn btn-sm flex-sm-fill flex-md-grow-0" style="border:1px solid #e0dde3;border-radius:8px;font-weight:600;font-size:0.78rem;">
+                <i class="bi bi-qr-code-scan me-1"></i> Scanner
+            </a>
+        </div>
+    </div>
+
+    
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(135,66,139,0.1);">⛺</div>
+                <div class="metric-label">Événements</div>
+                <div class="metric-value"><?php echo e($totalEvenements); ?></div>
+                <div class="metric-subtitle"><?php echo e($evenementsActifs); ?> actifs</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-icon" style="background: rgba(18,151,110,0.1);">🎫</div>
+                <div class="metric-label">Tickets vendus</div>
+                <div class="metric-value"><?php echo e(number_format($ticketsVendus, 0, ',', ' ')); ?></div>
+                <div class="metric-subtitle">
+                    <?php
+                        $thisMonth = App\Models\Ticket::whereHas('evenement', fn($q) => $q->where('user_id', auth()->id()))
+                            ->where('statut_paiement', 'payé')
+                            ->whereNull('lot_physique_id')
+                            ->where('date_achat', '>=', now()->startOfMonth())
+                            ->count();
+                        $lastMonth = App\Models\Ticket::whereHas('evenement', fn($q) => $q->where('user_id', auth()->id()))
+                            ->where('statut_paiement', 'payé')
+                            ->whereNull('lot_physique_id')
+                            ->whereBetween('date_achat', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
+                            ->count();
+                        $pct = $lastMonth > 0 ? round((($thisMonth - $lastMonth) / $lastMonth) * 100) : 0;
+                    ?>
+                    <?php if($pct > 0): ?>
+                        <span style="color:var(--vert);">+<?php echo e($pct); ?>%</span> vs mois dernier
+                    <?php elseif($pct < 0): ?>
+                        <span style="color:var(--danger);"><?php echo e($pct); ?>%</span> vs mois dernier
+                    <?php else: ?>
+                        vs mois dernier
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--teal);">
+                <div class="metric-icon" style="background: rgba(66,140,121,0.1);"><i class="bi bi-cash-coin" style="color:var(--teal);"></i></div>
+                <div class="metric-label">Revenu brut</div>
+                <div class="metric-value" style="font-size:1.3rem;"><?php echo e(number_format($recettesTotales, 0, ',', ' ')); ?></div>
+                <div class="metric-subtitle">FCFA · Commission <?php echo e($commissionPct); ?>%</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-wallet2" style="color:var(--vert);"></i></div>
+                <div class="metric-label">Net retirable (Mobile)</div>
+                <div class="metric-value" style="font-size:1.3rem;color:var(--vert);"><?php echo e(number_format($retirable, 0, ',', ' ')); ?></div>
+                <div class="metric-subtitle">FCFA après commission et retraits</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: #3498db;">
+                <div class="metric-icon" style="background: rgba(52,152,219,0.1);"><i class="bi bi-phone" style="color:#3498db;"></i></div>
+                <div class="metric-label">Paiements Mobile</div>
+                <div class="metric-value" style="font-size:1.2rem;color:#3498db;"><?php echo e(number_format($mobileRecettes, 0, ',', ' ')); ?> F</div>
+                <div class="metric-subtitle">Retirable via FedaPay</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: #f39c12;">
+                <div class="metric-icon" style="background: rgba(243,156,18,0.1);"><i class="bi bi-cash" style="color:#f39c12;"></i></div>
+                <div class="metric-label">Paiements Espèces</div>
+                <div class="metric-value" style="font-size:1.2rem;color:#f39c12;"><?php echo e(number_format($cashRecettes, 0, ',', ' ')); ?> F</div>
+                <div class="metric-subtitle">Déjà en votre possession</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-percent" style="color:var(--violet);"></i></div>
+                <div class="metric-label">Commission (<?php echo e($commissionPct); ?>%)</div>
+                <div class="metric-value" style="font-size:1.2rem;color:var(--danger);"><?php echo e(number_format($commission, 0, ',', ' ')); ?> F</div>
+                <div class="metric-subtitle">Sur tous les tickets</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-cash-stack" style="color:var(--vert);"></i></div>
+                <div class="metric-label">Net total</div>
+                <div class="metric-value" style="font-size:1.2rem;color:var(--vert);"><?php echo e(number_format($recettesNettes, 0, ',', ' ')); ?> F</div>
+                <div class="metric-subtitle">Brut − Commission</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <?php if($mobileRecettes > 0): ?>
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <h5><i class="bi bi-phone me-1" style="color:#3498db;"></i> Répartition par opérateur mobile</h5>
+                </div>
+                <div class="panel-card-body">
+                    <div class="row g-2">
+                        <?php $totalMobileTickets = 0; ?>
+                        <?php $__currentLoopData = $reseauxConfig; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $cfg): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
+                                $data = $reseauxPaiement->get($key);
+                                $count = $data ? (int) $data->total : 0;
+                                $montant = $data ? (int) $data->montant : 0;
+                                $totalMobileTickets += $count;
+                            ?>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center p-3 rounded-3" style="background:#f8f6f9;">
+                                    <div class="me-3">
+                                        <div style="width:40px;height:40px;background:rgba(52,152,219,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                                            <i class="bi bi-phone" style="color:#3498db;"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);"><?php echo e($cfg['label']); ?></div>
+                                        <div style="font-size:0.78rem;color:var(--gris);">
+                                            <?php echo e($count); ?> ticket<?php echo e($count > 1 ? 's' : ''); ?> · <?php echo e(number_format($montant, 0, ',', ' ')); ?> FCFA
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    
+    <?php if($ticketsVendus > 0): ?>
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <h5><i class="bi bi-wallet2 me-1" style="color:#7B3FA0;"></i> Répartition par moyen de paiement</h5>
+                </div>
+                <div class="panel-card-body">
+                    <div class="row g-2">
+                        <?php
+                            $moyensConfig = [
+                                'mobile_money' => ['label' => 'Mobile Money', 'icon' => 'bi-phone', 'color' => '#3498db'],
+                                'bancaire' => ['label' => 'Carte bancaire', 'icon' => 'bi-credit-card', 'color' => '#7B3FA0'],
+                                'especes' => ['label' => 'Espèces', 'icon' => 'bi-cash', 'color' => '#2e9e4f'],
+                            ];
+                            $totalMoyens = $moyensPaiement->sum('total');
+                        ?>
+                        <?php $__currentLoopData = $moyensConfig; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $mKey => $mCfg): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
+                                $mData = $moyensPaiement->get($mKey);
+                                $mCount = $mData ? (int) $mData->total : 0;
+                                $mMontant = $mData ? (int) $mData->montant : 0;
+                                $mPct = $totalMoyens > 0 ? round(($mCount / $totalMoyens) * 100) : 0;
+                            ?>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center p-3 rounded-3" style="background:#f8f6f9;">
+                                    <div class="me-3">
+                                        <div style="width:40px;height:40px;background:<?php echo e($mCfg['color']); ?>22;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                                            <i class="bi <?php echo e($mCfg['icon']); ?>" style="color:<?php echo e($mCfg['color']); ?>;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);"><?php echo e($mCfg['label']); ?></div>
+                                        <div style="font-size:0.78rem;color:var(--gris);">
+                                            <?php echo e($mCount); ?> ticket<?php echo e($mCount > 1 ? 's' : ''); ?> · <?php echo e(number_format($mMontant, 0, ',', ' ')); ?> FCFA · <?php echo e($mPct); ?>%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <h5><i class="bi bi-graph-up me-1" style="color:var(--vert);"></i> Ventes (7 derniers jours)</h5>
+                </div>
+                <div class="panel-card-body">
+                    <div style="position:relative;height:200px;">
+                        <canvas id="ventesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="panel-card" style="height:100%;">
+                <div class="panel-card-header">
+                    <h5><i class="bi bi-calendar-event me-1" style="color:var(--violet);"></i> Événements récents</h5>
+                    <a href="<?php echo e(route('admin.evenements.index')); ?>">Voir tout</a>
+                </div>
+                <div class="panel-card-body" style="padding:0;">
+                    <?php $__empty_1 = true; $__currentLoopData = $evenementsRecents; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $evenement): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php
+                            $now = now();
+                            $isPast = $evenement->date_event < $now;
+                            $isToday = $evenement->date_event->isToday();
+
+                            if ($evenement->statut === 'terminé' || $evenement->statut === 'annulé') {
+                                $statusLabel = 'Terminé';
+                                $dotColor = '#98919b';
+                            } elseif ($isPast && $evenement->statut === 'publié') {
+                                $statusLabel = 'Terminé';
+                                $dotColor = '#98919b';
+                            } elseif ($isToday || $evenement->statut === 'publié') {
+                                $statusLabel = $isToday ? 'En cours' : 'À venir';
+                                $dotColor = $isToday ? '#12976e' : '#87428b';
+                            } else {
+                                $statusLabel = ucfirst($evenement->statut);
+                                $dotColor = '#98919b';
+                            }
+                        ?>
+                        <div class="d-flex align-items-center px-3 py-2" style="border-bottom:1px solid #f5f5f5;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:<?php echo e($dotColor); ?>;margin-right:0.75rem;flex-shrink:0;"></div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:0.82rem;font-weight:600;color:var(--sombre);"><?php echo e($evenement->titre); ?></div>
+                                <div style="font-size:0.7rem;color:var(--gris);">
+                                    <?php echo e($evenement->date_event->isoFormat('D MMM YYYY')); ?> — <?php echo e($evenement->quota_vendu); ?> tickets
+                                </div>
+                            </div>
+                            <span style="font-size:0.65rem;font-weight:600;color:<?php echo e($dotColor); ?>;white-space:nowrap;"><?php echo e($statusLabel); ?></span>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <div class="text-center py-4" style="color:var(--gris);">
+                            <i class="bi bi-calendar-x d-block mb-2" style="font-size:1.5rem;"></i>
+                            <small>Aucun événement</small>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <h5><i class="bi bi-ticket-perforated me-1" style="color:var(--teal);"></i> Derniers tickets vendus</h5>
+                    <a href="<?php echo e(route('tickets.index')); ?>">Voir tout</a>
+                </div>
+                <div class="panel-card-body" style="padding:0;">
+                    <?php
+                        $recentTickets = App\Models\Ticket::whereHas('evenement', fn($q) => $q->where('user_id', auth()->id()))
+                            ->where('statut_paiement', 'payé')
+                            ->whereNull('lot_physique_id')
+                            ->latest('date_achat')
+                            ->take(8)
+                            ->get();
+                    ?>
+
+                    <?php if($recentTickets->isNotEmpty()): ?>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0" style="font-size:0.82rem;">
+                                <thead>
+                                    <tr style="background:#faf8fd;">
+                                        <th class="ps-3" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Acheteur</th>
+                                        <th style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Événement</th>
+                                        <th style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Date</th>
+                                        <th class="text-end pe-3" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--gris);font-weight:700;">Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php $__currentLoopData = $recentTickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="fw-semibold" style="color:var(--sombre);"><?php echo e($ticket->nom_acheteur ?? 'Anonyme'); ?></div>
+                                                <?php if($ticket->whatsapp_acheteur || $ticket->telephone_paiement || $ticket->telephone_acheteur): ?>
+                                                    <div class="text-muted" style="font-size:0.72rem;">
+                                                        <i class="bi bi-whatsapp me-1"></i><?php echo e($ticket->whatsapp_acheteur ?? $ticket->telephone_paiement ?? $ticket->telephone_acheteur); ?>
+
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="color:var(--gris);"><?php echo e($ticket->evenement->titre ?? '—'); ?></td>
+                                            <td style="color:var(--gris);white-space:nowrap;"><?php echo e($ticket->date_achat?->format('d/m/Y H:i')); ?></td>
+                                            <td class="text-end pe-3 fw-bold" style="color:var(--vert);white-space:nowrap;">
+                                                <?php if($ticket->montant > 0): ?><?php echo e(number_format($ticket->montant, 0, ',', ' ')); ?> F <?php else: ?> <span style="color:var(--gris);">Gratuit</span> <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4" style="color:var(--gris);">
+                            <i class="bi bi-cart-x d-block mb-2" style="font-size:1.5rem;"></i>
+                            <small>Aucune vente récente</small>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('scripts'); ?>
+<script>
+    const ctx = document.getElementById('ventesChart').getContext('2d');
+
+    const data = <?php echo json_encode($ventes7Jours, 15, 512) ?>;
+    const labels = <?php echo json_encode($joursLabels, 15, 512) ?>;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: labels.map((_, i) => i === 6 ? '#12976e' : '#b2e0d6'),
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.7,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#3d4345',
+                    padding: 10,
+                    cornerRadius: 6,
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.parsed.y + ' tickets';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                    ticks: { color: '#98919b', font: { size: 10 }, stepSize: 1 },
+                    border: { display: false }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#98919b', font: { size: 10 } },
+                    border: { display: false }
+                }
+            }
+        }
+    });
+
+    // ---- Modal « Contacter PaxEvent » : géré dans partials/demande-superadmin-modal ----
+</script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/abel/Projects/PassEvent/resources/views/dashboard.blade.php ENDPATH**/ ?>

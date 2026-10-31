@@ -10,6 +10,7 @@ use App\Mail\TarifDemandeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class TarifController extends Controller
 {
@@ -41,7 +42,7 @@ class TarifController extends Controller
         $validated = $request->validate([
             'nom' => 'required|string|max:100',
             'prix' => 'required|numeric|min:0',
-            'quantite_disponible' => 'nullable|integer|min:1',
+            'quantite_disponible' => ['nullable', 'integer', 'min:1', 'max:'.$evenement->capacite],
         ], [
             'nom.required' => 'Le nom du tarif est obligatoire.',
             'nom.max' => 'Le nom ne doit pas dépasser 100 caractères.',
@@ -50,7 +51,10 @@ class TarifController extends Controller
             'prix.min' => 'Le prix ne peut pas être négatif.',
             'quantite_disponible.integer' => 'La quantité doit être un nombre entier.',
             'quantite_disponible.min' => 'La quantité doit être d\'au moins 1.',
+            'quantite_disponible.max' => "La quantité d'un tarif ne peut pas dépasser la capacité de l'événement ({$evenement->capacite} places).",
         ]);
+
+        $this->validerCapaciteTotale($evenement, $validated['quantite_disponible'] ?? null);
 
         $validated['evenement_id'] = $evenement->id;
         $validated['quantite_vendue'] = 0;
@@ -73,11 +77,17 @@ class TarifController extends Controller
     public function update(Request $request, Evenement $evenement, Tarif $tarif)
     {
         abort_if($evenement->user_id !== Auth::id(), 403);
+        abort_if($tarif->evenement_id !== $evenement->id, 404);
 
         $validated = $request->validate([
             'nom' => 'required|string|max:100',
             'prix' => 'nullable|numeric|min:0',
-            'quantite_disponible' => 'nullable|integer|min:1',
+            'quantite_disponible' => [
+                'nullable',
+                'integer',
+                'min:'.max(1, (int) $tarif->quantite_vendue),
+                'max:'.$evenement->capacite,
+            ],
         ], [
             'nom.required' => 'Le nom du tarif est obligatoire.',
             'nom.max' => 'Le nom ne doit pas dépasser 100 caractères.',
@@ -85,7 +95,14 @@ class TarifController extends Controller
             'prix.min' => 'Le prix ne peut pas être négatif.',
             'quantite_disponible.integer' => 'La quantité doit être un nombre entier.',
             'quantite_disponible.min' => 'La quantité doit être d\'au moins 1.',
+            'quantite_disponible.max' => "La quantité d'un tarif ne peut pas dépasser la capacité de l'événement ({$evenement->capacite} places).",
         ]);
+
+        $this->validerCapaciteTotale(
+            $evenement,
+            $validated['quantite_disponible'] ?? null,
+            $tarif,
+        );
 
         $aVendu = $evenement->tarifs()->sum('quantite_vendue') > 0;
 
@@ -107,6 +124,23 @@ class TarifController extends Controller
 
         return redirect()->route('admin.tarifs.index', $evenement->id)
             ->with('success', 'Tarif modifié avec succès.');
+    }
+
+    private function validerCapaciteTotale(Evenement $evenement, ?int $quantite, ?Tarif $tarifExclu = null): void
+    {
+        $tarifsExistants = $evenement->tarifs();
+
+        if ($tarifExclu) {
+            $tarifsExistants->whereKeyNot($tarifExclu->getKey());
+        }
+
+        $totalPlacesTarifs = (int) $tarifsExistants->sum('quantite_disponible') + ($quantite ?? 0);
+
+        if ($totalPlacesTarifs > (int) $evenement->capacite) {
+            throw ValidationException::withMessages([
+                'quantite_disponible' => "La somme des places des tarifs ({$totalPlacesTarifs} places) ne peut pas dépasser la capacité totale de l'événement ({$evenement->capacite} places).",
+            ]);
+        }
     }
 
     // Soumet une demande de modification de prix à PaxEvent (utilisé quand des

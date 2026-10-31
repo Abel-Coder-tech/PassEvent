@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Observers\EvenementObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -118,6 +119,19 @@ class Evenement extends Model
             ->orderBy('date_event');
     }
 
+    public function scopeWithUpcomingDate(Builder $query): Builder
+    {
+        $now = now();
+
+        return $query->where(function (Builder $upcoming) use ($now) {
+            $upcoming->whereHas('dates', fn (Builder $dates) => $dates->where('date_debut', '>=', $now))
+                ->orWhere(function (Builder $withoutDates) use ($now) {
+                    $withoutDates->whereDoesntHave('dates')
+                        ->where('date_event', '>=', $now);
+                });
+        });
+    }
+
     public function getTextes(): array
     {
         return match ($this->type_evenement) {
@@ -180,6 +194,41 @@ class Evenement extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function ventesPayeesHorsBilletsPhysiques(): HasMany
+    {
+        return $this->tickets()
+            ->where('statut_paiement', 'payé')
+            ->whereNull('lot_physique_id')
+            ->where(function (Builder $query) {
+                $query->whereNull('annule')->orWhere('annule', false);
+            })
+            ->where(function (Builder $query) {
+                $query->whereNull('source')->orWhere('source', '!=', 'physique');
+            });
+    }
+
+    public function suppressionOrganisateurBloquee(): bool
+    {
+        if ($this->gratuit) {
+            return false;
+        }
+
+        $aVentesEligibles = array_key_exists('has_successful_non_physical_sales', $this->attributes)
+            ? (bool) $this->attributes['has_successful_non_physical_sales']
+            : $this->ventesPayeesHorsBilletsPhysiques()->exists();
+
+        if (! $aVentesEligibles) {
+            return false;
+        }
+
+        $derniereDate = $this->relationLoaded('dates')
+            ? $this->dates->max('date_debut')
+            : $this->dates()->max('date_debut');
+        $dateEvenement = $derniereDate ?? $this->date_event;
+
+        return $dateEvenement !== null && \Illuminate\Support\Carbon::parse($dateEvenement)->isFuture();
     }
 
     public function affiliateEventLinks(): HasMany

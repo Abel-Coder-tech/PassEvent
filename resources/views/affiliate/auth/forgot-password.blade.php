@@ -35,6 +35,9 @@
         @if (session('success'))
             <div class="alert alert-success small">{{ session('success') }}</div>
         @endif
+        @if (session('error'))
+            <div class="alert alert-danger small">{{ session('error') }}</div>
+        @endif
 
         <form method="POST" action="{{ route('affiliate.password.email') }}">
             @csrf

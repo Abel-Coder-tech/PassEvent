@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #542680, #3d1a5c); color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .content { padding: 20px; background: #f9fafb; }
+        .info { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 16px 0; }
+        .info p { margin: 8px 0; }
+        .label { font-weight: bold; color: #6b7280; }
+        .btn { display: inline-block; padding: 12px 24px; background: #522680; color: white; text-decoration: none; border-radius: 6px; margin-top: 16px; }
+        .footer { text-align: center; padding: 16px; color: #fff; font-size: 0.875rem; background: linear-gradient(135deg, #542680, #3d1a5c); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Bienvenue dans l'équipe de vente</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour <strong><?php echo e($agent->nom); ?></strong>,</p>
+            <p>Vous avez été designé comme agent de vente pour l'événement <strong><?php echo e($agent->evenement->titre); ?></strong>.</p>
+
+            <div class="info">
+                <p><span class="label">Événement :</span> <?php echo e($agent->evenement->titre); ?></p>
+                <p><span class="label">Date :</span> <?php echo e($agent->evenement->date_event->format('d/m/Y H:i')); ?></p>
+                <p><span class="label">Lieu :</span> <?php echo e($agent->evenement->lieu); ?></p>
+                <p><span class="label">Email de connexion :</span> <?php echo e($agent->email); ?></p>
+                <p><span class="label">Mot de passe :</span> <?php echo e($motDePasse); ?></p>
+            </div>
+
+            <p style="text-align: center;">
+                <a href="<?php echo e(route('agent-vente.login')); ?>" class="btn">Accéder à mon espace de vente</a>
+            </p>
+
+            <p><strong>Important :</strong></p>
+            <ul>
+                <li>Ne partagez jamais votre mot de passe</li>
+                <li>Vous pouvez générer des tickets PDF à remettre aux acheteurs</li>
+            </ul>
+        </div>
+        <div class="footer">
+            <p>PaxEvent &mdash; Billetterie en ligne 100% Bénin</p>
+        </div>
+    </div>
+</body>
+</html>
+<?php /**PATH /home/abel/Projects/PassEvent/resources/views/emails/agent-vente-assigned.blade.php ENDPATH**/ ?>

@@ -1,0 +1,231 @@
+<?php $__env->startSection('title', 'Notifications - Super Admin'); ?>
+<?php $__env->startSection('page-title', 'Notifications'); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="sa-card">
+    <div class="sa-card-header">
+        <span><i class="bi bi-bell-fill me-2" style="color: var(--sa-primary);"></i>Notifications</span>
+        <span class="text-muted" style="font-size:0.8rem;"><?php echo e($messages->total()); ?> notification(s)</span>
+    </div>
+    <div class="sa-card-body p-0">
+        <table class="sa-table">
+            <thead>
+                <tr><th>Type</th><th>Expéditeur</th><th>Objet</th><th>Message</th><th>Lu</th><th>Date</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                <?php $__currentLoopData = $messages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $msg): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php
+                    $isIncident = !empty($msg->transaction_id) || str_starts_with($msg->objet, 'Incident paiement');
+                    $supportUrl = !empty($msg->transaction_id)
+                        ? route('superadmin.support', ['transaction_id' => $msg->transaction_id])
+                        : route('superadmin.support', ['email' => $msg->email_achat]);
+                ?>
+                <tr id="row-<?php echo e($msg->id); ?>" style="<?php echo e(!$msg->lu ? 'background:rgba(107,63,160,0.03);' : ''); ?>">
+                    <td>
+                        <?php if($isIncident): ?>
+                            <span class="sa-badge" style="background:#e74c3c;color:#fff;">Incident paiement</span>
+                        <?php elseif(str_starts_with($msg->objet, '[Remboursement]')): ?>
+                            <span class="sa-badge" style="background:#f59e0b;color:#fff;">Remboursement</span>
+                        <?php elseif(str_starts_with($msg->objet, '[Demande]')): ?>
+                            <span class="sa-badge" style="background:#7B3FA0;color:#fff;">Demande</span>
+                        <?php else: ?>
+                            <span class="sa-badge sa-badge-primary">Contact</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><strong><?php echo e($msg->nom_complet); ?></strong><br><small style="font-size:0.7rem;"><?php echo e($msg->email); ?></small></td>
+                    <td><?php echo e($msg->objet); ?></td>
+                    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo e($msg->message); ?></td>
+                    <td id="lu-<?php echo e($msg->id); ?>">
+                        <?php if($msg->lu): ?>
+                            <span class="sa-badge sa-badge-success">Lu</span>
+                        <?php else: ?>
+                            <span class="sa-badge sa-badge-warning">Non lu</span>
+                        <?php endif; ?>
+                    </td>
+                    <td style="font-size:0.75rem;"><?php echo e($msg->created_at->isoFormat('D MMM YYYY HH:mm')); ?></td>
+                    <td style="white-space:nowrap;">
+                        <?php if($isIncident): ?>
+                            <a href="<?php echo e($supportUrl); ?>" target="_blank" class="sa-btn sa-btn-sm" style="background:#e74c3c;border:none;color:#fff;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;" title="Ouvrir le support technique">
+                                <i class="bi bi-tools"></i>
+                            </a>
+                        <?php endif; ?>
+                        <button class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;"
+                            onclick="voirNotification(<?php echo e($msg->id); ?>)" title="Voir">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <form action="<?php echo e(route('superadmin.notifications.supprimer', $msg)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette notification ?')">
+                            <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                            <button type="submit" class="sa-btn sa-btn-sm" style="background:transparent;border:1px solid #e74c3c;color:#e74c3c;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="mt-3 d-flex justify-content-center"><?php echo e($messages->links()); ?></div>
+
+
+<div id="notifModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="max-width:560px;">
+        <div class="modal-header">
+            <h5><i class="bi bi-bell-fill me-2" style="color:var(--sa-primary);"></i>Notification</h5>
+            <button class="modal-close" onclick="document.getElementById('notifModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="org-detail-row">
+                <span class="org-detail-label">Expéditeur</span>
+                <span class="org-detail-value"><strong id="modalNom"></strong></span>
+            </div>
+            <div class="org-detail-row">
+                <span class="org-detail-label">Email</span>
+                <span class="org-detail-value" id="modalEmail"></span>
+            </div>
+            <div class="org-detail-row" id="modalTelRow" style="display:none;">
+                <span class="org-detail-label">Téléphone</span>
+                <span class="org-detail-value" id="modalTel"></span>
+            </div>
+            <div class="org-detail-row" id="modalAchatRow" style="display:none;">
+                <span class="org-detail-label">Email d'achat</span>
+                <span class="org-detail-value" id="modalAchat"></span>
+            </div>
+            <div class="org-detail-row" id="modalEvenementRow" style="display:none;">
+                <span class="org-detail-label">Événement</span>
+                <span class="org-detail-value" id="modalEvenement"></span>
+            </div>
+            <div class="org-detail-row" id="modalTxRow" style="display:none;">
+                <span class="org-detail-label">ID transaction</span>
+                <span class="org-detail-value" id="modalTx"></span>
+            </div>
+            <div class="org-detail-row">
+                <span class="org-detail-label">Objet</span>
+                <span class="org-detail-value" id="modalObjet"></span>
+            </div>
+            <div class="org-detail-row" style="border-bottom:none;">
+                <span class="org-detail-label">Message</span>
+                <span class="org-detail-value" id="modalMessage" style="white-space:pre-wrap;"></span>
+            </div>
+            <div class="org-detail-row" id="modalSupportRow" style="border-top:1px solid #f5f5f5;padding-top:0.75rem;display:none;">
+                <span class="org-detail-label">Support</span>
+                <span class="org-detail-value">
+                    <a id="modalSupportLink" href="#" target="_blank" class="sa-btn sa-btn-sm" style="background:#e74c3c;border:none;color:#fff;text-decoration:none;padding:0.3rem 0.7rem;border-radius:6px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:0.35rem;">
+                        <i class="bi bi-tools"></i> Réconcilier dans le support
+                    </a>
+                </span>
+            </div>
+
+            <form id="repondreNotifForm" action="" method="POST" style="margin-top:1rem;border-top:1px solid #f5f5f5;padding-top:1rem;">
+                <?php echo csrf_field(); ?>
+                <label class="org-detail-label" style="display:block;margin-bottom:0.4rem;">Envoyer une note</label>
+                <textarea name="note" id="modalNote" class="form-control" rows="3" style="font-size:0.85rem;width:100%;border:1px solid #ddd;border-radius:8px;padding:0.5rem 0.7rem;resize:vertical;"></textarea>
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.6rem;">
+                    <button type="button" class="sa-btn sa-btn-secondary" onclick="document.getElementById('notifModal').style.display='none'">Fermer</button>
+                    <button type="submit" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-send me-1"></i> Envoyer la note
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.org-detail-row { display:flex;gap:1rem;padding:0.5rem 0;border-bottom:1px solid #f5f5f5;font-size:0.85rem; }
+.org-detail-row:last-child { border-bottom:none; }
+.org-detail-label { font-weight:600;color:#666;min-width:100px;flex-shrink:0; }
+.org-detail-value { color:#1a1a1a; }
+.modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center; }
+.modal-box { background:#fff;border-radius:14px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:modalIn 0.2s ease; }
+@keyframes modalIn { from{transform:scale(0.95);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-header { display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid #eee; }
+.modal-header h5 { margin:0;font-size:1rem;font-weight:700; }
+.modal-close { background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;line-height:1; }
+.modal-body { padding:1.25rem; }
+.modal-footer { padding:0.75rem 1.25rem;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:0.5rem; }
+.sa-btn-secondary { background:#6c757d;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer; }
+</style>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+const notifs = <?php echo json_encode($messages->items(), 15, 512) ?>;
+
+function voirNotification(id) {
+    const msg = notifs.find(n => n.id === id);
+    if (!msg) return;
+    document.getElementById('modalNom').textContent = msg.nom_complet;
+    document.getElementById('modalEmail').textContent = msg.email;
+    document.getElementById('modalObjet').textContent = msg.objet;
+    document.getElementById('modalMessage').textContent = msg.message;
+
+    const telRow = document.getElementById('modalTelRow');
+    const telEl = document.getElementById('modalTel');
+    const isIncident = msg.transaction_id || String(msg.objet || '').startsWith('Incident paiement');
+
+    if (msg.telephone) { telEl.textContent = msg.telephone; telRow.style.display = ''; }
+    else { telRow.style.display = 'none'; }
+
+    const evenementRow = document.getElementById('modalEvenementRow');
+    const evenementEl = document.getElementById('modalEvenement');
+    if (msg.evenement && msg.evenement.titre) {
+        evenementEl.textContent = msg.evenement.titre;
+        evenementRow.style.display = '';
+    } else {
+        evenementRow.style.display = 'none';
+    }
+
+    if (msg.email_achat) {
+        document.getElementById('modalAchat').textContent = msg.email_achat;
+        document.getElementById('modalAchatRow').style.display = '';
+    } else {
+        document.getElementById('modalAchatRow').style.display = 'none';
+    }
+
+    if (msg.transaction_id) {
+        document.getElementById('modalTx').textContent = msg.transaction_id;
+        document.getElementById('modalTxRow').style.display = '';
+    } else {
+        document.getElementById('modalTxRow').style.display = 'none';
+    }
+
+    const supportRow = document.getElementById('modalSupportRow');
+    const supportLink = document.getElementById('modalSupportLink');
+    if (isIncident) {
+        const params = new URLSearchParams();
+        if (msg.transaction_id) params.set('transaction_id', msg.transaction_id);
+        if (msg.email_achat) params.set('email', msg.email_achat);
+        supportLink.href = '<?php echo e(route('superadmin.support')); ?>' + '?' + params.toString();
+        supportRow.style.display = '';
+    } else {
+        supportRow.style.display = 'none';
+    }
+
+    document.getElementById('repondreNotifForm').action = '<?php echo e(url("/superadmin/notifications")); ?>/' + id + '/repondre';
+    document.getElementById('modalNote').value = "Bonjour " + (msg.nom_complet || 'cher organisateur') + ",\n\nNous avons bien reçu votre demande et nous vous répondons dans les plus brefs délais.\n\nCordialement,\nL'équipe PaxEvent";
+
+    document.getElementById('notifModal').style.display = 'flex';
+
+    if (!msg.lu) {
+        fetch('<?php echo e(url("/superadmin/notifications")); ?>/' + id + '/lire', { method: 'POST', headers: { 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>' } })
+            .then(() => {
+                const row = document.getElementById('row-' + id);
+                if (row) row.style.background = '';
+                const luCell = document.getElementById('lu-' + id);
+                if (luCell) luCell.innerHTML = '<span class="sa-badge sa-badge-success">Lu</span>';
+                const dot = document.querySelector('.sa-notif-dot');
+                if (dot) {
+                    const n = parseInt(dot.textContent, 10);
+                    if (n > 1) dot.textContent = n - 1;
+                    else dot.remove();
+                }
+                const m = notifs.find(x => x.id === id);
+                if (m) m.lu = true;
+            });
+    }
+}
+</script>
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('superadmin.layouts.master', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/abel/Projects/PassEvent/resources/views/superadmin/notifications.blade.php ENDPATH**/ ?>

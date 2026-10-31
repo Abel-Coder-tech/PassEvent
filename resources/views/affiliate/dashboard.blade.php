@@ -37,17 +37,17 @@
         </div>
     </div>
 
-    @if($evenementsOuverts->isNotEmpty())
-        <div class="mb-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                <div>
-                    <h2 class="h6 fw-bold mb-1"><i class="bi bi-share me-1"></i> Événements ouverts au co-parrainage</h2>
-                    <p class="text-muted small mb-0">Générez votre lien personnel et touchez un pourcentage sur chaque billet vendu via celui-ci.</p>
-                </div>
-                <a href="{{ route('affiliate.liens') }}" class="small text-decoration-none">
-                    Voir tous les événements <i class="bi bi-arrow-right"></i>
-                </a>
+    <div class="mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h2 class="h6 fw-bold mb-1"><i class="bi bi-share me-1"></i> Événements ouverts au co-parrainage</h2>
+                <p class="text-muted small mb-0">Générez votre lien personnel et touchez un pourcentage sur chaque billet vendu via celui-ci.</p>
             </div>
+            <a href="{{ route('affiliate.liens') }}" class="small text-decoration-none">
+                Voir tous les événements <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        @if($evenementsOuverts->isNotEmpty())
             <div class="row g-3">
                 @foreach($evenementsOuverts as $ev)
                     <div class="col-12 col-md-6 col-xl-4">
@@ -90,8 +90,13 @@
                     </div>
                 @endforeach
             </div>
-        </div>
-    @endif
+        @else
+            <div class="alert alert-light border small mb-0">
+                Aucun événement à promouvoir pour le moment. Les événements apparaissent ici lorsqu'ils sont publiés, payants, à venir et ouverts au co-parrainage.
+                <a href="{{ route('affiliate.liens') }}" class="alert-link">Voir tous les événements</a>.
+            </div>
+        @endif
+    </div>
 
     <div class="row g-3 mb-4">
         <div class="col-12">
