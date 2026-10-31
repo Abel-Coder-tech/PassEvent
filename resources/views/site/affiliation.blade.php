@@ -219,7 +219,6 @@
         .aff-partnership-layout { grid-template-columns: 1fr; }
         .aff-partnership-points { grid-template-columns: 1fr; }
     }
-
     .aff-scroll { max-height: 520px; overflow-y: auto; padding-right: 0.5rem; }
     .aff-scroll::-webkit-scrollbar { width: 8px; }
     .aff-scroll::-webkit-scrollbar-thumb { background: #d9cdee; border-radius: 8px; }

@@ -86,20 +86,9 @@
         .empty-state i { font-size: 1.9rem; color: var(--violet-clair); }
         .empty-state .empty-title { font-weight: 700; margin: 0.5rem 0 0.15rem; }
         @media (max-width: 991.98px) {
-            .aff-shell { flex-direction: column; }
+            .aff-shell { flex-direction: row; }
             .aff-content { padding: 1rem; }
-            .aff-sidebar { flex: 0 0 auto; width: 100%; padding: 0.5rem; }
-            .aff-sidebar .nav {
-                flex-direction: row;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                gap: 0.25rem;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-            .aff-sidebar .nav::-webkit-scrollbar { display: none; }
-            .aff-sidebar .nav-link { font-size: 0.82rem; padding: 0.45rem 0.7rem; }
-            .aff-sidebar .nav-link.active { box-shadow: none; }
+            .aff-sidebar { display: none !important; }
         }
         .card-aff, .aff-card {
             background: #fff;
@@ -163,19 +152,21 @@
         <div class="aff-column">
             <header class="aff-header">
                 <div class="container-fluid px-3 px-lg-4 d-flex align-items-center justify-content-between">
-                    <a href="{{ route('affiliate.dashboard') }}" class="brand">
-                        <i class="bi bi-broadcast-pin"></i> PaxEvent <span style="opacity:.7;font-weight:500;">· Affiliés</span>
-                    </a>
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="d-none d-sm-inline" style="opacity:.85;font-size:.9rem;">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm d-lg-none px-2 py-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#affMobileNav" aria-controls="affMobileNav" style="border:1px solid #d6d3da; background:#fff;">
+                            <i class="bi bi-list" style="font-size:1.1rem;"></i>
+                        </button>
+                        <a href="{{ route('affiliate.dashboard') }}" class="brand">
+                            <i class="bi bi-broadcast-pin"></i> <span>PaxEvent</span> <span class="d-none d-sm-inline" style="opacity:.7;font-weight:500;">· Affiliés</span>
+                        </a>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 gap-sm-3">
+                        <span class="d-none d-md-inline text-truncate" style="opacity:.85;font-size:.9rem; max-width: 180px;">
                             <i class="bi bi-person-circle me-1"></i>{{ auth('affiliate')->user()->nom_complet }}
                         </span>
-                        <form action="{{ route('affiliate.logout') }}" method="POST" class="m-0">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Déconnexion</span>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-2 px-sm-3" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+                            <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Déconnexion</span>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -209,7 +200,7 @@
             </main>
         </div>
 
-        <nav class="aff-sidebar">
+        <nav class="aff-sidebar d-none d-lg-block">
             <ul class="nav flex-column gap-1">
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('affiliate.dashboard') ? 'active' : '' }}" href="{{ route('affiliate.dashboard') }}">
@@ -243,6 +234,113 @@
                 </li>
             </ul>
         </nav>
+    </div>
+
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="affMobileNav" aria-labelledby="affMobileNavLabel" style="width:280px; background: linear-gradient(180deg, var(--violet) 0%, #3d1a5c 100%);">
+        <div class="offcanvas-header border-0 pb-2">
+            <h5 class="offcanvas-title text-white d-flex align-items-center gap-2" id="affMobileNavLabel">
+                <i class="bi bi-broadcast-pin"></i> PaxEvent · Affiliés
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+        </div>
+        <div class="offcanvas-body pt-2">
+            <div class="mb-3 px-2">
+                <div class="d-flex align-items-center gap-2 text-white-50 small">
+                    <i class="bi bi-person-circle"></i>
+                    <span class="text-truncate">{{ auth('affiliate')->user()->nom_complet }}</span>
+                </div>
+            </div>
+            <ul class="nav flex-column gap-1">
+                <li class="nav-item">
+                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.dashboard') ? 'active' : '' }}" href="{{ route('affiliate.dashboard') }}" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-speedometer2"></i> Tableau de bord
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.filleuls') ? 'active' : '' }}" href="{{ route('affiliate.filleuls') }}" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-people"></i> Mes filleuls
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.liens*') ? 'active' : '' }}" href="{{ route('affiliate.liens') }}" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-link-45deg"></i> Mes liens
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.commissions') ? 'active' : '' }}" href="{{ route('affiliate.commissions') }}" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-cash-coin"></i> Mes commissions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.paiements*') ? 'active' : '' }}" href="{{ route('affiliate.paiements') }}" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-wallet2"></i> Paiements
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.profil*') ? 'active' : '' }}" href="{{ route('affiliate.profil') }}" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-gear"></i> Profil
+                    </a>
+                </li>
+            </ul>
+            <div class="mt-4 pt-3 border-top border-white border-opacity-10">
+                <button type="button" class="btn btn-sm aff-mobile-logout w-100 text-start border-0" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal" onclick="const off = bootstrap.Offcanvas.getInstance(document.getElementById('affMobileNav')); if(off){off.hide();}">
+                    <i class="bi bi-box-arrow-right me-2"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .aff-mobile-link {
+            color: rgba(255,255,255,0.75);
+            font-weight: 600;
+            padding: 0.55rem 0.75rem;
+            font-size: 0.9rem;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .aff-mobile-link:hover,
+        .aff-mobile-link:focus {
+            color: #fff;
+            background: rgba(254,213,20,0.16);
+        }
+        .aff-mobile-link.active {
+            color: var(--sombre);
+            background: var(--accent);
+            font-weight: 700;
+            box-shadow: none;
+        }
+        .aff-mobile-logout {
+            color: rgba(255,255,255,0.75);
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .aff-mobile-logout:hover,
+        .aff-mobile-logout:focus {
+            color: #fff;
+            background: rgba(254,213,20,0.18);
+        }
+    </style>
+
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:12px; overflow:hidden;">
+                <div class="modal-header border-0 pb-1">
+                    <h5 class="modal-title text-danger" id="logoutConfirmModalLabel">Déconnexion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body pt-1">
+                    <p class="mb-0">Voulez-vous vous déconnecter ?</p>
+                </div>
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-end gap-3">
+                    <button type="button" class="btn btn-link btn-sm text-dark text-decoration-none p-0" data-bs-dismiss="modal">Non</button>
+                    <form action="{{ route('affiliate.logout') }}" method="POST" class="m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-link btn-sm text-danger text-decoration-none p-0">Oui</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/assets/js/bootstrap.bundle.min.js"></script>

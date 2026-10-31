@@ -127,7 +127,7 @@
         </div>
 
         @if(!$evenement->gratuit)
-        <div class="panel-card mb-4">
+        <div class="panel-card mb-4" id="coparrainage">
             <div class="panel-card-header">
                 <h5><i class="bi bi-share me-2" style="color: var(--violet);"></i>Co-parrainage</h5>
             </div>

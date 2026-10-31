@@ -45,20 +45,21 @@
 
 <div class="sa-card mb-4">
     <div class="sa-card-body">
-        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-            <form method="GET" action="{{ route('superadmin.affiliations.index') }}" class="d-flex flex-wrap gap-2 align-items-center">
-                <input type="text" name="q" value="{{ $recherche }}" class="sa-form-control" placeholder="Nom, email, code..." style="min-width:220px;">
-                <select name="statut" class="sa-form-control" style="min-width:150px;">
-                    <option value="">Tous les statuts</option>
-                    <option value="actif" @selected($statut === 'actif')>Actifs</option>
-                    <option value="inactif" @selected($statut === 'inactif')>Inactifs</option>
-                </select>
-                <button type="submit" class="sa-btn sa-btn-primary"><i class="bi bi-search"></i> Filtrer</button>
-                @if($recherche !== '' || $statut)
-                    <a href="{{ route('superadmin.affiliations.index') }}" class="sa-btn sa-btn-outline">Réinitialiser</a>
-                @endif
-            </form>
-            <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-nowrap gap-2 align-items-center overflow-auto justify-content-between">
+            <div class="d-flex flex-nowrap gap-2 align-items-center">
+                <form method="GET" action="{{ route('superadmin.affiliations.index') }}" id="affiliesFilterForm" class="d-flex flex-nowrap gap-2 align-items-center">
+                    <input type="text" name="q" id="affiliesSearch" value="{{ $recherche }}" class="sa-form-control" placeholder="Nom, email, code..." style="min-width:200px;" autocomplete="off">
+                    <select name="statut" id="affiliesStatut" class="sa-form-control" style="min-width:140px;">
+                        <option value="">Tous les statuts</option>
+                        <option value="actif" @selected($statut === 'actif')>Actifs</option>
+                        <option value="inactif" @selected($statut === 'inactif')>Inactifs</option>
+                    </select>
+                    @if($recherche !== '' || $statut)
+                        <a href="{{ route('superadmin.affiliations.index') }}" class="sa-btn sa-btn-outline">Réinitialiser</a>
+                    @endif
+                </form>
+            </div>
+            <div class="d-flex flex-nowrap gap-2 align-items-center ms-auto">
                 <a href="{{ route('superadmin.affiliations.dashboard') }}" class="sa-btn sa-btn-outline"><i class="bi bi-speedometer2"></i> Tableau de bord</a>
                 <a href="{{ route('superadmin.affiliations.commissions') }}" class="sa-btn sa-btn-outline"><i class="bi bi-list-columns"></i> Commissions</a>
                 <a href="{{ route('superadmin.affiliations.reversements') }}" class="sa-btn sa-btn-outline">
@@ -85,9 +86,8 @@
                         <tr>
                             <th>Affilié</th>
                             <th>Code</th>
-                            <th>Événements co-parrainés</th>
-                            <th class="text-center">Filleuls</th>
                             <th class="text-center">Liens</th>
+                            <th class="text-center">Filleuls</th>
                             <th class="text-end">En attente</th>
                             <th class="text-end">Disponible</th>
                             <th class="text-end">Total gagné</th>
@@ -103,39 +103,11 @@
                                     <br><small style="color:var(--sa-text-muted);">{{ $affilie->email }}</small>
                                 </td>
                                 <td><code style="font-size:0.72rem;">{{ $affilie->code_parrainage }}</code></td>
-                                <td style="min-width:220px;">
-                                    @php($evenementsAffilie = $affilie->eventLinks->pluck('evenement')->filter()->unique('id'))
-                                    @if($evenementsAffilie->count() > 0)
-                                        <div class="d-flex flex-wrap gap-1">
-                                            @foreach($evenementsAffilie->take(2) as $evenementAffilie)
-                                                <a href="{{ route('superadmin.evenements.voir', $evenementAffilie) }}"
-                                                   class="sa-badge sa-badge-info text-decoration-none"
-                                                   style="font-size:0.65rem;"
-                                                   title="{{ $evenementAffilie->titre }}">
-                                                    {{ \Illuminate\Support\Str::limit($evenementAffilie->titre, 24) }}
-                                                </a>
-                                            @endforeach
-                                            @if($evenementsAffilie->count() > 2)
-                                                <a href="{{ route('superadmin.affiliations.show', $affilie) }}"
-                                                   class="sa-badge sa-badge-secondary text-decoration-none"
-                                                   style="font-size:0.65rem;"
-                                                   title="Voir tous les événements co-parrainés">
-                                                    +{{ $evenementsAffilie->count() - 2 }}
-                                                </a>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span style="color:var(--sa-text-muted);">—</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">{{ $affilie->referrals_count }}</td>
                                 <td class="text-center">{{ $affilie->event_links_count }}</td>
+                                <td class="text-center">{{ $affilie->referrals_count }}</td>
                                 <td class="text-end">{{ number_format((float) $affilie->solde_en_attente, 0, ',', ' ') }} F</td>
                                 <td class="text-end"><strong>{{ number_format((float) $affilie->solde_disponible, 0, ',', ' ') }} F</strong></td>
-                                <td class="text-end">
-                                    {{ number_format((float) $affilie->total_gagne, 0, ',', ' ') }} F
-                                    <br><small style="color:var(--sa-text-muted);">{{ $affilie->commissions_count }} commission(s)</small>
-                                </td>
+                                <td class="text-end">{{ number_format((float) $affilie->total_gagne, 0, ',', ' ') }} F</td>
                                 <td class="text-center">
                                     @if($affilie->actif)
                                         <span class="sa-badge sa-badge-success">Actif</span>
@@ -170,4 +142,25 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    (function() {
+        const form = document.getElementById('affiliesFilterForm');
+        const search = document.getElementById('affiliesSearch');
+        const statut = document.getElementById('affiliesStatut');
+        if (!form) return;
+        let timeout;
+        if (search) {
+            search.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() { form.submit(); }, 400);
+            });
+        }
+        if (statut) {
+            statut.addEventListener('change', function() { form.submit(); });
+        }
+    })();
+</script>
+@endpush
 @endsection

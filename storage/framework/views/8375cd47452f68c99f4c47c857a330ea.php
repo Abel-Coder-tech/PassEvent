@@ -1,0 +1,298 @@
+<?php if (! $__env->hasRenderedOnce('662fd586-16dc-473b-a3f4-83c3bd19a5d5')): $__env->markAsRenderedOnce('662fd586-16dc-473b-a3f4-83c3bd19a5d5'); ?>
+<div style="padding:0.75rem;border-bottom:1px solid rgba(0,0,0,0.05);display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+    <button type="button" class="sa-btn sa-btn-sm" style="background:var(--sa-success);border:none;color:#fff;" onclick="supportAction('confirmer')">
+        <i class="bi bi-check-circle"></i> Confirmer les sélectionnés
+    </button>
+    <button type="button" class="sa-btn sa-btn-sm" style="background:#e74c3c;border:none;color:#fff;" onclick="supportAction('supprimer')">
+        <i class="bi bi-trash"></i> Supprimer les sélectionnés
+    </button>
+    <button type="button" class="sa-btn sa-btn-sm" style="background:#8e44ad;border:none;color:#fff;" onclick="supportAction('rembourser')">
+        <i class="bi bi-cash-coin"></i> Rembourser les sélectionnés
+    </button>
+    <span class="text-muted" style="font-size:0.72rem;margin-left:auto;" id="support-count">0 sélectionné(s)</span>
+</div>
+<?php endif; ?>
+
+<table class="sa-table">
+    <thead>
+        <tr>
+            <th style="width:36px;"><input type="checkbox" id="support-check-all" onchange="supportToggleAll(this)"></th>
+            <th>Billet</th>
+            <th>Événement</th>
+            <th>Acheteur</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>FedaPay</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <tr id="support-row-<?php echo e($ticket->id); ?>">
+            <td><input type="checkbox" class="support-check" value="<?php echo e($ticket->id); ?>" onchange="supportUpdateCount()"></td>
+            <td>
+                <span class="fw-bold" style="font-size:0.75rem;color:var(--sa-primary);"><?php echo e($ticket->code_unique); ?></span><br>
+                <small style="font-size:0.68rem;">#<?php echo e($ticket->id); ?> · <?php echo e($ticket->nom_tarif); ?></small>
+            </td>
+            <td style="max-width:160px;font-size:0.75rem;"><?php echo e($ticket->evenement?->titre ?? '—'); ?></td>
+            <td style="max-width:150px;">
+                <div style="font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo e($ticket->nom_acheteur); ?></div>
+                <small style="font-size:0.68rem;color:#666;"><?php echo e($ticket->email_acheteur ?? '—'); ?></small><br>
+                <small style="font-size:0.68rem;color:#666;">WhatsApp : <?php echo e($ticket->whatsapp_acheteur ?? '—'); ?></small><br>
+                <small style="font-size:0.68rem;color:#666;">N° payement : <?php echo e($ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—'); ?></small>
+            </td>
+            <td class="fw-bold" style="font-size:0.78rem;"><?php if($ticket->montant > 0): ?><?php echo e(number_format($ticket->montant, 0, ',', ' ')); ?> F <?php else: ?> Gratuit <?php endif; ?></td>
+            <td>
+                <?php if($ticket->statut_paiement === 'payé'): ?>
+                    <span class="sa-badge sa-badge-success">Payé</span>
+                <?php elseif($ticket->statut_paiement === 'en_attente'): ?>
+                    <span class="sa-badge sa-badge-warning">En attente</span>
+                <?php elseif($ticket->statut_paiement === 'remboursé'): ?>
+                    <span class="sa-badge" style="background:rgba(52,152,219,0.12);color:#2563eb;">Remboursé</span>
+                <?php else: ?>
+                    <span class="sa-badge sa-badge-danger"><?php echo e($ticket->statut_paiement); ?></span>
+                <?php endif; ?>
+            </td>
+            <td style="font-size:0.7rem;"><?php echo e($ticket->fedapay_transaction_id ?? '—'); ?></td>
+            <td style="white-space:nowrap;">
+                <button type="button" class="sa-btn sa-btn-sm" style="background:#8b5cf6;border:none;color:#fff;" onclick="supportVoirIncident(<?php echo e($ticket->id); ?>)" title="Voir la notification (incident)">
+                    <i class="bi bi-eye"></i>
+                </button>
+                <button type="button" class="sa-btn sa-btn-sm" style="background:#3b82f6;border:none;color:#fff;" onclick="supportApercu(<?php echo e($ticket->id); ?>)" title="Lire le mail puis renvoyer">
+                    <i class="bi bi-envelope"></i>
+                </button>
+            </td>
+        </tr>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+    </tbody>
+</table>
+
+<?php if (! $__env->hasRenderedOnce('f97e1de2-95da-423a-8c10-e699c5bcc6d0')): $__env->markAsRenderedOnce('f97e1de2-95da-423a-8c10-e699c5bcc6d0'); ?>
+
+<form id="support-form-confirmer" method="POST" action="<?php echo e(route('superadmin.support.confirmer')); ?>">
+    <?php echo csrf_field(); ?>
+    <input type="hidden" name="transaction_id" value="<?php echo e($transactionId ?? ''); ?>">
+    <input type="hidden" name="notes" value="">
+</form>
+<form id="support-form-supprimer" method="POST" action="<?php echo e(route('superadmin.support.supprimer')); ?>">
+    <?php echo csrf_field(); ?>
+    <input type="hidden" name="motif" value="">
+</form>
+<form id="support-form-rembourser" method="POST" action="<?php echo e(route('superadmin.support.rembourser')); ?>">
+    <?php echo csrf_field(); ?>
+    <input type="hidden" name="motif" value="">
+    <input type="hidden" name="notes" value="">
+</form>
+<form id="support-form-renvoyer" method="POST" action="<?php echo e(route('superadmin.support.renvoyer-email')); ?>">
+    <?php echo csrf_field(); ?>
+    <input type="hidden" name="ticket_id" value="">
+</form>
+
+
+<div id="incidentModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="max-width:560px;">
+        <div class="modal-header">
+            <h5><i class="bi bi-exclamation-triangle me-2" style="color:#e74c3c;"></i>Incident <span id="incidentTicketRef" style="font-weight:600;"></span></h5>
+            <button class="modal-close" onclick="document.getElementById('incidentModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body" id="incidentModalBody"></div>
+        <div class="modal-footer">
+            <button class="sa-btn sa-btn-secondary" onclick="document.getElementById('incidentModal').style.display='none'">Fermer</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="apercuModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="max-width:760px;">
+        <div class="modal-header">
+            <h5><i class="bi bi-envelope-paper me-2" style="color:#3b82f6;"></i>Aperçu de l'email à renvoyer</h5>
+            <button class="modal-close" onclick="document.getElementById('apercuModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="apercuLoading" class="text-muted" style="font-size:0.85rem;padding:1rem 0;">
+                <i class="bi bi-arrow-repeat spin me-2"></i>Génération de l'aperçu…
+            </div>
+            <div id="apercuError" style="display:none;font-size:0.85rem;color:#e74c3c;padding:1rem 0;"></div>
+            <div id="apercuBody" style="display:none;">
+                <div style="font-size:0.82rem;margin-bottom:0.75rem;">
+                    <div><strong>À :</strong> <span id="apercuTo" style="word-break:break-all;"></span></div>
+                    <div style="margin-top:0.25rem;"><strong>Objet :</strong> <span id="apercuSubject" style="font-weight:600;"></span></div>
+                </div>
+                <iframe id="apercuIframe" style="width:100%;height:360px;border:1px solid #eee;border-radius:8px;background:#fff;"></iframe>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="sa-btn-secondary" onclick="document.getElementById('apercuModal').style.display='none'">Annuler</button>
+            <button id="apercuSend" type="button" class="sa-btn" style="background:#3b82f6;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;"
+                    onclick="if (confirm('Envoyer ce mail à l\'acheteur ?')) supportEnvoyer();">
+                <i class="bi bi-send me-1"></i>Envoyer le mail
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center; }
+.modal-box { background:#fff;border-radius:14px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:modalIn 0.2s ease; }
+@keyframes modalIn { from{transform:scale(0.95);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-header { display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid #eee; }
+.modal-header h5 { margin:0;font-size:1rem;font-weight:700; }
+.modal-close { background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;line-height:1; }
+.modal-body { padding:1.25rem; }
+.modal-footer { padding:0.75rem 1.25rem;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:0.5rem; }
+.sa-btn-secondary { background:#6c757d;border:none;color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer; }
+.incident-msg { padding:0.75rem 0;border-bottom:1px solid #f5f5f5;font-size:0.85rem; }
+.incident-msg:last-child { border-bottom:none; }
+.spin { animation: spin 1s linear infinite; display:inline-block; }
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+</style>
+
+<script>
+function supportSelected() {
+    return Array.from(document.querySelectorAll('.support-check:checked')).map(c => c.value);
+}
+function supportUpdateCount() {
+    const n = supportSelected().length;
+    document.getElementById('support-count').textContent = n + ' sélectionné(s)';
+    document.querySelectorAll('.support-check:checked').forEach(c => {
+        const row = document.getElementById('support-row-' + c.value);
+        if (row) row.style.background = 'rgba(107,63,160,0.06)';
+    });
+    document.querySelectorAll('.support-check:not(:checked)').forEach(c => {
+        const row = document.getElementById('support-row-' + c.value);
+        if (row) row.style.background = '';
+    });
+}
+function supportToggleAll(el) {
+    document.querySelectorAll('.support-check').forEach(c => c.checked = el.checked);
+    supportUpdateCount();
+}
+function supportAction(action) {
+    const ids = supportSelected();
+    if (!ids.length) { alert('Sélectionnez au moins un billet.'); return; }
+    const form = document.getElementById('support-form-' + action);
+    if (!form) return;
+
+    let motif = '', notes = '';
+    if (action === 'supprimer') {
+        motif = prompt('Motif de la suppression :') || '';
+        if (!motif) return;
+    }
+    if (action === 'rembourser') {
+        motif = prompt('Motif du remboursement :') || '';
+        if (!motif) return;
+        notes = prompt('Notes internes (facultatif) :') || '';
+    }
+    if (action === 'confirmer') {
+        const t = prompt('ID transaction FedaPay (preuve API) :');
+        if (!t) {
+            const force = confirm('Confirmer SANS preuve API ?\nOverride tracé, à n\'utiliser qu\'après contrôle manuel.');
+            if (!force) return;
+            form.querySelector('input[name="transaction_id"]').value = '';
+        } else {
+            form.querySelector('input[name="transaction_id"]').value = t;
+        }
+    }
+    form.querySelectorAll('input[name="ticket_ids[]"]').forEach(el => el.remove());
+    ids.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ticket_ids[]';
+        input.value = id;
+        form.appendChild(input);
+    });
+    const m = form.querySelector('input[name="motif"]'); if (m) m.value = motif;
+    const n = form.querySelector('input[name="notes"]'); if (n) n.value = notes;
+    form.submit();
+}
+function supportRenvoyer(ticketId) {
+    const form = document.getElementById('support-form-renvoyer');
+    form.querySelector('input[name="ticket_id"]').value = ticketId;
+    form.submit();
+}
+function supportApercu(ticketId) {
+    document.getElementById('apercuTo').textContent = '';
+    document.getElementById('apercuSubject').textContent = '';
+    document.getElementById('apercuIframe').srcdoc = '';
+    document.getElementById('apercuError').style.display = 'none';
+    document.getElementById('apercuBody').style.display = 'none';
+    document.getElementById('apercuLoading').style.display = 'block';
+    document.getElementById('apercuModal').style.display = 'flex';
+    document.getElementById('apercuSend').setAttribute('data-ticket-id', ticketId);
+
+    fetch('<?php echo e(route('superadmin.support.renvoyer-apercu')); ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+        },
+        body: JSON.stringify({ ticket_id: ticketId })
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        document.getElementById('apercuLoading').style.display = 'none';
+        if (!ok || data.error) {
+            document.getElementById('apercuError').textContent = data.error || 'Erreur lors de la génération de l\'aperçu.';
+            document.getElementById('apercuError').style.display = 'block';
+            return;
+        }
+        document.getElementById('apercuTo').textContent = data.to;
+        document.getElementById('apercuSubject').textContent = data.subject;
+        document.getElementById('apercuIframe').srcdoc = data.html;
+        document.getElementById('apercuBody').style.display = 'block';
+    })
+    .catch(() => {
+        document.getElementById('apercuLoading').style.display = 'none';
+        document.getElementById('apercuError').textContent = 'Erreur lors du chargement de l\'aperçu.';
+        document.getElementById('apercuError').style.display = 'block';
+    });
+}
+function supportEnvoyer() {
+    const ticketId = document.getElementById('apercuSend').getAttribute('data-ticket-id');
+    supportRenvoyer(parseInt(ticketId, 10));
+    document.getElementById('apercuModal').style.display = 'none';
+}
+function supportVoirIncident(ticketId) {
+    fetch('<?php echo e(route('superadmin.support.incident-message')); ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+        },
+        body: JSON.stringify({ ticket_id: ticketId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('incidentTicketRef').textContent = '#' + data.ticket_id + ' · ' + (data.code_unique || '');
+        const body = document.getElementById('incidentModalBody');
+        if (!data.messages || !data.messages.length) {
+            body.innerHTML = '<div class="text-muted" style="font-size:0.85rem;">Aucune notification liée à ce ticket.</div>';
+        } else {
+            body.innerHTML = data.messages.map(m => `
+                <div class="incident-msg">
+                    <div><strong>${escapeHtml(m.nom_complet)}</strong> <small class="text-muted">${escapeHtml(m.email)}</small></div>
+                    <div class="text-muted" style="margin-top:0.25rem;">${escapeHtml(m.objet)}</div>
+                    <div style="margin-top:0.35rem;white-space:pre-wrap;">${escapeHtml(m.message)}</div>
+                    ${m.telephone ? `<div class="text-muted" style="margin-top:0.25rem;">Tél : ${escapeHtml(m.telephone)}</div>` : ''}
+                    ${m.email_achat ? `<div class="text-muted">Email d'achat : ${escapeHtml(m.email_achat)}</div>` : ''}
+                    ${m.transaction_id ? `<div class="text-muted">Transaction : ${escapeHtml(m.transaction_id)}</div>` : ''}
+                    <div class="text-muted" style="margin-top:0.25rem;">${escapeHtml(m.date)}</div>
+                </div>
+            `).join('');
+        }
+        document.getElementById('incidentModal').style.display = 'flex';
+        const dot = document.querySelector('.sa-notif-dot');
+        if (dot) {
+            const n = parseInt(dot.textContent, 10);
+            if (n > 1) dot.textContent = n - 1;
+            else dot.remove();
+        }
+    })
+    .catch(() => alert('Erreur lors du chargement de la notification.'));
+}
+</script>
+<?php endif; ?>
+<?php /**PATH /home/abel/Projects/PassEvent/resources/views/superadmin/support/tickets-table.blade.php ENDPATH**/ ?>

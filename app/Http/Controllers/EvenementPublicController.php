@@ -26,8 +26,8 @@ class EvenementPublicController extends Controller
     public function index(Request $request)
     {
         // Récupère les catégories disponibles pour les événements à venir
-        $categories = Evenement::where('statut', 'publié')
-            ->whereHas('dates', fn ($q) => $q->where('date_debut', '>=', now()))
+        $categories = Evenement::withUpcomingDate()
+            ->where('statut', 'publié')
             ->whereNotNull('categorie')
             ->distinct()
             ->orderBy('categorie')
@@ -38,8 +38,8 @@ class EvenementPublicController extends Controller
         $q = $request->input('q');
 
         $query = Evenement::with('tarifs', 'dates')
+            ->withUpcomingDate()
             ->where('statut', 'publié')
-            ->whereHas('dates', fn ($q) => $q->where('date_debut', '>=', now()))
             ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
@@ -65,7 +65,15 @@ class EvenementPublicController extends Controller
         // Événements passés (publiés ou terminés) affichés en bas de page
         $evenementsPasses = Evenement::with('tarifs', 'dates')
             ->whereIn('statut', ['publié', 'terminé'])
-            ->whereDoesntHave('dates', fn ($q) => $q->where('date_debut', '>=', now()))
+            ->where(function ($query) {
+                $query->where(function ($withDates) {
+                    $withDates->whereHas('dates')
+                        ->whereDoesntHave('dates', fn ($dates) => $dates->where('date_debut', '>=', now()));
+                })->orWhere(function ($withoutDates) {
+                    $withoutDates->whereDoesntHave('dates')
+                        ->where('date_event', '<', now());
+                });
+            })
             ->orderBy('date_event', 'desc')
             ->limit(9)
             ->get();

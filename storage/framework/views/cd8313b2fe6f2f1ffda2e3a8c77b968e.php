@@ -1,0 +1,286 @@
+<?php $__env->startSection('title', 'Événements'); ?>
+
+<?php $__env->startSection('page-title', 'Mes événements'); ?>
+
+<?php $__env->startSection('breadcrumb'); ?>
+    <li class="breadcrumb-item"><a href="<?php echo e(route('dashboard')); ?>">Tableau de bord</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Événements</li>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="page-content">
+    <?php if(session('evenement_suppression_bloquee')): ?>
+        <div class="alert alert-warning" role="alert">
+            Cet événement ne peut pas être annulé car des billets payants ont déjà été vendus. Pour demander une assistance, <a href="<?php echo e(route('contact')); ?>" class="alert-link">contactez l’équipe PaxEvent</a>.
+        </div>
+    <?php endif; ?>
+
+    <!-- Subtitle -->
+    <p class="text-muted mb-4" style="font-size: 0.9rem; margin-top: -0.5rem;">
+        <?php echo e($totalEvenements); ?> événement<?php echo e($totalEvenements > 1 ? 's' : ''); ?> · <?php echo e(number_format($totalBilletsVendus, 0, ',', ' ')); ?> billet<?php echo e($totalBilletsVendus > 1 ? 's' : ''); ?> vendu<?php echo e($totalBilletsVendus > 1 ? 's' : ''); ?>
+
+        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('evenement_a_la_une')">
+            <i class="bi bi-star me-1"></i> Mettre un événement à la une
+        </button>
+        <button type="button" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('booster_promouvoir')">
+            <i class="bi bi-megaphone me-1"></i> Booster / promouvoir
+        </button>
+    </p>
+
+    <!-- Stat Cards -->
+    <div class="row g-2 mt-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--violet);">
+                <div class="metric-label">Total événements</div>
+                <div class="metric-value"><?php echo e($totalEvenements); ?></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--vert);">
+                <div class="metric-label">En cours</div>
+                <div class="metric-value" style="color: var(--vert);"><?php echo e($enCours); ?></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--teal);">
+                <div class="metric-label">À venir</div>
+                <div class="metric-value" style="color: var(--teal);"><?php echo e($aVenir); ?></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="border-top-color: var(--gris);">
+                <div class="metric-label">Terminés</div>
+                <div class="metric-value" style="color: var(--gris);"><?php echo e($termines); ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar: Search + Filters + Create -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 w-100">
+            <div class="position-relative w-100" style="max-width: 320px;">
+                <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--gris); font-size: 0.9rem;"></i>
+                <input type="text" class="form-control ps-5 py-2 border rounded-3" id="searchInput" placeholder="Rechercher un événement…" style="border-color: #e2e0e4; font-size: 0.88rem;">
+            </div>
+            <div class="d-flex gap-2 flex-wrap" id="filterBtns">
+                <button class="btn btn-sm filter-btn active" data-filter="all" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid var(--vert); background: var(--vert); color: #fff;">Tous</button>
+                <button class="btn btn-sm filter-btn" data-filter="en-cours" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid #e2e0e4; color: var(--sombre); background: var(--blanc);">En cours</button>
+                <button class="btn btn-sm filter-btn" data-filter="a-venir" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid #e2e0e4; color: var(--sombre); background: var(--blanc);">À venir</button>
+                <button class="btn btn-sm filter-btn" data-filter="termines" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid #e2e0e4; color: var(--sombre); background: var(--blanc);">Terminés</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Cards List -->
+    <div class="d-flex flex-column gap-3" id="eventsList">
+        <?php $__empty_1 = true; $__currentLoopData = $evenements; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $evenement): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+            <?php
+                $now = now();
+                $isPast = $evenement->date_event < $now;
+                $isToday = $evenement->date_event->isToday();
+                $suppressionBloquee = $evenement->suppressionOrganisateurBloquee();
+
+                $ventes = $evenement->tickets_count ?? $evenement->quota_vendu;
+                $capacite = $evenement->capacite;
+                $remplissage = $capacite > 0 ? round(($ventes / $capacite) * 100) : 0;
+
+                $revenus = $evenement->tickets()->where('statut_paiement', 'payé')->sum('montant');
+
+                if ($evenement->statut === 'terminé') {
+                    $statusLabel = 'Terminé';
+                    $statusClass = 'status-termine';
+                    $filterKey = 'termines';
+                } elseif ($evenement->statut === 'annulé') {
+                    $statusLabel = 'Annulé';
+                    $statusClass = 'badge bg-danger';
+                    $filterKey = 'termines';
+                } elseif ($evenement->statut === 'brouillon') {
+                    $statusLabel = 'À venir';
+                    $statusClass = 'status-a-venir';
+                    $filterKey = 'a-venir';
+                } elseif ($evenement->statut === 'publié') {
+                    if ($isToday) {
+                        $statusLabel = 'En cours';
+                        $statusClass = 'status-en-cours';
+                        $filterKey = 'en-cours';
+                    } elseif ($isPast) {
+                        $statusLabel = 'Terminé';
+                        $statusClass = 'status-termine';
+                        $filterKey = 'termines';
+                    } else {
+                        $statusLabel = 'À venir';
+                        $statusClass = 'status-a-venir';
+                        $filterKey = 'a-venir';
+                    }
+                } else {
+                    $statusLabel = ucfirst($evenement->statut);
+                    $statusClass = 'status-brouillon';
+                    $filterKey = 'a-venir';
+                }
+
+                $progressColor = $remplissage >= 80 ? 'var(--vert)' : ($remplissage >= 50 ? 'var(--teal)' : 'var(--menthe)');
+            ?>
+            <div class="panel-card event-card" data-filter="<?php echo e($filterKey); ?>" data-title="<?php echo e(strtolower($evenement->titre . ' ' . ($evenement->categorie ?? ''))); ?>">
+                <div class="panel-card-body py-3">
+                    <!-- Top row: Title + Badge -->
+                    <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
+                        <h5 class="fw-bold mb-0 me-2" style="font-size: 1.05rem; flex:1; min-width:0;"><?php echo e($evenement->titre); ?></h5>
+                        <span class="status-badge <?php echo e($statusClass); ?>"><?php echo e($statusLabel); ?></span>
+                        <?php if($evenement->statut === 'publié' || $evenement->statut === 'brouillon'): ?>
+                            <span class="badge ms-2" style="font-size:0.7rem; <?php echo e($evenement->ventes_fermees ? 'background:var(--danger);' : 'background:var(--vert);'); ?>"><?php echo e($evenement->ventes_fermees ? 'Ventes fermées' : 'Ventes ouvertes'); ?></span>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Date + Location -->
+                    <div class="text-muted mb-3" style="font-size: 0.88rem;">
+                        <i class="bi bi-calendar3 me-1"></i><?php echo e($evenement->date_event->isoFormat('D MMM YYYY')); ?>
+
+                        <span class="mx-2">·</span>
+                        <i class="bi bi-geo-alt me-1"></i><?php echo e($evenement->lieu); ?>
+
+                        <?php if($evenement->categorie): ?>
+                            <span class="mx-2">·</span>
+                            <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet); font-size: 0.75rem; border-radius: 12px;">
+                                <?php echo e(ucfirst($evenement->categorie)); ?>
+
+                            </span>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Sales progress + Revenues -->
+                    <div class="row align-items-center g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span style="font-size: 0.85rem; font-weight: 600;"><?php echo e($ventes); ?> / <?php echo e($capacite); ?> billets</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: <?php echo e($progressColor); ?>;"><?php echo e($remplissage); ?>%</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-bar-fill" style="width: <?php echo e($remplissage); ?>%; background: <?php echo e($progressColor); ?>;"></div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 text-md-end">
+                            <span style="font-size: 0.8rem; color: var(--gris);">Revenus encaissés</span>
+                            <div class="fw-bold" style="font-size: 1rem; color: var(--vert);">
+                                <?php echo e(number_format($revenus, 0, ',', ' ')); ?> FCFA
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php if($suppressionBloquee): ?>
+                        <div class="alert alert-warning py-2 px-3 small mb-3" role="alert">
+                            L’annulation est bloquée car des billets payants ont déjà été vendus. <a href="<?php echo e(route('contact')); ?>" class="alert-link">Contacter l’équipe PaxEvent</a>.
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                        <a href="<?php echo e(route('admin.evenements.show', $evenement->id)); ?>#coparrainage" class="btn btn-sm <?php echo e($evenement->co_parrainage_actif ? 'text-white' : ''); ?>" style="border-radius: 6px; <?php echo e($evenement->co_parrainage_actif ? 'background:var(--violet);border:none;' : 'border:1px solid var(--violet);color:var(--violet);background:transparent;'); ?>" title="Gérer le co-parrainage">
+                            <i class="bi bi-share"></i> <span class="d-none d-sm-inline"><?php echo e($evenement->co_parrainage_actif ? 'Co-parrainage actif' : 'Co-parrainage'); ?></span>
+                        </a>
+                        <?php if($evenement->statut === 'publié' || $evenement->statut === 'brouillon'): ?>
+                            <form action="<?php echo e(route('admin.evenements.fermer-vente', $evenement->id)); ?>" method="POST" class="d-inline">
+                                <?php echo csrf_field(); ?>
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; <?php echo e($evenement->ventes_fermees ? 'background:var(--vert);color:#fff;border:none;' : 'border:1px solid var(--danger);color:var(--danger);background:transparent;'); ?>" title="<?php echo e($evenement->ventes_fermees ? 'Rouvrir les ventes' : 'Clôturer les ventes'); ?>">
+                                    <i class="bi <?php echo e($evenement->ventes_fermees ? 'bi-unlock' : 'bi-lock'); ?>"></i>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                        <a href="<?php echo e(route('admin.evenements.show', $evenement->id)); ?>" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;" title="Voir">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <?php if (! ($suppressionBloquee)): ?>
+                            <form action="<?php echo e(route('admin.evenements.destroy', $evenement->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet événement ? Cette action est irréversible.')">
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('DELETE'); ?>
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                        <a href="<?php echo e(route('admin.evenements.edit', $evenement->id)); ?>" class="btn btn-sm btn-secondary-custom" style="border-radius: 6px;" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <?php if($evenement->statut === 'publié'): ?>
+                            <a href="<?php echo e(route('scan.index')); ?>" class="btn btn-sm" style="border-radius: 6px; background: var(--vert); color: #fff; border: none;">
+                                <i class="bi bi-qr-code-scan me-1"></i>Scan
+                            </a>
+                        <?php elseif($evenement->statut === 'brouillon' || $evenement->statut === 'publié' && !$isPast): ?>
+                            <?php if (! ($suppressionBloquee)): ?>
+                                <form action="<?php echo e(route('admin.evenements.destroy', $evenement->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Annuler cet événement ?')">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;">
+                                        <i class="bi bi-x-circle me-1"></i>Annuler
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+            <div class="panel-card text-center py-5">
+                <i class="bi bi-calendar-x d-block mb-3" style="font-size: 3rem; color: var(--gris);"></i>
+                <h5 class="text-muted">Aucun événement</h5>
+                <p class="text-muted">Commencez par créer votre premier événement.</p>
+                <a href="<?php echo e(route('admin.evenements.create')); ?>" class="btn btn-primary-custom" style="border-radius: 8px;">
+                    <i class="bi bi-plus-lg me-1"></i> Créer un événement
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Pagination -->
+    <?php if($evenements->hasPages()): ?>
+        <div class="d-flex justify-content-center mt-4">
+            <?php echo e($evenements->links()); ?>
+
+        </div>
+    <?php endif; ?>
+</div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('scripts'); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.event-card');
+
+    function filterEvents() {
+        const query = searchInput.value.toLowerCase().trim();
+        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+        cards.forEach(card => {
+            const title = card.dataset.title;
+            const filter = card.dataset.filter;
+
+            const matchesSearch = title.includes(query);
+            const matchesFilter = activeFilter === 'all' || filter === activeFilter;
+
+            card.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterEvents);
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'var(--blanc)';
+                b.style.color = 'var(--sombre)';
+                b.style.borderColor = '#e2e0e4';
+            });
+            this.classList.add('active');
+            this.style.background = 'var(--vert)';
+            this.style.color = '#fff';
+            this.style.borderColor = 'var(--vert)';
+            filterEvents();
+        });
+    });
+});
+</script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/abel/Projects/PassEvent/resources/views/evenements/index.blade.php ENDPATH**/ ?>

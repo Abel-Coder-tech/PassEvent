@@ -35,7 +35,7 @@
                 @php
                     $manquant = array_filter([
                         'opérateur de paiement' => !$affiliate->operateur_paiement,
-                        'numéro / IBAN' => !$affiliate->numero_paiement,
+                        'numéro Mobile Money' => !$affiliate->numero_paiement,
                     ]);
                 @endphp
                 <div class="alert alert-warning mb-0">

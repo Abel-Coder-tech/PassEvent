@@ -108,8 +108,8 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                         <div>
-                            <h2 class="h6 fw-bold mb-1"><i class="bi bi-receipt me-1"></i> Note détaillée PaxEvent</h2>
-                            <p class="text-muted small mb-0">Décomposition du prix de chaque billet pour cet événement.</p>
+                            <h2 class="h6 fw-bold mb-1"><i class="bi bi-cash-coin me-1"></i> Combien vous rapporte chaque billet ?</h2>
+                            <p class="text-muted small mb-0">Votre gain estimé est calculé à partir du prix du billet et du taux de co-parrainage fixé par l'organisateur.</p>
                         </div>
                         <div class="text-end flex-shrink-0">
                             <div class="text-muted small">Taux PaxEvent</div>
@@ -130,7 +130,7 @@
                                         <th>Tarif</th>
                                         <th class="text-end">Prix du billet</th>
                                         <th class="text-end">Commission PaxEvent</th>
-                                        <th class="text-end">Votre commission</th>
+                                        <th class="text-end">Votre gain estimé par billet</th>
                                         <th class="text-end">Net organisateur</th>
                                     </tr>
                                 </thead>
@@ -145,7 +145,6 @@
                                             </td>
                                             <td class="text-end small fw-semibold" style="color:var(--violet);">
                                                 {{ $fmt($ligne['part_affilie']) }} F
-                                                <span class="text-muted">({{ $fmtPct($commissionAffilie) }} %)</span>
                                             </td>
                                             <td class="text-end small">{{ $fmt($ligne['part_organisateur']) }} F</td>
                                         </tr>
@@ -156,7 +155,7 @@
 
                         <div class="alert alert-light border small mb-0">
                             <i class="bi bi-info-circle me-1"></i>
-                            La commission de co-parrainage est <strong>à la charge de l'organisateur</strong> : elle est prélevée sur ses recettes et s'ajoute à la commission PaxEvent. Elle n'est jamais facturée à l'acheteur du billet.
+                            Chaque vente payée attribuée à votre lien génère le gain affiché pour le tarif concerné. Le montant réel peut varier si une réduction est appliquée. La commission de co-parrainage est <strong>à la charge de l'organisateur</strong> : elle est prélevée sur ses recettes et s'ajoute à la commission PaxEvent. Elle n'est jamais facturée à l'acheteur du billet.
                             @if($commissionAffilie <= 0)
                                 <br><span class="text-danger">Aucune commission de co-parrainage n'est définie pour cet événement.</span>
                             @endif
@@ -289,6 +288,13 @@
                                 @csrf
                                 <button type="submit" class="btn btn-sm {{ $lien->actif ? 'btn-outline-danger' : 'btn-outline-success' }}">
                                     {{ $lien->actif ? 'Désactiver mon lien' : 'Réactiver mon lien' }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('affiliate.liens.destroy', $lien) }}" class="mt-2" onsubmit="return confirm('Retirer cet événement de vos liens ? Vos commissions déjà générées seront conservées.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash me-1"></i> Retirer cet événement de mes liens
                                 </button>
                             </form>
                         @else

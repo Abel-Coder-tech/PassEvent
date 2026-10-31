@@ -22,6 +22,8 @@ class EvenementController extends Controller
         $user = Auth::user();
 
         $evenements = Evenement::where('user_id', $user->id)
+            ->with('dates')
+            ->withExists(['ventesPayeesHorsBilletsPhysiques as has_successful_non_physical_sales'])
             ->withCount(['tickets' => fn($q) => $q->where('statut_paiement', 'payé')])
             ->orderBy('date_event', 'asc')
             ->paginate(\App\Support\PerPage::resolve());
@@ -358,6 +360,16 @@ class EvenementController extends Controller
             'co_parrainage_pourcentage.max' => "La commission de co-parrainage ne peut pas dépasser {$maxCoParrainage} % (100 % moins votre commission PaxEvent de {$commissionPax} %).",
         ]);
 
+        $totalPlacesTarifs = (int) $evenement->tarifs()->sum('quantite_disponible');
+        if (
+            (int) $validated['capacite'] < (int) $evenement->quota_vendu
+            || $totalPlacesTarifs > (int) $validated['capacite']
+        ) {
+            throw ValidationException::withMessages([
+                'capacite' => "La capacité ne peut pas être inférieure aux places déjà vendues ({$evenement->quota_vendu}) ou à la somme des places des tarifs ({$totalPlacesTarifs}).",
+            ]);
+        }
+
         if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
             $validated['categorie'] = $validated['autre_categorie'];
         }
@@ -446,6 +458,12 @@ class EvenementController extends Controller
     public function destroy(Evenement $evenement)
     {
         abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
+
+        if ($evenement->suppressionOrganisateurBloquee()) {
+            return redirect()->route('admin.evenements.index')
+                ->with('error', 'Cet événement ne peut pas être annulé car des billets payants ont déjà été vendus. Contactez l’équipe PaxEvent pour demander une assistance.')
+                ->with('evenement_suppression_bloquee', true);
+        }
 
         $evenement->delete();
 

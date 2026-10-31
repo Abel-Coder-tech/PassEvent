@@ -190,6 +190,13 @@
                                                 {{ $lien->actif ? 'Désactiver' : 'Réactiver' }}
                                             </button>
                                         </form>
+                                        <form method="POST" action="{{ route('affiliate.liens.destroy', $lien) }}" class="flex-shrink-0" onsubmit="return confirm('Retirer cet événement de vos liens ? Vos commissions déjà générées seront conservées.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" aria-label="Retirer cet événement de mes liens" title="Retirer de mes liens">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
