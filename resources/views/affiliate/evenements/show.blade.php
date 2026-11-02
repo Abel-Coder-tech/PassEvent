@@ -6,6 +6,10 @@
     $fmt = fn ($v) => number_format((float) $v, 0, ',', ' ');
     $fmtPct = fn ($v) => rtrim(rtrim(number_format((float) $v, 2, ',', ' '), '0'), ',');
     $placesRestantes = max(0, (int) $evenement->capacite - (int) $evenement->quota_vendu);
+    $descriptionPartage = implode(' · ', array_filter([
+        $evenement->date_event?->format('d/m/Y à H:i'),
+        $evenement->lieu,
+    ]));
 @endphp
 
 @section('content')
@@ -381,10 +385,7 @@ function partagerLien(btn) {
 
     navigator.share({
         title: @json($evenement->titre),
-        text: @json(implode(' · ', array_filter([
-            $evenement->date_event?->format('d/m/Y à H:i'),
-            $evenement->lieu,
-        ]))),
+        text: @json($descriptionPartage),
         url: input.value
     }).catch(function (error) {
         if (error.name !== 'AbortError') copierLien(btn);
