@@ -60,6 +60,21 @@
             <!-- Colonne gauche : Description + Achat -->
             <div class="col-lg-8 show-event-content">
 
+                @if($evenement->co_parrainage_actif && !$evenement->gratuit)
+                    <div class="d-lg-none mb-3" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;background:linear-gradient(90deg,rgba(254,213,20,0.12),rgba(84,38,128,0.08));border:1px solid rgba(254,213,20,0.5);border-radius:12px;padding:0.55rem 0.7rem;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
+                            <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#542680,#9972B0);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;"><i class="bi bi-share-fill"></i></div>
+                            <div style="min-width:0;">
+                                <div style="font-weight:700;font-size:0.8rem;color:#211C31;line-height:1.1;">Co-parrainage activé</div>
+                                <div style="font-size:0.72rem;color:#6c757d;line-height:1.1;">{{ rtrim(rtrim(number_format((float) $evenement->co_parrainage_pourcentage, 2, ',', ' '), '0'), ',') }} % / billet</div>
+                            </div>
+                        </div>
+                        <a href="{{ auth('affiliate')->check() ? route('affiliate.liens') : route('affiliate.register') }}" style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.38rem 0.6rem;border-radius:8px;background:linear-gradient(135deg,#542680,#9972B0);color:#fff;text-decoration:none;font-weight:700;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
+                            <i class="bi bi-person-plus-fill"></i> Devenir affilié
+                        </a>
+                    </div>
+                @endif
+
                 <!-- Description -->
                 <div class="show-card show-card-left">
                     <h5 class="show-card-title"><i class="bi bi-info-circle"></i> Description</h5>

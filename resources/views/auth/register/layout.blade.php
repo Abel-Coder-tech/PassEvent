@@ -85,7 +85,7 @@
     .success-icon { font-size: 3.5rem; color: #2E7D4F; margin-bottom: 1rem; }
     .info-email { background: #f8f6f9; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.85rem; color: #542680; margin-bottom: 1rem; word-break: break-all; }
     .resend-link { font-size: 0.85rem; color: #6c757d; margin-top: 1rem; }
-    .resend-link a { color: #542680; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .resend-link a { color: #542680; font-weight: 600; text-decoration: underline; cursor: pointer; }
     .back-link { font-size: 0.85rem; color: #6c757d; margin-top: 0.75rem; }
     .back-link a { color: #6c757d; text-decoration: none; }
 

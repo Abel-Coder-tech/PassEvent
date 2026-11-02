@@ -2,24 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ResetPasswordEmail;
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Throwable;
 
 class ForgotPasswordController extends Controller
 {
-    // Affiche le formulaire de demande de réinitialisation
-    public function showForm()
+    public function __construct(private OtpService $otp)
     {
-        return view('auth.forgot');
     }
 
-    // Génère un token et envoie l'email de réinitialisation
-    public function sendResetLink(Request $request)
+    public function showForm(Request $request)
     {
-        $request->validate([
+        $verifiedAt = $request->session()->get('organizer_password_reset_verified_at');
+        $verified = is_numeric($verifiedAt) && (int) $verifiedAt > now()->subMinutes(10)->timestamp;
+
+        if ($verifiedAt && ! $verified) {
+            $request->session()->forget('organizer_password_reset_verified_at');
+        }
+
+        return view('auth.forgot', [
+            'email' => $request->session()->get('organizer_password_reset_email'),
+            'sentAt' => $request->session()->get('organizer_password_reset_sent_at'),
+            'verified' => $verified,
+        ]);
+    }
+
+    public function sendResetCode(Request $request)
+    {
+        $validated = $request->validate([
             'email' => 'required|email|exists:users,email',
         ], [
             'email.required' => 'Veuillez entrer votre email.',
@@ -27,59 +40,131 @@ class ForgotPasswordController extends Controller
             'email.exists' => 'Aucun compte trouvé avec cet email.',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $email = $validated['email'];
+        $sentAt = $request->session()->get('organizer_password_reset_sent_at');
+        if (
+            $request->session()->get('organizer_password_reset_email') === $email
+            && is_numeric($sentAt)
+            && (int) $sentAt > now()->subMinutes(10)->timestamp
+        ) {
+            return back()->withErrors([
+                'email' => 'Vous pourrez demander un nouveau code après la fin du compte à rebours.',
+            ]);
+        }
 
-        // Sécurité : le token en clair n'est JAMAIS stocké en base ; seul son empreinte
-        // SHA-256 l'est, avec une expiration de 60 minutes.
-        $token = Str::random(60);
-        $user->password_reset_token = hash('sha256', $token);
-        $user->password_reset_expires_at = now()->addMinutes(60);
-        $user->save();
-
-        $url = route('password.reset', ['token' => $token]); // Lien de réinitialisation
-
-        Mail::to($user->email)->send(new ResetPasswordEmail($user, $url));
-
-        return back()->with('success', 'Un lien de réinitialisation vous a été envoyé par email.');
+        return $this->sendCode($request, $email);
     }
 
-    // Affiche le formulaire de réinitialisation du mot de passe
-    public function showResetForm($token)
+    public function resendResetCode(Request $request)
     {
-        return view('auth.reset', compact('token'));
+        $email = $request->session()->get('organizer_password_reset_email');
+        if (! is_string($email) || ! User::where('email', $email)->exists()) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Veuillez d’abord demander un code de réinitialisation.']);
+        }
+
+        $sentAt = $request->session()->get('organizer_password_reset_sent_at');
+        if (is_numeric($sentAt) && (int) $sentAt > now()->subMinutes(10)->timestamp) {
+            return back()->withErrors([
+                'email' => 'Vous pourrez demander un nouveau code après la fin du compte à rebours.',
+            ]);
+        }
+
+        return $this->sendCode($request, $email);
     }
 
-    // Valide le token et réinitialise le mot de passe
+    private function sendCode(Request $request, string $email)
+    {
+        try {
+            $this->otp->generateAndSend($email);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors([
+                'email' => "Échec d'envoi du code de réinitialisation.",
+            ]);
+        }
+
+        $request->session()->put([
+            'organizer_password_reset_email' => $email,
+            'organizer_password_reset_sent_at' => now()->timestamp,
+        ]);
+        $request->session()->forget('organizer_password_reset_verified_at');
+
+        return back()->with('success', 'Un code de réinitialisation vient de vous être envoyé.');
+    }
+
+    public function verifyResetCode(Request $request)
+    {
+        $email = $request->session()->get('organizer_password_reset_email');
+        if (! is_string($email)) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Veuillez d’abord demander un code de réinitialisation.']);
+        }
+
+        $validated = $request->validate([
+            'code' => 'required|string|size:4|regex:/^[0-9]{4}$/',
+        ], [
+            'code.required' => 'Veuillez saisir le code reçu par email.',
+            'code.size' => 'Le code doit contenir 4 chiffres.',
+            'code.regex' => 'Le code doit contenir 4 chiffres.',
+        ]);
+
+        $result = $this->otp->verify($email, $validated['code']);
+        if ($result !== 'valide') {
+            return back()->withErrors([
+                'code' => $result === 'expire'
+                    ? 'Ce code a expiré. Demandez un nouveau code.'
+                    : 'Ce code est invalide. Vérifiez votre email ou demandez un nouveau code.',
+            ]);
+        }
+
+        $request->session()->put('organizer_password_reset_verified_at', now()->timestamp);
+
+        return back()->with('success', 'Code vérifié. Vous pouvez choisir un nouveau mot de passe.');
+    }
+
     public function reset(Request $request)
     {
+        $email = $request->session()->get('organizer_password_reset_email');
+        $verifiedAt = $request->session()->get('organizer_password_reset_verified_at');
+
+        if (
+            ! is_string($email)
+            || ! is_numeric($verifiedAt)
+            || (int) $verifiedAt <= now()->subMinutes(10)->timestamp
+        ) {
+            $request->session()->forget('organizer_password_reset_verified_at');
+
+            return redirect()->route('password.request')
+                ->withErrors(['code' => 'Veuillez vérifier un code valide avant de choisir un nouveau mot de passe.']);
+        }
+
         $validated = $request->validate([
-            'token' => 'required',
-            'email' => 'required|email|exists:users,email',
             'mot_de_passe' => 'required|string|min:8|max:255|confirmed',
         ], [
-            'token.required' => 'Token invalide.',
-            'email.required' => 'Veuillez entrer votre email.',
-            'email.exists' => 'Aucun compte trouvé avec cet email.',
             'mot_de_passe.required' => 'Le mot de passe est obligatoire.',
             'mot_de_passe.min' => 'Minimum 8 caractères.',
             'mot_de_passe.max' => 'Mot de passe trop long.',
             'mot_de_passe.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);
 
-        $user = User::where('email', $validated['email'])
-            ->where('password_reset_token', hash('sha256', $validated['token']))
-            ->where('password_reset_expires_at', '>', now())
-            ->first();
-
-        if (!$user) {
-            return back()->withErrors(['email' => 'Lien de réinitialisation invalide ou expiré.']); // Token invalide
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Aucun compte trouvé avec cet email.']);
         }
 
-        $user->mot_de_passe = bcrypt($validated['mot_de_passe']);
-        $user->password_reset_token = null; // Invalide le token après utilisation
-        $user->password_reset_expires_at = null;
+        $user->mot_de_passe = Hash::make($validated['mot_de_passe']);
         $user->save();
 
-        return redirect()->route('login')->with('success', 'Mot de passe réinitialisé. Connectez-vous avec votre nouveau mot de passe.');
+        $request->session()->forget([
+            'organizer_password_reset_email',
+            'organizer_password_reset_sent_at',
+            'organizer_password_reset_verified_at',
+        ]);
+
+        return redirect()->route('login')
+            ->with('success', 'Mot de passe réinitialisé. Connectez-vous avec votre nouveau mot de passe.');
     }
 }

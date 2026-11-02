@@ -101,9 +101,10 @@ Route::prefix('inscription')->name('inscriptions.')->group(function () {
 
 // Mot de passe oublié
 Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showForm'])->name('password.request');
-Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:3,1');
-Route::get('/reinitialiser/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-Route::post('/reinitialiser', [ForgotPasswordController::class, 'reset'])->name('password.update')->middleware('throttle:5,1');
+Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetCode'])->name('password.email')->middleware('throttle:3,1');
+Route::post('/mot-de-passe-oublie/renvoyer', [ForgotPasswordController::class, 'resendResetCode'])->name('password.resend')->middleware('throttle:2,30');
+Route::post('/mot-de-passe-oublie/verifier', [ForgotPasswordController::class, 'verifyResetCode'])->name('password.verify')->middleware('throttle:5,1');
+Route::post('/mot-de-passe-oublie/reinitialiser', [ForgotPasswordController::class, 'reset'])->name('password.update')->middleware('throttle:5,1');
 
 // ============================================================
 // Routes super admin
@@ -332,6 +333,8 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
     Route::post('/connexion', [AffiliateAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
     Route::get('/mot-de-passe-oublie', [AffiliateAuthController::class, 'showForgotPasswordForm'])->name('password.request');
     Route::post('/mot-de-passe-oublie', [AffiliateAuthController::class, 'sendPasswordResetCode'])->name('password.email')->middleware('throttle:3,1');
+    Route::post('/verifier-code-reinitialisation', [AffiliateAuthController::class, 'verifyPasswordResetCode'])->name('password.verify')->middleware('throttle:5,1');
+    Route::get('/reinitialiser-mot-de-passe', [AffiliateAuthController::class, 'showResetPasswordForm'])->name('password.reset-form');
     Route::post('/reinitialiser-mot-de-passe', [AffiliateAuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
     Route::get('/inscription', [AffiliateAuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/inscription', [AffiliateAuthController::class, 'register'])->name('register.post')->middleware('throttle:5,1');

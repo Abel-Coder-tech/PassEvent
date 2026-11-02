@@ -38,49 +38,50 @@
         @if (session('error'))
             <div class="alert alert-danger small">{{ session('error') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger small">{{ $errors->first() }}</div>
+        @endif
 
         <form method="POST" action="{{ route('affiliate.password.email') }}">
             @csrf
             <div class="mb-3">
                 <label for="reset-email" class="form-label small fw-semibold text-muted">Email du compte affilié</label>
-                <input id="reset-email" type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', session('affiliate_password_reset_email')) }}" required autofocus>
+                <input id="reset-email" type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', session('affiliate_password_reset_email')) }}" @if(session('affiliate_password_reset_sent_at')) readonly @endif required autofocus>
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <button type="submit" class="btn btn-primary">Envoyer un code</button>
+            @if(session('affiliate_password_reset_sent_at'))
+                <button type="button" class="btn btn-primary" disabled>Code envoyé</button>
+                <p class="text-center small text-muted mt-2 mb-0" id="affiliate-countdown">
+                    Vous pourrez renvoyer un code dans <strong id="affiliate-timer">10:00</strong>
+                </p>
+            @else
+                <button type="submit" class="btn btn-primary">Envoyer un code</button>
+            @endif
         </form>
 
-        @if (session('affiliate_password_reset_email'))
-            <hr class="my-4">
-            <h2 class="h6 fw-bold">Choisir un nouveau mot de passe</h2>
-            <p class="small text-muted">Saisissez le code à 6 chiffres reçu à l'adresse indiquée, puis votre nouveau mot de passe.</p>
+        @if(session('affiliate_password_reset_sent_at'))
+            <form method="POST" action="{{ route('affiliate.password.email') }}" id="affiliate-resend-form" class="text-center mt-2" hidden>
+                @csrf
+                <input type="hidden" name="email" value="{{ session('affiliate_password_reset_email') }}">
+                <a href="#" class="small" onclick="this.closest('form').requestSubmit(); return false;" style="color: var(--violet); font-weight:600; text-decoration:underline;">
+                    Renvoyer le code
+                </a>
+            </form>
+        @endif
 
-            <form method="POST" action="{{ route('affiliate.password.update') }}">
+        @if (session('affiliate_password_reset_sent_at'))
+            <hr class="my-4">
+            <h2 class="h6 fw-bold">Vérifier le code</h2>
+            <p class="small text-muted">Saisissez le code à 4 chiffres reçu à l'adresse indiquée.</p>
+
+            <form method="POST" action="{{ route('affiliate.password.verify') }}">
                 @csrf
                 <div class="mb-3">
                     <label for="reset-code" class="form-label small fw-semibold text-muted">Code reçu par email</label>
-                    <input id="reset-code" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}" required>
+                    <input id="reset-code" type="text" name="code" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}" required>
                     @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="mb-3">
-                    <label for="new-password" class="form-label small fw-semibold text-muted">Nouveau mot de passe</label>
-                    <div class="position-relative">
-                        <input id="new-password" type="password" name="password" autocomplete="new-password" class="form-control @error('password') is-invalid @enderror" style="padding-right: 2.6rem;" required>
-                        <button type="button" class="btn position-absolute border-0 bg-transparent password-toggle" aria-label="Afficher le nouveau mot de passe" aria-pressed="false">
-                            <i class="bi bi-eye" aria-hidden="true" style="color: #9a9a9a;"></i>
-                        </button>
-                    </div>
-                    @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="mb-3">
-                    <label for="new-password-confirmation" class="form-label small fw-semibold text-muted">Confirmer le nouveau mot de passe</label>
-                    <div class="position-relative">
-                        <input id="new-password-confirmation" type="password" name="password_confirmation" autocomplete="new-password" class="form-control" style="padding-right: 2.6rem;" required>
-                        <button type="button" class="btn position-absolute border-0 bg-transparent password-toggle" aria-label="Afficher la confirmation du nouveau mot de passe" aria-pressed="false">
-                            <i class="bi bi-eye" aria-hidden="true" style="color: #9a9a9a;"></i>
-                        </button>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Réinitialiser le mot de passe</button>
+                <button id="verify-code-submit" type="submit" class="btn btn-primary" disabled>Vérifier le code</button>
             </form>
         @endif
 
@@ -93,19 +94,30 @@
 
 @section('scripts')
 <script>
-document.querySelectorAll('.password-toggle').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const input = this.parentElement.querySelector('input');
-        if (!input) return;
-        const icon = this.querySelector('i');
-        const isVisible = input.type === 'password';
-        input.type = isVisible ? 'text' : 'password';
-        const fieldName = input.name === 'password_confirmation' ? 'la confirmation du nouveau mot de passe' : 'le nouveau mot de passe';
-        this.setAttribute('aria-label', `${isVisible ? 'Masquer' : 'Afficher'} ${fieldName}`);
-        this.setAttribute('aria-pressed', String(isVisible));
-        icon.classList.toggle('bi-eye', !isVisible);
-        icon.classList.toggle('bi-eye-slash', isVisible);
-    });
-});
+const resetCode = document.getElementById('reset-code');
+const verifySubmit = document.getElementById('verify-code-submit');
+if (resetCode && verifySubmit) {
+    const updateVerifyButton = () => {
+        verifySubmit.disabled = !/^\d{4}$/.test(resetCode.value);
+    };
+    resetCode.addEventListener('input', updateVerifyButton);
+    updateVerifyButton();
+}
+
+const sentAt = {{ (int) session('affiliate_password_reset_sent_at', 0) }};
+const timerEl = document.getElementById('affiliate-timer');
+const resendForm = document.getElementById('affiliate-resend-form');
+if (sentAt && timerEl && resendForm) {
+    const updateTimer = () => {
+        const remaining = Math.max(0, sentAt + 600 - Math.floor(Date.now() / 1000));
+        timerEl.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+        if (remaining === 0) {
+            document.getElementById('affiliate-countdown').hidden = true;
+            resendForm.hidden = false;
+        }
+    };
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
 </script>
 @endsection

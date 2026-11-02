@@ -30,12 +30,12 @@ Un code de vérification a été envoyé à&nbsp;:
                placeholder="••••" style="text-align:center;font-size:1.5rem;letter-spacing:6px;font-weight:700;">
         @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
-    <button type="submit" class="btn btn-primary">Vérifier mon code</button>
+    <button id="verify-code-submit" type="submit" class="btn btn-primary" disabled>Vérifier mon code</button>
 </form>
 
 <p class="resend-link" id="resend-section">
-    <span id="resend-text">Renvoyer dans <strong id="timer">60</strong>s</span>
-    <a id="resend-btn" class="disabled" onclick="resendCode()">Renvoyer le code</a>
+    <span id="resend-text">Renvoyer dans <strong id="timer">10:00</strong></span>
+    <a id="resend-btn" role="button" class="disabled" aria-disabled="true" onclick="resendCode()">Renvoyer le code</a>
 </p>
 
 <p class="back-link">
@@ -45,20 +45,34 @@ Un code de vérification a été envoyé à&nbsp;:
 
 @section('scripts')
 <script>
-    let seconds = 60;
     const timerEl = document.getElementById('timer');
     const textEl = document.getElementById('resend-text');
     const btnEl = document.getElementById('resend-btn');
+    const sentAt = {{ (int) $otpSentAt }};
 
-    const interval = setInterval(() => {
-        seconds--;
-        timerEl.textContent = seconds;
-        if (seconds <= 0) {
-            clearInterval(interval);
+    function updateCountdown() {
+        const remaining = Math.max(0, sentAt + 600 - Math.floor(Date.now() / 1000));
+        timerEl.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+        if (remaining === 0) {
             textEl.style.display = 'none';
             btnEl.classList.remove('disabled');
+            btnEl.setAttribute('aria-disabled', 'false');
         }
+    }
+
+    updateCountdown();
+    const countdownInterval = setInterval(() => {
+        updateCountdown();
+        if (Date.now() / 1000 >= sentAt + 600) clearInterval(countdownInterval);
     }, 1000);
+
+    const codeInput = document.querySelector('input[name="code"]');
+    const verifyButton = document.getElementById('verify-code-submit');
+    const updateVerifyButton = () => {
+        verifyButton.disabled = !/^\d{4}$/.test(codeInput.value);
+    };
+    codeInput.addEventListener('input', updateVerifyButton);
+    updateVerifyButton();
 
     function afficherErreurResend(message) {
         const box = document.createElement('div');
@@ -69,10 +83,9 @@ Un code de vérification a été envoyé à&nbsp;:
     }
 
     function resendCode() {
+        if (btnEl.classList.contains('disabled')) return;
         btnEl.classList.add('disabled');
-        textEl.style.display = 'inline';
-        seconds = 60;
-        timerEl.textContent = seconds;
+        btnEl.setAttribute('aria-disabled', 'true');
 
         const alertBox = document.getElementById('resend-error');
         if (alertBox) alertBox.remove();
@@ -85,21 +98,14 @@ Un code de vérification a été envoyé à&nbsp;:
                 location.reload();
                 return;
             }
-            // Erreur renvoyee par le serveur (SMTP...) : on l'affiche.
             afficherErreurResend(d.message || "Le renvoi du code a échoué.");
+            btnEl.classList.remove('disabled');
+            btnEl.setAttribute('aria-disabled', 'false');
         }).catch(() => {
             afficherErreurResend("Le renvoi du code a échoué : aucune réponse du serveur.");
+            btnEl.classList.remove('disabled');
+            btnEl.setAttribute('aria-disabled', 'false');
         });
-
-        const interval2 = setInterval(() => {
-            seconds--;
-            timerEl.textContent = seconds;
-            if (seconds <= 0) {
-                clearInterval(interval2);
-                textEl.style.display = 'none';
-                btnEl.classList.remove('disabled');
-            }
-        }, 1000);
     }
 </script>
 @endsection

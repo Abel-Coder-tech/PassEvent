@@ -25,6 +25,31 @@ class AuthController extends Controller
         return view('affiliate.auth.forgot-password');
     }
 
+    public function showResetPasswordForm(Request $request)
+    {
+        $email = $request->session()->get('affiliate_password_reset_email');
+        $verifiedAt = $request->session()->get('affiliate_password_reset_verified_at');
+        $affiliate = is_string($email)
+            ? Affiliate::whereRaw('LOWER(email) = ?', [$email])->first()
+            : null;
+
+        if (
+            ! $affiliate
+            || ! is_numeric($verifiedAt)
+            || (int) $verifiedAt <= now()->subMinutes(10)->timestamp
+            || ! $affiliate->password_reset_code
+            || ! $affiliate->password_reset_expires_at
+            || $affiliate->password_reset_expires_at->isPast()
+        ) {
+            $request->session()->forget('affiliate_password_reset_verified_at');
+
+            return redirect()->route('affiliate.password.request')
+                ->withErrors(['code' => 'Veuillez vérifier un code valide avant de choisir un nouveau mot de passe.']);
+        }
+
+        return view('affiliate.auth.reset-password');
+    }
+
     public function sendPasswordResetCode(Request $request)
     {
         $validated = $request->validate([
@@ -35,12 +60,21 @@ class AuthController extends Controller
         ]);
 
         $email = Str::lower($validated['email']);
-        $request->session()->put('affiliate_password_reset_email', $email);
-
         $affiliate = Affiliate::whereRaw('LOWER(email) = ?', [$email])->first();
 
         if ($affiliate) {
-            $code = (string) random_int(100000, 999999);
+            $sentAt = $request->session()->get('affiliate_password_reset_sent_at');
+            if (
+                $request->session()->get('affiliate_password_reset_email') === $email
+                && is_numeric($sentAt)
+                && (int) $sentAt > now()->subMinutes(10)->timestamp
+            ) {
+                return back()->withErrors([
+                    'email' => 'Vous pourrez demander un nouveau code après la fin du compte à rebours.',
+                ]);
+            }
+
+            $code = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
             $affiliate->forceFill([
                 'password_reset_code' => Hash::make($code),
                 'password_reset_expires_at' => now()->addMinutes(10),
@@ -48,23 +82,31 @@ class AuthController extends Controller
 
             Mail::to($affiliate->email)->send(new AffiliatePasswordResetOtp($code));
 
+            $request->session()->put([
+                'affiliate_password_reset_email' => $email,
+                'affiliate_password_reset_sent_at' => now()->timestamp,
+            ]);
+            $request->session()->forget('affiliate_password_reset_verified_at');
+
             return back()->with('success', 'Un code de réinitialisation vient de vous être envoyé.');
         }
 
-        return back()->with('error', "Aucun compte affilié n'est associé à cet email. Veuillez réessayer.");
+        $request->session()->forget([
+            'affiliate_password_reset_email',
+            'affiliate_password_reset_sent_at',
+            'affiliate_password_reset_verified_at',
+        ]);
+
+        return back()->with('success', 'Si un compte est associé à cet email, un code de réinitialisation vient de vous être envoyé.');
     }
 
-    public function resetPassword(Request $request)
+    public function verifyPasswordResetCode(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|digits:6',
-            'password' => 'required|string|min:8|max:255|confirmed',
+            'code' => 'required|digits:4',
         ], [
             'code.required' => 'Veuillez saisir le code reçu par email.',
-            'code.digits' => 'Le code doit contenir 6 chiffres.',
-            'password.required' => 'Veuillez saisir un nouveau mot de passe.',
-            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
+            'code.digits' => 'Le code doit contenir 4 chiffres.',
         ]);
 
         $email = $request->session()->get('affiliate_password_reset_email');
@@ -86,6 +128,41 @@ class AuthController extends Controller
             ]);
         }
 
+        $request->session()->put('affiliate_password_reset_verified_at', now()->timestamp);
+
+        return redirect()->route('affiliate.password.reset-form');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $email = $request->session()->get('affiliate_password_reset_email');
+        $verifiedAt = $request->session()->get('affiliate_password_reset_verified_at');
+        $affiliate = is_string($email)
+            ? Affiliate::whereRaw('LOWER(email) = ?', [$email])->first()
+            : null;
+
+        if (
+            ! $affiliate
+            || ! is_numeric($verifiedAt)
+            || (int) $verifiedAt <= now()->subMinutes(10)->timestamp
+            || ! $affiliate->password_reset_code
+            || ! $affiliate->password_reset_expires_at
+            || $affiliate->password_reset_expires_at->isPast()
+        ) {
+            $request->session()->forget('affiliate_password_reset_verified_at');
+
+            return redirect()->route('affiliate.password.request')
+                ->withErrors(['code' => 'Veuillez vérifier un code valide avant de choisir un nouveau mot de passe.']);
+        }
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:8|max:255|confirmed',
+        ], [
+            'password.required' => 'Veuillez saisir un nouveau mot de passe.',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
+        ]);
+
         $affiliate->forceFill([
             'password' => Hash::make($validated['password']),
             'password_reset_code' => null,
@@ -93,6 +170,8 @@ class AuthController extends Controller
         ])->save();
 
         $request->session()->forget('affiliate_password_reset_email');
+        $request->session()->forget('affiliate_password_reset_sent_at');
+        $request->session()->forget('affiliate_password_reset_verified_at');
 
         return redirect()->route('affiliate.login')
             ->with('success', 'Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.');
