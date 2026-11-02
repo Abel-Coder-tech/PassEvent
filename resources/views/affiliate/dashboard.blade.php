@@ -11,28 +11,22 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg-4">
             <div class="stat-card card h-100">
                 <div class="label">Solde disponible</div>
                 <div class="value">{{ number_format((float) $stats['solde_disponible'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg-4">
             <div class="stat-card card h-100">
                 <div class="label">En attente</div>
                 <div class="value">{{ number_format((float) $stats['solde_en_attente'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg-4">
             <div class="stat-card card h-100">
                 <div class="label">Total gagné</div>
                 <div class="value">{{ number_format((float) $stats['total_gagne'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card card h-100">
-                <div class="label">Parrainages historiques</div>
-                <div class="value">{{ $stats['filleuls'] }}</div>
             </div>
         </div>
     </div>

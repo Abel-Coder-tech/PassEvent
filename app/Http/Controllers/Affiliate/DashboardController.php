@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Affiliate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
-use App\Models\AffiliateCommission;
 use App\Models\AffiliateEventLink;
 use App\Models\Evenement;
 use App\Services\AffiliationService;
@@ -26,7 +25,6 @@ class DashboardController extends Controller
             'solde_disponible' => $affiliate->solde_disponible,
             'solde_en_attente' => $affiliate->solde_en_attente,
             'total_gagne' => $affiliate->total_gagne,
-            'filleuls' => $affiliate->referrals()->count(),
             'liens' => $affiliate->eventLinks()->count(),
             'commissions' => $affiliate->commissions()->count(),
         ];
@@ -55,27 +53,6 @@ class DashboardController extends Controller
             ->get();
 
         return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts'));
-    }
-
-    // Historique des organisateurs parrainés avant l'arrêt du parrainage direct.
-    public function filleuls()
-    {
-        $affiliate = $this->affiliateConnecte();
-
-        $referrals = $affiliate->referrals()
-            ->with(['organisateur', 'premierEvenement'])
-            ->latest()
-            ->get();
-
-        $stats = [
-            'total' => $referrals->count(),
-            'valides' => $referrals->where('statut', 'valide')->count(),
-            'clics' => (int) $affiliate->clics_parrainage,
-            'commissions' => $affiliate->commissions()
-                ->where('type', AffiliateCommission::TYPE_PARRAINAGE)->sum('montant'),
-        ];
-
-        return view('affiliate.filleuls', compact('affiliate', 'referrals', 'stats'));
     }
 
     // Mecanisme B : liens de co-parrainage

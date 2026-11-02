@@ -343,7 +343,6 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
         Route::post('/deconnexion', [AffiliateAuthController::class, 'logout'])->name('logout');
 
         Route::get('/dashboard', [AffiliateDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/filleuls', [AffiliateDashboardController::class, 'filleuls'])->name('filleuls');
         Route::get('/liens', [AffiliateDashboardController::class, 'liens'])->name('liens');
         Route::get('/evenements/{evenement}', [AffiliateDashboardController::class, 'evenement'])->name('evenements.show');
         Route::post('/liens/{evenement}/generer', [AffiliateDashboardController::class, 'genererLien'])->name('liens.generer');
