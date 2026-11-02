@@ -88,7 +88,12 @@ class InscriptionController extends Controller
                 ->withInput();
         }
 
-        $this->putReg(['email' => $request->email, 'email_verified' => false, 'step' => 1]);
+        $this->putReg([
+            'email' => $request->email,
+            'email_verified' => false,
+            'step' => 1,
+            'otp_sent_at' => now()->timestamp,
+        ]);
 
         return redirect()->route('inscriptions.verify');
     }
@@ -100,7 +105,10 @@ class InscriptionController extends Controller
         if (empty($reg['email'])) {
             return redirect()->route('inscriptions.organisateur');
         }
-        return view('auth.register.verify', ['email' => $reg['email']]);
+        return view('auth.register.verify', [
+            'email' => $reg['email'],
+            'otpSentAt' => $reg['otp_sent_at'] ?? now()->timestamp,
+        ]);
     }
 
     // Vérifie le code OTP saisi par l'utilisateur
@@ -151,6 +159,8 @@ class InscriptionController extends Controller
                 ? response()->json(['success' => false, 'message' => $message])
                 : back()->withErrors(['code' => $message]);
         }
+
+        $this->putReg(['otp_sent_at' => now()->timestamp]);
 
         return $request->expectsJson()
             ? response()->json(['success' => true])

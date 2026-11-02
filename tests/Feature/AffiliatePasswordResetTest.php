@@ -48,7 +48,7 @@ class AffiliatePasswordResetTest extends TestCase
 
         $this->get(route('affiliate.password.request'))->assertOk()
             ->assertSee('reset-code')
-            ->assertSee('new-password-confirmation');
+            ->assertDontSee('new-password-confirmation');
 
         Mail::assertSent(AffiliatePasswordResetOtp::class, function (AffiliatePasswordResetOtp $mail) use (&$code, $affiliate) {
             $code = $mail->code;
@@ -62,8 +62,16 @@ class AffiliatePasswordResetTest extends TestCase
         $this->assertTrue(Hash::check($code, $affiliate->password_reset_code));
         $this->assertTrue($affiliate->password_reset_expires_at->isFuture());
 
+        $this->get(route('affiliate.password.reset-form'))
+            ->assertRedirect(route('affiliate.password.request'));
+        $this->post(route('affiliate.password.verify'), ['code' => $code])
+            ->assertRedirect(route('affiliate.password.reset-form'));
+        $this->get(route('affiliate.password.reset-form'))->assertOk()
+            ->assertSee('new-password')
+            ->assertSee('new-password-confirmation')
+            ->assertDontSee('reset-code');
+
         $this->post(route('affiliate.password.update'), [
-            'code' => $code,
             'password' => 'nouveau-secret-123',
             'password_confirmation' => 'nouveau-secret-123',
         ])->assertRedirect(route('affiliate.login'))
@@ -75,7 +83,6 @@ class AffiliatePasswordResetTest extends TestCase
         $this->assertNull($affiliate->password_reset_expires_at);
 
         $this->post(route('affiliate.password.update'), [
-            'code' => $code,
             'password' => 'autre-secret-123',
             'password_confirmation' => 'autre-secret-123',
         ])->assertRedirect(route('affiliate.password.request'));
@@ -107,11 +114,13 @@ class AffiliatePasswordResetTest extends TestCase
 
         $affiliate->forceFill(['password_reset_expires_at' => now()->subMinute()])->save();
 
+        $this->post(route('affiliate.password.verify'), ['code' => $code])
+            ->assertSessionHasErrors('code');
+
         $this->post(route('affiliate.password.update'), [
-            'code' => $code,
             'password' => 'nouveau-secret-123',
             'password_confirmation' => 'nouveau-secret-123',
-        ])->assertSessionHasErrors('code');
+        ])->assertRedirect(route('affiliate.password.request'));
 
         $affiliate->refresh();
         $this->assertTrue(Hash::check('ancien-secret', $affiliate->password));
