@@ -3,10 +3,21 @@
 @section('title', $evenement->titre . ' — PaxEvent')
 @section('description', Str::limit($evenement->description ?? 'Consultez les détails de cet événement sur PaxEvent.', 160))
 @section('og_title', $evenement->titre)
-@section('og_description', Str::limit($evenement->description ?? (Str::ucfirst($evenement->getTextes()['acheter']) . ' pour ' . $evenement->titre . ' sur PaxEvent.'), 160))
-@if($evenement->image)
-    @section('og_image', asset('storage/' . $evenement->image))
-@endif
+@php
+    $datesPartage = $evenement->dates->isNotEmpty()
+        ? $evenement->dates->map(fn ($date) => $date->date_debut->isoFormat('D MMM YYYY'))->unique()->implode(', ')
+        : $evenement->date_event?->isoFormat('D MMM YYYY');
+    $descriptionPartage = Str::limit(implode(' · ', array_filter([
+        $evenement->categorie ? ucfirst($evenement->categorie) : null,
+        $datesPartage,
+        $evenement->lieu,
+        $evenement->description ? Str::squish(strip_tags($evenement->description)) : null,
+    ])), 160);
+@endphp
+@section('og_description', $descriptionPartage ?: (Str::ucfirst($evenement->getTextes()['acheter']) . ' pour ' . $evenement->titre . ' sur PaxEvent.'))
+@section('og_url', route('evenements.public.show', $evenement))
+@section('og_image', $evenement->image ? asset('storage/' . $evenement->image) : asset('images/og-image.png'))
+@section('og_image_alt', $evenement->titre)
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('evenements.public') }}">Événements</a></li>

@@ -208,11 +208,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('affiliate.filleuls') ? 'active' : '' }}" href="{{ route('affiliate.filleuls') }}">
-                        <i class="bi bi-people"></i> Mes filleuls
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('affiliate.liens*') ? 'active' : '' }}" href="{{ route('affiliate.liens') }}">
                         <i class="bi bi-link-45deg"></i> Mes liens
                     </a>
@@ -254,11 +249,6 @@
                 <li class="nav-item">
                     <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.dashboard') ? 'active' : '' }}" href="{{ route('affiliate.dashboard') }}" data-bs-dismiss="offcanvas">
                         <i class="bi bi-speedometer2"></i> Tableau de bord
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link aff-mobile-link rounded-2 {{ request()->routeIs('affiliate.filleuls') ? 'active' : '' }}" href="{{ route('affiliate.filleuls') }}" data-bs-dismiss="offcanvas">
-                        <i class="bi bi-people"></i> Mes filleuls
                     </a>
                 </li>
                 <li class="nav-item">

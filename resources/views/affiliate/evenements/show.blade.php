@@ -272,6 +272,9 @@
                                 <button class="btn btn-outline-secondary" type="button" onclick="copierLien(this)" title="Copier le lien">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="partagerLien(this)" title="Partager le lien">
+                                    <i class="bi bi-share"></i>
+                                </button>
                                 <a href="{{ $lienAchat }}" target="_blank" rel="noopener" class="btn btn-outline-secondary" title="Tester le lien tracé">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
@@ -365,6 +368,27 @@ function copierLien(btn) {
     } else {
         fallback();
     }
+}
+
+function partagerLien(btn) {
+    var group = btn.closest('.input-group');
+    var input = group ? group.querySelector('input') : null;
+    if (!input) return;
+    if (!navigator.share) {
+        copierLien(btn);
+        return;
+    }
+
+    navigator.share({
+        title: @json($evenement->titre),
+        text: @json(implode(' · ', array_filter([
+            $evenement->date_event?->format('d/m/Y à H:i'),
+            $evenement->lieu,
+        ]))),
+        url: input.value
+    }).catch(function (error) {
+        if (error.name !== 'AbortError') copierLien(btn);
+    });
 }
 </script>
 @endpush

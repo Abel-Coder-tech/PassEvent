@@ -108,8 +108,8 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="@yield('og_url', url()->current())">
     <meta property="og:image" content="@yield('og_image', asset('images/og-image.png'))">
-    <meta property="og:image:width" content="5001">
-    <meta property="og:image:height" content="2626">
+    <meta property="og:image:secure_url" content="@yield('og_image', asset('images/og-image.png'))">
+    <meta property="og:image:alt" content="@yield('og_image_alt', 'PaxEvent')">
 
     <link rel="canonical" href="@yield('canonical', url()->current())">
     <meta property="og:site_name" content="PaxEvent">
@@ -118,6 +118,7 @@
     <meta name="twitter:title" content="@yield('og_title', 'PaxEvent — Billetterie en ligne 100% Bénin')">
     <meta name="twitter:description" content="@yield('og_description','Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')">
     <meta name="twitter:image" content="@yield('og_image', asset('images/og-image.png'))">
+    <meta name="twitter:image:alt" content="@yield('og_image_alt', 'PaxEvent')">
 
     @stack('meta')
     <script>document.documentElement.classList.add('fouc');</script>
