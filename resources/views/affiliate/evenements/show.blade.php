@@ -157,13 +157,6 @@
                             </table>
                         </div>
 
-                        <div class="alert alert-light border small mb-0">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Chaque vente payée attribuée à votre lien génère le gain affiché pour le tarif concerné. Le montant réel peut varier si une réduction est appliquée. La commission de co-parrainage est <strong>à la charge de l'organisateur</strong> : elle est prélevée sur ses recettes et s'ajoute à la commission PaxEvent. Elle n'est jamais facturée à l'acheteur du billet.
-                            @if($commissionAffilie <= 0)
-                                <br><span class="text-danger">Aucune commission de co-parrainage n'est définie pour cet événement.</span>
-                            @endif
-                        </div>
                     @endif
                 </div>
             </div>
@@ -288,9 +281,6 @@
                                 {{ $lien->clics }} clic(s) ·
                                 {{ $lien->actif ? 'Actif' : 'Inactif' }}
                             </div>
-                            <p class="text-muted small mb-0 mt-1">
-                                Chaque visite via ce lien est comptée (une fois par session). Les billets payés sont rattachés à votre lien et génèrent votre commission après la tenue de l'événement.
-                            </p>
                             <form method="POST" action="{{ route('affiliate.liens.toggle', $lien) }}" class="mt-2">
                                 @csrf
                                 <button type="submit" class="btn btn-sm {{ $lien->actif ? 'btn-outline-danger' : 'btn-outline-success' }}">
