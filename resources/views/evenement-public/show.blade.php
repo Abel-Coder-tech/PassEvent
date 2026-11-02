@@ -799,7 +799,7 @@ function shareEvent() {
             url: window.location.href,
         }).catch(() => {});
     } else {
-        copyLink();
+        showToast('Le partage direct n’est pas disponible sur ce navigateur. Utilisez les boutons Facebook ou WhatsApp.', 'warning');
     }
 }
 
