@@ -149,6 +149,18 @@
         </div>
     </div>
 
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <div class="fw-semibold"><i class="bi bi-wifi-off me-1"></i> Mode hors ligne</div>
+                <small class="text-muted">Autoriser / activer le mode hors ligne (par résultat / informations) pour cet événement.</small>
+            </div>
+            <a href="{{ route('admin.evenements.offline.index', $agent->evenement) }}" class="btn btn-sm" style="background:#7c3aed;color:#fff;">
+                <i class="bi bi-shield-lock me-1"></i> Gérer le mode hors ligne
+            </a>
+        </div>
+    </div>
+
     {{-- Historique des scans --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-2">

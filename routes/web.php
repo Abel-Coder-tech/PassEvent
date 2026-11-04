@@ -32,6 +32,7 @@ use App\Http\Controllers\SitePublicController;
 use App\Http\Controllers\StatistiqueController;
 use App\Http\Controllers\SuperAdmin\AffiliationController as SuperAdminAffiliationController;
 use App\Http\Controllers\SuperAdmin\ParametresController as SuperAdminParametresController;
+use App\Http\Controllers\Admin\OfflineController as AdminOfflineController;
 use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
 use App\Http\Controllers\SuperAdminAuthController;
 use App\Http\Controllers\SuperAdminController;
@@ -490,17 +491,13 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::post('/admin/codes-promos', [CodePromoController::class, 'store'])->name('admin.codes-promos.store');
     Route::delete('/admin/codes-promos/{codePromo}', [CodePromoController::class, 'destroy'])->name('admin.codes-promos.destroy');
     Route::get('/admin/codes-promos/export', [CodePromoController::class, 'export'])->name('admin.codes-promos.export');
+    Route::prefix('evenements/{evenement}/offline')->name('admin.evenements.offline.')->group(function () {
+        Route::get('/', [AdminOfflineController::class, 'index'])->name('index');
+        Route::get('/report', [AdminOfflineController::class, 'report'])->name('report');
+        Route::post('/authorize', [AdminOfflineController::class, 'authorize'])->name('authorize');
+        Route::post('/activate', [AdminOfflineController::class, 'activate'])->name('activate');
+        Route::post('/revoke', [AdminOfflineController::class, 'revoke'])->name('revoke');
+        Route::post('/force-revoke', [AdminOfflineController::class, 'forceRevoke'])->name('force-revoke');
+    });
 });
 
-use App\Http\Controllers\Admin\OfflineController as AdminOfflineController;
-use App\Http\Controllers\Api\AgentOfflineController;
-
-
-Route::middleware(['auth'])->prefix('evenements/{evenement}/offline')->name('admin.evenements.offline.')->group(function () {
-    Route::get('/', [AdminOfflineController::class, 'index'])->name('index');
-    Route::get('/report', [AdminOfflineController::class, 'report'])->name('report');
-    Route::post('/authorize', [AdminOfflineController::class, 'authorize'])->name('authorize');
-    Route::post('/activate', [AdminOfflineController::class, 'activate'])->name('activate');
-    Route::post('/revoke', [AdminOfflineController::class, 'revoke'])->name('revoke');
-    Route::post('/force-revoke', [AdminOfflineController::class, 'forceRevoke'])->name('force-revoke');
-});
