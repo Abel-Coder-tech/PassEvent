@@ -19,3 +19,15 @@ Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:scan'])->group(
     Route::get('/agent/scan/history', [AgentScanController::class, 'history']);
     Route::post('/agent/scan/exit', [AgentScanController::class, 'exit']);
 });
+
+use App\Http\Controllers\Api\AgentOfflineController;
+Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->prefix('agent/offline')->group(function () {
+    Route::get('/state', [AgentOfflineController::class, 'state']);
+    Route::get('/manifest', [AgentOfflineController::class, 'manifest']);
+    Route::get('/delta', [AgentOfflineController::class, 'delta']);
+    Route::post('/activate', [AgentOfflineController::class, 'activate']);
+    Route::post('/revocation/ack', [AgentOfflineController::class, 'revocationAck']);
+    Route::post('/heartbeat', [AgentOfflineController::class, 'heartbeat']);
+});
+Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->post('/agent/offline/sync', [AgentOfflineController::class, 'sync']);
+

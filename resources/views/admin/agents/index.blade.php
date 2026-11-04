@@ -60,6 +60,10 @@
                         </td>
                         <td>{{ $agent->dernier_acces ? $agent->dernier_acces->format('d/m/Y H:i') : 'Jamais' }}</td>
                         <td class="text-end pe-3">
+                            <a href="{{ route('admin.evenements.offline.index', $agent->evenement) }}"
+                                class="btn btn-sm btn-outline-info py-0 px-2" title="Autoriser le scan hors ligne">
+                                <i class="bi bi-wifi-off"></i>
+                            </a>
                             <a href="{{ route('admin.agents.show', $agent) }}"
                                 class="btn btn-sm btn-outline-secondary py-0 px-2" title="Voir détails">
                                 <i class="bi bi-eye"></i>
