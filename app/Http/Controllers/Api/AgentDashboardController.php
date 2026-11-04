@@ -39,6 +39,7 @@ class AgentDashboardController extends Controller
             ])
             ->values();
 
+        $offlineLease = \App\Models\OfflineLease::where('evenement_id', $agent->evenement_id)->whereIn('statut', ['autorise', 'arme', 'activation_en_attente', 'actif', 'revocation_en_attente'])->latest()->first();
         return response()->json([
             'event' => [
                 'titre' => $evenement?->titre,
@@ -65,6 +66,14 @@ class AgentDashboardController extends Controller
             })->values(),
             'scan_disponible' => (bool) ($agent->actif && $evenement && $evenement->date_event >= now()),
             'notifications' => $notifications,
+            'offline' => [
+                'enabled' => (bool) ($evenement?->offline_mode_enabled),
+                'lease_state' => $offlineLease?->statut,
+                'is_holder' => $offlineLease && (int) $offlineLease->agent_id === (int) $agent->id,
+                'expires_at' => $offlineLease?->expires_at?->toIso8601String(),
+                'pending_scans' => 0,
+                'last_sync_at' => $offlineLease?->last_sync_at?->toIso8601String(),
+            ],
         ], 200);
     }
 }
