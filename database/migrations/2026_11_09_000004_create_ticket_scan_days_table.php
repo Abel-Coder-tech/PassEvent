@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('ticket_scan_days', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets')->cascadeOnDelete();
+            $table->foreignId('ticket_id')->constrained('ticket')->cascadeOnDelete();
             $table->date('scan_date');
             $table->foreignId('log_id')->constrained('logs')->cascadeOnDelete();
             $table->foreignId('agent_id')->nullable()->constrained('agents')->nullOnDelete();
