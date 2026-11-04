@@ -34,6 +34,15 @@ class AgentScanController extends Controller
             return response()->json(['message' => 'account_disabled'], 403);
         }
 
+        if ($agent->evenement && $agent->evenement->offline_mode_enabled) {
+            $lease = \App\Models\OfflineLease::where('evenement_id', $agent->evenement_id)
+                ->whereIn('statut', ['actif', 'revocation_en_attente'])
+                ->first();
+            if ($lease && (int) $lease->agent_id !== (int) $agent->id) {
+                return response()->json(['message' => 'offline_mode_reserved', 'code' => 'offline_mode_reserved'], 403);
+            }
+        }
+
         if ($agent->bloque_jusqua && Carbon::parse($agent->bloque_jusqua)->isFuture()) {
             $seconds = now()->diffInSeconds(Carbon::parse($agent->bloque_jusqua));
             return response()->json([
