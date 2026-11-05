@@ -63,9 +63,19 @@
         <div class="col-12 col-lg-8">
             <div class="card aff-card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h6 fw-bold mb-0">Performance (30 derniers jours)</h2>
-                        <span class="text-muted small">Ventes & commissions</span>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div>
+                            <h2 class="h6 fw-bold mb-0">Performance ({{ $periode ?? 30 }} derniers jours)</h2>
+                            <span class="text-muted small">Ventes & commissions</span>
+                        </div>
+                        <form method="GET" action="{{ route('affiliate.dashboard') }}" class="d-flex align-items-center gap-2">
+                            <label for="periode" class="small text-muted mb-0">Période</label>
+                            <select id="periode" name="periode" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+                                <option value="7" @selected(($periode ?? 30) == 7)>7 jours</option>
+                                <option value="30" @selected(($periode ?? 30) == 30)>30 jours</option>
+                                <option value="90" @selected(($periode ?? 30) == 90)>90 jours</option>
+                            </select>
+                        </form>
                     </div>
                     <div style="height:260px;">
                         <canvas id="affStatsChart"></canvas>
@@ -291,7 +301,7 @@ function copierLien(btn, val) {
             scales: {
                 x: { grid: { display: false }, ticks: { maxTicksLimit: 10, maxRotation: 0 } },
                 y: { type: 'linear', display: true, position: 'left', beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Ventes' } },
-                y1: { type: 'linear', display: true, position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { callback: function(v){ return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(v); } }, title: { display: true, text: 'FCFA' } }
+                y1: { type: 'linear', display: true, position: 'right', beginAtZero: true, suggestedMax: Math.max(10, Math.max.apply(null, montants.concat([0]))), grid: { drawOnChartArea: false }, ticks: { stepSize: Math.max(1, Math.ceil(Math.max.apply(null, montants.concat([0])) / 4)) || 1, precision: 0, callback: function(v){ if (!Number.isInteger(v)) return ''; return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(v); } }, title: { display: true, text: 'FCFA' } }
             }
         }
     });
