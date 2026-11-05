@@ -17,7 +17,7 @@ use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
-    public function index(AffiliateStatisticsService $statistics)
+    public function index(Request $request, AffiliateStatisticsService $statistics)
     {
         $affiliate = $this->affiliateConnecte();
 
@@ -37,7 +37,11 @@ class DashboardController extends Controller
             'evenements_promus' => (int) $affiliate->eventLinks()->where('actif', true)->distinct('evenement_id')->count('evenement_id'),
         ];
 
-        $days = 30;
+        $periode = (int) $request->query('periode', 30);
+        if (!in_array($periode, [7, 30, 90], true)) {
+            $periode = 30;
+        }
+        $days = $periode;
         $start = now()->subDays($days - 1)->startOfDay();
         $rows = $affiliate->commissions()
             ->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value)
@@ -97,7 +101,7 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts', 'chart'));
+        return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts', 'chart', 'periode'));
     }
 
     public function liens(Request $request, AffiliateStatisticsService $statistics)

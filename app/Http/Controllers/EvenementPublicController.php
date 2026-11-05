@@ -385,11 +385,51 @@ class EvenementPublicController extends Controller
 
     public function redirectAffilie(string $code)
     {
-        $lien = \App\Models\AffiliateEventLink::where('code', $code)->firstOrFail();
+        $lien = \App\Models\AffiliateEventLink::with('evenement.dates')->where('code', $code)->firstOrFail();
         $evenement = $lien->evenement;
-        if (! $evenement) {
+        if (! $evenement || ! in_array($evenement->statut, ['publié', 'terminé'], true)) {
             abort(404);
         }
-        return redirect()->to(route('evenements.public.show', $evenement) . '?ref=' . $lien->code, 302);
+
+        $targetUrl = route('evenements.public.show', $evenement) . '?ref=' . $lien->code;
+        $title = $evenement->titre . ' — PaxEvent';
+        $datesPartage = $evenement->dates->isNotEmpty()
+            ? $evenement->dates->map(fn ($date) => $date->date_debut->isoFormat('D MMM YYYY'))->unique()->implode(', ')
+            : $evenement->date_event?->isoFormat('D MMM YYYY');
+        $description = \Illuminate\Support\Str::limit(implode(' · ', array_filter([
+            $evenement->categorie ? ucfirst($evenement->categorie) : null,
+            $datesPartage,
+            $evenement->lieu,
+            $evenement->description ? \Illuminate\Support\Str::squish(strip_tags($evenement->description)) : null,
+        ])), 160) ?: ('Découvrir ' . $evenement->titre . ' sur PaxEvent.');
+        $image = $evenement->image ? asset('storage/' . $evenement->image) : asset('images/og-image.png');
+        $canonical = route('evenements.public.show', $evenement);
+
+        $e = fn ($v) => e((string) $v);
+        $html = '<!doctype html><html lang="fr"><head>'
+            . '<meta charset="utf-8">'
+            . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            . '<title>' . $e($title) . '</title>'
+            . '<meta name="description" content="' . $e($description) . '">'
+            . '<link rel="canonical" href="' . $e($canonical) . '">'
+            . '<meta property="og:type" content="website">'
+            . '<meta property="og:site_name" content="PaxEvent">'
+            . '<meta property="og:title" content="' . $e($evenement->titre) . '">'
+            . '<meta property="og:description" content="' . $e($description) . '">'
+            . '<meta property="og:url" content="' . $e($canonical) . '">'
+            . '<meta property="og:image" content="' . $e($image) . '">'
+            . '<meta property="og:image:secure_url" content="' . $e($image) . '">'
+            . '<meta property="og:image:alt" content="' . $e($evenement->titre) . '">'
+            . '<meta name="twitter:card" content="summary_large_image">'
+            . '<meta name="twitter:title" content="' . $e($evenement->titre) . '">'
+            . '<meta name="twitter:description" content="' . $e($description) . '">'
+            . '<meta name="twitter:image" content="' . $e($image) . '">'
+            . '<meta http-equiv="refresh" content="0;url=' . $e($targetUrl) . '">'
+            . '</head><body>'
+            . '<p>Redirection vers <a href="' . $e($targetUrl) . '">' . $e($evenement->titre) . '</a>…</p>'
+            . '<script>location.replace(' . json_encode($targetUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) . ');</script>'
+            . '</body></html>';
+
+        return response($html, 200)->header('Content-Type', 'text/html; charset=UTF-8');
     }
 }
