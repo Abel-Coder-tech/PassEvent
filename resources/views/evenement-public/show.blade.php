@@ -792,15 +792,19 @@ function copyLink() {
 }
 
 function shareEvent() {
+    var data = {
+        title: @json($evenement->titre),
+        text: @json($evenement->titre . ' - ' . ($evenement->date_event ? $evenement->date_event->isoFormat('D MMM YYYY') : '') . ($evenement->lieu ? ' à ' . $evenement->lieu : '') . ($evenement->description ? ' - ' . strip_tags(Str::limit($evenement->description, 120)) : '')),
+        url: window.location.href
+    };
     if (navigator.share) {
-        navigator.share({
-            title: @json($evenement->titre),
-            text: @json($evenement->titre . ' - ' . $evenement->date_event->isoFormat('D MMM YYYY') . ' à ' . $evenement->lieu . ($evenement->description ? ' - ' . strip_tags(Str::limit($evenement->description, 120)) : '')),
-            url: window.location.href,
-        }).catch(() => {});
-    } else {
-        showToast('Le partage direct n’est pas disponible sur ce navigateur. Utilisez les boutons Facebook ou WhatsApp.', 'warning');
+        navigator.share(data).catch(function (error) {
+            if (error && error.name === 'AbortError') return;
+            copyLink();
+        });
+        return;
     }
+    copyLink();
 }
 
 function selectTarif(el) {
