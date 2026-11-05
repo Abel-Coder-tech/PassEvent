@@ -368,18 +368,20 @@ function partagerLien(btn) {
     var group = btn.closest('.input-group');
     var input = group ? group.querySelector('input') : null;
     if (!input) return;
-    if (!navigator.share) {
-        copierLien(btn);
-        return;
-    }
-
-    navigator.share({
+    var url = input.value;
+    var data = {
         title: @json($evenement->titre),
         text: @json($descriptionPartage),
-        url: input.value
-    }).catch(function (error) {
-        if (error.name !== 'AbortError') copierLien(btn);
-    });
+        url: url
+    };
+    if (navigator.share && typeof navigator.share === 'function') {
+        navigator.share(data).catch(function (error) {
+            if (error && error.name === 'AbortError') return;
+            copierLien(btn);
+        });
+        return;
+    }
+    copierLien(btn);
 }
 </script>
 @endpush
