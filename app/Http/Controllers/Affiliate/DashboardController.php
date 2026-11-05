@@ -231,7 +231,7 @@ class DashboardController extends Controller
         $lien = $affiliate->eventLinks()->firstOrCreate(
             ['evenement_id' => $evenement->id],
             [
-                'code' => $this->genererCode(),
+                'code' => $this->genererCode($affiliate),
                 'pourcentage' => $evenement->co_parrainage_pourcentage ?? 0,
                 'actif' => true,
             ]
@@ -388,10 +388,17 @@ class DashboardController extends Controller
         return $affiliate;
     }
 
-    private function genererCode(): string
+    private function genererCode(Affiliate $affiliate): string
     {
+        $base = Str::upper(Str::ascii(($affiliate->nom ?? '') . ($affiliate->prenom ?? '')));
+        $base = (string) preg_replace('/[^A-Z]/', '', $base);
+        $base = substr($base, 0, 6);
+        if ($base === '') {
+            $base = 'AFFLNK';
+        }
+
         do {
-            $code = strtoupper(Str::random(10));
+            $code = $base . str_pad((string) random_int(0, 99), 2, '0', STR_PAD_LEFT);
         } while (AffiliateEventLink::where('code', $code)->exists());
 
         return $code;
