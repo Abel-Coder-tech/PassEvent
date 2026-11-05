@@ -129,7 +129,7 @@
                     @foreach($liens as $lien)
                         @php
                             $detailUrl = $lien->evenement ? route('affiliate.evenements.show', $lien->evenement) : null;
-                            $url = $lien->evenement ? route('evenements.public.show', $lien->evenement).'?ref='.$lien->code : null;
+                            $url = $lien->evenement ? route('evenements.affilie.redirect', ['code' => $lien->code]) : null;
                         @endphp
                         <div class="col-12 col-md-6 col-xl-4">
                             <div class="border rounded-3 h-100 d-flex flex-column overflow-hidden bg-white">

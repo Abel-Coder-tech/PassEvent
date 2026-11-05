@@ -382,4 +382,14 @@ class EvenementPublicController extends Controller
             session([$flag => true]);
         }
     }
+
+    public function redirectAffilie(string $code)
+    {
+        $lien = \App\Models\AffiliateEventLink::where('code', $code)->firstOrFail();
+        $evenement = $lien->evenement;
+        if (! $evenement) {
+            abort(404);
+        }
+        return redirect()->to(route('evenements.public.show', $evenement) . '?ref=' . $lien->code, 302);
+    }
 }

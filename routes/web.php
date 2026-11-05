@@ -50,6 +50,7 @@ use Spatie\Sitemap\Tags\Url;
 Route::get('/', [SitePublicController::class, 'accueil'])->name('accueil');
 Route::get('/evenements', [EvenementPublicController::class, 'index'])->name('evenements.public');
 Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show'])->name('evenements.public.show');
+Route::get('/r/{code}', [EvenementPublicController::class, 'redirectAffilie'])->name('evenements.affilie.redirect');
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat')->middleware('throttle:5,1');
 Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur')->middleware('throttle:5,10');
 
