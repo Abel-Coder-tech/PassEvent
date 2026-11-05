@@ -152,9 +152,14 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @if($url)
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copierLien(this, '{{ $url }}')" title="Copier"><i class="bi bi-clipboard"></i></button>
-                                    @endif
+                                    <div class="d-flex gap-1 flex-shrink-0">
+                                        @if($detailUrl)
+                                            <a href="{{ $detailUrl }}" class="btn btn-sm btn-outline-primary" title="Voir le détail"><i class="bi bi-eye"></i></a>
+                                        @endif
+                                        @if($url)
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copierLien(this, '{{ $url }}')" title="Copier le lien"><i class="bi bi-clipboard"></i></button>
+                                        @endif
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
