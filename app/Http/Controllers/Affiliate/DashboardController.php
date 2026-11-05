@@ -56,9 +56,10 @@ class DashboardController extends Controller
         for ($i = 0; $i < $days; $i++) {
             $date = $start->copy()->addDays($i);
             $key = $date->toDateString();
+            $row = $rows->get($key);
             $chartLabels[] = $date->format('d/m');
-            $chartVentes[] = (int) ($rows[$key]->ventes ?? 0);
-            $chartMontants[] = (float) ($rows[$key]->montant ?? 0);
+            $chartVentes[] = (int) ($row->ventes ?? 0);
+            $chartMontants[] = (float) ($row->montant ?? 0);
         }
         $chart = [
             'labels' => $chartLabels,
