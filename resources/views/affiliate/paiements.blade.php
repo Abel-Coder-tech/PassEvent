@@ -50,10 +50,10 @@
                     <div class="col-12 col-md-5">
                         <label class="form-label small fw-semibold text-muted mb-1">Montant à retirer (FCFA)</label>
                         <input type="number" name="montant" class="form-control @error('montant') is-invalid @enderror"
-                               min="5000" step="100" max="{{ (int) $affiliate->solde_disponible }}"
-                               value="{{ old('montant') }}" placeholder="5000">
+                               min="1000" step="100" max="{{ (int) $affiliate->solde_disponible }}"
+                               value="{{ old('montant') }}" placeholder="1000">
                         @error('montant')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Minimum 5 000 FCFA · Disponible : {{ number_format((float) $affiliate->solde_disponible, 0, ',', ' ') }} FCFA</div>
+                        <div class="form-text">Minimum 1 000 FCFA · Disponible : {{ number_format((float) $affiliate->solde_disponible, 0, ',', ' ') }} FCFA</div>
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label small fw-semibold text-muted mb-1">Versement</label>
