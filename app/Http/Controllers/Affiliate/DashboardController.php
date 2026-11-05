@@ -307,10 +307,10 @@ class DashboardController extends Controller
         $affiliate = $this->affiliateConnecte();
 
         $data = $request->validate([
-            'montant' => 'required|numeric|min:5000',
+            'montant' => 'required|numeric|min:1000',
         ], [
             'montant.required' => 'Indiquez le montant à retirer.',
-            'montant.min' => 'Le montant minimum de retrait est de 5 000 FCFA.',
+            'montant.min' => 'Le montant minimum de retrait est de 1 000 FCFA.',
         ]);
 
         if (!$affiliate->operateur_paiement || !$affiliate->numero_paiement) {
