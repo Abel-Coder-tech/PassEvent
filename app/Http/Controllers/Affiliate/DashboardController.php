@@ -151,7 +151,7 @@ class DashboardController extends Controller
 
         // Seul le co-parrainage (mecanisme B) est conservé.
         $lienAchat = $lien
-            ? route('evenements.public.show', $evenement).'?ref='.$lien->code
+            ? route('evenements.affilie.redirect', ['code' => $lien->code])
             : null;
         return view('affiliate.evenements.show', compact(
             'affiliate',
