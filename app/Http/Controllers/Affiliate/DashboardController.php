@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Affiliate;
 
+use App\Enums\AffiliateCommissionStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateEventLink;
@@ -16,27 +17,70 @@ use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
-    // Tableau de bord
-    public function index()
+    public function index(AffiliateStatisticsService $statistics)
     {
         $affiliate = $this->affiliateConnecte();
 
+        $linkStats = $statistics->links($affiliate);
+        $commStats = $affiliate->commissions()
+            ->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value)
+            ->selectRaw('COUNT(*) as ventes')
+            ->selectRaw('COALESCE(SUM(montant), 0) as total_gagne')
+            ->first();
+
         $stats = [
-            'solde_disponible' => $affiliate->solde_disponible,
-            'solde_en_attente' => $affiliate->solde_en_attente,
-            'total_gagne' => $affiliate->total_gagne,
-            'liens' => $affiliate->eventLinks()->count(),
-            'commissions' => $affiliate->commissions()->count(),
+            'liens' => $linkStats['liens'],
+            'liens_actifs' => $linkStats['liens_actifs'],
+            'clics' => $linkStats['clics'],
+            'ventes' => (int) ($commStats->ventes ?? 0),
+            'total_gagne' => (float) ($commStats->total_gagne ?? 0),
+            'evenements_promus' => (int) $affiliate->eventLinks()->where('actif', true)->distinct('evenement_id')->count('evenement_id'),
+        ];
+
+        $days = 30;
+        $start = now()->subDays($days - 1)->startOfDay();
+        $rows = $affiliate->commissions()
+            ->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value)
+            ->where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as d')
+            ->selectRaw('COUNT(*) as ventes')
+            ->selectRaw('COALESCE(SUM(montant), 0) as montant')
+            ->groupBy('d')
+            ->orderBy('d')
+            ->get()
+            ->keyBy('d');
+
+        $chartLabels = [];
+        $chartVentes = [];
+        $chartMontants = [];
+        for ($i = 0; $i < $days; $i++) {
+            $date = $start->copy()->addDays($i);
+            $key = $date->toDateString();
+            $chartLabels[] = $date->format('d/m');
+            $chartVentes[] = (int) ($rows[$key]->ventes ?? 0);
+            $chartMontants[] = (float) ($rows[$key]->montant ?? 0);
+        }
+        $chart = [
+            'labels' => $chartLabels,
+            'ventes' => $chartVentes,
+            'montants' => $chartMontants,
         ];
 
         $commissions = $affiliate->commissions()
             ->with(['evenement', 'ticket'])
+            ->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value)
             ->latest()
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         $liens = $affiliate->eventLinks()
             ->with(['evenement.user', 'evenement.tarifs'])
+            ->withCount(['commissions as ventes_count' => function ($q) {
+                $q->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value);
+            }])
+            ->withSum(['commissions as commissions_sum_montant' => function ($q) {
+                $q->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value);
+            }], 'montant')
             ->latest()
             ->limit(5)
             ->get();
@@ -52,10 +96,9 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts'));
+        return view('affiliate.dashboard', compact('affiliate', 'stats', 'commissions', 'liens', 'evenementsOuverts', 'chart'));
     }
 
-    // Mecanisme B : liens de co-parrainage
     public function liens(Request $request, AffiliateStatisticsService $statistics)
     {
         $affiliate = $this->affiliateConnecte();
@@ -63,7 +106,13 @@ class DashboardController extends Controller
         $statut = in_array($request->query('statut'), ['actif', 'inactif'], true) ? $request->query('statut') : null;
         $recherche = trim((string) $request->query('q'));
 
-        $liensQuery = $affiliate->eventLinks()->with(['evenement.user', 'evenement.tarifs']);
+        $liensQuery = $affiliate->eventLinks()->with(['evenement.user', 'evenement.tarifs'])
+            ->withCount(['commissions as ventes_count' => function ($q) {
+                $q->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value);
+            }])
+            ->withSum(['commissions as commissions_sum_montant' => function ($q) {
+                $q->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value);
+            }], 'montant');
         if ($statut !== null) {
             $liensQuery->where('actif', $statut === 'actif');
         }
@@ -87,6 +136,13 @@ class DashboardController extends Controller
         $evenementsOuverts = $evenementsOuvertsQuery->orderBy('date_event')->limit(30)->get();
 
         $stats = $statistics->links($affiliate);
+        $ventesStats = $affiliate->commissions()
+            ->where('statut', '!=', AffiliateCommissionStatus::Cancelled->value)
+            ->selectRaw('COUNT(*) as ventes')
+            ->selectRaw('COALESCE(SUM(montant), 0) as total')
+            ->first();
+        $stats['ventes'] = (int) ($ventesStats->ventes ?? 0);
+        $stats['commissions_total'] = (float) ($ventesStats->total ?? 0);
         $stats['evenements_ouverts'] = Evenement::query()
                 ->withUpcomingDate()
                 ->where('co_parrainage_actif', true)
@@ -97,7 +153,6 @@ class DashboardController extends Controller
         return view('affiliate.liens', compact('affiliate', 'liens', 'evenementsOuverts', 'stats', 'statut', 'recherche'));
     }
 
-    // Detail interne d'un evenement co-parraine (sans redirection vers la page publique)
     public function evenement(Evenement $evenement, AffiliateStatisticsService $statistics)
     {
         $affiliate = $this->affiliateConnecte();
@@ -106,8 +161,6 @@ class DashboardController extends Controller
             ->where('evenement_id', $evenement->id)
             ->first();
 
-        // Un evenement est consultable s'il est ouvert au co-parrainage ou si
-        // l'affilie possede deja un lien dessus (meme si l'evenement est passe).
         $accessible = $lien !== null
             || ($evenement->co_parrainage_actif && !$evenement->gratuit && $evenement->statut === 'publié');
 
@@ -124,10 +177,6 @@ class DashboardController extends Controller
         $commissionPax = $evenement->commissionEffective();
         $commissionAffilie = (float) ($lien?->pourcentage ?? $evenement->co_parrainage_pourcentage ?? 0);
 
-        // Note detaillee PaxEvent : pour chaque tarif, on decompose le prix du
-        // billet entre commission PaxEvent, commission de co-parrainage et net
-        // organiseur. La commission de co-parrainage est a la charge de
-        // l'organisateur et s'ajoute a la commission PaxEvent.
         $noteLignes = $evenement->tarifs->map(function ($tarif) use ($commissionPax, $commissionAffilie) {
             $prix = (float) $tarif->prix;
             $partPax = round($prix * $commissionPax / 100, 2);
@@ -149,7 +198,6 @@ class DashboardController extends Controller
             ? $organisateur->evenements()->where('statut', 'publié')->count()
             : 0;
 
-        // Seul le co-parrainage (mecanisme B) est conservé.
         $lienAchat = $lien
             ? route('evenements.affilie.redirect', ['code' => $lien->code])
             : null;
@@ -167,7 +215,6 @@ class DashboardController extends Controller
         ));
     }
 
-    // Genere (ou retrouve) le lien de co-parrainage d'un evenement
     public function genererLien(Evenement $evenement)
     {
         $affiliate = $this->affiliateConnecte();
@@ -192,7 +239,6 @@ class DashboardController extends Controller
         return back()->with('success', $message);
     }
 
-    // Active / desactive un lien de co-parrainage
     public function toggleLien(AffiliateEventLink $link)
     {
         $affiliate = $this->affiliateConnecte();
@@ -222,7 +268,6 @@ class DashboardController extends Controller
             ->with('success', 'L’événement a été retiré de vos liens. Vos commissions déjà générées restent conservées.');
     }
 
-    // Mecanisme A + B : historique complet des commissions
     public function commissions(Request $request, AffiliateStatisticsService $statistics)
     {
         $affiliate = $this->affiliateConnecte();
@@ -243,7 +288,6 @@ class DashboardController extends Controller
         return view('affiliate.commissions', compact('affiliate', 'commissions', 'totaux'));
     }
 
-    // Demandes de reversement
     public function paiements()
     {
         $affiliate = $this->affiliateConnecte();
@@ -253,7 +297,6 @@ class DashboardController extends Controller
         return view('affiliate.paiements', compact('affiliate', 'payouts'));
     }
 
-    // Cree une demande de reversement
     public function demanderPaiement(Request $request, AffiliationService $affiliation)
     {
         $affiliate = $this->affiliateConnecte();
@@ -284,7 +327,6 @@ class DashboardController extends Controller
         return back()->with('success', $message);
     }
 
-    // Profil
     public function profil()
     {
         $affiliate = $this->affiliateConnecte();
@@ -292,7 +334,6 @@ class DashboardController extends Controller
         return view('affiliate.profil', compact('affiliate'));
     }
 
-    // Met a jour les informations du compte
     public function majProfil(Request $request)
     {
         $affiliate = $this->affiliateConnecte();
@@ -312,7 +353,6 @@ class DashboardController extends Controller
         return back()->with('success', 'Vos informations ont été mises à jour.');
     }
 
-    // Change le mot de passe
     public function majMotDePasse(Request $request)
     {
         $affiliate = $this->affiliateConnecte();
@@ -343,7 +383,6 @@ class DashboardController extends Controller
         return $affiliate;
     }
 
-    // Genere un code unique pour un lien de co-parrainage
     private function genererCode(): string
     {
         do {

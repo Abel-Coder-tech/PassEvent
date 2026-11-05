@@ -8,19 +8,19 @@
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-4">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #198754 !important;">
                 <div class="label">Solde disponible</div>
                 <div class="value">{{ number_format((float) $affiliate->solde_disponible, 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
         <div class="col-6 col-lg-4">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #0dcaf0 !important;">
                 <div class="label">En attente</div>
                 <div class="value">{{ number_format((float) $affiliate->solde_en_attente, 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
         <div class="col-12 col-lg-4">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #FED514 !important;">
                 <div class="label">Total gagné</div>
                 <div class="value">{{ number_format((float) $affiliate->total_gagne, 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
