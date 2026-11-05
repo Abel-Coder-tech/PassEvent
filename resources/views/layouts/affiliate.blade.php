@@ -156,13 +156,13 @@
                         <button class="btn btn-sm d-lg-none px-2 py-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#affMobileNav" aria-controls="affMobileNav" style="border:1px solid #d6d3da; background:#fff;">
                             <i class="bi bi-list" style="font-size:1.1rem;"></i>
                         </button>
-                        <a href="{{ route('affiliate.dashboard') }}" class="brand">
-                            <i class="bi bi-broadcast-pin"></i> <span>PaxEvent</span> <span class="d-none d-sm-inline" style="opacity:.7;font-weight:500;">· Affiliés</span>
+                        <a href="{{ route('affiliate.dashboard') }}" class="brand" style="font-size:1.05rem; font-weight:800; color:var(--violet);">
+                            Espace affilié
                         </a>
                     </div>
                     <div class="d-flex align-items-center gap-2 gap-sm-3">
-                        <span class="d-none d-md-inline text-truncate" style="opacity:.85;font-size:.9rem; max-width: 180px;">
-                            <i class="bi bi-person-circle me-1"></i>{{ auth('affiliate')->user()->nom_complet }}
+                        <span class="d-none d-xl-inline text-truncate" style="opacity:.75;font-size:.85rem; max-width: 160px;">
+                            <i class="bi bi-person-circle me-1"></i>{{ auth('affiliate')->user()->prenom ?: auth('affiliate')->user()->nom }}
                         </span>
                         <button type="button" class="btn btn-sm btn-outline-secondary px-2 px-sm-3" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                             <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Déconnexion</span>
@@ -201,6 +201,11 @@
         </div>
 
         <nav class="aff-sidebar d-none d-lg-block">
+            <div class="px-2 pb-3 mb-2" style="border-bottom:1px solid rgba(255,255,255,0.12);">
+                <a href="{{ route('affiliate.dashboard') }}" class="d-flex align-items-center justify-content-center text-decoration-none">
+                    <img src="{{ asset('images/logo_paxevent_blanc.png') }}" alt="PaxEvent" style="height:44px; width:auto; max-width:100%;">
+                </a>
+            </div>
             <ul class="nav flex-column gap-1">
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('affiliate.dashboard') ? 'active' : '' }}" href="{{ route('affiliate.dashboard') }}">
@@ -234,7 +239,8 @@
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="affMobileNav" aria-labelledby="affMobileNavLabel" style="width:280px; background: linear-gradient(180deg, var(--violet) 0%, #3d1a5c 100%);">
         <div class="offcanvas-header border-0 pb-2">
             <h5 class="offcanvas-title text-white d-flex align-items-center gap-2" id="affMobileNavLabel">
-                <i class="bi bi-broadcast-pin"></i> PaxEvent · Affiliés
+                <img src="{{ asset('images/logo_paxevent_blanc.png') }}" alt="PaxEvent" style="height:24px; width:auto;">
+                <span>Espace affilié</span>
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
         </div>

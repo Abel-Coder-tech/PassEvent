@@ -8,25 +8,25 @@
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #542680 !important;">
                 <div class="label">Total gagné</div>
                 <div class="value">{{ number_format((float) $totaux['total'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #FED514 !important;">
                 <div class="label">En attente</div>
                 <div class="value">{{ number_format((float) $totaux['en_attente'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #0dcaf0 !important;">
                 <div class="label">Disponible</div>
                 <div class="value">{{ number_format((float) $totaux['disponible'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="stat-card card h-100">
+            <div class="stat-card card h-100 border-0" style="border-top:4px solid #198754 !important;">
                 <div class="label">Déjà payé</div>
                 <div class="value">{{ number_format((float) $totaux['paye'], 0, ',', ' ') }} <small class="fs-6">FCFA</small></div>
             </div>

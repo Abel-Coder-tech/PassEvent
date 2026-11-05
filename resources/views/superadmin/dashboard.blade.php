@@ -413,25 +413,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    new Chart(document.getElementById('reseauxChart'), {
-        type: 'doughnut',
-        data: {
-            labels: @json(collect($repartitionReseaux)->pluck('label')),
-            datasets: [{
-                data: @json(collect($repartitionReseaux)->pluck('count')),
-                backgroundColor: ['#6B3FA0', '#27ae60', '#3498db', '#95a5a6'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } }
-            },
-            cutout: '60%'
+    (function() {
+        var el = document.getElementById('reseauxChart');
+        if (!el) return;
+        var labels = @json(collect($repartitionReseaux)->pluck('label'));
+        var data = @json(collect($repartitionReseaux)->pluck('count'));
+        var colors = ['#6B3FA0', '#27ae60', '#3498db', '#95a5a6'];
+        var total = data.reduce(function(s, v){ return s + (Number(v) || 0); }, 0);
+        if (total <= 0) {
+            labels = ['Aucune donnée'];
+            data = [1];
+            colors = ['#e9ecef'];
         }
-    });
+        new Chart(el, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: data, backgroundColor: colors, borderWidth: 0 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } },
+                    tooltip: { enabled: total > 0 }
+                },
+                cutout: '60%'
+            }
+        });
+    })();
 
     var revenusCum = @json($revenusCumules);
     new Chart(document.getElementById('revenusCumulesChart'), {
