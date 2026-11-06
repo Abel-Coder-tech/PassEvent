@@ -12,6 +12,8 @@ use App\Mail\TarifDemandeRefusee;
 use App\Mail\TicketEmail;
 use App\Models\Agent;
 use App\Models\AgentVente;
+use App\Models\AffiliateCommission;
+use App\Models\AffiliateEventLink;
 use App\Models\AttributionAgent;
 use App\Models\Consentement;
 use App\Models\DemandeRemboursement;
@@ -21,6 +23,7 @@ use App\Models\Evenement;
 use App\Models\Log;
 use App\Models\Message;
 use App\Models\Newsletter;
+use App\Models\OrganizerActivityLog;
 use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Models\User;
@@ -1550,26 +1553,84 @@ class SuperAdminController extends Controller
     // Page événement : regroupe les contrôles, les infos et les actions
     public function voirEvenement(Evenement $evenement)
     {
-        $evenement->load('user', 'tarifs');
-        $evenement->loadCount(['tickets as tickets_vendus' => fn ($q) => $q->where('statut_paiement', 'payé')]);
+        $evenement->load('user', 'tarifs', 'dates');
+        $evenement->loadCount([
+            'tickets as tickets_vendus' => fn ($q) => $q->where('statut_paiement', 'payé'),
+            'tickets as tickets_scannes_count' => fn ($q) => $q->where('utilise', true),
+        ]);
         $evenement->loadSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant');
 
         $ticketsQuery = Ticket::where('evenement_id', $evenement->id)->where('statut_paiement', 'payé');
         $mobileRecettes = (clone $ticketsQuery)->whereNotIn('methode_paiement', ['cash', 'especes'])->sum('montant');
         $cashRecettes = (clone $ticketsQuery)->whereIn('methode_paiement', ['cash', 'especes'])->sum('montant');
+        $mobileVentes = (clone $ticketsQuery)->whereNotIn('methode_paiement', ['cash', 'especes'])->count();
+        $cashVentes = (clone $ticketsQuery)->whereIn('methode_paiement', ['cash', 'especes'])->count();
 
         $commissionPct = $evenement->commissionEffective();
-        $commission = round($evenement->recettes * $commissionPct / 100, 2);
-        $recettesNettes = $evenement->recettes - $commission;
+        $commission = round(($evenement->recettes ?? 0) * $commissionPct / 100, 2);
+        $recettesNettes = ($evenement->recettes ?? 0) - $commission;
 
         $tickets = Ticket::where('evenement_id', $evenement->id)
             ->with('tarif')
             ->latest('date_achat')
             ->limit(20)
             ->get();
-        $ticketsScannes = Ticket::where('evenement_id', $evenement->id)->where('utilise', true)->count();
-        $agentsScan = Agent::where('evenement_id', $evenement->id)->count();
-        $agentsVente = AgentVente::where('evenement_id', $evenement->id)->count();
+        $ticketsScannes = $evenement->tickets_scannes_count ?? 0;
+
+        $agentsScanList = Agent::where('evenement_id', $evenement->id)->orderBy('nom')->get();
+        $agentsVenteList = AgentVente::where('evenement_id', $evenement->id)->orderBy('nom')->get();
+        $agentsScan = $agentsScanList->count();
+        $agentsVente = $agentsVenteList->count();
+
+        $ventesParTarif = Ticket::where('evenement_id', $evenement->id)
+            ->where('statut_paiement', 'payé')
+            ->selectRaw('tarif_id, COUNT(*) as nb, COALESCE(SUM(montant),0) as total')
+            ->groupBy('tarif_id')
+            ->get();
+        $tarifsMap = $evenement->tarifs->keyBy('id');
+
+        $liensAffiliation = AffiliateEventLink::where('evenement_id', $evenement->id)
+            ->with('affiliate')
+            ->latest()
+            ->get();
+
+        $ventesParLien = AffiliateCommission::where('evenement_id', $evenement->id)
+            ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+            ->where('statut', '!=', 'annule')
+            ->whereNotNull('affiliate_event_link_id')
+            ->selectRaw('affiliate_event_link_id, COUNT(DISTINCT ticket_id) as ventes, COALESCE(SUM(montant),0) as commissions')
+            ->groupBy('affiliate_event_link_id')
+            ->get()
+            ->keyBy('affiliate_event_link_id');
+
+        $affiliationStats = [
+            'actif' => (bool) $evenement->co_parrainage_actif,
+            'pourcentage' => $evenement->co_parrainage_pourcentage,
+            'affilies' => $liensAffiliation->pluck('affiliate_id')->unique()->count(),
+            'liens' => $liensAffiliation->count(),
+            'liens_actifs' => $liensAffiliation->where('actif', true)->count(),
+            'clics' => (int) $liensAffiliation->sum('clics'),
+            'ventes' => (int) AffiliateCommission::where('evenement_id', $evenement->id)
+                ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+                ->where('statut', '!=', 'annule')
+                ->whereNotNull('ticket_id')
+                ->distinct('ticket_id')
+                ->count('ticket_id'),
+            'commissions' => (float) AffiliateCommission::where('evenement_id', $evenement->id)
+                ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+                ->where('statut', '!=', 'annule')
+                ->sum('montant'),
+            'en_attente' => (float) AffiliateCommission::where('evenement_id', $evenement->id)
+                ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+                ->where('statut', 'en_attente')
+                ->sum('montant'),
+        ];
+
+        $dernieresCommissionsAffiliation = AffiliateCommission::where('evenement_id', $evenement->id)
+            ->with(['affiliate', 'ticket'])
+            ->latest()
+            ->limit(15)
+            ->get();
 
         $ticketsEnAttente = Ticket::where('evenement_id', $evenement->id)->where('statut_paiement', 'en_attente')->count();
         $incidentsSupport = Ticket::where('evenement_id', $evenement->id)
@@ -1580,9 +1641,12 @@ class SuperAdminController extends Controller
         $historique = $this->historiqueAjustements('evenement', $evenement->id);
 
         return view('superadmin.evenement-show', compact(
-            'evenement', 'mobileRecettes', 'cashRecettes',
+            'evenement', 'mobileRecettes', 'cashRecettes', 'mobileVentes', 'cashVentes',
             'commissionPct', 'commission', 'recettesNettes',
             'tickets', 'ticketsScannes', 'agentsScan', 'agentsVente',
+            'agentsScanList', 'agentsVenteList',
+            'ventesParTarif', 'tarifsMap',
+            'liensAffiliation', 'ventesParLien', 'affiliationStats', 'dernieresCommissionsAffiliation',
             'ticketsEnAttente', 'incidentsSupport',
             'historique'
         ));

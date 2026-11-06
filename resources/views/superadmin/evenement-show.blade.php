@@ -55,13 +55,13 @@
     <div class="col-6 col-md-2">
         <div class="sa-card text-center py-2">
             <div class="fw-bold" style="color:#3498db;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Mobile (FedaPay)</small>
+            <small class="text-muted">Mobile ({{ $mobileVentes ?? 0 }} vente{{ ($mobileVentes ?? 0) > 1 ? 's' : '' }})</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
         <div class="sa-card text-center py-2">
             <div class="fw-bold" style="color:#f39c12;">{{ number_format($cashRecettes, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Espèces</small>
+            <small class="text-muted">Espèces ({{ $cashVentes ?? 0 }} vente{{ ($cashVentes ?? 0) > 1 ? 's' : '' }})</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
@@ -79,13 +79,39 @@
     <div class="col-6 col-md-2">
         <div class="sa-card text-center py-2">
             <div class="fw-bold" style="color: var(--sa-success);">{{ $agentsScan }}</div>
-            <small class="text-muted">Agents scan</small>
+            <small class="text-muted">Agents scan liés</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
         <div class="sa-card text-center py-2">
             <div class="fw-bold" style="color: #3498db;">{{ $agentsVente }}</div>
-            <small class="text-muted">Agents vente</small>
+            <small class="text-muted">Agents vente liés</small>
+        </div>
+    </div>
+</div>
+<div class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="color: var(--sa-primary);">{{ $affiliationStats['affilies'] ?? 0 }}</div>
+            <small class="text-muted">Affiliés liés</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold">{{ $affiliationStats['liens_actifs'] ?? 0 }} / {{ $affiliationStats['liens'] ?? 0 }}</div>
+            <small class="text-muted">Liens d'affiliation actifs</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="color:#3498db;">{{ $affiliationStats['ventes'] ?? 0 }}</div>
+            <small class="text-muted">Ventes via affiliation</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-2">
+            <div class="fw-bold" style="color: var(--sa-danger);">{{ number_format($affiliationStats['commissions'] ?? 0, 0, ',', ' ') }} F</div>
+            <small class="text-muted">Commissions affiliés</small>
         </div>
     </div>
 </div>
@@ -253,6 +279,127 @@
                     <a href="{{ route('superadmin.organisateurs.voir', $evenement->user) }}" class="fw-semibold small text-decoration-none" style="color: var(--sa-primary);">{{ $evenement->user->nom ?? '-' }}</a>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="sa-card h-100">
+            <div class="sa-card-header">
+                <span><i class="bi bi-bar-chart me-2" style="color: var(--sa-primary);"></i>Statistiques de vente (par tarif)</span>
+            </div>
+            <div class="sa-card-body p-0">
+                <table class="sa-table">
+                    <thead><tr><th>Tarif</th><th>Ventes</th><th>Montant</th></tr></thead>
+                    <tbody>
+                        @forelse($ventesParTarif ?? [] as $ligne)
+                            @php $tarifNom = ($tarifsMap[$ligne->tarif_id]->nom ?? null) ?? ($ligne->tarif->nom ?? 'Tarif supprimé / inconnu'); @endphp
+                            <tr>
+                                <td>{{ $tarifNom }}</td>
+                                <td>{{ $ligne->nb }}</td>
+                                <td class="fw-semibold">{{ number_format($ligne->total ?? 0, 0, ',', ' ') }} F</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3" class="text-center text-muted py-3">Aucune vente payée</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="sa-card h-100">
+            <div class="sa-card-header">
+                <span><i class="bi bi-people me-2" style="color: var(--sa-success);"></i>Agents liés</span>
+            </div>
+            <div class="sa-card-body">
+                <div class="mb-3">
+                    <div class="fw-semibold small mb-1"><i class="bi bi-qr-code-scan me-1"></i>Agents de scan ({{ $agentsScan ?? 0 }})</div>
+                    @forelse($agentsScanList ?? [] as $agent)
+                        <div class="d-flex justify-content-between align-items-center py-1" style="border-bottom:1px solid #f5f5f5;font-size:0.82rem;">
+                            <span>{{ $agent->prenom ?? '' }} {{ $agent->nom ?? '' }}</span>
+                            <span class="text-muted">{{ $agent->email ?? $agent->telephone ?? '' }}</span>
+                        </div>
+                    @empty
+                        <div class="text-muted small">Aucun agent de scan lié.</div>
+                    @endforelse
+                </div>
+                <div>
+                    <div class="fw-semibold small mb-1"><i class="bi bi-cash-coin me-1"></i>Agents de vente ({{ $agentsVente ?? 0 }})</div>
+                    @forelse($agentsVenteList ?? [] as $agent)
+                        <div class="d-flex justify-content-between align-items-center py-1" style="border-bottom:1px solid #f5f5f5;font-size:0.82rem;">
+                            <span>{{ $agent->prenom ?? '' }} {{ $agent->nom ?? '' }}</span>
+                            <span class="text-muted">{{ $agent->email ?? $agent->telephone ?? '' }}</span>
+                        </div>
+                    @empty
+                        <div class="text-muted small">Aucun agent de vente lié.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sa-card mb-4">
+    <div class="sa-card-header">
+        <span><i class="bi bi-share me-2" style="color:#8b5cf6;"></i>Affiliés & co-parrainage</span>
+        <span class="text-muted" style="font-size:0.8rem;">
+            {{ ($affiliationStats['actif'] ?? false) ? 'Activé' : 'Non activé' }}
+            @if(($affiliationStats['pourcentage'] ?? null) !== null) · {{ $affiliationStats['pourcentage'] }}% @endif
+        </span>
+    </div>
+    <div class="sa-card-body">
+        <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3"><div class="small text-muted">Affiliés liés</div><div class="fw-bold">{{ $affiliationStats['affilies'] ?? 0 }}</div></div>
+            <div class="col-6 col-md-3"><div class="small text-muted">Liens (actifs / total)</div><div class="fw-bold">{{ $affiliationStats['liens_actifs'] ?? 0 }} / {{ $affiliationStats['liens'] ?? 0 }}</div></div>
+            <div class="col-6 col-md-3"><div class="small text-muted">Clics</div><div class="fw-bold">{{ number_format($affiliationStats['clics'] ?? 0, 0, ',', ' ') }}</div></div>
+            <div class="col-6 col-md-3"><div class="small text-muted">Ventes affiliées</div><div class="fw-bold">{{ $affiliationStats['ventes'] ?? 0 }}</div></div>
+            <div class="col-6 col-md-3"><div class="small text-muted">Commissions totales</div><div class="fw-bold" style="color:var(--sa-danger);">{{ number_format($affiliationStats['commissions'] ?? 0, 0, ',', ' ') }} F</div></div>
+            <div class="col-6 col-md-3"><div class="small text-muted">Commissions en attente</div><div class="fw-bold">{{ number_format($affiliationStats['en_attente'] ?? 0, 0, ',', ' ') }} F</div></div>
+        </div>
+
+        <div class="fw-semibold small mb-2">Liens d'affiliation</div>
+        <div class="table-responsive mb-3">
+            <table class="sa-table">
+                <thead><tr><th>Affilié</th><th>Code</th><th>%</th><th>Clics</th><th>Ventes</th><th>Commissions</th><th>Statut</th></tr></thead>
+                <tbody>
+                    @forelse($liensAffiliation ?? [] as $lien)
+                        @php $statsLien = ($ventesParLien[$lien->id] ?? null); @endphp
+                        <tr>
+                            <td>{{ $lien->affiliate->nom_complet ?? trim(($lien->affiliate->prenom ?? '').' '.($lien->affiliate->nom ?? '')) ?: ('#'.($lien->affiliate_id ?? '?')) }}</td>
+                            <td><code>{{ $lien->code }}</code></td>
+                            <td>{{ $lien->pourcentage }}%</td>
+                            <td>{{ $lien->clics ?? 0 }}</td>
+                            <td>{{ $statsLien->ventes ?? 0 }}</td>
+                            <td>{{ number_format($statsLien->commissions ?? 0, 0, ',', ' ') }} F</td>
+                            <td>{!! ($lien->actif ?? false) ? '<span class="sa-badge sa-badge-success">Actif</span>' : '<span class="sa-badge sa-badge-secondary">Inactif</span>' !!}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="7" class="text-center text-muted py-3">Aucun affilié lié à cet événement.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="fw-semibold small mb-2">Dernières commissions d'affiliation</div>
+        <div class="table-responsive">
+            <table class="sa-table">
+                <thead><tr><th>Date</th><th>Affilié</th><th>Type</th><th>Montant</th><th>Statut</th></tr></thead>
+                <tbody>
+                    @forelse($dernieresCommissionsAffiliation ?? [] as $com)
+                        <tr>
+                            <td style="font-size:0.78rem;">{{ $com->created_at ? $com->created_at->format('d/m/Y H:i') : '-' }}</td>
+                            <td>{{ $com->affiliate->nom_complet ?? trim(($com->affiliate->prenom ?? '').' '.($com->affiliate->nom ?? '')) ?: '-' }}</td>
+                            <td>{{ $com->type === \App\Models\AffiliateCommission::TYPE_CO_PARRAINAGE ? 'Co-parrainage' : 'Parrainage' }}</td>
+                            <td class="fw-semibold">{{ number_format($com->montant ?? 0, 0, ',', ' ') }} F</td>
+                            <td>{{ ucfirst(str_replace('_', ' ', $com->statut ?? '-')) }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="text-center text-muted py-3">Aucune commission d'affiliation.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
