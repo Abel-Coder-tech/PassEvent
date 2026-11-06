@@ -24,8 +24,8 @@
             </thead>
             <tbody>
                 @foreach($evenements as $ev)
-                <tr>
-                    <td><strong><a href="{{ route('superadmin.evenements.voir', $ev) }}" class="text-decoration-none" style="color: var(--sa-primary);">{{ $ev->titre }}</a></strong></td>
+                <tr style="cursor:pointer;" onclick="window.location='{{ route('superadmin.evenements.voir', $ev) }}'" title="Cliquer pour consulter les activités de l'événement">
+                    <td><strong><a href="{{ route('superadmin.evenements.voir', $ev) }}" class="text-decoration-none" style="color: var(--sa-primary);" onclick="event.stopPropagation();">{{ $ev->titre }}</a></strong></td>
                     <td>{{ $ev->user->nom ?? '-' }}</td>
                     <td>
                         @php $statut = $ev->statutEffectif(); @endphp
@@ -39,8 +39,9 @@
                     <td>{{ $ev->tickets_vendus ?? 0 }} / {{ $ev->capacite }}</td>
                     <td>{{ number_format($ev->recettes ?? 0, 0, ',', ' ') }} F</td>
                     <td style="font-size:0.75rem;">{{ $ev->date_event->isoFormat('D MMM YYYY') }}</td>
-                    <td>
+                    <td onclick="event.stopPropagation();">
                         <div class="d-flex gap-1">
+                            <a href="{{ route('superadmin.evenements.voir', $ev) }}" class="sa-btn sa-btn-sm sa-btn-outline" title="Voir les activités"><i class="bi bi-eye"></i></a>
                             <form action="{{ route('superadmin.evenements.masquer', $ev) }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="sa-btn sa-btn-sm sa-btn-outline" title="Masquer"><i class="bi bi-eye-slash"></i></button>
