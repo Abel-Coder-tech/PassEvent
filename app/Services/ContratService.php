@@ -30,6 +30,10 @@ class ContratService
     {
         return [
             'user' => $user,
+            // Taux contractuels : commission du périmètre « tableau de bord » de l'organisateur.
+            // Les éventuelles commissions spécifiques à un événement ne modifient pas le contrat.
+            'commission_eticket' => $user->commissionPourcentage(),
+            'commission_physique' => $user->commissionPhysiquePourcentage(),
             'pax_signature_uri' => $this->signatureDataUri(public_path(self::PAX_SIGNATURE)),
             'organisateur_signature_uri' => $user->signature
                 ? $this->signatureDataUri(Storage::disk('public')->path($user->signature))
