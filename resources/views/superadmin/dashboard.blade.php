@@ -271,10 +271,44 @@
     <div class="col-lg-6">
         <div class="sa-card">
             <div class="sa-card-header">
-                <span><i class="bi bi-activity me-2" style="color: var(--sa-success);"></i>Activité en direct</span>
+                <span><i class="bi bi-person-lines-fill me-2" style="color: var(--sa-primary);"></i>Activités des organisateurs</span>
+            </div>
+            <div class="sa-card-body p-0" style="max-height: 340px; overflow-y: auto;">
+                @forelse(($activitesOrganisateurs ?? collect()) as $log)
+                    @php $ok = $log->status === 'success'; @endphp
+                    <div class="d-flex gap-2 px-3 py-2 border-bottom" style="font-size:0.82rem;">
+                        <div class="pt-1">
+                            <i class="bi {{ $ok ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' }}"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex flex-wrap align-items-center gap-1">
+                                <strong class="text-truncate" style="max-width:180px;">{{ $log->user?->nom ?? $log->user?->name ?? '—' }}</strong>
+                                <span class="text-muted">·</span>
+                                <span>{{ $log->labelAction() }}</span>
+                                <span class="badge {{ $ok ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis' }}" style="font-size:0.68rem;">{{ $ok ? 'Succès' : 'Échec' }}</span>
+                            </div>
+                            @if($log->description)
+                                <div class="text-muted text-truncate">{{ $log->description }}</div>
+                            @endif
+                            <div class="text-muted" style="font-size:0.72rem;">
+                                <i class="bi bi-clock me-1"></i>{{ $log->created_at?->format('d/m/Y H:i') }} ({{ $log->created_at?->diffForHumans() }})
+                                @if($log->ip)<span class="ms-2">IP: {{ $log->ip }}</span>@endif
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Aucune activité organisateur enregistrée</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="sa-card mb-3">
+            <div class="sa-card-header">
+                <span><i class="bi bi-activity me-2" style="color: var(--sa-success);"></i>Activité en direct (scans / opérations)</span>
                 <span class="activity-pulse"></span>
             </div>
-            <div class="sa-card-body" style="max-height: 300px; overflow-y: auto;">
+            <div class="sa-card-body" style="max-height: 220px; overflow-y: auto;">
                 @forelse($activiteEnDirect as $act)
                     <div class="sa-activity-item">
                         <div class="sa-activity-dot" style="background: {{ $act['action'] === 'achat' ? 'var(--sa-success)' : ($act['action'] === 'scan' ? '#3498db' : 'var(--sa-warning)') }};"></div>
@@ -293,8 +327,6 @@
                 @endforelse
             </div>
         </div>
-    </div>
-    <div class="col-lg-6">
         <div class="row g-3">
             <div class="col-12">
                 <div class="sa-card">

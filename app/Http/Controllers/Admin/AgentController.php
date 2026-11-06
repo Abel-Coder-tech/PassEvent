@@ -7,10 +7,12 @@ use App\Models\Agent;
 use App\Services\AgentScanStatisticsService;
 use App\Models\Evenement;
 use App\Mail\AgentAssigned;
+use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AgentController extends Controller
 {
@@ -31,33 +33,43 @@ class AgentController extends Controller
     // Crée un nouvel agent de scan après validation et vérification des limites
     public function store(Request $request)
     {
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:agents,email',
-            'password' => 'required|string|min:8|max:255',
-            'evenement_id' => ['required', Rule::exists('evenement', 'id')->where(function ($q) {
-                $q->where('user_id', auth()->id());
-            })],
-        ], [
-            'nom.required' => 'Le nom est obligatoire.',
-            'email.required' => 'L\'email est obligatoire.',
-            'email.unique' => 'Cet email est déjà utilisé par un autre agent.',
-            'password.required' => 'Le mot de passe est obligatoire.',
-            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-            'evenement_id.required' => 'Veuillez sélectionner un événement.',
-            'evenement_id.exists' => 'L\'événement sélectionné est invalide.',
-        ]);
+        try {
+            $request->validate([
+                'nom' => 'required|string|max:255',
+                'email' => 'required|email|max:255|unique:agents,email',
+                'password' => 'required|string|min:8|max:255',
+                'evenement_id' => ['required', Rule::exists('evenement', 'id')->where(function ($q) {
+                    $q->where('user_id', auth()->id());
+                })],
+            ], [
+                'nom.required' => 'Le nom est obligatoire.',
+                'email.required' => 'L\'email est obligatoire.',
+                'email.unique' => 'Cet email est déjà utilisé par un autre agent.',
+                'password.required' => 'Le mot de passe est obligatoire.',
+                'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'evenement_id.required' => 'Veuillez sélectionner un événement.',
+                'evenement_id.exists' => 'L\'événement sélectionné est invalide.',
+            ]);
+        } catch (ValidationException $e) {
+            ActivityLogger::failure('agent_scan.create', 'Validation échouée (création agent scan)', null, [
+                'errors' => array_keys($e->errors()),
+                'email' => $request->input('email'),
+            ], $request);
+            throw $e;
+        }
 
         $evenement = Evenement::findOrFail($request->evenement_id);
 
         $nbActifs = $evenement->agents()->where('actif', true)->count();
         $limite = $evenement->limiteAgentsScan();
         if ($limite !== null && $nbActifs >= $limite) {
+            ActivityLogger::failure('agent_scan.create', 'Limite d\'agents de scan atteinte', $evenement, ['limite' => $limite, 'email' => $request->email], $request);
             return back()->with('error', "Maximum de {$limite} agents de scan atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\AgentVente::where('email', $request->email)->exists();
         if ($emailExiste) { // Un email ne peut pas être utilisé pour un scan ET une vente
+            ActivityLogger::failure('agent_scan.create', 'Email déjà utilisé par un agent de vente', $evenement, ['email' => $request->email], $request);
             return back()->with('error', 'Cet email est déjà utilisé par un agent de vente. Un agent ne peut pas être à la fois scan et vente.');
         }
 
@@ -77,6 +89,12 @@ class AgentController extends Controller
         } catch (\Exception $e) {
             // L'agent est créé même si l'email échoue
         }
+
+        ActivityLogger::success('agent_scan.create', 'Agent de scan créé : ' . $agent->nom, $agent, [
+            'agent_id' => $agent->id,
+            'email' => $agent->email,
+            'evenement_id' => $agent->evenement_id,
+        ], $request);
 
         return redirect()->route('admin.agents.index')->with('success', 'Agent créé avec succès. Un email lui a été envoyé.');
     }
