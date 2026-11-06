@@ -188,10 +188,14 @@ class SuperAdminController extends Controller
                 ];
             });
 
-        $activitesOrganisateurs = OrganizerActivityLog::with('user')
-            ->orderByDesc('created_at')
-            ->limit(20)
-            ->get();
+        try {
+            $activitesOrganisateurs = OrganizerActivityLog::with('user')
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get();
+        } catch (\Throwable $e) {
+            $activitesOrganisateurs = collect();
+        }
 
         // Alertes de sécurité
         $scanInvalides = Log::where('type_operation', 'scan')
