@@ -559,7 +559,7 @@
                 <i class="bi bi-bar-chart-fill"></i> Statistiques
             </a>
             <a href="{{ route('superadmin.securite') }}" class="sa-nav-link {{ request()->routeIs('superadmin.securite') ? 'active' : '' }}">
-                <i class="bi bi-shield-fill"></i> Securite
+                <i class="bi bi-shield-fill"></i> Sécurité
             </a>
             <a href="{{ route('superadmin.consentements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.consentements') ? 'active' : '' }}">
                 <i class="bi bi-shield-check"></i> Consentements cookies
@@ -579,7 +579,7 @@
             @endif
             @if(!$estEquipe)
             <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-event-fill"></i> Evenements
+                <i class="bi bi-calendar-event-fill"></i> Événements
             </a>
             <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.tickets-physiques*') ? 'active' : '' }}">
                 <i class="bi bi-ticket-perforated-fill"></i> Tickets physiques
@@ -670,7 +670,7 @@
             @endif
             @if(!$estEquipe)
             <a href="{{ route('superadmin.logs') }}" class="sa-nav-link {{ request()->routeIs('superadmin.logs') ? 'active' : '' }}">
-                <i class="bi bi-journal-text"></i> Logs systeme
+                <i class="bi bi-journal-text"></i> Logs système
             </a>
             <a href="{{ route('superadmin.newsletter') }}" class="sa-nav-link {{ request()->routeIs('superadmin.newsletter*') ? 'active' : '' }}">
                 <i class="bi bi-envelope-fill"></i> Newsletter
@@ -678,7 +678,7 @@
             @endif
             @if(!$estEquipe)
             <a href="{{ route('superadmin.parametres') }}" class="sa-nav-link {{ request()->routeIs('superadmin.parametres') ? 'active' : '' }}">
-                <i class="bi bi-gear-fill"></i> Parametres
+                <i class="bi bi-gear-fill"></i> Paramètres
             </a>
             @endif
         </nav>
