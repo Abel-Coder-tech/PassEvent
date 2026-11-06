@@ -329,7 +329,7 @@
                 @if($lot->template_path)
                     <img src="{{ $lot->template_url }}" alt="Template" class="canvas-img" id="canvasImg">
                     <div class="qr-overlay" id="qrOverlay">
-                        <div class="qr-tooltip" id="qrTooltip">{{ $qrX }} mm, {{ $qrY }} mm</div>
+                        <div class="qr-tooltip" id="qrTooltip">Taille : {{ number_format((float) ($qrSize ?? ($format['qr_defaut'] ?? 40)) / 10, 1, ',', ' ') }} cm</div>
                         <div class="zone-inner" id="zoneInner"></div>
                         <div class="qr-crosshair"></div>
                         <span class="qr-label">QR Code</span>
@@ -430,41 +430,27 @@
                         <div class="mb-3">
                             <div class="d-flex align-items-center mb-1">
                                 <span class="step-badge">3</span>
-                                <span class="step-label">Positionnez le QR code</span>
+                                <span class="step-label">Placez le QR code</span>
                             </div>
-                            <div class="step-hint mb-2">Glissez le cadre rouge pour le déplacer, ou utilisez la poignée en bas à droite pour le redimensionner.</div>
-                            <div class="row g-2">
-                                <div class="col-6 col-md-4">
-                                    <label class="form-label">X (mm)</label>
+                            <div class="step-hint mb-2">Glissez le cadre rouge pour le déposer où vous voulez. Utilisez la poignée en bas à droite pour le redimensionner.</div>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-sm-7">
+                                    <label class="form-label">Taille du QR</label>
                                     <div class="input-group input-group-sm">
-                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrXInput" data-step="-1" aria-label="Diminuer X">−</button>
-                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrXInput" data-min="0" step="1" value="{{ old('qr_x', $qrX ?? 0) }}">
-                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrXInput" data-step="1" aria-label="Augmenter X">+</button>
+                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-0.1" aria-label="Diminuer la taille">−</button>
+                                        <input type="number" class="form-control text-center" id="qrSizeInput" min="0.5" max="15" step="0.1" value="{{ number_format((float) old('qr_size', $qrSize ?? ($format['qr_defaut'] ?? 40)) / 10, 1, '.', '') }}">
+                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="0.1" aria-label="Augmenter la taille">+</button>
+                                        <span class="input-group-text">cm</span>
                                     </div>
-                                    @if($errors->has('qr_x'))
-                                        <div class="text-danger small mt-1">{{ $errors->first('qr_x') }}</div>
+                                    @if($errors->has('qr_size'))
+                                        <div class="text-danger small mt-1">{{ $errors->first('qr_size') }}</div>
                                     @endif
+                                    <div class="step-hint">Ajustez la taille en centimètres.</div>
                                 </div>
-                                <div class="col-6 col-md-4">
-                                    <label class="form-label">Y (mm)</label>
-                                    <div class="input-group input-group-sm">
-                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrYInput" data-step="-1" aria-label="Diminuer Y">−</button>
-                                        <input type="text" inputmode="numeric" readonly class="form-control text-center step-value" id="qrYInput" data-min="0" step="1" value="{{ old('qr_y', $qrY ?? 0) }}">
-                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrYInput" data-step="1" aria-label="Augmenter Y">+</button>
-                                    </div>
-                                    @if($errors->has('qr_y'))
-                                        <div class="text-danger small mt-1">{{ $errors->first('qr_y') }}</div>
-                                    @endif
-                                </div>
-                                <div class="col-6 col-md-4">
-                                    <label class="form-label">Taille QR</label>
-                                    <div class="input-group input-group-sm">
-                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="-1" aria-label="Diminuer la taille">−</button>
-                                        <input type="number" class="form-control text-center" id="qrSizeInput" name="qr_size" min="5" max="150" step="0.1" value="{{ old('qr_size', $qrSize ?? ($format['qr_defaut'] ?? 40)) }}">
-                                        <button type="button" class="btn btn-outline-secondary step-btn" data-step-for="qrSizeInput" data-step="1" aria-label="Augmenter la taille">+</button>
-                                        <span class="input-group-text">mm</span>
-                                    </div>
-                                    <div class="step-hint">Taille entièrement personnalisable.</div>
+                                <div class="col-12 col-sm-5">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btnRecenterQr">
+                                        <i class="bi bi-bullseye me-1"></i>Recentrer le QR
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -621,6 +607,20 @@
         qrMax: 80
     };
 
+    function qrMaxMm() {
+        if (formatSelect && formatSelect.value === 'custom') {
+            var m = Math.min(TICKET_MM_W || 0, TICKET_MM_H || 0);
+            return m > 0 ? Math.max(ZONE.qrMin, m - 2) : 500;
+        }
+        return 80;
+    }
+    function syncQrSizeBounds() {
+        if (!qrSizeInput) return;
+        var maxCm = Math.round((qrMaxMm() / 10) * 10) / 10;
+        qrSizeInput.max = maxCm.toFixed(1);
+        qrSizeInput.min = (Math.round((ZONE.qrMin / 10) * 10) / 10).toFixed(1);
+    }
+
     // Zone blanche autour du QR : largeur = QR + 2 marges (haut 0,25, côtés
     // 0,25), hauteur = QR + haut + code pass. Le code pass est imprimé dans la
     // zone, sous le QR : écart 0,1 mm, puis la hauteur de ligne, puis 1,65 mm
@@ -671,12 +671,12 @@
     var overlay = document.getElementById('qrOverlay');
     var zoneInner = document.getElementById('zoneInner');
     var img = document.getElementById('canvasImg');
-    var qrXInput = document.getElementById('qrXInput');
-    var qrYInput = document.getElementById('qrYInput');
-    var qrSizeInput = document.getElementById('qrSizeInput');
+    var qrXInput = document.getElementById('qrXInput'); // optionnel (non affiché)
+    var qrYInput = document.getElementById('qrYInput'); // optionnel (non affiché)
+    var qrSizeInput = document.getElementById('qrSizeInput'); // affiché en cm
     var qrXHidden = document.getElementById('qr_x');
     var qrYHidden = document.getElementById('qr_y');
-    var qrSizeHidden = document.getElementById('qr_size_val');
+    var qrSizeHidden = document.getElementById('qr_size_val'); // soumis en mm
     var fileError = document.getElementById('fileError');
     var fileInput = document.getElementById('templateImageInput');
     var form = document.getElementById('formTemplate');
@@ -686,6 +686,7 @@
     var qrTooltip = document.getElementById('qrTooltip');
     var btnRemoveImg = document.getElementById('btnRemoveImg');
     var btnChangeImg = document.getElementById('btnChangeImg');
+    var btnRecenterQr = document.getElementById('btnRecenterQr');
     var formatSelect = document.getElementById('formatSelect');
     var formatHint = document.getElementById('formatHint');
     var formatBadgeLabel = document.getElementById('formatBadgeLabel');
@@ -740,6 +741,15 @@
         return (mm / TICKET_MM_W) * imgDispW * zoomFactor();
     }
 
+    function mmToCm(mm) { return Math.round(((parseFloat(mm) || 0) / 10) * 10) / 10; }
+    function cmToMm(cm) { return Math.round(((parseFloat(cm) || 0) * 10) * 10) / 10; }
+    function formatCm(mm) { return mmToCm(mm).toFixed(1).replace('.', ',') + ' cm'; }
+    function qrMmValue() {
+        var cm = qrSizeInput ? parseFloat(qrSizeInput.value) : NaN;
+        if (isFinite(cm)) return cmToMm(cm);
+        return parseFloat(qrSizeHidden ? qrSizeHidden.value : 0) || currentFmt().qr_defaut;
+    }
+
     function showFileError(msg) {
         fileError.textContent = msg;
         fileError.classList.remove('warn');
@@ -785,16 +795,16 @@
         var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
         var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
 
-        // QR : piloté par le champ Taille
-        var qrMm = parseFloat(qrSizeInput.value) || currentFmt().qr_defaut;
-        qrMm = Math.max(1, Math.min(500, qrMm));
+        // Taille pilotée en cm (conversion interne mm)
+        var qrMm = qrMmValue() || currentFmt().qr_defaut;
+        qrMm = Math.max(ZONE.qrMin, Math.min(qrMaxMm(), qrMm));
         qrMm = Math.round(qrMm * 10) / 10;
-        qrSizeInput.value = qrMm;
+        if (qrSizeInput) qrSizeInput.value = mmToCm(qrMm).toFixed(1);
         if (qrSizeHidden) qrSizeHidden.value = qrMm;
         var zone = zoneDims(qrMm);
         var qrPx = mmToPx(qrMm);
-        var xMm = parseInt(qrXInput.value) || 0;
-        var yMm = parseInt(qrYInput.value) || 0;
+        var xMm = qrXInput ? (parseInt(qrXInput.value) || 0) : (parseFloat(qrXHidden ? qrXHidden.value : 0) || 0);
+        var yMm = qrYInput ? (parseInt(qrYInput.value) || 0) : (parseFloat(qrYHidden ? qrYHidden.value : 0) || 0);
         var xPx = dispX + mmToPx(xMm) - mmToPx(zone.padX);
         var yPx = dispY + mmToPx(yMm) - mmToPx(zone.padTop);
 
@@ -868,17 +878,17 @@
             var z = zoomFactor();
             var dispX = imgOffX - (imgDispW * (z - 1)) / 2;
             var dispY = imgOffY - (imgDispH * (z - 1)) / 2;
-            var qrMm = parseInt(qrSizeInput.value) || currentFmt().qr_defaut;
+            var qrMm = qrMmValue() || currentFmt().qr_defaut;
             var zone = zoneDims(qrMm);
             var xMm = pxToMm((xPx - dispX) + mmToPx(zone.padX));
             var yMm = pxToMm((yPx - dispY) + mmToPx(zone.padTop));
-            qrXInput.value = xMm;
-            qrYInput.value = yMm;
+            if (qrXInput) qrXInput.value = xMm;
+            if (qrYInput) qrYInput.value = yMm;
             qrXHidden.value = xMm;
             qrYHidden.value = yMm;
 
             if (qrTooltip) {
-                qrTooltip.textContent = xMm + ' mm, ' + yMm + ' mm';
+                qrTooltip.textContent = 'Taille : ' + formatCm(qrMm);
                 qrTooltip.classList.add('show');
             }
         }
@@ -886,15 +896,15 @@
             var dx = clientX - startResizeX;
             var newQrPx = startResizeW + dx;
             var newMm = pxToMm(newQrPx);
-            if (newMm >= ZONE.qrMin && newMm <= ZONE.qrMax) {
-                qrSizeInput.value = Math.round(newMm);
-                qrSizeHidden.value = qrSizeInput.value;
+            var maxMm = qrMaxMm();
+            if (newMm >= ZONE.qrMin && newMm <= maxMm) {
+                newMm = Math.round(newMm * 10) / 10;
+                if (qrSizeInput) qrSizeInput.value = mmToCm(newMm).toFixed(1);
+                if (qrSizeHidden) qrSizeHidden.value = newMm;
                 updateOverlay();
 
                 if (qrTooltip) {
-                    var xMm2 = parseInt(qrXInput.value) || 0;
-                    var yMm2 = parseInt(qrYInput.value) || 0;
-                    qrTooltip.textContent = xMm2 + ' mm, ' + yMm2 + ' mm — ' + qrSizeInput.value + ' mm';
+                    qrTooltip.textContent = 'Taille : ' + formatCm(newMm);
                     qrTooltip.classList.add('show');
                 }
             }
@@ -918,17 +928,18 @@
     document.addEventListener('touchend', stopPointer);
     document.addEventListener('touchcancel', stopPointer);
 
-    // Sync inputs
+    // Sync inputs (taille en cm -> mm)
     [qrXInput, qrYInput, qrSizeInput].forEach(function(el) {
+        if (!el) return;
         el.addEventListener('input', function() {
-            if (qrXHidden) qrXHidden.value = qrXInput.value;
-            if (qrYHidden) qrYHidden.value = qrYInput.value;
-            if (qrSizeHidden) qrSizeHidden.value = qrSizeInput.value;
+            if (qrXInput && qrXHidden) qrXHidden.value = qrXInput.value;
+            if (qrYInput && qrYHidden) qrYHidden.value = qrYInput.value;
+            if (el === qrSizeInput && qrSizeHidden) qrSizeHidden.value = cmToMm(qrSizeInput.value);
             updateOverlay();
         });
     });
 
-    // Boutons − / + (mobile : pas de flèches natives sur les champs numériques)
+    // Boutons − / + (taille en cm)
     function activerSteppers() {
         document.querySelectorAll('.step-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -940,14 +951,27 @@
                 var val = (parseFloat(input.value) || 0) + delta;
                 if (min !== null && val < min) val = min;
                 if (max !== null && val > max) val = max;
-                if (input.id === 'qrXInput' || input.id === 'qrYInput') val = Math.round(val);
-                else val = Math.round(val * 10) / 10;
-                input.value = val;
+                val = Math.round(val * 10) / 10;
+                input.value = (input.step && parseFloat(input.step) < 1) ? val.toFixed(1) : val;
                 input.dispatchEvent(new Event('input', { bubbles: true }));
             });
         });
     }
     activerSteppers();
+
+    function recentrerQr() {
+        var f = currentFmt();
+        var qrMm = qrMmValue() || f.qr_defaut;
+        qrMm = Math.max(ZONE.qrMin, Math.min(qrMaxMm(), qrMm));
+        var xMm = Math.round((f.largeur - qrMm) / 2);
+        var yMm = Math.round((f.hauteur - qrMm) / 2);
+        if (qrXInput) qrXInput.value = xMm;
+        if (qrYInput) qrYInput.value = yMm;
+        qrXHidden.value = xMm;
+        qrYHidden.value = yMm;
+        updateOverlay();
+    }
+    if (btnRecenterQr) btnRecenterQr.addEventListener('click', recentrerQr);
 
     // Resize observer
     if (typeof ResizeObserver !== 'undefined' && img) {
@@ -973,14 +997,17 @@
         TICKET_MM_W = f.largeur;
         TICKET_MM_H = f.hauteur;
         var qrMM = f.qr_defaut;
-        qrSizeInput.value = qrMM;
-        qrSizeHidden.value = qrMM;
-        qrXInput.value = Math.round((f.largeur - qrMM) / 2);
-        qrYInput.value = Math.round((f.hauteur - qrMM) / 2);
-        qrXHidden.value = qrXInput.value;
-        qrYHidden.value = qrYInput.value;
+        if (qrSizeInput) qrSizeInput.value = mmToCm(qrMM).toFixed(1);
+        if (qrSizeHidden) qrSizeHidden.value = qrMM;
+        var xMm = Math.round((f.largeur - qrMM) / 2);
+        var yMm = Math.round((f.hauteur - qrMM) / 2);
+        if (qrXInput) qrXInput.value = xMm;
+        if (qrYInput) qrYInput.value = yMm;
+        qrXHidden.value = xMm;
+        qrYHidden.value = yMm;
         syncFormatHint(f);
         if (img && img.naturalWidth) checkRatio(f, img.naturalWidth, img.naturalHeight);
+        syncQrSizeBounds();
         updateOverlay();
     }
 
@@ -1001,15 +1028,18 @@
         TICKET_MM_H = c.hauteur;
         if (resetQr) {
             var qrMM = c.qr_defaut;
-            if (qrSizeInput) { qrSizeInput.value = qrMM; }
+            if (qrSizeInput) { qrSizeInput.value = mmToCm(qrMM).toFixed(1); }
             if (qrSizeHidden) { qrSizeHidden.value = qrMM; }
-            if (qrXInput) { qrXInput.value = Math.round((c.largeur - qrMM) / 2); }
-            if (qrYInput) { qrYInput.value = Math.round((c.hauteur - qrMM) / 2); }
-            if (qrXHidden) { qrXHidden.value = qrXInput ? qrXInput.value : qrXHidden.value; }
-            if (qrYHidden) { qrYHidden.value = qrYInput ? qrYInput.value : qrYHidden.value; }
+            var xMm = Math.round((c.largeur - qrMM) / 2);
+            var yMm = Math.round((c.hauteur - qrMM) / 2);
+            if (qrXInput) { qrXInput.value = xMm; }
+            if (qrYInput) { qrYInput.value = yMm; }
+            qrXHidden.value = xMm;
+            qrYHidden.value = yMm;
         }
         syncFormatHint(c);
         if (img && img.naturalWidth) checkRatio(c, img.naturalWidth, img.naturalHeight);
+        syncQrSizeBounds();
         updateOverlay();
     }
 
@@ -1119,7 +1149,7 @@
             var tt = document.createElement('div');
             tt.className = 'qr-tooltip';
             tt.id = 'qrTooltip';
-            tt.textContent = qrXInput.value + ' mm, ' + qrYInput.value + ' mm';
+            tt.textContent = 'Taille : ' + formatCm(qrMmValue());
             ov.appendChild(tt);
             var zi = document.createElement('div');
             zi.className = 'zone-inner';
@@ -1214,6 +1244,7 @@
         TICKET_MM_H = currentFmt().hauteur;
     }
     syncFormatHint(currentFmt());
+    syncQrSizeBounds();
     if (overlay) { updateOverlay(); bindOverlayEvents(); }
     if (img && hasStored) { showRemoveBtn(); setZoom(currentZoom); if (img.naturalWidth) { setZoom(currentZoom); } }
 })();
