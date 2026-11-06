@@ -272,9 +272,10 @@ h3 {
 
     <h3>ARTICLE 6 : COMMISSIONS</h3>
     <ul>
-        <li>Pour chaque e-ticket vendu, PaxEvent prélève des frais de commission d'un taux de <strong>5% à 10%</strong> de la valeur nominale du ticket ;</li>
-        <li>Pour chaque ticket physique généré, PaxEvent prélève des frais de commission d'un taux de <strong>5% à 10%</strong> de la valeur nominale du ticket.</li>
+        <li>Pour chaque e-ticket vendu, PaxEvent prélève des frais de commission d'un taux de <strong>{{ number_format($commission_eticket, 1, ',', ' ') }} %</strong> de la valeur nominale du ticket ;</li>
+        <li>Pour chaque ticket physique généré, PaxEvent prélève des frais de commission d'un taux de <strong>{{ number_format($commission_physique, 1, ',', ' ') }} %</strong> de la valeur nominale du ticket.</li>
     </ul>
+    <p style="font-size: 10px; color: #333;">Les taux ci-dessus sont ceux en vigueur à la date de génération du présent contrat ({{ now()->format('d/m/Y') }}).</p>
 
     <h3>ARTICLE 7 : RETRAIT DES AVOIRS</h3>
     <ul>
