@@ -7,6 +7,7 @@ use App\Models\Tarif;
 use App\Services\ContratService;
 use App\Services\EvenementStatisticsService;
 use App\Services\TicketStatisticsService;
+use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -59,6 +60,7 @@ class EvenementController extends Controller
     public function store(Request $request)
     {
         if (Auth::user()->statut !== 'actif') {
+            ActivityLogger::failure('evenement.create', 'Profil non vérifié', null, ['titre' => $request->input('titre')], $request);
             return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
         }
 
@@ -109,36 +111,41 @@ class EvenementController extends Controller
             }
         }
 
-        $validated = $request->validate($rules, [
-            'titre.required' => 'Le titre de l\'événement est obligatoire.',
-            'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
-            'description.max' => 'La description ne doit pas dépasser 5000 caractères.',
-            'date_event.required' => 'La date de l\'événement est obligatoire.',
-            'date_event.date' => 'Le format de la date est invalide.',
-            'lieu.required' => 'Le lieu est obligatoire.',
-            'lieu.max' => 'Le lieu ne doit pas dépasser 255 caractères.',
-            'categorie.required' => 'La categorie est obligatoire.',
-            'capacite.required' => 'La capacité est obligatoire.',
-            'capacite.integer' => 'La capacité doit être un nombre entier.',
-            'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
-            'image.image' => 'Le fichier doit être une image.',
-            'image.max' => 'L\'image ne doit pas dépasser 512 Ko.',
-            'statut.required' => 'Le statut est obligatoire.',
-            'tarif_nom_1.required_without' => 'Le nom du tarif est obligatoire.',
-            'tarif_nom_1.string' => 'Le nom du tarif doit être du texte.',
-            'tarif_prix_1.required_without' => 'Le prix du tarif est obligatoire.',
-            'tarif_prix_1.numeric' => 'Le prix du tarif doit être un nombre.',
-            'tarif_prix_1.min' => 'Le prix du tarif ne peut pas être négatif.',
-            'tarif_qte_1.required_without' => 'Indiquez le nombre de places pour ce tarif.',
-            'tarif_qte_1.min' => 'Le nombre de places doit être d\'au moins 1.',
-            'tarif_qte_1.max' => "Le nombre de places d'un tarif ne peut pas dépasser la capacité de l'événement ({$capaciteInput} places).",
-            'tarif_qte_2.required_with' => 'Indiquez le nombre de places pour ce tarif.',
-            'tarif_qte_3.required_with' => 'Indiquez le nombre de places pour ce tarif.',
-            'tarif_qte_4.required_with' => 'Indiquez le nombre de places pour ce tarif.',
-            'co_parrainage_pourcentage.required_if' => 'Indiquez la commission à reverser aux affiliés.',
-            'co_parrainage_pourcentage.min' => 'La commission de co-parrainage doit être d\'au moins 1 %.',
-            'co_parrainage_pourcentage.max' => "La commission de co-parrainage ne peut pas dépasser {$maxCoParrainage} % (100 % moins votre commission PaxEvent de {$commissionPax} %).",
-        ]);
+        try {
+            $validated = $request->validate($rules, [
+                'titre.required' => 'Le titre de l\'événement est obligatoire.',
+                'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
+                'description.max' => 'La description ne doit pas dépasser 5000 caractères.',
+                'date_event.required' => 'La date de l\'événement est obligatoire.',
+                'date_event.date' => 'Le format de la date est invalide.',
+                'lieu.required' => 'Le lieu est obligatoire.',
+                'lieu.max' => 'Le lieu ne doit pas dépasser 255 caractères.',
+                'categorie.required' => 'La categorie est obligatoire.',
+                'capacite.required' => 'La capacité est obligatoire.',
+                'capacite.integer' => 'La capacité doit être un nombre entier.',
+                'capacite.min' => 'La capacité doit être d\'au moins 1 place.',
+                'image.image' => 'Le fichier doit être une image.',
+                'image.max' => 'L\'image ne doit pas dépasser 512 Ko.',
+                'statut.required' => 'Le statut est obligatoire.',
+                'tarif_nom_1.required_without' => 'Le nom du tarif est obligatoire.',
+                'tarif_nom_1.string' => 'Le nom du tarif doit être du texte.',
+                'tarif_prix_1.required_without' => 'Le prix du tarif est obligatoire.',
+                'tarif_prix_1.numeric' => 'Le prix du tarif doit être un nombre.',
+                'tarif_prix_1.min' => 'Le prix du tarif ne peut pas être négatif.',
+                'tarif_qte_1.required_without' => 'Indiquez le nombre de places pour ce tarif.',
+                'tarif_qte_1.min' => 'Le nombre de places doit être d\'au moins 1.',
+                'tarif_qte_1.max' => "Le nombre de places d'un tarif ne peut pas dépasser la capacité de l'événement ({$capaciteInput} places).",
+                'tarif_qte_2.required_with' => 'Indiquez le nombre de places pour ce tarif.',
+                'tarif_qte_3.required_with' => 'Indiquez le nombre de places pour ce tarif.',
+                'tarif_qte_4.required_with' => 'Indiquez le nombre de places pour ce tarif.',
+                'co_parrainage_pourcentage.required_if' => 'Indiquez la commission à reverser aux affiliés.',
+                'co_parrainage_pourcentage.min' => 'La commission de co-parrainage doit être d\'au moins 1 %.',
+                'co_parrainage_pourcentage.max' => "La commission de co-parrainage ne peut pas dépasser {$maxCoParrainage} % (100 % moins votre commission PaxEvent de {$commissionPax} %).",
+            ]);
+        } catch (ValidationException $e) {
+            ActivityLogger::failure('evenement.create', 'Validation échouée lors de la création', null, ['errors' => array_keys($e->errors()), 'titre' => $request->input('titre')], $request);
+            throw $e;
+        }
 
         if ($validated['categorie'] === 'Autre' && !empty($validated['autre_categorie'])) {
             $validated['categorie'] = $validated['autre_categorie'];
@@ -187,6 +194,11 @@ class EvenementController extends Controller
             // La somme des places des tarifs ne peut pas dépasser la capacité de l'événement
             $totalPlacesTarifs = array_sum(array_map(fn ($t) => (int) ($t['quantite_disponible'] ?? 0), $tarifsData));
             if ($totalPlacesTarifs > (int) $validated['capacite']) {
+                ActivityLogger::failure('evenement.create', 'Capacité tarifs dépassée', null, [
+                    'titre' => $validated['titre'] ?? $request->input('titre'),
+                    'total_places_tarifs' => $totalPlacesTarifs,
+                    'capacite' => $validated['capacite'],
+                ], $request);
                 throw ValidationException::withMessages([
                     'tarifs' => "La somme des places des tarifs ({$totalPlacesTarifs} places) ne peut pas dépasser la capacité totale de l'événement ({$validated['capacite']} places).",
                 ]);
@@ -222,6 +234,12 @@ class EvenementController extends Controller
                 'statut' => 'actif',
             ]);
         }
+
+        ActivityLogger::success('evenement.create', 'Événement créé : ' . $evenement->titre, $evenement, [
+            'evenement_id' => $evenement->id,
+            'statut' => $evenement->statut,
+            'gratuit' => (bool) $gratuit,
+        ], $request);
 
         return redirect()->route('admin.evenements.index')
             ->with('success', $gratuit ? 'Événement gratuit créé avec succès.' : 'Événement créé avec succès.');

@@ -7,11 +7,13 @@ use App\Mail\AgentVenteAssigned;
 use App\Models\AgentVente;
 use App\Models\Evenement;
 use App\Services\AgentVenteStatisticsService;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AgentVenteController extends Controller
@@ -48,28 +50,39 @@ class AgentVenteController extends Controller
     // Crée un agent de vente avec mot de passe aléatoire et envoi d'email
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:agents_vente,email',
-            'evenement_id' => 'required|exists:evenement,id',
-        ]);
+        try {
+            $validated = $request->validate([
+                'nom' => 'required|string|max:255',
+                'email' => 'required|email|max:255|unique:agents_vente,email',
+                'evenement_id' => 'required|exists:evenement,id',
+            ]);
+        } catch (ValidationException $e) {
+            ActivityLogger::failure('agent_vente.create', 'Validation échouée (création agent vente)', null, [
+                'errors' => array_keys($e->errors()),
+                'email' => $request->input('email'),
+            ], $request);
+            throw $e;
+        }
 
         $evenement = Evenement::where('user_id', auth()->id())
             ->findOrFail($validated['evenement_id']);
 
         // Règle métier : pas d'agent de vente sur un événement déjà passé
         if ($evenement->date_event && $evenement->date_event->isPast()) {
+            ActivityLogger::failure('agent_vente.create', 'Événement déjà passé', $evenement, ['email' => $validated['email']], $request);
             return back()->with('error', 'Cet événement est déjà passé : impossible d\'y affecter un agent de vente.');
         }
 
         $nbActifs = $evenement->agentsVentes()->where('actif', true)->count();
         $limite = $evenement->limiteAgentsVente();
         if ($limite !== null && $nbActifs >= $limite) {
+            ActivityLogger::failure('agent_vente.create', 'Limite d\'agents de vente atteinte', $evenement, ['limite' => $limite, 'email' => $validated['email']], $request);
             return back()->with('error', "Maximum de {$limite} agents de vente atteint pour cet événement. Désactivez d'abord un agent existant avant d'en créer un nouveau.");
         }
 
         $emailExiste = \App\Models\Agent::where('email', $validated['email'])->exists();
         if ($emailExiste) { // Un email ne peut pas servir pour scan et vente à la fois
+            ActivityLogger::failure('agent_vente.create', 'Email déjà utilisé par un agent de scan', $evenement, ['email' => $validated['email']], $request);
             return back()->with('error', 'Cet email est déjà utilisé par un agent de scan. Un agent ne peut pas être à la fois scan et vente.');
         }
 
@@ -83,6 +96,12 @@ class AgentVenteController extends Controller
         ]);
 
         Mail::to($agent->email)->send(new AgentVenteAssigned($agent, $motDePasse));
+
+        ActivityLogger::success('agent_vente.create', 'Agent de vente créé : ' . $agent->nom, $agent, [
+            'agent_id' => $agent->id,
+            'email' => $agent->email,
+            'evenement_id' => $agent->evenement_id,
+        ], $request);
 
         return redirect()->route('admin.agents-vente.show', $agent)
             ->with('success', 'Agent de vente créé avec succès. Un email lui a été envoyé.');

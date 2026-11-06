@@ -188,6 +188,11 @@ class SuperAdminController extends Controller
                 ];
             });
 
+        $activitesOrganisateurs = OrganizerActivityLog::with('user')
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get();
+
         // Alertes de sécurité
         $scanInvalides = Log::where('type_operation', 'scan')
             ->where('details->resultat', '!=', 'valide')
@@ -232,7 +237,7 @@ class SuperAdminController extends Controller
             'periodeVentes', 'periodeReseaux', 'periodeCumules', 'periodeTaux', 'periodeActivite', 'periodeTop',
             'periodeVentesLabel', 'periodeReseauxLabel', 'periodeCumulesLabel', 'periodeTauxLabel', 'periodeActiviteLabel', 'periodeTopLabel',
             'ventes7Jours',
-            'usersParRole', 'topEvenements', 'activiteEnDirect',
+            'usersParRole', 'topEvenements', 'activiteEnDirect', 'activitesOrganisateurs',
             'scanInvalides', 'paiementsEchoues', 'ticketsDupliques',
             'transactionsReussies', 'transactionsEchouees',
             'montantsJournaliers', 'commissionPlateforme',
