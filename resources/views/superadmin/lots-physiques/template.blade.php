@@ -440,7 +440,7 @@
                                 <div class="step-hint">Ajustez la taille en centimètres.</div>
                             </div>
                             <div class="col-12 col-sm-5">
-                                <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btnRecenterQr">
+                                <button type="button" class="btn btn-sm w-100" id="btnRecenterQr" style="background:#ffc107;color:#1d1d1f;font-weight:600;border:1px solid #e0a800;">
                                     <i class="bi bi-bullseye me-1"></i>Recentrer le QR
                                 </button>
                             </div>
