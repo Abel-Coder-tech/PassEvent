@@ -39,16 +39,6 @@ class ScanController extends Controller
             return redirect()->route('agent.login')->withErrors(['email' => 'Compte désactivé.']);
         }
 
-        if ($agent->evenement && $agent->evenement->offline_mode_enabled) {
-            $lease = \App\Models\OfflineLease::where('evenement_id', $agent->evenement_id)
-                ->whereIn('statut', ['actif', 'revocation_en_attente'])
-                ->first();
-            if ($lease && (int) $lease->agent_id !== (int) $agent->id) {
-                Auth::guard('agent')->logout();
-                return redirect()->route('agent.login')->withErrors(['email' => 'Le scan est réservé à l\'agent désigné pour le mode hors ligne.']);
-            }
-        }
-
         $key = 'agent-pin:' . $agent->id . ':' . $request->ip(); // Clé de rate limiting par agent et IP
 
         if (RateLimiter::tooManyAttempts($key, 5)) { // Max 5 tentatives par fenêtre
