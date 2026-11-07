@@ -20,25 +20,6 @@
     <div class="alert alert-success py-2 small">{{ session('success') }}</div>
     @endif
 
-    @if (!$agents->isEmpty())
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div>
-                <div class="fw-semibold"><i class="bi bi-wifi-off me-1"></i> Mode hors ligne</div>
-                <small class="text-muted">Autoriser/activer le mode hors ligne pour un agent et gérer le bail.</small>
-            </div>
-            @php
-                $ev = $agents->first()->evenement ?? null;
-            @endphp
-            @if($ev)
-            <a href="{{ route('admin.evenements.offline.index', $ev) }}" class="btn btn-sm" style="background:#7c3aed;color:#fff;">
-                <i class="bi bi-shield-lock me-1"></i> Gérer le mode hors ligne
-            </a>
-            @endif
-        </div>
-    </div>
-    @endif
-
     @if ($agents->isEmpty())
     <div class="text-center py-5 text-muted">
         <i class="bi bi-people" style="font-size: 3rem;"></i>
@@ -79,10 +60,6 @@
                         </td>
                         <td>{{ $agent->dernier_acces ? $agent->dernier_acces->format('d/m/Y H:i') : 'Jamais' }}</td>
                         <td class="text-end pe-3">
-                            <a href="{{ route('admin.evenements.offline.index', $agent->evenement) }}"
-                                class="btn btn-sm btn-outline-info py-0 px-2" title="Autoriser le scan hors ligne">
-                                <i class="bi bi-wifi-off"></i>
-                            </a>
                             <a href="{{ route('admin.agents.show', $agent) }}"
                                 class="btn btn-sm btn-outline-secondary py-0 px-2" title="Voir détails">
                                 <i class="bi bi-eye"></i>

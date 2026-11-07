@@ -175,19 +175,6 @@ class ScanController extends Controller
             ]);
         }
 
-        $ev = \App\Models\Evenement::find($accessEvenementId);
-        if ($ev && $ev->offline_mode_enabled) {
-            $lease = \App\Models\OfflineLease::where('evenement_id', $ev->id)->whereIn('statut', ['actif', 'revocation_en_attente'])->first();
-            if ($lease) {
-                return response()->json([
-                    'success' => false,
-                    'resultat' => 'invalide',
-                    'raison' => 'offline_mode_reserved',
-                    'message' => 'Le scan est réservé à l\'agent désigné pour le mode hors ligne.',
-                ], 200);
-            }
-        }
-
         $ticket = Ticket::with('evenement', 'tarif')
             ->where('code_unique', Ticket::normaliserCodeSaisi($code))
             ->first();
