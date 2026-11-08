@@ -75,7 +75,6 @@ Route::get('/mentions-legales', [SitePublicController::class, 'mentionsLegales']
 Route::get('/politique-remboursement', [SitePublicController::class, 'politiqueRemboursement'])->name('politique-remboursement');
 Route::get('/conditions-generales-de-vente', [SitePublicController::class, 'cgv'])->name('cgv');
 Route::get('/affiliation', [SitePublicController::class, 'affiliation'])->name('affiliation');
-Route::get('/api', fn () => view('site.api'))->name('api.public');
 
 // Newsletter
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe')->middleware('throttle:3,10');
