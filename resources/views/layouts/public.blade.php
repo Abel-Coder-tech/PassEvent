@@ -472,6 +472,140 @@
 
         .footer-links { list-style: none; padding: 0; margin: 0; }
         .footer-links li { margin-bottom: 0.6rem; }
+        .footer-api-trigger {
+            appearance: none;
+            border: 0;
+            background: none;
+            color: rgba(255,255,255,0.65);
+            font: inherit;
+            font-size: 0.85rem;
+            min-height: 44px;
+            padding: 0;
+            text-align: left;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .footer-api-trigger:hover { color: var(--accent); }
+        .footer-api-trigger:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+            border-radius: 2px;
+        }
+
+        .api-modal .modal-content {
+            overflow: hidden;
+            border: 0;
+            border-radius: 24px;
+            box-shadow: 0 24px 80px rgba(24, 12, 38, 0.24);
+        }
+        .api-modal-hero {
+            position: relative;
+            padding: 2.25rem 2rem 1.75rem;
+            background:
+                radial-gradient(circle at 90% 15%, rgba(153,114,176,0.22), transparent 34%),
+                linear-gradient(135deg, #f8f4fb 0%, #fff 78%);
+        }
+        .api-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+        .api-modal-icon {
+            display: inline-flex;
+            width: 60px;
+            height: 60px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            border-radius: 18px;
+            background: var(--violet);
+            color: #fff;
+            font-size: 1.7rem;
+            box-shadow: 0 10px 24px rgba(84,38,128,0.22);
+        }
+        .api-modal-kicker {
+            display: block;
+            margin-bottom: 0.45rem;
+            color: var(--violet);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .api-modal-title {
+            margin: 0;
+            color: #241a2d;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 750;
+            letter-spacing: -0.035em;
+        }
+        .api-modal-description {
+            max-width: 470px;
+            margin: 0.75rem 0 0;
+            color: #5f5666;
+            font-size: 0.98rem;
+            line-height: 1.65;
+        }
+        .api-modal-body { padding: 1.5rem 2rem 2rem; }
+        .api-modal-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            border: 1px solid rgba(84,38,128,0.14);
+            border-radius: 999px;
+            background: #f7f2fa;
+            color: var(--violet);
+            padding: 0.45rem 0.75rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+        .api-modal-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #9972b0;
+        }
+        .api-modal-caption {
+            margin: 1.25rem 0 0.75rem;
+            color: #756d7c;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .api-modal-feature {
+            height: 100%;
+            border: 1px solid #eee9f2;
+            border-radius: 14px;
+            background: #fff;
+            padding: 0.9rem;
+        }
+        .api-modal-feature i {
+            display: block;
+            margin-bottom: 0.55rem;
+            color: var(--violet);
+            font-size: 1.15rem;
+        }
+        .api-modal-feature span {
+            color: #403747;
+            font-size: 0.84rem;
+            font-weight: 650;
+        }
+        .api-modal-action {
+            min-height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--violet);
+            color: #fff;
+            font-weight: 650;
+            padding: 0.7rem 1.1rem;
+        }
+        .api-modal-action:hover,
+        .api-modal-action:focus-visible { background: #432064; color: #fff; }
+        @media (max-width: 575.98px) {
+            .api-modal-hero { padding: 2rem 1.25rem 1.5rem; }
+            .api-modal-body { padding: 1.25rem; }
+        }
 
         .footer-newsletter {
             background: rgba(255,255,255,0.05);
@@ -1114,6 +1248,11 @@
                         <li><a href="{{ route('aide') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Aide / Comment ça marche</a></li>
                         <li><a href="{{ route('politique-remboursement') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Politique de remboursement</a></li>
                         <li><a href="{{ route('affiliation') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Affiliation</a></li>
+                        <li>
+                            <button type="button" class="footer-api-trigger" data-bs-toggle="modal" data-bs-target="#apiComingSoonModal">
+                                <i class="bi bi-chevron-right me-1" style="font-size:0.65rem;" aria-hidden="true"></i>API
+                            </button>
+                        </li>
                     </ul>
                 </div>
 
@@ -1147,6 +1286,50 @@
             </div>
         </div>
     </footer>
+
+    <div class="modal fade api-modal" id="apiComingSoonModal" tabindex="-1" aria-labelledby="apiComingSoonTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="api-modal-hero">
+                    <button type="button" class="btn-close api-modal-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    <span class="api-modal-icon" aria-hidden="true"><i class="bi bi-braces"></i></span>
+                    <span class="api-modal-kicker">PaxEvent pour les développeurs</span>
+                    <h2 class="api-modal-title" id="apiComingSoonTitle">Bientôt, votre API.</h2>
+                    <p class="api-modal-description">
+                        Connectez vos outils à PaxEvent et imaginez de nouvelles façons de gérer vos événements.
+                        Notre API est en préparation.
+                    </p>
+                </div>
+                <div class="api-modal-body">
+                    <span class="api-modal-status"><span class="api-modal-status-dot" aria-hidden="true"></span>Bientôt disponible</span>
+                    <p class="api-modal-caption">Ce que vous pourrez explorer</p>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="api-modal-feature">
+                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                                <span>Événements</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="api-modal-feature">
+                                <i class="bi bi-ticket-perforated" aria-hidden="true"></i>
+                                <span>Billetterie</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="api-modal-feature">
+                                <i class="bi bi-plug" aria-hidden="true"></i>
+                                <span>Intégrations</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn api-modal-action" data-bs-dismiss="modal">J’ai compris</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="/assets/js/bootstrap.bundle.min.js"></script>
     <script>
