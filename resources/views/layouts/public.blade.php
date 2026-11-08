@@ -601,6 +601,7 @@
             .public-footer .brand { justify-content: flex-start; }
             .public-footer .brand img { height: 70px; }
             .footer-social { justify-content: flex-start; }
+            .footer-api-soon { margin-left: 0.35rem; }
         }
 
         /* ========== PANNEAU COOKIES (modal Tarteaucitron) ========== */
