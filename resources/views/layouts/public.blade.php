@@ -472,19 +472,13 @@
 
         .footer-links { list-style: none; padding: 0; margin: 0; }
         .footer-links li { margin-bottom: 0.6rem; }
-        .footer-api-link {
+        .footer-api-label {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
             min-height: 44px;
             color: rgba(255,255,255,0.65);
             font-size: 0.85rem;
-        }
-        .footer-api-link:hover { color: var(--accent); }
-        .footer-api-link:focus-visible {
-            outline: 2px solid var(--accent);
-            outline-offset: 3px;
-            border-radius: 2px;
         }
         .footer-api-soon { color: #ff9292; font-size: 0.72rem; font-weight: 700; }
 
@@ -1130,11 +1124,11 @@
                         <li><a href="{{ route('politique-remboursement') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Politique de remboursement</a></li>
                         <li><a href="{{ route('affiliation') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.65rem;"></i>Affiliation</a></li>
                         <li>
-                            <a href="{{ route('api.public') }}" class="footer-api-link">
+                            <span class="footer-api-label">
                                 <i class="bi bi-chevron-right" style="font-size:0.65rem;" aria-hidden="true"></i>
                                 <span>API</span>
                                 <span class="footer-api-soon">Bientôt</span>
-                            </a>
+                            </span>
                         </li>
                     </ul>
                 </div>
