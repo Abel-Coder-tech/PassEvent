@@ -480,7 +480,12 @@
             color: rgba(255,255,255,0.65);
             font-size: 0.85rem;
         }
-        .footer-api-soon { color: #ff9292; font-size: 0.72rem; font-weight: 700; }
+        .footer-api-soon {
+            color: red;
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-left: 2rem;
+        }
 
         .footer-newsletter {
             background: rgba(255,255,255,0.05);
@@ -1127,7 +1132,7 @@
                             <span class="footer-api-label">
                                 <i class="bi bi-chevron-right" style="font-size:0.65rem;" aria-hidden="true"></i>
                                 <span>API</span>
-                                <span class="footer-api-soon">Bientôt</span>
+                                <span class="footer-api-soon">Bientôt disponible</span>
                             </span>
                         </li>
                     </ul>
