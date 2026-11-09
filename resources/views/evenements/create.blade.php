@@ -123,9 +123,9 @@
                     <label for="image" class="form-label fw-semibold">Image d'illustration</label>
                     <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
                     <div id="alerteTailleImage" class="text-danger small mt-1 d-none">
-                        <i class="bi bi-exclamation-circle me-1"></i>Image trop lourde : le maximum est 512 Ko. Choisissez une image plus légère.
+                        <i class="bi bi-exclamation-circle me-1"></i>Image trop lourde : le maximum est 2 Mo. Choisissez une image plus légère.
                     </div>
-                    <div class="form-text">Format JPG ou PNG, 512 Ko maximum.</div>
+                    <div class="form-text">Format JPG ou PNG, 2 Mo maximum.</div>
                     @error('image') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
@@ -512,11 +512,11 @@ document.getElementById('tarifs-container')?.addEventListener('input', function 
 toggleGratuit();
 majPlaces();
 
-// Alerte immediate si l image depasse 512 Ko (avant meme de soumettre)
+// Alerte immédiate si l'image dépasse 2 Mo (avant même de soumettre)
 document.getElementById('image')?.addEventListener('change', function () {
     var alerte = document.getElementById('alerteTailleImage');
     if (!alerte) return;
-    alerte.classList.toggle('d-none', !(this.files[0] && this.files[0].size > 512 * 1024));
+    alerte.classList.toggle('d-none', !(this.files[0] && this.files[0].size > 2 * 1024 * 1024));
 });
 </script>
 @endsection
