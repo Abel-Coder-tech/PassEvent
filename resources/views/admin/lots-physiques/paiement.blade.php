@@ -58,6 +58,7 @@
 
                     <div class="alert alert-light border py-2 mb-3" style="font-size:.78rem;">
                         <i class="bi bi-info-circle me-1"></i>
+                        Vérifiez le récapitulatif, puis cliquez sur « Payer avec FedaPay » pour ouvrir le paiement.
                         Commission de génération (5 % du prix des billets), payée d'avance et non remboursable.
                         @if($estDemande)
                             Votre template est déjà envoyé avec la demande : après le paiement, le super admin positionne les QR codes dessus puis vous transmet la planche.
@@ -130,8 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Ouvre automatiquement la fenêtre de paiement à l'arrivée sur la page
-    setTimeout(function () { btn.click(); }, 600);
 });
 </script>
 @endsection
