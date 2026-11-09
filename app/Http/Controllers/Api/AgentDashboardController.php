@@ -43,6 +43,7 @@ class AgentDashboardController extends Controller
             'event' => [
                 'titre' => $evenement?->titre,
                 'date_event' => $evenement && $evenement->date_event ? $evenement->date_event->toDateString() : null,
+                'derniere_date' => $evenement?->derniereDateVente()?->toDateString(),
                 'lieu' => $evenement?->lieu,
             ],
             'organisateur' => $organisateur ? [
@@ -63,7 +64,7 @@ class AgentDashboardController extends Controller
                     'raison' => $log->details['raison'] ?? null,
                 ];
             })->values(),
-            'scan_disponible' => (bool) ($agent->actif && $evenement && $evenement->date_event >= now()),
+            'scan_disponible' => (bool) ($agent->actif && $evenement && ! $evenement->evenementPasse()),
             'notifications' => $notifications,
         ], 200);
     }

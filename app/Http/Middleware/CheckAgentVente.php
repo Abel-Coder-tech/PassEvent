@@ -21,7 +21,7 @@ class CheckAgentVente
             return redirect()->route('agent-vente.login')->withErrors(['email' => 'Votre compte a été désactivé.']);
         }
 
-        if ($agent->evenement->date_event < now()) {
+        if ($agent->evenement->evenementPasse()) {
             auth('agent_vente')->logout();
             return redirect()->route('agent-vente.login')->withErrors(['email' => 'L\'événement est terminé.']);
         }

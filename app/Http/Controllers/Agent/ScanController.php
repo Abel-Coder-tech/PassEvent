@@ -30,7 +30,7 @@ class ScanController extends Controller
             'code_acces' => 'required|string|size:6',
         ]);
 
-        if ($agent->evenement->date_event < now()) {
+        if ($agent->evenement->evenementPasse()) {
             return back()->withErrors(['code_acces' => 'L\'événement est terminé.'])->onlyInput('code_acces');
         }
 

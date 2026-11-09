@@ -26,7 +26,7 @@ class AgentScanController extends Controller
             'code_acces.digits' => 'Le code d\'accès doit être un code à 6 chiffres.',
         ]);
 
-        if ($agent->evenement && $agent->evenement->date_event < now()) {
+        if ($agent->evenement && $agent->evenement->evenementPasse()) {
             return response()->json(['message' => 'event_ended'], 403);
         }
 
