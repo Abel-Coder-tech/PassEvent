@@ -14,9 +14,13 @@
 <a href="{{ route('admin.tarifs.index', $evenement->id) }}" class="btn btn-secondary-custom me-2">
     <i class="bi bi-tag me-1"></i> <span class="btn-text">Gérer les tarifs</span>
 </a>
-<a href="{{ route('admin.evenements.edit', $evenement->id) }}" class="btn btn-secondary-custom me-2">
-    <i class="bi bi-pencil me-1"></i> <span class="btn-text">Modifier</span>
-</a>
+@if($evenement->modificationGlobaleVerrouillee())
+    <span class="badge text-bg-secondary me-2">Événement verrouillé</span>
+@else
+    <a href="{{ route('admin.evenements.edit', $evenement->id) }}" class="btn btn-secondary-custom me-2">
+        <i class="bi bi-pencil me-1"></i> <span class="btn-text">Modifier</span>
+    </a>
+@endif
 <a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom">
     <i class="bi bi-arrow-left me-1"></i> <span class="btn-text">Retour</span>
 </a>
