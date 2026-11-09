@@ -18,13 +18,16 @@ class TicketObserver
     public function saved(Ticket $ticket): void
     {
         $paiementModifie = $ticket->wasRecentlyCreated || $ticket->wasChanged('statut_paiement');
-        $annulationModifiee = $ticket->wasChanged('annule');
+        $annulationModifiee = $ticket->wasChanged('annule') || $ticket->wasChanged('annule_at');
+        $expirationModifiee = $ticket->wasChanged('expire_at');
 
-        if (! $paiementModifie && ! $annulationModifiee) {
+        if (! $paiementModifie && ! $annulationModifiee && ! $expirationModifiee) {
             return;
         }
 
-        $estPaye = $ticket->statut_paiement === 'payé' && ! $ticket->annule;
+        $estPaye = $ticket->statut_paiement === 'payé'
+            && ! $ticket->annule
+            && $ticket->expire_at === null;
 
         if ($estPaye) {
             $this->affiliation->enregistrerPourTicket($ticket);
@@ -32,9 +35,9 @@ class TicketObserver
             return;
         }
 
-        // Un billet qui n'est plus payé (remboursé, annulé, échoué) ne doit
+        // Un billet qui n'est plus payé (remboursé, annulé, expiré, échoué) ne doit
         // plus porter de commission.
-        if ($ticket->wasChanged('statut_paiement') || $ticket->annule) {
+        if ($ticket->wasChanged('statut_paiement') || $ticket->annule || $ticket->expire_at !== null || $ticket->annule_at !== null) {
             $this->affiliation->annulerPourTicket($ticket);
         }
     }

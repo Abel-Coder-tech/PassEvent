@@ -21,7 +21,7 @@ class EnsureAgentIsActive
         }
 
         $evenement = $agent->evenement ?? null;
-        if ($evenement && isset($evenement->date_event) && $evenement->date_event < now()) {
+        if ($evenement && $evenement->evenementPasse()) {
             return response()->json(['message' => 'event_ended'], 403);
         }
 

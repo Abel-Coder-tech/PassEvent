@@ -38,7 +38,7 @@ class AgentAuthController extends Controller
             return response()->json(['message' => 'account_disabled'], 403);
         }
 
-        if ($agent->evenement && $agent->evenement->date_event < now()) {
+        if ($agent->evenement && $agent->evenement->evenementPasse()) {
             return response()->json(['message' => 'event_ended'], 403);
         }
 

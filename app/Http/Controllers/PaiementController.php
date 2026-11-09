@@ -723,7 +723,9 @@ class PaiementController extends Controller
                 $locked = Ticket::whereKey($t->id)->lockForUpdate()->first();
                 // Seuls les tickets en attente sont confirmables : un ticket payé (idempotence),
                 // annulé, remboursé ou échoué ne repasse jamais à 'payé'.
-                if (! $locked || $locked->statut_paiement !== 'en_attente') {
+                if (! $locked || $locked->statut_paiement !== 'en_attente'
+                    || $locked->annule
+                    || $locked->expire_at !== null) {
                     continue;
                 }
 
