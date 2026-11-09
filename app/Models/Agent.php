@@ -65,7 +65,7 @@ class Agent extends Authenticatable
         $ev = $this->evenement;
 
         // Événement passé (date dépassée)
-        if ($ev->date_event && $ev->date_event->isPast()) {
+        if ($ev->evenementPasse()) {
             return true;
         }
 

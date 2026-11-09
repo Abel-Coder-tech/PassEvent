@@ -106,7 +106,7 @@ class CodePromoController extends Controller
         }
 
         // Règle métier : plus de codes promo sur un événement déjà passé
-        if ($evenement->date_event && $evenement->date_event->isPast()) {
+        if ($evenement->evenementPasse()) {
             return back()->with('error', 'Cet événement est déjà passé : impossible d\'y créer des codes promo.');
         }
 

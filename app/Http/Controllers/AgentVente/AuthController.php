@@ -51,7 +51,7 @@ class AuthController extends Controller
                 return back()->withErrors(['email' => 'Votre compte a été désactivé. Contactez l\'organisateur.']);
             }
 
-            if ($agent->evenement->date_event < now()) {
+            if ($agent->evenement->evenementPasse()) {
                 Auth::guard('agent_vente')->logout();
 
                 return back()->withErrors(['email' => 'L\'événement est déjà terminé.']);
@@ -190,7 +190,7 @@ class AuthController extends Controller
             'methode_paiement.in' => 'Méthode de paiement invalide. Choisissez entre espèces ou mobile money.',
         ]);
 
-        if ($agent->evenement->date_event < now()) {
+        if ($agent->evenement->evenementPasse()) {
             return back()->withErrors(['email_acheteur' => 'L\'événement est terminé.']);
         }
 

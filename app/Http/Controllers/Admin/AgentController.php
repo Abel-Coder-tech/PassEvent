@@ -175,7 +175,7 @@ class AgentController extends Controller
 
             $cible = Evenement::findOrFail($validated['evenement_id']);
 
-            if ($cible->date_event && $cible->date_event->isPast()) {
+            if ($cible->evenementPasse()) {
                 return back()->withErrors(['evenement_id' => 'Cet événement est déjà passé : impossible d\'y affecter un agent.']);
             }
 

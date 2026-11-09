@@ -137,4 +137,171 @@ class FedapayService
             return null;
         }
     }
+
+    private function baseUrl(): string
+    {
+        return $this->isSandbox()
+            ? 'https://sandbox-api.fedapay.com'
+            : 'https://api.fedapay.com';
+    }
+
+    private function secretKey(): ?string
+    {
+        $secretKey = config('services.fedapay.secret_key');
+
+        return $secretKey ?: null;
+    }
+
+    /**
+     * Crée une transaction FedaPay puis génère son lien de paiement.
+     * Retourne les données de la transaction enrichies de `payment_url` et `token`,
+     * ou null en cas d'échec.
+     */
+    public function createTransaction(array $payload): ?array
+    {
+        $secretKey = $this->secretKey();
+
+        if (! $secretKey) {
+            Log::warning('FedapayService::createTransaction - Clé secrète manquante');
+
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$secretKey,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->timeout(15)->post($this->baseUrl().'/v1/transactions', $payload);
+
+            if (! $response->successful()) {
+                Log::warning('FedapayService::createTransaction - Échec HTTP', [
+                    'status' => $response->status(),
+                    'body' => $response->json(),
+                ]);
+
+                return null;
+            }
+
+            $data = $response->json();
+            $transaction = $data['v1/transaction'] ?? $data['transaction'] ?? $data;
+
+            if (! is_array($transaction) || empty($transaction['id'])) {
+                return null;
+            }
+
+            $tokenData = $this->generateToken((string) $transaction['id']);
+
+            if ($tokenData !== null) {
+                $transaction['token'] = $tokenData['token'] ?? null;
+                $transaction['payment_url'] = $tokenData['url']
+                    ?? $tokenData['payment_url']
+                    ?? null;
+            }
+
+            return $transaction;
+        } catch (\Throwable $e) {
+            Log::error('FedapayService::createTransaction - Exception', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Génère le token/lien de paiement d'une transaction existante.
+     */
+    public function generateToken(string $transactionId): ?array
+    {
+        $secretKey = $this->secretKey();
+
+        if (! $secretKey || ! preg_match('/^[a-zA-Z0-9_-]+$/', $transactionId)) {
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$secretKey,
+                'Accept' => 'application/json',
+            ])->timeout(15)->post($this->baseUrl()."/v1/transactions/{$transactionId}/token", []);
+
+            if (! $response->successful()) {
+                Log::warning('FedapayService::generateToken - Échec HTTP', [
+                    'transaction_id' => $transactionId,
+                    'status' => $response->status(),
+                ]);
+
+                return null;
+            }
+
+            $data = $response->json();
+            $token = $data['v1/token'] ?? $data['token'] ?? $data;
+
+            return is_array($token) ? $token : null;
+        } catch (\Throwable $e) {
+            Log::error('FedapayService::generateToken - Exception', [
+                'transaction_id' => $transactionId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Recherche la transaction FedaPay associée à une référence externe
+     * (external_id ou merchant_reference) pour la resynchronisation.
+     */
+    public function findTransactionByExternalId(string $externalId): ?array
+    {
+        $secretKey = $this->secretKey();
+
+        if (! $secretKey || trim($externalId) === '') {
+            return null;
+        }
+
+        $filtres = [
+            ['external_id', $externalId],
+            ['merchant_reference', $externalId],
+        ];
+
+        foreach ($filtres as [$champ, $valeur]) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer '.$secretKey,
+                    'Accept' => 'application/json',
+                ])->timeout(15)->get($this->baseUrl().'/v1/transactions/search', [
+                    $champ => $valeur,
+                ]);
+
+                if (! $response->successful()) {
+                    continue;
+                }
+
+                $data = $response->json();
+                $transactions = $data['v1/transactions']
+                    ?? $data['transactions']
+                    ?? (isset($data['data']) && is_array($data['data']) ? $data['data'] : []);
+
+                if (! is_array($transactions) || $transactions === []) {
+                    continue;
+                }
+
+                $transaction = $transactions[0] ?? null;
+
+                if (is_array($transaction) && ! empty($transaction['id'])) {
+                    return $transaction;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('FedapayService::findTransactionByExternalId - Exception', [
+                    'external_id' => $externalId,
+                    'field' => $champ,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
+    }
 }

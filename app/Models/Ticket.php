@@ -35,6 +35,7 @@ class Ticket extends Model
         'quantite',
         'statut_paiement',
         'transaction_id',
+        'idempotency_key',
         'reservation_expire_le',
         'fedapay_transaction_id',
         'methode_paiement',
@@ -49,6 +50,10 @@ class Ticket extends Model
         'lot_physique_id',
         'affiliate_event_link_id',
         'annule',
+        'annule_at',
+        'expire_at',
+        'dernier_renvoi_at',
+        'renvoi_count',
     ];
 
     public static function methodePaiementLabel(?string $methode, ?string $type = null): string
@@ -89,6 +94,10 @@ class Ticket extends Model
             'montant'             => 'decimal:2',
             'quantite'            => 'integer',
             'reservation_expire_le' => 'datetime',
+            'annule_at' => 'datetime',
+            'expire_at' => 'datetime',
+            'dernier_renvoi_at' => 'datetime',
+            'renvoi_count' => 'integer',
         ];
     }
 
@@ -120,6 +129,12 @@ class Ticket extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
+    }
+
+    // Trace des actions (création, confirmation, annulation, expiration, renvoi)
+    public function journalActions(): HasMany
+    {
+        return $this->hasMany(JournalAction::class);
     }
 
     // Détermine si le ticket a déjà été scanné avec succès aujourd'hui (1 scan par jour civil)
@@ -170,6 +185,10 @@ class Ticket extends Model
         if (!file_exists($path)) {
             return '';
         }
+        // GD absent : on renvoie le logo d'origine plutôt que de faire échouer le PDF
+        if (!function_exists('imagecreatefrompng')) {
+            return 'data:image/png;base64,' . base64_encode(file_get_contents($path));
+        }
         $src = @imagecreatefrompng($path);
         if (!$src) {
             return 'data:image/png;base64,' . base64_encode(file_get_contents($path));
@@ -204,6 +223,10 @@ class Ticket extends Model
         $path = public_path('images/logo-ticket.png');
         if (!file_exists($path)) {
             return '';
+        }
+        // GD absent : on renvoie le logo d'origine plutôt que de faire échouer le PDF
+        if (!function_exists('imagecreatefrompng')) {
+            return 'data:image/png;base64,' . base64_encode(file_get_contents($path));
         }
         $src = @imagecreatefrompng($path);
         if (!$src) {

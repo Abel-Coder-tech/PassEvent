@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class AgentVente extends Authenticatable
 {
+    use HasApiTokens;
+
     protected $table = 'agents_vente';
 
     protected $fillable = [
@@ -45,6 +48,11 @@ class AgentVente extends Authenticatable
         return $this->hasMany(Ticket::class, 'agent_vente_id');
     }
 
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(AgentVenteNotification::class, 'agent_vente_id');
+    }
+
     // Vérifie si l'agent de vente peut être réaffecté à un autre événement
     public function peutEtreReaffecte(): bool
     {
@@ -55,7 +63,7 @@ class AgentVente extends Authenticatable
         $ev = $this->evenement;
 
         // Événement passé (date dépassée)
-        if ($ev->date_event && $ev->date_event->isPast()) {
+        if ($ev->evenementPasse()) {
             return true;
         }
 
