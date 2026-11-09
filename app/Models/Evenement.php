@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 #[ObservedBy(EvenementObserver::class)]
@@ -255,7 +257,7 @@ class Evenement extends Model
     // Dernière session de l'événement (pour expiration des ventes et scans)
     public function derniereDate(): ?EvenementDate
     {
-        return $this->dates()->orderByDesc('date_debut')->first();
+        return $this->dates()->reorder('date_debut', 'desc')->first();
     }
 
     // Date de référence pour la clôture des ventes : dernière session réelle,
@@ -263,6 +265,53 @@ class Evenement extends Model
     public function derniereDateVente(): ?\Illuminate\Support\Carbon
     {
         return $this->derniereDate()?->date_debut ?? $this->date_event;
+    }
+
+    public function joursAvecScansReussis(): Collection
+    {
+        $joursEvenement = $this->dates()
+            ->pluck('date_debut')
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->push($this->date_event->toDateString())
+            ->unique()
+            ->values();
+
+        if ($joursEvenement->isEmpty()) {
+            return collect();
+        }
+
+        return Log::query()
+            ->where('type_operation', 'scan')
+            ->where('details->resultat', 'valide')
+            ->whereIn(\Illuminate\Support\Facades\DB::raw('DATE(created_at)'), $joursEvenement)
+            ->whereHas('ticket', fn (Builder $query) => $query->where('evenement_id', $this->id))
+            ->selectRaw('DATE(created_at) as jour_scan')
+            ->distinct()
+            ->pluck('jour_scan')
+            ->map(fn ($jour) => (string) $jour);
+    }
+
+    public function aDesScansReussis(): bool
+    {
+        return Log::query()
+            ->where('type_operation', 'scan')
+            ->where('details->resultat', 'valide')
+            ->whereHas('ticket', fn (Builder $query) => $query->where('evenement_id', $this->id))
+            ->exists();
+    }
+
+    public function modificationGlobaleVerrouillee(): bool
+    {
+        if (! $this->aDesScansReussis()) {
+            return false;
+        }
+
+        $derniereDate = $this->derniereDate();
+        $finDerniereDate = $derniereDate
+            ? $derniereDate->finFenetreScan()
+            : $this->date_event->copy()->addHours(self::DUREE_SCAN_HEURES);
+
+        return $finDerniereDate->copy()->addHours(12)->lte(now());
     }
 
     // Motif d'interdiction d'accès à l'espace de vente (statut ou événement passé).

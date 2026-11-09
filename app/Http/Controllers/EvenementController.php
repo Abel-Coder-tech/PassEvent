@@ -9,6 +9,8 @@ use App\Services\EvenementStatisticsService;
 use App\Services\TicketStatisticsService;
 use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\ValidationException;
@@ -327,17 +329,28 @@ class EvenementController extends Controller
     {
         abort_if($evenement->user_id !== Auth::id(), 403); // Vérification de propriété
 
+        if ($evenement->modificationGlobaleVerrouillee()) {
+            return redirect()->route('admin.evenements.show', $evenement)
+                ->with('error', 'Cet événement est verrouillé : des scans ont été effectués et le délai de 12 heures après sa dernière date est écoulé.');
+        }
+
         $evenement->load('tarifs');
+        $joursAvecScansReussis = $evenement->joursAvecScansReussis();
 
         $maxCoParrainage = max(0, 100 - $evenement->commissionEffective());
 
-        return view('evenements.edit', compact('evenement', 'maxCoParrainage'));
+        return view('evenements.edit', compact('evenement', 'maxCoParrainage', 'joursAvecScansReussis'));
     }
 
     // Met à jour un événement existant
     public function update(Request $request, Evenement $evenement)
     {
         abort_if($evenement->user_id !== Auth::id(), 403);
+
+        if ($evenement->modificationGlobaleVerrouillee()) {
+            return redirect()->route('admin.evenements.show', $evenement)
+                ->with('error', 'Cet événement est verrouillé : des scans ont été effectués et le délai de 12 heures après sa dernière date est écoulé.');
+        }
 
         // Co-parrainage : commission offerte aux affiliés, plafonnée à (100 % − commission PaxEvent)
         $commissionPax = $evenement->commissionEffective();
@@ -401,11 +414,28 @@ class EvenementController extends Controller
             ? (float) $validated['co_parrainage_pourcentage']
             : null;
 
+        $datesData = $this->extraireDatesSupplementaires($request, $validated['date_event']);
+        $joursAvecScansReussis = $evenement->joursAvecScansReussis();
+
+        if ($this->datesScanneesModifiees($evenement, $validated['date_event'], $datesData, $joursAvecScansReussis)) {
+            $dateEventDemandeeEstVerrouillee = $joursAvecScansReussis->contains(
+                Carbon::parse($validated['date_event'])->toDateString()
+            );
+            $dateEventActuelleEstVerrouillee = $joursAvecScansReussis->contains(
+                $evenement->date_event->toDateString()
+            );
+            $attribut = $dateEventDemandeeEstVerrouillee || $dateEventActuelleEstVerrouillee
+                ? 'date_event'
+                : 'dates_supplementaires';
+
+            throw ValidationException::withMessages([
+                $attribut => 'Une date ayant déjà enregistré un scan réussi ne peut être modifiée, déplacée ou supprimée.',
+            ]);
+        }
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('evenements', 'public');
         }
-
-        $datesData = $this->extraireDatesSupplementaires($request, $validated['date_event']);
 
         $evenement->update($validated);
 
@@ -546,6 +576,50 @@ class EvenementController extends Controller
         sort($dates);
 
         return $dates;
+    }
+
+    private function datesScanneesModifiees(
+        Evenement $evenement,
+        string $premiereDate,
+        array $datesSupplementaires,
+        Collection $joursVerrouilles
+    ): bool
+    {
+        if ($joursVerrouilles->isEmpty()) {
+            return false;
+        }
+
+        $normaliser = fn ($date) => Carbon::parse($date)->format('Y-m-d H:i');
+        if (
+            $joursVerrouilles->contains($evenement->date_event->toDateString())
+            && $normaliser($premiereDate) !== $normaliser($evenement->date_event)
+        ) {
+            return true;
+        }
+
+        $datesDemandees = collect(array_merge([$premiereDate], $datesSupplementaires))
+            ->map($normaliser);
+        $datesExistantes = $evenement->dates()
+            ->get()
+            ->map(fn ($date) => $normaliser($date->date_debut));
+        $dateEventExistante = $normaliser($evenement->date_event);
+        if (! $datesExistantes->contains($dateEventExistante)) {
+            $datesExistantes->push($dateEventExistante);
+        }
+
+        foreach ($joursVerrouilles as $jourVerrouille) {
+            $datesExistantesDuJour = $datesExistantes
+                ->filter(fn ($date) => Carbon::parse($date)->toDateString() === $jourVerrouille);
+
+            $datesDemandeesDuJour = $datesDemandees
+                ->filter(fn ($date) => Carbon::parse($date)->toDateString() === $jourVerrouille);
+
+            if ($datesExistantesDuJour->sort()->values()->all() !== $datesDemandeesDuJour->sort()->values()->all()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Synchronise les sessions de l'événement : la première = date_event, puis les dates supplémentaires
