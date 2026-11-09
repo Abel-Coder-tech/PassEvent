@@ -287,16 +287,21 @@
                         </div>
                     </div>
 
-                    <!-- Récapitulatif (uniquement flux gratuit : rien à payer) -->
-                    <div id="panelRecapGratuit" style="display:none;">
-                        <div id="recapLignesGratuit" class="mb-2"></div>
+                    <!-- Récapitulatif avant génération ou paiement -->
+                    <div id="panelRecap" style="display:none;">
+                        <div class="small text-muted mb-2">Événement : <strong id="recapEvenement" class="text-dark"></strong></div>
+                        <div id="recapLignes" class="mb-2"></div>
                         <div class="total-block d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-semibold small">Total à payer</span>
-                            <strong style="font-size:1.25rem;color:#198754;">0 F</strong>
+                            <span class="fw-semibold small" id="recapTotalLibelle">Total à payer</span>
+                            <strong id="recapTotal" style="font-size:1.25rem;color:#542680;">0 F</strong>
                         </div>
-                        <div class="alert alert-success border py-2 mb-0" style="font-size:.78rem;">
+                        <div id="recapEmail" class="small text-muted mb-3"></div>
+                        <div id="recapGratuitMessage" class="alert alert-success border py-2 mb-0" style="font-size:.78rem;display:none;">
                             <i class="bi bi-check-circle me-1"></i>
                             Événement gratuit : aucun paiement requis. Vos planches PDF seront générées immédiatement.
+                        </div>
+                        <div id="recapPaiementMessage" class="alert alert-light border py-2 mb-0" style="font-size:.78rem;display:none;">
+                            La fenêtre de paiement FedaPay s’ouvrira après confirmation de ce récapitulatif.
                         </div>
                     </div>
                 </div>
@@ -304,7 +309,7 @@
                 <div class="modal-footer py-2 px-3">
                     <button type="button" class="btn btn-sm btn-secondary-custom" id="btnRetourGen" style="visibility:hidden;" onclick="retourEtape()">Retour</button>
                     <button type="button" class="btn btn-sm btn-secondary-custom" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-sm text-white" id="btnPrincipal" style="background:#542680;border-radius:8px;font-weight:600;min-width:190px;" disabled onclick="actionPrincipale()">Continuer</button>
+                    <button type="button" class="btn btn-sm text-white" id="btnPrincipal" style="background:#542680;border-radius:8px;font-weight:600;min-width:190px;" disabled onclick="actionPrincipale()">Suivant</button>
                 </div>
             </div>
         </form>
@@ -437,7 +442,7 @@ function recalc() {
         chemin = nouveauChemin;
         construireBarre(chemin === 'gratuit'
             ? ['Événement', 'Récapitulatif', 'Téléchargement']
-            : ['Événement', 'Paiement', 'Téléchargement']);
+            : ['Événement', 'Récapitulatif', 'Paiement']);
     }
     majBouton();
     return { totalBillets, totalCommission };
@@ -448,31 +453,39 @@ function majBouton() {
     if (etape === 2) {
         btn.setAttribute('type', 'submit');
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-magic me-1"></i> Générer mes QR codes';
+        btn.innerHTML = chemin === 'gratuit'
+            ? '<i class="bi bi-magic me-1"></i> Générer mes QR codes'
+            : '<i class="bi bi-shield-lock me-1"></i> Payer avec FedaPay';
         return;
     }
     let totalBillets = 0;
     document.querySelectorAll('#tarifsListe input').forEach(i => { totalBillets += parseInt(i.value) || 0; });
     btn.disabled = !(evenementCourant && totalBillets > 0);
-    if (chemin === 'gratuit') {
-        btn.setAttribute('type', 'button');
-        btn.innerHTML = 'Continuer';
-    } else {
-        // Payant : soumet le formulaire -> creation de la commande puis ouverture de FedaPay
-        btn.setAttribute('type', 'submit');
-        btn.innerHTML = '<i class="bi bi-shield-lock me-1"></i> Payer avec FedaPay';
-    }
+    btn.setAttribute('type', 'button');
+    btn.innerHTML = 'Suivant';
 }
 
 function actionPrincipale() {
-    if (etape === 1 && chemin === 'gratuit') {
+    if (etape === 1) {
         const t = recalc();
         if (t.totalBillets === 0) return;
         remplirQuantites();
-        document.getElementById('recapLignesGratuit').innerHTML = lignesRecapHtml();
+        document.getElementById('recapEvenement').textContent = evenementCourant.titre;
+        document.getElementById('recapLignes').innerHTML = lignesRecapHtml();
+        document.getElementById('recapTotal').textContent = fmt(t.totalCommission) + ' F';
+        document.getElementById('recapTotalLibelle').textContent = t.totalCommission > 0
+            ? 'Commission à payer'
+            : 'Total à payer';
+        const email = document.querySelector('[name="email_reception"]').value.trim();
+        document.getElementById('recapEmail').textContent = email
+            ? 'Email de réception : ' + email
+            : '';
+        document.getElementById('recapGratuitMessage').style.display = chemin === 'gratuit' ? '' : 'none';
+        document.getElementById('recapPaiementMessage').style.display = chemin === 'payant' ? '' : 'none';
         etape = 2;
-        document.getElementById('panelRecapGratuit').style.display = '';
+        document.getElementById('panelChoix').style.display = 'none';
         document.getElementById('blocQtes').style.display = 'none';
+        document.getElementById('panelRecap').style.display = '';
         document.getElementById('btnRetourGen').style.visibility = 'visible';
         marquerEtapes(1);
         majBouton();
@@ -482,7 +495,8 @@ function actionPrincipale() {
 function retourEtape() {
     if (etape !== 2) return;
     etape = 1;
-    document.getElementById('panelRecapGratuit').style.display = 'none';
+    document.getElementById('panelRecap').style.display = 'none';
+    document.getElementById('panelChoix').style.display = '';
     document.getElementById('blocQtes').style.display = '';
     document.getElementById('btnRetourGen').style.visibility = 'hidden';
     marquerEtapes(0);
@@ -497,9 +511,10 @@ function lignesRecapHtml() {
         if (qte <= 0) return;
         const nom = row.querySelector('.fw-semibold').textContent.trim();
         const prix = parseFloat(input.dataset.prix);
+        const commission = Math.round(qte * prix * TAUX) / 100;
         html += '<div class="recap-ligne"><span><strong>' + qte + '</strong> &times; ' + escapeHtml(nom) +
             ' <small class="text-muted">(' + fmt(prix) + ' F/u)</small></span>' +
-            '<span class="fw-semibold">' + fmt(qte * prix) + ' F</span></div>';
+            '<span class="fw-semibold">' + fmt(commission) + ' F</span></div>';
     });
     return html;
 }
@@ -573,7 +588,7 @@ function escapeHtml(s) {
     return d.innerHTML;
 }
 
-construireBarre(['Événement', 'Paiement', 'Téléchargement']);
+construireBarre(['Événement', 'Récapitulatif', 'Paiement']);
 majBouton();
 
 // Réouverture automatique avec restauration si erreurs de validation
