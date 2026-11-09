@@ -21,7 +21,7 @@ class CheckAgent
             return redirect()->route('agent.login')->withErrors(['email' => 'Votre compte a été désactivé.']);
         }
 
-        if ($agent->evenement->date_event < now()) {
+        if ($agent->evenement->evenementPasse()) {
             auth('agent')->logout();
             return redirect()->route('agent.login')->withErrors(['email' => 'L\'événement est terminé.']);
         }

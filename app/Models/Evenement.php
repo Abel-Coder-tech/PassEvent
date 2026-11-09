@@ -258,6 +258,56 @@ class Evenement extends Model
         return $this->dates()->orderByDesc('date_debut')->first();
     }
 
+    // Date de référence pour la clôture des ventes : dernière session réelle,
+    // avec repli sur date_event pour les événements sans sessions détaillées.
+    public function derniereDateVente(): ?\Illuminate\Support\Carbon
+    {
+        return $this->derniereDate()?->date_debut ?? $this->date_event;
+    }
+
+    // Motif d'interdiction d'accès à l'espace de vente (statut ou événement passé).
+    public function raisonBlocageAcces(): ?string
+    {
+        return match ($this->statut) {
+            'annulé' => 'event_cancelled',
+            'suspendu' => 'event_suspended',
+            'brouillon' => 'event_draft',
+            default => $this->evenementPasse() ? 'event_ended' : null,
+        };
+    }
+
+    // Motif d'interdiction de vente : accès bloqué, ventes fermées ou capacité nulle.
+    public function raisonBlocageVente(): ?string
+    {
+        $acces = $this->raisonBlocageAcces();
+
+        if ($acces !== null) {
+            return $acces;
+        }
+
+        if ($this->ventes_fermees) {
+            return 'sales_closed';
+        }
+
+        if ((int) $this->capacite <= 0 || (int) $this->quota_vendu >= (int) $this->capacite) {
+            return 'event_full';
+        }
+
+        return null;
+    }
+
+    public function ventesOuvertes(): bool
+    {
+        return $this->raisonBlocageVente() === null;
+    }
+
+    public function evenementPasse(): bool
+    {
+        $derniere = $this->derniereDateVente();
+
+        return $derniere !== null && $derniere->isPast();
+    }
+
     // Session (jour) en cours si aujourd'hui est un jour d'événement, dans l'intervalle de scan
     public function jourScanActuel(): ?EvenementDate
     {

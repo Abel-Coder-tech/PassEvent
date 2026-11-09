@@ -68,7 +68,7 @@ class AgentVenteController extends Controller
             ->findOrFail($validated['evenement_id']);
 
         // Règle métier : pas d'agent de vente sur un événement déjà passé
-        if ($evenement->date_event && $evenement->date_event->isPast()) {
+        if ($evenement->evenementPasse()) {
             ActivityLogger::failure('agent_vente.create', 'Événement déjà passé', $evenement, ['email' => $validated['email']], $request);
             return back()->with('error', 'Cet événement est déjà passé : impossible d\'y affecter un agent de vente.');
         }
@@ -177,7 +177,7 @@ class AgentVenteController extends Controller
 
             $cible = Evenement::findOrFail($validated['evenement_id']);
 
-            if ($cible->date_event && $cible->date_event->isPast()) {
+            if ($cible->evenementPasse()) {
                 return back()->withErrors(['evenement_id' => 'Cet événement est déjà passé : impossible d\'y affecter un agent de vente.']);
             }
 

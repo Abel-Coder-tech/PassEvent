@@ -331,12 +331,12 @@
             <div class="col-12">
                 <div class="sa-card">
                     <div class="sa-card-header">
-                        <span><i class="bi bi-shield-fill me-2" style="color: var(--sa-danger);"></i>Securite</span>
+                        <span><i class="bi bi-shield-fill me-2" style="color: var(--sa-danger);"></i>Securité</span>
                     </div>
                     <div class="sa-card-body">
                         <div class="d-flex justify-content-between py-2 border-bottom"><span>Scans invalides (aujourdhui)</span><strong>{{ $scanInvalides }}</strong></div>
-                        <div class="d-flex justify-content-between py-2 border-bottom"><span>Paiements echoues</span><strong style="color: var(--sa-danger);">{{ $paiementsEchoues }}</strong></div>
-                        <div class="d-flex justify-content-between py-2"><span>Tickets dupliques suspects</span><strong style="color: var(--sa-warning);">{{ $ticketsDupliques }}</strong></div>
+                        <div class="d-flex justify-content-between py-2 border-bottom"><span>Paiements échoués</span><strong style="color: var(--sa-danger);">{{ $paiementsEchoues }}</strong></div>
+                        <div class="d-flex justify-content-between py-2"><span>Tickets dupliqués suspects</span><strong style="color: var(--sa-warning);">{{ $ticketsDupliques }}</strong></div>
                     </div>
                 </div>
             </div>
@@ -346,8 +346,8 @@
                         <span><i class="bi bi-cash-coin me-2" style="color: var(--sa-success);"></i>Finances</span>
                     </div>
                     <div class="sa-card-body">
-                        <div class="d-flex justify-content-between py-2 border-bottom"><span>Transactions reussies</span><strong>{{ $transactionsReussies }}</strong></div>
-                        <div class="d-flex justify-content-between py-2 border-bottom"><span>Transactions echouees</span><strong style="color: var(--sa-danger);">{{ $transactionsEchouees }}</strong></div>
+                        <div class="d-flex justify-content-between py-2 border-bottom"><span>Transactions réussies</span><strong>{{ $transactionsReussies }}</strong></div>
+                        <div class="d-flex justify-content-between py-2 border-bottom"><span>Transactions échouées</span><strong style="color: var(--sa-danger);">{{ $transactionsEchouees }}</strong></div>
                         <div class="d-flex justify-content-between py-2 border-bottom"><span>Montant journalier</span><strong>{{ number_format($montantsJournaliers, 0, ',', ' ') }} F</strong></div>
                         <div class="d-flex justify-content-between py-2"><span>Commission plateforme ({{ $commissionPct }}%)</span><strong>{{ number_format($commissionPlateforme, 0, ',', ' ') }} F</strong></div>
                     </div>
