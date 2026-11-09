@@ -20,6 +20,12 @@
 <div class="page-content">
     <div class="panel-card" style="max-width: 700px;">
         <div class="panel-card-body p-3 p-md-4">
+            @if($joursAvecScansReussis->isNotEmpty())
+                <div class="alert alert-info" role="status">
+                    Les dates ayant déjà enregistré un scan réussi sont verrouillées. Vous pouvez toujours modifier les autres dates de l’événement.
+                </div>
+            @endif
+
             <form action="{{ route('admin.evenements.update', $evenement->id) }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
                 @method('PUT')
@@ -39,7 +45,8 @@
                 <div class="row">
                     <div class="col-12 col-md-6 mb-3">
                         <label for="date_event" class="form-label fw-semibold">Date et heure <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control @error('date_event') is-invalid @enderror" id="date_event" name="date_event" value="{{ old('date_event', $evenement->date_event->format('Y-m-d\TH:i')) }}" required>
+                        @php $dateEventVerrouillee = $joursAvecScansReussis->contains($evenement->date_event->toDateString()); @endphp
+                        <input type="datetime-local" class="form-control @error('date_event') is-invalid @enderror" id="date_event" name="date_event" value="{{ $dateEventVerrouillee ? $evenement->date_event->format('Y-m-d\TH:i') : old('date_event', $evenement->date_event->format('Y-m-d\TH:i')) }}" required @if($dateEventVerrouillee) readonly @endif>
                         @error('date_event') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-12 col-md-6 mb-3">
@@ -60,16 +67,39 @@
                     <div id="dates-supplementaires-container">
                         @php
                             $datesExistantes = $evenement->dates()->where('date_debut', '!=', $evenement->date_event)->get();
+                            $datesSupplementairesDefaut = $datesExistantes->pluck('date_debut')->map(fn($d) => $d->format('Y-m-d\TH:i'))->all();
+                            $datesSupplementairesForm = old('dates_supplementaires');
+                            if ($datesSupplementairesForm === null) {
+                                $datesSupplementairesForm = $datesSupplementairesDefaut;
+                            } elseif ($joursAvecScansReussis->isNotEmpty()) {
+                                $datesSupplementairesVerrouillees = $datesExistantes
+                                    ->filter(fn($date) => $joursAvecScansReussis->contains($date->date_debut->toDateString()))
+                                    ->pluck('date_debut')
+                                    ->map(fn($date) => $date->format('Y-m-d\TH:i'));
+                                $datesSupplementairesModifiables = collect($datesSupplementairesForm)
+                                    ->filter(fn($date) => !$joursAvecScansReussis->contains(substr((string) $date, 0, 10)));
+                                $datesSupplementairesForm = $datesSupplementairesModifiables
+                                    ->merge($datesSupplementairesVerrouillees)
+                                    ->unique()
+                                    ->values()
+                                    ->all();
+                            }
                         @endphp
-                        @foreach(old('dates_supplementaires', $datesExistantes->pluck('date_debut')->map(fn($d) => $d->format('Y-m-d\TH:i'))->all()) as $i => $dateSupp)
+                        @foreach($datesSupplementairesForm as $i => $dateSupp)
+                            @php $dateSuppVerrouillee = $joursAvecScansReussis->contains(substr((string) $dateSupp, 0, 10)); @endphp
                             <div class="date-supp-row mb-2 d-flex gap-2 align-items-center" id="date-supp-row-{{ $i + 1 }}">
-                                <input type="datetime-local" class="form-control" name="dates_supplementaires[]" value="{{ $dateSupp }}">
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDateSupp(this)" style="flex-shrink:0;">
-                                    <i class="bi bi-x"></i>
-                                </button>
+                                <input type="datetime-local" class="form-control" name="dates_supplementaires[]" value="{{ $dateSupp }}" @if($dateSuppVerrouillee) readonly @endif>
+                                @if($dateSuppVerrouillee)
+                                    <span class="badge text-bg-secondary flex-shrink-0">Scan effectué</span>
+                                @else
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDateSupp(this)" style="flex-shrink:0;">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                @endif
                             </div>
                         @endforeach
                     </div>
+                    @error('dates_supplementaires') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="addDateSuppBtn" onclick="addDateSupp()">
                         <i class="bi bi-plus-lg me-1"></i> Ajouter un jour
                     </button>
