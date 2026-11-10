@@ -227,7 +227,7 @@ class AuthController extends Controller
             'evenement_id' => $agent->evenement->id,
             'tarif_id' => $tarif->id,
             'agent_vente_id' => $agent->id,
-            'code_unique' => Ticket::genererCodeSecurise(),
+            'code_unique' => Ticket::genererCodeReservation(),
             'qr_signature' => Str::uuid()->toString(),
             'email_acheteur' => $validated['email_acheteur'],
             'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
@@ -292,7 +292,7 @@ class AuthController extends Controller
             abort(403); // Vérification de propriété
         }
 
-        if ($ticket->statut_paiement !== 'payé') {
+        if (! $ticket->estDelivrable()) {
             abort(403, 'Le paiement de ce ticket n\'a pas été confirmé.'); // Ticket non payé
         }
 

@@ -813,7 +813,7 @@ class SuperAdminController extends Controller
     // Logs de sécurité (échecs de paiement, erreurs)
     public function securite()
     {
-        $logsSuspects = Log::whereIn('type_operation', ['echec_paiement', 'erreur_paiement'])
+        $logsSuspects = Log::whereIn('type_operation', ['echec_paiement', 'erreur_paiement', 'reconciliation'])
             ->with('ticket.evenement')
             ->orderByDesc('created_at')
             ->limit(50)

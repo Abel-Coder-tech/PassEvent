@@ -53,7 +53,10 @@ class LogController extends Controller
             'envoi' => ['label' => 'Envoi ticket', 'color' => 'var(--vert)'],
             'scan' => ['label' => 'Scan', 'color' => 'var(--teal)'],
             'recuperation' => ['label' => 'Récupération', 'color' => 'var(--aubergine)'],
+            'paiement' => ['label' => 'Suivi paiement', 'color' => 'var(--violet)'],
             'echec_paiement' => ['label' => 'Paiement échoué', 'color' => 'var(--danger)'],
+            'erreur_paiement' => ['label' => 'Anomalie paiement', 'color' => 'var(--danger)'],
+            'reconciliation' => ['label' => 'Réconciliation', 'color' => '#f39c12'],
             'remboursement' => ['label' => 'Remboursement', 'color' => '#f39c12'],
             'code_promo' => ['label' => 'Code promo', 'color' => 'var(--menthe)'],
         ];
@@ -102,7 +105,7 @@ class LogController extends Controller
                 ->orWhere('whatsapp_acheteur', $validated['telephone']);
         })
             ->where('email_acheteur', $validated['email'])
-            ->where('statut_paiement', 'payé');
+            ->delivrables();
 
         // Restreint aux événements de l'organisateur connecté (sauf super admin)
         if (auth()->user()->role !== 'super_admin') {

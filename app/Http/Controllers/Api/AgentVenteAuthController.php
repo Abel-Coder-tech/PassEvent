@@ -7,12 +7,19 @@ use App\Models\AgentVente;
 use App\Models\AgentVenteNotification;
 use App\Models\JournalAction;
 use App\Services\AgentVenteSaleService;
+use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AgentVenteAuthController extends Controller
 {
+    // Marqueur stocké dans les abilities du token : début de la session, utilisé
+    // pour plafonner la durée totale même après plusieurs rafraîchissements.
+    private const SESSION_STARTED_MARKER = 'session_started_at:';
+
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -50,10 +57,11 @@ class AgentVenteAuthController extends Controller
 
         $agent->update(['dernier_acces' => now()]);
 
-        $expiresAt = now()->addDays(30);
+        $sessionStartedAt = now();
+        $expiresAt = $sessionStartedAt->copy()->addMinutes((int) config('sanctum.expiration'));
         $token = $agent->createToken(
             'agent-vente-app',
-            ['agent_vente:read', 'agent_vente:sell'],
+            $this->tokenAbilities($sessionStartedAt),
             $expiresAt
         )->plainTextToken;
 
@@ -61,6 +69,7 @@ class AgentVenteAuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
             'expires_at' => $expiresAt->toIso8601String(),
+            'absolute_expires_at' => $this->absoluteExpiresAt($sessionStartedAt)->toIso8601String(),
             'agent' => $this->agentPayload($agent),
             'requires_pin' => false,
         ], 200);
@@ -93,7 +102,14 @@ class AgentVenteAuthController extends Controller
         return response()->json(['message' => 'logged_out'], 200);
     }
 
-    // Change le mot de passe de l'agent et révoque les autres sessions
+    public function logoutAll(Request $request): JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'logged_out_all'], 200);
+    }
+
+    // Change le mot de passe de l'agent et révoque toutes les sessions
     public function changePassword(Request $request): JsonResponse
     {
         /** @var AgentVente $agent */
@@ -125,12 +141,7 @@ class AgentVenteAuthController extends Controller
 
         $agent->update(['password' => Hash::make($validated['password'])]);
 
-        // Révoque toutes les sessions sauf celle qui effectue le changement
-        $current = $agent->currentAccessToken();
-
-        $agent->tokens()
-            ->when($current, fn ($query) => $query->where('id', '!=', $current->id))
-            ->delete();
+        $agent->tokens()->delete();
 
         JournalAction::enregistrer([
             'agent_vente_id' => $agent->id,
@@ -143,7 +154,7 @@ class AgentVenteAuthController extends Controller
         AgentVenteNotification::envoyer(
             $agent,
             'Mot de passe modifié',
-            'Votre mot de passe a été modifié. Les autres sessions ont été déconnectées.',
+            'Votre mot de passe a été modifié. Toutes les sessions ont été déconnectées.',
             $agent->evenement_id,
             AgentVenteNotification::TYPE_COMPTE
         );
@@ -151,22 +162,41 @@ class AgentVenteAuthController extends Controller
         return response()->json(['message' => 'Mot de passe modifié avec succès.'], 200);
     }
 
-    // Fait tourner le token d'accès sans redemander les identifiants
+    // Fait tourner le token d'accès sans redemander les identifiants.
+    // La session reste plafonnée par « sanctum.absolute_expiration ».
     public function refreshToken(Request $request): JsonResponse
     {
         /** @var AgentVente $agent */
         $agent = $request->user();
         $current = $agent->currentAccessToken();
 
-        $expiresAt = now()->addDays(30);
+        $sessionStartedAt = $this->sessionStartedAt($current instanceof PersonalAccessToken ? $current : null);
+        $absoluteExpiresAt = $this->absoluteExpiresAt($sessionStartedAt);
+
+        if ($absoluteExpiresAt->isPast()) {
+            if ($current instanceof PersonalAccessToken) {
+                $current->delete();
+            }
+
+            return response()->json([
+                'message' => 'session_expired',
+            ], 401);
+        }
+
+        $expiresAt = now()->addMinutes((int) config('sanctum.expiration'));
+
+        // Le token glissant ne peut jamais dépasser la fin absolue de session.
+        if ($expiresAt->greaterThan($absoluteExpiresAt)) {
+            $expiresAt = $absoluteExpiresAt->copy();
+        }
 
         $token = $agent->createToken(
             'agent-vente-app',
-            ['agent_vente:read', 'agent_vente:sell'],
+            $this->tokenAbilities($sessionStartedAt),
             $expiresAt
         )->plainTextToken;
 
-        if ($current) {
+        if ($current instanceof PersonalAccessToken) {
             $current->delete();
         }
 
@@ -174,7 +204,43 @@ class AgentVenteAuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
             'expires_at' => $expiresAt->toIso8601String(),
+            'absolute_expires_at' => $absoluteExpiresAt->toIso8601String(),
         ], 200);
+    }
+
+    private function tokenAbilities(CarbonInterface $sessionStartedAt): array
+    {
+        return [
+            'agent_vente:read',
+            'agent_vente:sell',
+            // ISO 8601 pour conserver explicitement le fuseau horaire.
+            self::SESSION_STARTED_MARKER.$sessionStartedAt->toIso8601String(),
+        ];
+    }
+
+    private function sessionStartedAt(?PersonalAccessToken $token): CarbonInterface
+    {
+        foreach ($token?->abilities ?? [] as $ability) {
+            if (is_string($ability) && str_starts_with($ability, self::SESSION_STARTED_MARKER)) {
+                $valeur = substr($ability, strlen(self::SESSION_STARTED_MARKER));
+
+                try {
+                    return Carbon::parse($valeur);
+                } catch (\Throwable) {
+                    // Marqueur illisible : on retombe sur la date de création.
+                }
+            }
+        }
+
+        // Token émis avant l'introduction du marqueur : la date de création fait foi.
+        return $token?->created_at ?? now();
+    }
+
+    private function absoluteExpiresAt(CarbonInterface $sessionStartedAt): Carbon
+    {
+        $minutes = max(1, (int) config('sanctum.absolute_expiration', 43200));
+
+        return Carbon::parse($sessionStartedAt)->addMinutes($minutes);
     }
 
     private function agentPayload(AgentVente $agent): array

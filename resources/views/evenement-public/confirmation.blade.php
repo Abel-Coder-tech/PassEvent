@@ -43,7 +43,13 @@
                                 @endif
                                 <div class="col-6">
                                     <span class="text-muted">Date</span><br>
-                                    <strong>{{ $ticket->evenement->date_event->format('d/m/Y') }}</strong>
+                                    <strong>
+                                        @forelse($ticket->evenement->datesDebut() as $date)
+                                            {{ $date->format('d/m/Y') }}{{ !$loop->last ? ' · ' : '' }}
+                                        @empty
+                                            —
+                                        @endforelse
+                                    </strong>
                                 </div>
                                 @if($ticket->montant > 0)
                                 <div class="col-6">

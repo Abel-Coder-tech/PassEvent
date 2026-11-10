@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Evenement;
 use App\Models\Tarif;
+use App\Jobs\SendTicketEmailJob;
 use App\Services\ContratService;
 use App\Services\EvenementStatisticsService;
 use App\Services\TicketStatisticsService;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\ValidationException;
 
@@ -437,10 +439,18 @@ class EvenementController extends Controller
             $validated['image'] = $request->file('image')->store('evenements', 'public');
         }
 
+        $anciennesDates = $this->datesNormalisees($evenement);
+
         $evenement->update($validated);
 
         // Remplace les sessions de l'événement par celles saisies (la première étant date_event)
         $this->enregistrerDates($evenement, $validated['date_event'], $datesData);
+
+        // Si les dates ont changé, les billets déjà émis doivent refléter les
+        // nouvelles sessions : on renvoie le PDF + l'email à chaque acheteur.
+        $acheteursRenotifies = $this->datesNormalisees($evenement) !== $anciennesDates
+            ? $this->renvoyerBilletsDatesModifiees($evenement)
+            : 0;
 
         if ($validated['gratuit']) {
             $evenement->tarifs()->update(['prix' => 0]);
@@ -448,8 +458,13 @@ class EvenementController extends Controller
             $this->synchroniserPrixTarifs($evenement, (array) $request->input('prix_tarifs', []));
         }
 
+        $message = 'Événement modifié avec succès.';
+        if ($acheteursRenotifies > 0) {
+            $message .= " Les billets ont été renvoyés à {$acheteursRenotifies} acheteur(s) avec les nouvelles dates.";
+        }
+
         return redirect()->route('admin.evenements.index')
-            ->with('success', 'Événement modifié avec succès.');
+            ->with('success', $message);
     }
 
     // Bascule la fermeture des ventes
@@ -622,20 +637,59 @@ class EvenementController extends Controller
         return false;
     }
 
-    // Synchronise les sessions de l'événement : la première = date_event, puis les dates supplémentaires
+    // Date/heure de chaque session, normalisée pour comparer deux états.
+    private function datesNormalisees(Evenement $evenement): array
+    {
+        $dates = $evenement->dates()
+            ->pluck('date_debut')
+            ->map(fn ($date) => Carbon::parse($date)->format('Y-m-d H:i'))
+            ->all();
+
+        if ($dates === [] && $evenement->date_event) {
+            $dates[] = $evenement->date_event->format('Y-m-d H:i');
+        }
+
+        sort($dates);
+
+        return $dates;
+    }
+
+    // Renvoie les billets (email + PDF) aux acheteurs déjà servis lorsque les
+    // dates de l'événement changent. Retourne le nombre d'acheteurs concernés.
+    private function renvoyerBilletsDatesModifiees(Evenement $evenement): int
+    {
+        $tickets = $evenement->tickets()
+            ->where('statut_paiement', 'payé')
+            ->where(fn ($query) => $query->whereNull('annule')->orWhere('annule', false))
+            ->whereNotNull('email_acheteur')
+            ->get(['id', 'email_acheteur']);
+
+        $tickets->groupBy('email_acheteur')->each(function ($groupe, $email) {
+            SendTicketEmailJob::dispatch($groupe->pluck('id')->all(), (string) $email);
+        });
+
+        return $tickets->pluck('email_acheteur')->unique()->count();
+    }
+
+    // Synchronise les sessions de l'événement : la première = date_event, puis les dates supplémentaires.
+    // Toutes les lignes sont remplacées dans une transaction : les identifiants changent,
+    // aucune référence externe ne dépend de evenement_dates.id.
     private function enregistrerDates(Evenement $evenement, string $premiereDate, array $datesSupplementaires): void
     {
         $toutes = array_merge([\Carbon\Carbon::parse($premiereDate)->toDateTimeString()], $datesSupplementaires);
         $toutes = array_values(array_unique($toutes));
 
-        // Préserve les evenement_dates existants qui correspondent (id stable) mais reconstruit l'ordre
-        $evenement->dates()->delete();
+        DB::transaction(function () use ($evenement, $toutes) {
+            $evenement->dates()->delete();
 
-        foreach (array_values($toutes) as $i => $date) {
-            $evenement->dates()->create([
-                'date_debut' => $date,
-                'ordre' => $i,
-            ]);
-        }
+            foreach (array_values($toutes) as $i => $date) {
+                $evenement->dates()->create([
+                    'date_debut' => $date,
+                    'ordre' => $i,
+                ]);
+            }
+        });
+
+        $evenement->unsetRelation('dates');
     }
 }

@@ -179,6 +179,12 @@ class ScanController extends Controller
             ->where('code_unique', Ticket::normaliserCodeSaisi($code))
             ->first();
 
+        // Un billet jamais délivré (paiement en attente, échoué ou non confirmé)
+        // ne peut pas être présenté par un client : on le traite comme inexistant.
+        if ($ticket && ! in_array($ticket->statut_paiement, ['payé', 'remboursé'], true)) {
+            $ticket = null;
+        }
+
         if (!$ticket) {
             // Ticket introuvable : log et retourne erreur
             Log::create([
@@ -223,16 +229,15 @@ class ScanController extends Controller
             ]);
         }
 
-        if ($ticket->statut_paiement !== 'payé') {
-            // Paiement non confirmé : log et retourne erreur
+        if ($ticket->statut_paiement === 'remboursé') {
+            // Ticket remboursé : log et retourne erreur
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
                 'details' => [
                     'code' => $code,
                     'resultat' => 'invalide',
-                    'raison' => 'paiement_non_confirmé',
-                    'statut' => $ticket->statut_paiement,
+                    'raison' => 'ticket_rembourse',
                     'agent' => Auth::id(),
                 ],
                 'ip' => $request->ip(),
@@ -241,14 +246,8 @@ class ScanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Paiement non confirmé. Ce ticket n\'est pas encore valide.',
-                'type' => 'unpaid',
-                'ticket' => [
-                    'code' => $ticket->code_unique,
-                    'nom' => $ticket->nom_acheteur,
-                    'evenement' => $ticket->evenement->titre,
-                    'nom_tarif' => $ticket->nom_tarif,
-                ],
+                'message' => 'Ticket remboursé. Ce ticket n\'est plus valide.',
+                'type' => 'refunded',
             ]);
         }
 
@@ -344,15 +343,15 @@ class ScanController extends Controller
             ]);
         }
 
-        // 1 scan par jour civil : déjà scanné avec succès aujourd'hui ?
-        if ($ticket->dejaScanneAujourdhui()) {
+        // 1 scan par session : déjà scanné avec succès sur cette fenêtre ?
+        if ($ticket->dejaScanneEntre($jourScan->date_debut, $jourScan->finFenetreScan())) {
             Log::create([
                 'ticket_id' => $ticket->id,
                 'type_operation' => 'scan',
                 'details' => [
                     'code' => $code,
                     'resultat' => 'deja_utilise',
-                    'raison' => 'ticket_deja_scanne_aujourdhui',
+                    'raison' => 'ticket_deja_scanne_pour_session',
                     'agent' => Auth::id(),
                 ],
                 'ip' => $request->ip(),
@@ -361,7 +360,7 @@ class ScanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours de l\'événement.',
+                'message' => 'Ce billet a déjà été scanné pour cette session. Il reste valable pour les prochains jours de l\'événement.',
                 'type' => 'already_used_today',
                 'ticket' => [
                     'code' => $ticket->code_unique,

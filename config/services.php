@@ -48,4 +48,11 @@ return [
         'sandbox' => env('FEDAPAY_SANDBOX', true),
     ],
 
+    'payment_monitoring' => [
+        'alert_email' => env('PAYMENT_ALERT_EMAIL', 'paxevent09@gmail.com'),
+        'alert_cooldown_minutes' => env('PAYMENT_ALERT_COOLDOWN_MINUTES', 15),
+        'failure_threshold' => env('PAYMENT_FAILURE_ALERT_THRESHOLD', 5),
+        'failure_window_minutes' => env('PAYMENT_FAILURE_ALERT_WINDOW_MINUTES', 10),
+    ],
+
 ];

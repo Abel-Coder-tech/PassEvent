@@ -64,7 +64,11 @@
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted">Code :</span><br>
-                                    <code class="fw-bold">{{ $ticket->code_unique }}</code>
+                                    @if($isPaid)
+                                        <code class="fw-bold">{{ $ticket->code_unique }}</code>
+                                    @else
+                                        <span class="text-muted fst-italic">Communiqué après confirmation du paiement</span>
+                                    @endif
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="text-muted">Scan :</span><br>

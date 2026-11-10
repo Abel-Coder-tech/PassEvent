@@ -44,8 +44,8 @@
                                 <strong>{{ $ticket->email_acheteur }}</strong>
                             </div>
                             <div class="col-6 text-end">
-                                <span class="text-muted">Ticket :</span><br>
-                                <code class="fw-bold" style="background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid #eee;">{{ $ticket->code_unique }}</code>
+                                <span class="text-muted">{{ $ticket->aUnCodeDefinitif() ? 'Ticket' : 'Référence' }} :</span><br>
+                                <code class="fw-bold" style="background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid #eee;">{{ $ticket->aUnCodeDefinitif() ? $ticket->code_unique : $ticket->transaction_id }}</code>
                             </div>
                         </div>
                     </div>

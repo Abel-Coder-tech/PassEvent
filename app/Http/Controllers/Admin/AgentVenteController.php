@@ -219,6 +219,9 @@ class AgentVenteController extends Controller
         }
 
         $agentVente->update(['actif' => !$agentVente->actif]);
+        if (! $agentVente->actif) {
+            $agentVente->tokens()->delete();
+        }
 
         return back()->with('success', $agentVente->actif
             ? 'Agent de vente réactivé.'

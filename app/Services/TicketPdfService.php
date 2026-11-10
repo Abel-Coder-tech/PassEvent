@@ -6,10 +6,14 @@ use App\Models\Ticket;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdfWrapper;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TicketPdfService
 {
+    // Évite de journaliser une fois par billet quand l'environnement n'a pas GD.
+    private static bool $gdManquantSignale = false;
+
     // Génère le PDF du ticket à une taille fixe : 8 × 13 cm.
     public static function generer(Ticket $ticket, string $qrCodeDataUri, string $logoDataUri, ?array $shared = null): DomPdfWrapper
     {
@@ -28,6 +32,24 @@ class TicketPdfService
             $logoDataUri = $shared['logo'];
         } elseif ($eventImageDataUri) {
             $logoDataUri = Ticket::logoBlancDataUri();
+        }
+
+        // dompdf décode les images raster (photo d'événement, favicon, logo) via GD.
+        // Sans GD, on dégrade le rendu au lieu de faire échouer l'envoi du billet :
+        // le QR (SVG) reste scannable, l'acheteur reçoit quand même son PDF.
+        if (! extension_loaded('gd')) {
+            $eventImageDataUri = null;
+            $eventImageW = null;
+            $eventImageH = null;
+            $faviconDataUri = null;
+            $logoDataUri = '';
+
+            if (! self::$gdManquantSignale) {
+                self::$gdManquantSignale = true;
+                Log::warning('Extension GD absente : PDF de billet généré sans images raster.', [
+                    'ticket_id' => $ticket->id,
+                ]);
+            }
         }
 
         $pdf = Pdf::loadView('tickets.pdf.ticket', compact(

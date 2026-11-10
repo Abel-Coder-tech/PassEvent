@@ -97,6 +97,83 @@ class EvenementModificationLockTest extends TestCase
         $this->assertFalse($evenement->modificationGlobaleVerrouillee());
     }
 
+    public function test_jour_scan_actuel_couvre_une_session_qui_traverse_minuit(): void
+    {
+        $evenement = $this->creerEvenement(['2026-11-09 20:00:00']);
+
+        Carbon::setTestNow('2026-11-10 00:30:00');
+
+        $session = $evenement->jourScanActuel();
+
+        $this->assertNotNull($session);
+        $this->assertSame('2026-11-09 20:00:00', $session->date_debut->format('Y-m-d H:i:s'));
+    }
+
+    public function test_jour_scan_actuel_renvoie_la_prochaine_session_du_jour(): void
+    {
+        $evenement = $this->creerEvenement(['2026-11-10 20:00:00']);
+
+        Carbon::setTestNow('2026-11-10 10:00:00');
+
+        $session = $evenement->jourScanActuel();
+
+        $this->assertNotNull($session);
+        $this->assertTrue($session->date_debut->isFuture());
+    }
+
+    public function test_jour_scan_actuel_renvoie_la_session_terminee_du_jour(): void
+    {
+        $evenement = $this->creerEvenement(['2026-11-10 08:00:00']);
+
+        Carbon::setTestNow('2026-11-10 15:00:00');
+
+        $session = $evenement->jourScanActuel();
+
+        $this->assertNotNull($session);
+        $this->assertTrue($session->finFenetreScan()->isPast());
+    }
+
+    public function test_jour_scan_actuel_est_null_hors_session(): void
+    {
+        $evenement = $this->creerEvenement(['2026-11-10 10:00:00']);
+
+        Carbon::setTestNow('2026-11-12 10:00:00');
+
+        $this->assertNull($evenement->jourScanActuel());
+    }
+
+    public function test_scan_termine_apres_la_fenetre_et_non_au_debut(): void
+    {
+        $evenement = $this->creerEvenement(['2026-11-10 20:00:00']);
+
+        Carbon::setTestNow('2026-11-10 22:00:00');
+        $this->assertFalse($evenement->scanTermine());
+
+        Carbon::setTestNow('2026-11-11 02:30:00');
+        $this->assertTrue($evenement->scanTermine());
+    }
+
+    public function test_un_scan_apres_minuit_reste_bloque_pour_la_meme_session(): void
+    {
+        $evenement = $this->creerEvenement(['2026-11-09 20:00:00']);
+        $ticketId = DB::table('ticket')->insertGetId([
+            'evenement_id' => $evenement->id,
+        ]);
+        $ticket = \App\Models\Ticket::findOrFail($ticketId);
+
+        DB::table('logs')->insert([
+            'ticket_id' => $ticketId,
+            'type_operation' => 'scan',
+            'details' => json_encode(['resultat' => 'valide']),
+            'created_at' => '2026-11-09 23:45:00',
+        ]);
+
+        $session = $evenement->dates()->first();
+
+        $this->assertTrue($ticket->dejaScanneEntre($session->date_debut, $session->finFenetreScan()));
+        $this->assertFalse($ticket->dejaScanneEntre($session->date_debut->copy()->subHour(), $session->date_debut));
+    }
+
     private function creerEvenement(array $dates): Evenement
     {
         $evenementId = DB::table('evenement')->insertGetId([

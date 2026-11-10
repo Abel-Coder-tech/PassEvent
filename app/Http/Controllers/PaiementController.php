@@ -12,18 +12,66 @@ use App\Models\Ticket;
 use App\Services\FedapayService;
 use App\Services\LotAutoService;
 use App\Services\PaiementMapper;
+use App\Services\PaymentMonitoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class PaiementController extends Controller
 {
     protected FedapayService $fedapay;
 
-    public function __construct(FedapayService $fedapay)
-    {
+    public function __construct(
+        FedapayService $fedapay,
+        protected PaymentMonitoringService $paymentMonitoring,
+    ) {
         $this->fedapay = $fedapay;
+    }
+
+    private function verifierTransaction(string $transactionId, Request $request, ?int $ticketId = null, ?string $source = null): ?array
+    {
+        try {
+            $txData = $this->fedapay->getTransaction($transactionId);
+        } catch (Throwable $exception) {
+            $this->paymentMonitoring->record(
+                'fedapay_verification_error',
+                [
+                    'transaction_id' => $transactionId,
+                    'source' => $source,
+                    'error_class' => $exception::class,
+                ],
+                $request,
+                $ticketId,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
+            throw $exception;
+        }
+
+        $status = is_array($txData) ? ($txData['status'] ?? null) : null;
+        $currency = $txData['currency'] ?? null;
+        $currency = is_array($currency) ? ($currency['iso'] ?? null) : $currency;
+        $this->paymentMonitoring->record(
+            'transaction_verifiee',
+            [
+                'transaction_id' => $transactionId,
+                'ticket_id' => $ticketId,
+                'verified_status' => $status,
+                'amount' => is_array($txData) ? ($txData['amount'] ?? null) : null,
+                'currency' => $currency,
+                'source' => $source,
+            ],
+            $request,
+            $ticketId,
+            'paiement',
+            $status ? 'info' : 'warning',
+        );
+
+        return is_array($txData) ? $txData : null;
     }
 
     // Vérifie que le ticket appartient à la commande en cours (session) pour prévenir l'IDOR
@@ -83,7 +131,7 @@ class PaiementController extends Controller
     // Affiche la page de paiement FedaPay pour un ticket
     public function show($ticketId)
     {
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($ticketId);
 
         $this->verifierAccesAcheteur($ticket);
 
@@ -97,7 +145,7 @@ class PaiementController extends Controller
             if (str_starts_with($ticket->transaction_id, 'GRATUIT-') || str_starts_with($ticket->transaction_id, 'GRP-')) {
                 $freeTickets = Ticket::where('transaction_id', $ticket->transaction_id)
                     ->where('statut_paiement', 'en_attente')
-                    ->with('evenement', 'tarif')
+                    ->with('evenement.dates', 'tarif')
                     ->get();
             }
 
@@ -127,7 +175,7 @@ class PaiementController extends Controller
         $montantTotal = $ticket->montant;
         if (str_starts_with($ticket->transaction_id, 'GRP-')) {
             $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
-                ->with('evenement', 'tarif')
+                ->with('evenement.dates', 'tarif')
                 ->get();
             if ($groupTickets->isNotEmpty()) {
                 $montantTotal = $groupTickets->sum('montant');
@@ -165,6 +213,17 @@ class PaiementController extends Controller
         $source = $request->query('source');
 
         if (! $transactionId) {
+            $this->paymentMonitoring->record(
+                'callback_sans_transaction',
+                [
+                    'ticket_id' => $ticketId,
+                    'source' => $source,
+                ],
+                $request,
+                null,
+                'echec_paiement',
+            );
+
             // Redirige vers la bonne page selon la source de la vente
             $fallback = match ($source) {
                 'agent_vente' => route('agent-vente.dashboard'),
@@ -179,20 +238,43 @@ class PaiementController extends Controller
 
         // Commande de QR codes auto-générés : flux dédié (pas de ticket existant avant paiement)
         if ($source === 'lot_physique') {
+            $this->paymentMonitoring->record(
+                'callback_recu',
+                [
+                    'transaction_id' => $transactionId,
+                    'reference' => $request->query('reference'),
+                    'source' => $source,
+                ],
+                $request,
+            );
+
             return $this->callbackLotPhysique($request, $transactionId);
         }
 
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($ticketId);
 
         // Find all tickets in the group (if group transaction)
         $groupTickets = collect([$ticket]);
         if (str_starts_with($ticket->transaction_id, 'GRP-')) {
             $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
-                ->with('evenement', 'tarif')
+                ->with('evenement.dates', 'tarif')
                 ->get();
         }
 
         if ($ticket->statut_paiement === 'payé') {
+            $this->paymentMonitoring->record(
+                'callback_paiement_deja_confirme',
+                [
+                    'transaction_id' => $transactionId,
+                    'status_before' => 'payé',
+                    'source' => $source,
+                    'amount' => (float) $ticket->montant,
+                    'currency' => 'XOF',
+                ],
+                $request,
+                $ticket->id,
+            );
+
             $fallback = match ($source) {
                 'agent_vente' => route('agent-vente.dashboard'),
                 'vente_manuelle' => route('ventes-manuelles.create'),
@@ -204,6 +286,20 @@ class PaiementController extends Controller
 
         // Sécurité : un ticket annulé, remboursé ou échoué ne peut jamais être (re)confirmé.
         if ($ticket->statut_paiement !== 'en_attente') {
+            $this->paymentMonitoring->record(
+                'callback_ticket_non_confirmable',
+                [
+                    'ticket_status' => $ticket->statut_paiement,
+                    'transaction_id' => $transactionId,
+                    'source' => $source,
+                ],
+                $request,
+                $ticket->id,
+                'erreur_paiement',
+                'warning',
+                true,
+            );
+
             FacadesLog::warning('FedaPay callback - tentative de confirmation d\'un ticket non confirmable', [
                 'ticket' => $ticket->id,
                 'statut' => $ticket->statut_paiement,
@@ -221,7 +317,7 @@ class PaiementController extends Controller
         }
 
         // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance aux query params)
-        $txData = $this->fedapay->getTransaction($transactionId);
+        $txData = $this->verifierTransaction($transactionId, $request, $ticket->id, $source);
         $status = $txData['status'] ?? null;
 
         if (! $status || ! in_array($status, ['approved', 'completed', 'accepted'], true)) {
@@ -233,6 +329,48 @@ class PaiementController extends Controller
                 'api_status' => $status,
                 'query_status' => $request->query('status'),
             ]);
+
+            if ($definitif) {
+                $this->paymentMonitoring->recordFailure(
+                    'paiement_refuse',
+                    [
+                        'transaction_id' => $transactionId,
+                        'ticket_id' => $ticket->id,
+                        'verified_status' => $status,
+                        'expected_amount' => (float) $groupTickets->sum('montant'),
+                        'currency' => 'XOF',
+                        'source' => $source,
+                    ],
+                    $request,
+                    $ticket->id,
+                );
+            } elseif (! $status) {
+                $this->paymentMonitoring->record(
+                    'statut_paiement_indisponible',
+                    [
+                        'transaction_id' => $transactionId,
+                        'source' => $source,
+                    ],
+                    $request,
+                    $ticket->id,
+                    'erreur_paiement',
+                    'critical',
+                    true,
+                );
+            } else {
+                $this->paymentMonitoring->record(
+                    'paiement_en_attente',
+                    [
+                        'transaction_id' => $transactionId,
+                        'verified_status' => $status,
+                        'expected_amount' => (float) $groupTickets->sum('montant'),
+                        'currency' => 'XOF',
+                        'source' => $source,
+                    ],
+                    $request,
+                    $ticket->id,
+                );
+            }
 
             if ($ticket->statut_paiement === 'en_attente') {
                 try {
@@ -280,6 +418,20 @@ class PaiementController extends Controller
         // Sécurité : la transaction doit avoir été créée pour CETTE commande (custom_metadata),
         // jamais uniquement pour un montant équivalent.
         if (! $this->verifierLiaisonTransaction($txData, $ticket)) {
+            $this->paymentMonitoring->record(
+                'transaction_non_liee_a_la_commande',
+                [
+                    'transaction_id' => $transactionId,
+                    'source' => $source,
+                    'ticket_group' => $ticket->transaction_id,
+                ],
+                $request,
+                $ticket->id,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay callback - transaction non liée à cette commande (metadata)', [
                 'ticket' => $ticket->id,
                 'transaction_id' => $transactionId,
@@ -303,6 +455,22 @@ class PaiementController extends Controller
         $montantAttendu = (float) $groupTickets->sum('montant');
         $montantTx = (float) ($txData['amount'] ?? 0);
         if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
+            $this->paymentMonitoring->record(
+                'montant_paiement_incoherent',
+                [
+                    'transaction_id' => $transactionId,
+                    'expected_amount' => $montantAttendu,
+                    'received_amount' => $montantTx,
+                    'currency' => 'XOF',
+                    'source' => $source,
+                ],
+                $request,
+                $ticket->id,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay callback - montant incohérent avec le ticket', [
                 'ticket' => $ticket->id,
                 'transaction_id' => $transactionId,
@@ -375,6 +543,20 @@ class PaiementController extends Controller
             ->get();
 
         if ($lots->isEmpty()) {
+            $this->paymentMonitoring->record(
+                'commande_lot_introuvable',
+                [
+                    'reference' => $reference,
+                    'transaction_id' => $transactionId,
+                    'source' => 'callback',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             return redirect()->route('admin.lots-physiques.index')
                 ->with('error', 'Commande introuvable.');
         }
@@ -388,11 +570,52 @@ class PaiementController extends Controller
         }
 
         // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance aux query params)
-        $txData = $this->fedapay->getTransaction($transactionId);
+        $txData = $this->verifierTransaction($transactionId, $request, null, 'lot_physique_callback');
         $status = $txData['status'] ?? null;
 
         if (! $status || ! in_array($status, ['approved', 'completed', 'accepted'], true)) {
             $definitif = $status && in_array(strtolower($status), ['declined', 'canceled', 'cancelled', 'cancel'], true);
+
+            if ($definitif) {
+                $this->paymentMonitoring->recordFailure(
+                    'paiement_lot_refuse',
+                    [
+                        'reference' => $reference,
+                        'transaction_id' => $transactionId,
+                        'verified_status' => $status,
+                        'expected_amount' => (float) $lots->sum('montant_commission'),
+                        'currency' => 'XOF',
+                        'source' => 'callback',
+                    ],
+                    $request,
+                );
+            } elseif (! $status) {
+                $this->paymentMonitoring->record(
+                    'statut_paiement_lot_indisponible',
+                    [
+                        'reference' => $reference,
+                        'transaction_id' => $transactionId,
+                        'source' => 'callback',
+                    ],
+                    $request,
+                    null,
+                    'erreur_paiement',
+                    'critical',
+                    true,
+                );
+            } else {
+                $this->paymentMonitoring->record(
+                    'paiement_lot_en_attente',
+                    [
+                        'reference' => $reference,
+                        'transaction_id' => $transactionId,
+                        'verified_status' => $status,
+                        'expected_amount' => (float) $lots->sum('montant_commission'),
+                        'currency' => 'XOF',
+                    ],
+                    $request,
+                );
+            }
 
             FacadesLog::warning('FedaPay callback lot - status non approuvé via API', [
                 'reference' => $reference,
@@ -418,6 +641,21 @@ class PaiementController extends Controller
         $metadata = $txData['custom_metadata'] ?? [];
         $metadataReference = trim((string) (is_array($metadata) ? ($metadata['reference'] ?? '') : ''));
         if ($metadataReference !== '' && ! hash_equals($metadataReference, (string) $reference)) {
+            $this->paymentMonitoring->record(
+                'transaction_lot_non_liee_a_la_commande',
+                [
+                    'reference' => $reference,
+                    'transaction_id' => $transactionId,
+                    'metadata_reference' => $metadataReference,
+                    'source' => 'callback',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay callback lot - transaction non liée à la commande (metadata)', [
                 'reference' => $reference,
                 'transaction_id' => $transactionId,
@@ -431,6 +669,23 @@ class PaiementController extends Controller
         $montantAttendu = round((float) $lots->sum('montant_commission'), 2);
         $montantTx = (float) ($txData['amount'] ?? 0);
         if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
+            $this->paymentMonitoring->record(
+                'montant_paiement_lot_incoherent',
+                [
+                    'reference' => $reference,
+                    'transaction_id' => $transactionId,
+                    'expected_amount' => $montantAttendu,
+                    'received_amount' => $montantTx,
+                    'currency' => 'XOF',
+                    'source' => 'callback',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay callback lot - montant incohérent avec la commande', [
                 'reference' => $reference,
                 'transaction_id' => $transactionId,
@@ -471,14 +726,38 @@ class PaiementController extends Controller
             try {
                 \FedaPay\Webhook::constructEvent($payload, $signature, $secret);
             } catch (\Throwable $e) {
+                $trace = $this->extraireTrace($payload);
+                $this->paymentMonitoring->record(
+                    'signature_webhook_invalide',
+                    [
+                        'transaction_id' => $trace['transaction_id'] ?? null,
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                    null,
+                    'erreur_paiement',
+                    'critical',
+                    true,
+                );
+
                 FacadesLog::warning('FedaPay webhook - signature invalide', [
                     'ip' => $request->ip(),
-                    'trace' => $this->extraireTrace($payload),
+                    'trace' => $trace,
                 ]);
 
                 return response()->json(['error' => 'Invalid signature'], 400);
             }
         } else {
+            $this->paymentMonitoring->record(
+                'secret_webhook_absent',
+                ['source' => 'webhook'],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook - Aucun endpoint secret configuré, signature non vérifiée');
         }
 
@@ -491,14 +770,60 @@ class PaiementController extends Controller
         $webhookStatus = $tx['status'] ?? $data['status'] ?? null;
 
         if ($transactionId === '') {
+            $this->paymentMonitoring->record(
+                'payload_webhook_invalide',
+                ['source' => 'webhook'],
+                $request,
+                null,
+                'erreur_paiement',
+                'warning',
+                true,
+            );
+
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
         // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance au webhook)
-        $txData = $this->fedapay->getTransaction($transactionId);
+        $txData = $this->verifierTransaction($transactionId, $request, null, 'webhook');
         $verifiedStatus = $txData['status'] ?? null;
 
         if (! $verifiedStatus || ! in_array($verifiedStatus, ['approved', 'completed', 'accepted'], true)) {
+            $statutsEchec = ['declined', 'canceled', 'cancelled', 'cancel', 'expired'];
+            if ($verifiedStatus && in_array(strtolower($verifiedStatus), $statutsEchec, true)) {
+                $this->paymentMonitoring->recordFailure(
+                    'paiement_webhook_refuse',
+                    [
+                        'transaction_id' => $transactionId,
+                        'verified_status' => $verifiedStatus,
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                );
+            } elseif ($verifiedStatus) {
+                $this->paymentMonitoring->record(
+                    'webhook_statut_non_confirmable',
+                    [
+                        'transaction_id' => $transactionId,
+                        'verified_status' => $verifiedStatus,
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                );
+            } else {
+                $this->paymentMonitoring->record(
+                    'webhook_statut_indisponible',
+                    [
+                        'transaction_id' => $transactionId,
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                    null,
+                    'erreur_paiement',
+                    'critical',
+                    true,
+                );
+            }
+
             FacadesLog::warning('FedaPay webhook - status non approuvé via API', [
                 'transaction_id' => $transactionId,
                 'api_status' => $verifiedStatus,
@@ -552,6 +877,20 @@ class PaiementController extends Controller
         // Sécurité : la transaction doit avoir été créée pour CETTE commande (custom_metadata).
         // Supprimé : la recherche par email + montant (appariement non fiable et source de détournement).
         if ($ticket && ! $this->verifierLiaisonTransaction($txData, $ticket)) {
+            $this->paymentMonitoring->record(
+                'webhook_transaction_non_liee_a_la_commande',
+                [
+                    'transaction_id' => $transactionId,
+                    'ticket_group' => $ticket->transaction_id,
+                    'source' => 'webhook',
+                ],
+                $request,
+                $ticket->id,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook - transaction non liée à la commande (metadata)', [
                 'ticket' => $ticket->id,
                 'transaction_id' => $transactionId,
@@ -562,21 +901,28 @@ class PaiementController extends Controller
 
         if (! $ticket) {
             // Paiement approuvé mais aucun billet retrouvé : incident journalisé pour le support
+            $currency = $txData['currency'] ?? null;
+            $currency = is_array($currency) ? ($currency['iso'] ?? 'XOF') : ($currency ?: 'XOF');
+
+            $this->paymentMonitoring->record(
+                'paiement_approuve_sans_ticket',
+                [
+                    'transaction_id' => $transactionId,
+                    'received_amount' => (float) ($txData['amount'] ?? 0),
+                    'currency' => $currency,
+                    'source' => 'webhook',
+                ],
+                $request,
+                null,
+                'reconciliation',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook - paiement approuvé sans ticket trouvé', [
                 'transaction_id' => $transactionId,
                 'amount' => (float) ($txData['amount'] ?? 0),
             ]);
-            LogModel::create([
-                'type_operation' => 'reconciliation',
-                'ticket_id' => null,
-                'details' => [
-                    'action' => 'webhook_incident_ticket_non_trouve',
-                    'transaction_id' => $transactionId,
-                    'montant' => (float) ($txData['amount'] ?? 0),
-                ],
-                'ip' => $request->ip(),
-            ]);
-
             return response()->json(['status' => 'ok', 'warning' => 'ticket_not_found']);
         }
 
@@ -587,7 +933,7 @@ class PaiementController extends Controller
         $groupTickets = collect([$ticket]);
         if (str_starts_with($ticket->transaction_id, 'GRP-')) {
             $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
-                ->with('evenement', 'tarif')
+                ->with('evenement.dates', 'tarif')
                 ->get();
         }
 
@@ -612,6 +958,23 @@ class PaiementController extends Controller
         $montantAttendu = (float) $groupTickets->sum('montant');
         $montantTx = (float) ($txData['amount'] ?? 0);
         if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
+            $this->paymentMonitoring->record(
+                'montant_webhook_incoherent',
+                [
+                    'transaction_id' => $transactionId,
+                    'ticket_id' => $ticket->id,
+                    'expected_amount' => $montantAttendu,
+                    'received_amount' => $montantTx,
+                    'currency' => 'XOF',
+                    'source' => 'webhook',
+                ],
+                $request,
+                $ticket->id,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook - montant incohérent avec le groupe de tickets', [
                 'ticket' => $ticket->id,
                 'transaction_id' => $transactionId,
@@ -636,6 +999,19 @@ class PaiementController extends Controller
     private function webhookLotPhysique(array $txData, string $reference, string $transactionIdPayload, Request $request)
     {
         if ($reference === '') {
+            $this->paymentMonitoring->record(
+                'reference_lot_webhook_absente',
+                [
+                    'transaction_id' => $txData['id'] ?? null,
+                    'source' => 'webhook',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook lot - reference manquante', ['transaction_id' => $txData['id'] ?? null]);
 
             return response()->json(['status' => 'ignored', 'reason' => 'missing_reference']);
@@ -646,6 +1022,20 @@ class PaiementController extends Controller
             ->get();
 
         if ($lots->isEmpty()) {
+            $this->paymentMonitoring->record(
+                'commande_lot_webhook_introuvable',
+                [
+                    'reference' => $reference,
+                    'transaction_id' => $txData['id'] ?? null,
+                    'source' => 'webhook',
+                ],
+                $request,
+                null,
+                'reconciliation',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook lot - commande introuvable', [
                 'reference' => $reference,
                 'transaction_id' => $txData['id'] ?? null,
@@ -661,6 +1051,46 @@ class PaiementController extends Controller
         // Sécurité : vérifier le statut réel via l'API FedaPay (ne JAMAIS faire confiance au webhook)
         $verifiedStatus = $txData['status'] ?? null;
         if (! $verifiedStatus || ! in_array($verifiedStatus, ['approved', 'completed', 'accepted'], true)) {
+            if ($verifiedStatus && in_array(strtolower($verifiedStatus), ['declined', 'canceled', 'cancelled', 'cancel', 'expired'], true)) {
+                $this->paymentMonitoring->recordFailure(
+                    'paiement_lot_webhook_refuse',
+                    [
+                        'reference' => $reference,
+                        'transaction_id' => $txData['id'] ?? null,
+                        'verified_status' => $verifiedStatus,
+                        'expected_amount' => (float) $lots->sum('montant_commission'),
+                        'currency' => 'XOF',
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                );
+            } elseif (! $verifiedStatus) {
+                $this->paymentMonitoring->record(
+                    'statut_paiement_lot_webhook_indisponible',
+                    [
+                        'reference' => $reference,
+                        'transaction_id' => $txData['id'] ?? null,
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                    null,
+                    'erreur_paiement',
+                    'critical',
+                    true,
+                );
+            } else {
+                $this->paymentMonitoring->record(
+                    'paiement_lot_webhook_en_attente',
+                    [
+                        'reference' => $reference,
+                        'transaction_id' => $txData['id'] ?? null,
+                        'verified_status' => $verifiedStatus,
+                        'source' => 'webhook',
+                    ],
+                    $request,
+                );
+            }
+
             FacadesLog::warning('FedaPay webhook lot - status non approuvé via API', [
                 'reference' => $reference,
                 'api_status' => $verifiedStatus,
@@ -673,6 +1103,21 @@ class PaiementController extends Controller
         $metadata = $txData['custom_metadata'] ?? [];
         $metadataReference = trim((string) (is_array($metadata) ? ($metadata['reference'] ?? '') : ''));
         if ($metadataReference !== '' && ! hash_equals($metadataReference, (string) $reference)) {
+            $this->paymentMonitoring->record(
+                'transaction_lot_webhook_non_liee',
+                [
+                    'reference' => $reference,
+                    'metadata_reference' => $metadataReference,
+                    'transaction_id' => $txData['id'] ?? null,
+                    'source' => 'webhook',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook lot - transaction non liée à la commande (metadata)', [
                 'reference' => $reference,
                 'transaction_id' => $txData['id'] ?? null,
@@ -685,6 +1130,23 @@ class PaiementController extends Controller
         $montantAttendu = round((float) $lots->sum('montant_commission'), 2);
         $montantTx = (float) ($txData['amount'] ?? 0);
         if ($montantTx <= 0 || abs($montantAttendu - $montantTx) >= 1) {
+            $this->paymentMonitoring->record(
+                'montant_lot_webhook_incoherent',
+                [
+                    'reference' => $reference,
+                    'transaction_id' => $txData['id'] ?? null,
+                    'expected_amount' => $montantAttendu,
+                    'received_amount' => $montantTx,
+                    'currency' => 'XOF',
+                    'source' => 'webhook',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook lot - montant incohérent avec la commande', [
                 'reference' => $reference,
                 'montant_attendu' => $montantAttendu,
@@ -696,6 +1158,19 @@ class PaiementController extends Controller
 
         $transactionId = (string) ($txData['id'] ?? '') !== '' ? (string) $txData['id'] : $transactionIdPayload;
         if ($transactionId === '') {
+            $this->paymentMonitoring->record(
+                'transaction_lot_webhook_absente',
+                [
+                    'reference' => $reference,
+                    'source' => 'webhook',
+                ],
+                $request,
+                null,
+                'erreur_paiement',
+                'critical',
+                true,
+            );
+
             FacadesLog::warning('FedaPay webhook lot - id de transaction introuvable', ['reference' => $reference]);
 
             return response()->json(['status' => 'ignored', 'reason' => 'missing_transaction_id']);
@@ -783,9 +1258,22 @@ class PaiementController extends Controller
                 LogModel::create([
                     'ticket_id' => $locked->id,
                     'type_operation' => 'achat',
-                    'details' => ['transaction_id' => $transactionId, 'methode' => 'fedapay', 'agent_vente' => $source === 'agent_vente'],
+                    'details' => [
+                        'action' => 'paiement_confirme',
+                        'transaction_id' => $transactionId,
+                        'methode' => 'fedapay',
+                        'payment_method' => $moyenPaiement,
+                        'operator' => $operateur,
+                        'source' => $source,
+                        'amount' => (float) $locked->montant,
+                        'currency' => 'XOF',
+                        'quantity' => (int) $locked->quantite,
+                        'event_id' => $locked->evenement_id,
+                        'status_before' => 'en_attente',
+                        'status_after' => 'payé',
+                    ],
                     'ip' => $ip,
-                    'user_agent' => $userAgent,
+                    'user_agent' => $userAgent ? mb_substr($userAgent, 0, 255) : null,
                 ]);
 
                 $confirme = true;
@@ -820,7 +1308,7 @@ class PaiementController extends Controller
     // Affiche la page de confirmation après paiement réussi
     public function confirmation($ticketId)
     {
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($ticketId);
 
         $this->verifierAccesAcheteur($ticket);
 
@@ -830,7 +1318,7 @@ class PaiementController extends Controller
 
         // Récupère tous les tickets du même groupe
         $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
-            ->with('evenement', 'tarif')
+            ->with('evenement.dates', 'tarif')
             ->get();
 
         return view('evenement-public.confirmation', compact('ticket', 'groupTickets'));

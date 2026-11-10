@@ -185,6 +185,7 @@ class ReconciliationService
                     continue;
                 }
 
+                $statutAvant = $ticket->statut_paiement;
                 $ticket->update([
                     'statut_paiement' => 'payé',
                     'transaction_id' => $transactionId ?? $ticket->transaction_id,
@@ -204,6 +205,13 @@ class ReconciliationService
                     'transaction_id' => $transactionId,
                     'force' => $force,
                     'par' => $this->acteur(),
+                    'amount' => (float) $ticket->montant,
+                    'currency' => 'XOF',
+                    'quantity' => (int) $ticket->quantite,
+                    'source' => $ticket->source,
+                    'status_before' => $statutAvant,
+                    'status_after' => 'payé',
+                    'payment_method' => $methodePaiement ?? $ticket->methode_paiement,
                 ]);
 
                 $ticketsConfirmes[] = $ticket;
@@ -218,7 +226,7 @@ class ReconciliationService
         }
 
         foreach ($ticketsConfirmes as $ticket) {
-            if (!$ticket->email_acheteur) {
+            if (!$ticket->email_acheteur || !$ticket->estDelivrable()) {
                 continue;
             }
             try {
@@ -261,7 +269,7 @@ class ReconciliationService
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $tarif?->id,
                     'source' => 'reconciliation',
-                    'code_unique' => 'TMP',
+                    'code_unique' => Ticket::genererCodeSecurise(),
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $data['nom_acheteur'] ?? 'Client',
                     'telephone_acheteur' => $data['telephone'] ?? null,
@@ -277,7 +285,6 @@ class ReconciliationService
                     'utilise' => false,
                     'date_achat' => $data['date_achat'] ?? now(),
                 ]);
-                $ticket->update(['code_unique' => Ticket::genererCodeSecurise()]);
                 $tickets->push($ticket);
             }
 
@@ -301,6 +308,9 @@ class ReconciliationService
         }
 
         foreach ($tickets as $ticket) {
+            if (!$ticket->estDelivrable()) {
+                continue;
+            }
             try {
                 $ticket->load('evenement', 'tarif');
                 Mail::to($ticket->email_acheteur)->send(new TicketEmail(collect([$ticket])));
@@ -346,6 +356,13 @@ class ReconciliationService
     public function renvoyerEmail(Ticket $ticket): array
     {
         $ticket->load('evenement', 'tarif');
+
+        if (! $ticket->estDelivrable()) {
+            $this->log('renvoi_email_refuse', $ticket, ['par' => $this->acteur(), 'statut' => $ticket->statut_paiement]);
+
+            return ['success' => false, 'message' => 'Ce billet ne peut pas être envoyé : son paiement n\'est pas confirmé.'];
+        }
+
         try {
             Mail::to($ticket->email_acheteur)->send(new TicketEmail(collect([$ticket])));
         } catch (\Exception $e) {

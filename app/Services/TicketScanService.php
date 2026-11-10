@@ -14,7 +14,10 @@ class TicketScanService
     {
         $ticket = Ticket::trouverParCodeSaisi($code);
 
-        if (! $ticket) {
+        // Un billet qui n'a jamais été délivré (paiement en attente, échoué ou non
+        // confirmé) n'a pas de code entre les mains du client. Il ne doit jamais
+        // produire un verdict dédié : on le traite exactement comme un code inconnu.
+        if (! $ticket || ! in_array($ticket->statut_paiement, ['payé', 'remboursé'], true)) {
             $this->logScan($agent, $code, 'invalide', 'Ticket introuvable');
 
             return [
@@ -38,81 +41,83 @@ class TicketScanService
             ];
         }
 
-        if ($ticket->statut_paiement !== 'payé') {
-            $this->logScan($agent, $code, 'invalide', 'Paiement non confirmé');
+        if ($ticket->statut_paiement === 'remboursé') {
+            $this->logScan($agent, $code, 'invalide', 'Ticket remboursé', $ticket->id);
 
             return [
                 'success' => false,
                 'resultat' => 'invalide',
-                'raison' => 'Paiement non confirmé',
-                'message' => 'Ce ticket n\'a pas été payé.',
-                'ticket' => null,
+                'raison' => 'Ticket remboursé',
+                'message' => 'Ce ticket a été remboursé et n\'est plus valide.',
+                'ticket' => $this->contexteBillet($ticket),
             ];
         }
 
         if ($ticket->annule) {
-            $this->logScan($agent, $code, 'invalide', 'Ticket annulé');
+            $this->logScan($agent, $code, 'invalide', 'Ticket annulé', $ticket->id);
 
             return [
                 'success' => false,
                 'resultat' => 'invalide',
                 'raison' => 'Ticket annulé',
                 'message' => 'Ce ticket a été annulé et n\'est plus valide.',
-                'ticket' => null,
+                'ticket' => $this->contexteBillet($ticket),
             ];
         }
 
         $jourScan = $agent->evenement->jourScanActuel();
 
         if (! $jourScan) {
-            $this->logScan($agent, $code, 'invalide', 'Pas de session aujourd\'hui');
+            $this->logScan($agent, $code, 'invalide', 'Pas de session aujourd\'hui', $ticket->id);
 
             return [
                 'success' => false,
                 'resultat' => 'invalide',
                 'raison' => 'Pas de session aujourd\'hui',
                 'message' => 'L\'événement n\'a pas de session prévue aujourd\'hui.',
-                'ticket' => null,
+                'ticket' => $this->contexteBillet($ticket),
             ];
         }
 
         $maintenant = now();
         if ($maintenant->lt($jourScan->date_debut)) {
-            $this->logScan($agent, $code, 'invalide', 'Session pas commencée');
+            $this->logScan($agent, $code, 'invalide', 'Session pas commencée', $ticket->id);
 
             return [
                 'success' => false,
                 'resultat' => 'invalide',
                 'raison' => 'Session pas commencée',
                 'message' => 'La session d\'aujourd\'hui commence à '.$jourScan->date_debut->format('H:i').'. Revenez à cette heure.',
-                'ticket' => null,
+                'ticket' => $this->contexteBillet($ticket),
             ];
         }
 
         if ($maintenant->gt($jourScan->finFenetreScan())) {
-            $this->logScan($agent, $code, 'invalide', 'Session terminée');
+            $this->logScan($agent, $code, 'invalide', 'Session terminée', $ticket->id);
 
             return [
                 'success' => false,
                 'resultat' => 'invalide',
                 'raison' => 'Session terminée',
                 'message' => 'La session d\'aujourd\'hui est terminée. Revenez un autre jour de l\'événement.',
-                'ticket' => null,
+                'ticket' => $this->contexteBillet($ticket),
             ];
         }
 
-        if ($ticket->dejaScanneAujourdhui()) {
-            $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné aujourd\'hui', $ticket->id);
+        if ($ticket->dejaScanneEntre($jourScan->date_debut, $jourScan->finFenetreScan())) {
+            $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné pour cette session', $ticket->id);
+
+            // Le billet reste valable : seul le scan du jour est refusé.
+            $multiJours = $agent->evenement->dates()->count() > 1;
 
             return [
                 'success' => false,
                 'resultat' => 'deja_utilise',
                 'raison' => 'Déjà scanné aujourd\'hui',
-                'message' => 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours.',
-                'ticket' => [
-                    'nom' => $ticket->nom_acheteur,
-                    'nom_tarif' => $ticket->nom_tarif,
-                ],
+                'message' => $multiJours
+                    ? 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours.'
+                    : 'Ce billet a déjà été scanné aujourd\'hui.',
+                'ticket' => $this->contexteBillet($ticket),
             ];
         }
 
@@ -124,13 +129,22 @@ class TicketScanService
             'raison' => 'Scan réussi',
             'message' => 'Ticket validé avec succès !',
             'ticket' => [
-                'nom' => $ticket->nom_acheteur,
+                ...$this->contexteBillet($ticket),
                 'email' => $ticket->email_acheteur,
-                'nom_tarif' => $ticket->nom_tarif,
                 'montant' => number_format($ticket->montant, 0, ',', ' '),
                 'transaction_id' => $ticket->transaction_id,
                 'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
             ],
+        ];
+    }
+
+    // Type de billet (nom du tarif : SIMPLE, STANDARD, VIP, ...) et porteur.
+    // Le type n'est jamais préfixé côté client : la valeur parle d'elle-même.
+    private function contexteBillet(Ticket $ticket): array
+    {
+        return [
+            'nom' => $ticket->nom_acheteur,
+            'nom_tarif' => $ticket->getLabel(),
         ];
     }
 

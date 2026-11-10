@@ -25,7 +25,7 @@ class TicketController extends Controller
         $filtres = $this->filtres($request);
         $evenementsIds = $filtres['evenementsIds'];
 
-        $query = Ticket::with('evenement', 'tarif')->whereIn('evenement_id', $evenementsIds);
+        $query = Ticket::with('evenement.dates', 'tarif')->whereIn('evenement_id', $evenementsIds);
         $this->appliquerFiltres($query, $filtres);
 
         $tickets = $query->orderBy('date_achat', 'desc')->paginate(PerPage::resolve());
@@ -207,7 +207,7 @@ class TicketController extends Controller
     // Détails d'un ticket avec historique de logs
     public function show(int $id)
     {
-        $ticket = Ticket::with('evenement', 'tarif', 'notifications')->findOrFail($id);
+        $ticket = Ticket::with('evenement.dates', 'tarif', 'notifications')->findOrFail($id);
         $this->authoriserOrganisateur($ticket); // Contrôle de propriété
         // use two-argument where to avoid argument mismatch
         $logs = Log::where('ticket_id', $id)->orderBy('created_at', 'desc')->get(); // Historique complet
@@ -218,8 +218,12 @@ class TicketController extends Controller
     // Télécharge le PDF du ticket avec QR code
     public function downloadPdf(int $id)
     {
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($id);
         $this->authoriserOrganisateur($ticket); // Contrôle de propriété
+
+        if (! $ticket->estDelivrable()) {
+            return back()->with('error', 'Le billet n\'est pas disponible tant que le paiement n\'est pas confirmé.');
+        }
 
         $max = config('app.max_downloads');
 
@@ -247,9 +251,9 @@ class TicketController extends Controller
     // Télécharge le ticket (avec vérification de paiement)
     public function downloadTicket(int $id)
     {
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($id);
 
-        if ($ticket->statut_paiement !== 'payé') {
+        if (! $ticket->estDelivrable()) {
             return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.'); // Paiement requis
         }
 
@@ -279,15 +283,15 @@ class TicketController extends Controller
     // Télécharge tous les tickets d'une même commande (même transaction_id) en un seul ZIP
     public function downloadAll(int $ticketId)
     {
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($ticketId);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($ticketId);
 
-        if ($ticket->statut_paiement !== 'payé') {
+        if (! $ticket->estDelivrable()) {
             return back()->with('error', 'Le ticket n\'est pas disponible tant que le paiement n\'est pas confirmé.');
         }
 
-        $groupTickets = Ticket::with('evenement', 'tarif')
+        $groupTickets = Ticket::with('evenement.dates', 'tarif')
             ->where('transaction_id', $ticket->transaction_id)
-            ->where('statut_paiement', 'payé')
+            ->delivrables()
             ->get();
 
         if ($groupTickets->isEmpty()) {
@@ -353,7 +357,7 @@ class TicketController extends Controller
         $transactionId = trim((string) $request->transaction_id);
         $emailRecuperation = trim((string) $request->email);
 
-        $tickets = Ticket::with('evenement', 'tarif')
+        $tickets = Ticket::with('evenement.dates', 'tarif')
             ->where('transaction_id', $transactionId)
             ->orderBy('date_achat', 'desc')
             ->get();
@@ -396,6 +400,10 @@ class TicketController extends Controller
         $ticket = Ticket::with('evenement')->findOrFail($id);
         $this->authoriserOrganisateur($ticket); // Contrôle de propriété
 
+        if (! $ticket->estDelivrable()) {
+            return back()->with('error', 'Ce billet ne peut pas être envoyé : son paiement n\'est pas confirmé.'); // Jamais de billet non payé par email
+        }
+
         try {
             Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
         } catch (\Exception $e) {
@@ -416,7 +424,7 @@ class TicketController extends Controller
     // Annule un ticket et restaure les quotas
     public function annuler(int $id)
     {
-        $ticket = Ticket::with('evenement', 'tarif')->findOrFail($id);
+        $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($id);
         $this->authoriserOrganisateur($ticket); // Contrôle de propriété
 
         if ($ticket->statut_paiement !== 'payé' && $ticket->statut_paiement !== 'en_attente') {
@@ -426,7 +434,7 @@ class TicketController extends Controller
         $ancienStatut = $ticket->statut_paiement;
 
         $ticket->update([
-            'statut_paiement' => 'rembourse', // Marque comme remboursé/annulé
+            'statut_paiement' => 'remboursé', // Marque comme remboursé/annulé
         ]);
 
         if ($ticket->evenement) {

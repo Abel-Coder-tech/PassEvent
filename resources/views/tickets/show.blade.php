@@ -48,8 +48,8 @@
                 <div class="panel-card-body">
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Code unique</label>
-                            <div class="fw-bold" style="font-size: 1.1rem; color: var(--violet); font-family: monospace; word-break: break-all;">{{ $ticket->code_unique }}</div>
+                            <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">{{ $ticket->aUnCodeDefinitif() ? 'Code unique' : 'Référence de réservation' }}</label>
+                            <div class="fw-bold" style="font-size: 1.1rem; color: var(--violet); font-family: monospace; word-break: break-all;">{{ $ticket->referenceAffichage() }}</div>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Date d'achat</label>
@@ -64,7 +64,16 @@
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Evenement</label>
                             <div class="fw-bold">{{ $ticket->evenement?->titre ?? '—' }}</div>
                             <small class="text-muted">
-                                <i class="bi bi-calendar3 me-1"></i>{{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY HH:mm') ?? '—' }}
+                                <i class="bi bi-calendar3 me-1"></i>
+                                @if($ticket->evenement)
+                                    @forelse($ticket->evenement->datesDebut() as $date)
+                                        {{ $date->isoFormat('D MMM YYYY HH:mm') }}{{ !$loop->last ? ' · ' : '' }}
+                                    @empty
+                                        —
+                                    @endforelse
+                                @else
+                                    —
+                                @endif
                                 <br>
                                 <i class="bi bi-geo-alt me-1"></i>{{ $ticket->evenement?->lieu ?? '—' }}
                             </small>

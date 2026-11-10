@@ -17,6 +17,13 @@ class Ticket extends Model
 
     protected $table = 'ticket';
 
+    /**
+     * Préfixe des codes provisoires portés par les réservations non payées.
+     * Un tel code n'est jamais scannable ni imprimé : il ne devient un vrai
+     * code PAX- qu'au moment où le paiement est confirmé.
+     */
+    public const PREFIXE_RESERVATION = 'TMP-';
+
     protected $fillable = [
         'evenement_id',
         'tarif_id',
@@ -83,6 +90,26 @@ class Ticket extends Model
         return $this->nom_tarif ?? 'Standard';
     }
 
+    /**
+     * Un billet ne peut être délivré (email, PDF public) que s'il est réellement payé.
+     * Les statuts en_attente / échoué / remboursé, les annulations et les
+     * réservations expirées ne doivent jamais quitter le système.
+     */
+    public function estDelivrable(): bool
+    {
+        return $this->statut_paiement === 'payé'
+            && ! $this->annule
+            && $this->expire_at === null;
+    }
+
+    // Restreint une requête aux billets réellement délivrables.
+    public function scopeDelivrables($query)
+    {
+        return $query->where('statut_paiement', 'payé')
+            ->where('annule', false)
+            ->whereNull('expire_at');
+    }
+
     protected function casts(): array
     {
         return [
@@ -147,6 +174,18 @@ class Ticket extends Model
             ->exists();
     }
 
+    // Détermine si le ticket a déjà été scanné avec succès pendant une session
+    // (fenêtre début → fin). Couvre les sessions qui traversent minuit, là où
+    // le jour civil changerait entre deux scans.
+    public function dejaScanneEntre(\Carbon\CarbonInterface $debut, \Carbon\CarbonInterface $fin): bool
+    {
+        return \App\Models\Log::where('ticket_id', $this->id)
+            ->where('type_operation', 'scan')
+            ->where('details->resultat', 'valide')
+            ->whereBetween('created_at', [$debut, $fin])
+            ->exists();
+    }
+
     // Compte le nombre de jours où le ticket a été scanné avec succès (chaque jour ne compte qu'une fois)
     public function nombreJoursScannes(): int
     {
@@ -163,6 +202,40 @@ class Ticket extends Model
             $code = 'PAX-' . strtoupper(Str::random(5));
         } while (self::where('code_unique', $code)->exists());
         return $code;
+    }
+
+    /**
+     * Code provisoire d'une réservation en attente de paiement. Il n'ouvre
+     * aucun droit : ni PDF, ni email, ni scan. Le code définitif est attribué
+     * par TicketObserver dès que le billet devient réellement payé.
+     */
+    public static function genererCodeReservation(): string
+    {
+        do {
+            $code = self::PREFIXE_RESERVATION.strtoupper(Str::random(10));
+        } while (self::where('code_unique', $code)->exists());
+
+        return $code;
+    }
+
+    // Vrai uniquement pour un code émis après confirmation du paiement.
+    public function aUnCodeDefinitif(): bool
+    {
+        $code = (string) $this->code_unique;
+
+        return $code !== ''
+            && $code !== 'TMP'
+            && ! str_starts_with($code, self::PREFIXE_RESERVATION);
+    }
+
+    // Référence à afficher à l'acheteur/à l'agent avant confirmation.
+    public function referenceAffichage(): string
+    {
+        if ($this->aUnCodeDefinitif()) {
+            return (string) $this->code_unique;
+        }
+
+        return (string) ($this->transaction_id ?: 'En attente de paiement');
     }
 
     // Normalise la saisie d'un code (avec ou sans préfixe) vers le format PAX-XXXXX

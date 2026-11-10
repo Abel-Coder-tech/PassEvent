@@ -260,6 +260,41 @@ class Evenement extends Model
         return $this->dates()->reorder('date_debut', 'desc')->first();
     }
 
+    // Dates de début effectives (sessions réelles, repli sur date_event).
+    // Utilisées pour l'affichage acheteur : email, confirmation, page billet.
+    public function datesDebut(): Collection
+    {
+        $debuts = $this->relationLoaded('dates')
+            ? $this->dates->pluck('date_debut')
+            : $this->dates()->pluck('date_debut');
+
+        $debuts = $debuts
+            ->map(fn ($date) => Carbon::parse($date))
+            ->sort()
+            ->values();
+
+        if ($debuts->isEmpty() && $this->date_event) {
+            return collect([$this->date_event]);
+        }
+
+        return $debuts;
+    }
+
+    // L'événement est-il terminé pour le scan ? On se base sur la fin de la
+    // dernière fenêtre de scan (début + tolérance), et non sur l'heure de début :
+    // une session qui commence la veille et finit après minuit reste scannable.
+    public function scanTermine(): bool
+    {
+        $derniere = $this->derniereDate();
+
+        if ($derniere) {
+            return $derniere->finFenetreScan()->isPast();
+        }
+
+        return $this->date_event !== null
+            && $this->date_event->copy()->addHours(self::DUREE_SCAN_HEURES)->isPast();
+    }
+
     // Date de référence pour la clôture des ventes : dernière session réelle,
     // avec repli sur date_event pour les événements sans sessions détaillées.
     public function derniereDateVente(): ?\Illuminate\Support\Carbon
@@ -357,14 +392,39 @@ class Evenement extends Model
         return $derniere !== null && $derniere->isPast();
     }
 
-    // Session (jour) en cours si aujourd'hui est un jour d'événement, dans l'intervalle de scan
+    // Session (jour) à utiliser pour le scan à l'instant présent.
+    // 1) une session dont la fenêtre contient now() (y compris celles qui
+    //    commencent la veille et se terminent après minuit) ;
+    // 2) sinon la prochaine session du jour (message « pas encore commencée ») ;
+    // 3) sinon la dernière session commencée aujourd'hui (message « terminée »).
     public function jourScanActuel(): ?EvenementDate
     {
-        $debutJour = now()->startOfDay();
-        $finJour = now()->copy()->endOfDay();
+        $maintenant = now();
+
+        $enCours = $this->dates()
+            ->where('date_debut', '<=', $maintenant)
+            ->where('date_debut', '>=', $maintenant->copy()->subHours(self::DUREE_SCAN_HEURES))
+            ->orderBy('date_debut')
+            ->first();
+
+        if ($enCours) {
+            return $enCours;
+        }
+
+        $aVenir = $this->dates()
+            ->where('date_debut', '>', $maintenant)
+            ->where('date_debut', '<=', $maintenant->copy()->endOfDay())
+            ->orderBy('date_debut')
+            ->first();
+
+        if ($aVenir) {
+            return $aVenir;
+        }
 
         return $this->dates()
-            ->whereBetween('date_debut', [$debutJour, $finJour])
+            ->where('date_debut', '<=', $maintenant)
+            ->where('date_debut', '>=', $maintenant->copy()->startOfDay())
+            ->orderByDesc('date_debut')
             ->first();
     }
 

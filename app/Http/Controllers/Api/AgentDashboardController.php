@@ -64,7 +64,7 @@ class AgentDashboardController extends Controller
                     'raison' => $log->details['raison'] ?? null,
                 ];
             })->values(),
-            'scan_disponible' => (bool) ($agent->actif && $evenement && ! $evenement->evenementPasse()),
+            'scan_disponible' => (bool) ($agent->actif && $evenement && ! $evenement->scanTermine()),
             'notifications' => $notifications,
         ], 200);
     }

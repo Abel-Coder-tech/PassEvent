@@ -11,7 +11,9 @@ Artisan::command('inspire', function () {
 
 Schedule::command('evenements:terminer')->hourly();
 Schedule::command('tickets:purger-en-attente')->everyFifteenMinutes();
-Schedule::command('tickets:envoyer-emails')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('tickets:envoyer-emails')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('tickets:reconcilier')->hourly();
 Schedule::command('tickets:corriger-operateurs')->hourly();
 Schedule::command('affiliations:liberer-commissions')->hourly();
+Schedule::command('sanctum:prune-expired --hours=24')->daily();
+Schedule::command('ventes:purger-idempotences')->daily();

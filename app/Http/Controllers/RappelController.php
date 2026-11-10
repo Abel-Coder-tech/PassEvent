@@ -37,7 +37,7 @@ class RappelController extends Controller
             ->firstOrFail();
 
         $tickets = Ticket::where('evenement_id', $evenement->id)
-            ->where('statut_paiement', 'payé')
+            ->delivrables()
             ->with('evenement')
             ->get();
 

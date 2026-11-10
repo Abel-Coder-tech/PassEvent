@@ -8,6 +8,7 @@ use App\Models\Evenement;
 use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\FedapayService;
+use App\Services\PaymentMonitoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -65,7 +66,7 @@ class VenteManuelleController extends Controller
     }
 
     // Enregistre une vente manuelle (gratuite, espèces ou paiement mobile)
-    public function store(Request $request)
+    public function store(Request $request, PaymentMonitoringService $paymentMonitoring)
     {
         $evenement = Evenement::where('id', $request->evenement_id)
             ->where('user_id', Auth::id()) // Vérification de propriété
@@ -165,7 +166,7 @@ class VenteManuelleController extends Controller
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $tarif->id,
                     'source' => 'vente_manuelle',
-                    'code_unique' => 'TMP',
+                    'code_unique' => Ticket::genererCodeSecurise(),
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $validated['nom_acheteur'],
                     'email_acheteur' => $validated['email'] ?? null,
@@ -178,9 +179,6 @@ class VenteManuelleController extends Controller
                     'utilise' => false,
                     'date_achat' => now(),
                 ]);
-                $ticket->update([
-                    'code_unique' => Ticket::genererCodeSecurise(),
-                ]);
                 $ticket->load('evenement');
                 $tickets[] = $ticket;
             }
@@ -189,7 +187,7 @@ class VenteManuelleController extends Controller
             $tarif->increment('quantite_vendue', $validated['quantite']);
 
             foreach ($tickets as $ticket) {
-                if ($ticket->email_acheteur) {
+                if ($ticket->email_acheteur && $ticket->estDelivrable()) {
                     try {
                         $ticket->load('evenement', 'tarif');
                         Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
@@ -243,7 +241,7 @@ class VenteManuelleController extends Controller
                     'evenement_id' => $evenement->id,
                     'tarif_id' => $tarif->id,
                     'source' => 'vente_manuelle',
-                    'code_unique' => 'TMP',
+                    'code_unique' => Ticket::genererCodeSecurise(),
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $validated['nom_acheteur'],
                     'email_acheteur' => $validated['email'] ?? null,
@@ -260,9 +258,6 @@ class VenteManuelleController extends Controller
                     'utilise' => false,
                     'date_achat' => now(),
                 ]);
-                $ticket->update([
-                    'code_unique' => Ticket::genererCodeSecurise(),
-                ]);
                 $ticket->load('evenement');
                 $tickets[] = $ticket;
             }
@@ -276,7 +271,7 @@ class VenteManuelleController extends Controller
             }
 
             foreach ($tickets as $ticket) {
-                if ($ticket->email_acheteur) {
+                if ($ticket->email_acheteur && $ticket->estDelivrable()) {
                     try {
                         $ticket->load('evenement', 'tarif');
                         Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
@@ -308,7 +303,7 @@ class VenteManuelleController extends Controller
                 'evenement_id' => $evenement->id,
                 'tarif_id' => $tarif->id,
                 'source' => 'vente_manuelle',
-                'code_unique' => 'TMP',
+                'code_unique' => Ticket::genererCodeReservation(),
                 'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                 'nom_acheteur' => $validated['nom_acheteur'],
                 'email_acheteur' => $validated['email'],
@@ -325,11 +320,24 @@ class VenteManuelleController extends Controller
                 'utilise' => false,
                 'date_achat' => now(),
             ]);
-            $t->update([
-                'code_unique' => Ticket::genererCodeSecurise(),
-            ]);
             $tickets[] = $t;
         }
+
+        $paymentMonitoring->record(
+            'paiement_initie',
+            [
+                'transaction_id' => $groupTransactionId,
+                'event_id' => $evenement->id,
+                'ticket_count' => count($tickets),
+                'amount' => round((float) $montantTotal, 2),
+                'currency' => 'XOF',
+                'source' => 'vente_manuelle',
+                'payment_status' => 'en_attente',
+                'actor_id' => Auth::id(),
+            ],
+            $request,
+            $tickets[0]->id,
+        );
 
         return response()->json([
             'success' => true,
