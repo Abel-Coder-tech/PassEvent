@@ -5,9 +5,11 @@ namespace App\Http\Controllers\AgentVente;
 use App\Http\Controllers\Controller;
 use App\Models\CodePromo;
 use App\Models\Evenement;
+use App\Models\Tarif;
 use App\Models\Ticket;
-use App\Services\FedapayService;
+use App\Services\AgentVenteSaleService;
 use App\Services\AgentVenteStatisticsService;
+use App\Services\FedapayService;
 use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
@@ -17,7 +19,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -223,37 +227,106 @@ class AuthController extends Controller
             ]);
         }
 
-        $ticket = Ticket::create([
-            'evenement_id' => $agent->evenement->id,
-            'tarif_id' => $tarif->id,
-            'agent_vente_id' => $agent->id,
-            'code_unique' => Ticket::genererCodeReservation(),
-            'qr_signature' => Str::uuid()->toString(),
-            'email_acheteur' => $validated['email_acheteur'],
-            'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
-            'nom_acheteur' => $validated['nom_acheteur'],
-            'nom_tarif' => $tarif->nom ?? 'Standard',
-            'montant' => $prixUnitaire,
-            'montant_reduction' => $montantReduction,
-            'code_promo_utilise' => $codePromo ? $codePromo->code : null,
-            'quantite' => 1,
-            'statut_paiement' => 'en_attente',
-            'methode_paiement' => $validated['methode_paiement'],
-            'type_paiement' => PaiementMapper::moyenPaiement($validated['methode_paiement']),
-            'utilise' => false,
-            'date_achat' => now(),
-        ]);
+        // Une vente mobile en attente réserve sa place dès sa création ; une
+        // vente espèces la consomme immédiatement.
+        $confirmerImmediatement = $validated['methode_paiement'] === 'cash';
+        $reservationExpireLe = $confirmerImmediatement
+            ? null
+            : now()->addMinutes(AgentVenteSaleService::DUREE_RESERVATION_MINUTES);
 
-        if ($validated['methode_paiement'] === 'cash') {
-            $ticket->update(['statut_paiement' => 'payé']); // Paiement espèces = confirmé immédiatement
-            $agent->evenement->increment('quota_vendu', 1);
-            $tarif->increment('quantite_vendue', 1);
-            $agent->increment('tickets_count', 1, []);
-            $agent->increment('montant_total', $prixUnitaire, []);
-            // Comptabilise le code promo une fois la vente espèces confirmée
-            if ($codePromo) {
-                $codePromo->increment('nb_utilisations', 1, []);
-            }
+        try {
+            $ticket = DB::transaction(function () use (
+                $agent,
+                $tarif,
+                $validated,
+                $prixUnitaire,
+                $montantReduction,
+                $codePromo,
+                $confirmerImmediatement,
+                $reservationExpireLe
+            ) {
+                $evenementVerrouille = Evenement::whereKey($agent->evenement->id)->lockForUpdate()->first();
+                $tarifVerrouille = Tarif::whereKey($tarif->id)->lockForUpdate()->first();
+
+                if (! $evenementVerrouille || ! $tarifVerrouille) {
+                    throw ValidationException::withMessages([
+                        'tarif_id' => "Le tarif sélectionné n'est plus disponible pour cet événement.",
+                    ]);
+                }
+
+                $placesRestantes = max(0, (int) $evenementVerrouille->capacite - (int) $evenementVerrouille->quota_vendu);
+
+                if ($placesRestantes < 1) {
+                    throw ValidationException::withMessages([
+                        'tarif_id' => "Capacité atteinte : il ne reste plus de place pour cet événement.",
+                    ]);
+                }
+
+                if ($tarifVerrouille->quantite_disponible !== null) {
+                    // Les ventes en attente ont réservé la capacité mais leur tarif
+                    // n'est compté qu'à la confirmation : on les déduit du stock.
+                    $reservees = (int) Ticket::query()
+                        ->where('tarif_id', $tarifVerrouille->id)
+                        ->where('statut_paiement', 'en_attente')
+                        ->whereNull('expire_at')
+                        ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
+                        ->whereNotNull('reservation_expire_le')
+                        ->sum('quantite');
+
+                    $stock = (int) $tarifVerrouille->quantite_disponible
+                        - (int) $tarifVerrouille->quantite_vendue
+                        - $reservees;
+
+                    if ($stock < 1) {
+                        throw ValidationException::withMessages([
+                            'tarif_id' => "Quantité restante insuffisante pour ce tarif.",
+                        ]);
+                    }
+                }
+
+                $evenementVerrouille->increment('quota_vendu', 1);
+
+                $ticket = Ticket::create([
+                    'evenement_id' => $evenementVerrouille->id,
+                    'tarif_id' => $tarifVerrouille->id,
+                    'agent_vente_id' => $agent->id,
+                    'source' => 'agent_vente',
+                    'code_unique' => Ticket::genererCodeReservation(),
+                    'qr_signature' => Str::uuid()->toString(),
+                    'email_acheteur' => $validated['email_acheteur'],
+                    'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
+                    'nom_acheteur' => $validated['nom_acheteur'],
+                    'nom_tarif' => $tarifVerrouille->nom ?? 'Standard',
+                    'montant' => $prixUnitaire,
+                    'montant_reduction' => $montantReduction,
+                    'code_promo_utilise' => $codePromo ? $codePromo->code : null,
+                    'quantite' => 1,
+                    'statut_paiement' => $confirmerImmediatement ? 'payé' : 'en_attente',
+                    'methode_paiement' => $validated['methode_paiement'],
+                    'type_paiement' => PaiementMapper::moyenPaiement($validated['methode_paiement']),
+                    'reservation_expire_le' => $reservationExpireLe,
+                    'utilise' => false,
+                    'date_achat' => now(),
+                ]);
+
+                if ($confirmerImmediatement) {
+                    $tarifVerrouille->increment('quantite_vendue', 1);
+                    $agent->increment('tickets_count', 1, []);
+                    $agent->increment('montant_total', $prixUnitaire, []);
+
+                    // Comptabilise le code promo une fois la vente espèces confirmée
+                    if ($codePromo) {
+                        $codePromo->increment('nb_utilisations', 1, []);
+                    }
+                }
+
+                return $ticket;
+            });
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
+        }
+
+        if ($confirmerImmediatement) {
             session()->flash('ticket_created', $ticket->id); // Pour affichage du dernier ticket
 
             return redirect()->route('agent-vente.dashboard')

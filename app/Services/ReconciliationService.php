@@ -73,8 +73,12 @@ class ReconciliationService
                 }
 
                 $evenement = $locked->evenement()->lockForUpdate()->first();
-                if ($evenement) {
-                    $evenement->decrement('quota_vendu', max(1, (int) $locked->quantite));
+
+                // Seule une réservation comptée à la création doit rendre sa place.
+                // Un ticket manuel en attente n'a jamais consommé de quota.
+                if ($evenement && $locked->reservation_expire_le !== null) {
+                    $nouveauQuota = max(0, (int) $evenement->quota_vendu - max(1, (int) $locked->quantite));
+                    $evenement->update(['quota_vendu' => $nouveauQuota]);
                 }
 
                 $this->log('liberation_ticket', $locked, ['motif' => $motif, 'par' => $this->acteur()]);
@@ -180,12 +184,26 @@ class ReconciliationService
         DB::beginTransaction();
         try {
             foreach ($tickets as $ticket) {
+                // Verrou pessimiste : évite qu'une confirmation concurrente
+                // (webhook, purge) compte deux fois la place et le tarif.
+                $locked = Ticket::whereKey($ticket->id)->lockForUpdate()->first();
+
+                if (! $locked) {
+                    continue;
+                }
+
+                $ticket = $locked;
+
                 if ($ticket->statut_paiement === 'payé') {
                     $dejaPayes++;
                     continue;
                 }
 
                 $statutAvant = $ticket->statut_paiement;
+                // Une place déjà réservée à la création (vente mobile en attente)
+                // ne doit pas être comptée deux fois à la confirmation.
+                $reservationDejaComptee = $ticket->reservation_expire_le !== null;
+
                 $ticket->update([
                     'statut_paiement' => 'payé',
                     'transaction_id' => $transactionId ?? $ticket->transaction_id,
@@ -193,10 +211,15 @@ class ReconciliationService
                     'methode_paiement' => $methodePaiement ?? $ticket->methode_paiement ?? 'mobile_money',
                     'type_paiement' => PaiementMapper::moyenPaiement($methodePaiement ?? $ticket->methode_paiement ?? 'mobile_money'),
                     'telephone_paiement' => $telephonePaiement ?? $ticket->telephone_paiement,
+                    'reservation_expire_le' => null,
                 ]);
 
                 $ticket->load('evenement', 'tarif');
-                $ticket->evenement->increment('quota_vendu', $ticket->quantite);
+
+                if (! $reservationDejaComptee) {
+                    $ticket->evenement->increment('quota_vendu', $ticket->quantite);
+                }
+
                 if ($ticket->tarif) {
                     $ticket->tarif->increment('quantite_vendue', $ticket->quantite);
                 }

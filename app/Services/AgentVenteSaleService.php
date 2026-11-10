@@ -24,6 +24,10 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class AgentVenteSaleService
 {
+    // Durée pendant laquelle une vente mobile en attente garde sa place réservée,
+    // alignée sur l'expiration des ventes en attente (30 minutes).
+    public const DUREE_RESERVATION_MINUTES = 30;
+
     public function __construct(
         private FedapayService $fedapay,
         private PaymentMonitoringService $paymentMonitoring,
@@ -38,13 +42,14 @@ class AgentVenteSaleService
             ->where('statut_paiement', TicketPaymentStatus::Pending->value)
             ->whereNull('expire_at')
             ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
-            ->where('date_achat', '<', now()->subMinutes(30))
+            ->where('date_achat', '<', now()->subMinutes(self::DUREE_RESERVATION_MINUTES))
             ->get();
 
         $expires = 0;
 
         foreach ($tickets->groupBy('transaction_id') as $groupe) {
             foreach ($groupe as $ticket) {
+                $this->libererReservation($ticket);
                 $ticket->update(['expire_at' => now()]);
                 $this->journaliser($ticket, $agent, 'vente_expiree', 'en_attente', 'expire', $ip, $userAgent);
                 $expires++;
@@ -55,7 +60,7 @@ class AgentVenteSaleService
             AgentVenteNotification::envoyer(
                 $agent,
                 'Vente expirée',
-                "La vente {$premier->referenceAffichage()} a expiré après 30 minutes sans paiement.",
+                "La vente {$premier->referenceAffichage()} a expiré après ".self::DUREE_RESERVATION_MINUTES." minutes sans paiement.",
                 $premier->evenement_id,
                 AgentVenteNotification::TYPE_EXPIRATION,
                 ['ticket_id' => $premier->id, 'transaction_id' => $premier->transaction_id]
@@ -98,9 +103,13 @@ class AgentVenteSaleService
 
     public function tarifPayload(Tarif $tarif): array
     {
+        // Les ventes en attente n'ont pas encore de tarif comptabilisé mais
+        // bloquent déjà du stock : on les retire des places affichées.
         $restantes = $tarif->quantite_disponible === null
             ? null
-            : max(0, (int) $tarif->quantite_disponible - (int) $tarif->quantite_vendue);
+            : max(0, (int) $tarif->quantite_disponible
+                - (int) $tarif->quantite_vendue
+                - $this->quantiteReservee($tarif));
 
         return [
             'id' => $tarif->id,
@@ -265,6 +274,13 @@ class AgentVenteSaleService
         // Un billet à 0 FCFA (événement gratuit ou promo à 100 %) est confirmé immédiatement
         $confirmerImmediatement = $methode === 'cash' || $montantTotal <= 0;
 
+        // Une vente mobile en attente réserve sa place dès sa création : la
+        // capacité est comptée dans quota_vendu et libérée si le paiement
+        // n'aboutit pas (expiration ou annulation).
+        $reservationExpireLe = $confirmerImmediatement
+            ? null
+            : now()->addMinutes(self::DUREE_RESERVATION_MINUTES);
+
         $transactionId = $confirmerImmediatement
             ? 'AGENT-'.strtoupper(Str::random(10))
             : 'GRP-'.strtoupper(Str::random(16));
@@ -273,7 +289,7 @@ class AgentVenteSaleService
             $result = DB::transaction(function () use (
                 $agent, $evenement, $tarif, $quantite, $prixUnitaire,
                 $montantReduction, $codePromo, $montantTotal, $confirmerImmediatement, $data,
-                $idempotencyKey, $empreinte, $transactionId
+                $idempotencyKey, $empreinte, $transactionId, $reservationExpireLe
             ) {
                 // Réclamation atomique de la clé d'idempotence avant toute écriture :
                 // en cas de doublon concurrent, l'index unique fait échouer la
@@ -319,13 +335,17 @@ class AgentVenteSaleService
                         'type_paiement' => $confirmerImmediatement ? 'especes' : 'mobile_money',
                         'transaction_id' => $transactionId,
                         'idempotency_key' => $idempotencyKey !== '' ? $idempotencyKey : null,
+                        'reservation_expire_le' => $reservationExpireLe,
                         'utilise' => false,
                         'date_achat' => now(),
                     ]));
                 }
 
+                // Toute vente consomme une place : réservation immédiate pour le
+                // mobile money, consommation définitive pour les espèces.
+                $evenementVerrouille->increment('quota_vendu', $quantite);
+
                 if ($confirmerImmediatement) {
-                    $evenementVerrouille->increment('quota_vendu', $quantite);
                     $tarifVerrouille->increment('quantite_vendue', $quantite);
 
                     if ($codePromo) {
@@ -558,7 +578,12 @@ class AgentVenteSaleService
         }
 
         if ($tarif->quantite_disponible !== null) {
-            $stock = (int) $tarif->quantite_disponible - (int) $tarif->quantite_vendue;
+            // Les ventes en attente ont réservé la capacité mais leur tarif n'est
+            // comptabilisé qu'à la confirmation : on les déduit du stock pour
+            // éviter de vendre deux fois la même unité de tarif.
+            $stock = (int) $tarif->quantite_disponible
+                - (int) $tarif->quantite_vendue
+                - $this->quantiteReservee($tarif);
 
             if ($stock < $quantite) {
                 $stock = max(0, $stock);
@@ -568,6 +593,43 @@ class AgentVenteSaleService
                 ]);
             }
         }
+    }
+
+    // Somme des places déjà réservées par des ventes en attente pour ce tarif.
+    private function quantiteReservee(Tarif $tarif): int
+    {
+        return (int) Ticket::query()
+            ->where('tarif_id', $tarif->id)
+            ->where('statut_paiement', TicketPaymentStatus::Pending->value)
+            ->whereNull('expire_at')
+            ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
+            ->whereNotNull('reservation_expire_le')
+            ->sum('quantite');
+    }
+
+    // Libère la place réservée par une vente en attente, une seule fois.
+    private function libererReservation(Ticket $ticket): bool
+    {
+        return DB::transaction(function () use ($ticket) {
+            $locked = Ticket::whereKey($ticket->id)->lockForUpdate()->first();
+
+            if (! $locked
+                || $locked->statut_paiement !== TicketPaymentStatus::Pending->value
+                || $locked->reservation_expire_le === null) {
+                return false;
+            }
+
+            $evenement = $locked->evenement()->lockForUpdate()->first();
+
+            if ($evenement) {
+                $nouveauQuota = max(0, (int) $evenement->quota_vendu - max(1, (int) $locked->quantite));
+                $evenement->update(['quota_vendu' => $nouveauQuota]);
+            }
+
+            $locked->update(['reservation_expire_le' => null]);
+
+            return true;
+        });
     }
 
     // Données de checkout FedaPay renvoyées à l'application mobile
@@ -802,34 +864,94 @@ class AgentVenteSaleService
 
         $premier = $pending->first();
 
-        $customer = array_filter([
-            'firstname' => $this->prenomAcheteur($premier->nom_acheteur),
-            'lastname' => $this->nomAcheteur($premier->nom_acheteur),
-            'email' => $premier->email_acheteur,
-            'phone' => $premier->whatsapp_acheteur,
-            'phone_number' => $premier->whatsapp_acheteur,
-        ], fn ($value) => $value !== null && $value !== '');
-
         $txData = null;
 
-        try {
-            $txData = $this->fedapay->createTransaction([
-                'description' => 'Ticket - '.$ticket->evenement->titre,
-                'amount' => (int) round($montant),
-                'currency' => ['iso' => 'XOF'],
-                'callback_url' => route('paiement.callback', [
-                    'ticket' => $ticket->id,
-                    'source' => 'agent_vente',
-                ]),
-                'customer' => $customer,
-                'custom_metadata' => [
-                    'ticket_id' => (string) $premier->id,
-                    'group_transaction_id' => (string) $premier->transaction_id,
-                ],
-                'merchant_reference' => (string) $premier->id,
-            ]);
-        } catch (\Throwable $e) {
-            $txData = null;
+        // FedaPay impose un `merchant_reference` unique par transaction, et nous
+        // utilisons l'id du premier billet comme référence. Recréer une transaction
+        // pour le même billet échoue donc à chaque reprise (réouverture du checkout,
+        // réponse perdue...). On reprend la transaction existante et on régénère
+        // simplement son lien de paiement.
+        $fedapayIdExistant = trim((string) $groupTickets
+            ->first(fn (Ticket $t) => filled($t->fedapay_transaction_id))
+            ?->fedapay_transaction_id);
+
+        $existante = $fedapayIdExistant !== ''
+            ? $this->fedapay->getTransaction($fedapayIdExistant)
+            : $this->fedapay->findTransactionByExternalId((string) $premier->id);
+
+        if (is_array($existante) && ! empty($existante['id'])) {
+            $statutExistant = strtolower(trim((string) ($existante['status'] ?? '')));
+
+            if (in_array($statutExistant, ['approved', 'completed', 'accepted'], true)) {
+                // Paiement déjà validé chez FedaPay mais webhook non reçu :
+                // on confirme la vente au lieu de renvoyer un checkout mort.
+                return $this->confirmerDepuisTransaction(
+                    $agent,
+                    $ticket,
+                    $groupTickets,
+                    $existante,
+                    (string) $existante['id'],
+                    null,
+                    null,
+                    $ip,
+                    $userAgent
+                );
+            }
+
+            if (in_array($statutExistant, ['canceled', 'cancelled', 'declined', 'failed', 'expired'], true)) {
+                throw ValidationException::withMessages([
+                    'paiement_mobile' => 'La transaction FedaPay précédente a échoué. Annulez cette vente et créez-en une nouvelle.',
+                ]);
+            }
+
+            $montantExistant = (int) round((float) ($existante['amount'] ?? 0));
+
+            if ($montantExistant > 0 && $montantExistant !== (int) round($montant)) {
+                throw ValidationException::withMessages([
+                    'montant' => 'Le montant de cette vente a changé. Annulez cette vente et créez-en une nouvelle.',
+                ]);
+            }
+
+            $tokenExistant = $this->fedapay->generateToken((string) $existante['id']);
+            $lienExistant = is_array($tokenExistant)
+                ? ($tokenExistant['url'] ?? $tokenExistant['payment_url'] ?? null)
+                : null;
+
+            if (is_string($lienExistant) && $lienExistant !== '') {
+                $existante['payment_url'] = $lienExistant;
+                $existante['token'] = $tokenExistant['token'] ?? null;
+                $txData = $existante;
+            }
+        }
+
+        if (! is_array($txData)) {
+            $customer = array_filter([
+                'firstname' => $this->prenomAcheteur($premier->nom_acheteur),
+                'lastname' => $this->nomAcheteur($premier->nom_acheteur),
+                'email' => $premier->email_acheteur,
+                'phone' => $premier->whatsapp_acheteur,
+                'phone_number' => $premier->whatsapp_acheteur,
+            ], fn ($value) => $value !== null && $value !== '');
+
+            try {
+                $txData = $this->fedapay->createTransaction([
+                    'description' => 'Ticket - '.$ticket->evenement->titre,
+                    'amount' => (int) round($montant),
+                    'currency' => ['iso' => 'XOF'],
+                    'callback_url' => route('paiement.callback', [
+                        'ticket' => $ticket->id,
+                        'source' => 'agent_vente',
+                    ]),
+                    'customer' => $customer,
+                    'custom_metadata' => [
+                        'ticket_id' => (string) $premier->id,
+                        'group_transaction_id' => (string) $premier->transaction_id,
+                    ],
+                    'merchant_reference' => (string) $premier->id,
+                ]);
+            } catch (\Throwable $e) {
+                $txData = null;
+            }
         }
 
         if (! is_array($txData)) {
@@ -1029,6 +1151,7 @@ class AgentVenteSaleService
             if ($item->statut_paiement === TicketPaymentStatus::Pending->value
                 && ! $item->annule
                 && $item->expire_at === null) {
+                $this->libererReservation($item);
                 $item->update(['annule' => true, 'annule_at' => now()]);
                 $this->journaliser($item, $agent, 'vente_annulee', 'en_attente', 'annule', $ip, $userAgent);
                 $annules++;
@@ -1264,8 +1387,14 @@ class AgentVenteSaleService
                     continue;
                 }
 
-                $nouveauQuota = (int) $evenement->quota_vendu + (int) $locked->quantite;
-                $evenement->update(['quota_vendu' => min($nouveauQuota, (int) $evenement->capacite)]);
+                // Une vente mobile a déjà réservé sa place à la création : on ne
+                // recompte pas la capacité, on lève seulement la réservation.
+                $reservationDejaComptee = $locked->reservation_expire_le !== null;
+
+                if (! $reservationDejaComptee) {
+                    $nouveauQuota = (int) $evenement->quota_vendu + (int) $locked->quantite;
+                    $evenement->update(['quota_vendu' => min($nouveauQuota, (int) $evenement->capacite)]);
+                }
 
                 $locked->update([
                     'statut_paiement' => TicketPaymentStatus::Paid->value,

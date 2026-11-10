@@ -41,7 +41,7 @@ class PurgerTicketsEnAttente extends Command
         $reservations = Ticket::whereNotNull('reservation_expire_le')
             ->where('reservation_expire_le', '<', now())
             ->where('statut_paiement', 'en_attente')
-            ->with('evenement')
+            ->with('evenement', 'tarif')
             ->get();
 
         $liberees = 0;
@@ -60,15 +60,40 @@ class PurgerTicketsEnAttente extends Command
 
                     if ($verification['ok'] && $verification['approuve']) {
                         // Paiement abouti mais jamais confirmé : auto-réparation.
-                        // La place est DÉJÀ comptée dans quota_vendu par la réservation en ligne,
+                        // La place est DÉJÀ comptée dans quota_vendu par la réservation,
                         // donc on confirme sans re-compter (évite le double comptage).
-                        foreach ($groupeTickets as $t) {
-                            $t->update([
-                                'statut_paiement' => 'payé',
-                                'reservation_expire_le' => null,
-                            ]);
-                        }
-                        $confirmees += $groupeTickets->count();
+                        $confirmes = 0;
+
+                        DB::transaction(function () use ($groupeTickets, &$confirmes) {
+                            foreach ($groupeTickets as $t) {
+                                // Verrou + re-vérification : un webhook a pu confirmer
+                                // ce billet entre la sélection et maintenant.
+                                $locked = Ticket::whereKey($t->id)->lockForUpdate()->first();
+
+                                if (! $locked
+                                    || $locked->statut_paiement !== 'en_attente'
+                                    || $locked->reservation_expire_le === null) {
+                                    continue;
+                                }
+
+                                $locked->update([
+                                    'statut_paiement' => 'payé',
+                                    'reservation_expire_le' => null,
+                                ]);
+
+                                // La capacité est déjà comptée par la réservation ;
+                                // le tarif, lui, ne l'est qu'à la confirmation.
+                                $tarif = $locked->tarif()->lockForUpdate()->first();
+
+                                if ($tarif) {
+                                    $tarif->increment('quantite_vendue', max(1, (int) $locked->quantite));
+                                }
+
+                                $confirmes++;
+                            }
+                        });
+
+                        $confirmees += $confirmes;
                         $conserves += $groupeTickets->count();
                         continue;
                     }
