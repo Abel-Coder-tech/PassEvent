@@ -481,10 +481,10 @@
             font-size: 0.85rem;
         }
         .footer-api-soon {
-            color: red;
+            color: #ffc107;
             font-size: 0.72rem;
             font-weight: 700;
-            margin-left: 2rem;
+            margin-left: 0.50rem;
         }
 
         .footer-newsletter {
@@ -1132,8 +1132,7 @@
                         <li>
                             <span class="footer-api-label">
                                 <i class="bi bi-chevron-right" style="font-size:0.65rem;" aria-hidden="true"></i>
-                                <span>API</span>
-                                <span class="footer-api-soon">Bientôt disponible</span>
+                                <span>API<sup class="footer-api-soon">Bientôt</sup></span>
                             </span>
                         </li>
                     </ul>
