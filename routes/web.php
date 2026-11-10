@@ -88,7 +88,7 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->
 // Routes de connexion & inscription
 // ============================================================
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:login');
 Route::prefix('inscription')->name('inscriptions.')->group(function () {
     Route::get('/', [InscriptionController::class, 'step0'])->name('organisateur');
     Route::post('/email', [InscriptionController::class, 'sendOtp'])->name('send-otp')->middleware('throttle:3,1');
@@ -112,7 +112,7 @@ Route::post('/mot-de-passe-oublie/reinitialiser', [ForgotPasswordController::cla
 // ============================================================
 Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/login', [SuperAdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [SuperAdminAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::post('/login', [SuperAdminAuthController::class, 'login'])->name('login.post')->middleware('throttle:login');
 
     Route::middleware(['superadmin', 'no_cache'])->group(function () {
         Route::post('/logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
@@ -244,7 +244,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 Route::prefix('equipe')->name('equipe.')->middleware('no_cache')->group(function () {
     Route::get('/', [SuperAdminAuthController::class, 'portail'])->name('portail');
     Route::get('/login', [SuperAdminAuthController::class, 'showLoginFormEquipe'])->name('login');
-    Route::post('/login', [SuperAdminAuthController::class, 'loginEquipe'])->name('login.post')->middleware('throttle:5,1');
+    Route::post('/login', [SuperAdminAuthController::class, 'loginEquipe'])->name('login.post')->middleware('throttle:login');
 
     Route::get('/premiere-connexion', [SuperAdminController::class, 'premiereConnexion'])->name('premiere-connexion');
     Route::post('/premiere-connexion', [SuperAdminController::class, 'enregistrerPremiereConnexion'])->name('premiere-connexion.post');
@@ -293,7 +293,7 @@ Route::middleware('auth')->get('/generate-sitemap', function () {
 // ============================================================
 Route::prefix('agent')->name('agent.')->group(function () {
     Route::get('/connexion', [AgentAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/connexion', [AgentAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::post('/connexion', [AgentAuthController::class, 'login'])->name('login.post')->middleware('throttle:login');
 
     Route::middleware(['agent', 'no_cache'])->group(function () {
         Route::post('/deconnexion', [AgentAuthController::class, 'logout'])->name('logout');
@@ -313,7 +313,7 @@ Route::prefix('agent')->name('agent.')->group(function () {
 // ============================================================
 Route::prefix('vente')->name('agent-vente.')->group(function () {
     Route::get('/connexion', [AgentVenteAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/connexion', [AgentVenteAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::post('/connexion', [AgentVenteAuthController::class, 'login'])->name('login.post')->middleware('throttle:login');
 
     Route::middleware(['agent_vente', 'no_cache'])->group(function () {
         Route::post('/deconnexion', [AgentVenteAuthController::class, 'logout'])->name('logout');
@@ -331,7 +331,7 @@ Route::prefix('vente')->name('agent-vente.')->group(function () {
 // ============================================================
 Route::prefix('affilie')->name('affiliate.')->group(function () {
     Route::get('/connexion', [AffiliateAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/connexion', [AffiliateAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::post('/connexion', [AffiliateAuthController::class, 'login'])->name('login.post')->middleware('throttle:login');
     Route::get('/mot-de-passe-oublie', [AffiliateAuthController::class, 'showForgotPasswordForm'])->name('password.request');
     Route::post('/mot-de-passe-oublie', [AffiliateAuthController::class, 'sendPasswordResetCode'])->name('password.email')->middleware('throttle:3,1');
     Route::post('/verifier-code-reinitialisation', [AffiliateAuthController::class, 'verifyPasswordResetCode'])->name('password.verify')->middleware('throttle:5,1');

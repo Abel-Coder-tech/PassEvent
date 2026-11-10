@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Ticket;
 use App\Services\PaiementMapper;
+use App\Services\PaymentMonitoringService;
 use App\Services\ReconciliationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,7 @@ class ReconcilierTickets extends Command
 
     public function __construct(
         protected ReconciliationService $reconciliation,
+        protected PaymentMonitoringService $paymentMonitoring,
     ) {
         parent::__construct();
     }
@@ -57,6 +59,22 @@ class ReconcilierTickets extends Command
                 $supprimes += $groupe->count();
             } else {
                 // Statut indéterminé : conservé pour le support
+                $this->paymentMonitoring->record(
+                    'reconciliation_indeterminee',
+                    [
+                        'transaction_id' => (string) $txId,
+                        'verified_status' => $verification['statut'] ?? null,
+                        'ticket_count' => $groupe->count(),
+                        'api_ok' => (bool) $verification['ok'],
+                        'source' => 'scheduled_reconciliation',
+                    ],
+                    null,
+                    $groupe->first()?->id,
+                    'reconciliation',
+                    $verification['ok'] ? 'warning' : 'critical',
+                    ! $verification['ok'],
+                );
+
                 Log::warning('Réconciliation automatique - statut indéterminé, tickets conservés', [
                     'transaction_id' => $txId,
                     'statut' => $verification['statut'] ?? null,

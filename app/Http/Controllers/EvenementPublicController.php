@@ -10,6 +10,7 @@ use App\Models\EventWaitlist;
 use App\Models\Message;
 use App\Models\Tarif;
 use App\Models\Ticket;
+use App\Services\PaymentMonitoringService;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,7 +110,7 @@ class EvenementPublicController extends Controller
     }
 
     // Traite l'achat de tickets (gratuits ou payants) avec codes promo
-    public function achat(Evenement $evenement, Request $request)
+    public function achat(Evenement $evenement, Request $request, PaymentMonitoringService $paymentMonitoring)
     {
         if ($evenement->statut !== 'publié') {
             abort(404);
@@ -261,7 +262,7 @@ class EvenementPublicController extends Controller
         for ($i = 0; $i < $quantite; $i++) {
             $t = $evenement->tickets()->create([
                 'tarif_id' => $tarif->id,
-                'code_unique' => 'TMP',
+                'code_unique' => Ticket::genererCodeReservation(),
                 'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
                 'email_acheteur' => strtolower($validated['email_acheteur']),
                 'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
@@ -278,10 +279,6 @@ class EvenementPublicController extends Controller
                 'affiliate_event_link_id' => $affiliateLinkId,
             ]);
 
-            $t->update([
-                'code_unique' => Ticket::genererCodeSecurise(),
-            ]);
-
             $tickets[] = $t;
         }
 
@@ -289,6 +286,23 @@ class EvenementPublicController extends Controller
         // Les pages paiement.show / confirmation.show ne sont accessibles que pour ces tickets.
         $sessionTickets = session('paiement_tickets', []);
         session(['paiement_tickets' => array_values(array_unique(array_merge($sessionTickets, collect($tickets)->pluck('id')->all())))]);
+
+        if (! $estGratuit) {
+            $paymentMonitoring->record(
+                'paiement_initie',
+                [
+                    'transaction_id' => $groupTransactionId,
+                    'event_id' => $evenement->id,
+                    'ticket_count' => count($tickets),
+                    'amount' => round((float) $montantUnitaire * $quantite, 2),
+                    'currency' => 'XOF',
+                    'source' => 'public',
+                    'payment_status' => 'en_attente',
+                ],
+                $request,
+                $tickets[0]->id,
+            );
+        }
 
         if ($evenement->gratuit || $montantUnitaire <= 0) { // Traitement spécial pour les tickets gratuits (événement gratuit, tarif 0 F ou promo 100 %)
             // Le code promo n'est comptabilisé qu'une fois le paiement confirmé :

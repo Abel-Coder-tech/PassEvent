@@ -42,18 +42,29 @@ class TicketEmail extends Mailable
         }
 
         $this->loaded = true;
-        $this->tickets = Ticket::with('evenement', 'tarif')->whereIn('id', $this->ticketIds)->get();
+        $this->tickets = Ticket::with('evenement.dates', 'tarif')->whereIn('id', $this->ticketIds)->get();
 
         if ($this->tickets->isEmpty()) {
             throw new \RuntimeException('Aucun ticket trouvé pour l\'envoi de l\'email.');
         }
 
+        // Assets communs calculés une seule fois pour toute la commande.
+        $logoDataUri = Ticket::logoVioletDataUri();
+        $sharedParEvenement = [];
+
         foreach ($this->tickets as $ticket) {
             $qrCodeDataUri = QrCodeService::generateDataUri($ticket->code_unique, 170, 'H');
-            $logoDataUri = \App\Models\Ticket::logoVioletDataUri();
+
+            // Photo d'événement + favicon : lus une seule fois par événement, pas par billet.
+            $evenementId = (int) ($ticket->evenement_id ?? 0);
+            $shared = $sharedParEvenement[$evenementId] ??= [
+                ...TicketPdfService::sharedForTicket($ticket),
+                // Conserve le rendu actuel de l'e-mail (logo violet).
+                'logo' => $logoDataUri,
+            ];
 
             $this->pdfs[] = [
-                'content' => TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri)->output(),
+                'content' => TicketPdfService::generer($ticket, $qrCodeDataUri, $logoDataUri, $shared)->output(),
                 'filename' => 'PaxEvent-' . $ticket->code_unique . '.pdf',
             ];
         }

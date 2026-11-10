@@ -13,7 +13,10 @@ use App\Models\JournalAction;
 use App\Models\Log;
 use App\Models\Tarif;
 use App\Models\Ticket;
+use App\Models\VenteIdempotence;
+use App\Services\PaymentMonitoringService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +24,10 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class AgentVenteSaleService
 {
-    public function __construct(private FedapayService $fedapay) {}
+    public function __construct(
+        private FedapayService $fedapay,
+        private PaymentMonitoringService $paymentMonitoring,
+    ) {}
 
     // Marque comme expirées les ventes mobiles restées en attente depuis plus
     // de 30 minutes, sans les supprimer : elles restent consultables dans
@@ -49,7 +55,7 @@ class AgentVenteSaleService
             AgentVenteNotification::envoyer(
                 $agent,
                 'Vente expirée',
-                "La vente du billet {$premier->code_unique} a expiré après 30 minutes sans paiement.",
+                "La vente {$premier->referenceAffichage()} a expiré après 30 minutes sans paiement.",
                 $premier->evenement_id,
                 AgentVenteNotification::TYPE_EXPIRATION,
                 ['ticket_id' => $premier->id, 'transaction_id' => $premier->transaction_id]
@@ -153,29 +159,10 @@ class AgentVenteSaleService
         // Idempotence : une même clé renvoie la vente déjà créée au lieu
         // de générer des billets en double (retry réseau, double tap, ...).
         $idempotencyKey = trim((string) ($data['idempotency_key'] ?? ''));
+        $empreinte = $this->empreinteDemande($data);
 
-        if ($idempotencyKey !== '') {
-            $existants = $agent->tickets()
-                ->where('idempotency_key', $idempotencyKey)
-                ->with(['tarif', 'evenement'])
-                ->orderBy('id')
-                ->get();
-
-            if ($existants->isNotEmpty()) {
-                $premier = $existants->first();
-
-                return [
-                    'tickets' => $existants,
-                    'ticket' => $premier,
-                    'statut' => $premier->statut_paiement,
-                    'montant_total' => (float) $existants->sum('montant'),
-                    'transaction_id' => $premier->transaction_id,
-                    'payment' => $premier->statut_paiement === TicketPaymentStatus::Pending->value
-                        ? $this->checkoutPayload($existants, $evenement)
-                        : null,
-                    'idempotent' => true,
-                ];
-            }
+        if ($idempotencyKey !== '' && ($existante = $this->venteDejaCreee($agent, $idempotencyKey, $empreinte, $evenement)) !== null) {
+            return $existante;
         }
 
         // Blocage organisateur, statut de l'événement, dernière date réelle
@@ -220,7 +207,17 @@ class AgentVenteSaleService
             ]);
         }
 
-        $this->verifierDisponibilites($evenement, $tarif, $quantite);
+        try {
+            $this->verifierDisponibilites($evenement, $tarif, $quantite);
+        } catch (ValidationException $exception) {
+            // Une requête concurrente a pu consommer la dernière place : si la
+            // vente demandée existe déjà, on la renvoie plutôt que d'échouer.
+            if ($idempotencyKey !== '' && ($existante = $this->venteDejaCreee($agent, $idempotencyKey, $empreinte, $evenement)) !== null) {
+                return $existante;
+            }
+
+            throw $exception;
+        }
 
         // Code promo (comptabilisé à la confirmation de la vente)
         $codePromo = null;
@@ -268,81 +265,106 @@ class AgentVenteSaleService
         // Un billet à 0 FCFA (événement gratuit ou promo à 100 %) est confirmé immédiatement
         $confirmerImmediatement = $methode === 'cash' || $montantTotal <= 0;
 
-        $result = DB::transaction(function () use (
-            $agent, $evenement, $tarif, $quantite, $prixUnitaire,
-            $montantReduction, $codePromo, $montantTotal, $confirmerImmediatement, $data,
-            $idempotencyKey
-        ) {
-            // Re-vérification sous verrou pour éviter la survente en cas de ventes concurrentes
-            $evenementVerrouille = Evenement::whereKey($evenement->id)->lockForUpdate()->first();
-            $tarifVerrouille = Tarif::whereKey($tarif->id)->lockForUpdate()->first();
-            $this->verifierDisponibilites($evenementVerrouille, $tarifVerrouille, $quantite);
+        $transactionId = $confirmerImmediatement
+            ? 'AGENT-'.strtoupper(Str::random(10))
+            : 'GRP-'.strtoupper(Str::random(16));
 
-            $tickets = new Collection;
-            $transactionId = $confirmerImmediatement
-                ? 'AGENT-'.strtoupper(Str::random(10))
-                : 'GRP-'.strtoupper(Str::random(16));
-
-            for ($i = 0; $i < $quantite; $i++) {
-                $tickets->push(Ticket::create([
-                    'evenement_id' => $evenement->id,
-                    'tarif_id' => $tarif->id,
-                    'agent_vente_id' => $agent->id,
-                    'source' => 'agent_vente',
-                    'code_unique' => Ticket::genererCodeSecurise(),
-                    'qr_signature' => Str::uuid()->toString(),
-                    'email_acheteur' => $data['email_acheteur'],
-                    'whatsapp_acheteur' => $data['whatsapp_acheteur'] ?? null,
-                    'nom_acheteur' => $data['nom_acheteur'],
-                    'nom_tarif' => $tarif->nom ?? 'Standard',
-                    'montant' => $prixUnitaire,
-                    'montant_reduction' => $montantReduction,
-                    'code_promo_utilise' => $codePromo?->code,
-                    'quantite' => 1,
-                    'statut_paiement' => $confirmerImmediatement
-                        ? TicketPaymentStatus::Paid->value
-                        : TicketPaymentStatus::Pending->value,
-                    'methode_paiement' => $confirmerImmediatement ? 'cash' : 'mobile_money',
-                    'type_paiement' => $confirmerImmediatement ? 'especes' : 'mobile_money',
-                    'transaction_id' => $transactionId,
-                    'idempotency_key' => $idempotencyKey !== '' ? $idempotencyKey : null,
-                    'utilise' => false,
-                    'date_achat' => now(),
-                ]));
-            }
-
-            if ($confirmerImmediatement) {
-                $evenementVerrouille->increment('quota_vendu', $quantite);
-                $tarifVerrouille->increment('quantite_vendue', $quantite);
-
-                if ($codePromo) {
-                    $codePromo->increment('nb_utilisations');
-                }
-
-                $agent->increment('tickets_count', $quantite);
-                $agent->increment('montant_total', $montantTotal);
-
-                foreach ($tickets as $ticket) {
-                    Log::create([
-                        'ticket_id' => $ticket->id,
-                        'type_operation' => LogOperationType::Purchase->value,
-                        'details' => [
-                            'transaction_id' => $transactionId,
-                            'methode' => 'cash',
-                            'agent_vente' => true,
-                        ],
+        try {
+            $result = DB::transaction(function () use (
+                $agent, $evenement, $tarif, $quantite, $prixUnitaire,
+                $montantReduction, $codePromo, $montantTotal, $confirmerImmediatement, $data,
+                $idempotencyKey, $empreinte, $transactionId
+            ) {
+                // Réclamation atomique de la clé d'idempotence avant toute écriture :
+                // en cas de doublon concurrent, l'index unique fait échouer la
+                // transaction entière, puis la vente déjà enregistrée est relue.
+                if ($idempotencyKey !== '') {
+                    VenteIdempotence::create([
+                        'agent_vente_id' => $agent->id,
+                        'cle' => $idempotencyKey,
+                        'empreinte' => $empreinte,
+                        'transaction_id' => $transactionId,
                     ]);
                 }
+
+                // Re-vérification sous verrou pour éviter la survente en cas de ventes concurrentes
+                $evenementVerrouille = Evenement::whereKey($evenement->id)->lockForUpdate()->first();
+                $tarifVerrouille = Tarif::whereKey($tarif->id)->lockForUpdate()->first();
+                $this->verifierDisponibilites($evenementVerrouille, $tarifVerrouille, $quantite);
+
+                $tickets = new Collection;
+
+                for ($i = 0; $i < $quantite; $i++) {
+                    $tickets->push(Ticket::create([
+                        'evenement_id' => $evenement->id,
+                        'tarif_id' => $tarif->id,
+                        'agent_vente_id' => $agent->id,
+                        'source' => 'agent_vente',
+                        'code_unique' => $confirmerImmediatement
+                            ? Ticket::genererCodeSecurise()
+                            : Ticket::genererCodeReservation(),
+                        'qr_signature' => Str::uuid()->toString(),
+                        'email_acheteur' => $data['email_acheteur'],
+                        'whatsapp_acheteur' => $data['whatsapp_acheteur'] ?? null,
+                        'nom_acheteur' => $data['nom_acheteur'],
+                        'nom_tarif' => $tarif->nom ?? 'Standard',
+                        'montant' => $prixUnitaire,
+                        'montant_reduction' => $montantReduction,
+                        'code_promo_utilise' => $codePromo?->code,
+                        'quantite' => 1,
+                        'statut_paiement' => $confirmerImmediatement
+                            ? TicketPaymentStatus::Paid->value
+                            : TicketPaymentStatus::Pending->value,
+                        'methode_paiement' => $confirmerImmediatement ? 'cash' : 'mobile_money',
+                        'type_paiement' => $confirmerImmediatement ? 'especes' : 'mobile_money',
+                        'transaction_id' => $transactionId,
+                        'idempotency_key' => $idempotencyKey !== '' ? $idempotencyKey : null,
+                        'utilise' => false,
+                        'date_achat' => now(),
+                    ]));
+                }
+
+                if ($confirmerImmediatement) {
+                    $evenementVerrouille->increment('quota_vendu', $quantite);
+                    $tarifVerrouille->increment('quantite_vendue', $quantite);
+
+                    if ($codePromo) {
+                        $codePromo->increment('nb_utilisations');
+                    }
+
+                    $agent->increment('tickets_count', $quantite);
+                    $agent->increment('montant_total', $montantTotal);
+
+                    foreach ($tickets as $ticket) {
+                        Log::create([
+                            'ticket_id' => $ticket->id,
+                            'type_operation' => LogOperationType::Purchase->value,
+                            'details' => [
+                                'transaction_id' => $transactionId,
+                                'methode' => 'cash',
+                                'agent_vente' => true,
+                            ],
+                        ]);
+                    }
+                }
+
+                return [
+                    'tickets' => $tickets,
+                    'ticket' => $tickets->first(),
+                    'statut' => $confirmerImmediatement ? 'payé' : 'en_attente',
+                    'montant_total' => $montantTotal,
+                    'transaction_id' => $transactionId,
+                ];
+            });
+        } catch (UniqueConstraintViolationException $exception) {
+            // Deux requêtes concurrentes avec la même clé : la perdante relit
+            // la vente déjà enregistrée par la gagnante.
+            if ($idempotencyKey !== '' && ($existante = $this->venteDejaCreee($agent, $idempotencyKey, $empreinte, $evenement)) !== null) {
+                return $existante;
             }
 
-            return [
-                'tickets' => $tickets,
-                'ticket' => $tickets->first(),
-                'statut' => $confirmerImmediatement ? 'payé' : 'en_attente',
-                'montant_total' => $montantTotal,
-                'transaction_id' => $transactionId,
-            ];
-        });
+            throw $exception;
+        }
 
         if ($result['statut'] === 'payé') {
             SendTicketEmailJob::dispatchAfterResponse(
@@ -352,6 +374,29 @@ class AgentVenteSaleService
         }
 
         $statutVente = $result['statut'] === 'payé' ? 'paye' : 'en_attente';
+
+        if ($result['statut'] === 'en_attente') {
+            $this->paymentMonitoring->record(
+                'paiement_initie',
+                [
+                    'transaction_id' => $result['transaction_id'],
+                    'event_id' => $evenement->id,
+                    'ticket_count' => $result['tickets']->count(),
+                    'amount' => (float) $result['montant_total'],
+                    'currency' => 'XOF',
+                    'source' => 'agent_vente',
+                    'payment_status' => 'en_attente',
+                    'agent_id' => $agent->id,
+                ],
+                null,
+                $result['ticket']->id,
+                'paiement',
+                'info',
+                false,
+                $ip,
+                $userAgent,
+            );
+        }
 
         foreach ($result['tickets'] as $ticket) {
             $this->journaliser(
@@ -370,8 +415,8 @@ class AgentVenteSaleService
             $agent,
             $result['statut'] === 'payé' ? 'Ticket vendu' : 'Vente enregistrée',
             $result['statut'] === 'payé'
-                ? "Le billet {$result['ticket']->code_unique} a été vendu ({$result['ticket']->montant} FCFA)."
-                : "La vente du billet {$result['ticket']->code_unique} est en attente du paiement mobile.",
+                ? "Le billet {$result['ticket']->referenceAffichage()} a été vendu ({$result['ticket']->montant} FCFA)."
+                : "La vente {$result['ticket']->referenceAffichage()} est en attente du paiement mobile.",
             $evenement->id,
             $result['statut'] === 'payé' ? AgentVenteNotification::TYPE_VENTE : AgentVenteNotification::TYPE_PAIEMENT,
             [
@@ -389,6 +434,73 @@ class AgentVenteSaleService
                 ? null
                 : $this->checkoutPayload($result['tickets'], $evenement),
         ];
+    }
+
+    /**
+     * Renvoie une vente déjà enregistrée pour cette clé d'idempotence.
+     *
+     * @return array{tickets: Collection, ticket: Ticket, statut: string, montant_total: float, transaction_id: string, payment: ?array, idempotent: bool}|null
+     */
+    private function venteDejaCreee(AgentVente $agent, string $cle, string $empreinte, Evenement $evenement): ?array
+    {
+        $trace = VenteIdempotence::query()
+            ->where('agent_vente_id', $agent->id)
+            ->where('cle', $cle)
+            ->first();
+
+        if (! $trace) {
+            return null;
+        }
+
+        // Une clé ne doit jamais servir à deux ventes différentes : le client
+        // a réutilisé sa clé pour une autre commande.
+        if (! hash_equals($trace->empreinte, $empreinte)) {
+            throw ValidationException::withMessages([
+                'idempotency_key' => "Cette clé d'idempotence a déjà servi pour une autre vente. Utilisez une nouvelle clé.",
+            ]);
+        }
+
+        $existants = $agent->tickets()
+            ->where('transaction_id', $trace->transaction_id)
+            ->with(['tarif', 'evenement'])
+            ->orderBy('id')
+            ->get();
+
+        $premier = $existants->first();
+
+        if (! $premier) {
+            // Trace orpheline (vente supprimée manuellement) : on repart proprement.
+            $trace->delete();
+
+            return null;
+        }
+
+        return [
+            'tickets' => $existants,
+            'ticket' => $premier,
+            'statut' => $premier->statut_paiement,
+            'montant_total' => (float) $existants->sum('montant'),
+            'transaction_id' => $premier->transaction_id,
+            'payment' => $premier->statut_paiement === TicketPaymentStatus::Pending->value
+                ? $this->checkoutPayload($existants, $evenement)
+                : null,
+            'idempotent' => true,
+        ];
+    }
+
+    // Empreinte normalisée de la demande : sert à détecter la réutilisation
+    // d'une même clé pour un contenu différent.
+    private function empreinteDemande(array $data): string
+    {
+        return hash('sha256', json_encode([
+            'nom_acheteur' => trim((string) ($data['nom_acheteur'] ?? '')),
+            'email_acheteur' => strtolower(trim((string) ($data['email_acheteur'] ?? ''))),
+            'whatsapp_acheteur' => trim((string) ($data['whatsapp_acheteur'] ?? '')),
+            'tarif_id' => $data['tarif_id'] ?? null,
+            'methode_paiement' => $this->normaliserMethode($data['methode_paiement'] ?? null),
+            'code_promo' => strtoupper(trim((string) ($data['code_promo'] ?? ''))),
+            'quantite' => max(1, (int) ($data['quantite'] ?? 1)),
+        ]));
     }
 
     private function messageBlocage(string $raison): string
@@ -559,7 +671,8 @@ class AgentVenteSaleService
 
         return [
             'id' => $ticket->id,
-            'code_unique' => $ticket->code_unique,
+            'code_unique' => $ticket->aUnCodeDefinitif() ? $ticket->code_unique : null,
+            'reference' => $ticket->referenceAffichage(),
             'nom_acheteur' => $ticket->nom_acheteur,
             'email_acheteur' => $ticket->email_acheteur,
             'whatsapp_acheteur' => $ticket->whatsapp_acheteur,
@@ -926,7 +1039,7 @@ class AgentVenteSaleService
             AgentVenteNotification::envoyer(
                 $agent,
                 'Vente annulée',
-                "La vente du billet {$ticket->code_unique} a été annulée.",
+                "La vente {$ticket->referenceAffichage()} a été annulée.",
                 $ticket->evenement_id,
                 AgentVenteNotification::TYPE_ANNULATION,
                 ['ticket_id' => $ticket->id, 'tickets_annules' => $annules]
@@ -969,7 +1082,7 @@ class AgentVenteSaleService
             AgentVenteNotification::envoyer(
                 $agent,
                 'Paiement non confirmé',
-                "Le paiement du billet {$ticket->code_unique} n'a pas encore été confirmé (statut : ".($status ?: 'inconnu').').',
+                "Le paiement de la vente {$ticket->referenceAffichage()} n'a pas encore été confirmé (statut : ".($status ?: 'inconnu').').',
                 $ticket->evenement_id,
                 AgentVenteNotification::TYPE_PAIEMENT,
                 ['ticket_id' => $ticket->id, 'statut' => $status]
@@ -1018,6 +1131,10 @@ class AgentVenteSaleService
         );
 
         if ($confirme) {
+            // Recharge le billet : le code définitif vient d'être attribué par
+            // TicketObserver, l'instance d'origine porte encore le code TMP-.
+            $ticket->refresh();
+
             SendTicketEmailJob::dispatchAfterResponse(
                 $groupTickets->pluck('id')->all(),
                 $ticket->email_acheteur
@@ -1026,7 +1143,7 @@ class AgentVenteSaleService
             AgentVenteNotification::envoyer(
                 $agent,
                 'Paiement confirmé',
-                "Le paiement du billet {$ticket->code_unique} ({$ticket->montant} FCFA) a été confirmé.",
+                "Le paiement du billet {$ticket->referenceAffichage()} ({$ticket->montant} FCFA) a été confirmé.",
                 $ticket->evenement_id,
                 AgentVenteNotification::TYPE_PAIEMENT,
                 ['ticket_id' => $ticket->id, 'transaction_id' => $transactionId]

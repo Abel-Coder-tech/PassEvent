@@ -9,13 +9,14 @@ use App\Http\Controllers\Api\AgentVenteNotificationController;
 use App\Http\Controllers\Api\AgentVenteSaleController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/agent/login', [AgentAuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/agent/login', [AgentAuthController::class, 'login'])->middleware('throttle:login');
 
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(function () {
     Route::get('/agent/me', [AgentAuthController::class, 'me']);
     Route::get('/agent/dashboard', [AgentDashboardController::class, 'show']);
     Route::post('/agent/scan/pin', [AgentScanController::class, 'pin']);
     Route::post('/agent/logout', [AgentAuthController::class, 'logout']);
+    Route::post('/agent/logout-all', [AgentAuthController::class, 'logoutAll']);
 });
 
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:scan'])->group(function () {
@@ -28,7 +29,7 @@ Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:scan'])->group(
 // API agent de vente (compte distinct des agents de scan)
 // ============================================================
 Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
-    Route::post('/login', [AgentVenteAuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/login', [AgentVenteAuthController::class, 'login'])->middleware('throttle:login');
 
     Route::middleware(['auth:sanctum', 'agent.vente.api', 'abilities:agent_vente:read'])->group(function () {
         Route::get('/me', [AgentVenteAuthController::class, 'me']);
@@ -48,6 +49,7 @@ Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
         Route::post('/refresh-token', [AgentVenteAuthController::class, 'refreshToken'])->middleware('throttle:10,1');
 
         Route::post('/logout', [AgentVenteAuthController::class, 'logout']);
+        Route::post('/logout-all', [AgentVenteAuthController::class, 'logoutAll']);
     });
 
     Route::middleware(['auth:sanctum', 'agent.vente.api', 'abilities:agent_vente:sell'])->group(function () {

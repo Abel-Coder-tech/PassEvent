@@ -60,7 +60,7 @@ class LotAutoService
                         'tarif_id' => $lot->tarif_id,
                         'lot_physique_id' => $lot->id,
                         'source' => 'physique',
-                        'code_unique' => 'TMP',
+                        'code_unique' => Ticket::genererCodeSecurise(),
                         'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                         'email_acheteur' => null,
                         'telephone_acheteur' => null,
@@ -75,9 +75,6 @@ class LotAutoService
                         'transaction_id' => 'PHYS-'.strtoupper(Str::random(8)),
                         'utilise' => false,
                         'date_achat' => now(),
-                    ]);
-                    $ticket->update([
-                        'code_unique' => Ticket::genererCodeSecurise(),
                     ]);
                 }
 

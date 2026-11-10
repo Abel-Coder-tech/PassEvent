@@ -29,6 +29,14 @@ class TicketObserver
             && ! $ticket->annule
             && $ticket->expire_at === null;
 
+        // Un billet ne reçoit son code définitif qu'au moment où il devient
+        // réellement délivrable. Avant cela il ne porte qu'un code de
+        // réservation TMP- (voir Ticket::genererCodeReservation()).
+        // updateQuietly évite de rappeler cet observer en boucle.
+        if ($estPaye && ! $ticket->aUnCodeDefinitif()) {
+            $ticket->updateQuietly(['code_unique' => Ticket::genererCodeSecurise()]);
+        }
+
         if ($estPaye) {
             $this->affiliation->enregistrerPourTicket($ticket);
 

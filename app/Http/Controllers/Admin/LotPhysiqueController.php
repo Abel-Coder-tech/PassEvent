@@ -9,6 +9,7 @@ use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\TicketStatisticsService;
 use App\Services\LotAutoService;
+use App\Services\PaymentMonitoringService;
 use App\Services\LotPhysiquePdfService;
 use App\Services\LotPhysiqueTemplatePdfService;
 use App\Support\PerPage;
@@ -92,7 +93,7 @@ class LotPhysiqueController extends Controller
 
     // Crée la commande (lots en attente de paiement) puis redirige vers le checkout FedaPay.
     // AUCUN ticket n'est créé ici : ils ne le seront qu'après vérification du paiement.
-    public function commander(Request $request)
+    public function commander(Request $request, PaymentMonitoringService $paymentMonitoring)
     {
         $user = Auth::user();
 
@@ -164,6 +165,24 @@ class LotPhysiqueController extends Controller
         });
 
         $total = round(collect($lignes)->sum(fn ($l) => (float) $l['tarif']->prix * ($tauxAuto / 100) * $l['quantite']), 2);
+
+        if ($total > 0) {
+            $paymentMonitoring->record(
+                'paiement_initie',
+                [
+                    'reference' => $reference,
+                    'event_id' => $evenement->id,
+                    'lot_count' => count($lignes),
+                    'ticket_count' => collect($lignes)->sum('quantite'),
+                    'amount' => $total,
+                    'currency' => 'XOF',
+                    'source' => 'lot_physique',
+                    'payment_status' => 'en_attente_paiement',
+                    'actor_id' => $user->id,
+                ],
+                $request,
+            );
+        }
 
         // Événement gratuit ou tarifs à 0 F : rien à payer, génération immédiate
         if ($total <= 0) {

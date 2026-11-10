@@ -200,7 +200,13 @@
                 <table cellpadding="0" cellspacing="0">
                     <tr>
                         <td>Date et heure</td>
-                        <td>{{ $ticket->evenement->date_event->format('d/m/Y \a H:i') }}</td>
+                        <td>
+                            @forelse($ticket->evenement->datesDebut() as $date)
+                                {{ $date->format('d/m/Y \a H:i') }}{{ !$loop->last ? ' · ' : '' }}
+                            @empty
+                                —
+                            @endforelse
+                        </td>
                     </tr>
                     <tr>
                         <td>Lieu</td>

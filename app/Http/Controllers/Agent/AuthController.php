@@ -37,7 +37,7 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Votre compte a été désactivé. Contactez l\'organisateur.'])->onlyInput('email');
         }
 
-        if ($agent->evenement->evenementPasse()) {
+        if ($agent->evenement->scanTermine()) {
             return back()->withErrors(['email' => 'L\'événement est terminé. Accès refusé.'])->onlyInput('email');
         }
 

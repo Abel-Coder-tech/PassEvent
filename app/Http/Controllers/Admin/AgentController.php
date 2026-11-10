@@ -216,6 +216,9 @@ class AgentController extends Controller
             abort(403); // Vérification de propriété
         }
         $agent->update(['actif' => !$agent->actif]); // Bascule le statut
+        if (! $agent->actif) {
+            $agent->tokens()->delete();
+        }
         $statut = $agent->actif ? 'activé' : 'désactivé';
         return redirect()->route('admin.agents.index')->with('success', "Agent {$statut} avec succès.");
     }

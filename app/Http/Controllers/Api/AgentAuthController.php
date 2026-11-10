@@ -38,14 +38,18 @@ class AgentAuthController extends Controller
             return response()->json(['message' => 'account_disabled'], 403);
         }
 
-        if ($agent->evenement && $agent->evenement->evenementPasse()) {
+        if ($agent->evenement && $agent->evenement->scanTermine()) {
             return response()->json(['message' => 'event_ended'], 403);
         }
 
         $agent->update(['dernier_acces' => now()]);
 
         // Multi-appareils autorisé pour le login
-        $token = $agent->createToken('agent-app', ['agent:read'], now()->addDays(30))->plainTextToken;
+        $token = $agent->createToken(
+            'agent-app',
+            ['agent:read'],
+            now()->addMinutes((int) config('sanctum.expiration'))
+        )->plainTextToken;
 
         $name = trim($agent->nom ?? '');
         if ($name === '') {
@@ -96,5 +100,12 @@ class AgentAuthController extends Controller
         }
 
         return response()->json(['message' => 'logged_out'], 200);
+    }
+
+    public function logoutAll(Request $request): JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'logged_out_all'], 200);
     }
 }

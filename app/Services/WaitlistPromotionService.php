@@ -71,7 +71,7 @@ class WaitlistPromotionService
                     'evenement_id' => $evenementId,
                     'tarif_id' => $promu->tarif_id,
                     'source' => 'waitlist',
-                    'code_unique' => 'TMP',
+                    'code_unique' => Ticket::genererCodeReservation(),
                     'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
                     'email_acheteur' => strtolower($promu->email_acheteur),
                     'telephone_acheteur' => $promu->telephone_acheteur,
@@ -87,7 +87,6 @@ class WaitlistPromotionService
                     'date_achat' => now(),
                     'code_promo_utilise' => $promu->code_promo_utilise,
                 ]);
-                $ticket->update(['code_unique' => Ticket::genererCodeSecurise()]);
 
                 // La place est (re)comptée grâce au ticket en_attente
                 $evenement->increment('quota_vendu', $ticket->quantite);

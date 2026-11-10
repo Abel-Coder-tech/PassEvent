@@ -50,7 +50,20 @@ return [
     |
     */
 
-    'expiration' => null,
+    'expiration' => 20160,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Durée de vie absolue d'une session (minutes)
+    |--------------------------------------------------------------------------
+    |
+    | Le token glissant ci-dessus peut être rafraîchi indéfiniment. Cette
+    | valeur plafonne la durée totale d'une session, quel que soit le nombre
+    | de rafraîchissements : au-delà, il faut se reconnecter.
+    |
+    */
+
+    'absolute_expiration' => (int) env('SANCTUM_ABSOLUTE_EXPIRATION', 43200),
 
     /*
     |--------------------------------------------------------------------------
