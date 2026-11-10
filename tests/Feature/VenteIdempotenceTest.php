@@ -228,6 +228,7 @@ class VenteIdempotenceTest extends TestCase
             $table->string('type_paiement')->nullable();
             $table->string('transaction_id')->nullable();
             $table->string('idempotency_key', 100)->nullable();
+            $table->dateTime('reservation_expire_le')->nullable();
             $table->boolean('utilise')->default(false);
             $table->boolean('annule')->default(false);
             $table->dateTime('date_achat')->nullable();
