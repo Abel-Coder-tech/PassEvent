@@ -154,11 +154,13 @@ class TicketCodeBeforePaymentTest extends TestCase
             $table->unsignedBigInteger('evenement_id');
             $table->dateTime('date_debut')->nullable();
             $table->unsignedInteger('ordre')->default(0);
+            $table->unsignedInteger('capacite')->nullable();
         });
 
         Schema::create('tarifs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('evenement_id');
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->string('nom');
             $table->decimal('prix', 10, 2)->default(0);
             $table->timestamps();
@@ -178,6 +180,7 @@ class TicketCodeBeforePaymentTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('evenement_id');
             $table->unsignedBigInteger('tarif_id')->nullable();
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->unsignedBigInteger('agent_vente_id')->nullable();
             $table->string('code_unique')->unique();
             $table->string('email_acheteur')->nullable();

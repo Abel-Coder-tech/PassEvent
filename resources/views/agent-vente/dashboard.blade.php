@@ -93,12 +93,46 @@
                             <label class="form-label small fw-medium">Tarif</label>
                             <select name="tarif_id" class="form-select form-select-sm" required>
                                 <option value="">Sélectionner...</option>
-                                @foreach ($agent->evenement->tarifs as $tarif)
-                                <option value="{{ $tarif->id }}">
-                                    {{ $tarif->getLabel() }} &mdash; {{ number_format($tarif->prix, 0, ',', ' ') }} F
-                                </option>
+                                @php
+                                    $tarifsPack = $tarifs->whereNull('evenement_date_id');
+                                    $joursAvecTarifs = $agent->evenement->dates->filter(
+                                        fn ($jour) => $tarifs->where('evenement_date_id', $jour->id)->isNotEmpty()
+                                    );
+                                @endphp
+                                @if($tarifsPack->isNotEmpty())
+                                    <optgroup label="{{ $agent->evenement->estMultiJour() ? 'Tous les jours (pack)' : 'Tarifs' }}">
+                                        @foreach($tarifsPack as $tarif)
+                                            @php $restantes = $agent->evenement->placesRestantesPourTarif($tarif); @endphp
+                                            <option value="{{ $tarif->id }}" {{ $restantes <= 0 ? 'disabled' : '' }}>
+                                                {{ $tarif->getLabel() }} &mdash; {{ number_format($tarif->prix, 0, ',', ' ') }} F
+                                                @if($restantes <= 0) (épuisé) @else ({{ $restantes }} restantes) @endif
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                                @foreach($joursAvecTarifs as $jour)
+                                    <optgroup label="{{ $jour->libelle() }} — {{ $jour->date_debut->isoFormat('ddd D MMM · HH:mm') }}">
+                                        @foreach($tarifs->where('evenement_date_id', $jour->id) as $tarif)
+                                            @php $restantes = $agent->evenement->placesRestantesPourTarif($tarif); @endphp
+                                            <option value="{{ $tarif->id }}" {{ $restantes <= 0 ? 'disabled' : '' }}>
+                                                {{ $tarif->getLabel() }} &mdash; {{ number_format($tarif->prix, 0, ',', ' ') }} F
+                                                @if($restantes <= 0) (épuisé) @else ({{ $restantes }} restantes) @endif
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
+                                @if($tarifs->isEmpty())
+                                    <option value="" disabled>Aucun tarif disponible</option>
+                                @endif
                             </select>
+                            @if($agent->evenement->estMultiJour())
+                                <small class="text-muted d-block mt-1">
+                                    {{ $agent->evenement->placesRestantesTotales() }} places au total
+                                    @foreach($agent->evenement->placesParJour()->reject(fn ($ligne) => $ligne['termine']) as $ligne)
+                                        · {{ $ligne['jour']->libelle() }} : {{ $ligne['restantes'] > 0 ? $ligne['restantes'] : 'complet' }}
+                                    @endforeach
+                                </small>
+                            @endif
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-medium">Code promo <span class="text-muted">(facultatif)</span></label>

@@ -51,6 +51,7 @@ Route::get('/evenements', [EvenementPublicController::class, 'index'])->name('ev
 Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show'])->name('evenements.public.show');
 Route::get('/r/{code}', [EvenementPublicController::class, 'redirectAffilie'])->name('evenements.affilie.redirect');
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat')->middleware('throttle:5,1');
+Route::post('/evenements/{evenement}/liste-attente', [EvenementPublicController::class, 'inscrireListeAttente'])->name('evenements.liste-attente')->middleware('throttle:10,1');
 Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur')->middleware('throttle:5,10');
 
 Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback')->middleware('throttle:20,5');
@@ -393,6 +394,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
 
         Route::get('/evenements/{evenement}/tarifs', [TarifController::class, 'index'])->name('tarifs.index');
         Route::get('/evenements/{evenement}/tarifs/create', [TarifController::class, 'create'])->name('tarifs.create');
+        Route::post('/evenements/{evenement}/tarifs/{tarif}/liste-attente/notifier', [TarifController::class, 'notifierListeAttente'])->name('tarifs.liste-attente.notifier');
         Route::post('/evenements/{evenement}/tarifs', [TarifController::class, 'store'])->name('tarifs.store');
         Route::get('/evenements/{evenement}/tarifs/{tarif}/edit', [TarifController::class, 'edit'])->name('tarifs.edit');
         Route::put('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
@@ -404,6 +406,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
         Route::post('/evenements/{evenement}/fermer-vente', [EvenementController::class, 'fermerVente'])->name('evenements.fermer-vente');
         Route::post('/evenements/{evenement}/coparrainage', [EvenementController::class, 'toggleCoParrainage'])->name('evenements.coparrainage');
+        Route::post('/evenements/{evenement}/jours/{jour}/capacite', [EvenementController::class, 'updateJourCapacite'])->name('evenements.jours.capacite');
 
         Route::prefix('agents')->name('agents.')->group(function () {
             Route::get('/', [AdminAgentController::class, 'index'])->name('index');

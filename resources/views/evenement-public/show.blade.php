@@ -26,10 +26,53 @@
 
 @section('content')
 @php
-    $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
-    $estComplet = $placesRestantes <= 0;
-    $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
+    $placesRestantes = $placesRestantes ?? max(0, $evenement->capacite - $evenement->quota_vendu);
+    $placesRestantesTotales = $placesRestantesTotales ?? $placesRestantes;
+    $estComplet = $estComplet ?? $placesRestantes <= 0;
+    $remplissage = (int) round($evenement->tauxRemplissage());
     $textes = $evenement->getTextes();
+    $multiJour = $evenement->estMultiJour();
+    $nbJours = max(1, $evenement->dates->count());
+    $fmtPrix = fn ($prix) => (float) $prix <= 0 ? 'Gratuit' : number_format((float) $prix, 0, ',', ' ').' F';
+
+    // Lignes du formulaire d'achat : un tarif par jour (multijours) ou les
+    // tarifs de l'événement (un jour), puis les packs valables tous les jours.
+    $lignesAchat = $tarifs->map(function ($tarif) use ($evenement, $multiJour, $nbJours, $fmtPrix) {
+        $stock = $tarif->quantite_disponible === null
+            ? PHP_INT_MAX
+            : max(0, (int) $tarif->quantite_disponible - (int) $tarif->quantite_vendue);
+        $pack = $multiJour && $tarif->evenement_date_id === null;
+
+        return [
+            'id' => $tarif->id,
+            'nom' => $tarif->nom,
+            'sous' => $tarif->jour?->date_debut?->isoFormat('D MMM'),
+            'heure' => $tarif->jour?->date_debut?->format('H:i'),
+            'prix' => (float) $tarif->prix,
+            'prixLabel' => $fmtPrix($tarif->prix),
+            'duree' => $pack ? $nbJours.' jours' : null,
+            'restantes' => max(0, min($evenement->placesRestantesPourTarif($tarif), $stock)),
+            'pack' => $pack,
+            'vip' => $pack && \App\Models\Evenement::estPackVip($tarif),
+            'economie' => $pack ? $evenement->economiePack($tarif) : null,
+            'ordre' => $tarif->jour?->date_debut?->timestamp ?? 0,
+        ];
+    });
+    $lignesJours = $lignesAchat->reject(fn ($ligne) => $ligne['pack'])->sortBy('ordre')->values();
+    $lignesPacks = $lignesAchat->filter(fn ($ligne) => $ligne['pack'])->values();
+    // Tarifs complets regroupés en bas, avec leur bouton « Liste d'attente »
+    $lignesComplets = $lignesJours->merge($lignesPacks)->filter(fn ($ligne) => $ligne['restantes'] <= 0)->values();
+    $lignesJours = $lignesJours->filter(fn ($ligne) => $ligne['restantes'] > 0)->values();
+    $lignesPacks = $lignesPacks->filter(fn ($ligne) => $ligne['restantes'] > 0)->values();
+    $quantitesInitiales = collect(old('lignes', []))->map(fn ($q) => (int) $q)->filter()->all();
+
+    $autresEvenements = App\Models\Evenement::query()
+        ->where('statut', 'publié')
+        ->where('date_event', '>=', now())
+        ->where('id', '!=', $evenement->id)
+        ->orderBy('date_event', 'asc')
+        ->limit(3)
+        ->get();
 @endphp
 
 <div class="show-event">
@@ -51,7 +94,7 @@
                         @endif
                         <span><i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}</span>
                         @if(!$estComplet)
-                            <span><i class="bi bi-people"></i> {{ number_format($placesRestantes, 0, ',', ' ') }} places</span>
+                            <span><i class="bi bi-people"></i> {{ number_format($placesRestantesTotales, 0, ',', ' ') }} places</span>
                         @endif
                     </div>
                 </div>
@@ -97,7 +140,7 @@
                 </div>
 
                 <!-- Achat -->
-                <div class="show-purchase-wrap">
+                <div class="show-purchase-wrap" id="reserver">
                     @if(($venteCloturee ?? false) || ($evenementPasse ?? false))
                         <div class="show-card text-center py-4">
                             <div class="show-lock-icon"><i class="bi bi-lock-fill"></i></div>
@@ -112,16 +155,15 @@
                         </div>
                     @else
                     <div class="show-card">
+                        @if($evenement->gratuit)
                         <div class="show-ticket-header">
                             <div class="show-ticket-icon"><i class="bi bi-ticket-perforated"></i></div>
                             <div>
-                                <h5 class="fw-bold mb-0">{{ $evenement->gratuit ? $textes['participer_gratuit'] : $textes['acheter'] }}</h5>
-                                <small class="text-muted">{{ number_format($placesRestantes, 0, ',', ' ') }} {{ $textes['places'] }}</small>
+                                <h5 class="fw-bold mb-0">{{ $textes['participer_gratuit'] }}</h5>
+                                <small class="text-muted">{{ number_format($placesRestantesTotales, 0, ',', ' ') }} {{ $textes['places'] }}@if($multiJour) · valable tous les jours @endif</small>
                             </div>
                         </div>
                         <hr class="my-3">
-
-                        @if($evenement->gratuit)
                         <form action="{{ route('evenements.achat', $evenement) }}" method="POST">
                             @csrf
                             <input type="hidden" name="gratuit" value="1">
@@ -157,67 +199,101 @@
                             <p class="show-secure"><i class="bi bi-check-circle me-1" style="color:var(--violet);"></i> Réservation gratuite — Ticket PDF reçu par email</p>
                         </form>
                         @else
-                        <div class="mb-3">
-                            <label class="show-label">Choisissez votre tarif</label>
-                            @if($tarifs->isEmpty())
-                                <div class="alert alert-danger py-2" style="font-size:0.85rem;">Aucun tarif disponible</div>
-                            @else
-                                <div class="d-flex flex-column gap-2">
-                                    @foreach($tarifs as $tarif)
-                                        <label class="show-tarif" onclick="selectTarif(this)">
-                                            <input type="radio" name="tarif_id" value="{{ $tarif->id }}" {{ $loop->first ? 'checked' : '' }}>
-                                            <strong>{{ $tarif->nom }}</strong>
-                                            <strong class="show-tarif-price">{{ number_format($tarif->prix, 0, ',', ' ') . ' F' }}</strong>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                        <div class="mb-3">
-                            <label class="show-label">Quantité</label>
-                            <div class="show-qty">
-                                <button type="button" id="qtyMinus">-</button>
-                                <input type="number" id="quantiteInput" value="1" min="1" max="{{ max(1, $placesRestantes) }}" readonly>
-                                <button type="button" id="qtyPlus">+</button>
-                            </div>
-                        </div>
-                        <hr>
-                        <form action="{{ route('evenements.achat', $evenement) }}" method="POST">
+                        <form action="{{ route('evenements.achat', $evenement) }}" method="POST" id="formAchat" novalidate>
                             @csrf
-                            <input type="hidden" name="tarif_id" id="hiddenTarifId">
-                            <input type="hidden" name="quantite" id="hiddenQuantite" value="1">
+
+                            <div class="show-ticket-header">
+                                <div class="show-ticket-icon"><i class="bi bi-ticket-perforated"></i></div>
+                                <div>
+                                    <h5 class="fw-bold mb-0">{{ $textes['acheter'] }}</h5>
+                                    <small class="text-muted">{{ number_format($placesRestantesTotales, 0, ',', ' ') }} {{ $textes['places'] }}</small>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+
+                            <label class="show-label">Choisissez vos billets</label>
+                            @if($lignesAchat->isEmpty())
+                                <div class="alert alert-danger py-2" style="font-size:0.85rem;">Aucun tarif disponible</div>
+                            @endif
+
+                            @foreach(['' => $lignesJours, 'Packs' => $lignesPacks, 'Complets' => $lignesComplets] as $titreGroupe => $groupe)
+                                @if($groupe->isNotEmpty() && $titreGroupe !== '')
+                                    <div class="achat-section" @if($lignesJours->isEmpty() && ($titreGroupe === 'Packs' || $lignesPacks->isEmpty())) style="margin-top:0;" @endif>{{ $titreGroupe }}</div>
+                                @endif
+                                @foreach($groupe as $ligne)
+                                    <div class="achat-ligne {{ $ligne['pack'] ? 'achat-pack' : '' }} {{ $ligne['vip'] ? 'achat-vip' : '' }}"
+                                         data-tarif="{{ $ligne['id'] }}" data-prix="{{ $ligne['prix'] }}" data-max="{{ $ligne['restantes'] }}" data-nom="{{ $ligne['nom'] }}">
+                                        <div class="achat-info">
+                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant">{{ $ligne['prixLabel'] }}@if($ligne['duree'])<span class="d-none d-sm-inline"> / {{ $ligne['duree'] }}</span>@endif</span>
+                                                @if($ligne['economie'])
+                                                    <span class="achat-eco d-none d-sm-inline-block">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>
+                                                @endif</div>
+                                            <div class="achat-l2">
+                                                @if($ligne['sous'])<span>{{ $ligne['sous'] }}<span class="d-none d-sm-inline"> · {{ $ligne['heure'] }}</span></span> <span class="achat-sep">·</span>@endif
+                                                @if($ligne['economie'])<span class="achat-eco d-sm-none" style="margin:0 .2rem 0 0;">−{{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@elseif($ligne['duree'])<span class="d-sm-none">{{ $ligne['duree'] }} <span class="achat-sep">·</span></span>@endif
+                                                @if($ligne['restantes'] <= 0)
+                                                    <span class="achat-complet">Complet</span>
+                                                @else
+                                                    <span class="achat-bas">{{ $ligne['restantes'] }} {{ $ligne['restantes'] > 1 ? 'places restantes' : 'place restante' }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @if($ligne['restantes'] > 0)
+                                            <div class="achat-step">
+                                                <button type="button" data-moins aria-label="Retirer un billet {{ $ligne['nom'] }}">−</button>
+                                                <span data-qte aria-live="polite">0</span>
+                                                <button type="button" data-plus aria-label="Ajouter un billet {{ $ligne['nom'] }}">+</button>
+                                            </div>
+                                        @else
+                                            <button type="button" class="achat-attente" data-attente data-bs-toggle="modal" data-bs-target="#modalListeAttente">Liste d'attente</button>
+                                        @endif
+                                        <input type="hidden" name="lignes[{{ $ligne['id'] }}]" value="0" data-input>
+                                    </div>
+                                @endforeach
+                            @endforeach
+
+                            <hr>
                             <div class="mb-3">
-                                <label class="show-label">Prénom et Nom <span class="text-danger">*</span></label>
-                                <input type="text" class="show-input" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
+                                <label class="show-label" for="nom_acheteur">Prénom et Nom <span class="text-danger">*</span></label>
+                                <input type="text" class="show-input" id="nom_acheteur" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex: Kofi Mensah" required>
                             </div>
                             <div class="mb-3">
-                                <label class="show-label">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="show-input" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
+                                <label class="show-label" for="email_acheteur">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="show-input" id="email_acheteur" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="votre@email.com" required>
                             </div>
                             <div class="mb-3">
-                                <label class="show-label">N° WhatsApp <span class="text-danger">*</span></label>
-                                <input type="tel" class="show-input" name="whatsapp_acheteur" value="{{ old('whatsapp_acheteur') }}" placeholder="+229 XX XX XX XX" required>
+                                <label class="show-label" for="whatsapp_acheteur">N° WhatsApp <span class="text-danger">*</span></label>
+                                <input type="tel" class="show-input" id="whatsapp_acheteur" name="whatsapp_acheteur" value="{{ old('whatsapp_acheteur') }}" placeholder="+229 XX XX XX XX" required>
                             </div>
-                            <div class="mb-3">
-                                <label class="show-label">Code promo <span class="text-muted fw-normal">(optionnel)</span></label>
-                                <input type="text" class="show-input" name="code_promo" value="{{ old('code_promo') }}" placeholder="PROMO-XXXXXX" style="text-transform:uppercase;">
+                            <div class="mb-3" id="blocPromo">
+                                <label class="show-label" for="code_promo">Code promo <span class="text-muted fw-normal">(optionnel)</span></label>
+                                <input type="text" class="show-input" id="code_promo" name="code_promo" value="{{ old('code_promo') }}" placeholder="PROMO-XXXXXX" style="text-transform:uppercase;">
                             </div>
-                            <div class="show-total">
-                                <span class="fw-bold">Total à payer</span>
-                                <span class="show-total-price" id="totalDisplay">--</span>
+                            <div class="show-total" id="blocTotal">
+                                <span class="fw-bold" data-nombre>Aucun billet choisi</span>
+                                <span class="show-total-price" data-total>0 FCFA</span>
                             </div>
-                            <button type="submit" class="show-btn show-btn-primary" id="btnPayer" {{ $tarifs->isEmpty() || $estComplet ? 'disabled' : '' }}>
-                                <i class="bi bi-shield-lock me-2"></i> Payer avec FedaPay
+                            <button type="submit" class="show-btn show-btn-primary" id="btnPayer" {{ $lignesAchat->isEmpty() ? 'disabled' : '' }}>
+                                <i class="bi bi-shield-lock me-2"></i> <span data-libelle>Payer avec FedaPay</span>
                             </button>
                             <p class="show-secure"><i class="bi bi-shield-check me-1" style="color:var(--violet);"></i> Paiement 100% sécurisé — Ticket PDF envoyé par email</p>
                         </form>
+
+                        {{-- Barre du panier, fixée en bas de l'écran sur téléphone --}}
+                        <div class="achat-barre" id="barrePanier">
+                            <div>
+                                <div class="achat-barre-n" data-nombre>Aucun billet choisi</div>
+                                <div class="achat-barre-t" data-total>0 FCFA</div>
+                            </div>
+                            <button type="button" class="show-btn show-btn-primary" id="btnContinuerBarre" style="width:auto;">Continuer <i class="bi bi-arrow-down ms-1"></i></button>
+                        </div>
                         @endif
                     </div>
                     @endif
                 </div>
             </div>
 
-            <!-- Colonne droite : Partager + Lieu + Contacter + Autres -->
+            <!-- Colonne droite : Co-parrainage + Programme + Partager + Question + Lieu -->
             <div class="col-lg-4 show-event-sidebar">
 
                 @if($evenement->co_parrainage_actif && !$evenement->gratuit)
@@ -232,6 +308,24 @@
                         <a href="{{ auth('affiliate')->check() ? route('affiliate.liens') : route('affiliate.register') }}" style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.38rem 0.6rem;border-radius:8px;background:linear-gradient(135deg,#542680,#9972B0);color:#fff;text-decoration:none;font-weight:700;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
                             <i class="bi bi-person-plus-fill"></i> Devenir affilié
                         </a>
+                    </div>
+                @endif
+
+                @if($evenement->dates->count() > 1)
+                    <!-- Programme -->
+                    <div class="show-card show-card-left">
+                        <h5 class="show-card-title"><i class="bi bi-calendar3"></i> Programme</h5>
+                        <ul class="list-unstyled mb-0">
+                            @foreach($evenement->dates as $jour)
+                                @php $tarifDuJour = $tarifs->firstWhere('evenement_date_id', $jour->id); @endphp
+                                <li class="d-flex justify-content-between align-items-center gap-2 py-2 {{ $loop->last ? '' : 'border-bottom' }}" style="font-size:0.9rem;">
+                                    <span><strong style="color:var(--violet);">{{ $jour->libelle() }}</strong> {{ $jour->date_debut->isoFormat('ddd D MMM · HH:mm') }}</span>
+                                    @if($tarifDuJour && (float) $tarifDuJour->prix <= 0)
+                                        <span class="badge" style="background:#b2e0d6;color:#1d4a3f;">Gratuit</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 
@@ -253,58 +347,144 @@
                         </a>
                     </div>
                 </div>
-                
-
-                <!-- Lieu -->
-                <div class="show-card show-card-left">
-                    <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
-                    <div class="show-map">
-                        <iframe src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                    </div>
-                </div>
 
                 <!-- Contacter -->
                 <div class="show-card show-card-left">
                     <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
                     <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
-                    <button type="button" class="show-btn" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
+                    <button type="button" class="show-btn show-btn-primary" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
                         <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
                     </button>
                 </div>
 
-                @php
-                    $autresEvenements = App\Models\Evenement::with('tarifs')
-                        ->where('statut', 'publié')
-                        ->where('date_event', '>=', now())
-                        ->where('id', '!=', $evenement->id)
-                        ->orderBy('date_event', 'asc')
-                        ->limit(3)
-                        ->get();
-                @endphp
-                @if($autresEvenements->isNotEmpty())
-                    <div class="show-card show-card-left">
-                        <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
-                        <div class="d-flex flex-column gap-3">
-                            @foreach($autresEvenements as $autre)
-                                <a href="{{ route('evenements.public.show', $autre) }}" class="show-other-card">
-                                    @if($autre->image)
-                                        <img src="{{ asset('storage/' . $autre->image) }}" alt="">
-                                    @else
-                                        <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
-                                    @endif
-                                    <div class="flex-grow-1 min-w-0">
-                                        <div class="show-other-title">{{ $autre->titre }}</div>
-                                        <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
-                                    </div>
-                                    <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
-                                </a>
-                            @endforeach
-                        </div>
+                <!-- Lieu -->
+                <div class="show-card show-card-left">
+                    <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
+                    <div class="show-map">
+                        <iframe id="carteLieu" src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy" title="Carte : {{ $evenement->lieu }}"></iframe>
                     </div>
-                @endif
+                    <p class="show-card-text mt-2 mb-2" style="font-size:0.85rem;" id="lieuTexte">{{ $evenement->lieu }}</p>
+                    <button type="button" class="show-btn show-btn-primary" id="btnItineraire" data-lieu="{{ $evenement->lieu }}">
+                        <i class="bi bi-sign-turn-right me-2"></i> Itinéraire
+                    </button>
+                    <div id="itineraireActions" class="gap-2" style="display:none;">
+                        <a id="lienNavigation" class="show-btn show-btn-primary" href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($evenement->lieu) }}" target="_blank" rel="noopener">
+                            <i class="bi bi-cursor me-2"></i> Lancer la navigation
+                        </a>
+                        <button type="button" class="show-btn" id="btnMasquerItineraire" style="width:auto;">Masquer</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    @if($autresEvenements->isNotEmpty())
+        <!-- Autres événements -->
+        <div class="container pb-5">
+            <h5 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h5>
+            <div class="row g-3">
+                @foreach($autresEvenements as $autre)
+                    <div class="col-md-4">
+                        <a href="{{ route('evenements.public.show', $autre) }}" class="show-other-card h-100">
+                            @if($autre->image)
+                                <img src="{{ asset('storage/' . $autre->image) }}" alt="">
+                            @else
+                                <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
+                            @endif
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="show-other-title">{{ $autre->titre }}</div>
+                                <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
+                            </div>
+                            <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+
+    {{-- Liste d'attente d'un tarif complet --}}
+    <div class="modal fade" id="modalListeAttente" tabindex="-1" aria-labelledby="titreListeAttente" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" id="formListeAttente" style="border-radius:16px;" novalidate>
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold" id="titreListeAttente">Liste d'attente</h5>
+                        <small class="text-muted" data-attente-tarif></small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">Ce billet est complet. Laissez votre email : vous serez prévenu(e) dès que des places seront ajoutées.</p>
+                    <input type="hidden" name="tarif_id">
+                    <div class="mb-3">
+                        <label class="show-label" for="attente_email">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="show-input" id="attente_email" name="email" placeholder="votre@email.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="show-label" for="attente_quantite">Nombre de places souhaitées <span class="text-danger">*</span></label>
+                        <input type="number" class="show-input" id="attente_quantite" name="quantite" value="1" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="show-label" for="attente_nom">Prénom et Nom <span class="text-muted fw-normal">(facultatif)</span></label>
+                        <input type="text" class="show-input" id="attente_nom" name="nom" placeholder="Ex: Kofi Mensah">
+                    </div>
+                    <div class="mb-1">
+                        <label class="show-label" for="attente_whatsapp">N° WhatsApp <span class="text-muted fw-normal">(facultatif)</span></label>
+                        <input type="tel" class="show-input" id="attente_whatsapp" name="whatsapp" placeholder="+229 XX XX XX XX">
+                    </div>
+                    <div class="text-danger small mt-2 d-none" data-attente-erreur role="alert"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="show-btn show-btn-primary" data-attente-envoyer>Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<style>
+.achat-section{font-size:.78rem;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.03em;margin:1.1rem 0 .5rem}
+.achat-ligne{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;border:1.5px solid #e6e3eb;border-radius:14px;padding:.8rem 1rem;margin-bottom:.5rem;background:#fff;transition:border-color .15s}
+.achat-ligne.is-on{border-color:#542680;background:#faf7fc}
+.achat-pack{background:#faf7fc;border-color:#cdbbe0}
+.achat-vip{background:#211C31;border-color:#211C31;color:#fff}
+.achat-vip .achat-sous,.achat-vip .achat-bas,.achat-vip .achat-complet{color:#e4dfea}
+.achat-vip .achat-montant{color:#FED514}
+.achat-vip.is-on{border-color:#FED514;background:#211C31}
+.achat-nom{font-weight:700}
+.achat-l1,.achat-l2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.achat-l2{font-size:.78rem;color:#6b6474;margin-top:.15rem}
+.achat-sep{color:#b7b0c0;margin:0 .15rem}
+.achat-l1 .achat-montant{display:inline}
+.achat-step{display:inline-flex;align-items:center;gap:.6rem}
+@media (max-width:575.98px){.achat-ligne{gap:.5rem;padding:.7rem .75rem}.achat-step{gap:.35rem}.achat-step button{width:32px!important;height:32px!important}.achat-l1{font-size:.92rem}.achat-l2{font-size:.74rem}.achat-sep{margin:0 .05rem}#reserver .show-card{padding-left:.85rem;padding-right:.85rem}.achat-eco{font-size:.66rem;padding:.1rem .4rem;margin-left:.2rem}}
+.achat-step button{width:36px;height:36px;border-radius:50%;border:0;background:#3b3a8f;color:#fff;font-size:1.15rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
+.achat-step button[data-moins]{background:#fff;border:1.5px solid #d9d4df;color:#6b6474}
+.achat-step button:disabled{background:#fff;border:1.5px solid #e6e3eb;color:#c9c3d1}
+.achat-step span{min-width:18px;text-align:center;font-weight:700;color:#6b6474}
+.achat-vip .achat-step span,.achat-vip .achat-l2{color:#e4dfea}
+.achat-vip .achat-step button[data-moins]{background:transparent;border-color:#6b6474;color:#e4dfea}
+.achat-sous{font-size:.8rem;color:#6b6474}
+.achat-eco{display:inline-block;margin-left:.35rem;background:#FED514;color:#211C31;font-size:.72rem;font-weight:700;padding:.15rem .55rem;border-radius:99px}
+.achat-prix{text-align:right}
+.achat-montant{font-weight:700;color:#542680;white-space:nowrap}
+.achat-bas{font-weight:600}
+.achat-complet{font-weight:600;color:#a5322a}
+.achat-attente{border:0;background:none;color:#542680;font-weight:600;text-decoration:underline;font-size:.85rem;padding:.6rem 0}
+.achat-vip .achat-attente{color:#FED514}
+.achat-attente{border:1.5px solid #542680;border-radius:99px;text-decoration:none;padding:.4rem .9rem;white-space:nowrap}
+.achat-attente.is-inscrit{border-color:#428c79;background:#e5f4e4;color:#245a4c}
+.achat-vip .achat-attente{border-color:#FED514}
+.achat-complet-ligne{opacity:.85}
+.achat-barre{display:none}
+@media (max-width:991.98px){
+  .achat-barre.is-visible{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:1030;background:#fff;border-top:1px solid #e6e3eb;padding:.75rem 1rem;align-items:center;justify-content:space-between;gap:1rem;box-shadow:0 -6px 18px rgba(33,28,49,.08)}
+  body.achat-barre-ouverte{padding-bottom:84px}
+}
+.achat-barre-n{font-size:.75rem;color:#6b6474}
+.achat-barre-t{font-size:1.1rem;font-weight:800;color:#211C31}
+</style>
 </div>
 
 <!-- Modal Contacter -->
@@ -647,13 +827,14 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.65rem;
-    border-radius: 10px;
-    background: #f8f6f9;
+    padding: 0.75rem 0.9rem;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #ece8f0;
     text-decoration: none;
     transition: background 0.2s;
 }
-.show-other-card:hover { background: #f0edf2; }
+.show-other-card:hover { background: #faf7fc; border-color: #cdbbe0; }
 .show-other-card img {
     width: 50px;
     height: 50px;
@@ -807,16 +988,6 @@ function shareEvent() {
     copyLink();
 }
 
-function selectTarif(el) {
-    document.querySelectorAll('.show-tarif').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    const radio = el.querySelector('input[type="radio"]');
-    if (radio) {
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
-    }
-}
-
 function showToast(message, type) {
     const el = document.getElementById('shareToast');
     el.querySelector('.toast-body').textContent = message;
@@ -824,6 +995,48 @@ function showToast(message, type) {
     const toast = bootstrap.Toast.getOrCreateInstance(el, { autohide: true, delay: 3000 });
     toast.show();
 }
+
+// Itinéraire : trajet affiché dans la carte depuis la position du visiteur
+// (demandée seulement au clic), puis lien de navigation Google Maps.
+document.addEventListener('DOMContentLoaded', function () {
+    const bouton = document.getElementById('btnItineraire');
+    if (!bouton) return;
+    const carte = document.getElementById('carteLieu');
+    const actions = document.getElementById('itineraireActions');
+    const lien = document.getElementById('lienNavigation');
+    const lieu = bouton.dataset.lieu;
+    const srcInitial = carte.src;
+    const libelleInitial = bouton.innerHTML;
+    const urlNavigation = (origine) => 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(lieu)
+        + (origine ? '&origin=' + encodeURIComponent(origine) : '');
+    const afficherActions = () => { bouton.style.display = 'none'; actions.style.display = 'flex'; };
+
+    bouton.addEventListener('click', function () {
+        if (!navigator.geolocation) { lien.href = urlNavigation(); afficherActions(); return; }
+        bouton.disabled = true;
+        bouton.textContent = 'Localisation…';
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const origine = position.coords.latitude + ',' + position.coords.longitude;
+            carte.src = 'https://maps.google.com/maps?saddr=' + encodeURIComponent(origine) + '&daddr=' + encodeURIComponent(lieu) + '&output=embed';
+            lien.href = urlNavigation(origine);
+            bouton.disabled = false;
+            bouton.innerHTML = libelleInitial;
+            afficherActions();
+        }, function () {
+            // Position refusée ou indisponible : on propose l'itinéraire dans Google Maps.
+            lien.href = urlNavigation();
+            bouton.disabled = false;
+            bouton.innerHTML = libelleInitial;
+            afficherActions();
+        }, { timeout: 10000, maximumAge: 300000 });
+    });
+
+    document.getElementById('btnMasquerItineraire').addEventListener('click', function () {
+        carte.src = srcInitial;
+        actions.style.display = 'none';
+        bouton.style.display = '';
+    });
+});
 
 @if($evenement->gratuit)
 document.addEventListener('DOMContentLoaded', function() {
@@ -839,49 +1052,140 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 @else
-document.addEventListener('DOMContentLoaded', function() {
-    const quantiteInput = document.getElementById('quantiteInput');
-    const hiddenQuantite = document.getElementById('hiddenQuantite');
-    const hiddenTarifId = document.getElementById('hiddenTarifId');
-    const totalDisplay = document.getElementById('totalDisplay');
+// Panier : un compteur par billet, coordonnées juste en dessous, un seul récapitulatif ensuite.
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formAchat');
+    if (!form) return;
 
-    const tarifs = @json($tarifs->map(function($t) { return ['id' => $t->id, 'prix' => $t->prix]; }));
+    const QUANTITES_INITIALES = @json((object) $quantitesInitiales);
+    const lignes = Array.from(form.querySelectorAll('[data-tarif]'));
+    const btnPayer = document.getElementById('btnPayer');
+    const libelle = btnPayer.querySelector('[data-libelle]');
+    const barre = document.getElementById('barrePanier');
+    const blocPromo = document.getElementById('blocPromo');
+    const blocTotal = document.getElementById('blocTotal');
 
-    function getSelectedTarif() {
-        const selected = document.querySelector('input[name="tarif_id"]:checked');
-        if (!selected) return null;
-        return tarifs.find(t => t.id == selected.value);
+    const fmt = (n) => n <= 0 ? 'Gratuit' : new Intl.NumberFormat('fr-FR').format(n) + ' FCFA';
+    const quantite = (ligne) => parseInt(ligne.querySelector('[data-input]').value, 10) || 0;
+
+    function definirQuantite(ligne, valeur) {
+        const max = parseInt(ligne.dataset.max, 10) || 0;
+        const v = Math.max(0, Math.min(max, valeur));
+        ligne.querySelector('[data-input]').value = v;
+        const affichage = ligne.querySelector('[data-qte]');
+        if (affichage) affichage.textContent = v;
+        const moins = ligne.querySelector('[data-moins]');
+        const plus = ligne.querySelector('[data-plus]');
+        if (moins) moins.disabled = v <= 0;
+        if (plus) plus.disabled = v >= max;
+        ligne.classList.toggle('is-on', v > 0);
     }
 
-    function updateTotal() {
-        const tarif = getSelectedTarif();
-        const qty = parseInt(quantiteInput.value) || 1;
-        if (tarif) {
-            totalDisplay.textContent = new Intl.NumberFormat('fr-FR').format(tarif.prix * qty) + ' F';
-            hiddenTarifId.value = tarif.id;
-        } else {
-            totalDisplay.textContent = '--';
+    function rendre() {
+        const nombre = lignes.reduce((s, l) => s + quantite(l), 0);
+        const total = lignes.reduce((s, l) => s + quantite(l) * parseFloat(l.dataset.prix), 0);
+        const texteNombre = nombre === 0 ? 'Aucun billet choisi' : nombre + (nombre > 1 ? ' billets' : ' billet');
+        document.querySelectorAll('[data-nombre]').forEach((el) => { el.textContent = texteNombre; });
+        document.querySelectorAll('[data-total]').forEach((el) => { el.textContent = nombre === 0 ? '0 FCFA' : fmt(total); });
+
+        libelle.textContent = nombre > 0 && total <= 0 ? 'Réserver gratuitement' : 'Payer avec FedaPay';
+
+        const visible = nombre > 0;
+        barre.classList.toggle('is-visible', visible);
+        document.body.classList.toggle('achat-barre-ouverte', visible);
+    }
+
+    form.addEventListener('click', function (e) {
+        const bouton = e.target.closest('button');
+        if (!bouton) return;
+        const ligne = bouton.closest('[data-tarif]');
+        if (bouton.hasAttribute('data-plus')) { definirQuantite(ligne, quantite(ligne) + 1); }
+        if (bouton.hasAttribute('data-moins')) { definirQuantite(ligne, quantite(ligne) - 1); }
+        rendre();
+    });
+
+    document.getElementById('btnContinuerBarre').addEventListener('click', function () {
+        document.getElementById('nom_acheteur').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('nom_acheteur').focus({ preventScroll: true });
+    });
+
+    form.addEventListener('submit', function (e) {
+        if (lignes.every((l) => quantite(l) === 0)) {
+            e.preventDefault();
+            alert('Choisissez au moins un billet.');
+            return;
         }
-        hiddenQuantite.value = qty;
-    }
-
-    document.getElementById('qtyMinus').addEventListener('click', function() {
-        const v = parseInt(quantiteInput.value);
-        if (v > 1) { quantiteInput.value = v - 1; updateTotal(); }
+        if (!form.checkValidity()) { e.preventDefault(); form.reportValidity(); return; }
+        btnPayer.disabled = true;
+        libelle.textContent = 'Traitement…';
     });
 
-    document.getElementById('qtyPlus').addEventListener('click', function() {
-        const v = parseInt(quantiteInput.value);
-        if (v < {{ max(1, $placesRestantes) }}) { quantiteInput.value = v + 1; updateTotal(); }
+    // État initial : quantités restaurées après une erreur serveur.
+    lignes.forEach((l) => definirQuantite(l, QUANTITES_INITIALES[l.dataset.tarif] || 0));
+    rendre();
+});
+
+// Liste d'attente : fenêtre email + nombre de places, puis « Inscrit ».
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('modalListeAttente');
+    const formAttente = document.getElementById('formListeAttente');
+    if (!modal || !formAttente) return;
+
+    const URL_ATTENTE = @json(route('evenements.liste-attente', $evenement));
+    const CLE = (id) => 'pax-attente-{{ $evenement->id }}-' + id;
+    const erreur = formAttente.querySelector('[data-attente-erreur]');
+    const envoyer = formAttente.querySelector('[data-attente-envoyer]');
+    let boutonCourant = null;
+
+    const marquerInscrit = (bouton) => {
+        bouton.textContent = 'Inscrit ✓';
+        bouton.classList.add('is-inscrit');
+        bouton.disabled = true;
+        bouton.removeAttribute('data-bs-toggle');
+    };
+    document.querySelectorAll('[data-attente]').forEach((bouton) => {
+        try { if (localStorage.getItem(CLE(bouton.closest('[data-tarif]').dataset.tarif))) marquerInscrit(bouton); } catch (e) { /* stockage indisponible */ }
     });
 
-    document.querySelectorAll('input[name="tarif_id"]').forEach(radio => {
-        radio.addEventListener('change', updateTotal);
+    modal.addEventListener('show.bs.modal', function (e) {
+        boutonCourant = e.relatedTarget;
+        const ligne = boutonCourant ? boutonCourant.closest('[data-tarif]') : null;
+        if (!ligne) return;
+        formAttente.querySelector('[name="tarif_id"]').value = ligne.dataset.tarif;
+        modal.querySelector('[data-attente-tarif]').textContent = ligne.dataset.nom;
+        erreur.classList.add('d-none');
     });
 
-    const first = document.querySelector('.show-tarif');
-    if (first) selectTarif(first);
-    else updateTotal();
+    formAttente.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!formAttente.checkValidity()) { formAttente.reportValidity(); return; }
+        envoyer.disabled = true;
+        envoyer.textContent = 'Envoi…';
+        erreur.classList.add('d-none');
+        try {
+            const reponse = await fetch(URL_ATTENTE, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                body: new FormData(formAttente),
+            });
+            const donnees = await reponse.json().catch(() => ({}));
+            if (!reponse.ok) {
+                const premiere = donnees.errors ? Object.values(donnees.errors)[0][0] : (donnees.message || 'Envoi impossible, réessayez.');
+                throw new Error(reponse.status === 429 ? 'Trop de demandes, réessayez dans une minute.' : premiere);
+            }
+            const tarifId = formAttente.querySelector('[name="tarif_id"]').value;
+            try { localStorage.setItem(CLE(tarifId), '1'); } catch (err) { /* rien */ }
+            if (boutonCourant) marquerInscrit(boutonCourant);
+            bootstrap.Modal.getOrCreateInstance(modal).hide();
+            formAttente.reset();
+        } catch (err) {
+            erreur.textContent = err.message;
+            erreur.classList.remove('d-none');
+        } finally {
+            envoyer.disabled = false;
+            envoyer.textContent = 'Envoyer';
+        }
+    });
 });
 @endif
 </script>

@@ -201,11 +201,15 @@
                     <tr>
                         <td>Date et heure</td>
                         <td>
-                            @forelse($ticket->evenement->datesDebut() as $date)
-                                {{ $date->format('d/m/Y \a H:i') }}{{ !$loop->last ? ' · ' : '' }}
-                            @empty
-                                —
-                            @endforelse
+                            @if($ticket->evenement_date_id && $ticket->jour)
+                                {{ $ticket->jour->date_debut->format('d/m/Y \a H:i') }}
+                            @else
+                                @forelse($ticket->evenement->datesDebut() as $date)
+                                    {{ $date->format('d/m/Y \a H:i') }}{{ !$loop->last ? ' · ' : '' }}
+                                @empty
+                                    —
+                                @endforelse
+                            @endif
                         </td>
                     </tr>
                     <tr>

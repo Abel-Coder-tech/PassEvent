@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Agent;
 use App\Services\TicketScanService;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -135,6 +136,104 @@ class TicketScanServiceTest extends TestCase
         $this->assertNull($resultat['ticket']);
     }
 
+    public function test_un_billet_du_jour_est_valide_le_jour_prevu(): void
+    {
+        $jourDuJour = DB::table('evenement_dates')
+            ->where('evenement_id', $this->evenementId)
+            ->value('id');
+
+        $this->creerTicket($this->evenementId, 'PAX-DAY-TODAY', 'SIMPLE', evenementDateId: $jourDuJour);
+
+        $resultat = app(TicketScanService::class)->verifier($this->agent, 'PAX-DAY-TODAY');
+
+        $this->assertTrue($resultat['success']);
+        $this->assertSame('valide', $resultat['resultat']);
+    }
+
+    public function test_un_billet_d_un_jour_futur_est_refuse(): void
+    {
+        $jourFutur = $this->creerJour($this->evenementId, now()->addDay()->setTime(10, 0), 1);
+        $this->creerTicket($this->evenementId, 'PAX-DAY-FUTUR', 'SIMPLE', evenementDateId: $jourFutur);
+
+        $resultat = app(TicketScanService::class)->verifier($this->agent, 'PAX-DAY-FUTUR');
+
+        $this->assertFalse($resultat['success']);
+        $this->assertSame('invalide', $resultat['resultat']);
+        $this->assertSame('Billet valable un autre jour', $resultat['raison']);
+        $this->assertStringContainsString('Jour 2', $resultat['message']);
+    }
+
+    public function test_un_billet_d_un_jour_passe_est_refuse(): void
+    {
+        $jourPasse = $this->creerJour($this->evenementId, now()->subDay()->setTime(10, 0), 1);
+        $this->creerTicket($this->evenementId, 'PAX-DAY-PASSE', 'SIMPLE', evenementDateId: $jourPasse);
+
+        $resultat = app(TicketScanService::class)->verifier($this->agent, 'PAX-DAY-PASSE');
+
+        $this->assertFalse($resultat['success']);
+        $this->assertSame('invalide', $resultat['resultat']);
+        $this->assertSame('Billet valable un autre jour', $resultat['raison']);
+        $this->assertStringContainsString("n'est plus valable", $resultat['message']);
+    }
+
+    public function test_un_billet_d_un_autre_jour_ne_consomme_pas_le_pack(): void
+    {
+        // Billet jour (demain) refusé aujourd'hui : le ticket n'est pas marqué
+        // comme scanné et reste utilisable demain.
+        $jourFutur = $this->creerJour($this->evenementId, now()->addDay()->setTime(10, 0), 1);
+        $this->creerTicket($this->evenementId, 'PAX-DAY-RETRY', 'SIMPLE', evenementDateId: $jourFutur);
+
+        $service = app(TicketScanService::class);
+        $aujourdHui = $service->verifier($this->agent, 'PAX-DAY-RETRY');
+        $this->assertFalse($aujourdHui['success']);
+
+        Carbon::setTestNow(now()->addDay()->setTime(10, 30));
+        try {
+            $demain = $service->verifier($this->agent, 'PAX-DAY-RETRY');
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        $this->assertTrue($demain['success']);
+        $this->assertSame('valide', $demain['resultat']);
+    }
+
+    public function test_un_pack_est_valable_une_fois_par_jour(): void
+    {
+        $this->creerJour($this->evenementId, now()->addDay()->setTime(10, 0), 1);
+        $this->creerTicket($this->evenementId, 'PAX-PACK-MULTI', 'PACK');
+
+        $service = app(TicketScanService::class);
+
+        $jour1 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
+        $this->assertTrue($jour1['success']);
+
+        $doublonJour1 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
+        $this->assertFalse($doublonJour1['success']);
+        $this->assertSame('deja_utilise', $doublonJour1['resultat']);
+
+        Carbon::setTestNow(now()->addDay()->setTime(10, 30));
+        try {
+            $jour2 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
+            $this->assertTrue($jour2['success']);
+            $this->assertSame('valide', $jour2['resultat']);
+
+            $doublonJour2 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
+            $this->assertSame('deja_utilise', $doublonJour2['resultat']);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    private function creerJour(int $evenementId, Carbon $dateDebut, int $ordre): int
+    {
+        return DB::table('evenement_dates')->insertGetId([
+            'evenement_id' => $evenementId,
+            'date_debut' => $dateDebut,
+            'ordre' => $ordre,
+        ]);
+    }
+
     private function creerEvenement(string $titre = 'Concert test'): int
     {
         $evenementId = DB::table('evenement')->insertGetId([
@@ -176,10 +275,12 @@ class TicketScanServiceTest extends TestCase
         string $code,
         ?string $nomTarif,
         string $statut = 'payé',
-        bool $annule = false
+        bool $annule = false,
+        ?int $evenementDateId = null
     ): int {
         return DB::table('ticket')->insertGetId([
             'evenement_id' => $evenementId,
+            'evenement_date_id' => $evenementDateId,
             'code_unique' => $code,
             'nom_acheteur' => 'Awa Kone',
             'email_acheteur' => 'awa@example.test',
@@ -212,6 +313,7 @@ class TicketScanServiceTest extends TestCase
             $table->unsignedBigInteger('evenement_id');
             $table->dateTime('date_debut')->nullable();
             $table->unsignedInteger('ordre')->default(0);
+            $table->unsignedInteger('capacite')->nullable();
         });
 
         Schema::create('agents', function (Blueprint $table) {
@@ -232,6 +334,7 @@ class TicketScanServiceTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('evenement_id');
             $table->unsignedBigInteger('tarif_id')->nullable();
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->string('code_unique')->unique();
             $table->string('email_acheteur')->nullable();
             $table->string('nom_acheteur')->nullable();

@@ -130,6 +130,76 @@
             </div>
         </div>
 
+        @if($jours->count() > 1)
+        <div class="panel-card mb-4">
+            <div class="panel-card-header">
+                <h5><i class="bi bi-calendar3 me-2" style="color: var(--violet);"></i>Jours et jauges</h5>
+            </div>
+            <div class="panel-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table custom-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="font-size: 0.75rem;">Jour</th>
+                                <th style="font-size: 0.75rem;">Date</th>
+                                <th style="font-size: 0.75rem;">Capacité</th>
+                                <th style="font-size: 0.75rem;">Jauge du jour</th>
+                                <th style="font-size: 0.75rem;">Occupées</th>
+                                <th style="font-size: 0.75rem;">Restantes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($jours as $jour)
+                                @php
+                                    $capaciteJour = $jour->capaciteEffective();
+                                    $occupeesJour = $evenement->occupationJour($jour);
+                                @endphp
+                                <tr>
+                                    <td class="fw-semibold" style="font-size:0.82rem;">
+                                        {{ $jour->libelle() }}
+                                        @if($jour->estTermine())
+                                            <span class="badge bg-secondary ms-1" style="font-size:0.62rem;">Terminé</span>
+                                        @endif
+                                    </td>
+                                    <td style="font-size:0.82rem;">{{ $jour->date_debut->isoFormat('ddd D MMM · HH:mm') }}</td>
+                                    <td style="font-size:0.82rem;">
+                                        {{ $capaciteJour }}
+                                        @if($jour->capacite === null)
+                                            <small class="text-muted d-block" style="font-size:0.68rem;">Défaut événement</small>
+                                        @endif
+                                    </td>
+                                    <td style="font-size:0.82rem;">
+                                        <form action="{{ route('admin.evenements.jours.capacite', [$evenement->id, $jour->id]) }}" method="POST" class="d-flex gap-1 align-items-center">
+                                            @csrf
+                                            <input type="number" name="capacite" class="form-control form-control-sm" style="width:90px;" min="1" value="{{ $jour->capacite }}" placeholder="{{ $evenement->capacite }}" title="Laisser vide pour utiliser la capacité de l'événement">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Enregistrer la jauge de ce jour">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td style="font-size:0.82rem;">{{ $occupeesJour }}</td>
+                                    <td style="font-size:0.82rem;">
+                                        <span class="badge {{ max(0, $capaciteJour - $occupeesJour) > 0 ? 'bg-success' : 'bg-danger' }}">
+                                            {{ max(0, $capaciteJour - $occupeesJour) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-semibold" style="font-size:0.82rem;">
+                                <td colspan="5">Total des jours à venir</td>
+                                <td>
+                                    <span class="badge {{ $placesRestantes > 0 ? 'bg-success' : 'bg-danger' }}">{{ $placesRestantes }}</span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
         @if(!$evenement->gratuit)
         <div class="panel-card mb-4" id="coparrainage">
             <div class="panel-card-header">
@@ -193,12 +263,26 @@
                         </thead>
                         <tbody>
                             @foreach($tarifs as $tarif)
+                                @php
+                                    $stockTarif = $tarif->quantite_disponible === null
+                                        ? null
+                                        : max(0, (int) $tarif->quantite_disponible - (int) $tarif->quantite_vendue);
+                                    $restantesJour = $evenement->placesRestantesPourTarif($tarif);
+                                    $dispoTarif = $stockTarif === null ? $restantesJour : min($stockTarif, $restantesJour);
+                                @endphp
                                 <tr>
                                     <td style="font-size: 0.82rem;">
                                         {{ $tarif->nom }}
+                                        @if($tarif->jour)
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">
+                                                {{ $tarif->jour->libelle() }} — {{ $tarif->jour->date_debut->isoFormat('ddd D MMM · HH:mm') }}
+                                            </small>
+                                        @elseif($jours->count() > 1)
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">Tous les jours (pack)</small>
+                                        @endif
                                     </td>
                                     <td style="font-size: 0.82rem;">{{ number_format($tarif->prix, 0, ',', ' ') }} F</td>
-                                    <td style="font-size: 0.82rem;">{{ $tarif->quantite_disponible - $tarif->quantite_vendue }}</td>
+                                    <td style="font-size: 0.82rem;">{{ $dispoTarif }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

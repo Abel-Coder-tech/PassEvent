@@ -40,6 +40,7 @@ class StatisticsAggregationTest extends TestCase
             $table->unsignedBigInteger('evenement_id')->nullable();
             $table->unsignedBigInteger('agent_vente_id')->nullable();
             $table->unsignedBigInteger('tarif_id')->nullable();
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->unsignedBigInteger('lot_physique_id')->nullable();
             $table->string('statut_paiement')->nullable();
             $table->boolean('utilise')->default(false);

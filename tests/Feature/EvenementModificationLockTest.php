@@ -25,11 +25,13 @@ class EvenementModificationLockTest extends TestCase
             $table->unsignedBigInteger('evenement_id');
             $table->dateTime('date_debut');
             $table->integer('ordre')->default(0);
+            $table->unsignedInteger('capacite')->nullable();
         });
 
         Schema::create('ticket', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('evenement_id');
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
         });
 
         Schema::create('logs', function (Blueprint $table) {
@@ -54,6 +56,8 @@ class EvenementModificationLockTest extends TestCase
 
     public function test_a_successful_scan_locks_only_the_scanned_day(): void
     {
+        Carbon::setTestNow('2026-11-09 12:00:00');
+
         $evenement = $this->creerEvenement([
             '2026-11-09 10:00:00',
             '2026-11-10 10:00:00',

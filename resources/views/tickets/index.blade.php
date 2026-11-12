@@ -225,7 +225,9 @@
                                     <td>
                                         <div class="fw-semibold" style="font-size: 0.85rem;">{{ $ticket->evenement?->titre ?? '—' }}</div>
                                         <small class="text-muted">
-                                            @if($ticket->evenement)
+                                            @if($ticket->evenement_date_id && $ticket->jour)
+                                                {{ $ticket->jour->date_debut->isoFormat('D MMM YYYY') }}
+                                            @elseif($ticket->evenement)
                                                 @forelse($ticket->evenement->datesDebut() as $date)
                                                     {{ $date->isoFormat('D MMM YYYY') }}{{ !$loop->last ? ' · ' : '' }}
                                                 @empty

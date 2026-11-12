@@ -140,6 +140,7 @@ class TicketDeliverabilityTest extends TestCase
             $table->unsignedBigInteger('evenement_id');
             $table->dateTime('date_debut')->nullable();
             $table->unsignedInteger('ordre')->default(0);
+            $table->unsignedInteger('capacite')->nullable();
         });
 
         Schema::create('tarif', function (Blueprint $table) {
@@ -154,6 +155,7 @@ class TicketDeliverabilityTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('evenement_id');
             $table->unsignedBigInteger('tarif_id')->nullable();
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->string('code_unique')->unique();
             $table->string('email_acheteur')->nullable();
             $table->string('nom_acheteur')->nullable();

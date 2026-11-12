@@ -250,29 +250,58 @@ class FedapayService
     }
 
     /**
-     * Recherche la transaction FedaPay associée à une référence externe
-     * (external_id ou merchant_reference) pour la resynchronisation.
+     * Recherche la transaction FedaPay associée à une référence marchande
+     * (le plus souvent l'id du billet) pour la resynchronisation.
+     *
+     * FedaPay expose un endpoint dédié `GET /v1/transactions/merchant/{ref}`.
+     * On l'utilise en priorité : le filtre `?merchant_reference=` de
+     * `/v1/transactions/search` n'est pas garanti, ce qui laissait croire
+     * qu'aucune transaction n'existait et provoquait une erreur de doublon au
+     * moment de recréer le paiement.
      */
     public function findTransactionByExternalId(string $externalId): ?array
     {
         $secretKey = $this->secretKey();
+        $reference = trim($externalId);
 
-        if (! $secretKey || trim($externalId) === '') {
+        if (! $secretKey || $reference === '') {
             return null;
         }
 
-        $filtres = [
-            ['external_id', $externalId],
-            ['merchant_reference', $externalId],
-        ];
+        // 1) Endpoint officiel par référence marchande.
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$secretKey,
+                'Accept' => 'application/json',
+            ])->timeout(15)->get(
+                $this->baseUrl().'/v1/transactions/merchant/'.rawurlencode($reference)
+            );
 
-        foreach ($filtres as [$champ, $valeur]) {
+            if ($response->successful()) {
+                $data = $response->json();
+                $transaction = $data['v1/transaction']
+                    ?? $data['transaction']
+                    ?? $data;
+
+                if (is_array($transaction) && ! empty($transaction['id'])) {
+                    return $transaction;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('FedapayService::findTransactionByExternalId - Exception (merchant)', [
+                'reference' => $reference,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        // 2) Repli sur la recherche pleine liste, avec les deux filtres connus.
+        foreach (['merchant_reference', 'external_id'] as $champ) {
             try {
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer '.$secretKey,
                     'Accept' => 'application/json',
                 ])->timeout(15)->get($this->baseUrl().'/v1/transactions/search', [
-                    $champ => $valeur,
+                    $champ => $reference,
                 ]);
 
                 if (! $response->successful()) {
@@ -280,22 +309,40 @@ class FedapayService
                 }
 
                 $data = $response->json();
-                $transactions = $data['v1/transactions']
-                    ?? $data['transactions']
-                    ?? (isset($data['data']) && is_array($data['data']) ? $data['data'] : []);
+
+                // L'API peut renvoyer une liste directe ou une enveloppe.
+                $transactions = null;
+
+                if (is_array($data) && array_is_list($data)) {
+                    $transactions = $data;
+                } else {
+                    $transactions = $data['v1/transactions']
+                        ?? $data['transactions']
+                        ?? (isset($data['data']) && is_array($data['data']) ? $data['data'] : []);
+                }
 
                 if (! is_array($transactions) || $transactions === []) {
                     continue;
                 }
 
-                $transaction = $transactions[0] ?? null;
+                foreach ($transactions as $transaction) {
+                    if (! is_array($transaction) || empty($transaction['id'])) {
+                        continue;
+                    }
 
-                if (is_array($transaction) && ! empty($transaction['id'])) {
-                    return $transaction;
+                    // Sans filtre fiable côté API, on vérifie nous-mêmes que la
+                    // transaction correspond bien à cette référence : sinon on
+                    // risquerait de réutiliser celle d'un autre billet.
+                    $ref = trim((string) ($transaction['merchant_reference'] ?? ''));
+                    $external = trim((string) ($transaction['external_id'] ?? ''));
+
+                    if ($ref === $reference || $external === $reference) {
+                        return $transaction;
+                    }
                 }
             } catch (\Throwable $e) {
                 Log::warning('FedapayService::findTransactionByExternalId - Exception', [
-                    'external_id' => $externalId,
+                    'external_id' => $reference,
                     'field' => $champ,
                     'message' => $e->getMessage(),
                 ]);

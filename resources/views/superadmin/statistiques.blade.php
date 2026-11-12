@@ -16,7 +16,7 @@
             <tbody>
                 @foreach($evenements as $ev)
                 @php
-                    $taux = $ev->capacite > 0 ? round(($ev->quota_vendu / $ev->capacite) * 100) : 0;
+                    $taux = (int) round($ev->tauxRemplissage());
                 @endphp
                 <tr>
                     <td><strong>{{ $ev->titre }}</strong></td>
