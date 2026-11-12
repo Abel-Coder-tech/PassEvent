@@ -377,12 +377,19 @@
                         <span class="info-label">Date et heure</span>
                         <span class="info-val">
                             @php
-                                $datesTicket = $ticket->evenement?->dates ?? collect();
+                                // Billet jour : une seule date. Pack / billet historique : toutes les dates.
+                                $jourTicket = $ticket->evenement_date_id ? $ticket->jour : null;
+                                $datesTicket = $jourTicket
+                                    ? collect([$jourTicket])
+                                    : ($ticket->evenement?->dates ?? collect());
                             @endphp
                             @if($datesTicket->count() > 1)
                                 @foreach($datesTicket as $d)
                                     {{ $d->date_debut->isoFormat('D MMM') }} - {{ $d->date_debut->format('H\hi') }}{{ !$loop->last ? ', ' : '' }}
                                 @endforeach
+                            @elseif($datesTicket->isNotEmpty())
+                                {{ $datesTicket->first()->date_debut->isoFormat('D MMM YYYY') }}
+                                - {{ $datesTicket->first()->date_debut->format('H\hi') }}
                             @else
                                 {{ $ticket->evenement?->date_event?->isoFormat('D MMM YYYY') ?? '---' }}
                                 @if($ticket->evenement?->date_event)

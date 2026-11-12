@@ -60,6 +60,7 @@ class AffiliationCommissionTest extends TestCase
             $table->id();
             $table->foreignId('evenement_id')->constrained('evenement')->cascadeOnDelete();
             $table->foreignId('tarif_id')->nullable();
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->string('code_unique')->nullable();
             $table->string('qr_signature')->nullable();
             $table->string('nom_acheteur')->nullable();

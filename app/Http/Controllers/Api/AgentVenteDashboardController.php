@@ -107,12 +107,21 @@ class AgentVenteDashboardController extends Controller
                 'raison_indisponible' => $evenement->raisonBlocageVente(),
                 'capacite' => (int) $evenement->capacite,
                 'quota_vendu' => (int) $evenement->quota_vendu,
-                'places_restantes' => max(0, (int) $evenement->capacite - (int) $evenement->quota_vendu),
+                'places_restantes' => $evenement->placesRestantesTotales(),
                 'image_url' => $evenement->image ? asset('storage/'.$evenement->image) : null,
                 'dates' => $evenement->dates
                     ->map(fn ($date) => [
                         'id' => $date->id,
                         'date_debut' => $date->date_debut?->toIso8601String(),
+                        'capacite' => $date->capacite,
+                        'capacite_effective' => $date->capaciteEffective(),
+                        // Champs ajoutés : l'application existante peut les ignorer.
+                        'libelle' => $date->libelle(),
+                        'occupees' => $evenement->estMultiJour() ? $evenement->occupationJour($date) : (int) $evenement->quota_vendu,
+                        'restantes' => $evenement->estMultiJour()
+                            ? max(0, $date->capaciteEffective() - $evenement->occupationJour($date))
+                            : $evenement->placesRestantesTotales(),
+                        'termine' => $date->estTermine(),
                     ])
                     ->values(),
                 'textes' => $evenement->getTextes(),

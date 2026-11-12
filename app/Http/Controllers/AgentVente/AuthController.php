@@ -94,7 +94,21 @@ class AuthController extends Controller
             'montant_ajd' => $ticketsAujourdHui->sum('montant'),
         ];
 
-        return view('agent-vente.dashboard', compact('agent', 'ticketsAujourdHui', 'stats'));
+        $evenement = $agent->evenement;
+        $evenement->loadMissing('dates');
+        $tarifs = $evenement->tarifs()
+            ->where('statut', 'actif')
+            ->with('jour')
+            ->get()
+            ->filter(fn ($tarif) => $tarif->estEncoreVendable())
+            ->sortBy(fn ($tarif) => [
+                $tarif->estPack() ? 1 : 0,
+                $tarif->jour?->date_debut?->timestamp ?? PHP_INT_MAX,
+                (float) $tarif->prix,
+            ])
+            ->values();
+
+        return view('agent-vente.dashboard', compact('agent', 'ticketsAujourdHui', 'stats', 'tarifs'));
     }
 
     // Retourne l'historique des ventes en JSON pour rafraîchissement dynamique
@@ -254,7 +268,13 @@ class AuthController extends Controller
                     ]);
                 }
 
-                $placesRestantes = max(0, (int) $evenementVerrouille->capacite - (int) $evenementVerrouille->quota_vendu);
+                if (! $tarifVerrouille->estEncoreVendable()) {
+                    throw ValidationException::withMessages([
+                        'tarif_id' => "Ce tarif n'est plus disponible : la date associée est passée.",
+                    ]);
+                }
+
+                $placesRestantes = $evenementVerrouille->placesRestantesPourTarif($tarifVerrouille);
 
                 if ($placesRestantes < 1) {
                     throw ValidationException::withMessages([

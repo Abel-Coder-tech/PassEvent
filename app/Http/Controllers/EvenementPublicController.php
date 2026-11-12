@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PlacesInsuffisantesException;
 use App\Jobs\SendTicketEmailJob;
 use App\Models\AffiliateEventLink;
 use App\Models\CodePromo;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class EvenementPublicController extends Controller
 {
@@ -99,17 +101,30 @@ class EvenementPublicController extends Controller
         $this->capturerAffiliation($evenement, $request);
 
         $evenement->load('user', 'dates');
-        $tarifs = $evenement->tarifs()->where('statut', 'actif')->get();
-        $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
-        $estComplet = $placesRestantes <= 0; // Vérifie la disponibilité
+        $tarifs = $evenement->tarifs()
+            ->where('statut', 'actif')
+            ->with('jour')
+            ->get()
+            ->filter(fn (Tarif $tarif) => $tarif->estEncoreVendable())
+            ->values();
+        $placesRestantes = $evenement->placesRestantesPourTarif(null);
+        $placesRestantesTotales = $evenement->placesRestantesTotales();
+        // Détail par jour affiché uniquement pour un événement multijours.
+        $placesParJour = $evenement->estMultiJour() ? $evenement->placesParJour() : collect();
+        // Un événement payant reste achetable tant qu'au moins un tarif en
+        // vente a des places. Pour le gratuit (billet valable tous les jours),
+        // c'est la limite du jour le plus contraint qui s'applique.
+        $estComplet = $evenement->estComplet() || (! $evenement->gratuit && $tarifs->isEmpty());
         $venteCloturee = $evenement->ventes_fermees; // Fermeture manuelle par l'organisateur
         $derniereDate = $evenement->derniereDate();
         $evenementPasse = $derniereDate && $derniereDate->date_debut->lt(now());
 
-        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'estComplet', 'venteCloturee', 'evenementPasse'));
+        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'placesRestantesTotales', 'placesParJour', 'estComplet', 'venteCloturee', 'evenementPasse'));
     }
 
-    // Traite l'achat de tickets (gratuits ou payants) avec codes promo
+    // Traite l'achat d'un panier (un ou plusieurs tarifs : jours et packs),
+    // gratuit ou payant, avec code promo. Accepte aussi l'ancien format
+    // (tarif_id + quantite) et l'inscription seule sur liste d'attente.
     public function achat(Evenement $evenement, Request $request, PaymentMonitoringService $paymentMonitoring)
     {
         if ($evenement->statut !== 'publié') {
@@ -121,129 +136,108 @@ class EvenementPublicController extends Controller
             return back()->with('error', 'La vente est clôturée pour cet événement.'); // Vente expirée
         }
 
-        $estGratuit = $evenement->gratuit || $request->boolean('gratuit');
-
-        $rules = [
+        $validated = $request->validate([
             'nom_acheteur' => 'required|string|max:255',
             'email_acheteur' => 'required|email|max:255',
-            'code_promo' => 'nullable|string|max:50',
-            'quantite' => 'nullable|integer|min:1',
             'whatsapp_acheteur' => 'required|string|min:10|max:20',
-        ];
-
-        $messages = [
+            'code_promo' => 'nullable|string|max:50',
+            'quantite' => 'nullable|integer|min:1|max:50',
+            'tarif_id' => 'nullable|integer',
+            'lignes' => 'nullable|array',
+            'lignes.*' => 'nullable|integer|min:0|max:50',
+        ], [
             'nom_acheteur.required' => 'Le nom est obligatoire.',
             'email_acheteur.required' => 'L\'email est obligatoire.',
             'email_acheteur.email' => 'Le format de l\'email est invalide.',
             'whatsapp_acheteur.required' => 'Le numéro WhatsApp est obligatoire.',
             'whatsapp_acheteur.min' => 'Le numéro WhatsApp doit contenir au moins 10 caractères.',
-        ];
+            'lignes.*.max' => 'Pas plus de 50 billets par tarif et par commande.',
+        ]);
 
-        if (! $estGratuit) {
-            $rules['tarif_id'] = 'required|exists:tarifs,id';
-            $messages['tarif_id.required'] = 'Le type de billet est obligatoire.';
-        }
-
-        $validated = $request->validate($rules, $messages);
-
-        if ($estGratuit) {
-            $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
-            if (! $tarif) {
-                $tarif = Tarif::create([
-                    'evenement_id' => $evenement->id,
-                    'nom' => 'Gratuit',
-                    'prix' => 0,
-                    'statut' => 'actif',
-                    'quantite_disponible' => $evenement->capacite ?? 9999,
-                    'quantite_vendue' => 0,
-                ]);
-            }
+        // Panier demandé : tarif_id => quantité
+        if ($evenement->gratuit) {
+            $tarifGratuit = $evenement->tarifs()->where('statut', 'actif')->first() ?? Tarif::create([
+                'evenement_id' => $evenement->id,
+                'nom' => 'Gratuit',
+                'prix' => 0,
+                'statut' => 'actif',
+                'quantite_disponible' => $evenement->capacite ?? 9999,
+                'quantite_vendue' => 0,
+            ]);
+            $demandes = [$tarifGratuit->id => max(1, (int) ($validated['quantite'] ?? 1))];
         } else {
-            $tarif = Tarif::query()
-                ->where('id', $validated['tarif_id'])
-                ->where('evenement_id', $evenement->id)
-                ->where('statut', 'actif')
-                ->firstOrFail();
+            $demandes = collect($validated['lignes'] ?? [])
+                ->map(fn ($quantite) => (int) $quantite)
+                ->filter(fn ($quantite) => $quantite > 0)
+                ->all();
+
+            if ($demandes === [] && ! empty($validated['tarif_id'])) {
+                $demandes = [(int) $validated['tarif_id'] => max(1, (int) ($validated['quantite'] ?? 1))];
+            }
         }
 
-        // Quantité illimitée par personne (plafonnée uniquement par les places restantes)
-        $quantite = max(1, (int) ($validated['quantite'] ?? 1));
+        if ($demandes === []) {
+            return back()->with('error', 'Choisissez au moins un billet.')->withInput();
+        }
 
-        $codePromoUtilise = null;
-        $montantReduction = 0;
-        $montantUnitaire = $tarif->prix;
+        $tarifs = Tarif::query()
+            ->where('evenement_id', $evenement->id)
+            ->where('statut', 'actif')
+            ->whereIn('id', array_keys($demandes))
+            ->with('jour')
+            ->get()
+            ->keyBy('id');
 
-        // Validation et application du code promo
-        if (! empty($validated['code_promo'])) {
+        if ($tarifs->count() !== count($demandes)) {
+            return back()->with('error', 'Un des billets choisis n\'est plus disponible.')->withInput();
+        }
+
+        foreach ($tarifs as $tarif) {
+            if (! $tarif->estEncoreVendable()) {
+                return back()->with('error', "« {$tarif->nom} » n'est plus en vente : la date associée est passée.")->withInput();
+            }
+        }
+
+        // Code promo : s'applique aux billets de son tarif
+        $codePromo = null;
+        if (! empty($validated['code_promo']) && ! $evenement->gratuit) {
             $codePromo = CodePromo::where('code', strtoupper($validated['code_promo']))
                 ->whereHas('tarif', fn ($q) => $q->where('evenement_id', $evenement->id))
                 ->first();
 
-            if (! $codePromo) {
-                return back()->with('error', 'Ce code promo n\'est pas valide pour cet événement.')->withInput();
-            }
+            $erreurPromo = match (true) {
+                ! $codePromo => 'Ce code promo n\'est pas valide pour cet événement.',
+                ! $codePromo->actif => 'Ce code promo a été désactivé.',
+                $codePromo->date_expiration && $codePromo->date_expiration < now() => 'Ce code promo a expiré.',
+                $codePromo->max_utilisations && $codePromo->nb_utilisations >= $codePromo->max_utilisations => 'Ce code promo a atteint son nombre maximum d\'utilisations.',
+                ! $tarifs->has($codePromo->tarif_id) => 'Ce code promo ne s\'applique à aucun des billets choisis.',
+                default => null,
+            };
 
-            if (! $codePromo->actif) {
-                return back()->with('error', 'Ce code promo a été désactivé.')->withInput();
+            if ($erreurPromo) {
+                return back()->with('error', $erreurPromo)->withInput();
             }
-
-            if ($codePromo->date_expiration && $codePromo->date_expiration < now()) {
-                return back()->with('error', 'Ce code promo a expiré.')->withInput();
-            }
-
-            if ($codePromo->max_utilisations && $codePromo->nb_utilisations >= $codePromo->max_utilisations) {
-                return back()->with('error', 'Ce code promo a atteint son nombre maximum d\'utilisations.')->withInput();
-            }
-
-            if ($codePromo->tarif_id !== $tarif->id) {
-                return back()->with('error', 'Ce code promo n\'est pas compatible avec le tarif sélectionné.')->withInput();
-            }
-
-            $codePromoUtilise = $codePromo->code;
-            $montantReduction = $codePromo->calculerReduction($tarif->prix);
-            $montantUnitaire = $tarif->prix - $montantReduction;
         }
 
-        $estGratuit = $evenement->gratuit || $montantUnitaire <= 0;
+        $lignes = $tarifs->map(function (Tarif $tarif) use ($demandes, $codePromo) {
+            $reduction = $codePromo && (int) $codePromo->tarif_id === (int) $tarif->id
+                ? $codePromo->calculerReduction($tarif->prix)
+                : 0;
 
-        // Réservation ATOMIQUE des places : le verrou (lockForUpdate) sérialise les demandes
-        // simultanées, garantissant qu'on ne vend jamais plus que la capacité, même à 200
-        // demandes au même moment. Les places réservées sont comptées immédiatement dans
-        // quota_vendu (réservation incluse).
-        $reserve = DB::transaction(function () use ($evenement, $quantite) {
-            $verrou = Evenement::whereKey($evenement->id)->lockForUpdate()->first();
-            if (! $verrou) {
-                return false;
-            }
-            $placesRestantes = $verrou->capacite - $verrou->quota_vendu;
-            if ($placesRestantes < $quantite) {
-                return false;
-            }
-            $verrou->increment('quota_vendu', $quantite);
-            return true;
-        });
+            return [
+                'tarif' => $tarif,
+                'quantite' => $demandes[$tarif->id],
+                'reduction' => $reduction,
+                'unitaire' => max(0, $tarif->prix - $reduction),
+                'code' => $reduction > 0 || ($codePromo && (int) $codePromo->tarif_id === (int) $tarif->id) ? $codePromo->code : null,
+            ];
+        })->values();
 
-        if (! $reserve) {
-            // Capacité pleine : on met l'acheteur en file d'attente (il sera recontacté si une
-            // place se libère) plutôt que de le laisser payer pour rien.
-            EventWaitlist::create([
-                'evenement_id' => $evenement->id,
-                'tarif_id' => $tarif->id ?? null,
-                'nom_acheteur' => $validated['nom_acheteur'],
-                'email_acheteur' => strtolower($validated['email_acheteur']),
-                'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
-                'quantite' => $quantite,
-                'code_promo_utilise' => $codePromoUtilise,
-                'montant_unitaire' => (int) round($montantUnitaire),
-                'montant_reduction' => (int) round($montantReduction),
-                'statut' => 'en_attente',
-            ]);
-
-            return back()->with('error', "Capacité atteinte pour cet événement. Vous êtes inscrit(e) en file d'attente ; nous vous préviendrons si une place se libère.")->withInput();
-        }
+        $total = $lignes->sum(fn ($ligne) => $ligne['unitaire'] * $ligne['quantite']);
+        $nombreBillets = (int) $lignes->sum('quantite');
+        $estGratuit = $evenement->gratuit || $total <= 0;
 
         $groupTransactionId = 'GRP-'.strtoupper(Str::random(16)); // ID de transaction groupée
-        $tickets = [];
         // Les tickets payants sont réservés pour une durée limitée ; s'ils ne sont pas payés,
         // la place est libérée et proposée à la file d'attente.
         $reservationExpireLe = $estGratuit ? null : now()->addMinutes(self::DUREE_RESERVATION_MINUTES);
@@ -258,28 +252,59 @@ class EvenementPublicController extends Controller
                 ->value('id');
         }
 
-        // Création de N tickets avec un ID de transaction partagé
-        for ($i = 0; $i < $quantite; $i++) {
-            $t = $evenement->tickets()->create([
-                'tarif_id' => $tarif->id,
-                'code_unique' => Ticket::genererCodeReservation(),
-                'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
-                'email_acheteur' => strtolower($validated['email_acheteur']),
-                'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
-                'nom_acheteur' => $validated['nom_acheteur'],
-                'nom_tarif' => $tarif->nom,
-                'montant' => $montantUnitaire,
-                'montant_reduction' => $montantReduction,
-                'quantite' => 1,
-                'statut_paiement' => 'en_attente',
-                'transaction_id' => $groupTransactionId,
-                'reservation_expire_le' => $reservationExpireLe,
-                'date_achat' => now(),
-                'code_promo_utilise' => $codePromoUtilise,
-                'affiliate_event_link_id' => $affiliateLinkId,
-            ]);
+        // Réservation ATOMIQUE de tout le panier : le verrou sérialise les demandes
+        // simultanées et les billets sont créés SOUS le verrou (en multijours,
+        // l'occupation d'un jour est calculée à partir des billets). Une ligne sans
+        // place lève une exception qui annule tout le panier.
+        try {
+            $tickets = DB::transaction(function () use (
+                $evenement, $lignes, $validated, $groupTransactionId, $reservationExpireLe, $affiliateLinkId
+            ) {
+                $verrou = Evenement::whereKey($evenement->id)->lockForUpdate()->firstOrFail();
+                $tickets = [];
 
-            $tickets[] = $t;
+                foreach ($lignes as $ligne) {
+                    $tarif = Tarif::whereKey($ligne['tarif']->id)->lockForUpdate()->firstOrFail();
+                    $verrou->resetCachesCapacite();
+
+                    $places = min($verrou->placesRestantesPourTarif($tarif), $this->stockRestantTarif($tarif));
+                    if ($places < $ligne['quantite']) {
+                        throw new PlacesInsuffisantesException($tarif, max(0, $places));
+                    }
+
+                    for ($i = 0; $i < $ligne['quantite']; $i++) {
+                        $tickets[] = $evenement->tickets()->create([
+                            'tarif_id' => $tarif->id,
+                            'code_unique' => Ticket::genererCodeReservation(),
+                            'qr_signature' => hash_hmac('sha256', (string) Str::uuid(), config('app.key') ?? 'fallback'),
+                            'email_acheteur' => strtolower($validated['email_acheteur']),
+                            'whatsapp_acheteur' => $validated['whatsapp_acheteur'] ?? null,
+                            'nom_acheteur' => $validated['nom_acheteur'],
+                            'nom_tarif' => $tarif->nom,
+                            'montant' => $ligne['unitaire'],
+                            'montant_reduction' => $ligne['reduction'],
+                            'quantite' => 1,
+                            'statut_paiement' => 'en_attente',
+                            'transaction_id' => $groupTransactionId,
+                            'reservation_expire_le' => $reservationExpireLe,
+                            'date_achat' => now(),
+                            'code_promo_utilise' => $ligne['code'],
+                            'affiliate_event_link_id' => $affiliateLinkId,
+                        ]);
+                    }
+
+                    $verrou->increment('quota_vendu', $ligne['quantite']);
+                }
+
+                return $tickets;
+            });
+        } catch (PlacesInsuffisantesException $e) {
+            $reste = $e->placesRestantes;
+            $message = $reste > 0
+                ? "Il ne reste que {$reste} place(s) pour « {$e->tarif->nom} ». Ajustez votre panier."
+                : "« {$e->tarif->nom} » est complet. Retirez-le de votre panier ou inscrivez-vous sur sa liste d'attente.";
+
+            return back()->with('error', $message)->withInput();
         }
 
         // Sécurité anti-IDOR : mémorise les tickets de la commande courante en session.
@@ -287,30 +312,9 @@ class EvenementPublicController extends Controller
         $sessionTickets = session('paiement_tickets', []);
         session(['paiement_tickets' => array_values(array_unique(array_merge($sessionTickets, collect($tickets)->pluck('id')->all())))]);
 
-        if (! $estGratuit) {
-            $paymentMonitoring->record(
-                'paiement_initie',
-                [
-                    'transaction_id' => $groupTransactionId,
-                    'event_id' => $evenement->id,
-                    'ticket_count' => count($tickets),
-                    'amount' => round((float) $montantUnitaire * $quantite, 2),
-                    'currency' => 'XOF',
-                    'source' => 'public',
-                    'payment_status' => 'en_attente',
-                ],
-                $request,
-                $tickets[0]->id,
-            );
-        }
-
-        if ($evenement->gratuit || $montantUnitaire <= 0) { // Traitement spécial pour les tickets gratuits (événement gratuit, tarif 0 F ou promo 100 %)
-            // Le code promo n'est comptabilisé qu'une fois le paiement confirmé :
-            // pour un événement gratuit, la confirmation est immédiate ici.
-            if ($codePromoUtilise) {
-                $codePromo->increment('nb_utilisations', 1);
-            }
-
+        if ($estGratuit) {
+            // Commande entièrement gratuite (événement gratuit, jours à 0 F ou promo 100 %) :
+            // confirmation immédiate. quota_vendu a déjà été compté à la réservation.
             $freeGroupId = 'GRATUIT-'.$tickets[0]->id;
             foreach ($tickets as $t) {
                 $t->update([
@@ -319,16 +323,155 @@ class EvenementPublicController extends Controller
                     'reservation_expire_le' => null,
                 ]);
             }
-            // quota_vendu a déjà été incrémenté lors de la réservation atomique ci-dessus.
-            $tarif->increment('quantite_vendue', $quantite);
+            foreach ($lignes as $ligne) {
+                $ligne['tarif']->increment('quantite_vendue', $ligne['quantite']);
+            }
+            if ($codePromo) {
+                $codePromo->increment('nb_utilisations', 1);
+            }
+
             SendTicketEmailJob::dispatchAfterResponse(collect($tickets)->pluck('id')->all(), $tickets[0]->email_acheteur);
 
             return redirect()->route('confirmation.show', $tickets[0]->id)
-                ->with('success', $quantite > 1 ? "{$quantite} places réservées." : 'Votre place est réservée.');
+                ->with('success', $nombreBillets > 1 ? "{$nombreBillets} places réservées." : 'Votre place est réservée.');
         }
 
+        $paymentMonitoring->record(
+            'paiement_initie',
+            [
+                'transaction_id' => $groupTransactionId,
+                'event_id' => $evenement->id,
+                'ticket_count' => count($tickets),
+                'amount' => round((float) $total, 2),
+                'currency' => 'XOF',
+                'source' => 'public',
+                'payment_status' => 'en_attente',
+            ],
+            $request,
+            $tickets[0]->id,
+        );
+
         return redirect()->route('paiement.show', $tickets[0]->id)
-            ->with('success', $quantite > 1 ? "{$quantite} places réservées. Finalisez le paiement." : 'Votre place est réservée. Finalisez le paiement.');
+            ->with('success', $nombreBillets > 1 ? "{$nombreBillets} places réservées. Finalisez le paiement." : 'Votre place est réservée. Finalisez le paiement.');
+    }
+
+    // Places encore vendables sur le stock propre d'un tarif : stock − vendus −
+    // réservations en ligne non expirées (non encore comptées dans quantite_vendue).
+    private function stockRestantTarif(Tarif $tarif): int
+    {
+        if ($tarif->quantite_disponible === null) {
+            return PHP_INT_MAX;
+        }
+
+        $reservees = (int) Ticket::query()
+            ->where('tarif_id', $tarif->id)
+            ->where('statut_paiement', 'en_attente')
+            ->whereNull('expire_at')
+            ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
+            ->where('reservation_expire_le', '>', now())
+            ->sum('quantite');
+
+        return max(0, (int) $tarif->quantite_disponible - (int) $tarif->quantite_vendue - $reservees);
+    }
+
+    // Liste d'attente d'un tarif complet (fenêtre de la page publique) : une
+    // demande par email et par tarif, l'organisateur est prévenu à chaque fois.
+    public function inscrireListeAttente(Request $request, Evenement $evenement)
+    {
+        abort_if($evenement->statut !== 'publié', 404);
+
+        $validated = $request->validate([
+            'tarif_id' => 'required|integer',
+            'nom' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'whatsapp' => 'nullable|string|max:30',
+            'quantite' => 'required|integer|min:1|max:100000',
+        ], [
+            'email.required' => 'Indiquez votre email.',
+            'email.email' => 'Le format de l\'email est invalide.',
+            'quantite.required' => 'Indiquez le nombre de places souhaitées.',
+            'quantite.min' => 'Demandez au moins une place.',
+        ]);
+
+        $tarif = Tarif::where('evenement_id', $evenement->id)
+            ->where('statut', 'actif')
+            ->find($validated['tarif_id']);
+        if (! $tarif) {
+            throw ValidationException::withMessages(['tarif_id' => 'Ce billet n\'est pas disponible.']);
+        }
+
+        $email = strtolower(trim($validated['email']));
+        $demande = EventWaitlist::where('evenement_id', $evenement->id)
+            ->where('tarif_id', $tarif->id)
+            ->where('email_acheteur', $email)
+            ->where('statut', 'en_attente')
+            ->first();
+
+        $donnees = [
+            'nom_acheteur' => $validated['nom'] ?? null,
+            'telephone_acheteur' => $validated['whatsapp'] ?? null,
+            'quantite' => (int) $validated['quantite'],
+            'montant_unitaire' => (int) round($tarif->prix),
+        ];
+
+        if ($demande) {
+            $demande->update($donnees);
+        } else {
+            $demande = EventWaitlist::create($donnees + [
+                'evenement_id' => $evenement->id,
+                'tarif_id' => $tarif->id,
+                'email_acheteur' => $email,
+                'montant_reduction' => 0,
+                'statut' => 'en_attente',
+            ]);
+        }
+
+        $this->notifierOrganisateurListeAttente($evenement, $tarif, $demande);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Vous êtes inscrit(e). Nous vous préviendrons par email dès que des places seront disponibles.',
+        ]);
+    }
+
+    // Notification de l'organisateur à chaque demande : tableau de bord + email.
+    private function notifierOrganisateurListeAttente(Evenement $evenement, Tarif $tarif, EventWaitlist $demande): void
+    {
+        $organisateur = $evenement->user;
+        if (! $organisateur) {
+            return;
+        }
+
+        $totaux = EventWaitlist::where('tarif_id', $tarif->id)->where('statut', 'en_attente');
+        $personnes = (clone $totaux)->count();
+        $places = (int) (clone $totaux)->sum('quantite');
+        $qui = trim(($demande->nom_acheteur ? $demande->nom_acheteur.' · ' : '').$demande->email_acheteur
+            .($demande->telephone_acheteur ? ' · '.$demande->telephone_acheteur : ''));
+        $texte = "Nouvelle demande sur la liste d'attente de « {$tarif->nom} » ({$evenement->titre}) : "
+            ."{$demande->quantite} place(s) demandée(s) par {$qui}.\n\n"
+            ."Au total : {$places} place(s) demandée(s) par {$personnes} personne(s).\n"
+            ."Ajoutez des places à ce tarif puis cliquez sur « Envoyer la notification » dans la gestion des tarifs : "
+            .route('admin.tarifs.index', $evenement->id);
+
+        try {
+            Message::create([
+                'user_id' => $organisateur->id,
+                'evenement_id' => $evenement->id,
+                'nom_complet' => $demande->nom_acheteur ?: 'Liste d\'attente',
+                'email' => $demande->email_acheteur,
+                'telephone' => $demande->telephone_acheteur,
+                'objet' => "Liste d'attente : {$tarif->nom} — {$evenement->titre}",
+                'message' => $texte,
+            ]);
+
+            Mail::raw($texte, function ($m) use ($organisateur, $evenement, $tarif) {
+                $m->to($organisateur->email, $organisateur->nom)
+                    ->subject("[PaxEvent] Liste d'attente : {$tarif->nom} — {$evenement->titre}");
+            });
+        } catch (\Throwable $e) {
+            // L'inscription reste valable même si la notification échoue.
+            Log::warning('Notification liste d\'attente impossible', ['evenement_id' => $evenement->id, 'erreur' => $e->getMessage()]);
+        }
     }
 
     // Permet à un utilisateur de contacter l'organisateur d'un événement

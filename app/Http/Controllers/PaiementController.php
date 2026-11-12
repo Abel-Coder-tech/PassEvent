@@ -139,15 +139,22 @@ class PaiementController extends Controller
             return redirect()->route('confirmation.show', $ticket->id); // Déjà payé, redirige
         }
 
-        if ($ticket->montant <= 0) { // Traitement spécial pour tickets gratuits
-            // Find all tickets in the same free group or single ticket
-            $freeTickets = collect([$ticket]);
-            if (str_starts_with($ticket->transaction_id, 'GRATUIT-') || str_starts_with($ticket->transaction_id, 'GRP-')) {
-                $freeTickets = Ticket::where('transaction_id', $ticket->transaction_id)
-                    ->where('statut_paiement', 'en_attente')
-                    ->with('evenement.dates', 'tarif')
-                    ->get();
+        // Billets de la même commande. Avec le panier, une commande peut mêler un
+        // jour gratuit et des billets payants : la gratuité se juge sur le TOTAL,
+        // jamais sur le seul billet affiché.
+        $commande = collect([$ticket]);
+        if (str_starts_with((string) $ticket->transaction_id, 'GRATUIT-') || str_starts_with((string) $ticket->transaction_id, 'GRP-')) {
+            $commande = Ticket::where('transaction_id', $ticket->transaction_id)
+                ->where('statut_paiement', 'en_attente')
+                ->with('evenement.dates', 'tarif')
+                ->get();
+            if ($commande->isEmpty()) {
+                $commande = collect([$ticket]);
             }
+        }
+
+        if ((float) $commande->sum('montant') <= 0) { // Commande entièrement gratuite
+            $freeTickets = $commande;
 
             $groupId = 'GRATUIT-'.$freeTickets->first()->id;
             foreach ($freeTickets as $ft) {
@@ -172,20 +179,30 @@ class PaiementController extends Controller
         }
 
         // Calcule le montant total pour les transactions groupées
-        $montantTotal = $ticket->montant;
+        $groupTickets = collect([$ticket]);
         if (str_starts_with($ticket->transaction_id, 'GRP-')) {
-            $groupTickets = Ticket::where('transaction_id', $ticket->transaction_id)
+            $groupe = Ticket::where('transaction_id', $ticket->transaction_id)
                 ->with('evenement.dates', 'tarif')
                 ->get();
-            if ($groupTickets->isNotEmpty()) {
-                $montantTotal = $groupTickets->sum('montant');
+            if ($groupe->isNotEmpty()) {
+                $groupTickets = $groupe;
             }
         }
+        $montantTotal = $groupTickets->sum('montant');
+
+        // Lignes du récapitulatif : une par tarif, quantités cumulées.
+        $lignesCommande = $groupTickets->groupBy(fn ($t) => $t->tarif_id ?? $t->nom_tarif)
+            ->map(fn ($tickets) => [
+                'nom' => $tickets->first()->nom_tarif ?? $tickets->first()->tarif?->nom ?? 'Billet',
+                'quantite' => (int) $tickets->sum('quantite'),
+                'montant' => (float) $tickets->sum('montant'),
+            ])->values();
+        $nombreBillets = $lignesCommande->sum('quantite');
 
         $publicKey = $this->fedapay->getPublicKey();
         $sandbox = $this->fedapay->isSandbox();
 
-        return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox', 'montantTotal'));
+        return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox', 'montantTotal', 'lignesCommande', 'nombreBillets'));
     }
 
     // Accès au paiement via un lien signé (ex: ticket réservé depuis la file d'attente).
@@ -1216,17 +1233,24 @@ class PaiementController extends Controller
                 $reservationDejaComptee = $locked->reservation_expire_le !== null;
 
                 if (! $reservationDejaComptee) {
-                    $nouveauQuota = (int) $evenement->quota_vendu + (int) $locked->quantite;
-                    if ($nouveauQuota > (int) $evenement->capacite) {
-                        FacadesLog::warning('FedaPay - dépassement de capacité à la confirmation, quota plafonné', [
-                            'ticket' => $locked->id,
-                            'evenement' => $evenement->id,
-                            'quota_actuel' => $evenement->quota_vendu,
-                            'capacite' => $evenement->capacite,
-                        ]);
-                        $nouveauQuota = (int) $evenement->capacite;
+                    if ($evenement->estMultiJour()) {
+                        // Multijours : l'occupation est calculée par jour à partir
+                        // des billets actifs, le compteur global sert uniquement de
+                        // statistique et n'est pas plafonné par la jauge de la salle.
+                        $evenement->increment('quota_vendu', (int) $locked->quantite);
+                    } else {
+                        $nouveauQuota = (int) $evenement->quota_vendu + (int) $locked->quantite;
+                        if ($nouveauQuota > (int) $evenement->capacite) {
+                            FacadesLog::warning('FedaPay - dépassement de capacité à la confirmation, quota plafonné', [
+                                'ticket' => $locked->id,
+                                'evenement' => $evenement->id,
+                                'quota_actuel' => $evenement->quota_vendu,
+                                'capacite' => $evenement->capacite,
+                            ]);
+                            $nouveauQuota = (int) $evenement->capacite;
+                        }
+                        $evenement->update(['quota_vendu' => $nouveauQuota]);
                     }
-                    $evenement->update(['quota_vendu' => $nouveauQuota]);
                 }
 
                 $locked->update([

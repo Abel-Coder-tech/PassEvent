@@ -52,6 +52,7 @@ class EventVisibilityTest extends TestCase
                 $table->unsignedBigInteger('evenement_id');
                 $table->dateTime('date_debut');
                 $table->unsignedInteger('ordre')->default(0);
+                $table->unsignedInteger('capacite')->nullable();
                 $table->timestamps();
             });
         }

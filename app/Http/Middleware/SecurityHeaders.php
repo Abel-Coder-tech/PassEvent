@@ -28,7 +28,11 @@ class SecurityHeaders
         // (/scan pour l'organisateur, /agent/scan pour l'agent) qui en ont
         // besoin, et uniquement en same-origin (camera=(self)).
         $camera = ($request->is('agent/scan') || $request->is('scan')) ? '(self)' : '()';
-        $response->headers->set('Permissions-Policy', "geolocation=(), microphone=(), camera={$camera}");
+        // La géolocalisation n'est ouverte que sur la page publique d'un
+        // événement (bouton « Itinéraire »), en same-origin, et jamais demandée
+        // sans clic du visiteur.
+        $geolocalisation = $this->estPageEvenement($request) ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "geolocation={$geolocalisation}, microphone=(), camera={$camera}");
 
         // HSTS : uniquement sur HTTPS
         if ($request->secure()) {
@@ -36,5 +40,12 @@ class SecurityHeaders
         }
 
         return $response;
+    }
+
+    // Page publique d'un événement : /evenements/{slug} (GET), hors sous-pages.
+    private function estPageEvenement(Request $request): bool
+    {
+        return $request->isMethod('GET')
+            && $request->routeIs('evenements.public.show');
     }
 }

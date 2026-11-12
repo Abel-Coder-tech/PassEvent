@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\AffiliationService;
 
@@ -13,6 +14,19 @@ class TicketObserver
 {
     public function __construct(private AffiliationService $affiliation)
     {
+    }
+
+    /**
+     * Fige le jour du billet à partir du tarif au moment de la vente. Le jour
+     * reste ainsi inchangé même si l'organisateur modifie le tarif ensuite.
+     */
+    public function creating(Ticket $ticket): void
+    {
+        if ($ticket->evenement_date_id !== null || ! $ticket->tarif_id) {
+            return;
+        }
+
+        $ticket->evenement_date_id = Tarif::whereKey($ticket->tarif_id)->value('evenement_date_id');
     }
 
     public function saved(Ticket $ticket): void

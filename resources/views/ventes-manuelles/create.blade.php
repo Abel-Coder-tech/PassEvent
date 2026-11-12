@@ -70,14 +70,14 @@
                     <div class="panel-card-body">
                         <div class="row g-3">
                             <div class="col-md-6 d-none" id="fieldStatut"></div>
-                            <div class="col-md-6" id="fieldTarif">
-                                <label for="tarif_id" class="form-label fw-semibold">Tarif <span class="text-danger">*</span></label>
-                                <select class="form-select" id="tarif_id" name="tarif_id" required>
-                                    <option value="">— Sélectionnez d'abord un événement —</option>
-                                </select>
+                            <div class="col-12" id="fieldTarif">
+                                <span class="form-label fw-semibold d-block">Billets <span class="text-danger">*</span></span>
+                                <div id="listeBillets" class="vm-billets">
+                                    <div class="text-muted small">Sélectionnez d'abord un événement.</div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="quantite" class="form-label fw-semibold">Quantité</label>
+                            <div class="col-md-6" id="fieldQuantite">
+                                <label for="quantite" class="form-label fw-semibold">Nombre de places</label>
                                 <div class="input-group" style="max-width: 160px;">
                                     <button type="button" class="btn btn-outline-secondary btn-qty" id="qtyMinus" style="border-radius: 6px 0 0 6px;">−</button>
                                     <input type="number" class="form-control text-center" id="quantite" name="quantite" value="1" min="1" max="20" style="border-left:0;border-right:0;">
@@ -121,11 +121,10 @@
                                 <span class="text-muted">Statut</span>
                                 <span class="fw-semibold" id="recapStatut">Externe</span>
                             </div>
-                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;">
-                                <span class="text-muted">Tarif unitaire</span>
-                                <span class="fw-semibold" id="recapTarif">—</span>
+                            <div class="py-2" style="border-bottom:1px solid #f5f5f5;" id="recapBillets">
+                                <div id="recapLignes"><span class="text-muted">Aucun billet</span></div>
                             </div>
-                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;">
+                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;" id="recapQuantiteRow">
                                 <span class="text-muted">Quantité</span>
                                 <span class="fw-semibold" id="recapQuantite">1</span>
                             </div>
@@ -211,12 +210,24 @@
 @endsection
 
 @section('scripts')
+<style>
+.vm-billets{display:flex;flex-direction:column;gap:8px}
+.vm-section{font-size:.75rem;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
+.vm-ligne{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;border:1.5px solid #e6e3eb;border-radius:12px;padding:10px 12px;background:#fff}
+.vm-ligne.is-on{border-color:var(--violet);background:#faf7fc}
+.vm-ligne.is-off{opacity:.6}
+.vm-step{display:inline-flex;align-items:center;border:1.5px solid #d9d4df;border-radius:10px;overflow:hidden}
+.vm-step button{width:44px;height:44px;border:0;background:#fff;color:var(--violet);font-size:1.2rem}
+.vm-step button:disabled{color:#c9c3d1}
+.vm-step span{min-width:28px;text-align:center;font-weight:700}
+@media (max-width:575.98px){.vm-ligne{grid-template-columns:minmax(0,1fr) auto}.vm-ligne .vm-step{grid-column:1 / -1;justify-self:end}}
+</style>
 <script src="https://cdn.fedapay.com/checkout.js?v=1.1.3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('venteForm');
     const eventSelect = document.getElementById('evenement_id');
-    const tarifSelect = document.getElementById('tarif_id');
+    const listeBillets = document.getElementById('listeBillets');
     const quantiteInput = document.getElementById('quantite');
     const qtyMinus = document.getElementById('qtyMinus');
     const qtyPlus = document.getElementById('qtyPlus');
@@ -229,26 +240,43 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     const fedapayPublicKey = '{{ $publicKey }}';
     const fedapaySandbox = {{ $sandbox ? 'true' : 'false' }};
+    const MAX_BILLETS = 20;
 
     const isUniversitaire = {{ auth()->user()->type === 'universitaire' ? 'true' : 'false' }};
-    let tarifUnitaire = 0;
     let isFreeEvent = false;
     let eventType = 'spectacle';
     let especesActivees = true;
-    let promoReduction = 0;
+    // Panier : billets chargés pour l'événement et quantités choisies (tarif_id => quantité)
+    let billets = [];
+    let panier = {};
+    // Code promo appliqué : réduction unitaire sur un tarif du panier
     let promoCodeApplique = '';
+    let promoTarifId = null;
+    let promoReduction = 0;
+
+    function escapeHtml(v) {
+        return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function numberFormat(n) {
+        return new Intl.NumberFormat('fr-FR').format(n);
+    }
+
+    const nombreBillets = () => Object.values(panier).reduce((s, q) => s + q, 0);
 
     function toggleFieldsPayants(hide) {
         document.getElementById('fieldStatut').style.display = (hide || !isUniversitaire) ? 'none' : '';
         document.getElementById('fieldTarif').style.display = hide ? 'none' : '';
         document.getElementById('fieldPaiement').style.display = hide ? 'none' : '';
-        document.getElementById('sectionTarif').style.display = hide ? 'none' : '';
+        document.getElementById('fieldPromo').style.display = hide ? 'none' : '';
+        document.getElementById('fieldQuantite').style.display = hide ? '' : 'none';
+        document.getElementById('recapBillets').style.display = hide ? 'none' : '';
+        document.getElementById('recapQuantiteRow').style.display = hide ? '' : 'none';
 
         if (hide) {
             document.getElementById('recapTotalLabel').textContent = eventType === 'spectacle' ? 'Billet' : 'Inscription';
             document.getElementById('recapTotal').textContent = 'Gratuite';
             document.getElementById('recapStatut').closest('.d-flex').style.display = 'none';
-            document.getElementById('recapTarif').closest('.d-flex').style.display = 'none';
             document.getElementById('recapPaiement').closest('.d-flex').style.display = 'none';
             document.getElementById('submitInfo').innerHTML = '<i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail';
             document.getElementById('digitalInfo').classList.add('d-none');
@@ -257,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('recapTotalLabel').textContent = 'Total à encaisser';
             document.getElementById('recapTotal').textContent = '0 FCFA';
             document.getElementById('recapStatut').closest('.d-flex').style.display = '';
-            document.getElementById('recapTarif').closest('.d-flex').style.display = '';
             document.getElementById('recapPaiement').closest('.d-flex').style.display = '';
         }
     }
@@ -278,49 +305,93 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('digitalInfo').classList.toggle('d-none', !mobile);
     }
 
+    // Une ligne par billet : jours dans l'ordre, puis les packs.
+    function rendreBillets() {
+        if (!billets.length) {
+            listeBillets.innerHTML = '<div class="text-muted small">Aucun billet en vente pour cet événement.</div>';
+            return;
+        }
+        let html = '';
+        let packsAffiches = false;
+        billets.forEach((b) => {
+            if (b.pack && !packsAffiches) {
+                html += '<div class="vm-section">Packs</div>';
+                packsAffiches = true;
+            }
+            const q = panier[b.id] || 0;
+            const epuise = b.restantes !== null && b.restantes <= 0;
+            const prix = b.prix > 0 ? numberFormat(b.prix) + ' F' + (b.pack ? ' / ' + b.nb_jours + ' jours' : '') : 'Gratuit';
+            html += '<div class="vm-ligne' + (q > 0 ? ' is-on' : '') + (epuise ? ' is-off' : '') + '" data-tarif="' + b.id + '">'
+                + '<div><div class="fw-semibold">' + escapeHtml(b.nom) + '</div>'
+                + (b.jour_date ? '<small class="text-muted">' + escapeHtml(b.jour_date) + '</small>' : '') + '</div>'
+                + '<div class="text-end"><div class="fw-bold" style="color:var(--violet);">' + prix + '</div>'
+                + '<small class="' + (epuise ? 'text-danger fw-semibold' : 'text-muted') + '">' + (epuise ? 'Complet' : (b.restantes === null ? '' : b.restantes + ' restantes')) + '</small></div>'
+                + (epuise ? '<span></span>' : '<div class="vm-step"><button type="button" data-moins aria-label="Retirer un billet ' + escapeHtml(b.nom) + '"' + (q <= 0 ? ' disabled' : '') + '>−</button>'
+                    + '<span>' + q + '</span>'
+                    + '<button type="button" data-plus aria-label="Ajouter un billet ' + escapeHtml(b.nom) + '"' + (q >= b.restantes || nombreBillets() >= MAX_BILLETS ? ' disabled' : '') + '>+</button></div>')
+                + '</div>';
+        });
+        listeBillets.innerHTML = html;
+    }
+
+    listeBillets.addEventListener('click', function (e) {
+        const bouton = e.target.closest('button');
+        if (!bouton) return;
+        const id = bouton.closest('[data-tarif]').dataset.tarif;
+        const billet = billets.find((b) => String(b.id) === id);
+        if (!billet) return;
+        const q = panier[id] || 0;
+        if (bouton.hasAttribute('data-plus') && q < billet.restantes && nombreBillets() < MAX_BILLETS) panier[id] = q + 1;
+        if (bouton.hasAttribute('data-moins') && q > 0) panier[id] = q - 1;
+        if (!panier[id]) delete panier[id];
+        if (promoTarifId && !panier[promoTarifId]) resetPromo();
+        rendreBillets();
+        updateRecap();
+    });
+
     function updateRecap() {
         const eventOption = eventSelect.options[eventSelect.selectedIndex];
 
         document.getElementById('recapEvent').textContent = eventOption.text || '—';
         document.getElementById('recapQuantite').textContent = quantiteInput.value;
 
+        const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
+
         if (isFreeEvent) {
-            const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
             btnSubmit.disabled = !(eventSelect.value && nomOk);
             return;
         }
 
-        const tarifOption = tarifSelect.options[tarifSelect.selectedIndex];
-
         document.getElementById('recapStatut').textContent = '—';
-        document.getElementById('recapTarif').textContent = tarifUnitaire > 0 ? numberFormat(tarifUnitaire) + ' FCFA' : '—';
         document.getElementById('recapPaiement').textContent = methodLabels[methodeSelect.value] || '—';
 
-        const unitaireFinal = Math.max(0, tarifUnitaire - promoReduction);
-        const total = unitaireFinal * parseInt(quantiteInput.value || 0);
+        let total = 0;
+        const lignes = billets.filter((b) => panier[b.id]).map((b) => {
+            const q = panier[b.id];
+            const unitaire = Math.max(0, b.prix - (String(b.id) === String(promoTarifId) ? promoReduction : 0));
+            total += unitaire * q;
+            return '<div class="d-flex justify-content-between"><span>' + q + ' × ' + escapeHtml(b.nom) + '</span><span class="fw-semibold">' + (unitaire * q > 0 ? numberFormat(unitaire * q) + ' FCFA' : 'Gratuit') + '</span></div>';
+        });
+        document.getElementById('recapLignes').innerHTML = lignes.length ? lignes.join('') : '<span class="text-muted">Aucun billet</span>';
         document.getElementById('recapTotal').textContent = numberFormat(total) + ' FCFA';
 
         const promoRow = document.getElementById('recapPromoRow');
         const promoEl = document.getElementById('recapPromo');
         if (promoCodeApplique && promoReduction > 0) {
-            promoEl.textContent = promoCodeApplique + ' (' + numberFormat(promoReduction) + ' FCFA)';
+            promoEl.textContent = promoCodeApplique + ' (−' + numberFormat(promoReduction) + ' FCFA / billet)';
             promoRow.classList.remove('d-none');
         } else {
             promoRow.classList.add('d-none');
         }
 
-        const nomOk = document.getElementById('nom_acheteur').value.trim() !== '';
         const emailOk = emailInput.value.trim() !== '';
-        btnSubmit.disabled = !(eventSelect.value && tarifSelect.value && nomOk && emailOk);
-    }
-
-    function numberFormat(n) {
-        return new Intl.NumberFormat('fr-FR').format(n);
+        btnSubmit.disabled = !(eventSelect.value && lignes.length && nomOk && emailOk);
     }
 
     function resetPromo() {
         promoReduction = 0;
         promoCodeApplique = '';
+        promoTarifId = null;
         const feedback = document.getElementById('promoFeedback');
         feedback.className = 'mt-1';
         feedback.style.color = '';
@@ -329,7 +400,8 @@ document.addEventListener('DOMContentLoaded', function() {
         updateRecap();
     }
 
-    function verifierPromo() {
+    // Le code promo vise un tarif : on l'essaie sur chaque billet du panier.
+    async function verifierPromo() {
         const codeInput = document.getElementById('code_promo');
         const code = codeInput.value.trim();
         const feedback = document.getElementById('promoFeedback');
@@ -340,11 +412,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const eventId = eventSelect.value;
-        const tarifId = tarifSelect.value;
-        if (!eventId || !tarifId || isFreeEvent) {
+        const tarifIds = Object.keys(panier);
+        if (!eventId || !tarifIds.length || isFreeEvent) {
             feedback.className = 'mt-1 text-danger';
             feedback.style.color = '';
-            feedback.textContent = 'Sélectionnez d\'abord un événement et un tarif.';
+            feedback.textContent = 'Ajoutez d\'abord des billets au panier.';
             return;
         }
 
@@ -352,49 +424,52 @@ document.addEventListener('DOMContentLoaded', function() {
         feedback.style.color = '';
         feedback.textContent = 'Vérification…';
 
-        fetch('{{ route('ventes-manuelles.verifier-code-promo') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: JSON.stringify({ evenement_id: eventId, tarif_id: tarifId, code: code }),
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.valide) {
-                promoCodeApplique = data.code;
-                promoReduction = data.reduction;
-                codeInput.value = data.code;
-                feedback.className = 'mt-1';
-                feedback.style.color = 'var(--vert)';
-                feedback.textContent = 'Code promo appliqué : -' + numberFormat(data.reduction) + ' FCFA';
-                updateRecap();
-            } else {
-                resetPromo();
-                feedback.className = 'mt-1 text-danger';
-                feedback.style.color = '';
-                feedback.textContent = data.erreur || 'Code promo invalide.';
+        let derniereErreur = 'Code promo invalide.';
+        try {
+            for (const tarifId of tarifIds) {
+                const r = await fetch('{{ route('ventes-manuelles.verifier-code-promo') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ evenement_id: eventId, tarif_id: tarifId, code: code }),
+                });
+                const data = await r.json();
+                if (data.valide) {
+                    promoCodeApplique = data.code;
+                    promoReduction = data.reduction;
+                    promoTarifId = tarifId;
+                    codeInput.value = data.code;
+                    const billet = billets.find((b) => String(b.id) === String(tarifId));
+                    feedback.className = 'mt-1';
+                    feedback.style.color = 'var(--vert)';
+                    feedback.textContent = 'Code promo appliqué sur « ' + (billet ? billet.nom : '') + ' » : −' + numberFormat(data.reduction) + ' FCFA par billet';
+                    updateRecap();
+                    return;
+                }
+                derniereErreur = data.erreur || derniereErreur;
             }
-        })
-        .catch(() => {
+            resetPromo();
+            feedback.className = 'mt-1 text-danger';
+            feedback.textContent = derniereErreur;
+        } catch (e) {
             feedback.className = 'mt-1 text-danger';
             feedback.style.color = '';
             feedback.textContent = 'Erreur de vérification. Réessayez.';
-        });
+        }
     }
 
     function loadTarifs() {
         const eventId = eventSelect.value;
 
+        panier = {};
+        billets = [];
         resetPromo();
 
-        tarifSelect.innerHTML = '<option value="">Chargement…</option>';
-
         if (!eventId) {
-            tarifSelect.innerHTML = '<option value="">— Sélectionnez d\'abord un événement —</option>';
-            tarifUnitaire = 0;
+            listeBillets.innerHTML = '<div class="text-muted small">Sélectionnez d\'abord un événement.</div>';
             isFreeEvent = false;
             toggleFieldsPayants(false);
             updateRecap();
@@ -407,14 +482,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (isFreeEvent) {
             toggleFieldsPayants(true);
-            tarifUnitaire = 0;
             updateRecap();
             return;
         }
 
         toggleFieldsPayants(false);
-
-        const body = { evenement_id: eventId };
+        listeBillets.innerHTML = '<div class="text-muted small">Chargement…</div>';
 
         fetch('{{ route('ventes-manuelles.tarifs') }}', {
             method: 'POST',
@@ -422,18 +495,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify({ evenement_id: eventId }),
         })
         .then(r => r.json())
         .then(data => {
-            tarifSelect.innerHTML = '<option value="">Choisir un tarif —</option>';
-            data.tarifs.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = t.nom + ' — ' + numberFormat(t.prix) + ' FCFA';
-                opt.dataset.prix = t.prix;
-                tarifSelect.appendChild(opt);
-            });
+            billets = data.tarifs || [];
+            rendreBillets();
 
             // Gestion du seuil espèces
             especesActivees = data.especes_activees;
@@ -455,19 +522,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 alertEspeces.style.display = 'none';
                 alertEspeces.innerHTML = '';
             }
+            updateUI();
+            updateRecap();
         })
         .catch(() => {
-            tarifSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            listeBillets.innerHTML = '<div class="text-danger small">Erreur de chargement des billets.</div>';
         });
     }
 
     eventSelect.addEventListener('change', loadTarifs);
-
-    tarifSelect.addEventListener('change', function() {
-        const opt = this.options[this.selectedIndex];
-        tarifUnitaire = parseFloat(opt.dataset.prix || 0);
-        resetPromo();
-    });
 
     document.getElementById('nom_acheteur').addEventListener('input', updateRecap);
     emailInput.addEventListener('input', updateRecap);
@@ -490,6 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Quantité : uniquement pour un événement gratuit (billet unique)
     qtyMinus.addEventListener('click', function() {
         const v = parseInt(quantiteInput.value);
         if (v > 1) { quantiteInput.value = v - 1; updateRecap(); }
@@ -497,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     qtyPlus.addEventListener('click', function() {
         const v = parseInt(quantiteInput.value);
-        if (v < 20) { quantiteInput.value = v + 1; updateRecap(); }
+        if (v < MAX_BILLETS) { quantiteInput.value = v + 1; updateRecap(); }
     });
 
     form.addEventListener('submit', function(e) {
@@ -508,8 +572,10 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.forEach((val, key) => data[key] = val);
 
         if (isFreeEvent) {
-            delete data.tarif_id;
             delete data.methode_paiement;
+        } else {
+            delete data.quantite;
+            data.lignes = panier;
         }
 
         btnSubmit.disabled = true;
@@ -591,22 +657,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 body.tickets.forEach(t => {
                     const reference = t.code_unique || t.transaction_id;
                     const label = t.code_unique ? 'Code' : 'Référence';
-                    ticketsHtml += '<li><strong>' + label + ' :</strong> ' + escapeHtml(reference) + '</li>';
+                    ticketsHtml += '<li><strong>' + label + ' :</strong> ' + escapeHtml(reference) + ' <span class="text-muted">· ' + escapeHtml(t.nom_tarif || '') + '</span></li>';
                 });
-                if (body.total > 0) {
-                    ticketsHtml += '</li><li class="fw-bold mt-1">Total : ' + numberFormat(body.total) + ' FCFA</li></ul>';
-                } else {
-                    ticketsHtml += '</li><li class="fw-bold mt-1">Gratuit</li></ul>';
-                }
+                ticketsHtml += '<li class="fw-bold mt-1">' + (body.total > 0 ? 'Total : ' + numberFormat(body.total) + ' FCFA' : 'Gratuit') + '</li></ul>';
                 document.getElementById('successTickets').innerHTML = ticketsHtml;
                 const modal = new bootstrap.Modal(document.getElementById('successModal'));
                 modal.show();
 
                 form.reset();
-                document.getElementById('quantite').value = 1;
-                tarifUnitaire = 0;
+                quantiteInput.value = 1;
+                panier = {};
+                billets = [];
                 isFreeEvent = false;
-                tarifSelect.innerHTML = '<option value="">— Sélectionnez d\'abord un événement —</option>';
+                listeBillets.innerHTML = '<div class="text-muted small">Sélectionnez d\'abord un événement.</div>';
                 toggleFieldsPayants(false);
                 updateRecap();
 
@@ -624,6 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    toggleFieldsPayants(false);
     updateUI();
     updateRecap();
 });

@@ -13,6 +13,7 @@ class Tarif extends Model
 
     protected $fillable = [
         'evenement_id',
+        'evenement_date_id',
         'nom',
         'prix',
         'quantite_disponible',
@@ -28,6 +29,34 @@ class Tarif extends Model
     public function evenement(): BelongsTo
     {
         return $this->belongsTo(Evenement::class);
+    }
+
+    // Jour auquel ce tarif est rattaché. `null` = valable toutes les dates
+    // de l'événement (packs et tarifs historiques).
+    public function jour(): BelongsTo
+    {
+        return $this->belongsTo(EvenementDate::class, 'evenement_date_id');
+    }
+
+    public function estPack(): bool
+    {
+        return $this->evenement_date_id === null;
+    }
+
+    // Billet à la journée : vendable jusqu'à minuit de son jour.
+    // Pack : vendable jusqu'à minuit du premier jour payant de l'événement
+    // (un premier jour gratuit ne ferme donc pas la vente des packs).
+    public function estEncoreVendable(): bool
+    {
+        if ($this->evenement_date_id !== null) {
+            $jour = $this->relationLoaded('jour') ? $this->jour : $this->jour()->first();
+
+            return $jour !== null && ! $jour->estTermine();
+        }
+
+        $fin = $this->evenement?->finVentePacks();
+
+        return $fin === null || now()->lte($fin);
     }
 
     public function codesPromos(): HasMany

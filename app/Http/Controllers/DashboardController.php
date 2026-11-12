@@ -168,9 +168,7 @@ class DashboardController extends Controller
         $activiteRecents = array_slice($activiteRecents, 0, 5);
 
         // Calcul du remplissage moyen de tous les événements
-        $remplissageMoyen = $evenements->avg(function ($e) {
-            return $e->capacite > 0 ? ($e->quota_vendu / $e->capacite) * 100 : 0;
-        });
+        $remplissageMoyen = $evenements->avg(fn ($e) => $e->tauxRemplissage());
 
         // Statistiques par opérateur mobile (uniquement les paiements mobile money)
         $paiementStats = $ticketStatistics->repartitionPaiements($evenementsIds);
