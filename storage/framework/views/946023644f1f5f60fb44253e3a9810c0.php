@@ -1,1 +1,0 @@
-<?php /**PATH /home/abel/Projects/PassEvent/resources/views/statistiques/index.blade.php ENDPATH**/ ?>
