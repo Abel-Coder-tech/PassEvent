@@ -544,6 +544,7 @@ class ApiAuthenticationSecurityTest extends TestCase
                 $table->unsignedBigInteger('evenement_id');
                 $table->dateTime('date_debut')->nullable();
                 $table->unsignedInteger('ordre')->default(0);
+                $table->unsignedInteger('capacite')->nullable();
             });
         }
 
@@ -551,6 +552,7 @@ class ApiAuthenticationSecurityTest extends TestCase
             Schema::create('ticket', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('evenement_id');
+                $table->unsignedBigInteger('evenement_date_id')->nullable();
                 $table->unsignedBigInteger('agent_vente_id')->nullable();
                 $table->string('code_unique')->unique();
                 $table->string('statut_paiement')->default('payé');

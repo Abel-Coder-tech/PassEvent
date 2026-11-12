@@ -318,11 +318,13 @@ class AgentVenteCapacityReservationTest extends TestCase
             $table->unsignedBigInteger('evenement_id');
             $table->dateTime('date_debut')->nullable();
             $table->unsignedInteger('ordre')->default(0);
+            $table->unsignedInteger('capacite')->nullable();
         });
 
         Schema::create('tarifs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('evenement_id');
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->string('nom');
             $table->decimal('prix', 10, 2)->default(0);
             $table->unsignedInteger('quantite_disponible')->nullable();
@@ -349,6 +351,7 @@ class AgentVenteCapacityReservationTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('evenement_id');
             $table->unsignedBigInteger('tarif_id')->nullable();
+            $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->unsignedBigInteger('agent_vente_id')->nullable();
             $table->unsignedBigInteger('lot_physique_id')->nullable();
             $table->unsignedBigInteger('affiliate_event_link_id')->nullable();

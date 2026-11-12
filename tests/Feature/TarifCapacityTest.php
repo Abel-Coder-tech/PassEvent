@@ -45,10 +45,23 @@ class TarifCapacityTest extends TestCase
             });
         }
 
+        // Le contrôle des stocks distingue mono-jour et multijours.
+        if (! Schema::hasTable('evenement_dates')) {
+            Schema::create('evenement_dates', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('evenement_id');
+                $table->dateTime('date_debut')->nullable();
+                $table->unsignedInteger('ordre')->default(0);
+                $table->unsignedInteger('capacite')->nullable();
+                $table->timestamps();
+            });
+        }
+
         if (! Schema::hasTable('tarifs')) {
             Schema::create('tarifs', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('evenement_id');
+                $table->unsignedBigInteger('evenement_date_id')->nullable();
                 $table->string('nom');
                 $table->decimal('prix', 10, 2);
                 $table->unsignedInteger('quantite_disponible')->nullable();

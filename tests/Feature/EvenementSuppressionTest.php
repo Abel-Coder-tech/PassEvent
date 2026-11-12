@@ -51,6 +51,7 @@ class EvenementSuppressionTest extends TestCase
                 $table->unsignedBigInteger('evenement_id');
                 $table->dateTime('date_debut');
                 $table->unsignedInteger('ordre')->default(0);
+                $table->unsignedInteger('capacite')->nullable();
                 $table->timestamps();
             });
         }
@@ -59,6 +60,7 @@ class EvenementSuppressionTest extends TestCase
             Schema::create('ticket', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('evenement_id');
+                $table->unsignedBigInteger('evenement_date_id')->nullable();
                 $table->string('statut_paiement')->default('en_attente');
                 $table->unsignedBigInteger('lot_physique_id')->nullable();
                 $table->boolean('annule')->default(false);

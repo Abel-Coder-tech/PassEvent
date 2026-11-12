@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Observers\TicketObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ class Ticket extends Model
     protected $fillable = [
         'evenement_id',
         'tarif_id',
+        'evenement_date_id',
         'agent_vente_id',
         'source',
         'code_unique',
@@ -85,6 +87,34 @@ class Ticket extends Model
         return static::methodePaiementLabel($this->methode_paiement, $this->type_paiement);
     }
 
+    // Billet valable pour ce jour : soit il est rattaché à ce jour précis,
+    // soit il couvre toutes les dates de l'événement (pack / historique).
+    public function estValableLeJour(?EvenementDate $jour): bool
+    {
+        return $jour === null
+            || $this->evenement_date_id === null
+            || (int) $this->evenement_date_id === (int) $jour->id;
+    }
+
+    // Billets qui occupent réellement une place : payés, ou en attente tant
+    // que leur réservation n'est pas expirée. Les annulés, remboursés,
+    // échoués et expirés sont exclus.
+    public function scopeActifsPourCapacite(Builder $query): Builder
+    {
+        return $query
+            ->whereNull('expire_at')
+            ->where(fn (Builder $q) => $q->whereNull('annule')->orWhere('annule', false))
+            ->where(function (Builder $q) {
+                $q->where('statut_paiement', 'payé')
+                    ->orWhere(function (Builder $q) {
+                        $q->where('statut_paiement', 'en_attente')
+                            ->where(fn (Builder $q2) => $q2
+                                ->whereNull('reservation_expire_le')
+                                ->orWhere('reservation_expire_le', '>', now()));
+                    });
+            });
+    }
+
     public function getLabel(): string
     {
         return $this->nom_tarif ?? 'Standard';
@@ -136,6 +166,13 @@ class Ticket extends Model
     public function tarif(): BelongsTo
     {
         return $this->belongsTo(Tarif::class);
+    }
+
+    // Jour auquel ce billet donne accès. `null` = valable toutes les dates
+    // (packs et billets historiques).
+    public function jour(): BelongsTo
+    {
+        return $this->belongsTo(EvenementDate::class, 'evenement_date_id');
     }
 
     public function agentVente(): BelongsTo

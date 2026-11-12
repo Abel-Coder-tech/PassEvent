@@ -65,7 +65,9 @@
                             <div class="fw-bold">{{ $ticket->evenement?->titre ?? '—' }}</div>
                             <small class="text-muted">
                                 <i class="bi bi-calendar3 me-1"></i>
-                                @if($ticket->evenement)
+                                @if($ticket->evenement_date_id && $ticket->jour)
+                                    {{ $ticket->jour->date_debut->isoFormat('D MMM YYYY HH:mm') }}
+                                @elseif($ticket->evenement)
                                     @forelse($ticket->evenement->datesDebut() as $date)
                                         {{ $date->isoFormat('D MMM YYYY HH:mm') }}{{ !$loop->last ? ' · ' : '' }}
                                     @empty

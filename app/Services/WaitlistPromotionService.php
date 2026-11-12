@@ -25,6 +25,13 @@ class WaitlistPromotionService
      */
     public function promouvoirEvenement(int $evenementId): int
     {
+        // Désactivé : l'organisateur prévient lui-même tous les inscrits d'un
+        // tarif en une fois (gestion des tarifs), premier arrivé premier servi.
+        // Plus aucune place n'est réservée automatiquement dans l'ordre de la file.
+        if (! config('paxevent.promotion_auto_liste_attente', false)) {
+            return 0;
+        }
+
         return DB::transaction(function () use ($evenementId) {
             $promus = 0;
 
@@ -34,11 +41,6 @@ class WaitlistPromotionService
             }
 
             while (true) {
-                $placesRestantes = $evenement->capacite - $evenement->quota_vendu;
-                if ($placesRestantes < 1) {
-                    break; // Plus de place libre
-                }
-
                 // Premier inscrit en attente (ordre d'arrivée) — verrouillé pour éviter les doublons
                 $candidat = EventWaitlist::where('evenement_id', $evenementId)
                     ->where('statut', 'en_attente')
@@ -47,6 +49,13 @@ class WaitlistPromotionService
 
                 if (! $candidat) {
                     break; // Plus personne en file d'attente
+                }
+
+                // La place doit être disponible pour le jour couvert par le tarif
+                // de l'inscrit (ou pour tous les jours s'il s'agit d'un pack).
+                $placesRestantes = $evenement->placesRestantesPourTarif($candidat->tarif);
+                if ($placesRestantes < max(1, (int) $candidat->quantite)) {
+                    break; // Plus de place libre pour ce tarif
                 }
 
                 // On "réserve" la place pour le premier de la file

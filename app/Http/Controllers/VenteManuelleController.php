@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PlacesInsuffisantesException;
 use App\Mail\TicketEmail;
 use App\Models\CodePromo;
 use App\Models\Evenement;
@@ -11,6 +12,7 @@ use App\Services\FedapayService;
 use App\Services\PaymentMonitoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -65,7 +67,9 @@ class VenteManuelleController extends Controller
         ));
     }
 
-    // Enregistre une vente manuelle (gratuite, espèces ou paiement mobile)
+    // Enregistre une vente manuelle (gratuite, espèces ou paiement mobile).
+    // Le panier peut contenir plusieurs tarifs : lignes[tarif_id] = quantité
+    // (l'ancien format tarif_id + quantite reste accepté).
     public function store(Request $request, PaymentMonitoringService $paymentMonitoring)
     {
         $evenement = Evenement::where('id', $request->evenement_id)
@@ -86,7 +90,7 @@ class VenteManuelleController extends Controller
             'nom_acheteur' => 'required|string|max:255',
             'whatsapp' => 'nullable|string|max:30',
             'email' => 'required|email|max:255',
-            'quantite' => 'required|integer|min:1|max:20',
+            'quantite' => ($evenement->gratuit ? 'required' : 'nullable').'|integer|min:1|max:20',
             'code_promo' => 'nullable|string|max:50',
         ];
         $messages = [
@@ -96,13 +100,14 @@ class VenteManuelleController extends Controller
             'quantite.required' => 'La quantité est obligatoire.',
             'quantite.min' => 'La quantité doit être d\'au moins 1.',
             'quantite.max' => 'La quantité ne doit pas dépasser 20.',
+            'lignes.*.max' => 'Pas plus de 20 billets par tarif.',
         ];
 
         if (! $evenement->gratuit) {
-            $rules['tarif_id'] = 'required|exists:tarifs,id'; // Tarif obligatoire pour événements payants
+            $rules['tarif_id'] = 'nullable|integer';
+            $rules['lignes'] = 'nullable|array';
+            $rules['lignes.*'] = 'nullable|integer|min:0|max:20';
             $rules['methode_paiement'] = 'required|in:especes,mobile';
-
-            $messages['tarif_id.required'] = 'Veuillez sélectionner un tarif.';
 
             if (Auth::user()->type === 'universitaire') {
                 $rules['categorie'] = 'nullable|string';
@@ -134,184 +139,195 @@ class VenteManuelleController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
-        // Vérification des places restantes (capacité de l'événement)
-        $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
-        if ($placesRestantes < $validated['quantite']) {
-            return response()->json([
-                'errors' => [
-                    'quantite' => ["Places restantes insuffisantes. Il ne reste que {$placesRestantes} place(s) disponible(s) pour cet événement."],
-                ],
-            ], 422);
-        }
-
-        // --- Cas 1 : Événement gratuit ---
+        // --- Cas 1 : Événement gratuit (un billet unique, valable tous les jours) ---
         if ($evenement->gratuit) {
-            // Création de tickets gratuits
-            $tarif = $evenement->tarifs()->where('statut', 'actif')->first();
-            if (! $tarif) {
-                // Crée un tarif par défaut si aucun n'existe
-                $tarif = Tarif::create([
-                    'evenement_id' => $evenement->id,
-                    'nom' => 'Gratuit',
-                    'prix' => 0,
-                    'statut' => 'actif',
-                    'quantite_disponible' => $evenement->capacite,
-                    'quantite_vendue' => 0,
-                ]);
-            }
+            $tarif = $evenement->tarifs()->where('statut', 'actif')->first() ?? Tarif::create([
+                'evenement_id' => $evenement->id,
+                'nom' => 'Gratuit',
+                'prix' => 0,
+                'statut' => 'actif',
+                'quantite_disponible' => $evenement->capacite,
+                'quantite_vendue' => 0,
+            ]);
 
-            $tickets = [];
-            for ($i = 0; $i < $validated['quantite']; $i++) {
-                $ticket = Ticket::create([
+            $resultat = $this->creerSousVerrou($evenement, [[
+                'tarif' => $tarif,
+                'quantite' => (int) $validated['quantite'],
+                'creer' => fn (Tarif $t) => Ticket::create([
                     'evenement_id' => $evenement->id,
-                    'tarif_id' => $tarif->id,
+                    'tarif_id' => $t->id,
                     'source' => 'vente_manuelle',
                     'code_unique' => Ticket::genererCodeSecurise(),
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $validated['nom_acheteur'],
                     'email_acheteur' => $validated['email'] ?? null,
                     'whatsapp_acheteur' => $validated['whatsapp'] ?? null,
-                    'nom_tarif' => $tarif->nom,
+                    'nom_tarif' => $t->nom,
                     'montant' => 0,
                     'statut_paiement' => 'payé',
                     'methode_paiement' => null,
                     'transaction_id' => 'MANUEL-GRATUIT-'.strtoupper(Str::random(6)),
                     'utilise' => false,
                     'date_achat' => now(),
-                ]);
-                $ticket->load('evenement');
-                $tickets[] = $ticket;
+                ]),
+            ]], verifierStockTarif: false, compterVente: true);
+
+            if (isset($resultat['erreurs'])) {
+                return response()->json(['errors' => $resultat['erreurs']], 422);
             }
 
-            $evenement->increment('quota_vendu', $validated['quantite']);
-            $tarif->increment('quantite_vendue', $validated['quantite']);
-
-            foreach ($tickets as $ticket) {
-                if ($ticket->email_acheteur && $ticket->estDelivrable()) {
-                    try {
-                        $ticket->load('evenement', 'tarif');
-                        Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
-                        Log::info('Vente manuelle gratuite - Email envoyé à '.$ticket->email_acheteur);
-                    } catch (\Exception $e) {
-                        Log::error('Vente manuelle gratuite - Erreur email : '.$e->getMessage());
-                    }
-                }
-            }
+            $tickets = $resultat['tickets'];
+            $this->envoyerBillets($tickets, 'Vente manuelle gratuite');
 
             return response()->json([
                 'success' => true,
-                'message' => $validated['quantite'] > 1
-                    ? "{$validated['quantite']} inscription(s) gratuite(s) enregistrée(s) avec succès."
+                'message' => count($tickets) > 1
+                    ? count($tickets).' inscription(s) gratuite(s) enregistrée(s) avec succès.'
                     : 'Inscription gratuite enregistrée avec succès.',
                 'tickets' => $tickets,
                 'total' => 0,
             ]);
         }
 
-        $tarif = Tarif::where('evenement_id', $evenement->id)->findOrFail($validated['tarif_id']);
+        // --- Panier : tarif_id => quantité ---
+        $demandes = collect($validated['lignes'] ?? [])
+            ->map(fn ($quantite) => (int) $quantite)
+            ->filter(fn ($quantite) => $quantite > 0);
 
-        // Application du code promo (si fourni)
+        if ($demandes->isEmpty() && ! empty($validated['tarif_id'])) {
+            $demandes = collect([(int) $validated['tarif_id'] => (int) ($validated['quantite'] ?? 1)]);
+        }
+
+        if ($demandes->isEmpty()) {
+            return response()->json(['errors' => ['tarif_id' => ['Ajoutez au moins un billet.']]], 422);
+        }
+
+        if ($demandes->sum() > 20) {
+            return response()->json(['errors' => ['quantite' => ['Pas plus de 20 billets par vente.']]], 422);
+        }
+
+        $tarifs = Tarif::where('evenement_id', $evenement->id)
+            ->whereIn('id', $demandes->keys())
+            ->with('jour')
+            ->get()
+            ->keyBy('id');
+
+        if ($tarifs->count() !== $demandes->count()) {
+            return response()->json(['errors' => ['tarif_id' => ['Un des billets choisis n\'existe plus.']]], 422);
+        }
+
+        foreach ($tarifs as $tarif) {
+            if (! $tarif->estEncoreVendable()) {
+                return response()->json([
+                    'errors' => ['tarif_id' => ["« {$tarif->nom} » n'est plus en vente : la date associée est passée."]],
+                ], 422);
+            }
+        }
+
+        // Code promo : valable pour l'un des tarifs du panier
         $codePromo = null;
-        $montantReduction = 0;
-        $prixUnitaire = $tarif->prix;
-
         if (! empty($validated['code_promo'])) {
-            $codePromo = CodePromo::validerPour($validated['code_promo'], $evenement, $tarif);
-            $montantReduction = $codePromo->calculerReduction($tarif->prix);
-            $prixUnitaire = max(0, $tarif->prix - $montantReduction);
-            // nb_utilisations incrémenté uniquement à la confirmation (espèces ici, mobile via callback/webhook)
+            $derniereErreur = null;
+            foreach ($tarifs as $tarif) {
+                try {
+                    $codePromo = CodePromo::validerPour($validated['code_promo'], $evenement, $tarif);
+                    break;
+                } catch (ValidationException $e) {
+                    $derniereErreur = $e;
+                }
+            }
+            if (! $codePromo && $derniereErreur) {
+                throw $derniereErreur;
+            }
         }
 
-        // Vérification du stock restant du tarif
-        if ($tarif->quantite_disponible !== null && $tarif->quantite_disponible - $tarif->quantite_vendue < $validated['quantite']) {
-            $restantes = max(0, $tarif->quantite_disponible - $tarif->quantite_vendue);
+        $lignes = $tarifs->map(function (Tarif $tarif) use ($demandes, $codePromo) {
+            $promoSurCeTarif = $codePromo && (int) $codePromo->tarif_id === (int) $tarif->id;
+            $reduction = $promoSurCeTarif ? $codePromo->calculerReduction($tarif->prix) : 0;
 
-            return response()->json([
-                'errors' => [
-                    'quantite' => ["Quantité restante insuffisante pour ce tarif. Il n'en reste que {$restantes}."],
-                ],
-            ], 422);
-        }
+            return [
+                'tarif' => $tarif,
+                'quantite' => $demandes[$tarif->id],
+                'reduction' => $reduction,
+                'unitaire' => max(0, $tarif->prix - $reduction),
+                'code' => $promoSurCeTarif ? $codePromo->code : null,
+            ];
+        })->values();
+        $montantTotal = $lignes->sum(fn ($ligne) => $ligne['unitaire'] * $ligne['quantite']);
+        $nombreBillets = (int) $lignes->sum('quantite');
 
-        // --- Cas 2 : Paiement en espèces ---
-        if ($validated['methode_paiement'] === 'especes') {
-            $tickets = [];
-            for ($i = 0; $i < $validated['quantite']; $i++) {
-                $ticket = Ticket::create([
+        // --- Cas 2 : Paiement en espèces (ou panier entièrement gratuit) ---
+        if ($validated['methode_paiement'] === 'especes' || $montantTotal <= 0) {
+            $especes = $validated['methode_paiement'] === 'especes';
+            $resultat = $this->creerSousVerrou($evenement, $lignes->map(fn ($ligne) => [
+                'tarif' => $ligne['tarif'],
+                'quantite' => $ligne['quantite'],
+                'creer' => fn (Tarif $t) => Ticket::create([
                     'evenement_id' => $evenement->id,
-                    'tarif_id' => $tarif->id,
+                    'tarif_id' => $t->id,
                     'source' => 'vente_manuelle',
                     'code_unique' => Ticket::genererCodeSecurise(),
                     'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                     'nom_acheteur' => $validated['nom_acheteur'],
                     'email_acheteur' => $validated['email'] ?? null,
                     'whatsapp_acheteur' => $validated['whatsapp'] ?? null,
-                    'nom_tarif' => $tarif->nom,
-                    'montant' => $prixUnitaire,
-                    'montant_reduction' => $montantReduction,
-                    'code_promo_utilise' => $codePromo ? $codePromo->code : null,
+                    'nom_tarif' => $t->nom,
+                    'montant' => $ligne['unitaire'],
+                    'montant_reduction' => $ligne['reduction'],
+                    'code_promo_utilise' => $ligne['code'],
                     'quantite' => 1,
                     'statut_paiement' => 'payé',
-                    'methode_paiement' => 'especes',
-                    'type_paiement' => 'especes',
+                    'methode_paiement' => $especes ? 'especes' : null,
+                    'type_paiement' => $especes ? 'especes' : null,
                     'transaction_id' => 'MANUEL-'.strtoupper(Str::random(6)),
                     'utilise' => false,
                     'date_achat' => now(),
-                ]);
-                $ticket->load('evenement');
-                $tickets[] = $ticket;
+                ]),
+            ])->all(), verifierStockTarif: true, compterVente: true);
+
+            if (isset($resultat['erreurs'])) {
+                return response()->json(['errors' => $resultat['erreurs']], 422);
             }
 
-            $evenement->increment('quota_vendu', $validated['quantite']);
-            $tarif->increment('quantite_vendue', $validated['quantite']);
+            $tickets = $resultat['tickets'];
 
-            // Comptabilise le code promo une fois la vente espèces confirmée
+            // Comptabilise le code promo une fois la vente confirmée
             if ($codePromo) {
                 $codePromo->increment('nb_utilisations', 1);
             }
 
-            foreach ($tickets as $ticket) {
-                if ($ticket->email_acheteur && $ticket->estDelivrable()) {
-                    try {
-                        $ticket->load('evenement', 'tarif');
-                        Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
-                        Log::info('Vente manuelle - Email envoyé à '.$ticket->email_acheteur);
-                    } catch (\Exception $e) {
-                        Log::error('Vente manuelle - Erreur email : '.$e->getMessage());
-                    }
-                }
-            }
-
-            $total = $prixUnitaire * $validated['quantite'];
+            $this->envoyerBillets($tickets, 'Vente manuelle');
 
             return response()->json([
                 'success' => true,
-                'message' => "{$validated['quantite']} billet(s) enregistré(s) avec succès.",
+                'message' => "{$nombreBillets} billet(s) enregistré(s) avec succès.",
                 'tickets' => $tickets,
-                'total' => $total,
+                'total' => $montantTotal,
             ]);
         }
 
-        // Digital payment: create N tickets as 'en_attente' with shared group ID
-        // --- Cas 3 : Paiement mobile (FedaPay) ---
-        $montantTotal = $prixUnitaire * $validated['quantite'];
+        // --- Cas 3 : Paiement mobile (FedaPay) : billets en attente, même groupe ---
         $groupTransactionId = 'GRP-'.strtoupper(Str::random(16));
-        $tickets = [];
 
-        for ($i = 0; $i < $validated['quantite']; $i++) {
-            $t = Ticket::create([
+        // Les billets en attente ne sont comptés dans quota_vendu qu'à la
+        // confirmation du paiement, mais ils occupent déjà leur jour en
+        // multijours : ils sont donc eux aussi créés sous le verrou.
+        $resultat = $this->creerSousVerrou($evenement, $lignes->map(fn ($ligne) => [
+            'tarif' => $ligne['tarif'],
+            'quantite' => $ligne['quantite'],
+            'creer' => fn (Tarif $t) => Ticket::create([
                 'evenement_id' => $evenement->id,
-                'tarif_id' => $tarif->id,
+                'tarif_id' => $t->id,
                 'source' => 'vente_manuelle',
                 'code_unique' => Ticket::genererCodeReservation(),
                 'qr_signature' => hash_hmac('sha256', Str::random(32), config('app.key') ?? 'fallback'),
                 'nom_acheteur' => $validated['nom_acheteur'],
                 'email_acheteur' => $validated['email'],
                 'whatsapp_acheteur' => $validated['whatsapp'] ?? null,
-                'nom_tarif' => $tarif->nom,
-                'montant' => $prixUnitaire,
-                'montant_reduction' => $montantReduction,
-                'code_promo_utilise' => $codePromo ? $codePromo->code : null,
+                'nom_tarif' => $t->nom,
+                'montant' => $ligne['unitaire'],
+                'montant_reduction' => $ligne['reduction'],
+                'code_promo_utilise' => $ligne['code'],
                 'quantite' => 1,
                 'statut_paiement' => 'en_attente',
                 'methode_paiement' => 'mobile_money',
@@ -319,9 +335,14 @@ class VenteManuelleController extends Controller
                 'transaction_id' => $groupTransactionId,
                 'utilise' => false,
                 'date_achat' => now(),
-            ]);
-            $tickets[] = $t;
+            ]),
+        ])->all(), verifierStockTarif: true, compterVente: false);
+
+        if (isset($resultat['erreurs'])) {
+            return response()->json(['errors' => $resultat['erreurs']], 422);
         }
+
+        $tickets = $resultat['tickets'];
 
         $paymentMonitoring->record(
             'paiement_initie',
@@ -352,6 +373,71 @@ class VenteManuelleController extends Controller
         ]);
     }
 
+    // Envoie le billet de chaque ticket délivrable (vente gratuite ou espèces).
+    private function envoyerBillets(array $tickets, string $contexte): void
+    {
+        foreach ($tickets as $ticket) {
+            if ($ticket->email_acheteur && $ticket->estDelivrable()) {
+                try {
+                    $ticket->load('evenement', 'tarif');
+                    Mail::to($ticket->email_acheteur)->send(new TicketEmail($ticket));
+                    Log::info($contexte.' - Email envoyé à '.$ticket->email_acheteur);
+                } catch (\Exception $e) {
+                    Log::error($contexte.' - Erreur email : '.$e->getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Vérifie les places et crée les billets de tout le panier dans une même
+     * transaction, sous verrou de l'événement et de chaque tarif : deux ventes
+     * simultanées ne peuvent pas se partager la dernière place. Une ligne sans
+     * place annule tout le panier (rien n'est créé).
+     *
+     * @param  array<int, array{tarif: Tarif, quantite: int, creer: callable(Tarif): Ticket}>  $lignes
+     * @return array{tickets: array<int, Ticket>}|array{erreurs: array<string, array<int, string>>}
+     */
+    private function creerSousVerrou(Evenement $evenement, array $lignes, bool $verifierStockTarif, bool $compterVente): array
+    {
+        try {
+            return DB::transaction(function () use ($evenement, $lignes, $verifierStockTarif, $compterVente) {
+                $evenementVerrouille = Evenement::whereKey($evenement->id)->lockForUpdate()->firstOrFail();
+                $tickets = [];
+
+                foreach ($lignes as $ligne) {
+                    $quantite = (int) $ligne['quantite'];
+                    $tarifVerrouille = Tarif::whereKey($ligne['tarif']->id)->lockForUpdate()->firstOrFail();
+                    $evenementVerrouille->resetCachesCapacite();
+
+                    $places = $evenementVerrouille->placesRestantesPourTarif($tarifVerrouille);
+                    if ($verifierStockTarif && $tarifVerrouille->quantite_disponible !== null) {
+                        $places = min($places, max(0, $tarifVerrouille->quantite_disponible - $tarifVerrouille->quantite_vendue));
+                    }
+
+                    if ($places < $quantite) {
+                        throw new PlacesInsuffisantesException($tarifVerrouille, max(0, $places));
+                    }
+
+                    for ($i = 0; $i < $quantite; $i++) {
+                        $tickets[] = $ligne['creer']($tarifVerrouille)->load('evenement');
+                    }
+
+                    if ($compterVente) {
+                        $evenementVerrouille->increment('quota_vendu', $quantite);
+                        $tarifVerrouille->increment('quantite_vendue', $quantite);
+                    }
+                }
+
+                return ['tickets' => $tickets];
+            });
+        } catch (PlacesInsuffisantesException $e) {
+            return ['erreurs' => [
+                'quantite' => ["Places restantes insuffisantes pour « {$e->tarif->nom} » : il n'en reste que {$e->placesRestantes}."],
+            ]];
+        }
+    }
+
     // Récupère les tarifs d'un événement pour le formulaire dynamique
     public function getTarifs(Request $request)
     {
@@ -372,7 +458,32 @@ class VenteManuelleController extends Controller
         $tarifs = collect();
 
         if (! $evenement->gratuit) {
-            $tarifs = Tarif::where('evenement_id', $evenement->id)->where('statut', 'actif')->get();
+            $evenement->loadMissing('dates');
+            $tarifs = Tarif::where('evenement_id', $evenement->id)
+                ->where('statut', 'actif')
+                ->with('jour')
+                ->get()
+                ->filter(fn (Tarif $tarif) => $tarif->estEncoreVendable())
+                ->sortBy(fn (Tarif $tarif) => [
+                    $tarif->estPack() ? 1 : 0,
+                    $tarif->jour?->date_debut?->timestamp ?? PHP_INT_MAX,
+                    (float) $tarif->prix,
+                ])
+                ->map(fn (Tarif $tarif) => [
+                    'id' => $tarif->id,
+                    'nom' => $tarif->nom,
+                    'prix' => (float) $tarif->prix,
+                    // Un « pack » n'a de sens qu'en multijours (tarif valable tous les jours).
+                    'pack' => $evenement->estMultiJour() && $tarif->estPack(),
+                    'jour' => $tarif->jour?->libelle(),
+                    'jour_date' => $tarif->jour?->date_debut?->isoFormat('ddd D MMM · HH:mm'),
+                    'restantes' => max(0, min(
+                        $evenement->placesRestantesPourTarif($tarif),
+                        $tarif->quantite_disponible === null ? PHP_INT_MAX : (int) $tarif->quantite_disponible - (int) $tarif->quantite_vendue
+                    )),
+                    'nb_jours' => max(1, $evenement->dates->count()),
+                ])
+                ->values();
         }
 
         return response()->json([
