@@ -675,7 +675,7 @@
                     @php
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
                         $estComplet = $placesRestantes <= 0;
-                        $remplissage = $evenement->capacite > 0 ? round(($evenement->quota_vendu / $evenement->capacite) * 100) : 0;
+                        $remplissage = (int) round($evenement->tauxRemplissage());
                         $prixDernier = $evenement->tarifs->min('prix');
                         $textes = $evenement->getTextes();
                         $venteCloturee = $evenement->ventes_fermees;

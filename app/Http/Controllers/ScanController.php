@@ -276,6 +276,77 @@ class ScanController extends Controller
         // Vérification du jour : l'événement doit avoir une session aujourd'hui
         $jourScan = $ticket->evenement->jourScanActuel();
 
+        // Billet rattaché à un jour précis : il n'est valable que ce jour-là.
+        if ($ticket->evenement_date_id !== null) {
+            $jourBillet = $ticket->jour()->first();
+            $libelle = $jourBillet?->libelle() ?? 'le jour prévu';
+            $dateLabel = $jourBillet?->date_debut?->isoFormat('ddd D MMM') ?? '';
+
+            if (! $jourBillet) {
+                Log::create([
+                    'ticket_id' => $ticket->id,
+                    'type_operation' => 'scan',
+                    'details' => [
+                        'code' => $code,
+                        'resultat' => 'invalide',
+                        'raison' => 'jour_billet_introuvable',
+                        'agent' => Auth::id(),
+                    ],
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le jour associé à ce billet est introuvable.',
+                    'type' => 'wrong_day',
+                ]);
+            }
+
+            $memeSession = $jourScan !== null && (int) $jourScan->id === (int) $jourBillet->id;
+
+            if (! $memeSession) {
+                if (now()->lt($jourBillet->date_debut)) {
+                    $raison = 'billet_autre_jour';
+                    $message = "Ce billet est valable {$libelle} ({$dateLabel}). Revenez ce jour-là.";
+                    $type = 'wrong_day';
+
+                    if (now()->toDateString() === $jourBillet->date_debut->toDateString()) {
+                        $raison = 'session_pas_commencee';
+                        $message = 'La session de ce billet commence à '.$jourBillet->date_debut->format('H:i').'. Revenez à cette heure.';
+                        $type = 'not_started';
+                    }
+                } elseif (now()->gt($jourBillet->finFenetreScan())) {
+                    $raison = 'billet_autre_jour';
+                    $message = "Ce billet était valable {$libelle} ({$dateLabel}). Il n'est plus valable.";
+                    $type = 'wrong_day';
+                } else {
+                    $raison = 'billet_autre_session';
+                    $message = "Ce billet n'est pas valable pour la session en cours. Il est valable {$libelle} ({$dateLabel}).";
+                    $type = 'wrong_day';
+                }
+
+                Log::create([
+                    'ticket_id' => $ticket->id,
+                    'type_operation' => 'scan',
+                    'details' => [
+                        'code' => $code,
+                        'resultat' => 'invalide',
+                        'raison' => $raison,
+                        'agent' => Auth::id(),
+                    ],
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'type' => $type,
+                ]);
+            }
+        }
+
         if (! $jourScan) {
             // Aucune session prévue aujourd'hui
             Log::create([

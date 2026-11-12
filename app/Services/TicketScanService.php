@@ -67,6 +67,57 @@ class TicketScanService
 
         $jourScan = $agent->evenement->jourScanActuel();
 
+        // Billet rattaché à un jour précis : il n'est valable que ce jour-là.
+        // On distingue le jour futur, le jour passé et une autre session du
+        // même jour pour que le refus soit explicite.
+        if ($ticket->evenement_date_id !== null) {
+            $jourBillet = $ticket->jour()->first();
+            $libelle = $jourBillet?->libelle() ?? 'le jour prévu';
+            $dateLabel = $jourBillet?->date_debut?->isoFormat('ddd D MMM') ?? '';
+
+            if (! $jourBillet) {
+                $this->logScan($agent, $code, 'invalide', 'Jour du billet introuvable', $ticket->id);
+
+                return [
+                    'success' => false,
+                    'resultat' => 'invalide',
+                    'raison' => 'Jour du billet introuvable',
+                    'message' => 'Le jour associé à ce billet est introuvable.',
+                    'ticket' => $this->contexteBillet($ticket),
+                ];
+            }
+
+            $memeSession = $jourScan !== null && (int) $jourScan->id === (int) $jourBillet->id;
+
+            if (! $memeSession) {
+                if (now()->lt($jourBillet->date_debut)) {
+                    $raison = 'Billet valable un autre jour';
+                    $message = "Ce billet est valable {$libelle} ({$dateLabel}). Revenez ce jour-là.";
+
+                    if (now()->toDateString() === $jourBillet->date_debut->toDateString()) {
+                        $raison = 'Session pas commencée';
+                        $message = 'La session de ce billet commence à '.$jourBillet->date_debut->format('H:i').'. Revenez à cette heure.';
+                    }
+                } elseif (now()->gt($jourBillet->finFenetreScan())) {
+                    $raison = 'Billet valable un autre jour';
+                    $message = "Ce billet était valable {$libelle} ({$dateLabel}). Il n'est plus valable.";
+                } else {
+                    $raison = 'Billet valable une autre session';
+                    $message = "Ce billet n'est pas valable pour la session en cours. Il est valable {$libelle} ({$dateLabel}).";
+                }
+
+                $this->logScan($agent, $code, 'invalide', $raison, $ticket->id);
+
+                return [
+                    'success' => false,
+                    'resultat' => 'invalide',
+                    'raison' => $raison,
+                    'message' => $message,
+                    'ticket' => $this->contexteBillet($ticket),
+                ];
+            }
+        }
+
         if (! $jourScan) {
             $this->logScan($agent, $code, 'invalide', 'Pas de session aujourd\'hui', $ticket->id);
 

@@ -802,7 +802,8 @@ class SuperAdminController extends Controller
     // Statistiques par événement
     public function statistiques()
     {
-        $evenements = Evenement::select('id', 'titre', 'capacite', 'quota_vendu', 'date_event', 'statut')
+        $evenements = Evenement::select('id', 'titre', 'capacite', 'quota_vendu', 'date_event', 'statut', 'gratuit')
+            ->withCount('dates')
             ->withSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('date_event')
             ->get();

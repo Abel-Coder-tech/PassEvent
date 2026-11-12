@@ -94,14 +94,21 @@ class AgentVenteSaleService
     {
         return $evenement->tarifs()
             ->where('statut', 'actif')
+            ->with('jour')
             ->orderBy('prix')
             ->get()
-            ->map(fn (Tarif $tarif) => $this->tarifPayload($tarif))
+            ->filter(fn (Tarif $tarif) => $tarif->estEncoreVendable())
+            ->sortBy(fn (Tarif $tarif) => [
+                $tarif->estPack() ? 1 : 0,
+                $tarif->jour?->date_debut?->timestamp ?? PHP_INT_MAX,
+                (float) $tarif->prix,
+            ])
+            ->map(fn (Tarif $tarif) => $this->tarifPayload($tarif, $evenement))
             ->values()
             ->all();
     }
 
-    public function tarifPayload(Tarif $tarif): array
+    public function tarifPayload(Tarif $tarif, ?Evenement $evenement = null): array
     {
         // Les ventes en attente n'ont pas encore de tarif comptabilisé mais
         // bloquent déjà du stock : on les retire des places affichées.
@@ -110,6 +117,14 @@ class AgentVenteSaleService
             : max(0, (int) $tarif->quantite_disponible
                 - (int) $tarif->quantite_vendue
                 - $this->quantiteReservee($tarif));
+
+        // Sur un événement multijours, les places réellement disponibles sont
+        // limitées par la jauge des jours couverts par le tarif (un pack est
+        // limité par le jour le plus contraint).
+        if ($evenement !== null) {
+            $restantesJour = $evenement->placesRestantesPourTarif($tarif);
+            $restantes = $restantes === null ? $restantesJour : min($restantes, $restantesJour);
+        }
 
         return [
             'id' => $tarif->id,
@@ -122,6 +137,14 @@ class AgentVenteSaleService
             'quantite_vendue' => (int) $tarif->quantite_vendue,
             'restantes' => $restantes,
             'epuise' => $restantes !== null && $restantes <= 0,
+            'pack' => $tarif->estPack(),
+            'vendre' => $tarif->estEncoreVendable(),
+            'jour' => $tarif->jour ? [
+                'id' => $tarif->jour->id,
+                'libelle' => $tarif->jour->libelle(),
+                'date' => $tarif->jour->date_debut?->toIso8601String(),
+                'date_label' => $tarif->jour->date_debut?->isoFormat('ddd D MMM'),
+            ] : null,
         ];
     }
 
@@ -560,7 +583,7 @@ class AgentVenteSaleService
         ]);
     }
 
-    // Vérifie les places restantes de l'événement et du tarif
+    // Vérifie les places restantes de l'événement/du jour et du tarif
     private function verifierDisponibilites(?Evenement $evenement, ?Tarif $tarif, int $quantite): void
     {
         if (! $evenement || ! $tarif) {
@@ -569,7 +592,16 @@ class AgentVenteSaleService
             ]);
         }
 
-        $placesRestantes = max(0, (int) $evenement->capacite - (int) $evenement->quota_vendu);
+        if (! $tarif->estEncoreVendable()) {
+            throw ValidationException::withMessages([
+                'tarif_id' => "Ce tarif n'est plus disponible : la date associée est passée.",
+            ]);
+        }
+
+        // Mono-jour : capacité globale historique. Multijours : jauge propre
+        // au(x) jour(s) couvert(s), un pack étant limité par le jour le plus
+        // contraint.
+        $placesRestantes = $evenement->placesRestantesPourTarif($tarif);
 
         if ($placesRestantes < $quantite) {
             throw ValidationException::withMessages([

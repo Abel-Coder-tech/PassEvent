@@ -47,6 +47,25 @@
                     @endif
                 </div>
 
+                @if($jours->count() > 1 && ! $evenement->gratuit)
+                <div class="mb-3">
+                    <label for="evenement_date_id" class="form-label fw-semibold">Valable</label>
+                    <select class="form-select @error('evenement_date_id') is-invalid @enderror" id="evenement_date_id" name="evenement_date_id">
+                        <option value="">Tous les jours — pack</option>
+                        @foreach($jours as $jour)
+                            <option value="{{ $jour->id }}" data-capacite="{{ $jour->capaciteEffective() }}" @selected((string) old('evenement_date_id', $tarif->evenement_date_id) === (string) $jour->id)>
+                                {{ $jour->libelle() }} — {{ $jour->date_debut->isoFormat('ddd D MMM YYYY · HH:mm') }} ({{ $jour->capaciteEffective() }} places)
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">
+                        Un jour précis rend le billet valable uniquement ce jour-là. « Tous les jours » crée un pack valable à chaque date, en vente jusqu’à minuit du premier jour payant.
+                        Les billets déjà vendus conservent le jour figé au moment de l'achat.
+                    </small>
+                    @error('evenement_date_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                @endif
+
                 @if($aVendu)
                     <div class="mb-3">
                         <button type="button" class="btn btn-primary-custom" onclick="document.getElementById('demandeModificationModal').style.display='flex'">
@@ -150,4 +169,22 @@
     gap: 0.5rem;
 }
 </style>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const select = document.getElementById('evenement_date_id');
+    const quantite = document.getElementById('quantite_disponible');
+    if (!select || !quantite) return;
+
+    function synchroniserMaximum() {
+        const option = select.selectedOptions[0];
+        quantite.max = option?.dataset.capacite || {{ (int) $evenement->capacite }};
+    }
+
+    select.addEventListener('change', synchroniserMaximum);
+    synchroniserMaximum();
+});
+</script>
 @endsection

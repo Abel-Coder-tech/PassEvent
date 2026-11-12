@@ -20,6 +20,11 @@ class Evenement extends Model
 
     protected $table = 'evenement';
 
+    private ?bool $multiJourCache = null;
+
+    /** @var array<int, int> */
+    private array $occupationCache = [];
+
     // Intervalle (en heures) après l'heure de début pendant lequel le scan reste valide
     public const DUREE_SCAN_HEURES = 6;
 
@@ -254,6 +259,276 @@ class Evenement extends Model
         return $this->hasMany(EvenementDate::class, 'evenement_id')->orderBy('ordre')->orderBy('date_debut');
     }
 
+    // Un événement est considéré multijours dès qu'il possède plus d'une
+    // session. La capacité est alors raisonnée par jour.
+    public function estMultiJour(): bool
+    {
+        if ($this->multiJourCache === null) {
+            // Réutilise un withCount('dates') ou une relation déjà chargée pour
+            // éviter une requête par événement dans les listes.
+            $this->multiJourCache = match (true) {
+                array_key_exists('dates_count', $this->attributes) => (int) $this->attributes['dates_count'] > 1,
+                $this->relationLoaded('dates') => $this->dates->count() > 1,
+                default => $this->dates()->count() > 1,
+            };
+        }
+
+        return $this->multiJourCache;
+    }
+
+    public function capacitePourJour(EvenementDate $jour): int
+    {
+        return $jour->capaciteEffective();
+    }
+
+    // Jours couverts par un tarif pour le calcul des places : son jour s'il en
+    // a un, sinon les jours pas encore terminés de l'événement (pack). Un jour
+    // passé, même complet, ne doit pas bloquer la vente d'un pack.
+    public function joursCouvertsParTarif(?Tarif $tarif): Collection
+    {
+        if ($tarif && $tarif->evenement_date_id) {
+            $jour = $tarif->relationLoaded('jour') ? $tarif->jour : $tarif->jour()->first();
+
+            return $jour ? collect([$jour]) : collect();
+        }
+
+        return $this->dates()->get()
+            ->reject(fn (EvenementDate $jour) => $jour->estTermine())
+            ->values();
+    }
+
+    // Premier jour payant : un jour est gratuit s'il propose au moins un tarif
+    // à la journée et que tous ses tarifs actifs sont à 0 F. Un jour sans tarif
+    // propre n'est accessible que par un pack, il est donc considéré payant.
+    public function premierJourPayant(): ?EvenementDate
+    {
+        if ($this->gratuit) {
+            return null;
+        }
+
+        $tarifsParJour = $this->tarifs()
+            ->whereNotNull('evenement_date_id')
+            ->where('statut', 'actif')
+            ->get(['evenement_date_id', 'prix'])
+            ->groupBy('evenement_date_id');
+
+        return $this->dates()->get()->first(function (EvenementDate $jour) use ($tarifsParJour) {
+            $tarifs = $tarifsParJour->get($jour->id);
+
+            return $tarifs === null || $tarifs->contains(fn ($tarif) => (float) $tarif->prix > 0);
+        });
+    }
+
+    // Fin de la vente des packs : minuit du premier jour payant (repli sur le
+    // dernier jour si tous les jours sont gratuits). `null` = pas de limite
+    // propre aux packs (événement mono-jour ou gratuit).
+    public function finVentePacks(): ?\Carbon\CarbonInterface
+    {
+        if ($this->gratuit || ! $this->estMultiJour()) {
+            return null;
+        }
+
+        // Sans aucun billet à la journée (événements créés avant les tarifs par
+        // jour), le pack est le seul moyen d'entrer : il reste en vente jusqu'au
+        // bout, comme avant.
+        if (! $this->tarifs()->whereNotNull('evenement_date_id')->where('statut', 'actif')->exists()) {
+            return null;
+        }
+
+        $jour = $this->premierJourPayant() ?? $this->derniereDate();
+
+        return $jour?->finVente();
+    }
+
+    // Un pack VIP se reconnaît à son nom (« Pack VIP », « Pass VIP »…).
+    public static function estPackVip(Tarif $tarif): bool
+    {
+        return $tarif->evenement_date_id === null && Str::contains(Str::lower($tarif->nom), 'vip');
+    }
+
+    // Économie d'un pack simple : somme des tarifs à la journée − prix du pack.
+    // `null` si le pack est VIP, si un jour n'a pas de tarif à la journée, ou si
+    // le pack ne fait rien économiser.
+    public function economiePack(Tarif $pack): ?int
+    {
+        if ($pack->evenement_date_id !== null || self::estPackVip($pack) || ! $this->estMultiJour()) {
+            return null;
+        }
+
+        $prixParJour = $this->tarifs()
+            ->whereNotNull('evenement_date_id')
+            ->where('statut', 'actif')
+            ->get(['evenement_date_id', 'prix'])
+            ->groupBy('evenement_date_id')
+            ->map(fn ($tarifs) => (float) $tarifs->min('prix'));
+
+        $jours = $this->dates()->pluck('id');
+        if ($jours->isEmpty() || $jours->contains(fn ($id) => ! $prixParJour->has($id))) {
+            return null;
+        }
+
+        $economie = (int) round($jours->sum(fn ($id) => $prixParJour[$id]) - (float) $pack->prix);
+
+        return $economie > 0 ? $economie : null;
+    }
+
+    // Places déjà prises pour un jour : billets rattachés à ce jour + billets
+    // valables toutes les dates (packs et billets historiques).
+    public function occupationJour(EvenementDate $jour): int
+    {
+        if (array_key_exists($jour->id, $this->occupationCache)) {
+            return $this->occupationCache[$jour->id];
+        }
+
+        return $this->occupationCache[$jour->id] = (int) Ticket::query()
+            ->where('evenement_id', $this->id)
+            ->where(fn (Builder $q) => $q->where('evenement_date_id', $jour->id)->orWhereNull('evenement_date_id'))
+            ->actifsPourCapacite()
+            ->sum('quantite');
+    }
+
+    // Places promises par les tarifs sur un jour : stocks des billets du jour
+    // + stocks des packs (qui occupent chaque jour). Les stocks illimités
+    // (null) ne comptent pas.
+    public function stocksTarifsPourJour(EvenementDate $jour): int
+    {
+        return (int) $this->tarifs()
+            ->where(fn (Builder $q) => $q->whereNull('evenement_date_id')->orWhere('evenement_date_id', $jour->id))
+            ->sum('quantite_disponible');
+    }
+
+    // Places restantes pour un tarif : minimum sur les jours qu'il couvre.
+    // Un événement mono-jour conserve le comportement historique basé sur
+    // quota_vendu.
+    public function placesRestantesPourTarif(?Tarif $tarif): int
+    {
+        if (! $this->estMultiJour()) {
+            return max(0, (int) $this->capacite - (int) $this->quota_vendu);
+        }
+
+        $jours = $this->joursCouvertsParTarif($tarif);
+
+        if ($jours->isEmpty()) {
+            return max(0, (int) $this->capacite - (int) $this->quota_vendu);
+        }
+
+        return (int) $jours
+            ->map(fn (EvenementDate $jour) => max(0, $this->capacitePourJour($jour) - $this->occupationJour($jour)))
+            ->min();
+    }
+
+    // Total des places encore disponibles sur les jours pas encore terminés.
+    // Utilisé pour l'affichage (organisateur, public, agent) : une vente sur un
+    // jour non limitant doit tout de même faire baisser ce compteur global,
+    // alors que placesRestantesPourTarif() conserve la limite par jour qui
+    // plafonne une commande (notamment pour un pack).
+    public function placesRestantesTotales(): int
+    {
+        if (! $this->estMultiJour()) {
+            return max(0, (int) $this->capacite - (int) $this->quota_vendu);
+        }
+
+        return (int) $this->placesParJour()
+            ->reject(fn (array $ligne) => $ligne['termine'])
+            ->sum('restantes');
+    }
+
+    // Détail de la jauge de chaque jour, pour l'affichage « total + par jour ».
+    // @return Collection<int, array{jour: EvenementDate, capacite: int, occupees: int, restantes: int, termine: bool}>
+    public function placesParJour(): Collection
+    {
+        return $this->dates()->get()->map(function (EvenementDate $jour) {
+            $capacite = $this->capacitePourJour($jour);
+            $occupees = $this->occupationJour($jour);
+
+            return [
+                'jour' => $jour,
+                'capacite' => $capacite,
+                'occupees' => $occupees,
+                'restantes' => max(0, $capacite - $occupees),
+                'termine' => $jour->estTermine(),
+            ];
+        });
+    }
+
+    // Plus aucune place vendable. Mono-jour : capacité globale. Multijours
+    // gratuit : le billet unique couvre tous les jours restants. Multijours
+    // payant : aucun tarif encore en vente n'a de place.
+    public function estComplet(): bool
+    {
+        if (! $this->estMultiJour()) {
+            return (int) $this->capacite <= 0 || (int) $this->quota_vendu >= (int) $this->capacite;
+        }
+
+        if ($this->gratuit) {
+            return $this->placesRestantesPourTarif(null) <= 0;
+        }
+
+        $tarifs = $this->tarifs()
+            ->where('statut', 'actif')
+            ->with('jour')
+            ->get()
+            ->filter(fn (Tarif $tarif) => $tarif->estEncoreVendable());
+
+        if ($tarifs->isEmpty()) {
+            return $this->placesRestantesTotales() <= 0;
+        }
+
+        return $tarifs->every(fn (Tarif $tarif) => $this->placesRestantesPourTarif($tarif) <= 0);
+    }
+
+    // Taux de remplissage en %. Multijours : places occupées sur l'ensemble
+    // des jours rapportées à la somme des jauges (quota_vendu n'y est qu'une
+    // statistique de billets vendus).
+    public function tauxRemplissage(): float
+    {
+        if (! $this->estMultiJour()) {
+            return (int) $this->capacite > 0
+                ? ((int) $this->quota_vendu / (int) $this->capacite) * 100
+                : 0.0;
+        }
+
+        $jours = $this->placesParJour();
+        $capaciteTotale = (int) $jours->sum('capacite');
+
+        return $capaciteTotale > 0
+            ? min(100, ((int) $jours->sum('occupees') / $capaciteTotale) * 100)
+            : 0.0;
+    }
+
+    // Jours qui portent déjà des tarifs ou des billets : leur date ne peut
+    // plus être déplacée ni supprimée sans casser les ventes en cours.
+    public function joursAvecTarifsOuBillets(): Collection
+    {
+        $ids = $this->tarifs()
+            ->whereNotNull('evenement_date_id')
+            ->pluck('evenement_date_id')
+            ->merge(
+                Ticket::query()
+                    ->where('evenement_id', $this->id)
+                    ->whereNotNull('evenement_date_id')
+                    ->pluck('evenement_date_id')
+            )
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return EvenementDate::whereIn('id', $ids)
+            ->pluck('date_debut')
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->values();
+    }
+
+    public function resetCachesCapacite(): void
+    {
+        $this->multiJourCache = null;
+        $this->occupationCache = [];
+    }
+
     // Dernière session de l'événement (pour expiration des ventes et scans)
     public function derniereDate(): ?EvenementDate
     {
@@ -373,7 +648,7 @@ class Evenement extends Model
             return 'sales_closed';
         }
 
-        if ((int) $this->capacite <= 0 || (int) $this->quota_vendu >= (int) $this->capacite) {
+        if ($this->estComplet()) {
             return 'event_full';
         }
 
