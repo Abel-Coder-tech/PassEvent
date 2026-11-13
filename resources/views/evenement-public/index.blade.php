@@ -63,7 +63,7 @@
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = (int) round($evenement->tauxRemplissage());
-                        $prixDernier = $evenement->tarifs->min('prix');
+                        $prixDernier = $evenement->prixAPartirDe();
                         $venteCloturee = $evenement->ventes_fermees;
                         $estPasse = $evenement->dates->max(fn ($d) => $d->date_debut) ? $evenement->dates->max(fn ($d) => $d->date_debut)->lt(now()) : $evenement->date_event->isPast();
                         $textes = $evenement->getTextes();
@@ -100,6 +100,8 @@
                                     <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
                                 @elseif($prixDernier)
                                     <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
+                                @elseif($prixDernier !== null)
+                                    <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
                                 @endif
                                 @if($estPasse)
                                     <div class="ev-card-past"><i class="bi bi-clock-history me-1"></i> Événement passé</div>
@@ -170,7 +172,7 @@
                     $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
                     $estComplet = $placesRestantes <= 0;
                     $remplissage = (int) round($evenement->tauxRemplissage());
-                    $prixDernier = $evenement->tarifs->min('prix');
+                    $prixDernier = $evenement->prixAPartirDe();
                     $venteCloturee = $evenement->ventes_fermees;
                     $estPasse = $evenement->date_event->isPast();
                     $textes = $evenement->getTextes();
@@ -201,6 +203,8 @@
                                 <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
                             @elseif($prixDernier)
                                 <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
+                            @elseif($prixDernier !== null)
+                                <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
                             @endif
                             <div class="ev-card-past"><i class="bi bi-clock-history me-1"></i> Événement passé</div>
                             <span class="ev-card-btn disabled"><i class="bi bi-clock-history me-1"></i> Événement passé</span>

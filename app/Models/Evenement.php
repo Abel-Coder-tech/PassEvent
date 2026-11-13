@@ -372,6 +372,23 @@ class Evenement extends Model
         return $economie > 0 ? $economie : null;
     }
 
+    // Prix « à partir de » des listes publiques : le plus petit prix payant.
+    // Un jour ou un tarif gratuit est ignoré tant qu'il existe un tarif payant
+    // (Jour 1 gratuit, Jour 2 à 1000 F, Jour 3 à 500 F -> 500 F). 0 si tous
+    // les tarifs sont gratuits, null s'il n'y a aucun tarif.
+    public function prixAPartirDe(): ?float
+    {
+        $prix = $this->tarifs->pluck('prix')->map(fn ($p) => (float) $p);
+
+        if ($prix->isEmpty()) {
+            return null;
+        }
+
+        $payants = $prix->filter(fn ($p) => $p > 0);
+
+        return $payants->isEmpty() ? 0.0 : $payants->min();
+    }
+
     // Places déjà prises pour un jour : billets rattachés à ce jour + billets
     // valables toutes les dates (packs et billets historiques).
     public function occupationJour(EvenementDate $jour): int
