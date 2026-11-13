@@ -497,8 +497,6 @@
             vus.add(t.jourId);
             return true;
         });
-        // Ancien événement vendu uniquement en packs : pas de tarif imposé par jour.
-        if (EDITION && EDITION.sansTarifJour) return;
         etat.jours.forEach((j) => {
             if (!vus.has(j.id)) etat.tarifsJours.push(nouveauTarif({ nom: 'Jour', jourId: j.id }));
         });
@@ -656,7 +654,7 @@
                         return '<div class="wz-prix-qte mb-2" data-tarif="' + t.id + '">'
                             + '<input type="hidden" name="tarifs[' + k + '][nom]" value="' + esc(t.tid ? t.nom : 'Jour ' + (i + 1)) + '">'
                             + '<input type="hidden" name="tarifs[' + k + '][jour]" value="' + i + '">' + champId(t, k)
-                            + '<label>' + (duJour.length > 1 ? esc(t.nom) + ' · ' : '') + 'Prix (F CFA)<input type="number" min="0" step="100" class="form-control" name="tarifs[' + k + '][prix]" data-champ="prix" value="' + esc(t.prix) + '" placeholder="Prix"' + attrPrix(t) + '></label>'
+                            + '<label>' + (duJour.length > 1 ? esc(t.nom) + ' · ' : '') + 'Prix (F CFA)<input type="number" min="0" step="100" class="form-control" name="tarifs[' + k + '][prix]" data-champ="prix" value="' + esc(t.prix) + '" placeholder="' + (EDITION && !t.tid ? 'Vide = gratuit' : 'Prix') + '"' + attrPrix(t) + '></label>'
                             + '<label>Qté<input type="number" class="form-control" name="tarifs[' + k + '][qte]" data-champ="qte" value="' + esc(t.qte) + '"' + attrQte(t) + '></label>'
                             + noteVendu(t) + '</div>';
                     }).join('') + '</div>';
@@ -867,9 +865,11 @@
         }
         if (etape === 'billets' && !estGratuit()) {
             const tarifs = tarifsActifs();
+            // En modification, un jour laissé vide (nouveau tarif sans prix) est gratuit.
+            const jourGratuitVide = (t) => !!EDITION && !t.tid && t.jourId !== 'pack' && t.prix === '';
             if (!tarifs.length) e.push('Ajoutez au moins un billet.');
-            if (tarifs.some((t) => t.prix === '' || num(t.prix) < 0)) e.push('Indiquez le prix de chaque billet (0 pour gratuit).');
-            if (tarifs.some((t) => num(t.qte) < 1 && !(infoTarif(t) || {}).illimite)) e.push('Indiquez le nombre de places de chaque billet.');
+            if (tarifs.some((t) => (t.prix === '' && !jourGratuitVide(t)) || num(t.prix) < 0)) e.push('Indiquez le prix de chaque billet (0 pour gratuit).');
+            if (tarifs.some((t) => num(t.qte) < 1 && !(infoTarif(t) || {}).illimite && !(jourGratuitVide(t) && t.qte === ''))) e.push('Indiquez le nombre de places de chaque billet.');
             if (tarifs.some((t) => tarifVendu(t) && t.qte !== '' && num(t.qte) < infoTarif(t).vendu)) e.push('La quantité d’un tarif ne peut pas descendre sous ses ventes.');
             if (tarifs.some((t) => t.nom === 'Personnalisé' && !t.nom_perso.trim())) e.push('Donnez un nom à chaque billet personnalisé.');
             if (nbTarifs() > MAX_TARIFS) e.push('Pas plus de ' + MAX_TARIFS + ' tarifs par événement.');

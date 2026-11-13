@@ -856,7 +856,8 @@ class EvenementController extends Controller
             $rules['tarifs.*.id'] = 'nullable|integer';
             $rules['tarifs.*.nom'] = 'required|string|max:100';
             $rules['tarifs.*.nom_perso'] = 'nullable|string|max:100';
-            $rules['tarifs.*.prix'] = 'required|numeric|min:0';
+            // Un jour laissé vide (sans prix) est gratuit : contrôlé plus bas.
+            $rules['tarifs.*.prix'] = ($multi ? 'nullable' : 'required').'|numeric|min:0';
             $rules['tarifs.*.qte'] = 'nullable|integer|min:1';
             $rules[$multi ? 'tarifs.*.jour' : 'generer_vip'] = $multi ? 'required|string' : 'nullable|boolean';
         }
@@ -911,10 +912,15 @@ class EvenementController extends Controller
                 }
                 $position = $positionParIndex[(string) $tarif['jour']];
             }
+            $nouveau = ! isset($tarif['id']) || $tarif['id'] === '';
+            $prixVide = ! isset($tarif['prix']) || $tarif['prix'] === '';
+            if ($prixVide && ! ($multi && $position !== null && $nouveau)) {
+                throw ValidationException::withMessages(["tarifs.{$i}.prix" => 'Indiquez le prix de chaque billet (0 pour gratuit).']);
+            }
             $tarifs[] = [
-                'id' => isset($tarif['id']) && $tarif['id'] !== '' ? (int) $tarif['id'] : null,
+                'id' => ! $nouveau ? (int) $tarif['id'] : null,
                 'nom' => $nom,
-                'prix' => round((float) $tarif['prix']),
+                'prix' => $prixVide ? 0 : round((float) $tarif['prix']),
                 'qte' => isset($tarif['qte']) && $tarif['qte'] !== '' ? (int) $tarif['qte'] : null,
                 'position' => $position,
             ];
@@ -991,7 +997,9 @@ class EvenementController extends Controller
                 continue;
             }
 
-            if ($t['qte'] === null) {
+            // Jour gratuit laissé vide : billet gratuit sans limite propre (la jauge du jour s'applique).
+            $jourGratuit = $multi && $t['position'] !== null && (float) $t['prix'] === 0.0;
+            if ($t['qte'] === null && ! $jourGratuit) {
                 throw ValidationException::withMessages(["tarifs.{$i}.qte" => 'Indiquez le nombre de places de chaque nouveau billet.']);
             }
 
