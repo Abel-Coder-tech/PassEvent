@@ -134,8 +134,41 @@ class TarifController extends Controller
     {
         abort_if($evenement->user_id !== Auth::id(), 403);
         $jours = $evenement->dates()->get();
+        $restes = $this->placesRestantesParCible($evenement, $tarif);
 
-        return view('tarifs.edit', compact('evenement', 'tarif', 'jours'));
+        return view('tarifs.edit', compact('evenement', 'tarif', 'jours', 'restes'));
+    }
+
+    // Multijours : places encore disponibles pour ce tarif, selon sa cible
+    // (clé = id du jour, ou « pack » pour tous les jours). Les autres tarifs
+    // sont déjà déduits ; un pack est borné par le jour le plus chargé.
+    private function placesRestantesParCible(Evenement $evenement, Tarif $tarif): array
+    {
+        if (! $evenement->estMultiJour() || $evenement->gratuit) {
+            return [];
+        }
+
+        $autres = $evenement->tarifs()->whereKeyNot($tarif->getKey())->get(['evenement_date_id', 'quantite_disponible']);
+        $placesPacks = (int) $autres->whereNull('evenement_date_id')->sum('quantite_disponible');
+        $restes = [];
+
+        foreach ($evenement->dates()->get() as $jour) {
+            $duJour = (int) $autres->where('evenement_date_id', $jour->id)->sum('quantite_disponible');
+            $capacite = (int) $jour->capaciteEffective();
+            $restes[$jour->id] = [
+                'reste' => max(0, $capacite - $placesPacks - $duJour),
+                'detail' => "{$capacite} places − packs ({$placesPacks}) − autres billets du jour ({$duJour})",
+            ];
+            $restes['pack'] = [
+                'reste' => min($restes['pack']['reste'] ?? PHP_INT_MAX, $restes[$jour->id]['reste']),
+                'detail' => 'jour le plus chargé : '.$restes[$jour->id]['detail'],
+            ];
+            if ($restes['pack']['reste'] === $restes[$jour->id]['reste']) {
+                $restes['pack']['detail'] = 'jour le plus chargé : '.$restes[$jour->id]['detail'];
+            }
+        }
+
+        return $restes;
     }
 
     // Met à jour un tarif existant. Le prix est libre s'il n'y a aucune vente,

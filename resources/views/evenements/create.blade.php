@@ -657,7 +657,8 @@
                             + '<label>' + (duJour.length > 1 ? esc(t.nom) + ' · ' : '') + 'Prix (F CFA)<input type="number" min="0" step="100" class="form-control" name="tarifs[' + k + '][prix]" data-champ="prix" value="' + esc(t.prix) + '" placeholder="' + (EDITION && !t.tid ? 'Vide = gratuit' : 'Prix') + '"' + attrPrix(t) + '></label>'
                             + '<label>Qté<input type="number" class="form-control" name="tarifs[' + k + '][qte]" data-champ="qte" value="' + esc(t.qte) + '"' + attrQte(t) + '></label>'
                             + noteVendu(t) + '</div>';
-                    }).join('') + '</div>';
+                    }).join('')
+                    + '<div class="wz-reste small mt-1" data-reste-jour="' + j.id + '"></div></div>';
             }).join('');
             // Packs facultatifs : Pack Simple et Pack VIP, chacun activé par une case.
             const champsPack = (t, k, libelle) => '<div class="wz-prix-qte" data-tarif="' + t.id + '">'
@@ -701,6 +702,24 @@
         const placesPacks = packs.reduce((s, t) => s + num(t.qte), 0);
         let premierPayant = null;
         let depassement = false;
+
+        // Aide par jour : places que les packs réservent, et ce qu'il reste pour les billets du jour.
+        etat.jours.forEach((j) => {
+            const el = $('[data-reste-jour="' + j.id + '"]');
+            if (!el) return;
+            const duJour = etat.tarifsJours.filter((t) => t.jourId === j.id);
+            const cap = capaciteJour(j);
+            const reste = cap - placesPacks;
+            const saisi = duJour.reduce((s, t) => s + num(t.qte), 0);
+            let html = 'Capacité du jour : <strong>' + cap + '</strong>'
+                + (placesPacks ? ' − packs : <strong>' + placesPacks + '</strong>' : '')
+                + ' = <strong>' + Math.max(0, reste) + '</strong> places possibles pour les billets de ce jour.';
+            if (duJour.length && saisi !== Math.max(0, reste) && reste > 0) {
+                html += ' <button type="button" class="wz-link" data-remplir-reste="' + j.id + '">Utiliser ' + reste + '</button>';
+            }
+            if (saisi > reste) html += ' <span class="wz-ko">Réduisez de ' + (saisi - Math.max(0, reste)) + '.</span>';
+            el.innerHTML = html;
+        });
 
         $('#wz-jauges').innerHTML = etat.jours.map((j, i) => {
             const duJour = etat.tarifsJours.filter((t) => t.jourId === j.id);
@@ -930,6 +949,16 @@
             etat.jours = etat.jours.filter((j) => j.id !== id);
             etat.tarifsJours = etat.tarifsJours.filter((t) => t.jourId !== id);
             rendreTout(); sauvegarder();
+            return;
+        }
+        if (cible.dataset.remplirReste) {
+            const j = etat.jours.find((x) => x.id === num(cible.dataset.remplirReste));
+            const t = j && etat.tarifsJours.find((x) => x.jourId === j.id);
+            if (t) {
+                const packs = etat.tarifsJours.filter((x) => x.jourId === 'pack').reduce((s, x) => s + num(x.qte), 0);
+                t.qte = String(Math.max(capaciteJour(j) - packs, (infoTarif(t) || {}).vendu || 1));
+                rendreBillets(); sauvegarder();
+            }
             return;
         }
         if (cible.dataset.ajoutTarif) {
