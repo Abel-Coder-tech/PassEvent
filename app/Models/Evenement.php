@@ -417,6 +417,21 @@ class Evenement extends Model
             ->min();
     }
 
+    // Reste-t-il de la place pour `$quantite` billets de ce tarif ? À appeler
+    // sur un événement fraîchement chargé (idéalement verrouillé). `$dejaCompte`
+    // retire de l'occupation les places que le billet concerné occupe déjà
+    // (multijours : un billet en attente sans expiration est déjà compté).
+    public function aPlacePour(?Tarif $tarif, int $quantite, int $dejaCompte = 0): bool
+    {
+        $this->resetCachesCapacite();
+
+        if (! $this->estMultiJour()) {
+            return (int) $this->quota_vendu + $quantite <= (int) $this->capacite;
+        }
+
+        return $this->placesRestantesPourTarif($tarif) + $dejaCompte >= $quantite;
+    }
+
     // Total des places encore disponibles sur les jours pas encore terminés.
     // Utilisé pour l'affichage (organisateur, public, agent) : une vente sur un
     // jour non limitant doit tout de même faire baisser ce compteur global,

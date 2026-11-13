@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Tarif;
 use App\Models\Evenement;
-use App\Models\User;
-use App\Models\DemandeModificationTarif;
-use App\Mail\TarifDemandeNotification;
 use App\Mail\ListeAttentePlacesDisponibles;
 use App\Models\EventWaitlist;
 use Illuminate\Http\Request;
@@ -196,19 +193,9 @@ class TarifController extends Controller
                 : $tarif->evenement_date_id,
         );
 
-        $aVendu = $evenement->tarifs()->sum('quantite_vendue') > 0;
-
-        // Si des billets ont déjà été vendus, le prix ne peut plus être modifié
-        // directement : passage par une demande d'approbation.
-        if ($aVendu && isset($validated['prix']) && (float) $validated['prix'] != (float) $tarif->prix) {
-            return back()->withErrors([
-                'prix' => 'Des billets ont déjà été vendus : le prix ne peut pas être modifié directement. Utilisez le bouton « Demander une modification » qui sera validé par PaxEvent.',
-            ])->withInput();
-        }
-
-        if (!$aVendu && isset($validated['prix'])) {
-            $validated['prix'] = $validated['prix'];
-        } else {
+        // Le prix reste modifiable après des ventes : les billets déjà émis
+        // gardent le montant payé, seuls les achats futurs changent.
+        if (! isset($validated['prix'])) {
             $validated['prix'] = $tarif->prix;
         }
 
@@ -287,51 +274,6 @@ class TarifController extends Controller
                 ]);
             }
         }
-    }
-
-    // Soumet une demande de modification de prix à PaxEvent (utilisé quand des
-    // billets ont déjà été vendus).
-    public function demanderModificationPrix(Request $request, Evenement $evenement, Tarif $tarif)
-    {
-        abort_if($evenement->user_id !== Auth::id(), 403);
-        abort_if($tarif->evenement_id !== $evenement->id, 403);
-
-        $aVendu = $evenement->tarifs()->sum('quantite_vendue') > 0;
-        abort_if(!$aVendu, 403, 'Aucune vente : modifiez directement le prix.');
-
-        $validated = $request->validate([
-            'nouveau_prix' => 'required|numeric|min:0',
-        ], [
-            'nouveau_prix.required' => 'Le nouveau prix est obligatoire.',
-            'nouveau_prix.numeric' => 'Le prix doit être un nombre valide.',
-            'nouveau_prix.min' => 'Le prix ne peut pas être négatif.',
-        ]);
-
-        // Évite les doublons : une demande en attente pour ce tarif existe déjà.
-        $existe = $tarif->demandesModification()
-            ->where('statut', 'en_attente')
-            ->exists();
-
-        if ($existe) {
-            return back()->with('error', 'Une demande de modification est déjà en attente pour ce tarif.');
-        }
-
-        $demande = DemandeModificationTarif::create([
-            'evenement_id' => $evenement->id,
-            'tarif_id' => $tarif->id,
-            'user_id' => Auth::id(),
-            'ancien_prix' => $tarif->prix,
-            'nouveau_prix' => $validated['nouveau_prix'],
-            'statut' => 'en_attente',
-        ]);
-
-        // Notifie PaxEvent par email (super administrateurs) pour traiter la demande.
-        $superAdmins = User::where('role', 'super_admin')->get();
-        foreach ($superAdmins as $sa) {
-            Mail::to($sa->email)->queue(new TarifDemandeNotification($demande));
-        }
-
-        return back()->with('success', 'Votre demande de modification de prix a été envoyée à PaxEvent.');
     }
 
     // Supprime un tarif

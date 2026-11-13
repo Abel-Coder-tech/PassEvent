@@ -10,6 +10,7 @@ use App\Models\Log as LogModel;
 use App\Models\LotPhysique;
 use App\Models\Ticket;
 use App\Services\FedapayService;
+use App\Services\WaitlistPromotionService;
 use App\Services\LotAutoService;
 use App\Services\PaiementMapper;
 use App\Services\PaymentMonitoringService;
@@ -404,9 +405,10 @@ class PaiementController extends Controller
                 // En cas de statut indéterminé (API injoignable, pending…), on garde les tickets :
                 // le webhook FedaPay (vérifié) confirmera la vente si le paiement a réellement abouti.
                 if ($definitif) {
-                    foreach ($groupTickets as $t) {
-                        $t->delete();
-                    }
+                    // On rend la place (si elle avait été réservée) et on marque les
+                    // billets échoués, au lieu de les supprimer : la trace du paiement
+                    // refusé reste disponible pour le support.
+                    $this->libererGroupeRefuse($groupTickets, $transactionId);
                 } else {
                     FacadesLog::warning('FedaPay callback - verification indeterminee, tickets conserves en_attente', [
                         'ticket' => $ticket->id,
@@ -1200,6 +1202,61 @@ class PaiementController extends Controller
         }
 
         return response()->json(['status' => 'ok']);
+    }
+
+    // Paiement définitivement refusé au retour FedaPay : rend la place réservée
+    // (une seule fois, sous verrou) et marque les billets « échoué » sans les
+    // supprimer. Une vente sans réservation n'a jamais consommé de place.
+    protected function libererGroupeRefuse(iterable $groupTickets, string $transactionId): void
+    {
+        $evenementIds = [];
+
+        DB::transaction(function () use ($groupTickets, $transactionId, &$evenementIds) {
+            foreach ($groupTickets as $t) {
+                $locked = Ticket::whereKey($t->id)->lockForUpdate()->first();
+                if (! $locked || $locked->statut_paiement !== 'en_attente') {
+                    continue;
+                }
+
+                // Place comptée uniquement si le billet portait une réservation en cours.
+                if ($locked->reservation_expire_le !== null && $locked->lot_physique_id === null) {
+                    $evenement = $locked->evenement()->lockForUpdate()->first();
+                    if ($evenement) {
+                        $evenement->forceFill([
+                            'quota_vendu' => max(0, (int) $evenement->quota_vendu - max(1, (int) $locked->quantite)),
+                        ])->saveQuietly();
+                        $evenementIds[$evenement->id] = $evenement->id;
+                    }
+                }
+
+                $locked->update([
+                    'statut_paiement' => 'échoué',
+                    'reservation_expire_le' => null,
+                    'fedapay_transaction_id' => $transactionId,
+                ]);
+
+                LogModel::create([
+                    'ticket_id' => $locked->id,
+                    'type_operation' => 'achat',
+                    'details' => [
+                        'action' => 'paiement_refuse_place_liberee',
+                        'transaction_id' => $transactionId,
+                        'quantity' => (int) $locked->quantite,
+                    ],
+                    'ip' => request()->ip(),
+                    'user_agent' => request()->userAgent() ? mb_substr(request()->userAgent(), 0, 255) : null,
+                ]);
+            }
+        });
+
+        // Les places rendues peuvent servir la liste d'attente.
+        foreach ($evenementIds as $evenementId) {
+            try {
+                app(WaitlistPromotionService::class)->promouvoirEvenement((int) $evenementId);
+            } catch (Throwable $e) {
+                FacadesLog::error('Promotion liste d\'attente après paiement refusé : '.$e->getMessage());
+            }
+        }
     }
 
     // Confirme atomiquement un groupe de tickets : verrouillage anti double-traitement,

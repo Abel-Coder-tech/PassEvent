@@ -6,6 +6,7 @@ use App\Jobs\SendTicketEmailJob;
 use App\Mail\TicketEmail;
 use App\Models\Evenement;
 use App\Models\Log;
+use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
@@ -425,34 +426,70 @@ class TicketController extends Controller
     public function annuler(int $id)
     {
         $ticket = Ticket::with('evenement.dates', 'tarif')->findOrFail($id);
-        $this->authoriserOrganisateur($ticket); // Contrôle de propriété
+        $this->authoriserOrganisateur($ticket); // Contrôle de propriété avant toute écriture
 
-        if ($ticket->statut_paiement !== 'payé' && $ticket->statut_paiement !== 'en_attente') {
-            return back()->with('error', 'Ce ticket ne peut pas etre annulé.'); // Statut incompatible
+        $resultat = DB::transaction(function () use ($id) {
+            $locked = Ticket::whereKey($id)->lockForUpdate()->first();
+
+            if (! $locked || ($locked->statut_paiement !== 'payé' && $locked->statut_paiement !== 'en_attente')) {
+                return null; // Statut incompatible (ou changé entre-temps)
+            }
+
+            $ancienStatut = $locked->statut_paiement;
+            $quantite = max(1, (int) $locked->quantite);
+            $physique = $locked->lot_physique_id !== null || $locked->source === 'physique';
+
+            // La place n'est rendue que si elle était réellement comptée :
+            // - payé : comptée dans quota_vendu (sauf billet physique) ;
+            // - en attente : comptée seulement si c'est une réservation en ligne.
+            $placeComptee = ! $physique
+                && ($ancienStatut === 'payé' || $locked->reservation_expire_le !== null);
+            // Le stock du tarif n'est consommé qu'à la confirmation du paiement.
+            $tarifCompte = $ancienStatut === 'payé';
+
+            $locked->update([
+                'statut_paiement' => 'remboursé', // Marque comme remboursé/annulé
+                'reservation_expire_le' => null,
+            ]);
+
+            if ($placeComptee && $locked->evenement_id) {
+                $evenement = Evenement::whereKey($locked->evenement_id)->lockForUpdate()->first();
+                if ($evenement) {
+                    $evenement->forceFill([
+                        'quota_vendu' => max(0, (int) $evenement->quota_vendu - $quantite),
+                    ])->saveQuietly();
+                }
+            }
+            if ($tarifCompte && $locked->tarif_id) {
+                $tarif = Tarif::whereKey($locked->tarif_id)->lockForUpdate()->first();
+                if ($tarif) {
+                    $tarif->forceFill([
+                        'quantite_vendue' => max(0, (int) $tarif->quantite_vendue - $quantite),
+                    ])->saveQuietly();
+                }
+            }
+
+            Log::create([
+                'ticket_id' => $locked->id,
+                'type_operation' => 'remboursement',
+                'details' => [
+                    'ancien_statut' => $ancienStatut,
+                    'motif' => 'annulation_admin',
+                    'quantite' => $quantite,
+                    'place_rendue' => $placeComptee,
+                ],
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return $placeComptee;
+        });
+
+        if ($resultat === null) {
+            return back()->with('error', 'Ce ticket ne peut pas etre annulé.');
         }
 
-        $ancienStatut = $ticket->statut_paiement;
-
-        $ticket->update([
-            'statut_paiement' => 'remboursé', // Marque comme remboursé/annulé
-        ]);
-
-        if ($ticket->evenement) {
-            $ticket->evenement->decrement('quota_vendu', 1, []); // Restaure le quota
-        }
-        if ($ticket->tarif) {
-            $ticket->tarif->decrement('quantite_vendue', 1, []); // Restaure la quantité vendue
-        }
-
-        Log::create([
-            'ticket_id' => $ticket->id,
-            'type_operation' => 'remboursement',
-            'details' => ['ancien_statut' => $ancienStatut, 'motif' => 'annulation_admin'],
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        return back()->with('success', 'Ticket annulé et quota restauré.');
+        return back()->with('success', $resultat ? 'Ticket annulé et quota restauré.' : 'Ticket annulé.');
     }
 
     public function create()
