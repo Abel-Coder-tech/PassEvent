@@ -19,17 +19,36 @@
             --vert: #12976e;
             --vert-fonce: #428c79;
             --teal: #428c79;
-            --violet: #87428b;
-            --violet-fonce: #6d4e72;
-            --violet-dark: #6d3570;
-            --menthe: #b2e0d6;
-            --aubergine: #6d4e72;
-            --sombre: #3d4345;
+            /* Charte PaxEvent : violet #542680, violet clair #9972B0, jaune #FED514, sombre #211C31.
+               Le vert ne sert plus qu'aux montants et aux états de succès. */
+            --violet: #542680;
+            --violet-clair: #9972B0;
+            --violet-fonce: #3f1c60;
+            --violet-dark: #3f1c60;
+            --accent: #FED514;
+            --menthe: #FED514;
+            --aubergine: #3f1c60;
+            --sombre: #211C31;
             --gris: #98919b;
             --blanc-casse: #edecf0;
             --blanc: #ffffff;
             --danger: #e74c3c;
         }
+
+        /* Bootstrap : le bleu par défaut passe au violet PaxEvent (cases à cocher, liens, alertes d'information). */
+        :root {
+            --bs-primary: #542680;
+            --bs-primary-rgb: 84, 38, 128;
+            --bs-link-color: #542680;
+            --bs-link-color-rgb: 84, 38, 128;
+            --bs-link-hover-color: #3f1c60;
+            --bs-link-hover-color-rgb: 63, 28, 96;
+        }
+        .form-check-input:checked { background-color: var(--violet); border-color: var(--violet); }
+        .form-check-input:focus { border-color: var(--violet-clair); box-shadow: 0 0 0 0.15rem rgba(84, 38, 128, 0.18); }
+        .btn-primary { --bs-btn-bg: #542680; --bs-btn-border-color: #542680; --bs-btn-hover-bg: #3f1c60; --bs-btn-hover-border-color: #3f1c60; --bs-btn-active-bg: #3f1c60; --bs-btn-active-border-color: #3f1c60; --bs-btn-disabled-bg: #542680; --bs-btn-disabled-border-color: #542680; }
+        .btn-outline-primary { --bs-btn-color: #542680; --bs-btn-border-color: #542680; --bs-btn-hover-bg: #542680; --bs-btn-hover-border-color: #542680; --bs-btn-active-bg: #542680; --bs-btn-active-border-color: #542680; }
+        .alert-info { --bs-alert-color: #3f1c60; --bs-alert-bg: #f1ebf6; --bs-alert-border-color: #d9c9e6; --bs-alert-link-color: #542680; }
 
         * { box-sizing: border-box; }
 
@@ -67,7 +86,7 @@
         .sidebar-logo-icon {
             width: 32px;
             height: 32px;
-            background: var(--vert);
+            background: var(--violet);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -145,7 +164,7 @@
 
         .sidebar .nav-link.active {
             color: var(--menthe);
-            background: rgba(18, 151, 110, 0.15);
+            background: rgba(254, 213, 20, 0.12);
             border-left-color: var(--menthe);
             font-weight: 700;
         }
@@ -276,7 +295,7 @@
         }
 
         .top-bar-left p span {
-            color: var(--vert);
+            color: var(--violet);
             font-weight: 700;
         }
 
@@ -371,7 +390,7 @@
 
         .panel-card-header a {
             font-size: 0.78rem;
-            color: var(--vert);
+            color: var(--violet);
             text-decoration: none;
             font-weight: 600;
         }
@@ -437,7 +456,7 @@
         .progress-bar-fill {
             height: 100%;
             border-radius: 3px;
-            background: var(--vert);
+            background: var(--violet);
             transition: width 0.5s ease;
         }
 
@@ -506,27 +525,27 @@
 
         /* Buttons */
         .btn-vert {
-            background: var(--vert);
-            border-color: var(--vert);
+            background: var(--violet);
+            border-color: var(--violet);
             color: #fff;
             font-weight: 600;
         }
 
         .btn-vert:hover {
-            background: var(--vert-fonce);
-            border-color: var(--vert-fonce);
+            background: var(--violet-fonce);
+            border-color: var(--violet-fonce);
             color: #fff;
         }
 
         .btn-outline-vert {
             background: transparent;
-            border: 1px solid var(--vert);
-            color: var(--vert);
+            border: 1px solid var(--violet);
+            color: var(--violet);
             font-weight: 600;
         }
 
         .btn-outline-vert:hover {
-            background: var(--vert);
+            background: var(--violet);
             color: #fff;
         }
 
@@ -578,8 +597,8 @@
             border-color: var(--violet);
             color: var(--violet);
         }
-        .btn-icon-vert { color: var(--vert); border-color: var(--vert); }
-        .btn-icon-vert:hover { background: rgba(18,151,110,0.08); color: var(--vert); border-color: var(--vert); }
+        .btn-icon-vert { color: var(--violet); border-color: var(--violet); }
+        .btn-icon-vert:hover { background: rgba(84,38,128,0.08); color: var(--violet); border-color: var(--violet); }
         .btn-icon-danger { color: var(--danger); border-color: var(--danger); }
         .btn-icon-danger:hover { background: rgba(231,76,60,0.08); color: var(--danger); border-color: var(--danger); }
         .btn-icon-gris { color: var(--gris); border-color: #ddd; }
@@ -644,20 +663,20 @@
 
         /* Form controls */
         .form-control:focus, .form-select:focus {
-            border-color: var(--vert);
-            box-shadow: 0 0 0 0.15rem rgba(18, 151, 110, 0.15);
+            border-color: var(--violet);
+            box-shadow: 0 0 0 0.15rem rgba(84, 38, 128, 0.18);
         }
 
         .btn-primary-custom {
-            background: var(--vert);
-            border-color: var(--vert);
+            background: var(--violet);
+            border-color: var(--violet);
             color: #fff;
             font-weight: 600;
         }
 
         .btn-primary-custom:hover {
-            background: var(--vert-fonce);
-            border-color: var(--vert-fonce);
+            background: var(--violet-fonce);
+            border-color: var(--violet-fonce);
             color: #fff;
         }
 
