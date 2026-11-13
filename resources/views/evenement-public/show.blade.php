@@ -224,13 +224,10 @@
                                     <div class="achat-ligne {{ $ligne['pack'] ? 'achat-pack' : '' }} {{ $ligne['vip'] ? 'achat-vip' : '' }}"
                                          data-tarif="{{ $ligne['id'] }}" data-prix="{{ $ligne['prix'] }}" data-max="{{ $ligne['restantes'] }}" data-nom="{{ $ligne['nom'] }}">
                                         <div class="achat-info">
-                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant">{{ $ligne['prixLabel'] }}@if($ligne['duree'])<span class="d-none d-sm-inline"> / {{ $ligne['duree'] }}</span>@endif</span>
-                                                @if($ligne['economie'])
-                                                    <span class="achat-eco d-none d-sm-inline-block">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>
-                                                @endif</div>
+                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant">{{ $ligne['prixLabel'] }}@if($ligne['duree'])<span class="d-none d-sm-inline"> / {{ $ligne['duree'] }}</span>@endif</span></div>
                                             <div class="achat-l2">
                                                 @if($ligne['sous'])<span>{{ $ligne['sous'] }}<span class="d-none d-sm-inline"> · {{ $ligne['heure'] }}</span></span> <span class="achat-sep">·</span>@endif
-                                                @if($ligne['economie'])<span class="achat-eco d-sm-none" style="margin:0 .2rem 0 0;">−{{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@elseif($ligne['duree'])<span class="d-sm-none">{{ $ligne['duree'] }} <span class="achat-sep">·</span></span>@endif
+                                                @if($ligne['economie'])<span class="achat-eco" style="margin:0 .2rem 0 0;">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@elseif($ligne['duree'])<span class="d-sm-none">{{ $ligne['duree'] }} <span class="achat-sep">·</span></span>@endif
                                                 @if($ligne['restantes'] <= 0)
                                                     <span class="achat-complet">Complet</span>
                                                 @else
