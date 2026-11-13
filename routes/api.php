@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\AgentVenteNotificationController;
 use App\Http\Controllers\Api\AgentVenteSaleController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/agent/login', [AgentAuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/agent/login', [AgentAuthController::class, 'login'])->middleware(['connexion.verrou', 'throttle:login']);
 
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(function () {
     Route::get('/agent/me', [AgentAuthController::class, 'me']);
@@ -29,7 +29,7 @@ Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:scan'])->group(
 // API agent de vente (compte distinct des agents de scan)
 // ============================================================
 Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
-    Route::post('/login', [AgentVenteAuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/login', [AgentVenteAuthController::class, 'login'])->middleware(['connexion.verrou', 'throttle:login']);
 
     Route::middleware(['auth:sanctum', 'agent.vente.api', 'abilities:agent_vente:read'])->group(function () {
         Route::get('/me', [AgentVenteAuthController::class, 'me']);
