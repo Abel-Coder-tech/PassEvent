@@ -293,7 +293,7 @@
                 </div>
             </div>
 
-            <!-- Colonne droite : Co-parrainage + Programme + Partager + Question + Lieu -->
+            <!-- Colonne droite : Co-parrainage + Programme + Partager + Question + Lieu + Autres événements -->
             <div class="col-lg-4 show-event-sidebar">
 
                 @if($evenement->co_parrainage_actif && !$evenement->gratuit)
@@ -374,34 +374,32 @@
                         <button type="button" class="show-btn" id="btnMasquerItineraire" style="width:auto;">Masquer</button>
                     </div>
                 </div>
+
+                <!-- Autres événements -->
+                @if($autresEvenements->isNotEmpty())
+                    <div class="show-card show-card-left">
+                        <h6 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h6>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach($autresEvenements as $autre)
+                                <a href="{{ route('evenements.public.show', $autre) }}" class="show-other-card">
+                                    @if($autre->image)
+                                        <img src="{{ asset('storage/' . $autre->image) }}" alt="">
+                                    @else
+                                        <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
+                                    @endif
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="show-other-title">{{ $autre->titre }}</div>
+                                        <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
+                                    </div>
+                                    <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
-
-    @if($autresEvenements->isNotEmpty())
-        <!-- Autres événements -->
-        <div class="container pb-5">
-            <h5 class="fw-bold mb-3" style="color:#211C31;"><i class="bi bi-calendar-event me-2" style="color:var(--violet);"></i>Autres événements</h5>
-            <div class="row g-3">
-                @foreach($autresEvenements as $autre)
-                    <div class="col-md-4">
-                        <a href="{{ route('evenements.public.show', $autre) }}" class="show-other-card h-100">
-                            @if($autre->image)
-                                <img src="{{ asset('storage/' . $autre->image) }}" alt="">
-                            @else
-                                <div class="show-other-placeholder"><i class="bi bi-calendar-event"></i></div>
-                            @endif
-                            <div class="flex-grow-1 min-w-0">
-                                <div class="show-other-title">{{ $autre->titre }}</div>
-                                <div class="show-other-date"><i class="bi bi-calendar3 me-1"></i>{{ $autre->date_event->isoFormat('D MMM YYYY') }}</div>
-                            </div>
-                            <i class="bi bi-chevron-right" style="color:#aaa; font-size:0.8rem;"></i>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
 
 
     {{-- Liste d'attente d'un tarif complet --}}
@@ -454,11 +452,12 @@
 .achat-vip.is-on{border-color:#FED514;background:#211C31}
 .achat-nom{font-weight:700}
 .achat-l1,.achat-l2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.achat-l2{font-size:.78rem;color:#6b6474;margin-top:.15rem}
+.achat-l1{font-size:1.1rem}
+.achat-l2{font-size:.86rem;color:#6b6474;margin-top:.2rem}
 .achat-sep{color:#b7b0c0;margin:0 .15rem}
 .achat-l1 .achat-montant{display:inline}
 .achat-step{display:inline-flex;align-items:center;gap:.6rem}
-@media (max-width:575.98px){.achat-ligne{gap:.5rem;padding:.7rem .75rem}.achat-step{gap:.35rem}.achat-step button{width:32px!important;height:32px!important}.achat-l1{font-size:.92rem}.achat-l2{font-size:.74rem}.achat-sep{margin:0 .05rem}#reserver .show-card{padding-left:.85rem;padding-right:.85rem}.achat-eco{font-size:.66rem;padding:.1rem .4rem;margin-left:.2rem}}
+@media (max-width:575.98px){.achat-ligne{gap:.5rem;padding:.7rem .75rem}.achat-step{gap:.35rem}.achat-step button{width:32px!important;height:32px!important}.achat-l1{font-size:1rem}.achat-l2{font-size:.78rem}.achat-sep{margin:0 .05rem}#reserver .show-card{padding-left:.85rem;padding-right:.85rem}.achat-eco{font-size:.66rem;padding:.1rem .4rem;margin-left:.2rem}}
 .achat-step button{width:36px;height:36px;border-radius:50%;border:0;background:#3b3a8f;color:#fff;font-size:1.15rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
 .achat-step button[data-moins]{background:#fff;border:1.5px solid #d9d4df;color:#6b6474}
 .achat-step button:disabled{background:#fff;border:1.5px solid #e6e3eb;color:#c9c3d1}
