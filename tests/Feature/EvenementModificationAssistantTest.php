@@ -188,6 +188,31 @@ class EvenementModificationAssistantTest extends TestCase
         $this->assertSame(1, $evenement->tarifs()->count());
     }
 
+    public function test_un_ancien_evenement_vendu_en_packs_peut_recevoir_un_tarif_par_jour(): void
+    {
+        $evenement = $this->creerMulti();
+        $evenement->tarifs()->delete();
+        $pass = $evenement->tarifs()->create(['nom' => 'Pass complet', 'prix' => 9000, 'quantite_disponible' => 100, 'quantite_vendue' => 0, 'statut' => 'actif']);
+        $jours = $evenement->dates()->reorder('date_debut')->get();
+
+        $this->modifier($evenement, [
+            'duree' => 'plusieurs',
+            'jours' => $jours->map(fn ($j) => $j->date_debut->format('Y-m-d\TH:i'))->all(),
+            'capacite' => 500, 'meme_capacite' => 1,
+            'tarifs' => [
+                ['id' => $pass->id, 'nom' => 'Pass complet', 'prix' => 9000, 'qte' => 100, 'jour' => 'pack'],
+                ['nom' => 'Jour', 'prix' => '', 'qte' => '', 'jour' => '0'],
+                ['nom' => 'Jour', 'prix' => 1000, 'qte' => 50, 'jour' => '1'],
+            ],
+        ])->assertRedirect(route('admin.evenements.index'));
+
+        $gratuit = $evenement->tarifs()->where('evenement_date_id', $jours[0]->id)->first();
+        $this->assertNotNull($gratuit);
+        $this->assertSame(0.0, (float) $gratuit->prix);
+        $payant = $evenement->tarifs()->where('evenement_date_id', $jours[1]->id)->first();
+        $this->assertSame(1000.0, (float) $payant->prix);
+    }
+
     protected function tarifsActuels(Evenement $evenement): array
     {
         $index = $evenement->dates()->reorder('date_debut')->pluck('id')->flip();

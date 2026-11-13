@@ -636,6 +636,30 @@ class MultiDayEvenementTest extends TestCase
         return \App\Models\User::findOrFail($id);
     }
 
+    public function test_un_pack_donne_acces_a_tous_les_jours_y_compris_le_jour_gratuit(): void
+    {
+        $evenement = $this->creerEvenement(100);
+        $jours = collect(range(0, 3))->map(fn ($i) => $this->creerJour($evenement->id, now()->addDays($i), $i, 50));
+        $this->creerTarif($evenement->id, $jours[0], 50, 0);
+        foreach ([1, 2, 3] as $i) {
+            $this->creerTarif($evenement->id, $jours[$i], 50, 1000);
+        }
+        $pack = $this->creerTarif($evenement->id, null, 10, 3000);
+
+        $billetPack = Ticket::create([
+            'evenement_id' => $evenement->id,
+            'tarif_id' => $pack->id,
+            'code_unique' => 'PAX-PACK4J',
+            'quantite' => 1,
+            'statut_paiement' => 'en_attente',
+        ]);
+
+        $this->assertNull($billetPack->evenement_date_id);
+        foreach ($jours as $jour) {
+            $this->assertTrue($billetPack->estValableLeJour($jour));
+        }
+    }
+
     private function creerEvenement(int $capacite, int $quotaVendu = 0, ?int $userId = null, bool $gratuit = false): Evenement
     {
         $id = DB::table('evenement')->insertGetId([
