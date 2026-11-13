@@ -98,6 +98,30 @@ class ApiAuthenticationSecurityTest extends TestCase
         ])->assertStatus(429);
     }
 
+    public function test_trop_d_echecs_bloquent_la_connexion_quinze_minutes(): void
+    {
+        DB::table('agents')->insert([
+            'nom' => 'Agent', 'email' => 'bloque@example.test', 'password' => bcrypt('bon-mot-de-passe'),
+            'actif' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        RateLimiter::clear('connexion-verrou-ip:127.0.0.1');
+        Carbon::setTestNow(now());
+
+        // 5 échecs espacés (le limiteur à la minute ne gêne pas) puis blocage.
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/agent/login', ['email' => 'bloque@example.test', 'password' => 'faux'])->assertUnauthorized();
+            Carbon::setTestNow(now()->addSeconds(61));
+        }
+
+        // Même avec le bon mot de passe, l'accès reste bloqué.
+        $this->postJson('/api/agent/login', ['email' => 'bloque@example.test', 'password' => 'bon-mot-de-passe'])
+            ->assertStatus(429)->assertJsonPath('message', 'too_many_attempts')->assertHeader('Retry-After');
+
+        // Après la durée de blocage, la connexion est de nouveau possible.
+        Carbon::setTestNow(now()->addMinutes(16));
+        $this->postJson('/api/agent/login', ['email' => 'bloque@example.test', 'password' => 'bon-mot-de-passe'])->assertOk();
+    }
+
     public function test_agent_login_issues_a_token_that_expires_after_fourteen_days(): void
     {
         DB::table('agents')->insert([
