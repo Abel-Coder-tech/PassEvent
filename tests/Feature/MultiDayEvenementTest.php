@@ -427,6 +427,23 @@ class MultiDayEvenementTest extends TestCase
         }
     }
 
+    public function test_deplacer_un_jour_avec_billets_vers_un_autre_jour_conserve_son_identifiant(): void
+    {
+        $evenement = $this->creerEvenement(10);
+        $jour1 = $this->creerJour($evenement->id, Carbon::parse('2026-12-24 10:00'), 0);
+        $jour2 = $this->creerJour($evenement->id, Carbon::parse('2026-12-25 10:00'), 1);
+        $tarif = $this->creerTarif($evenement->id, $jour2);
+        $billet = $this->creerBillet($evenement->id, $jour2, $tarif, 1);
+
+        // Le jour 2 passe du 25 au 28 décembre : autre jour calendaire.
+        $this->enregistrerDates($evenement, '2026-12-24 10:00', ['2026-12-28 10:00']);
+
+        $this->assertSame('2026-12-28 10:00', $jour2->fresh()->date_debut->format('Y-m-d H:i'));
+        $this->assertSame($jour2->id, (int) DB::table('ticket')->where('id', $billet)->value('evenement_date_id'));
+        $this->assertSame($jour2->id, (int) $tarif->fresh()->evenement_date_id);
+        $this->assertSame(2, $evenement->dates()->count());
+    }
+
     public function test_mettre_a_jour_la_jauge_d_un_jour(): void
     {
         $user = $this->creerUtilisateur();

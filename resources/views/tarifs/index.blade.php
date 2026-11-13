@@ -54,9 +54,9 @@
         }
     @endphp
     @if($evenementAVendu)
-        <div class="alert alert-warning">
+        <div class="alert alert-info">
             <i class="bi bi-info-circle me-2"></i>
-            Des billets ont déjà été vendus pour cet événement : le prix d'un tarif ne peut plus être modifié directement. Cliquez sur « Modifier » puis utilisez le bouton « Demander une modification » pour soumettre un nouveau prix à validation par PaxEvent.
+            Des billets ont déjà été vendus : vous pouvez toujours modifier le prix d'un tarif. Les acheteurs déjà servis conservent le montant payé, le nouveau prix s'applique uniquement aux prochains achats.
         </div>
     @else
         <div class="alert alert-info">
@@ -130,7 +130,7 @@
                                                 </button>
                                             </form>
                                         @endif
-                                        <a href="{{ route('admin.tarifs.edit', [$evenement->id, $tarif->id]) }}" class="btn btn-sm btn-outline-secondary me-1" title="Modifier ce tarif (prix, quantité, ou demande de modification)">
+                                        <a href="{{ route('admin.tarifs.edit', [$evenement->id, $tarif->id]) }}" class="btn btn-sm btn-outline-secondary me-1" title="Modifier ce tarif (prix, quantité)">
                                             <i class="bi bi-pencil me-1"></i> Modifier
                                         </a>
                                         <form action="{{ route('admin.tarifs.destroy', [$evenement->id, $tarif->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tarif ?')">

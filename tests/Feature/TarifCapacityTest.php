@@ -163,6 +163,23 @@ class TarifCapacityTest extends TestCase
         $this->assertSame(20, (int) $tarif->refresh()->quantite_disponible);
     }
 
+    public function test_un_tarif_deja_vendu_change_de_prix_directement(): void
+    {
+        [$user, $evenement] = $this->creerEvenement(capacite: 100);
+        $tarif = $this->creerTarif($evenement, quantiteDisponible: 80);
+        $tarif->update(['quantite_vendue' => 10]);
+
+        $this->actingAs($user)
+            ->put(route('admin.tarifs.update', [$evenement, $tarif]), [
+                'nom' => $tarif->nom,
+                'prix' => 7000,
+                'quantite_disponible' => 80,
+            ])
+            ->assertRedirect(route('admin.tarifs.index', $evenement->id));
+
+        $this->assertSame(7000.0, (float) $tarif->refresh()->prix);
+    }
+
     private function creerEvenement(int $capacite): array
     {
         $user = User::create([

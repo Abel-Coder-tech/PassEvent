@@ -100,13 +100,13 @@ class EvenementModificationAssistantTest extends TestCase
         $this->assertNull($etudiant->fresh());
     }
 
-    public function test_un_tarif_vendu_garde_son_prix_et_ne_peut_etre_ni_supprime_ni_reduit_sous_ses_ventes(): void
+    public function test_un_tarif_vendu_change_de_prix_mais_ne_peut_etre_ni_supprime_ni_reduit_sous_ses_ventes(): void
     {
         $evenement = $this->creerMono();
         [$standard, $etudiant] = $evenement->tarifs()->orderBy('id')->get()->all();
         $standard->update(['quantite_vendue' => 30]);
 
-        // Le prix envoyé est ignoré pour un tarif vendu ; la quantité reste modifiable.
+        // Le prix d'un tarif vendu reste modifiable (les billets émis gardent leur montant).
         $this->modifier($evenement, [
             'duree' => 'un',
             'date_event' => $this->date(5, '20:00'),
@@ -116,7 +116,7 @@ class EvenementModificationAssistantTest extends TestCase
                 ['id' => $etudiant->id, 'nom' => 'Étudiant', 'prix' => 2500, 'qte' => 100],
             ],
         ])->assertRedirect(route('admin.evenements.index'));
-        $this->assertSame([5000.0, 180], [(float) $standard->fresh()->prix, $standard->fresh()->quantite_disponible]);
+        $this->assertSame([1.0, 180], [(float) $standard->fresh()->prix, $standard->fresh()->quantite_disponible]);
 
         $this->modifier($evenement, [
             'duree' => 'un', 'date_event' => $this->date(5, '20:00'), 'capacite' => 300,
