@@ -745,6 +745,7 @@ class MultiDayEvenementTest extends TestCase
             $table->unsignedBigInteger('tarif_id')->nullable();
             $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->unsignedBigInteger('agent_vente_id')->nullable();
+            $table->unsignedBigInteger('lot_physique_id')->nullable();
             $table->string('source')->nullable();
             $table->string('code_unique')->nullable();
             $table->unsignedInteger('quantite')->default(1);

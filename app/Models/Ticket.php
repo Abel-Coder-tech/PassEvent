@@ -98,10 +98,13 @@ class Ticket extends Model
 
     // Billets qui occupent réellement une place : payés, ou en attente tant
     // que leur réservation n'est pas expirée. Les annulés, remboursés,
-    // échoués et expirés sont exclus.
+    // échoués et expirés sont exclus. Les billets physiques (lots imprimés)
+    // sont aussi exclus : ils n'ont jamais été comptés dans la jauge en ligne.
     public function scopeActifsPourCapacite(Builder $query): Builder
     {
         return $query
+            ->whereNull('lot_physique_id')
+            ->where(fn (Builder $q) => $q->whereNull('source')->orWhere('source', '!=', 'physique'))
             ->whereNull('expire_at')
             ->where(fn (Builder $q) => $q->whereNull('annule')->orWhere('annule', false))
             ->where(function (Builder $q) {

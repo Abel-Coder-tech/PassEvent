@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tarif;
 use App\Models\Ticket;
 use App\Models\Evenement;
 use App\Models\Log;
@@ -161,13 +162,49 @@ class RemboursementController extends Controller
             return back()->withErrors(['error' => 'Ce remboursement a été traité par PaxEvent et ne peut plus être annulé.']);
         }
 
-        $ticket->update(['statut_paiement' => 'payé']); // Restaure le statut payé
+        $quantite = max(1, (int) $ticket->quantite);
 
-        if ($ticket->tarif) {
-            $ticket->tarif->increment('quantite_vendue'); // Restaure le compteur de vente
+        // Vérification de la place et du stock du tarif sous verrou avant de
+        // réincrémenter : la place a pu être revendue depuis le remboursement.
+        $restaure = DB::transaction(function () use ($ticket, $quantite) {
+            $locked = Ticket::whereKey($ticket->id)->lockForUpdate()->first();
+            if (! $locked || $locked->statut_paiement !== 'remboursé') {
+                return 'deja_traite';
+            }
+
+            $evenement = Evenement::whereKey($locked->evenement_id)->lockForUpdate()->first();
+            $tarif = $locked->tarif_id ? Tarif::whereKey($locked->tarif_id)->lockForUpdate()->first() : null;
+
+            // Un billet physique n'a jamais occupé la jauge en ligne.
+            $compte = $locked->lot_physique_id === null && $locked->source !== 'physique';
+
+            if ($compte && (! $evenement || ! $evenement->aPlacePour($tarif, $quantite))) {
+                return 'complet';
+            }
+            if ($compte && $tarif && ! $tarif->aStockPour($quantite)) {
+                return 'stock';
+            }
+
+            $locked->update(['statut_paiement' => 'payé']); // Restaure le statut payé
+
+            if ($tarif) {
+                $tarif->increment('quantite_vendue', $quantite); // Restaure le compteur de vente
+            }
+            if ($compte && $evenement) {
+                $evenement->increment('quota_vendu', $quantite); // Restaure le quota
+            }
+
+            return 'ok';
+        });
+
+        if ($restaure === 'complet') {
+            return back()->withErrors(['error' => 'Impossible de restaurer ce ticket : l\'événement est complet, la place a été revendue.']);
         }
-        if ($ticket->evenement) {
-            $ticket->evenement->increment('quota_vendu'); // Restaure le quota
+        if ($restaure === 'stock') {
+            return back()->withErrors(['error' => 'Impossible de restaurer ce ticket : le stock de ce tarif est épuisé.']);
+        }
+        if ($restaure === 'deja_traite') {
+            return back()->withErrors(['error' => 'Ce ticket n\'est plus remboursé.']);
         }
 
         Log::create([
