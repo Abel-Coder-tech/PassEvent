@@ -38,6 +38,13 @@ class Tarif extends Model
         return $this->belongsTo(EvenementDate::class, 'evenement_date_id');
     }
 
+    // Le stock propre du tarif (illimité si null) permet-il `$quantite` ventes de plus ?
+    public function aStockPour(int $quantite): bool
+    {
+        return $this->quantite_disponible === null
+            || (int) $this->quantite_vendue + $quantite <= (int) $this->quantite_disponible;
+    }
+
     public function estPack(): bool
     {
         return $this->evenement_date_id === null;
