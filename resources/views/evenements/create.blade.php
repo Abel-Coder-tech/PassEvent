@@ -156,6 +156,11 @@
 
 @section('content')
 <div class="page-content">
+    @if($edition && ($edition['aDesBillets'] ?? false))
+        <div class="alert alert-warning" role="status">
+            Des billets ont déjà été vendus. Si vous modifiez les dates, les acheteurs reçoivent leurs billets mis à jour par email et leurs billets restent valables sur le jour déplacé. Un changement de prix ne s'applique qu'aux prochains achats.
+        </div>
+    @endif
     @if($edition && $joursAvecScansReussis->isNotEmpty())
         <div class="alert alert-info" role="status">
             Les dates ayant déjà enregistré un scan réussi sont verrouillées. Vous pouvez toujours modifier les autres dates de l'événement.
@@ -558,13 +563,13 @@
     // ---------- Rendu des parties dynamiques ----------
     // Modification : identifiant du tarif existant et attributs de verrouillage.
     const champId = (t, index) => (t.tid ? '<input type="hidden" name="tarifs[' + index + '][id]" value="' + t.tid + '">' : '');
-    const attrPrix = (t) => (tarifVendu(t) ? ' readonly title="Tarif déjà vendu : le prix se modifie par une demande d’approbation"' : '');
+    const attrPrix = (t) => '';
     const attrQte = (t) => { const i = infoTarif(t); return ' min="' + Math.max(1, i ? i.vendu : 1) + '"' + (i && i.illimite ? ' placeholder="Illimité"' : ' placeholder="Qté"'); };
     const noteVendu = (t) => {
         const i = infoTarif(t);
         if (!i || !i.vendu) return '';
         return '<div class="wz-perso small text-muted">' + i.vendu + ' vendu(s) · '
-            + (i.demande ? 'demande de prix en attente' : 'prix modifiable par <a href="' + esc(EDITION.urlTarifs) + '">demande d’approbation</a>') + '</div>';
+            + 'le nouveau prix s’applique aux prochains achats</div>';
     };
     const boutonSuppr = (t) => (tarifVendu(t) ? '<span></span>'
         : '<button type="button" class="wz-x" data-suppr-tarif="' + t.id + '" aria-label="Supprimer ce billet"><i class="bi bi-x-lg" aria-hidden="true"></i></button>');
@@ -594,12 +599,12 @@
             const verrou = verrouJour(j.orig);
             return '<div class="wz-dayrow">'
                 + '<label class="fw-semibold" for="jour-' + j.id + '">Jour ' + (i + 1) + '</label>'
-                + '<input type="datetime-local" class="form-control" id="jour-' + j.id + '" name="jours[' + i + ']" value="' + esc(j.date) + '"' + (verrou ? ' readonly title="Jour verrouillé : scans, tarifs ou billets"' : (j.orig ? '' : ' min="' + esc(MIN_DATE) + '"')) + ' data-jour="' + j.id + '">'
-                + (verrou ? '<span class="wz-badge wz-badge-pack" title="Scans, tarifs ou billets sur ce jour"><i class="bi bi-lock"></i></span>'
-                    : (etat.jours.length > 2 ? '<button type="button" class="wz-x" data-suppr-jour="' + j.id + '" aria-label="Supprimer le jour ' + (i + 1) + '"><i class="bi bi-x-lg" aria-hidden="true"></i></button>' : '<span></span>'))
+                + '<input type="datetime-local" class="form-control" id="jour-' + j.id + '" name="jours[' + i + ']" value="' + esc(j.date) + '"' + (verrou ? ' readonly title="Jour verrouillé : un scan a déjà eu lieu"' : (j.orig ? '' : ' min="' + esc(MIN_DATE) + '"')) + ' data-jour="' + j.id + '">'
+                + (verrou ? '<span class="wz-badge wz-badge-pack" title="Un scan a déjà eu lieu ce jour"><i class="bi bi-lock"></i></span>'
+                    : (etat.jours.length > 2 && !(EDITION && j.orig && (EDITION.joursProteges || []).includes(String(j.orig).slice(0, 10))) ? '<button type="button" class="wz-x" data-suppr-jour="' + j.id + '" aria-label="Supprimer le jour ' + (i + 1) + '"><i class="bi bi-x-lg" aria-hidden="true"></i></button>' : '<span></span>'))
                 + '</div>';
         }).join('');
-        // Date unique verrouillée (un seul jour déjà scanné ou vendu)
+        // Date unique verrouillée (un seul jour déjà scanné)
         $('#date_event').readOnly = !!EDITION && verrouJour(EDITION.dateInitiale);
         $('#wz-ajout-jour').classList.toggle('d-none', etat.jours.length >= MAX_JOURS);
     }

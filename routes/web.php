@@ -398,7 +398,6 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::post('/evenements/{evenement}/tarifs', [TarifController::class, 'store'])->name('tarifs.store');
         Route::get('/evenements/{evenement}/tarifs/{tarif}/edit', [TarifController::class, 'edit'])->name('tarifs.edit');
         Route::put('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
-        Route::post('/evenements/{evenement}/tarifs/{tarif}/demande-modification', [TarifController::class, 'demanderModificationPrix'])->name('tarifs.demande-modification');
         Route::delete('/evenements/{evenement}/tarifs/{tarif}', [TarifController::class, 'destroy'])->name('tarifs.destroy');
 
         Route::get('/scan-codes', [EvenementController::class, 'scanCodesIndex'])->name('scan-codes.index');

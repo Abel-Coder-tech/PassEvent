@@ -6,6 +6,7 @@ use App\Mail\TicketEmail;
 use App\Models\DemandeRemboursement;
 use App\Models\Evenement;
 use App\Models\Log as LogModel;
+use App\Models\Tarif;
 use App\Models\Ticket;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -179,6 +180,8 @@ class ReconciliationService
 
         $confirmes = 0;
         $dejaPayes = 0;
+        $ignores = 0;
+        $sansPlace = 0;
         $ticketsConfirmes = [];
 
         DB::beginTransaction();
@@ -199,10 +202,34 @@ class ReconciliationService
                     continue;
                 }
 
+                // Un billet annulé ou expiré ne redevient jamais payé.
+                if ($ticket->annule || $ticket->expire_at !== null) {
+                    $ignores++;
+                    continue;
+                }
+
                 $statutAvant = $ticket->statut_paiement;
                 // Une place déjà réservée à la création (vente mobile en attente)
                 // ne doit pas être comptée deux fois à la confirmation.
                 $reservationDejaComptee = $ticket->reservation_expire_le !== null;
+
+                // Sinon la place n'est pas (ou plus) tenue : vérifier qu'il en
+                // reste avant de confirmer, sous verrou de l'événement.
+                if (! $reservationDejaComptee) {
+                    $evenementVerrouille = Evenement::whereKey($ticket->evenement_id)->lockForUpdate()->first();
+                    $tarifVerrouille = $ticket->tarif_id ? Tarif::whereKey($ticket->tarif_id)->lockForUpdate()->first() : null;
+                    $quantite = max(1, (int) $ticket->quantite);
+                    // Multijours : un billet en attente sans expiration est déjà compté dans l'occupation.
+                    $dejaCompte = $evenementVerrouille && $evenementVerrouille->estMultiJour()
+                        && Ticket::whereKey($ticket->id)->actifsPourCapacite()->exists()
+                        ? $quantite : 0;
+
+                    if (! $evenementVerrouille || ! $evenementVerrouille->aPlacePour($tarifVerrouille, $quantite, $dejaCompte)) {
+                        $this->log('confirmation_refusee_complet', $ticket, ['par' => $this->acteur(), 'transaction_id' => $transactionId]);
+                        $sansPlace++;
+                        continue;
+                    }
+                }
 
                 $ticket->update([
                     'statut_paiement' => 'payé',
@@ -261,9 +288,13 @@ class ReconciliationService
 
         return [
             'success' => true,
-            'message' => "{$confirmes} ticket(s) confirmé(s)" . ($dejaPayes ? ", {$dejaPayes} déjà payé(s)" : '') . '.',
+            'message' => "{$confirmes} ticket(s) confirmé(s)" . ($dejaPayes ? ", {$dejaPayes} déjà payé(s)" : '')
+                . ($ignores ? ", {$ignores} annulé(s)/expiré(s) ignoré(s)" : '')
+                . ($sansPlace ? ", {$sansPlace} non confirmé(s) faute de place" : '') . '.',
             'confirmes' => $confirmes,
             'deja_payes' => $dejaPayes,
+            'ignores' => $ignores,
+            'sans_place' => $sansPlace,
         ];
     }
 
