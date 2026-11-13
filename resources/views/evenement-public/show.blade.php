@@ -225,15 +225,12 @@
                                          data-tarif="{{ $ligne['id'] }}" data-prix="{{ $ligne['prix'] }}" data-max="{{ $ligne['restantes'] }}" data-nom="{{ $ligne['nom'] }}">
                                         <div class="achat-info">
                                             <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant">{{ $ligne['prixLabel'] }}@if($ligne['duree'])<span class="d-none d-sm-inline"> / {{ $ligne['duree'] }}</span>@endif</span></div>
-                                            <div class="achat-l2">
-                                                @if($ligne['sous'])<span>{{ $ligne['sous'] }}<span class="d-none d-sm-inline"> · {{ $ligne['heure'] }}</span></span> <span class="achat-sep">·</span>@endif
-                                                @if($ligne['economie'])<span class="achat-eco" style="margin:0 .2rem 0 0;">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@elseif($ligne['duree'])<span class="d-sm-none">{{ $ligne['duree'] }} <span class="achat-sep">·</span></span>@endif
-                                                @if($ligne['restantes'] <= 0)
-                                                    <span class="achat-complet">Complet</span>
-                                                @else
-                                                    <span class="achat-bas">{{ $ligne['restantes'] }} {{ $ligne['restantes'] > 1 ? 'places restantes' : 'place restante' }}</span>
-                                                @endif
-                                            </div>
+                                            @if($ligne['economie'] || $ligne['restantes'] <= 0)
+                                                <div class="achat-l2">
+                                                    @if($ligne['economie'])<span class="achat-eco" style="margin:0 .2rem 0 0;">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@endif
+                                                    @if($ligne['restantes'] <= 0)<span class="achat-complet">Épuisé</span>@endif
+                                                </div>
+                                            @endif
                                         </div>
                                         @if($ligne['restantes'] > 0)
                                             <div class="achat-step">
@@ -449,12 +446,12 @@
 .achat-vip.is-on{border-color:#FED514;background:#211C31}
 .achat-nom{font-weight:700}
 .achat-l1,.achat-l2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.achat-l1{font-size:1.1rem}
+.achat-l1{font-size:1.3rem}
 .achat-l2{font-size:.86rem;color:#6b6474;margin-top:.2rem}
 .achat-sep{color:#b7b0c0;margin:0 .15rem}
 .achat-l1 .achat-montant{display:inline}
 .achat-step{display:inline-flex;align-items:center;gap:.6rem}
-@media (max-width:575.98px){.achat-ligne{gap:.5rem;padding:.7rem .75rem}.achat-step{gap:.35rem}.achat-step button{width:32px!important;height:32px!important}.achat-l1{font-size:1rem}.achat-l2{font-size:.78rem}.achat-sep{margin:0 .05rem}#reserver .show-card{padding-left:.85rem;padding-right:.85rem}.achat-eco{font-size:.66rem;padding:.1rem .4rem;margin-left:.2rem}}
+@media (max-width:575.98px){.achat-ligne{gap:.5rem;padding:.7rem .75rem}.achat-step{gap:.35rem}.achat-step button{width:32px!important;height:32px!important}.achat-l1{font-size:1.15rem}.achat-l2{font-size:.78rem}.achat-sep{margin:0 .05rem}#reserver .show-card{padding-left:.85rem;padding-right:.85rem}.achat-eco{font-size:.66rem;padding:.1rem .4rem;margin-left:.2rem}}
 .achat-step button{width:36px;height:36px;border-radius:50%;border:0;background:#3b3a8f;color:#fff;font-size:1.15rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
 .achat-step button[data-moins]{background:#fff;border:1.5px solid #d9d4df;color:#6b6474}
 .achat-step button:disabled{background:#fff;border:1.5px solid #e6e3eb;color:#c9c3d1}
