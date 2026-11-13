@@ -20,12 +20,14 @@
     <!-- Subtitle -->
     <p class="text-muted mb-4" style="font-size: 0.9rem; margin-top: -0.5rem;">
         {{ $totalEvenements }} événement{{ $totalEvenements > 1 ? 's' : '' }} · {{ number_format($totalBilletsVendus, 0, ',', ' ') }} billet{{ $totalBilletsVendus > 1 ? 's' : '' }} vendu{{ $totalBilletsVendus > 1 ? 's' : '' }}
-        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('evenement_a_la_une')">
-            <i class="bi bi-star me-1"></i> Mettre un événement à la une
-        </button>
-        <button type="button" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;margin-left:0.75rem;" onclick="openDemande('booster_promouvoir')">
-            <i class="bi bi-megaphone me-1"></i> Booster / promouvoir
-        </button>
+        <span class="d-inline-flex align-items-center gap-2 ms-0 ms-sm-3 mt-1 mt-sm-0" style="vertical-align: middle; white-space: nowrap;">
+            <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.72rem;padding:0.25rem 0.55rem;" onclick="openDemande('evenement_a_la_une')">
+                <i class="bi bi-star me-1"></i><span class="d-none d-sm-inline">Mettre un événement à la une</span><span class="d-sm-none">À la une</span>
+            </button>
+            <button type="button" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;font-size:0.72rem;padding:0.25rem 0.55rem;" onclick="openDemande('booster_promouvoir')">
+                <i class="bi bi-megaphone me-1"></i><span class="d-none d-sm-inline">Booster / promouvoir</span><span class="d-sm-none">Booster</span>
+            </button>
+        </span>
     </p>
 
     <!-- Stat Cards -->
