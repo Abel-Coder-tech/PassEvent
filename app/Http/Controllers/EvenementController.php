@@ -472,21 +472,21 @@ class EvenementController extends Controller
             session()->now('_old_input', $this->valeursAssistant($evenement));
         }
 
-        // Jours verrouillés : scan réussi, tarif rattaché ou billet émis.
-        $joursVerrouilles = $joursAvecScansReussis
-            ->merge($evenement->joursAvecTarifsOuBillets())
-            ->unique()
-            ->values();
+        // Jours verrouillés : seulement ceux ayant un scan réussi. Un jour avec
+        // tarifs ou billets peut être déplacé (les billets suivent le jour) mais
+        // pas supprimé.
+        $joursVerrouilles = $joursAvecScansReussis->unique()->values();
+        $joursProteges = $evenement->joursAvecTarifsOuBillets();
 
         $edition = [
             'joursVerrouilles' => $joursVerrouilles->all(),
+            'joursProteges' => $joursProteges->all(),
+            'aDesBillets' => $evenement->tickets()->where('statut_paiement', 'payé')->exists(),
             'dateInitiale' => $evenement->date_event->format('Y-m-d\\TH:i'),
             'image' => $evenement->image ? asset('storage/'.$evenement->image) : null,
             'tarifs' => $evenement->tarifs->mapWithKeys(fn ($tarif) => [$tarif->id => [
                 'vendu' => (int) $tarif->quantite_vendue,
                 'illimite' => $tarif->quantite_disponible === null,
-                'demande' => $tarif->quantite_vendue > 0
-                    && $tarif->demandesModification()->where('statut', 'en_attente')->exists(),
             ]])->all(),
             // Ancien événement multijours sans tarif à la journée : on ne lui
             // impose pas de tarif « Jour N ».
@@ -658,8 +658,8 @@ class EvenementController extends Controller
             : null;
 
         $datesData = $this->extraireDatesSupplementaires($request, $validated['date_event']);
+        // Seuls les jours déjà scannés sont figés : tarifs et billets suivent le jour déplacé.
         $joursAvecScansReussis = $evenement->joursAvecScansReussis()
-            ->merge($evenement->joursAvecTarifsOuBillets())
             ->unique()
             ->values();
 
@@ -675,7 +675,7 @@ class EvenementController extends Controller
                 : 'dates_supplementaires';
 
             throw ValidationException::withMessages([
-                $attribut => 'Une date ayant déjà enregistré un scan, des tarifs ou des billets ne peut être modifiée, déplacée ou supprimée.',
+                $attribut => 'Une date ayant déjà enregistré un scan ne peut être modifiée, déplacée ou supprimée.',
             ]);
         }
 
@@ -950,8 +950,9 @@ class EvenementController extends Controller
     }
 
     // Tarifs saisis dans l'assistant : mise à jour des existants, création des
-    // nouveaux, suppression des retirés. Un tarif vendu garde son prix (demande
-    // d'approbation) et ne peut ni être supprimé ni descendre sous ses ventes.
+    // nouveaux, suppression des retirés. Le prix d'un tarif vendu reste
+    // modifiable (les billets émis gardent leur montant) ; il ne peut en
+    // revanche ni être supprimé ni descendre sous ses ventes.
     private function synchroniserTarifsAssistant(Evenement $evenement, array $donnees): void
     {
         $multi = $donnees['multi'];
@@ -967,12 +968,11 @@ class EvenementController extends Controller
                 }
                 $conserves->push($tarif->id);
 
-                $maj = [];
-                if ((int) $tarif->quantite_vendue === 0) {
-                    $maj['prix'] = $t['prix'];
-                    if (! $multi) {
-                        $maj['nom'] = $t['nom'];
-                    }
+                // Le prix reste modifiable après des ventes : les billets déjà émis
+                // gardent le montant payé, seuls les achats futurs changent.
+                $maj = ['prix' => $t['prix']];
+                if ((int) $tarif->quantite_vendue === 0 && ! $multi) {
+                    $maj['nom'] = $t['nom'];
                 }
                 if ($t['qte'] === null) {
                     if ($tarif->quantite_disponible !== null) {
@@ -1089,12 +1089,8 @@ class EvenementController extends Controller
                 continue;
             }
 
-            // Un tarif avec des ventes laisse le prix inchangé :
-            // sa modification passe par une demande d'approbation dédiée.
-            if ($tarif->quantite_vendue > 0) {
-                continue;
-            }
-
+            // Le prix reste modifiable après des ventes : les billets déjà
+            // émis gardent le montant payé, seuls les achats futurs changent.
             $prix = trim((string) $prix);
             if ($prix === '' || !is_numeric($prix) || (float) $prix < 0) {
                 continue;
@@ -1256,6 +1252,27 @@ class EvenementController extends Controller
                 return $ligne;
             });
 
+            // 3) Repli par position : un jour déplacé vers une autre date (autre jour
+            //    calendaire) garde son identifiant, donc ses tarifs et ses billets.
+            //    Seuls les jours portant des tarifs ou des billets sont concernés, attribués
+            //    dans l'ordre chronologique aux dates demandées sans correspondance ; un jour
+            //    vide remplacé par une autre date reste un simple retrait + ajout.
+            $libres = $existantes
+                ->reject(fn ($jour) => $utilisees->contains($jour->id))
+                ->filter(fn ($jour) => $jour->tarifs()->exists() || $jour->tickets()->exists())
+                ->sortBy('date_debut')
+                ->values();
+            $restantes = $restantes->map(function (array $ligne) use (&$libres, $utilisees) {
+                if ($ligne['existante'] !== null || $libres->isEmpty()) {
+                    return $ligne;
+                }
+
+                $ligne['existante'] = $libres->shift();
+                $utilisees->push($ligne['existante']->id);
+
+                return $ligne;
+            });
+
             // Identifiants à garder : jours existants réutilisés ET jours créés
             // ci-dessous (sinon l'étape 3 supprimerait les nouvelles dates).
             $conservees = collect();
@@ -1277,7 +1294,7 @@ class EvenementController extends Controller
                 ])->id);
             }
 
-            // 3) Suppression des jours retirés, en refusant de casser un jour qui
+            // 4) Suppression des jours retirés, en refusant de casser un jour qui
             //    porte encore des tarifs ou des billets.
             $evenement->dates()
                 ->whereNotIn('id', $conservees->all())
