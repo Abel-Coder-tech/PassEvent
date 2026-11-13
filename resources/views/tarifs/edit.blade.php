@@ -70,6 +70,12 @@
                     <label for="quantite_disponible" class="form-label fw-semibold">Quantité disponible</label>
                     <input type="number" class="form-control @error('quantite_disponible') is-invalid @enderror" id="quantite_disponible" name="quantite_disponible" value="{{ old('quantite_disponible', $tarif->quantite_disponible) }}" min="1">
                     <small class="text-muted">Laissez vide pour illimité</small>
+                    @if(! empty($restes))
+                        <div class="small mt-2" id="reste-places" style="display:none">
+                            <span id="reste-texte"></span>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" id="reste-utiliser"></button>
+                        </div>
+                    @endif
                     @error('quantite_disponible') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
@@ -92,9 +98,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const quantite = document.getElementById('quantite_disponible');
     if (!select || !quantite) return;
 
+    const restes = @json($restes);
+    const bloc = document.getElementById('reste-places');
+    const texte = document.getElementById('reste-texte');
+    const utiliser = document.getElementById('reste-utiliser');
+
     function synchroniserMaximum() {
         const option = select.selectedOptions[0];
         quantite.max = option?.dataset.capacite || {{ (int) $evenement->capacite }};
+        const r = restes[select.value || 'pack'];
+        if (!bloc || !r) return;
+        bloc.style.display = '';
+        texte.textContent = 'Places possibles pour ce tarif : ' + r.reste + ' (' + r.detail + ').';
+        utiliser.textContent = 'Utiliser ' + r.reste;
+        utiliser.style.display = r.reste > 0 ? '' : 'none';
+        utiliser.onclick = () => { quantite.value = r.reste; };
+        quantite.max = Math.min(quantite.max, r.reste) || quantite.max;
     }
 
     select.addEventListener('change', synchroniserMaximum);
