@@ -114,8 +114,10 @@ class EvenementController extends Controller
             $rules['tarifs'] = 'required|array|min:1|max:'.self::MAX_TARIFS;
             $rules['tarifs.*.nom'] = 'required|string|max:100';
             $rules['tarifs.*.nom_perso'] = 'nullable|string|max:100';
-            $rules['tarifs.*.prix'] = 'required|numeric|min:0';
-            $rules['tarifs.*.qte'] = 'required|integer|min:1';
+            // Multijours : le prix et la quantité d'un jour peuvent rester vides (jour gratuit),
+            // contrôlés plus bas ; les packs et les événements d'un jour les exigent.
+            $rules['tarifs.*.prix'] = ($multi ? 'nullable' : 'required').'|numeric|min:0';
+            $rules['tarifs.*.qte'] = ($multi ? 'nullable' : 'required').'|integer|min:1';
             $rules['co_parrainage_actif'] = 'nullable|boolean';
             $rules['co_parrainage_pourcentage'] = "nullable|numeric|min:1|max:{$maxCoParrainage}|required_if:co_parrainage_actif,1";
 
@@ -219,10 +221,22 @@ class EvenementController extends Controller
                     $position = $positionParIndex[(string) $tarif['jour']];
                 }
 
+                $prixVide = ! isset($tarif['prix']) || $tarif['prix'] === '';
+                $qteVide = ! isset($tarif['qte']) || $tarif['qte'] === '';
+                $jourLibre = $multi && $position !== null;
+                if ($prixVide && ! $jourLibre) {
+                    throw ValidationException::withMessages(["tarifs.{$i}.prix" => 'Indiquez le prix de chaque billet (0 pour gratuit).']);
+                }
+                $prix = $prixVide ? 0.0 : round((float) $tarif['prix']);
+                // Un jour gratuit (vide ou 0 F) peut ne pas limiter ses places : la jauge du jour s'applique.
+                if ($qteVide && ! ($jourLibre && $prix === 0.0)) {
+                    throw ValidationException::withMessages(["tarifs.{$i}.qte" => 'Indiquez le nombre de places de chaque billet.']);
+                }
+
                 $tarifsData[] = [
                     'nom' => $nom,
-                    'prix' => round((float) $tarif['prix']),
-                    'quantite_disponible' => (int) $tarif['qte'],
+                    'prix' => $prix,
+                    'quantite_disponible' => $qteVide ? null : (int) $tarif['qte'],
                     'position' => $position,
                 ];
             }
@@ -914,13 +928,13 @@ class EvenementController extends Controller
             }
             $nouveau = ! isset($tarif['id']) || $tarif['id'] === '';
             $prixVide = ! isset($tarif['prix']) || $tarif['prix'] === '';
-            if ($prixVide && ! ($multi && $position !== null && $nouveau)) {
+            if ($prixVide && ! ($multi && $position !== null)) {
                 throw ValidationException::withMessages(["tarifs.{$i}.prix" => 'Indiquez le prix de chaque billet (0 pour gratuit).']);
             }
             $tarifs[] = [
                 'id' => ! $nouveau ? (int) $tarif['id'] : null,
                 'nom' => $nom,
-                'prix' => $prixVide ? 0 : round((float) $tarif['prix']),
+                'prix' => $prixVide ? 0.0 : round((float) $tarif['prix']),
                 'qte' => isset($tarif['qte']) && $tarif['qte'] !== '' ? (int) $tarif['qte'] : null,
                 'position' => $position,
             ];
@@ -980,7 +994,10 @@ class EvenementController extends Controller
                 if ((int) $tarif->quantite_vendue === 0 && ! $multi) {
                     $maj['nom'] = $t['nom'];
                 }
-                if ($t['qte'] === null) {
+                $jourGratuitExistant = $multi && $t['position'] !== null && (float) $t['prix'] === 0.0;
+                if ($t['qte'] === null && $jourGratuitExistant && (int) $tarif->quantite_vendue === 0) {
+                    $maj['quantite_disponible'] = null; // jour gratuit sans limite propre
+                } elseif ($t['qte'] === null) {
                     if ($tarif->quantite_disponible !== null) {
                         throw ValidationException::withMessages(["tarifs.{$i}.qte" => "Indiquez le nombre de places du tarif « {$tarif->nom} »."]);
                     }

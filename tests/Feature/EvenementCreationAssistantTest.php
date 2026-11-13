@@ -89,6 +89,42 @@ class EvenementCreationAssistantTest extends TestCase
         $this->assertNull($tarifs['Pack VIP']->evenement_date_id);
     }
 
+    public function test_un_jour_au_prix_vide_ou_a_zero_est_gratuit(): void
+    {
+        $this->envoyer([
+            'duree' => 'plusieurs',
+            'jours' => [$this->date(4, '18:00'), $this->date(5, '18:00'), $this->date(6, '18:00')],
+            'capacite' => 500,
+            'meme_capacite' => 1,
+            'tarifs' => [
+                ['nom' => 'Jour', 'prix' => '', 'qte' => '', 'jour' => '0'],
+                ['nom' => 'Jour', 'prix' => 0, 'qte' => '', 'jour' => '1'],
+                ['nom' => 'Jour', 'prix' => 1000, 'qte' => 50, 'jour' => '2'],
+                ['nom' => 'Pack Simple', 'prix' => 2500, 'qte' => 100, 'jour' => 'pack'],
+            ],
+        ])->assertSessionHasNoErrors();
+
+        $evenement = Evenement::latest('id')->firstOrFail();
+        $prix = $evenement->tarifs()->whereNotNull('evenement_date_id')->orderBy('evenement_date_id')->pluck('prix')->map(fn ($p) => (float) $p)->all();
+        $this->assertSame([0.0, 0.0, 1000.0], $prix);
+        $this->assertSame(1000.0, $evenement->fresh('tarifs')->prixAPartirDe());
+    }
+
+    public function test_un_pack_sans_prix_est_refuse(): void
+    {
+        $this->envoyer([
+            'duree' => 'plusieurs',
+            'jours' => [$this->date(4, '18:00'), $this->date(5, '18:00')],
+            'capacite' => 500,
+            'meme_capacite' => 1,
+            'tarifs' => [
+                ['nom' => 'Jour', 'prix' => 1000, 'qte' => 10, 'jour' => '0'],
+                ['nom' => 'Jour', 'prix' => 1000, 'qte' => 10, 'jour' => '1'],
+                ['nom' => 'Pack Simple', 'prix' => '', 'qte' => 10, 'jour' => 'pack'],
+            ],
+        ])->assertSessionHasErrors('tarifs.2.prix');
+    }
+
     public function test_deux_tarifs_le_meme_jour_sont_refuses(): void
     {
         $this->envoyer([

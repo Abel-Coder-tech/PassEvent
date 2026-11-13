@@ -435,7 +435,7 @@
                     @php
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
                         $estComplet = $placesRestantes <= 0;
-                        $prixDernier = $evenement->tarifs->min('prix');
+                        $prixDernier = $evenement->prixAPartirDe();
                         $textes = $evenement->getTextes();
                         $venteCloturee = $evenement->ventes_fermees;
                     @endphp
@@ -472,6 +472,8 @@
                                             <span class="une-price">Entrée <strong>Gratuit</strong></span>
                                         @elseif($prixDernier)
                                             <span class="une-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></span>
+                                        @elseif($prixDernier !== null)
+                                            <span class="une-price">Entrée <strong>Gratuit</strong></span>
                                         @else
                                             <span class="une-price text-muted">Tarifs non configurés</span>
                                         @endif
@@ -676,7 +678,7 @@
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = (int) round($evenement->tauxRemplissage());
-                        $prixDernier = $evenement->tarifs->min('prix');
+                        $prixDernier = $evenement->prixAPartirDe();
                         $textes = $evenement->getTextes();
                         $venteCloturee = $evenement->ventes_fermees;
                     @endphp
@@ -712,6 +714,8 @@
                                     <div class="ev-price">Entrée <strong>Gratuit</strong></div>
                                 @elseif($prixDernier)
                                     <div class="ev-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
+                                @elseif($prixDernier !== null)
+                                    <div class="ev-price">Entrée <strong>Gratuit</strong></div>
                                 @else
                                     <div class="ev-price"><span class="text-muted">Tarifs non configurés</span></div>
                                 @endif
