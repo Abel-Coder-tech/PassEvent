@@ -224,9 +224,11 @@
                                     <div class="achat-ligne {{ $ligne['pack'] ? 'achat-pack' : '' }} {{ $ligne['vip'] ? 'achat-vip' : '' }}"
                                          data-tarif="{{ $ligne['id'] }}" data-prix="{{ $ligne['prix'] }}" data-max="{{ $ligne['restantes'] }}" data-nom="{{ $ligne['nom'] }}">
                                         <div class="achat-info">
-                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant">{{ $ligne['prixLabel'] }}@if($ligne['duree'])<span class="d-none d-sm-inline"> / {{ $ligne['duree'] }}</span>@endif</span></div>
-                                            @if($ligne['economie'] || $ligne['restantes'] <= 0)
+                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant">{{ $ligne['prixLabel'] }}</span></div>
+                                            @if($ligne['duree'] || $ligne['economie'] || $ligne['restantes'] <= 0)
                                                 <div class="achat-l2">
+                                                    @if($ligne['duree'])<span class="achat-duree">{{ $ligne['duree'] }}</span>@endif
+                                                    @if($ligne['duree'] && $ligne['economie'])<span class="achat-sep">·</span>@endif
                                                     @if($ligne['economie'])<span class="achat-eco" style="margin:0 .2rem 0 0;">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@endif
                                                     @if($ligne['restantes'] <= 0)<span class="achat-complet">Épuisé</span>@endif
                                                 </div>
@@ -444,7 +446,7 @@
 .achat-vip .achat-sous,.achat-vip .achat-bas,.achat-vip .achat-complet{color:#e4dfea}
 .achat-vip .achat-montant{color:#FED514}
 .achat-vip.is-on{border-color:#FED514;background:#211C31}
-.achat-nom{font-weight:700}
+.achat-nom{font-weight:600;font-size:.78em}
 .achat-l1,.achat-l2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .achat-l1{font-size:1.3rem}
 .achat-l2{font-size:.86rem;color:#6b6474;margin-top:.2rem}
