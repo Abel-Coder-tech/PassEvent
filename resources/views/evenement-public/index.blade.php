@@ -81,6 +81,8 @@
                                 @endif
                                 @if($estPasse)
                                     <span class="ev-card-badge" style="right:10px;left:auto;background:#6c757d;color:#fff;">Terminé</span>
+                                @elseif($evenement->billetteriePasOuverte())
+                                    <span class="ev-card-badge" style="background: rgba(107,100,116,0.92); color: #fff;">Billetterie bientôt ouverte</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-card-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
                                 @elseif($estComplet)
@@ -116,6 +118,8 @@
                                 @endif
                                 @if($estPasse)
                                     <span class="ev-card-btn disabled"><i class="bi bi-clock-history me-1"></i> Événement passé</span>
+                                @elseif($evenement->billetteriePasOuverte())
+                                    <span class="ev-card-btn disabled"><i class="bi bi-clock me-1"></i> Billetterie bientôt ouverte</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-card-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
                                 @elseif($estComplet)

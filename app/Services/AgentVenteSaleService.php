@@ -553,6 +553,7 @@ class AgentVenteSaleService
             'event_suspended' => "L'événement est suspendu. Les ventes sont fermées.",
             'event_draft' => "L'événement n'est pas encore publié. Les ventes sont fermées.",
             'event_ended' => "L'événement est terminé. Les ventes sont fermées.",
+            'sales_not_open' => "La billetterie de cet événement n'est pas encore ouverte.",
             'sales_closed' => "L'organisateur a fermé les ventes pour cet événement.",
             'event_full' => "L'événement est complet. Les ventes sont fermées.",
             default => "Les ventes sont fermées pour cet événement.",

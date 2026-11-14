@@ -43,6 +43,8 @@ class Evenement extends Model
         'type_evenement',
         'gratuit',
         'ventes_fermees',
+        'billetterie_ouverte',
+        'billetterie_ouvre_le',
         'ventes_especes',
         'commission_pourcentage',
         'co_parrainage_actif',
@@ -58,6 +60,8 @@ class Evenement extends Model
             'date_event' => 'datetime',
             'gratuit' => 'boolean',
             'ventes_fermees' => 'boolean',
+            'billetterie_ouverte' => 'boolean',
+            'billetterie_ouvre_le' => 'datetime',
             'commission_pourcentage' => 'float',
             'co_parrainage_actif' => 'boolean',
             'co_parrainage_pourcentage' => 'float',
@@ -667,13 +671,29 @@ class Evenement extends Model
         };
     }
 
-    // Motif d'interdiction de vente : accès bloqué, ventes fermées ou capacité nulle.
+    // Billetterie pas encore ouverte : fermée par l'organisateur et, si une date
+    // d'ouverture est fixée, cette date n'est pas encore atteinte. Un événement
+    // sans la colonne (anciens jeux de données) est considéré ouvert.
+    public function billetteriePasOuverte(): bool
+    {
+        if (($this->billetterie_ouverte ?? true) !== false) {
+            return false;
+        }
+
+        return $this->billetterie_ouvre_le === null || $this->billetterie_ouvre_le->isFuture();
+    }
+
+    // Motif d'interdiction de vente : accès bloqué, billetterie pas ouverte, ventes fermées ou capacité nulle.
     public function raisonBlocageVente(): ?string
     {
         $acces = $this->raisonBlocageAcces();
 
         if ($acces !== null) {
             return $acces;
+        }
+
+        if ($this->billetteriePasOuverte()) {
+            return 'sales_not_open';
         }
 
         if ($this->ventes_fermees) {

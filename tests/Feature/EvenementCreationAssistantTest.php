@@ -125,6 +125,40 @@ class EvenementCreationAssistantTest extends TestCase
         ])->assertSessionHasErrors('tarifs.2.prix');
     }
 
+    public function test_la_billetterie_peut_etre_ouverte_plus_tard_puis_ouverte_a_la_main(): void
+    {
+        $ouverture = now()->addDays(2)->format('Y-m-d\TH:i');
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+            'billetterie_plus_tard' => 1,
+            'billetterie_ouvre_le' => $ouverture,
+        ])->assertRedirect(route('admin.evenements.index'));
+
+        $evenement = Evenement::firstOrFail();
+        $this->assertFalse($evenement->billetterie_ouverte);
+        $this->assertTrue($evenement->billetteriePasOuverte());
+        $this->assertSame('sales_not_open', $evenement->raisonBlocageVente());
+
+        // Page publique : l'événement reste consultable, sans bouton d'achat.
+        auth()->logout();
+        $this->get(route('evenements.public.show', $evenement))->assertOk()
+            ->assertSee('Billetterie bientôt ouverte')->assertDontSee('id="formAchat"', false);
+
+        $this->actingAs($this->organisateur)
+            ->post(route('admin.evenements.billetterie', $evenement->id), ['action' => 'ouvrir'])
+            ->assertRedirect();
+        $this->assertFalse($evenement->fresh()->billetteriePasOuverte());
+        $this->assertNull($evenement->fresh()->billetterie_ouvre_le);
+
+        $this->actingAs($this->organisateur)
+            ->post(route('admin.evenements.billetterie', $evenement->id), ['action' => 'fermer', 'ouvre_le' => $ouverture])
+            ->assertRedirect();
+        $this->assertTrue($evenement->fresh()->billetteriePasOuverte());
+    }
+
     public function test_deux_tarifs_le_meme_jour_sont_refuses(): void
     {
         $this->envoyer([
@@ -387,6 +421,8 @@ class EvenementCreationAssistantTest extends TestCase
             $table->string('type_evenement')->default('spectacle');
             $table->boolean('gratuit')->default(false);
             $table->boolean('ventes_fermees')->default(false);
+            $table->boolean('billetterie_ouverte')->default(true);
+            $table->dateTime('billetterie_ouvre_le')->nullable();
             $table->boolean('co_parrainage_actif')->default(false);
             $table->decimal('co_parrainage_pourcentage', 5, 2)->nullable();
             $table->timestamps();

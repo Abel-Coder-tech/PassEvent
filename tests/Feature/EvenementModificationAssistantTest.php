@@ -329,6 +329,8 @@ class EvenementModificationAssistantTest extends TestCase
             $table->string('type_evenement')->default('spectacle');
             $table->boolean('gratuit')->default(false);
             $table->boolean('ventes_fermees')->default(false);
+            $table->boolean('billetterie_ouverte')->default(true);
+            $table->dateTime('billetterie_ouvre_le')->nullable();
             $table->boolean('co_parrainage_actif')->default(false);
             $table->decimal('co_parrainage_pourcentage', 5, 2)->nullable();
             $table->timestamps();

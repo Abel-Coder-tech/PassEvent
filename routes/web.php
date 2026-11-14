@@ -404,6 +404,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
         Route::post('/evenements/{evenement}/fermer-vente', [EvenementController::class, 'fermerVente'])->name('evenements.fermer-vente');
+        Route::post('/evenements/{evenement}/billetterie', [EvenementController::class, 'billetterie'])->name('evenements.billetterie');
         Route::post('/evenements/{evenement}/coparrainage', [EvenementController::class, 'toggleCoParrainage'])->name('evenements.coparrainage');
         Route::post('/evenements/{evenement}/jours/{jour}/capacite', [EvenementController::class, 'updateJourCapacite'])->name('evenements.jours.capacite');
 

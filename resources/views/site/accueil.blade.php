@@ -454,7 +454,9 @@
                                     @if($evenement->categorie)
                                         <span class="une-badge">{{ ucfirst($evenement->categorie) }}</span>
                                     @endif
-                                    @if($venteCloturee)
+                                    @if($evenement->billetteriePasOuverte())
+                                        <span class="une-badge" style="background:#6b6474;color:#fff;">Billetterie bientôt ouverte</span>
+                                    @elseif($venteCloturee)
                                         <span class="une-badge une-badge-danger">{{ $textes['cloturee'] }}</span>
                                     @elseif($estComplet)
                                         <span class="une-badge une-badge-danger">Complet</span>
@@ -477,7 +479,11 @@
                                         @else
                                             <span class="une-price text-muted">Tarifs non configurés</span>
                                         @endif
-                                        @if(!$venteCloturee && !$estComplet)
+                                        @if($evenement->billetteriePasOuverte())
+                                            <span class="une-cta" style="background:#e6e3eb;color:#6b6474;">
+                                                <i class="bi bi-clock me-1"></i> Billetterie bientôt ouverte
+                                            </span>
+                                        @elseif(!$venteCloturee && !$estComplet)
                                             <span class="une-cta">
                                                 <i class="bi bi-{{ $evenement->gratuit ? 'check-circle' : 'ticket-perforated' }} me-1"></i>
                                                 {{ $evenement->gratuit ? $textes['participer_gratuit'] : $textes['acheter'] }}
@@ -695,7 +701,9 @@
                                 @if($evenement->categorie)
                                     <span class="ev-badge">{{ ucfirst($evenement->categorie) }}</span>
                                 @endif
-                                @if($venteCloturee)
+                                @if($evenement->billetteriePasOuverte())
+                                    <span class="ev-badge" style="background: rgba(107,100,116,0.92); color: #fff;">Billetterie bientôt ouverte</span>
+                                @elseif($venteCloturee)
                                     <span class="ev-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
                                 @elseif($estComplet)
                                     <span class="ev-badge ev-badge-complet">Complet</span>
@@ -726,7 +734,9 @@
                                     </div>
                                     <div class="gauge-track"><div class="gauge-fill" style="width:{{ min($remplissage,100) }}%"></div></div>
                                 </div>
-                                @if($venteCloturee)
+                                @if($evenement->billetteriePasOuverte())
+                                    <span class="ev-btn disabled"><i class="bi bi-clock me-1"></i> Billetterie bientôt ouverte</span>
+                                @elseif($venteCloturee)
                                     <span class="ev-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
                                 @elseif($estComplet)
                                     <span class="ev-btn disabled">Complet</span>

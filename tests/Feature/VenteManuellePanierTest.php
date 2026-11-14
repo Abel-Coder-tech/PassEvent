@@ -175,6 +175,8 @@ class VenteManuellePanierTest extends TestCase
             $table->unsignedInteger('quota_vendu')->default(0);
             $table->boolean('gratuit')->default(false);
             $table->boolean('ventes_fermees')->default(false);
+            $table->boolean('billetterie_ouverte')->default(true);
+            $table->dateTime('billetterie_ouvre_le')->nullable();
             $table->string('ventes_especes')->nullable();
             $table->timestamps();
         });

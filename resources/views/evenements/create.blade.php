@@ -43,7 +43,7 @@
         'dates' => ['duree', 'date_event', 'jours'],
         'lieu' => ['lieu', 'capacite', 'meme_capacite', 'capacites_jours'],
         'billets' => ['tarifs', 'generer_vip'],
-        'recap' => ['co_parrainage_actif', 'co_parrainage_pourcentage', 'statut'],
+        'recap' => ['co_parrainage_actif', 'co_parrainage_pourcentage', 'statut', 'billetterie_plus_tard', 'billetterie_ouvre_le'],
     ];
     $etapeDuChamp = fn (string $cle) => collect($champsParEtape)
         ->search(fn ($champs) => in_array(explode('.', $cle)[0], $champs, true));
@@ -412,6 +412,18 @@
                             <div class="form-text">Maximum {{ $maxCoParrainage }} % (100 % moins votre commission PaxEvent).</div>
                         </div>
                     </div>
+                    <div class="wz-block" id="wz-billetterie">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="billetterie_plus_tard" name="billetterie_plus_tard" value="1" @checked(old('billetterie_plus_tard'))>
+                            <label class="form-check-label fw-semibold" for="billetterie_plus_tard"><i class="bi bi-clock me-1"></i>Ouvrir la billetterie plus tard</label>
+                        </div>
+                        <div class="form-text">L'événement est visible, mais les visiteurs voient « Billetterie bientôt ouverte » et ne peuvent pas acheter. Vous l'ouvrez quand vous voulez depuis la fiche de l'événement.</div>
+                        <div id="wz-bill-date" class="mt-3 d-none" style="max-width: 280px;">
+                            <label class="form-label fw-semibold" for="billetterie_ouvre_le">Ouverture automatique (facultatif)</label>
+                            <input type="datetime-local" class="form-control" id="billetterie_ouvre_le" name="billetterie_ouvre_le" value="{{ old('billetterie_ouvre_le') }}">
+                            <div class="form-text">À cette date, la billetterie s'ouvre toute seule.</div>
+                        </div>
+                    </div>
                     <div class="wz-recap" id="wz-recap"></div>
                 </section>
 
@@ -457,7 +469,7 @@
     const NOMS_BILLETS = ['Standard', 'VIP', 'VVIP', 'Étudiant', 'Prévente', 'Personnalisé'];
     const NOMS_PACKS = ['Pass complet', 'Pass VIP', 'Personnalisé'];
     const CHAMPS_SIMPLES = ['type_evenement', 'categorie', 'autre_categorie', 'titre', 'description', 'gratuit', 'duree',
-        'date_event', 'lieu', 'capacite', 'meme_capacite', 'generer_vip', 'co_parrainage_actif', 'co_parrainage_pourcentage'];
+        'date_event', 'lieu', 'capacite', 'meme_capacite', 'generer_vip', 'co_parrainage_actif', 'co_parrainage_pourcentage', 'billetterie_plus_tard', 'billetterie_ouvre_le'];
 
     let sequence = 1;
     const nouvelId = () => sequence++;
@@ -765,6 +777,7 @@
         $('#wz-co').classList.toggle('d-none', gratuit);
         $$('input', $('#wz-co')).forEach((el) => { el.disabled = gratuit; });
         $('#wz-co-champs').classList.toggle('d-none', gratuit || !$('#co_parrainage_actif').checked);
+        $('#wz-bill-date').classList.toggle('d-none', !$('#billetterie_plus_tard').checked);
     }
 
     function rendreRecap() {
@@ -802,7 +815,9 @@
             bloc('Dates', 'dates', jours.map((j, i) => (multi ? 'Jour ' + (i + 1) + ' : ' : '') + fmtDate(j.date))),
             bloc('Lieu et capacité', 'lieu', [$('#lieu').value.trim() || 'Lieu à renseigner'].concat(capacites)),
             bloc('Billets', gratuit ? 'acces' : 'billets', billets.length ? billets : ['Aucun billet']),
-        ].join('');
+        ].concat($('#billetterie_plus_tard').checked
+            ? [bloc('Billetterie', 'recap', ['Ouverture plus tard' + ($('#billetterie_ouvre_le').value ? ' · le ' + fmtDate($('#billetterie_ouvre_le').value) : ' · manuelle')])]
+            : []).join('');
     }
 
     function rendreTout() {
@@ -1010,7 +1025,7 @@
             if (el.checked) etat.tarifsJours.push(nouveauTarif({ nom: el.dataset.pack, jourId: 'pack' }));
             rendreBillets();
         }
-        else if (['gratuit', 'duree', 'meme_capacite', 'generer_vip', 'co_parrainage_actif', 'categorie'].includes(el.name)) {
+        else if (['gratuit', 'duree', 'meme_capacite', 'generer_vip', 'co_parrainage_actif', 'billetterie_plus_tard', 'categorie'].includes(el.name)) {
             rendreTout();
             if (el.name === 'gratuit') allerA(courante);
         }
