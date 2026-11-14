@@ -130,7 +130,11 @@
                         <h5 class="fw-bold mb-0 me-2" style="font-size: 1.05rem; flex:1; min-width:0;">{{ $evenement->titre }}</h5>
                         <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
-                            <span class="badge ms-2" style="font-size:0.7rem; {{ $evenement->ventes_fermees ? 'background:var(--danger);' : 'background:var(--vert);' }}">{{ $evenement->ventes_fermees ? 'Ventes fermées' : 'Ventes ouvertes' }}</span>
+                            @if($evenement->billetteriePasOuverte())
+                                <span class="badge ms-2" style="font-size:0.7rem; background:#6b6474;">Billetterie pas ouverte</span>
+                            @else
+                                <span class="badge ms-2" style="font-size:0.7rem; {{ $evenement->ventes_fermees ? 'background:var(--danger);' : 'background:var(--vert);' }}">{{ $evenement->ventes_fermees ? 'Ventes fermées' : 'Ventes ouvertes' }}</span>
+                            @endif
                         @endif
                     </div>
 

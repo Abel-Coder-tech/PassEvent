@@ -32,6 +32,8 @@ class CompteursCapaciteTest extends TestCase
             $table->boolean('gratuit')->default(false);
             $table->string('statut')->default('publié');
             $table->boolean('ventes_fermees')->default(false);
+            $table->boolean('billetterie_ouverte')->default(true);
+            $table->dateTime('billetterie_ouvre_le')->nullable();
             $table->timestamps();
         });
         Schema::create('evenement_dates', function (Blueprint $table) {

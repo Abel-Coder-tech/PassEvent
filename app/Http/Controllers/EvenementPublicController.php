@@ -119,7 +119,10 @@ class EvenementPublicController extends Controller
         $derniereDate = $evenement->derniereDate();
         $evenementPasse = $derniereDate && $derniereDate->date_debut->lt(now());
 
-        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'placesRestantesTotales', 'placesParJour', 'estComplet', 'venteCloturee', 'evenementPasse'));
+        // Événement publié à l'avance : la billetterie n'a pas encore ouvert.
+        $billetteriePasOuverte = $evenement->billetteriePasOuverte() && ! $venteCloturee && ! $evenementPasse;
+
+        return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'placesRestantesTotales', 'placesParJour', 'estComplet', 'venteCloturee', 'evenementPasse', 'billetteriePasOuverte'));
     }
 
     // Traite l'achat d'un panier (un ou plusieurs tarifs : jours et packs),
@@ -129,6 +132,10 @@ class EvenementPublicController extends Controller
     {
         if ($evenement->statut !== 'publié') {
             abort(404);
+        }
+
+        if ($evenement->billetteriePasOuverte()) {
+            return back()->with('error', 'La billetterie de cet événement n\'est pas encore ouverte.');
         }
 
         $derniereDate = $evenement->derniereDate();
@@ -379,6 +386,10 @@ class EvenementPublicController extends Controller
     public function inscrireListeAttente(Request $request, Evenement $evenement)
     {
         abort_if($evenement->statut !== 'publié', 404);
+
+        if ($evenement->billetteriePasOuverte()) {
+            return back()->with('error', 'La billetterie de cet événement n\'est pas encore ouverte.');
+        }
 
         $validated = $request->validate([
             'tarif_id' => 'required|integer',

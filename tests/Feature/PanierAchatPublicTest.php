@@ -49,6 +49,23 @@ class PanierAchatPublicTest extends TestCase
         ];
     }
 
+    public function test_l_achat_est_refuse_tant_que_la_billetterie_n_est_pas_ouverte(): void
+    {
+        $this->evenement->update(['billetterie_ouverte' => false, 'billetterie_ouvre_le' => null]);
+
+        $this->acheter([$this->tarifs['jour2'] => 1])->assertSessionHas('error');
+        $this->assertSame(0, Ticket::count());
+
+        // Date d'ouverture dans le futur : toujours fermée ; passée : l'ouverture est automatique.
+        $this->evenement->update(['billetterie_ouvre_le' => now()->addDay()]);
+        $this->assertTrue($this->evenement->fresh()->billetteriePasOuverte());
+        $this->evenement->update(['billetterie_ouvre_le' => now()->subMinute()]);
+        $this->assertFalse($this->evenement->fresh()->billetteriePasOuverte());
+
+        $this->acheter([$this->tarifs['jour2'] => 1])->assertSessionMissing('error');
+        $this->assertGreaterThan(0, Ticket::count());
+    }
+
     public function test_un_panier_multijours_cree_une_seule_commande(): void
     {
         $reponse = $this->acheter([
@@ -244,6 +261,8 @@ class PanierAchatPublicTest extends TestCase
             $table->unsignedInteger('quota_vendu')->default(0);
             $table->boolean('gratuit')->default(false);
             $table->boolean('ventes_fermees')->default(false);
+            $table->boolean('billetterie_ouverte')->default(true);
+            $table->dateTime('billetterie_ouvre_le')->nullable();
             $table->timestamps();
         });
 

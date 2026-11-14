@@ -334,6 +334,50 @@
             </div>
         </div>
 
+        @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
+        <div class="panel-card mb-4">
+            <div class="panel-card-header">
+                <h5><i class="bi bi-door-open me-2" style="color: var(--violet);"></i>Ouverture de la billetterie</h5>
+            </div>
+            <div class="panel-card-body">
+                @if($evenement->billetteriePasOuverte())
+                    <p class="mb-2" style="font-size:0.85rem;">
+                        <span class="badge" style="background:#6b6474;">Pas encore ouverte</span>
+                        @if($evenement->billetterie_ouvre_le)
+                            <span class="text-muted ms-1">ouverture le {{ $evenement->billetterie_ouvre_le->isoFormat('D MMM YYYY [à] HH[h]mm') }}</span>
+                        @endif
+                    </p>
+                    <p class="text-muted" style="font-size:0.8rem;">Les visiteurs voient l'événement avec « Billetterie bientôt ouverte » et ne peuvent pas acheter.</p>
+                    <form action="{{ route('admin.evenements.billetterie', $evenement->id) }}" method="POST" class="mb-2">
+                        @csrf
+                        <input type="hidden" name="action" value="ouvrir">
+                        <button type="submit" class="btn btn-primary-custom w-100 py-2"><i class="bi bi-unlock me-1"></i> Ouvrir maintenant</button>
+                    </form>
+                    <form action="{{ route('admin.evenements.billetterie', $evenement->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="action" value="fermer">
+                        <label class="form-label small fw-semibold mb-1" for="ouvre_le_modif">Ouverture automatique (facultatif)</label>
+                        <input type="datetime-local" class="form-control form-control-sm mb-2 @error('ouvre_le') is-invalid @enderror" id="ouvre_le_modif" name="ouvre_le" value="{{ old('ouvre_le', $evenement->billetterie_ouvre_le?->format('Y-m-d\TH:i')) }}">
+                        @error('ouvre_le') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
+                        <button type="submit" class="btn btn-secondary-custom w-100 btn-sm">Enregistrer la date</button>
+                    </form>
+                @else
+                    <p class="mb-2" style="font-size:0.85rem;"><span class="badge bg-success">Ouverte</span></p>
+                    <form action="{{ route('admin.evenements.billetterie', $evenement->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="action" value="fermer">
+                        <label class="form-label small fw-semibold mb-1" for="ouvre_le">Ouverture automatique (facultatif)</label>
+                        <input type="datetime-local" class="form-control form-control-sm mb-2 @error('ouvre_le') is-invalid @enderror" id="ouvre_le" name="ouvre_le" value="{{ old('ouvre_le') }}">
+                        @error('ouvre_le') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
+                        <button type="submit" class="btn w-100 py-2 fw-semibold" style="border-radius:8px; border:1px solid #6b6474; color:#6b6474; background:transparent;">
+                            <i class="bi bi-clock me-1"></i> Fermer la billetterie
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+        @endif
+
         <div class="panel-card mb-4">
             <div class="panel-card-header">
                 <h5><i class="bi bi-toggle-on me-2" style="color: var(--violet);"></i>Gestion des ventes</h5>

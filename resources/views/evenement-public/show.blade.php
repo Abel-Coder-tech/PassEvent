@@ -153,6 +153,41 @@
                                 @endif
                             </p>
                         </div>
+                    @elseif($billetteriePasOuverte ?? false)
+                        <div class="show-card">
+                            <div class="text-center py-2">
+                                <div class="show-lock-icon" style="color:#8a8493;"><i class="bi bi-clock"></i></div>
+                                <h5 style="color:#6b6474; font-weight:700; margin-bottom:0.25rem;">Billetterie bientôt ouverte</h5>
+                                <p class="show-card-text mb-0">
+                                    @if($evenement->billetterie_ouvre_le)
+                                        Ouverture le {{ $evenement->billetterie_ouvre_le->isoFormat('D MMMM YYYY [à] HH[h]mm') }}. Revenez à cette date pour réserver.
+                                    @else
+                                        {{ $textes['type'] === 'spectacle' ? 'Les billets ne sont pas encore en vente.' : 'Les inscriptions ne sont pas encore ouvertes.' }} Revenez bientôt.
+                                    @endif
+                                </p>
+                            </div>
+                            @if(! $evenement->gratuit && $lignesAchat->isNotEmpty())
+                                <hr class="my-3">
+                                <label class="show-label">Tarifs prévus</label>
+                                @foreach($lignesJours->merge($lignesPacks)->merge($lignesComplets) as $ligne)
+                                    <div class="achat-ligne" style="opacity:.6; grid-template-columns:1fr;">
+                                        <div class="achat-info">
+                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant" style="color:#6b6474;">{{ $ligne['prixLabel'] }}</span></div>
+                                            @if($ligne['duree'] || $ligne['economie'])
+                                                <div class="achat-l2">
+                                                    @if($ligne['duree'])<span class="achat-duree">{{ $ligne['duree'] }}</span>@endif
+                                                    @if($ligne['duree'] && $ligne['economie'])<span class="achat-sep">·</span>@endif
+                                                    @if($ligne['economie'])<span class="achat-eco" style="margin:0 .2rem 0 0;">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                            <button type="button" class="show-btn" disabled style="background:#e6e3eb; color:#6b6474; cursor:not-allowed; margin-top:.75rem;">
+                                <i class="bi bi-clock me-2"></i> Billetterie bientôt ouverte
+                            </button>
+                        </div>
                     @else
                     <div class="show-card">
                         @if($evenement->gratuit)

@@ -98,6 +98,8 @@ class EvenementController extends Controller
             'lieu' => 'required|string|max:255',
             'capacite' => 'required|integer|min:1',
             'statut' => 'required|in:brouillon,publié',
+            'billetterie_plus_tard' => 'nullable|boolean',
+            'billetterie_ouvre_le' => 'nullable|date|after:now',
         ];
 
         if ($multi) {
@@ -266,6 +268,13 @@ class EvenementController extends Controller
         $attributs['date_event'] = $dateEvent;
         $attributs['user_id'] = Auth::id();
         $attributs['gratuit'] = $gratuit;
+
+        // Billetterie ouverte dès la publication, ou ouverture plus tard (date facultative)
+        $plusTard = $request->boolean('billetterie_plus_tard');
+        $attributs['billetterie_ouverte'] = ! $plusTard;
+        $attributs['billetterie_ouvre_le'] = $plusTard && ! empty($validated['billetterie_ouvre_le'])
+            ? Carbon::parse($validated['billetterie_ouvre_le'])
+            : null;
 
         // Co-parrainage : impossible sur un événement gratuit, null si désactivé
         $attributs['co_parrainage_actif'] = ! $gratuit && $request->boolean('co_parrainage_actif');
@@ -556,6 +565,8 @@ class EvenementController extends Controller
             'titre' => $evenement->titre,
             'description' => (string) $evenement->description,
             'gratuit' => $evenement->gratuit ? '1' : '0',
+            'billetterie_plus_tard' => $evenement->billetteriePasOuverte() ? '1' : null,
+            'billetterie_ouvre_le' => $evenement->billetteriePasOuverte() ? $evenement->billetterie_ouvre_le?->format('Y-m-d\TH:i') : null,
             'duree' => $multi ? 'plusieurs' : 'un',
             'date_event' => $evenement->date_event->format('Y-m-d\TH:i'),
             'jours' => $multi ? $jours->map(fn ($jour) => $jour->date_debut->format('Y-m-d\TH:i'))->all() : [],
@@ -603,7 +614,8 @@ class EvenementController extends Controller
             'gratuit' => 'nullable|boolean',
             'co_parrainage_actif' => 'nullable|boolean',
             'co_parrainage_pourcentage' => "nullable|numeric|min:1|max:{$maxCoParrainage}|required_if:co_parrainage_actif,1",
-            
+            'billetterie_plus_tard' => 'nullable|boolean',
+            'billetterie_ouvre_le' => 'nullable|date',
         ], [
             'titre.required' => 'Le titre de l\'événement est obligatoire.',
             'titre.max' => 'Le titre ne doit pas dépasser 255 caractères.',
@@ -699,6 +711,18 @@ class EvenementController extends Controller
 
         $anciennesDates = $this->datesNormalisees($evenement);
 
+        // L'assistant porte l'option de billetterie ; l'ancien formulaire ne la touche pas.
+        if ($assistant) {
+            $plusTard = $request->boolean('billetterie_plus_tard');
+            $validated['billetterie_ouverte'] = ! $plusTard;
+            $validated['billetterie_ouvre_le'] = $plusTard && ! empty($validated['billetterie_ouvre_le'])
+                ? Carbon::parse($validated['billetterie_ouvre_le'])
+                : null;
+        } else {
+            unset($validated['billetterie_plus_tard'], $validated['billetterie_ouvre_le']);
+        }
+        unset($validated['billetterie_plus_tard']);
+
         DB::transaction(function () use ($evenement, $validated, $datesData, $assistant, $donneesAssistant, $request) {
             $evenement->update($validated);
 
@@ -752,6 +776,36 @@ class EvenementController extends Controller
 
         return redirect()->route('admin.evenements.show', $evenement->id)
             ->with('success', $message);
+    }
+
+    // Ferme la billetterie (événement publié à l'avance, ventes pas encore
+    // ouvertes) ou l'ouvre. Une date d'ouverture facultative l'ouvre toute seule.
+    public function billetterie(Request $request, Evenement $evenement)
+    {
+        abort_if($evenement->user_id !== Auth::id(), 403);
+
+        $validated = $request->validate([
+            'action' => 'required|in:fermer,ouvrir',
+            'ouvre_le' => 'nullable|date|after:now',
+        ], [
+            'ouvre_le.date' => 'La date d\'ouverture est invalide.',
+            'ouvre_le.after' => 'La date d\'ouverture doit être dans le futur.',
+        ]);
+
+        if ($validated['action'] === 'fermer') {
+            $evenement->update([
+                'billetterie_ouverte' => false,
+                'billetterie_ouvre_le' => $validated['ouvre_le'] ?? null,
+            ]);
+            $message = isset($validated['ouvre_le'])
+                ? 'La billetterie est fermée, elle s\'ouvrira automatiquement à la date choisie.'
+                : 'La billetterie est fermée. Rouvrez-la quand vous êtes prêt.';
+        } else {
+            $evenement->update(['billetterie_ouverte' => true, 'billetterie_ouvre_le' => null]);
+            $message = 'La billetterie est ouverte.';
+        }
+
+        return redirect()->route('admin.evenements.show', $evenement->id)->with('success', $message);
     }
 
     // Active / désactive le co-parrainage directement depuis la fiche de l'événement
