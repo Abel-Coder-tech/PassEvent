@@ -229,6 +229,45 @@ class AgentVenteCapacityReservationTest extends TestCase
         $this->assertSame(1, (int) DB::table('tarifs')->where('id', $this->tarifId)->value('quantite_vendue'));
     }
 
+    public function test_un_agent_ne_peut_pas_vendre_quand_les_ventes_sont_fermees_ou_bloquees(): void
+    {
+        $cas = [
+            'ventes clôturées' => ['ventes_fermees' => true],
+            'billetterie pas encore ouverte' => ['billetterie_ouverte' => false, 'billetterie_ouvre_le' => null],
+            'ouverture programmée dans le futur' => ['billetterie_ouverte' => false, 'billetterie_ouvre_le' => now()->addDay()],
+            'événement en brouillon' => ['statut' => 'brouillon'],
+            'événement suspendu' => ['statut' => 'suspendu'],
+            'événement annulé' => ['statut' => 'annulé'],
+            'événement terminé' => ['date_event' => now()->subDays(2)],
+        ];
+
+        foreach ($cas as $libelle => $etat) {
+            DB::table('evenement')->where('id', $this->evenementId)->update($etat);
+            if (isset($etat['date_event'])) {
+                DB::table('evenement_dates')->where('evenement_id', $this->evenementId)->update(['date_debut' => $etat['date_event']]);
+            }
+
+            try {
+                $this->vendreMobile();
+                $this->fail("La vente aurait dû être refusée : {$libelle}.");
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $this->assertArrayHasKey('evenement', $e->errors(), $libelle);
+            }
+
+            $this->assertSame(0, DB::table('ticket')->count(), $libelle);
+
+            // Retour à l'état de vente normal avant le cas suivant.
+            DB::table('evenement')->where('id', $this->evenementId)->update([
+                'ventes_fermees' => false, 'billetterie_ouverte' => true, 'billetterie_ouvre_le' => null,
+                'statut' => 'publie', 'date_event' => now()->addDays(30),
+            ]);
+            DB::table('evenement_dates')->where('evenement_id', $this->evenementId)->update(['date_debut' => now()->addDays(30)]);
+        }
+
+        // Une fois tout rouvert, la vente passe.
+        $this->assertNotNull($this->vendreMobile()['ticket']);
+    }
+
     private function vendreMobile(): array
     {
         return $this->service()->create($this->agent, [
