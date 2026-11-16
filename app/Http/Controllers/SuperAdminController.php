@@ -610,11 +610,36 @@ class SuperAdminController extends Controller
     }
 
     // Liste de tous les utilisateurs
-    public function utilisateurs()
+    public function utilisateurs(Request $request)
     {
-        $users = User::withCount('evenements')->orderByDesc('created_at')->paginate(PerPage::resolve());
+        $q = trim((string) $request->input('q'));
+        $type = in_array($request->input('type'), ['comptes', 'agents'], true) ? $request->input('type') : 'tous';
 
-        return view('superadmin.utilisateurs', compact('users'));
+        $users = User::withCount('evenements')
+            ->when($q !== '', fn ($query) => $query->where(function ($sub) use ($q) {
+                $sub->where('nom', 'like', "%{$q}%")
+                    ->orWhere('prenom', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('telephone', 'like', "%{$q}%");
+            }))
+            ->orderByDesc('created_at')
+            ->paginate(PerPage::resolve(), ['*'], 'page')
+            ->withQueryString();
+
+        // Agents de scan : recherche sur le nom, l'email, l'événement ou l'organisateur.
+        $agents = \App\Models\Agent::with('evenement.user')
+            ->when($q !== '', fn ($query) => $query->where(function ($sub) use ($q) {
+                $sub->where('nom', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhereHas('evenement', fn ($e) => $e->where('titre', 'like', "%{$q}%")
+                        ->orWhereHas('user', fn ($u) => $u->where('nom', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%")));
+            }))
+            ->orderByDesc('created_at')
+            ->paginate(PerPage::resolve(), ['*'], 'agents_page')
+            ->withQueryString();
+
+        return view('superadmin.utilisateurs', compact('users', 'agents', 'q', 'type'));
     }
 
     // Liste des organisateurs avec leurs statistiques
