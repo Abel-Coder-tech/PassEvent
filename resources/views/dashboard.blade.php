@@ -41,6 +41,12 @@
     </div>
     @endif
 
+    @if(Auth::user()->profilEnCoursDeValidation())
+    <div class="alert" style="border:none;background:#f1ebf6;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #542680;color:#3f1c60;font-size:0.88rem;">
+        <i class="bi bi-info-circle me-1"></i> Vous pouvez créer et publier vos événements dès maintenant. Ils s'affichent avec « Billetterie bientôt ouverte » : la vente s'ouvrira automatiquement dès que PaxEvent aura validé votre profil.
+    </div>
+    @endif
+
     {{-- Actions rapides --}}
     <div class="row g-2 mb-4 align-items-center">
         <div class="col-md-6">

@@ -40,7 +40,7 @@ class EvenementPublicController extends Controller
         $selectedDate = $request->input('date');
         $q = $request->input('q');
 
-        $query = Evenement::with('tarifs', 'dates')
+        $query = Evenement::with('tarifs', 'dates', 'user:id,statut')
             ->withUpcomingDate()
             ->where('statut', 'publié')
             ->orderBy('date_event', 'asc');
@@ -49,10 +49,10 @@ class EvenementPublicController extends Controller
             $query->where('categorie', $selectedCategorie);
         }
 
-        if ($selectedDate === 'weekend') {
-            $query->whereHas('dates', fn ($q) => $q->whereBetween('date_debut', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]));
-        } elseif ($selectedDate === 'mois') {
-            $query->whereHas('dates', fn ($q) => $q->whereMonth('date_debut', now()->month)->whereYear('date_debut', now()->year));
+        if (Evenement::periodeFiltre($selectedDate)) {
+            $query->dansPeriode($selectedDate);
+        } else {
+            $selectedDate = null;
         }
 
         if ($q) {
@@ -66,7 +66,7 @@ class EvenementPublicController extends Controller
         $evenements = $query->paginate(PerPage::resolve());
 
         // Événements passés (publiés ou terminés) affichés en bas de page
-        $evenementsPasses = Evenement::with('tarifs', 'dates')
+        $evenementsPasses = Evenement::with('tarifs', 'dates', 'user:id,statut')
             ->whereIn('statut', ['publié', 'terminé'])
             ->where(function ($query) {
                 $query->where(function ($withDates) {
@@ -115,12 +115,12 @@ class EvenementPublicController extends Controller
         // vente a des places. Pour le gratuit (billet valable tous les jours),
         // c'est la limite du jour le plus contraint qui s'applique.
         $estComplet = $evenement->estComplet() || (! $evenement->gratuit && $tarifs->isEmpty());
-        $venteCloturee = $evenement->ventes_fermees; // Fermeture manuelle par l'organisateur
+        $venteCloturee = $evenement->etatVitrine() === 'cloturee'; // Billetterie fermée après des ventes
         $derniereDate = $evenement->derniereDate();
         $evenementPasse = $derniereDate && $derniereDate->date_debut->lt(now());
 
         // Événement publié à l'avance : la billetterie n'a pas encore ouvert.
-        $billetteriePasOuverte = $evenement->billetteriePasOuverte() && ! $venteCloturee && ! $evenementPasse;
+        $billetteriePasOuverte = $evenement->etatVitrine() === 'bientot' && ! $evenementPasse;
 
         return view('evenement-public.show', compact('evenement', 'tarifs', 'placesRestantes', 'placesRestantesTotales', 'placesParJour', 'estComplet', 'venteCloturee', 'evenementPasse', 'billetteriePasOuverte'));
     }
@@ -139,7 +139,7 @@ class EvenementPublicController extends Controller
         }
 
         $derniereDate = $evenement->derniereDate();
-        if ($evenement->ventes_fermees || ($derniereDate && $derniereDate->date_debut->isPast())) {
+        if ($derniereDate && $derniereDate->date_debut->isPast()) {
             return back()->with('error', 'La vente est clôturée pour cet événement.'); // Vente expirée
         }
 

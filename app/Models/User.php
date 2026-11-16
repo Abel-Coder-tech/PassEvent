@@ -96,6 +96,21 @@ class User extends Authenticatable
         'numero_rc',
         'numero_cip',
         'contrat_telecharge_le',
+        'cree_par_paxevent',
+        'contrat_genere_le',
+        'contrat_chemin',
+        'contrat_transmis_le',
+        'contrat_transmis_canal',
+        'contrat_transmis_par',
+        'contrat_signe_chemin',
+        'mandat_actif',
+        'mandat_accorde_le',
+        'mandat_mode',
+        'mandat_pdf_chemin',
+        'mandat_justificatif_chemin',
+        'mandat_enregistre_par',
+        'mandat_retire_le',
+        'mandat_retire_par',
         'ventes_especes',
         'commission_pourcentage',
         'commission_physique',
@@ -118,6 +133,12 @@ class User extends Authenticatable
             'commission_physique' => 'float',
             'permissions' => 'array',
             'must_change_password' => 'boolean',
+            'cree_par_paxevent' => 'boolean',
+            'contrat_genere_le' => 'datetime',
+            'contrat_transmis_le' => 'datetime',
+            'mandat_actif' => 'boolean',
+            'mandat_accorde_le' => 'datetime',
+            'mandat_retire_le' => 'datetime',
         ];
     }
 
@@ -129,6 +150,21 @@ class User extends Authenticatable
     public function estEquipe(): bool
     {
         return $this->role === 'equipe';
+    }
+
+    // Statuts d'un organisateur dont le profil n'est pas encore validé par PaxEvent.
+    public const STATUTS_EN_COURS_DE_VALIDATION = ['incomplet', 'en_attente', 'corrections_demandees', 'corrections_apportees'];
+
+    public function profilEnCoursDeValidation(): bool
+    {
+        return in_array($this->statut, self::STATUTS_EN_COURS_DE_VALIDATION, true);
+    }
+
+    // Un organisateur peut créer et publier ses événements dès l'inscription ;
+    // tant que son profil n'est pas validé, leur billetterie reste fermée.
+    public function peutCreerEvenement(): bool
+    {
+        return $this->statut === 'actif' || $this->profilEnCoursDeValidation();
     }
 
     public function estSuperAdmin(): bool

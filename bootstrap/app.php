@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'profil_verifie' => \App\Http\Middleware\CheckProfilActif::class,
             'compte_actif' => \App\Http\Middleware\CheckCompteActif::class,
             'connexion.verrou' => \App\Http\Middleware\BloquerTentativesConnexion::class,
+            'gestion.org' => \App\Http\Middleware\GestionOrganisateurMiddleware::class,
             'no_cache' => \App\Http\Middleware\NoCache::class,
             'agent.api' => \App\Http\Middleware\EnsureAgentIsActive::class,
             'agent.vente.api' => \App\Http\Middleware\EnsureAgentVenteIsActive::class,

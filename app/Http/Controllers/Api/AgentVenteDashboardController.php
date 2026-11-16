@@ -102,7 +102,7 @@ class AgentVenteDashboardController extends Controller
                 'type_evenement' => $evenement->type_evenement,
                 'statut' => $evenement->statut,
                 'gratuit' => (bool) $evenement->gratuit,
-                'ventes_fermees' => (bool) $evenement->ventes_fermees,
+                'ventes_fermees' => $evenement->billetteriePasOuverte(),
                 'ventes_ouvertes' => $evenement->ventesOuvertes(),
                 'raison_indisponible' => $evenement->raisonBlocageVente(),
                 'capacite' => (int) $evenement->capacite,

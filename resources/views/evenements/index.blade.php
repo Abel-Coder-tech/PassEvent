@@ -131,9 +131,9 @@
                         <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
                             @if($evenement->billetteriePasOuverte())
-                                <span class="badge ms-2" style="font-size:0.7rem; background:#6b6474;">Billetterie pas ouverte</span>
+                                <span class="badge ms-2" style="font-size:0.7rem; background:#6b6474;">Billetterie fermée</span>
                             @else
-                                <span class="badge ms-2" style="font-size:0.7rem; {{ $evenement->ventes_fermees ? 'background:var(--danger);' : 'background:var(--vert);' }}">{{ $evenement->ventes_fermees ? 'Ventes fermées' : 'Ventes ouvertes' }}</span>
+                                <span class="badge ms-2" style="font-size:0.7rem; background:var(--vert);">Ventes ouvertes</span>
                             @endif
                         @endif
                     </div>
@@ -182,10 +182,11 @@
                             <i class="bi bi-share"></i> <span class="d-none d-sm-inline">{{ $evenement->co_parrainage_actif ? 'Co-parrainage actif' : 'Co-parrainage' }}</span>
                         </a>
                         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
-                            <form action="{{ route('admin.evenements.fermer-vente', $evenement->id) }}" method="POST" class="d-inline">
+                            <form action="{{ route('admin.evenements.billetterie', $evenement->id) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; {{ $evenement->ventes_fermees ? 'background:var(--vert);color:#fff;border:none;' : 'border:1px solid var(--danger);color:var(--danger);background:transparent;' }}" title="{{ $evenement->ventes_fermees ? 'Rouvrir les ventes' : 'Clôturer les ventes' }}">
-                                    <i class="bi {{ $evenement->ventes_fermees ? 'bi-unlock' : 'bi-lock' }}"></i>
+                                <input type="hidden" name="action" value="{{ $evenement->billetteriePasOuverte() ? 'ouvrir' : 'fermer' }}">
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; {{ $evenement->billetteriePasOuverte() ? 'background:var(--vert);color:#fff;border:none;' : 'border:1px solid #6b6474;color:#6b6474;background:transparent;' }}" title="{{ $evenement->billetteriePasOuverte() ? 'Ouvrir la billetterie' : 'Fermer la billetterie' }}">
+                                    <i class="bi {{ $evenement->billetteriePasOuverte() ? 'bi-unlock' : 'bi-lock' }}"></i>
                                 </button>
                             </form>
                         @endif

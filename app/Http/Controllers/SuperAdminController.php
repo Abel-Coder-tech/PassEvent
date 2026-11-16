@@ -233,7 +233,34 @@ class SuperAdminController extends Controller
         $messagesNonLus = Message::where('lu', false)->whereNull('user_id')->count();
         $newsletterCount = Newsletter::where('actif', true)->count();
 
+        // Renvoi de billet : recherche d'un achat réussi par code, email ou n° de paiement.
+        // Seuls les billets délivrables sont proposés (payés, non annulés, non expirés).
+        $rechercheBillet = trim((string) $request->input('billet', ''));
+
+        $billetsRenvoyables = Ticket::with('evenement')
+            ->where('statut_paiement', 'payé')
+            ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
+            ->whereNull('expire_at')
+            ->whereNotNull('email_acheteur')
+            ->where('email_acheteur', '!=', '')
+            ->when($rechercheBillet !== '', function ($q) use ($rechercheBillet) {
+                $motif = '%'.$rechercheBillet.'%';
+
+                $q->where(function ($sub) use ($motif) {
+                    $sub->where('code_unique', 'like', $motif)
+                        ->orWhere('email_acheteur', 'like', $motif)
+                        ->orWhere('nom_acheteur', 'like', $motif)
+                        ->orWhere('transaction_id', 'like', $motif)
+                        ->orWhere('fedapay_transaction_id', 'like', $motif);
+                });
+            })
+            ->orderByDesc('date_achat')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
         return view('superadmin.dashboard', compact(
+            'rechercheBillet', 'billetsRenvoyables',
             'totalUsers', 'totalEvenements', 'ticketsVendus',
             'recettesGlobales', 'evenementsActifs', 'scansPeriode',
             'ticketsEvolution', 'recettesEvolution', 'usersEvolution', 'evenementsEvolution',
@@ -681,6 +708,17 @@ class SuperAdminController extends Controller
         $allTickets = Ticket::with('evenement')->orderByDesc('created_at')->paginate(PerPage::resolve());
 
         return view('superadmin.tickets', compact('allTickets'));
+    }
+
+    // Renvoie le billet existant par email, sans créer de ticket ni toucher aux quotas.
+    public function renvoyerTicket(Ticket $ticket)
+    {
+        $resultat = $this->reconciliation->renvoyerEmail($ticket);
+
+        return back()->with(
+            $resultat['success'] ? 'success' : 'error',
+            $resultat['message']
+        );
     }
 
     // Liste des acheteurs (nom, email, WhatsApp) avec filtres et export CSV
@@ -2049,15 +2087,29 @@ class SuperAdminController extends Controller
             'email' => 'required|email|unique:users',
             'mot_de_passe' => 'required|string|min:8|max:255',
             'telephone' => 'nullable|string|max:20',
-            'organisation' => 'nullable|string|max:255',
-            'type' => 'nullable|string|in:universitaire,professionnel',
         ]);
         $data['mot_de_passe'] = bcrypt($data['mot_de_passe']);
         $data['role'] = 'admin';
-        $data['statut'] = 'actif';
-        User::create($data);
+        // Le profil (type, documents, signature) se complète ensuite via « Gérer »,
+        // ce qui finalise le compte et génère le contrat.
+        $data['statut'] = 'incomplet';
+        $data['cree_par_paxevent'] = true;
+        $organisateur = User::create($data);
 
-        return back()->with('success', 'Organisateur créé.');
+        // L'organisateur ne gère pas son compte : l'autorisation est accordée dès la création.
+        app(\App\Services\MandatGestionService::class)->accorder(
+            $organisateur, 'creation_paxevent', auth('superadmin')->user()->email, request()->ip()
+        );
+
+        Log::create([
+            'type_operation' => 'organisateur_cree_par_paxevent',
+            'ticket_id' => null,
+            'details' => $this->avecActeur(['user_id' => $organisateur->id, 'email' => $organisateur->email]),
+            'ip' => request()->ip(),
+        ]);
+
+        return redirect()->route('superadmin.organisateurs.voir', $organisateur)
+            ->with('success', 'Compte créé. Cliquez sur « Gérer l\'organisateur » pour compléter son profil et générer son contrat.');
     }
 
     // Approuve un organisateur et lui envoie un email de confirmation
@@ -2068,6 +2120,13 @@ class SuperAdminController extends Controller
         }
 
         $user->update(['statut' => 'actif']); // Active le compte
+
+        // Le contrat est toujours généré et figé à l'approbation.
+        try {
+            app(ContratService::class)->figer($user);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Contrat non figé pour l\'organisateur '.$user->id.' : '.$e->getMessage());
+        }
 
         try {
             Mail::to($user->email)->queue(new RegistrationApproved($user)); // Notification email

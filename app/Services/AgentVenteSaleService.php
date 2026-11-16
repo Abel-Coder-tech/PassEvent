@@ -290,7 +290,7 @@ class AgentVenteSaleService
 
         if ($methode === 'mobile_money' && $montantTotal > 0 && ! $this->paymentConfig()['disponible']) {
             throw ValidationException::withMessages([
-                'methode_paiement' => 'Le paiement mobile est temporairement indisponible. Utilisez les espèces.',
+                'methode_paiement' => 'Le mobile money est fermé pour le moment. Encaissez en espèces ou contactez l\'organisateur.',
             ]);
         }
 
@@ -891,7 +891,7 @@ class AgentVenteSaleService
 
         if (! $this->paymentConfig()['disponible'] || ! config('services.fedapay.secret_key')) {
             throw ValidationException::withMessages([
-                'paiement_mobile' => 'Le paiement mobile est temporairement indisponible.',
+                'paiement_mobile' => 'Le mobile money est fermé pour le moment. Contactez l\'organisateur.',
             ]);
         }
 
@@ -958,30 +958,36 @@ class AgentVenteSaleService
         }
 
         if (! is_array($txData)) {
-            $customer = array_filter([
-                'firstname' => $this->prenomAcheteur($premier->nom_acheteur),
-                'lastname' => $this->nomAcheteur($premier->nom_acheteur),
-                'email' => $premier->email_acheteur,
-                'phone' => $premier->whatsapp_acheteur,
-                'phone_number' => $premier->whatsapp_acheteur,
-            ], fn ($value) => $value !== null && $value !== '');
+            // Comme le checkout web, on n'envoie ni le nom ni le téléphone de
+            // l'acheteur : le payeur les saisit lui-même dans le checkout. Un
+            // numéro WhatsApp transmis tel quel faisait échouer la création
+            // de la transaction (erreur 500 côté FedaPay).
+            $payload = [
+                'description' => 'Ticket - '.$ticket->evenement->titre,
+                'amount' => (int) round($montant),
+                'currency' => ['iso' => 'XOF'],
+                'callback_url' => route('paiement.callback', [
+                    'ticket' => $ticket->id,
+                    'source' => 'agent_vente',
+                ]),
+                'custom_metadata' => [
+                    'ticket_id' => (string) $premier->id,
+                    'group_transaction_id' => (string) $premier->transaction_id,
+                ],
+                'merchant_reference' => (string) $premier->id,
+            ];
+
+            $email = trim((string) $premier->email_acheteur);
 
             try {
-                $txData = $this->fedapay->createTransaction([
-                    'description' => 'Ticket - '.$ticket->evenement->titre,
-                    'amount' => (int) round($montant),
-                    'currency' => ['iso' => 'XOF'],
-                    'callback_url' => route('paiement.callback', [
-                        'ticket' => $ticket->id,
-                        'source' => 'agent_vente',
-                    ]),
-                    'customer' => $customer,
-                    'custom_metadata' => [
-                        'ticket_id' => (string) $premier->id,
-                        'group_transaction_id' => (string) $premier->transaction_id,
-                    ],
-                    'merchant_reference' => (string) $premier->id,
-                ]);
+                $txData = $this->fedapay->createTransaction(
+                    $email !== '' ? [...$payload, 'customer' => ['email' => $email]] : $payload
+                );
+
+                // Dernier recours : aucune donnée client, le checkout demande tout.
+                if (! is_array($txData) && $email !== '') {
+                    $txData = $this->fedapay->createTransaction($payload);
+                }
             } catch (\Throwable $e) {
                 $txData = null;
             }
@@ -989,7 +995,7 @@ class AgentVenteSaleService
 
         if (! is_array($txData)) {
             throw ValidationException::withMessages([
-                'paiement_mobile' => 'FedaPay est injoignable. Réessayez dans un instant.',
+                'paiement_mobile' => $this->messageEchecPaiement($this->fedapay->derniereErreur()),
             ]);
         }
 
@@ -997,7 +1003,7 @@ class AgentVenteSaleService
 
         if (! $paymentUrl) {
             throw ValidationException::withMessages([
-                'paiement_mobile' => "FedaPay n'a pas renvoyé de lien de paiement.",
+                'paiement_mobile' => 'La page de paiement n\'a pas pu s\'ouvrir. Touchez « Payer » pour réessayer.',
             ]);
         }
 
@@ -1025,6 +1031,19 @@ class AgentVenteSaleService
             'montant_label' => number_format($montant, 0, ',', ' ').' FCFA',
             'devise' => 'XOF',
         ];
+    }
+
+    // Message affiché à l'agent quand le paiement mobile ne peut pas démarrer :
+    // une phrase simple qui dit quoi faire, sans détail technique (le détail
+    // reste dans les journaux).
+    private function messageEchecPaiement(?string $cause): string
+    {
+        return match ($cause) {
+            FedapayService::ERREUR_RESEAU => 'Le service de paiement ne répond pas. Patientez quelques secondes puis touchez « Payer » à nouveau.',
+            FedapayService::ERREUR_INDISPONIBLE => 'Le paiement n\'a pas pu démarrer. Réessayez dans quelques minutes.',
+            FedapayService::ERREUR_CONFIG => 'Le mobile money est fermé pour le moment. Encaissez en espèces ou contactez l\'organisateur.',
+            default => 'Ce paiement n\'a pas pu être préparé. Annulez la vente et recommencez ; si le problème continue, contactez l\'organisateur.',
+        };
     }
 
     // Resynchronise une vente mobile à partir de l'external_id / de l'ID FedaPay

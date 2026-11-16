@@ -114,7 +114,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Ventes :</strong>
-                        @if($evenement->ventes_fermees)
+                        @if($evenement->billetteriePasOuverte())
                             <span class="badge bg-danger">Fermées</span>
                         @else
                             <span class="badge bg-success">Ouvertes</span>
@@ -337,10 +337,24 @@
         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
         <div class="panel-card mb-4">
             <div class="panel-card-header">
-                <h5><i class="bi bi-door-open me-2" style="color: var(--violet);"></i>Ouverture de la billetterie</h5>
+                <h5><i class="bi bi-door-open me-2" style="color: var(--violet);"></i>Billetterie</h5>
             </div>
             <div class="panel-card-body">
-                @if($evenement->billetteriePasOuverte())
+                @php $etatVente = $evenement->etatVenteOrganisateur(); @endphp
+                @unless($evenement->organisateurEnCoursDeValidation())
+                <div class="mb-3 p-2 rounded" style="font-size:0.84rem; {{ $etatVente['ouverte'] ? 'background:#e8f5ee;color:#1e6b43;' : 'background:#f1ebf6;color:#3f1c60;' }}">
+                    <i class="bi {{ $etatVente['ouverte'] ? 'bi-check-circle-fill' : 'bi-info-circle-fill' }} me-1"></i>{{ $etatVente['raison'] }}
+                </div>
+                @endunless
+                @if(session('warning'))
+                    <div class="alert alert-warning py-2 mb-3" style="font-size:0.84rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ session('warning') }}</div>
+                @endif
+                @if($evenement->organisateurEnCoursDeValidation())
+                    <div class="p-2 rounded mb-3" style="font-size:0.84rem;background:#f1ebf6;color:#3f1c60;">
+                        <i class="bi bi-hourglass-split me-1"></i>Billetterie disponible après la validation de votre profil par PaxEvent.
+                    </div>
+                    <button type="button" class="btn btn-secondary w-100 py-2" disabled style="opacity:.55;cursor:not-allowed;"><i class="bi bi-lock me-1"></i> Ouvrir la billetterie</button>
+                @elseif($evenement->billetteriePasOuverte())
                     <p class="mb-2" style="font-size:0.85rem;">
                         <span class="badge" style="background:#6b6474;">Pas encore ouverte</span>
                         @if($evenement->billetterie_ouvre_le)
@@ -366,7 +380,7 @@
                     <form action="{{ route('admin.evenements.billetterie', $evenement->id) }}" method="POST">
                         @csrf
                         <input type="hidden" name="action" value="fermer">
-                        <label class="form-label small fw-semibold mb-1" for="ouvre_le">Ouverture automatique (facultatif)</label>
+                        <label class="form-label small fw-semibold mb-1" for="ouvre_le">Réouverture automatique (facultatif)</label>
                         <input type="datetime-local" class="form-control form-control-sm mb-2 @error('ouvre_le') is-invalid @enderror" id="ouvre_le" name="ouvre_le" value="{{ old('ouvre_le') }}">
                         @error('ouvre_le') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
                         <button type="submit" class="btn w-100 py-2 fw-semibold" style="border-radius:8px; border:1px solid #6b6474; color:#6b6474; background:transparent;">
@@ -377,28 +391,6 @@
             </div>
         </div>
         @endif
-
-        <div class="panel-card mb-4">
-            <div class="panel-card-header">
-                <h5><i class="bi bi-toggle-on me-2" style="color: var(--violet);"></i>Gestion des ventes</h5>
-            </div>
-            <div class="panel-card-body">
-                <p class="mb-2" style="font-size:0.85rem;">
-                    @if($evenement->ventes_fermees)
-                        <span class="badge bg-danger">Ventes fermées</span>
-                    @else
-                        <span class="badge bg-success">Ventes ouvertes</span>
-                    @endif
-                </p>
-                <form action="{{ route('admin.evenements.fermer-vente', $evenement->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn w-100 py-2 text-white fw-semibold" style="border-radius:8px; background: {{ $evenement->ventes_fermees ? 'var(--vert)' : 'var(--danger)' }};">
-                        <i class="bi {{ $evenement->ventes_fermees ? 'bi-unlock' : 'bi-lock' }} me-1"></i>
-                        {{ $evenement->ventes_fermees ? 'Rouvrir les ventes' : 'Clôturer les ventes' }}
-                    </button>
-                </form>
-            </div>
-        </div>
 
         @if($evenement->image)
             <div class="panel-card">

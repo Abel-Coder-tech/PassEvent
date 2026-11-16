@@ -85,6 +85,11 @@ class SuperAdminAuthController extends Controller
     {
         $versEquipe = auth('superadmin')->user()?->estEquipe();
 
+        // Une prise en main d'organisateur ne doit pas survivre à la déconnexion.
+        if ($request->session()->has('gestion')) {
+            \App\Http\Middleware\GestionOrganisateurMiddleware::terminer($request);
+        }
+
         auth('superadmin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

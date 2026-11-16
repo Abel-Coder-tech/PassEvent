@@ -27,6 +27,25 @@
                 <span class="sa-badge sa-badge-{{ $badgeMap[$user->statut] ?? 'secondary' }} mb-2">
                     {{ $labelMap[$user->statut] ?? ucfirst($user->statut) }}
                 </span>
+                @if($user->cree_par_paxevent)
+                    <div class="small text-muted mt-1"><i class="bi bi-person-plus"></i> Compte créé par PaxEvent</div>
+                @endif
+                @if(auth('superadmin')->user()?->peut('organisateurs.gerer') && $user->statut !== 'rejete')
+                    @if($user->mandat_actif)
+                    <form action="{{ route('superadmin.organisateurs.gerer', $user) }}" method="POST" class="mt-3">
+                        @csrf
+                        <button type="submit" class="btn w-100 text-white fw-semibold" style="background:var(--sa-primary);border-radius:8px;">
+                            <i class="bi bi-person-gear me-1"></i> Gérer l'organisateur
+                        </button>
+                    </form>
+                    <div class="small text-muted mt-1">Ouvre son tableau de bord en son nom, avec accès limité.</div>
+                    @else
+                    <button type="button" class="btn w-100 fw-semibold mt-3" disabled style="border-radius:8px;">
+                        <i class="bi bi-person-gear me-1"></i> Gérer l'organisateur
+                    </button>
+                    <div class="small text-muted mt-1">Autorisation à recueillir : voir le bloc « Autorisation de gestion ».</div>
+                    @endif
+                @endif
                 @if($user->organisation)
                     <p class="small mb-0 mt-2"><i class="bi bi-building"></i> {{ $user->organisation }}</p>
                 @endif
@@ -85,6 +104,83 @@
     </div>
 
     <div class="col-md-8">
+        @if(auth('superadmin')->user()?->peut('organisateurs.gerer'))
+        <div class="sa-card mb-3">
+            <div class="sa-card-header"><span><i class="bi bi-shield-check me-2"></i>Autorisation de gestion</span></div>
+            <div class="sa-card-body">
+                @if($user->mandat_actif)
+                    @php $modes = ['organisateur' => 'accordée en ligne par l\'organisateur', 'creation_paxevent' => 'accordée à la création du compte par PaxEvent', 'paxevent_recueilli' => 'recueillie par PaxEvent (justificatif signé)']; @endphp
+                    <p class="small mb-2"><span class="sa-badge sa-badge-success">Autorisée</span>
+                        {{ $modes[$user->mandat_mode] ?? '' }}, le {{ $user->mandat_accorde_le?->isoFormat('D MMM YYYY [à] HH[h]mm') }}@if($user->mandat_enregistre_par && $user->mandat_mode !== 'organisateur') ({{ $user->mandat_enregistre_par }})@endif.
+                    </p>
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @if($user->mandat_pdf_chemin || $user->mandat_justificatif_chemin)
+                            <a href="{{ route('superadmin.organisateurs.mandat.voir', $user) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Voir la déclaration</a>
+                        @endif
+                        @if($user->mandat_justificatif_chemin && $user->mandat_pdf_chemin)
+                            <a href="{{ route('superadmin.organisateurs.mandat.justificatif', $user) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Voir le justificatif signé</a>
+                        @endif
+                        <form action="{{ route('superadmin.organisateurs.mandat.retirer', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Enregistrer le retrait de l\'autorisation demandé par l\'organisateur ?')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Enregistrer un retrait demandé</button>
+                        </form>
+                    </div>
+                @else
+                    <p class="small mb-2"><span class="sa-badge sa-badge-warning">À recueillir</span>
+                        @if($user->mandat_retire_le) Retirée le {{ $user->mandat_retire_le->isoFormat('D MMM YYYY [à] HH[h]mm') }} ({{ $user->mandat_retire_par }}). @endif
+                        PaxEvent ne peut gérer ce compte qu'avec l'accord de l'organisateur.</p>
+                    <ul class="small mb-2">
+                        <li>L'organisateur peut l'activer en un clic depuis son tableau de bord (Paramètres), ou</li>
+                        <li>vous recueillez sa déclaration signée : <a href="{{ route('superadmin.organisateurs.mandat.modele', $user) }}" target="_blank">télécharger le modèle à signer</a>, puis joignez la version signée.</li>
+                    </ul>
+                    <form action="{{ route('superadmin.organisateurs.mandat.enregistrer', $user) }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-center flex-wrap">
+                        @csrf
+                        <input type="file" name="justificatif" class="form-control form-control-sm" style="max-width:260px;" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <button type="submit" class="btn btn-sm btn-primary">Enregistrer l'autorisation</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+        <div class="sa-card mb-3">
+            <div class="sa-card-header"><span><i class="bi bi-file-earmark-text me-2"></i>Contrat de prestation</span></div>
+            <div class="sa-card-body">
+                @if($user->contrat_chemin)
+                    <p class="small mb-2">Contrat figé le <strong>{{ $user->contrat_genere_le?->isoFormat('D MMM YYYY [à] HH[h]mm') }}</strong>.
+                        <a href="{{ route('superadmin.organisateurs.contrat.fige', $user) }}" target="_blank">Voir le PDF</a></p>
+                @else
+                    <p class="small text-muted mb-2">Aucun contrat figé. Il est généré à la finalisation du profil, ou ici à la demande.</p>
+                @endif
+                <form action="{{ route('superadmin.organisateurs.contrat.figer', $user) }}" method="POST" class="d-inline"
+                      @if($user->contrat_chemin) onsubmit="return confirm('Régénérer le contrat avec les informations et taux actuels ? L\'ancienne copie ne sera plus servie.')" @endif>
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{ $user->contrat_chemin ? 'Régénérer le contrat' : 'Générer le contrat' }}</button>
+                </form>
+                @if($user->contrat_chemin)
+                    <hr>
+                    @if($user->contrat_transmis_le)
+                        <p class="small mb-2"><i class="bi bi-send-check text-success me-1"></i> Transmis le {{ $user->contrat_transmis_le->isoFormat('D MMM YYYY [à] HH[h]mm') }} par {{ $user->contrat_transmis_canal }} ({{ $user->contrat_transmis_par }}).</p>
+                    @endif
+                    <form action="{{ route('superadmin.organisateurs.contrat.transmis', $user) }}" method="POST" class="d-flex gap-2 align-items-center flex-wrap mb-2">
+                        @csrf
+                        <select name="canal" class="form-select form-select-sm" style="max-width:170px;">
+                            <option value="email">Par email</option>
+                            <option value="whatsapp">Par WhatsApp</option>
+                            <option value="autre">Autre moyen</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">Marquer comme transmis</button>
+                    </form>
+                    <form action="{{ route('superadmin.organisateurs.contrat.signe', $user) }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-center flex-wrap">
+                        @csrf
+                        <input type="file" name="contrat_signe" class="form-control form-control-sm" style="max-width:260px;" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Enregistrer le contrat signé</button>
+                        @if($user->contrat_signe_chemin)
+                            <a href="{{ route('superadmin.organisateurs.contrat.signe.voir', $user) }}" target="_blank" class="small">Voir le contrat signé</a>
+                        @endif
+                    </form>
+                @endif
+            </div>
+        </div>
+        @endif
         <div class="row g-2">
             <div class="col-6 col-md-3">
                 <div class="sa-card text-center py-3">

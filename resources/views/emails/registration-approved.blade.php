@@ -24,6 +24,10 @@
             <p>Bonjour <strong>{{ $user->nom }}</strong>,</p>
             <p>Votre compte organisateur a été approuvé !</p>
             <p>Vous pouvez dès maintenant vous connecter et créer vos événements.</p>
+            @php $nbEvenementsPublies = $user->evenements()->where('statut', 'publié')->count(); @endphp
+            @if($nbEvenementsPublies > 0)
+            <p><strong>{{ $nbEvenementsPublies }} {{ $nbEvenementsPublies > 1 ? 'de vos événements publiés sont' : 'de vos événements publiés est' }} maintenant en vente</strong> : leur billetterie s'est ouverte avec la validation de votre compte.</p>
+            @endif
             <div style="background:#f6f2fa;border-left:4px solid #542680;padding:12px 16px;border-radius:8px;margin:16px 0;">
                 <p style="margin:0 0 4px;"><strong><i class="bi bi-file-pdf"></i> Votre contrat de prestation</strong></p>
                 <p style="margin:0;font-size:13px;color:#444;">Une version PDF de votre contrat de prestation est jointe à cet email. Vous pouvez aussi le télécharger à tout moment depuis votre <strong>tableau de bord → Paramètres → Contrat de prestation</strong>.</p>

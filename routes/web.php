@@ -98,7 +98,7 @@ Route::prefix('inscription')->name('inscriptions.')->group(function () {
     Route::post('/renvoyer', [InscriptionController::class, 'resendOtp'])->name('resend-otp')->middleware('throttle:2,30');
     Route::get('/identite', [InscriptionController::class, 'step1'])->name('identity');
     Route::post('/identite', [InscriptionController::class, 'postStep1'])->name('post-identity');
-    Route::post('/resoumettre', [InscriptionController::class, 'resubmit'])->name('resubmit')->middleware('auth');
+    Route::post('/resoumettre', [InscriptionController::class, 'resubmit'])->name('resubmit')->middleware(['auth', 'gestion.org']);
 });
 
 // Mot de passe oublié
@@ -136,6 +136,17 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
         Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
         Route::get('/organisateurs/{user}/contrat', [SuperAdminController::class, 'voirContrat'])->name('organisateurs.contrat');
+        Route::post('/organisateurs/{user}/contrat/figer', [\App\Http\Controllers\ContratOrganisateurController::class, 'figer'])->name('organisateurs.contrat.figer');
+        Route::get('/organisateurs/{user}/contrat/fige', [\App\Http\Controllers\ContratOrganisateurController::class, 'voirFige'])->name('organisateurs.contrat.fige');
+        Route::post('/organisateurs/{user}/contrat/transmis', [\App\Http\Controllers\ContratOrganisateurController::class, 'transmis'])->name('organisateurs.contrat.transmis');
+        Route::post('/organisateurs/{user}/contrat/signe', [\App\Http\Controllers\ContratOrganisateurController::class, 'signe'])->name('organisateurs.contrat.signe');
+        Route::get('/organisateurs/{user}/contrat/signe', [\App\Http\Controllers\ContratOrganisateurController::class, 'voirSigne'])->name('organisateurs.contrat.signe.voir');
+        Route::post('/organisateurs/{user}/mandat', [\App\Http\Controllers\MandatGestionController::class, 'enregistrer'])->name('organisateurs.mandat.enregistrer');
+        Route::post('/organisateurs/{user}/mandat/retirer', [\App\Http\Controllers\MandatGestionController::class, 'retirerPourOrganisateur'])->name('organisateurs.mandat.retirer');
+        Route::get('/organisateurs/{user}/mandat/modele', [\App\Http\Controllers\MandatGestionController::class, 'modele'])->name('organisateurs.mandat.modele');
+        Route::get('/organisateurs/{user}/mandat/declaration', [\App\Http\Controllers\MandatGestionController::class, 'voir'])->name('organisateurs.mandat.voir');
+        Route::get('/organisateurs/{user}/mandat/justificatif', [\App\Http\Controllers\MandatGestionController::class, 'voirJustificatif'])->name('organisateurs.mandat.justificatif');
+        Route::post('/organisateurs/{user}/gerer', [\App\Http\Controllers\GestionOrganisateurController::class, 'demarrer'])->name('organisateurs.gerer');
         Route::get('/evenements', [SuperAdminController::class, 'evenements'])->name('evenements');
         Route::post('/evenements/{evenement}/suspendre', [SuperAdminController::class, 'suspendreEvenement'])->name('evenements.suspendre');
         Route::post('/evenements/{evenement}/masquer', [SuperAdminController::class, 'masquerEvenement'])->name('evenements.masquer');
@@ -154,6 +165,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/controle-reset', [SuperAdminController::class, 'reinitialiserControle'])->name('organisateurs.controle-reset');
         Route::get('/transactions', [SuperAdminController::class, 'transactions'])->name('transactions');
         Route::get('/tickets', [SuperAdminController::class, 'tickets'])->name('tickets');
+        Route::post('/tickets/{ticket}/renvoyer', [SuperAdminController::class, 'renvoyerTicket'])->name('tickets.renvoyer');
         Route::get('/acheteurs', [SuperAdminController::class, 'acheteurs'])->name('acheteurs');
         Route::get('/acheteurs/export', [SuperAdminController::class, 'acheteursExport'])->name('acheteurs.export');
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
@@ -262,7 +274,7 @@ Route::prefix('equipe')->name('equipe.')->middleware('no_cache')->group(function
     });
 });
 // Routes globales Spatie Sitemap
-Route::middleware('auth')->get('/generate-sitemap', function () {
+Route::middleware(['auth', 'gestion.org'])->get('/generate-sitemap', function () {
     $sitemap = Sitemap::create()
         ->add(Url::create(url('/')))
         ->add(Url::create(url('/evenements')))
@@ -362,8 +374,13 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
 // ============================================================
 // Routes protégées (admin)
 // ============================================================
-Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
+Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/gestion/quitter', [\App\Http\Controllers\GestionOrganisateurController::class, 'quitter'])->name('admin.gestion.quitter');
+    Route::post('/mandat/accorder', [\App\Http\Controllers\MandatGestionController::class, 'accorder'])->name('admin.mandat.accorder');
+    Route::post('/mandat/retirer', [\App\Http\Controllers\MandatGestionController::class, 'retirer'])->name('admin.mandat.retirer');
+    Route::get('/mandat/declaration', [\App\Http\Controllers\MandatGestionController::class, 'declaration'])->name('admin.mandat.declaration');
+    Route::get('/journal-paxevent', [\App\Http\Controllers\GestionOrganisateurController::class, 'journal'])->name('admin.gestion.journal');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::prefix('profil')->name('profil.')->group(function () {
@@ -388,7 +405,7 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
     Route::get('/contrat-prestation', [EvenementController::class, 'contratPrestation'])->name('contrat-prestation');
 });
 
-Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
+Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('evenements', EvenementController::class);
 
@@ -403,7 +420,6 @@ Route::middleware(['auth', 'compte_actif', 'no_cache'])->group(function () {
         Route::get('/scan-codes', [EvenementController::class, 'scanCodesIndex'])->name('scan-codes.index');
         Route::post('/evenements/{evenement}/scan-codes', [EvenementController::class, 'genererCodeAcces'])->name('evenements.scan-codes.generate');
         Route::delete('/evenements/{evenement}/scan-codes/{scanAccessCode}', [EvenementController::class, 'supprimerCodeAcces'])->name('evenements.scan-codes.destroy');
-        Route::post('/evenements/{evenement}/fermer-vente', [EvenementController::class, 'fermerVente'])->name('evenements.fermer-vente');
         Route::post('/evenements/{evenement}/billetterie', [EvenementController::class, 'billetterie'])->name('evenements.billetterie');
         Route::post('/evenements/{evenement}/coparrainage', [EvenementController::class, 'toggleCoParrainage'])->name('evenements.coparrainage');
         Route::post('/evenements/{evenement}/jours/{jour}/capacite', [EvenementController::class, 'updateJourCapacite'])->name('evenements.jours.capacite');

@@ -50,7 +50,7 @@ class AgentVenteAuthController extends Controller
 
         // L'accès est refusé si l'événement est annulé, suspendu, en brouillon
         // ou si sa dernière session réelle est passée. Une fermeture manuelle
-        // des ventes (ventes_fermees) laisse l'accès ouvert mais bloque la vente.
+        // de la billetterie laisse l'accès ouvert mais bloque la vente.
         if ($raison = $evenement->raisonBlocageAcces()) {
             return response()->json(['message' => $raison], 403);
         }
@@ -271,7 +271,7 @@ class AgentVenteAuthController extends Controller
             'lieu' => $evenement->lieu,
             'statut' => $evenement->statut,
             'gratuit' => (bool) $evenement->gratuit,
-            'ventes_fermees' => (bool) $evenement->ventes_fermees,
+            'ventes_fermees' => $evenement->billetteriePasOuverte(),
             'ventes_ouvertes' => $evenement->ventesOuvertes(),
             'raison_indisponible' => $evenement->raisonBlocageVente(),
         ];

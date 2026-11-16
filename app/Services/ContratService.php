@@ -118,6 +118,29 @@ class ContratService
     }
 
     /**
+     * Fige le contrat : conserve une copie du PDF (avec les taux et la signature
+     * du moment) pour que le document transmis reste identique par la suite.
+     */
+    public function figer(User $user): string
+    {
+        $chemin = 'contrats/'.$user->id.'/contrat-'.now()->format('Ymd-His').'.pdf';
+        Storage::disk('local')->put($chemin, $this->pdf($user)->output());
+        $user->update(['contrat_chemin' => $chemin, 'contrat_genere_le' => now()]);
+
+        return $chemin;
+    }
+
+    /**
+     * Chemin de la copie figée si elle existe encore sur le disque.
+     */
+    public function cheminFige(User $user): ?string
+    {
+        return $user->contrat_chemin && Storage::disk('local')->exists($user->contrat_chemin)
+            ? $user->contrat_chemin
+            : null;
+    }
+
+    /**
      * Nom de fichier par défaut du contrat.
      */
     public function filename(User $user): string
