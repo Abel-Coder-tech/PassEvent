@@ -74,18 +74,7 @@
                             @endif
                         </p>
 
-                        @php
-                            $etape = match ($etat['etat']) { 'verification' => 2, 'paye' => 4, default => 1 };
-                            $refCommande = $ticket->transaction_id;
-                        @endphp
-                        <ol class="pay-etapes" aria-label="Étapes de la commande">
-                            @foreach(['Commande', 'Paiement', 'Confirmation', 'Billets envoyés'] as $i => $libelle)
-                                <li class="{{ $i < $etape ? 'fait' : ($i === $etape ? 'actif' : '') }}" data-etape="{{ $i }}">
-                                    <span class="pay-pastille">@if($i < $etape)<i class="bi bi-check-lg"></i>@else{{ $i + 1 }}@endif</span>
-                                    <span class="pay-libelle">{{ $libelle }}</span>
-                                </li>
-                            @endforeach
-                        </ol>
+                        @php $refCommande = $ticket->transaction_id; @endphp
 
                         {{-- À payer --}}
                         <div class="pay-etat" data-etat="a_payer" @if($etat['etat'] !== 'a_payer') hidden @endif>
@@ -128,35 +117,6 @@
                             </div>
                         </div>
 
-                        {{-- Paiement envoyé, en attente de confirmation --}}
-                        <div class="pay-etat" data-etat="verification" @if($etat['etat'] !== 'verification') hidden @endif>
-                            <div class="pay-attente">
-                                <div class="pay-progression" role="progressbar" aria-label="Confirmation du paiement en cours"><span></span></div>
-                                <strong id="payAttenteTitre">Confirmation de votre paiement…</strong>
-                                <p id="payAttenteTexte">Validez la demande sur votre téléphone si ce n'est pas déjà fait. Cette page se met à jour toute seule.</p>
-                            </div>
-                            <div class="pay-alerte pay-alerte-info mt-3" id="payAttenteLongue" hidden>
-                                <i class="bi bi-hourglass-split"></i>
-                                <div>
-                                    <strong>La confirmation prend plus de temps que prévu.</strong>
-                                    <p>C'est fréquent avec le mobile money. Si vous avez été débité, vos billets vous seront envoyés à <strong>{{ $ticket->email_acheteur }}</strong> dès la confirmation : vous pouvez fermer cette page.</p>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <button type="button" class="pay-btn-secondaire" id="btnVerifier"><i class="bi bi-arrow-clockwise me-1"></i> Vérifier à nouveau</button>
-                                        <a class="pay-btn-lien" href="{{ route('contact') }}?sujet={{ urlencode('Paiement en attente — commande '.$refCommande) }}"><i class="bi bi-life-preserver me-1"></i> Contacter le support</a>
-                                    </div>
-                                    <small class="d-block mt-2 text-muted">Référence de commande : <code>{{ $refCommande }}</code></small>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Paiement confirmé (bascule automatique) --}}
-                        <div class="pay-etat" data-etat="paye" hidden>
-                            <div class="pay-alerte pay-alerte-ok">
-                                <i class="bi bi-check-circle-fill"></i>
-                                <div><strong>Paiement confirmé !</strong><p>Redirection vers vos billets…</p></div>
-                            </div>
-                        </div>
-
                         {{-- Échecs : cause en clair + action --}}
                         @foreach([
                             'refuse' => ['bi-x-octagon', 'Le paiement n\'a pas abouti', 'Il a été refusé ou annulé par le service de paiement. Les places ont été libérées. Vous pouvez refaire votre commande.'],
@@ -190,6 +150,23 @@
     </div>
 </section>
 
+{{-- Confirmation du paiement : petit modal (chargement, puis succès ou échec) --}}
+<div class="pay-modal" id="payModal" role="dialog" aria-modal="true" aria-labelledby="payModalTitre" @if($etat['etat'] !== 'verification') hidden @endif>
+    <div class="pay-modal-boite">
+        <div class="pay-modal-icone" id="payModalIcone"><span class="pay-spinner" aria-hidden="true"></span></div>
+        <strong id="payModalTitre">Confirmation de votre paiement…</strong>
+        <p id="payModalTexte">Validez la demande sur votre téléphone si ce n'est pas déjà fait.</p>
+        <div class="pay-modal-actions" id="payModalAttente" hidden>
+            <button type="button" class="pay-btn-secondaire" id="btnVerifier"><i class="bi bi-arrow-clockwise me-1"></i> Vérifier à nouveau</button>
+            <a class="pay-btn-lien" href="{{ route('contact') }}?sujet={{ urlencode('Paiement en attente — commande '.$refCommande) }}">Contacter le support</a>
+        </div>
+        <div class="pay-modal-actions" id="payModalEchec" hidden>
+            <a class="show-btn-payer d-inline-block w-auto px-4 text-decoration-none" href="{{ route('evenements.public.show', $evenement) }}">Refaire ma commande</a>
+            <a class="pay-btn-lien" href="{{ route('contact') }}?sujet={{ urlencode('Problème de paiement — commande '.$refCommande) }}">J'ai été débité</a>
+        </div>
+    </div>
+</div>
+
 <style>
 .cmd-carte{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 6px 24px rgba(33,28,49,.08)}
 .cmd-entete{min-height:200px;display:flex;flex-direction:column;justify-content:flex-end;padding:1.25rem 1.5rem;background:linear-gradient(135deg,#542680,#9972B0);background-size:cover;background-position:center;color:#fff}
@@ -203,14 +180,6 @@
 .cmd-envoi{font-size:.88rem;color:#4a4453;margin:.6rem 0 1.2rem}
 .show-btn-payer{width:100%;border:0;border-radius:12px;padding:.95rem;background:#542680;color:#fff;font-weight:700;font-size:1rem}
 .show-btn-payer:hover{background:#45206a}
-.pay-etapes{list-style:none;display:flex;gap:.25rem;padding:0;margin:0 0 1.25rem;counter-reset:e}
-.pay-etapes li{flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem;position:relative;font-size:.7rem;color:#9a93a3;text-align:center}
-.pay-etapes li:not(:last-child)::after{content:"";position:absolute;top:13px;left:calc(50% + 16px);right:calc(-50% + 16px);height:2px;background:#e6e0ec}
-.pay-etapes li.fait:not(:last-child)::after{background:#542680}
-.pay-pastille{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f1ebf6;color:#9a93a3;font-weight:700;font-size:.8rem;transition:all .3s}
-.pay-etapes li.fait .pay-pastille{background:#542680;color:#fff}
-.pay-etapes li.actif .pay-pastille{background:#fff;color:#542680;box-shadow:0 0 0 2px #542680}
-.pay-etapes li.actif{color:#542680;font-weight:700}
 .pay-chrono{text-align:center;margin-top:.6rem;font-size:.82rem;color:#6b6474}
 .pay-chrono.urgent{color:#c0392b}
 .pay-alerte{display:flex;gap:.75rem;padding:.9rem 1rem;border-radius:12px;font-size:.88rem;text-align:left}
@@ -223,13 +192,16 @@
 .pay-btn-secondaire{border:1px solid #542680;background:#fff;color:#542680;border-radius:10px;padding:.45rem .9rem;font-weight:600;font-size:.85rem}
 .pay-btn-secondaire:disabled{opacity:.6}
 .pay-btn-lien{display:inline-flex;align-items:center;padding:.45rem .5rem;color:#542680;font-weight:600;font-size:.85rem;text-decoration:none}
-.pay-attente{text-align:center;padding:.5rem 0}
-.pay-attente strong{display:block;margin-top:1rem;color:#211C31}
-.pay-attente p{font-size:.88rem;color:#6b6474;margin:.3rem 0 0}
-.pay-progression{height:6px;border-radius:6px;background:#f1ebf6;overflow:hidden;position:relative}
-.pay-progression span{position:absolute;inset:0 auto 0 0;width:35%;border-radius:6px;background:linear-gradient(90deg,#9972B0,#542680);animation:pay-glisse 1.4s ease-in-out infinite}
-@keyframes pay-glisse{0%{left:-35%}100%{left:100%}}
-@media (prefers-reduced-motion: reduce){.pay-progression span{animation:none;width:100%;opacity:.5}}
+.pay-modal{position:fixed;inset:0;z-index:1060;display:grid;place-items:center;padding:1rem;background:rgba(33,28,49,.45)}
+.pay-modal[hidden]{display:none}
+.pay-modal-boite{width:100%;max-width:340px;background:#fff;border-radius:16px;padding:1.5rem 1.25rem;text-align:center;box-shadow:0 20px 50px rgba(33,28,49,.25)}
+.pay-modal-boite strong{display:block;color:#211C31;font-size:1rem}
+.pay-modal-boite p{font-size:.86rem;color:#6b6474;margin:.4rem 0 0}
+.pay-modal-icone{height:48px;display:grid;place-items:center;margin-bottom:.75rem;font-size:2.4rem}
+.pay-modal-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin-top:1rem}
+.pay-spinner{width:40px;height:40px;border-radius:50%;border:4px solid #f1ebf6;border-top-color:#542680;animation:pay-tourne .8s linear infinite}
+@keyframes pay-tourne{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.pay-spinner{animation-duration:2s}}
 </style>
 @endsection
 
@@ -244,17 +216,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const debutAttente = Date.now();
 
     // ---------- Affichage d'un état ----------
-    const etapeDe = { a_payer: 1, verification: 2, paye: 4 };
+    const modal = document.getElementById('payModal');
+    const modalIcone = document.getElementById('payModalIcone');
+    const modalTitre = document.getElementById('payModalTitre');
+    const modalTexte = document.getElementById('payModalTexte');
+    const ECHECS = {
+        refuse: ['bi-x-circle-fill text-danger', 'Le paiement n\'a pas abouti', 'Il a été refusé ou annulé. Les places ont été libérées.'],
+        expire: ['bi-alarm text-danger', 'Réservation expirée', 'Le délai de paiement est dépassé. Aucun montant n\'a été débité.'],
+        annule: ['bi-slash-circle text-danger', 'Commande plus active', 'Elle a été annulée ou remboursée.'],
+    };
+    function modalEtat(icone, titre, texte, actions) {
+        modalIcone.innerHTML = icone ? '<i class="bi ' + icone + '"></i>' : '<span class="pay-spinner" aria-hidden="true"></span>';
+        modalTitre.textContent = titre;
+        modalTexte.textContent = texte;
+        document.getElementById('payModalAttente').hidden = actions !== 'attente';
+        document.getElementById('payModalEchec').hidden = actions !== 'echec';
+        modal.hidden = false;
+    }
     function afficher(nouvel) {
+        const etaitEnAttente = etat === 'verification';
         etat = nouvel;
+        if (nouvel === 'verification') {
+            modalEtat(null, 'Confirmation de votre paiement…', 'Validez la demande sur votre téléphone si ce n\'est pas déjà fait.');
+            demarrerSuivi();
+            return;
+        }
+        if (nouvel === 'paye') {
+            modalEtat('bi-check-circle-fill text-success', 'Paiement confirmé !', 'Redirection vers vos billets…');
+            return;
+        }
+        if (ECHECS[nouvel] && (etaitEnAttente || !modal.hidden)) {
+            const [i, ti, te] = ECHECS[nouvel];
+            modalEtat(i, ti, te, 'echec');
+        } else {
+            modal.hidden = true;
+        }
         document.querySelectorAll('.pay-etat').forEach(el => el.hidden = el.dataset.etat !== nouvel);
-        const etape = etapeDe[nouvel] ?? 1;
-        document.querySelectorAll('.pay-etapes li').forEach(li => {
-            const i = Number(li.dataset.etape);
-            li.classList.toggle('fait', i < etape);
-            li.classList.toggle('actif', i === etape);
-        });
-        if (nouvel === 'verification') demarrerSuivi();
     }
 
     // ---------- Compte à rebours de la réservation ----------
@@ -288,19 +285,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     function demarrerSuivi() {
         if (suivi) return;
-        const titre = document.getElementById('payAttenteTitre');
-        const texte = document.getElementById('payAttenteTexte');
-        const longue = document.getElementById('payAttenteLongue');
         suivi = setInterval(function () {
-            const ecoule = (Date.now() - debutAttente) / 1000;
             if (etat !== 'verification') { clearInterval(suivi); suivi = null; return; }
+            const ecoule = (Date.now() - debutAttente) / 1000;
             if (ecoule > 30 && ecoule <= 120) {
-                titre.textContent = 'Toujours en cours de confirmation…';
-                texte.textContent = 'Ça prend un peu plus de temps que d\'habitude. Gardez cette page ouverte.';
+                modalTexte.textContent = 'Ça prend un peu plus de temps que d\'habitude. Gardez cette page ouverte.';
             } else if (ecoule > 120) {
-                titre.textContent = 'Paiement en cours de vérification';
-                texte.textContent = 'Nous attendons la confirmation de l\'opérateur.';
-                longue.hidden = false;
+                modalTexte.textContent = 'La confirmation tarde. Si vous avez été débité, vos billets vous seront envoyés par email dès confirmation : vous pouvez fermer cette page.';
+                document.getElementById('payModalAttente').hidden = false;
             }
             verifier();
         }, 4000);
