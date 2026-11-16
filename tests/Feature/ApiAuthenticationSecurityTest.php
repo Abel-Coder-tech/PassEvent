@@ -215,7 +215,7 @@ class ApiAuthenticationSecurityTest extends TestCase
             'email' => 'scan-agent@example.test',
             'password' => bcrypt('test-password'),
             'evenement_id' => 1,
-            'code_acces' => '123456',
+            'code_acces' => '1234',
             'actif' => true,
             'created_at' => now(),
             'updated_at' => now(),

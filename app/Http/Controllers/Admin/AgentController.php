@@ -73,7 +73,7 @@ class AgentController extends Controller
             return back()->with('error', 'Cet email est déjà utilisé par un agent de vente. Un agent ne peut pas être à la fois scan et vente.');
         }
 
-        $codeAcces = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT); // Génère un code PIN à 6 chiffres
+        $codeAcces = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT); // Code PIN à 4 chiffres
 
         $agent = Agent::create([
             'nom' => $request->nom,

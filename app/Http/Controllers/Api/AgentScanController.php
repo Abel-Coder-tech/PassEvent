@@ -20,10 +20,10 @@ class AgentScanController extends Controller
         $agent = $request->user();
 
         $request->validate([
-            'code_acces' => ['required', 'digits:6'],
+            'code_acces' => ['required', 'digits:4'],
         ], [
             'code_acces.required' => 'Le code d\'accès est obligatoire.',
-            'code_acces.digits' => 'Le code d\'accès doit être un code à 6 chiffres.',
+            'code_acces.digits' => 'Le code d\'accès doit être un code à 4 chiffres.',
         ]);
 
         if ($agent->evenement && $agent->evenement->scanTermine()) {
