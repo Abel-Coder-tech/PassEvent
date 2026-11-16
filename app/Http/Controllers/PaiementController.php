@@ -230,6 +230,19 @@ class PaiementController extends Controller
         $transactionId = $request->query('id');
         $source = $request->query('source');
 
+        // Journalise TOUT retour navigateur, même incomplet : sans cette trace,
+        // un checkout interrompu est indiscernable d'un callback jamais reçu.
+        $this->paymentMonitoring->record(
+            'callback_recu',
+            [
+                'transaction_id' => $transactionId,
+                'ticket_id' => $ticketId,
+                'reference' => $request->query('reference'),
+                'source' => $source,
+            ],
+            $request,
+        );
+
         if (! $transactionId) {
             $this->paymentMonitoring->record(
                 'callback_sans_transaction',
@@ -256,16 +269,6 @@ class PaiementController extends Controller
 
         // Commande de QR codes auto-générés : flux dédié (pas de ticket existant avant paiement)
         if ($source === 'lot_physique') {
-            $this->paymentMonitoring->record(
-                'callback_recu',
-                [
-                    'transaction_id' => $transactionId,
-                    'reference' => $request->query('reference'),
-                    'source' => $source,
-                ],
-                $request,
-            );
-
             return $this->callbackLotPhysique($request, $transactionId);
         }
 
@@ -740,6 +743,22 @@ class PaiementController extends Controller
         $signature = $request->header('x-fedapay-signature');
         $secret = config('services.fedapay.webhook_secret');
 
+        // Trace d'entrée AVANT toute validation : c'est la seule preuve qu'un
+        // webhook a bien atteint l'application, même si sa signature est refusée.
+        $traceEntree = $this->extraireTrace($payload);
+
+        $this->paymentMonitoring->record(
+            'webhook_recu',
+            [
+                'transaction_id' => $traceEntree['transaction_id'] ?? null,
+                'signature_presente' => filled($signature),
+                'payload_size' => strlen($payload),
+                'event_type' => $request->input('name') ?? $request->input('event'),
+                'source' => 'webhook',
+            ],
+            $request,
+        );
+
         // Sécurité : seule une signature FedaPay valide (HMAC, horodatée) est acceptée.
         if ($secret) {
             try {
@@ -946,6 +965,18 @@ class PaiementController extends Controller
         }
 
         if ($ticket->statut_paiement === 'payé') {
+            $this->paymentMonitoring->record(
+                'webhook_paiement_deja_confirme',
+                [
+                    'transaction_id' => $transactionId,
+                    'ticket_id' => $ticket->id,
+                    'ticket_group' => $ticket->transaction_id,
+                    'source' => 'webhook',
+                ],
+                $request,
+                $ticket->id,
+            );
+
             return response()->json(['status' => 'ok']);
         }
 
@@ -1005,6 +1036,21 @@ class PaiementController extends Controller
         }
 
         $confirme = $this->confirmerTickets($groupTickets, $transactionId, $moyenPaiement, $operateur, $tx['phone'] ?? $data['phone'] ?? $ticket->telephone_acheteur, $request->input('source'), $request->ip(), $request->userAgent());
+
+        // Trace du succès : un webhook peut désormais être prouvé de bout en bout.
+        $this->paymentMonitoring->record(
+            $confirme ? 'webhook_paiement_confirme' : 'webhook_paiement_deja_confirme',
+            [
+                'transaction_id' => $transactionId,
+                'ticket_id' => $ticket->id,
+                'ticket_group' => $ticket->transaction_id,
+                'amount' => $montantTx,
+                'currency' => 'XOF',
+                'source' => 'webhook',
+            ],
+            $request,
+            $ticket->id,
+        );
 
         if ($confirme) {
             SendTicketEmailJob::dispatchAfterResponse($groupTickets->pluck('id')->all(), $ticket->email_acheteur);
