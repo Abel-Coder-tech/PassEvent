@@ -14,6 +14,7 @@
             <option value="tous" @selected($type === 'tous')>Tous</option>
             <option value="comptes" @selected($type === 'comptes')>Organisateurs / admins</option>
             <option value="agents" @selected($type === 'agents')>Agents de scan</option>
+            <option value="vendeurs" @selected($type === 'vendeurs')>Agents de vente</option>
         </select>
         <button class="btn btn-sm btn-primary">Rechercher</button>
         @if($q !== '' || $type !== 'tous')
@@ -22,7 +23,7 @@
     </div>
 </form>
 
-@if($type !== 'agents')
+@if(in_array($type, ['tous', 'comptes'], true))
 <div class="sa-card">
     <div class="sa-card-header">
         <span><i class="bi bi-people-fill me-2" style="color: var(--sa-primary);"></i>Tous les utilisateurs</span>
@@ -59,7 +60,7 @@
 <div class="mt-3 mb-4">{{ $users->links('vendor.pagination.pass', ['label' => 'utilisateur(s)']) }}</div>
 @endif
 
-@if($type !== 'comptes')
+@if(in_array($type, ['tous', 'agents'], true))
 <div class="sa-card">
     <div class="sa-card-header">
         <span><i class="bi bi-qr-code-scan me-2" style="color: var(--sa-primary);"></i>Agents de scan</span>
@@ -95,5 +96,45 @@
     </div>
 </div>
 <div class="mt-3">{{ $agents->links('vendor.pagination.pass', ['label' => 'agent(s)']) }}</div>
+@endif
+
+@if(in_array($type, ['tous', 'vendeurs'], true))
+<div class="sa-card mt-4">
+    <div class="sa-card-header">
+        <span><i class="bi bi-cart-check me-2" style="color: var(--sa-primary);"></i>Agents de vente</span>
+        <span class="text-muted" style="font-size:0.8rem;">{{ $vendeurs->total() }} total</span>
+    </div>
+    <div class="sa-card-body p-0">
+        <table class="sa-table">
+            <thead>
+                <tr><th>Nom</th><th>Email</th><th>Événement</th><th>Organisateur</th><th>Billets vendus</th><th>Montant</th><th>Statut</th><th>Dernier accès</th><th>Créé le</th></tr>
+            </thead>
+            <tbody>
+                @forelse($vendeurs as $vendeur)
+                <tr>
+                    <td><strong>{{ $vendeur->nom }}</strong></td>
+                    <td>{{ $vendeur->email }}</td>
+                    <td>{{ $vendeur->evenement->titre ?? '-' }}</td>
+                    <td>{{ $vendeur->evenement?->user?->nom ?? '-' }}</td>
+                    <td>{{ (int) $vendeur->tickets_count }}</td>
+                    <td>{{ number_format((float) $vendeur->montant_total, 0, ',', ' ') }} FCFA</td>
+                    <td>
+                        @if($vendeur->actif)
+                            <span class="sa-badge sa-badge-success">Actif</span>
+                        @else
+                            <span class="sa-badge sa-badge-secondary">Inactif</span>
+                        @endif
+                    </td>
+                    <td style="font-size:0.75rem; color:var(--sa-text-muted);">{{ $vendeur->dernier_acces ? \Illuminate\Support\Carbon::parse($vendeur->dernier_acces)->isoFormat('D MMM YYYY HH:mm') : 'Jamais' }}</td>
+                    <td style="font-size:0.75rem; color:var(--sa-text-muted);">{{ $vendeur->created_at?->isoFormat('D MMM YYYY') }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="9" class="text-center text-muted py-4">Aucun agent de vente trouvé.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="mt-3">{{ $vendeurs->links('vendor.pagination.pass', ['label' => 'agent(s) de vente']) }}</div>
 @endif
 @endsection

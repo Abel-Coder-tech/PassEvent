@@ -613,7 +613,7 @@ class SuperAdminController extends Controller
     public function utilisateurs(Request $request)
     {
         $q = trim((string) $request->input('q'));
-        $type = in_array($request->input('type'), ['comptes', 'agents'], true) ? $request->input('type') : 'tous';
+        $type = in_array($request->input('type'), ['comptes', 'agents', 'vendeurs'], true) ? $request->input('type') : 'tous';
 
         $users = User::withCount('evenements')
             ->when($q !== '', fn ($query) => $query->where(function ($sub) use ($q) {
@@ -626,20 +626,27 @@ class SuperAdminController extends Controller
             ->paginate(PerPage::resolve(), ['*'], 'page')
             ->withQueryString();
 
-        // Agents de scan : recherche sur le nom, l'email, l'événement ou l'organisateur.
-        $agents = \App\Models\Agent::with('evenement.user')
-            ->when($q !== '', fn ($query) => $query->where(function ($sub) use ($q) {
-                $sub->where('nom', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhereHas('evenement', fn ($e) => $e->where('titre', 'like', "%{$q}%")
-                        ->orWhereHas('user', fn ($u) => $u->where('nom', 'like', "%{$q}%")
-                            ->orWhere('email', 'like', "%{$q}%")));
-            }))
+        // Agents de scan et de vente : recherche sur le nom, l'email,
+        // l'événement ou l'organisateur.
+        $rechercheAgent = fn ($query) => $query->when($q !== '', fn ($query) => $query->where(function ($sub) use ($q) {
+            $sub->where('nom', 'like', "%{$q}%")
+                ->orWhere('email', 'like', "%{$q}%")
+                ->orWhereHas('evenement', fn ($e) => $e->where('titre', 'like', "%{$q}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('nom', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")));
+        }));
+
+        $agents = $rechercheAgent(\App\Models\Agent::with('evenement.user'))
             ->orderByDesc('created_at')
             ->paginate(PerPage::resolve(), ['*'], 'agents_page')
             ->withQueryString();
 
-        return view('superadmin.utilisateurs', compact('users', 'agents', 'q', 'type'));
+        $vendeurs = $rechercheAgent(\App\Models\AgentVente::with('evenement.user'))
+            ->orderByDesc('created_at')
+            ->paginate(PerPage::resolve(), ['*'], 'vendeurs_page')
+            ->withQueryString();
+
+        return view('superadmin.utilisateurs', compact('users', 'agents', 'vendeurs', 'q', 'type'));
     }
 
     // Liste des organisateurs avec leurs statistiques
