@@ -139,6 +139,17 @@
                     </a>
                 </div>
                 @endif
+                @if(in_array($statut, \App\Models\User::STATUTS_EN_COURS_DE_VALIDATION, true))
+                <div class="mt-4 pt-3 mx-auto" style="max-width: 440px; border-top: 1px solid #ece8f0;">
+                    <p style="color: var(--gris); font-size: 0.85rem; line-height: 1.5;">
+                        En attendant, vous pouvez créer et publier vos événements. Ils seront visibles avec « Billetterie bientôt ouverte », et la vente s'ouvrira automatiquement dès la validation de votre profil.
+                    </p>
+                    <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i> Créer un événement
+                    </a>
+                    <a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom btn-sm">Mes événements</a>
+                </div>
+                @endif
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
             </div>
         </div>

@@ -232,7 +232,8 @@ class AgentVenteCapacityReservationTest extends TestCase
     public function test_un_agent_ne_peut_pas_vendre_quand_les_ventes_sont_fermees_ou_bloquees(): void
     {
         $cas = [
-            'ventes clôturées' => ['ventes_fermees' => true],
+            'billetterie fermée' => ['billetterie_ouverte' => false],
+            'billetterie fermée après des ventes' => ['billetterie_ouverte' => false, 'quota_vendu' => 3],
             'billetterie pas encore ouverte' => ['billetterie_ouverte' => false, 'billetterie_ouvre_le' => null],
             'ouverture programmée dans le futur' => ['billetterie_ouverte' => false, 'billetterie_ouvre_le' => now()->addDay()],
             'événement en brouillon' => ['statut' => 'brouillon'],
@@ -258,7 +259,7 @@ class AgentVenteCapacityReservationTest extends TestCase
 
             // Retour à l'état de vente normal avant le cas suivant.
             DB::table('evenement')->where('id', $this->evenementId)->update([
-                'ventes_fermees' => false, 'billetterie_ouverte' => true, 'billetterie_ouvre_le' => null,
+                'billetterie_ouverte' => true, 'billetterie_ouvre_le' => null, 'quota_vendu' => 0,
                 'statut' => 'publie', 'date_event' => now()->addDays(30),
             ]);
             DB::table('evenement_dates')->where('evenement_id', $this->evenementId)->update(['date_debut' => now()->addDays(30)]);

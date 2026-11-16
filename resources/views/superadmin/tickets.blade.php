@@ -12,7 +12,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Code unique</th><th>Evenement</th><th>Acheteur</th><th>WhatsApp</th><th>N° paiement</th><th>Montant</th><th>Statut</th><th>Utilise</th><th>Date achat</th></tr>
+                <tr><th>Code unique</th><th>Evenement</th><th>Acheteur</th><th>WhatsApp</th><th>N° paiement</th><th>Montant</th><th>Statut</th><th>Email</th><th>Utilise</th><th>Date achat</th><th>Action</th></tr>
             </thead>
             <tbody>
                 @foreach($allTickets as $t)
@@ -30,12 +30,25 @@
                         @else <span class="sa-badge sa-badge-secondary">{{ $t->statut_paiement }}</span>
                         @endif
                     </td>
+                    <td style="font-size:0.75rem;">
+                        @if($t->email_envoye_at)
+                            <span class="sa-badge sa-badge-success">Envoyé</span><br>
+                            <small class="text-muted">{{ \Carbon\Carbon::parse($t->email_envoye_at)->isoFormat('D MMM YYYY HH:mm') }}</small>
+                        @elseif($t->email_derniere_erreur)
+                            <span class="sa-badge sa-badge-danger" title="{{ $t->email_derniere_erreur }}">Échec</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td>
                         @if($t->utilise) <span class="sa-badge sa-badge-success">Oui</span>
                         @else <span class="sa-badge sa-badge-secondary">Non</span>
                         @endif
                     </td>
                     <td style="font-size:0.75rem;">{{ $t->date_achat ? \Carbon\Carbon::parse($t->date_achat)->isoFormat('D MMM YYYY HH:mm') : '-' }}</td>
+                    <td>
+                        @include('superadmin.partials.renvoyer-ticket', ['t' => $t])
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

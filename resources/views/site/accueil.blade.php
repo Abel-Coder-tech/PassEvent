@@ -437,7 +437,7 @@
                         $estComplet = $placesRestantes <= 0;
                         $prixDernier = $evenement->prixAPartirDe();
                         $textes = $evenement->getTextes();
-                        $venteCloturee = $evenement->ventes_fermees;
+                        $venteCloturee = $evenement->etatVitrine() === 'cloturee';
                     @endphp
                     <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                         <a href="{{ route('evenements.public.show', $evenement) }}" class="une-slide">
@@ -454,7 +454,7 @@
                                     @if($evenement->categorie)
                                         <span class="une-badge">{{ ucfirst($evenement->categorie) }}</span>
                                     @endif
-                                    @if($evenement->billetteriePasOuverte())
+                                    @if($evenement->etatVitrine() === 'bientot')
                                         <span class="une-badge" style="background:#6b6474;color:#fff;">Billetterie bientôt ouverte</span>
                                     @elseif($venteCloturee)
                                         <span class="une-badge une-badge-danger">{{ $textes['cloturee'] }}</span>
@@ -479,7 +479,7 @@
                                         @else
                                             <span class="une-price text-muted">Tarifs non configurés</span>
                                         @endif
-                                        @if($evenement->billetteriePasOuverte())
+                                        @if($evenement->etatVitrine() === 'bientot')
                                             <span class="une-cta" style="background:#e6e3eb;color:#6b6474;">
                                                 <i class="bi bi-clock me-1"></i> Billetterie bientôt ouverte
                                             </span>
@@ -660,10 +660,10 @@
 <section class="section-events">
     <div class="container">
         <!-- Barre de recherche -->
-        <form action="{{ route('accueil') }}" method="GET" class="filter-search mb-4">
+        <form action="{{ route('accueil') }}#evenements" method="GET" class="filter-search mb-4" id="evenements">
             <div class="search-wrap">
                 <i class="bi bi-search search-icon"></i>
-                <input type="text" name="q" class="search-input" placeholder="Rechercher par nom, catégorie, lieu..." value="{{ $q ?? '' }}">
+                <input type="search" name="q" id="accueilSearchInput" class="search-input" placeholder="Nom, catégorie, lieu..." value="{{ $q ?? '' }}" autocomplete="off" @if($q) autofocus @endif>
             </div>
             @if($selectedCategorie)
                 <input type="hidden" name="categorie" value="{{ $selectedCategorie }}">
@@ -671,11 +671,38 @@
             @if($selectedDate)
                 <input type="hidden" name="date" value="{{ $selectedDate }}">
             @endif
-            <button type="submit" class="btn-search"><i class="bi bi-search"></i></button>
+            <div class="date-chips">
+                @foreach(['aujourdhui' => "Aujourd'hui", 'weekend' => 'Ce week-end', 'mois' => 'Ce mois'] as $cle => $libelle)
+                    {{-- Un clic sur le filtre actif le retire --}}
+                    <a href="{{ route('accueil', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate === $cle ? null : $cle])) }}#evenements"
+                       class="date-chip {{ $selectedDate === $cle ? 'active' : '' }}">{{ $libelle }}</a>
+                @endforeach
+            </div>
             @if($q || $selectedCategorie || $selectedDate)
-                <a href="{{ route('accueil') }}" class="btn-clear"><i class="bi bi-x-lg"></i></a>
+                <a href="{{ route('accueil') }}#evenements" class="btn-clear" title="Effacer les filtres"><i class="bi bi-x-lg"></i></a>
             @endif
         </form>
+        <script>
+            // Recherche automatique : envoie le formulaire après une courte pause de saisie.
+            (function () {
+                const input = document.getElementById('accueilSearchInput');
+                if (!input) return;
+                const initiale = input.value.trim();
+                let minuterie;
+                input.addEventListener('input', function () {
+                    clearTimeout(minuterie);
+                    minuterie = setTimeout(function () {
+                        const valeur = input.value.trim();
+                        if (valeur === initiale || (valeur.length > 0 && valeur.length < 2)) return;
+                        input.form.submit();
+                    }, 500);
+                });
+                if (document.activeElement === input) {
+                    const n = input.value.length;
+                    input.setSelectionRange(n, n);
+                }
+            })();
+        </script>
 
         @if($evenementsVedettes->isNotEmpty())
             <div class="events-grid">
@@ -686,7 +713,7 @@
                         $remplissage = (int) round($evenement->tauxRemplissage());
                         $prixDernier = $evenement->prixAPartirDe();
                         $textes = $evenement->getTextes();
-                        $venteCloturee = $evenement->ventes_fermees;
+                        $venteCloturee = $evenement->etatVitrine() === 'cloturee';
                     @endphp
                     <div class="event-col">
                         <a href="{{ route('evenements.public.show', $evenement) }}" class="ev-card">
@@ -701,7 +728,7 @@
                                 @if($evenement->categorie)
                                     <span class="ev-badge">{{ ucfirst($evenement->categorie) }}</span>
                                 @endif
-                                @if($evenement->billetteriePasOuverte())
+                                @if($evenement->etatVitrine() === 'bientot')
                                     <span class="ev-badge" style="background: rgba(107,100,116,0.92); color: #fff;">Billetterie bientôt ouverte</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
@@ -734,7 +761,7 @@
                                     </div>
                                     <div class="gauge-track"><div class="gauge-fill" style="width:{{ min($remplissage,100) }}%"></div></div>
                                 </div>
-                                @if($evenement->billetteriePasOuverte())
+                                @if($evenement->etatVitrine() === 'bientot')
                                     <span class="ev-btn disabled"><i class="bi bi-clock me-1"></i> Billetterie bientôt ouverte</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
@@ -809,12 +836,42 @@
 
 .filter-search {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    scroll-margin-top: 90px;
 }
 .search-wrap {
     position: relative;
-    flex: 1;
+    flex: 1 1 220px;
+    max-width: 320px;
+}
+.search-input::-webkit-search-cancel-button { display: none; }
+.date-chips { display: flex; gap: 0.4rem; }
+.date-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 0.9rem;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fff;
+    color: #555;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.date-chip:hover { border-color: #542680; color: #542680; }
+.date-chip.active {
+    background: linear-gradient(135deg, #542680, #9972B0);
+    border-color: transparent;
+    color: #fff;
+}
+@media (max-width: 575.98px) {
+    .search-wrap { max-width: none; flex-basis: 100%; }
+    .date-chip { padding: 0.45rem 0.7rem; }
 }
 .search-icon {
     position: absolute;

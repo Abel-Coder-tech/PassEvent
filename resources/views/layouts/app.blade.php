@@ -944,6 +944,15 @@
     @yield('styles')
 </head>
 <body>
+@if(session('gestion'))
+<div style="position:sticky;top:0;z-index:3000;background:#FED514;color:#211C31;padding:.55rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-weight:600;font-size:.88rem;border-bottom:2px solid #211C31;">
+    <span><i class="bi bi-person-gear me-1"></i> Vous gérez <strong>{{ Auth::user()?->nom }}</strong> au nom de PaxEvent. Vos actions sont enregistrées dans son journal.</span>
+    <form action="{{ route('admin.gestion.quitter') }}" method="POST" class="m-0">
+        @csrf
+        <button type="submit" class="btn btn-sm" style="background:#211C31;color:#fff;font-weight:600;border-radius:8px;"><i class="bi bi-box-arrow-left me-1"></i> Quitter</button>
+    </form>
+</div>
+@endif
 
 @auth
     <!-- Sidebar overlay -->

@@ -196,6 +196,41 @@ class AgentVentePaymentRetryTest extends TestCase
         $this->assertSame('en_attente', $ticket->fresh()->statut_paiement);
     }
 
+    public function test_un_echec_fedapay_donne_un_message_adapte_a_sa_cause(): void
+    {
+        $ticket = $this->creerTicket('en_attente');
+        $payloads = [];
+
+        $this->fedapay->shouldReceive('findTransactionByExternalId')->once()->andReturnNull();
+
+        // Premier essai avec l'email seul, second sans aucune donnée client.
+        $this->fedapay->shouldReceive('createTransaction')
+            ->twice()
+            ->withArgs(function (array $payload) use (&$payloads) {
+                $payloads[] = $payload;
+
+                return true;
+            })
+            ->andReturnNull();
+
+        $this->fedapay->shouldReceive('derniereErreur')
+            ->once()
+            ->andReturn(FedapayService::ERREUR_INDISPONIBLE);
+
+        try {
+            $this->service()->createPayment($this->agent, $ticket);
+            $this->fail('Un échec FedaPay doit remonter un message à l\'agent.');
+        } catch (ValidationException $exception) {
+            $message = $exception->errors()['paiement_mobile'][0];
+            $this->assertStringContainsString('Réessayez dans quelques minutes', $message);
+            $this->assertStringNotContainsString('500', $message);
+        }
+
+        // Ni le nom ni le téléphone de l'acheteur ne partent chez FedaPay.
+        $this->assertSame(['email' => 'awa@example.test'], $payloads[0]['customer']);
+        $this->assertArrayNotHasKey('customer', $payloads[1]);
+    }
+
     private function service(): AgentVenteSaleService
     {
         return $this->app->make(AgentVenteSaleService::class);

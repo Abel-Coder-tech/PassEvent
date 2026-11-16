@@ -51,11 +51,12 @@ class EvenementController extends Controller
         ));
     }
 
-    // Affiche le formulaire de création (profil vérifié requis)
+    // Affiche le formulaire de création. Un profil non validé peut créer et publier ;
+    // la billetterie reste fermée jusqu'à la validation par PaxEvent.
     public function create()
     {
-        if (Auth::user()->statut !== 'actif') { // Seuls les profils vérifiés peuvent créer
-            return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
+        if (! Auth::user()->peutCreerEvenement()) { // compte rejeté ou bloqué
+            return redirect()->route('dashboard')->with('error', 'Votre compte ne permet pas de créer un événement pour le moment.');
         }
         $maxCoParrainage = max(0, 100 - Auth::user()->commissionPourcentage());
         return view('evenements.create', compact('maxCoParrainage'));
@@ -74,9 +75,9 @@ class EvenementController extends Controller
     // billets à la journée et packs.
     public function store(Request $request)
     {
-        if (Auth::user()->statut !== 'actif') {
-            ActivityLogger::failure('evenement.create', 'Profil non vérifié', null, ['titre' => $request->input('titre')], $request);
-            return redirect()->route('dashboard')->with('error', 'Votre profil doit être vérifié avant de pouvoir créer un événement.');
+        if (! Auth::user()->peutCreerEvenement()) {
+            ActivityLogger::failure('evenement.create', 'Compte ne pouvant pas créer', null, ['titre' => $request->input('titre')], $request);
+            return redirect()->route('dashboard')->with('error', 'Votre compte ne permet pas de créer un événement pour le moment.');
         }
 
         $gratuit = $request->boolean('gratuit');
@@ -270,7 +271,7 @@ class EvenementController extends Controller
         $attributs['gratuit'] = $gratuit;
 
         // Billetterie ouverte dès la publication, ou ouverture plus tard (date facultative)
-        $plusTard = $request->boolean('billetterie_plus_tard');
+        $plusTard = $request->boolean('billetterie_plus_tard') && Auth::user()->statut === 'actif';
         $attributs['billetterie_ouverte'] = ! $plusTard;
         $attributs['billetterie_ouvre_le'] = $plusTard && ! empty($validated['billetterie_ouvre_le'])
             ? Carbon::parse($validated['billetterie_ouvre_le'])
@@ -405,6 +406,15 @@ class EvenementController extends Controller
 
         if (!$user || !in_array($user->statut, ['actif', 'approuvé', 'verifie'])) {
             abort(403, 'Accès réservé aux organisateurs approuvés.');
+        }
+
+        // Contrat figé à la finalisation du compte : c'est cette copie qui est servie.
+        if ($chemin = $contratService->cheminFige($user)) {
+            if (! $user->contrat_telecharge_le) {
+                $user->update(['contrat_telecharge_le' => now()]);
+            }
+
+            return \Illuminate\Support\Facades\Storage::disk('local')->download($chemin, $contratService->filename($user));
         }
 
         $user->load('evenements');
@@ -713,7 +723,7 @@ class EvenementController extends Controller
 
         // L'assistant porte l'option de billetterie ; l'ancien formulaire ne la touche pas.
         if ($assistant) {
-            $plusTard = $request->boolean('billetterie_plus_tard');
+            $plusTard = $request->boolean('billetterie_plus_tard') && Auth::user()->statut === 'actif';
             $validated['billetterie_ouverte'] = ! $plusTard;
             $validated['billetterie_ouvre_le'] = $plusTard && ! empty($validated['billetterie_ouvre_le'])
                 ? Carbon::parse($validated['billetterie_ouvre_le'])
@@ -761,23 +771,6 @@ class EvenementController extends Controller
             ->with('success', $message);
     }
 
-    // Bascule la fermeture des ventes
-    public function fermerVente(Evenement $evenement)
-    {
-        abort_if($evenement->user_id !== Auth::id(), 403);
-
-        $evenement->update([
-            'ventes_fermees' => !$evenement->ventes_fermees,
-        ]);
-
-        $message = $evenement->ventes_fermees
-            ? 'Les ventes sont désormais fermées pour cet événement.'
-            : 'Les ventes sont désormais rouvertes pour cet événement.';
-
-        return redirect()->route('admin.evenements.show', $evenement->id)
-            ->with('success', $message);
-    }
-
     // Ferme la billetterie (événement publié à l'avance, ventes pas encore
     // ouvertes) ou l'ouvre. Une date d'ouverture facultative l'ouvre toute seule.
     public function billetterie(Request $request, Evenement $evenement)
@@ -801,6 +794,12 @@ class EvenementController extends Controller
                 ? 'La billetterie est fermée, elle s\'ouvrira automatiquement à la date choisie.'
                 : 'La billetterie est fermée. Rouvrez-la quand vous êtes prêt.';
         } else {
+            // Tant que le profil n'est pas validé, l'ouverture est impossible (bouton grisé côté vue).
+            if ($evenement->organisateurEnCoursDeValidation()) {
+                return redirect()->route('admin.evenements.show', $evenement->id)
+                    ->with('warning', 'La billetterie pourra être ouverte après la validation de votre profil par PaxEvent.');
+            }
+
             $evenement->update(['billetterie_ouverte' => true, 'billetterie_ouvre_le' => null]);
             $message = 'La billetterie est ouverte.';
         }
@@ -889,6 +888,15 @@ class EvenementController extends Controller
             return redirect()->route('admin.evenements.index')
                 ->with('error', 'Cet événement ne peut pas être annulé car des billets payants ont déjà été vendus. Contactez l’équipe PaxEvent pour demander une assistance.')
                 ->with('evenement_suppression_bloquee', true);
+        }
+
+        // Suppression par PaxEvent au nom de l'organisateur (sur sa demande) : seulement
+        // si aucun ticket n'a été émis, payant ou gratuit.
+        if (session()->has('gestion') && $evenement->tickets()->exists()) {
+            request()->attributes->set('gestion_action_refusee', true);
+
+            return redirect()->route('admin.evenements.index')
+                ->with('error', 'Cet événement a déjà des tickets : PaxEvent ne peut pas le supprimer en mode gestion.');
         }
 
         $evenement->delete();

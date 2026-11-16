@@ -26,7 +26,7 @@ class SitePublicController extends Controller
         $selectedDate = $request->input('date');
         $q = $request->input('q');
 
-        $query = Evenement::with('tarifs')
+        $query = Evenement::with('tarifs', 'user:id,statut')
             ->where('statut', '=', 'publié')
             ->where('date_event', '>=', now())
             ->orderBy('date_event', 'asc');
@@ -35,11 +35,10 @@ class SitePublicController extends Controller
             $query->where('categorie', '=', $selectedCategorie);
         }
 
-        if ($selectedDate === 'weekend') {
-            $query->whereBetween('date_event', [now()->startOfWeek()->addDays(5), now()->endOfWeek()->addDays(5)]);
-        } elseif ($selectedDate === 'mois') {
-            $query->whereMonth('date_event', now()->month)
-                ->whereYear('date_event', now()->year);
+        if (Evenement::periodeFiltre($selectedDate)) {
+            $query->dansPeriode($selectedDate);
+        } else {
+            $selectedDate = null;
         }
 
         if ($q) {
@@ -56,7 +55,8 @@ class SitePublicController extends Controller
         $evenementsUne = Evenement::ALaUne()
             ->where('statut', 'publié')
             ->where('date_event', '>=', now())
-            ->with('tarifs')
+            ->whereHas('user', fn ($q) => $q->where('statut', 'actif'))
+            ->with('tarifs', 'user:id,statut')
             ->limit(6)
             ->get();
 

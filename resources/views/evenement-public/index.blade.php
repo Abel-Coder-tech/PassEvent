@@ -24,18 +24,46 @@
                 <span class="ev-hero-chip">Tous les événements</span>
                 <h1 class="ev-hero-title">Retrouvez vos évènements préférés</h1>
                 <p class="ev-hero-sub" style="color:var(--accent);">Festivals &mdash; Concerts &mdash; Chills &mdash; Galas &mdash; Conférences </p>
-                <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search">
+                <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search" id="evSearchForm">
                     <div class="ev-search-wrap">
                         <i class="bi bi-search"></i>
-                        <input type="text" name="q" class="ev-search-input" placeholder="Rechercher par nom, catégorie, lieu..." value="{{ $q ?? '' }}">
+                        <input type="search" name="q" id="evSearchInput" class="ev-search-input" placeholder="Nom, catégorie, lieu..." value="{{ $q ?? '' }}" autocomplete="off" @if($q) autofocus @endif>
                     </div>
                     @if($selectedCategorie)<input type="hidden" name="categorie" value="{{ $selectedCategorie }}">@endif
                     @if($selectedDate)<input type="hidden" name="date" value="{{ $selectedDate }}">@endif
-                    <button type="submit" class="ev-search-btn"><i class="bi bi-search"></i></button>
+                    <div class="ev-date-chips">
+                        @foreach(['aujourdhui' => "Aujourd'hui", 'weekend' => 'Ce week-end', 'mois' => 'Ce mois'] as $cle => $libelle)
+                            {{-- Un clic sur le filtre actif le retire --}}
+                            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate === $cle ? null : $cle])) }}"
+                               class="ev-date-chip {{ $selectedDate === $cle ? 'active' : '' }}">{{ $libelle }}</a>
+                        @endforeach
+                    </div>
                     @if($q || $selectedCategorie || $selectedDate)
-                        <a href="{{ route('evenements.public') }}" class="ev-search-clear"><i class="bi bi-x-lg"></i></a>
+                        <a href="{{ route('evenements.public') }}" class="ev-search-clear" title="Effacer les filtres"><i class="bi bi-x-lg"></i></a>
                     @endif
                 </form>
+                <script>
+                    // Recherche automatique : envoie le formulaire après une courte pause de saisie.
+                    (function () {
+                        const input = document.getElementById('evSearchInput');
+                        if (!input) return;
+                        const initiale = input.value;
+                        let minuterie;
+                        input.addEventListener('input', function () {
+                            clearTimeout(minuterie);
+                            minuterie = setTimeout(function () {
+                                const valeur = input.value.trim();
+                                if (valeur === initiale.trim() || (valeur.length > 0 && valeur.length < 2)) return;
+                                input.form.submit();
+                            }, 500);
+                        });
+                        // Garde le curseur en fin de texte après rechargement.
+                        if (document.activeElement === input) {
+                            const n = input.value.length;
+                            input.setSelectionRange(n, n);
+                        }
+                    })();
+                </script>
                 @if($categories->isNotEmpty())
                     <div class="ev-cat-row">
                         <a href="{{ route('evenements.public', array_filter(['q' => $q, 'date' => $selectedDate])) }}" class="ev-cat-chip {{ !$selectedCategorie ? 'active' : '' }}">Tous</a>
@@ -64,7 +92,7 @@
                         $estComplet = $placesRestantes <= 0;
                         $remplissage = (int) round($evenement->tauxRemplissage());
                         $prixDernier = $evenement->prixAPartirDe();
-                        $venteCloturee = $evenement->ventes_fermees;
+                        $venteCloturee = $evenement->etatVitrine() === 'cloturee';
                         $estPasse = $evenement->dates->max(fn ($d) => $d->date_debut) ? $evenement->dates->max(fn ($d) => $d->date_debut)->lt(now()) : $evenement->date_event->isPast();
                         $textes = $evenement->getTextes();
                     @endphp
@@ -81,7 +109,7 @@
                                 @endif
                                 @if($estPasse)
                                     <span class="ev-card-badge" style="right:10px;left:auto;background:#6c757d;color:#fff;">Terminé</span>
-                                @elseif($evenement->billetteriePasOuverte())
+                                @elseif($evenement->etatVitrine() === 'bientot')
                                     <span class="ev-card-badge" style="background: rgba(107,100,116,0.92); color: #fff;">Billetterie bientôt ouverte</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-card-badge" style="background: rgba(231,76,60,0.9); color: #fff;">{{ $textes['cloturee'] }}</span>
@@ -118,7 +146,7 @@
                                 @endif
                                 @if($estPasse)
                                     <span class="ev-card-btn disabled"><i class="bi bi-clock-history me-1"></i> Événement passé</span>
-                                @elseif($evenement->billetteriePasOuverte())
+                                @elseif($evenement->etatVitrine() === 'bientot')
                                     <span class="ev-card-btn disabled"><i class="bi bi-clock me-1"></i> Billetterie bientôt ouverte</span>
                                 @elseif($venteCloturee)
                                     <span class="ev-card-btn disabled"><i class="bi bi-lock me-1"></i> {{ $textes['cloturee'] }}</span>
@@ -177,7 +205,7 @@
                     $estComplet = $placesRestantes <= 0;
                     $remplissage = (int) round($evenement->tauxRemplissage());
                     $prixDernier = $evenement->prixAPartirDe();
-                    $venteCloturee = $evenement->ventes_fermees;
+                    $venteCloturee = $evenement->etatVitrine() === 'cloturee';
                     $estPasse = $evenement->date_event->isPast();
                     $textes = $evenement->getTextes();
                 @endphp
@@ -294,12 +322,45 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    max-width: 580px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 680px;
     margin: 0 auto 1.5rem;
 }
 .ev-search-wrap {
-    flex: 1;
+    flex: 1 1 220px;
+    max-width: 300px;
     position: relative;
+}
+.ev-search-input::-webkit-search-cancel-button { display: none; }
+.ev-date-chips {
+    display: flex;
+    gap: 0.4rem;
+}
+.ev-date-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 0.9rem;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.7);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.ev-date-chip:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.ev-date-chip.active {
+    background: linear-gradient(135deg, #542680, #9972B0);
+    border-color: transparent;
+    color: #fff;
+}
+@media (max-width: 575.98px) {
+    .ev-search-wrap { max-width: none; flex-basis: 100%; }
+    .ev-date-chip { height: 36px; padding: 0 0.75rem; }
 }
 .ev-search-wrap .bi-search {
     position: absolute; left: 14px; top: 50%;

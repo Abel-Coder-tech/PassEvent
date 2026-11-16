@@ -242,6 +242,27 @@ class ProfilController extends Controller
         $updateData['numero_rc'] = $data['numero_rc'] ?? null;
         $updateData['numero_cip'] = $data['numero_cip'] ?? ($data['numero_cip_rep'] ?? null);
 
+        // PaxEvent complète le profil en son nom (mode « Gérer ») : le compte est
+        // finalisé tout de suite, le contrat est généré et figé, aucun email n'est
+        // envoyé. PaxEvent transmet ensuite le contrat à l'organisateur.
+        if (session()->has('gestion')) {
+            $updateData['statut'] = 'actif';
+            $user->update($updateData);
+            session()->forget('profil');
+
+            $contratGenere = true;
+            try {
+                app(\App\Services\ContratService::class)->figer($user->fresh());
+            } catch (\Throwable $e) {
+                $contratGenere = false;
+                \Illuminate\Support\Facades\Log::warning('Contrat non figé pour l\'organisateur '.$user->id.' : '.$e->getMessage());
+            }
+
+            return $contratGenere
+                ? redirect()->route('dashboard')->with('success', 'Profil finalisé. Le contrat est généré : transmettez-le à l\'organisateur depuis sa fiche.')
+                : redirect()->route('dashboard')->with('error', 'Profil finalisé, mais le contrat n\'a pas pu être généré. Générez-le depuis la fiche de l\'organisateur.');
+        }
+
         $user->update($updateData);
 
         session()->forget('profil');

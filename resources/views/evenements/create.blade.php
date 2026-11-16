@@ -412,6 +412,12 @@
                             <div class="form-text">Maximum {{ $maxCoParrainage }} % (100 % moins votre commission PaxEvent).</div>
                         </div>
                     </div>
+                    @if(Auth::user()->statut !== 'actif')
+                    <div class="wz-block" id="wz-billetterie">
+                        <div class="fw-semibold"><i class="bi bi-clock me-1"></i>Billetterie</div>
+                        <div class="form-text">Votre profil n'est pas encore validé : votre événement sera visible avec « Billetterie bientôt ouverte », et la vente s'ouvrira automatiquement dès la validation par PaxEvent.</div>
+                    </div>
+                    @else
                     <div class="wz-block" id="wz-billetterie">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" id="billetterie_plus_tard" name="billetterie_plus_tard" value="1" @checked(old('billetterie_plus_tard'))>
@@ -424,6 +430,7 @@
                             <div class="form-text">À cette date, la billetterie s'ouvre toute seule.</div>
                         </div>
                     </div>
+                    @endif
                     <div class="wz-recap" id="wz-recap"></div>
                 </section>
 
@@ -777,7 +784,7 @@
         $('#wz-co').classList.toggle('d-none', gratuit);
         $$('input', $('#wz-co')).forEach((el) => { el.disabled = gratuit; });
         $('#wz-co-champs').classList.toggle('d-none', gratuit || !$('#co_parrainage_actif').checked);
-        $('#wz-bill-date').classList.toggle('d-none', !$('#billetterie_plus_tard').checked);
+        if ($('#billetterie_plus_tard')) $('#wz-bill-date').classList.toggle('d-none', !$('#billetterie_plus_tard').checked);
     }
 
     function rendreRecap() {
@@ -815,7 +822,7 @@
             bloc('Dates', 'dates', jours.map((j, i) => (multi ? 'Jour ' + (i + 1) + ' : ' : '') + fmtDate(j.date))),
             bloc('Lieu et capacité', 'lieu', [$('#lieu').value.trim() || 'Lieu à renseigner'].concat(capacites)),
             bloc('Billets', gratuit ? 'acces' : 'billets', billets.length ? billets : ['Aucun billet']),
-        ].concat($('#billetterie_plus_tard').checked
+        ].concat($('#billetterie_plus_tard') && $('#billetterie_plus_tard').checked
             ? [bloc('Billetterie', 'recap', ['Ouverture plus tard' + ($('#billetterie_ouvre_le').value ? ' · le ' + fmtDate($('#billetterie_ouvre_le').value) : ' · manuelle')])]
             : []).join('');
     }

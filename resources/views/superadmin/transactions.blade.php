@@ -12,7 +12,7 @@
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Transaction ID</th><th>Evenement</th><th>Montant</th><th>Statut</th><th>Methode</th><th>Acheteur</th><th>Date</th></tr>
+                <tr><th>Transaction ID</th><th>Evenement</th><th>Montant</th><th>Statut</th><th>Methode</th><th>Acheteur</th><th>Date</th><th>Action</th></tr>
             </thead>
             <tbody>
                 @foreach($transactions as $t)
@@ -30,6 +30,9 @@
                     <td>@if($t->montant > 0){{ \App\Models\Ticket::methodePaiementLabel($t->methode_paiement) }}@else — @endif</td>
                     <td>{{ $t->email_acheteur }}</td>
                     <td style="font-size:0.75rem;">{{ $t->created_at->isoFormat('D MMM YYYY HH:mm') }}</td>
+                    <td>
+                        @include('superadmin.partials.renvoyer-ticket', ['t' => $t])
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

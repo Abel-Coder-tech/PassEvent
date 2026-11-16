@@ -143,6 +143,37 @@ class Evenement extends Model
         });
     }
 
+    // Plage [début, fin] d'un filtre rapide public, toujours à partir de maintenant.
+    // weekend : en semaine, le samedi-dimanche qui arrive ; le week-end, le reste du week-end en cours.
+    public static function periodeFiltre(?string $filtre): ?array
+    {
+        $now = now();
+
+        return match ($filtre) {
+            'aujourdhui' => [$now, $now->copy()->endOfDay()],
+            'weekend' => [
+                $now->isWeekend() ? $now : $now->copy()->next(\Carbon\Carbon::SATURDAY)->startOfDay(),
+                ($now->isSunday() ? $now->copy() : $now->copy()->next(\Carbon\Carbon::SUNDAY))->endOfDay(),
+            ],
+            'mois' => [$now, $now->copy()->endOfMonth()],
+            default => null,
+        };
+    }
+
+    // Événements ayant une date (ou date_event s'il n'y a pas de dates détaillées) dans la période du filtre.
+    public function scopeDansPeriode(Builder $query, ?string $filtre): Builder
+    {
+        if (! $periode = static::periodeFiltre($filtre)) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $sub) use ($periode) {
+            $sub->whereHas('dates', fn (Builder $d) => $d->whereBetween('date_debut', $periode))
+                ->orWhere(fn (Builder $sansDates) => $sansDates->whereDoesntHave('dates')
+                    ->whereBetween('date_event', $periode));
+        });
+    }
+
     public function getTextes(): array
     {
         return match ($this->type_evenement) {
@@ -674,13 +705,49 @@ class Evenement extends Model
     // Billetterie pas encore ouverte : fermée par l'organisateur et, si une date
     // d'ouverture est fixée, cette date n'est pas encore atteinte. Un événement
     // sans la colonne (anciens jeux de données) est considéré ouvert.
+    // La billetterie ne s'ouvre que pour un organisateur dont le compte est actif.
+    // Tant qu'il ne l'est pas (profil en cours de validation, mais aussi compte rejeté),
+    // elle reste fermée ; à la validation elle s'ouvre toute seule, sans mise à jour.
+    public function organisateurEnCoursDeValidation(): bool
+    {
+        $organisateur = $this->user;
+
+        return $organisateur !== null && $organisateur->statut !== 'actif';
+    }
+
     public function billetteriePasOuverte(): bool
     {
+        if ($this->organisateurEnCoursDeValidation()) {
+            return true;
+        }
+
         if (($this->billetterie_ouverte ?? true) !== false) {
             return false;
         }
 
         return $this->billetterie_ouvre_le === null || $this->billetterie_ouvre_le->isFuture();
+    }
+
+    // Des billets ont déjà été réservés ou vendus (le compteur inclut les réservations).
+    public function ventesDejaFaites(): bool
+    {
+        return (int) $this->quota_vendu > 0;
+    }
+
+    // Ce que voit le public : 'ouverte', 'bientot' (billetterie pas encore ouverte)
+    // ou 'cloturee' (billetterie fermée alors que des billets ont déjà été vendus).
+    public function etatVitrine(): string
+    {
+        if (! $this->billetteriePasOuverte()) {
+            return 'ouverte';
+        }
+
+        if ($this->organisateurEnCoursDeValidation()
+            || ($this->billetterie_ouvre_le !== null && $this->billetterie_ouvre_le->isFuture())) {
+            return 'bientot';
+        }
+
+        return $this->ventesDejaFaites() ? 'cloturee' : 'bientot';
     }
 
     // Motif d'interdiction de vente : accès bloqué, billetterie pas ouverte, ventes fermées ou capacité nulle.
@@ -693,11 +760,8 @@ class Evenement extends Model
         }
 
         if ($this->billetteriePasOuverte()) {
-            return 'sales_not_open';
-        }
-
-        if ($this->ventes_fermees) {
-            return 'sales_closed';
+            // Un seul interrupteur (billetterie fermée) : le motif dépend de la situation.
+            return $this->etatVitrine() === 'cloturee' ? 'sales_closed' : 'sales_not_open';
         }
 
         if ($this->estComplet()) {
@@ -705,6 +769,31 @@ class Evenement extends Model
         }
 
         return null;
+    }
+
+    // Phrase lisible pour l'organisateur : la vente est-elle ouverte, sinon pourquoi.
+    public function etatVenteOrganisateur(): array
+    {
+        $raison = $this->raisonBlocageVente();
+
+        if ($raison === null) {
+            return ['ouverte' => true, 'raison' => 'La vente est ouverte.'];
+        }
+
+        $libelle = match ($raison) {
+            'event_draft' => 'l\'événement est en brouillon (publiez-le).',
+            'event_cancelled' => 'l\'événement est annulé.',
+            'event_suspended' => 'l\'événement est suspendu.',
+            'event_ended' => 'l\'événement est terminé.',
+            'sales_not_open' => $this->organisateurEnCoursDeValidation()
+                ? 'votre profil n\'est pas encore validé par PaxEvent (la vente s\'ouvrira à la validation).'
+                : 'la billetterie est fermée'.($this->billetterie_ouvre_le ? ' (ouverture le '.$this->billetterie_ouvre_le->isoFormat('D MMM YYYY [à] HH[h]mm').').' : '.'),
+            'sales_closed' => 'la billetterie est fermée (les ventes sont arrêtées).',
+            'event_full' => 'toutes les places sont vendues.',
+            default => 'la vente est indisponible.',
+        };
+
+        return ['ouverte' => false, 'raison' => 'La vente est fermée : '.$libelle];
     }
 
     public function ventesOuvertes(): bool

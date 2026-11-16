@@ -159,6 +159,181 @@ class EvenementCreationAssistantTest extends TestCase
         $this->assertTrue($evenement->fresh()->billetteriePasOuverte());
     }
 
+    public function test_un_profil_non_valide_publie_mais_la_billetterie_ouvre_a_la_validation(): void
+    {
+        foreach (['incomplet', 'en_attente', 'corrections_demandees', 'corrections_apportees'] as $statut) {
+            $this->organisateur->update(['statut' => $statut]);
+            Evenement::query()->delete();
+
+            $this->envoyer([
+                'duree' => 'un',
+                'date_event' => $this->date(10, '20:00'),
+                'capacite' => 100,
+                'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+            ])->assertRedirect(route('admin.evenements.index'));
+
+            $evenement = Evenement::firstOrFail();
+            $this->assertSame('publié', $evenement->statut, $statut);
+            $this->assertTrue($evenement->billetteriePasOuverte(), $statut);
+            $this->assertSame('sales_not_open', $evenement->raisonBlocageVente(), $statut);
+        }
+
+        // La validation du compte ouvre la billetterie, sans toucher à l'événement.
+        $this->organisateur->update(['statut' => 'actif']);
+        $evenement = Evenement::firstOrFail();
+        $this->assertFalse($evenement->billetteriePasOuverte());
+        $this->assertNull($evenement->raisonBlocageVente());
+    }
+
+    public function test_un_compte_valide_publie_et_la_billetterie_est_ouverte_par_defaut(): void
+    {
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+            'statut' => 'publié',
+        ])->assertRedirect(route('admin.evenements.index'));
+
+        $evenement = Evenement::firstOrFail();
+        $this->assertSame('publié', $evenement->statut);
+        $this->assertFalse($evenement->billetteriePasOuverte());
+        $this->assertNull($evenement->raisonBlocageVente());
+    }
+
+    public function test_les_evenements_d_un_organisateur_rejete_ne_s_ouvrent_pas_a_la_vente(): void
+    {
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+        ]);
+        $this->organisateur->update(['statut' => 'en_attente']);
+        $this->assertTrue(Evenement::firstOrFail()->billetteriePasOuverte());
+
+        // Refusé par PaxEvent après la publication : la vente reste fermée.
+        $this->organisateur->update(['statut' => 'rejete']);
+        $this->assertTrue(Evenement::firstOrFail()->billetteriePasOuverte());
+    }
+
+    public function test_l_organisateur_voit_pourquoi_la_vente_est_fermee(): void
+    {
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+        ]);
+        $evenement = Evenement::firstOrFail();
+
+        $this->assertTrue($evenement->etatVenteOrganisateur()['ouverte']);
+
+        $this->organisateur->update(['statut' => 'en_attente']);
+        $this->assertStringContainsString('profil n\'est pas encore validé', $evenement->fresh()->etatVenteOrganisateur()['raison']);
+
+        $this->organisateur->update(['statut' => 'actif']);
+        $evenement->update(['statut' => 'brouillon']);
+        $this->assertStringContainsString('brouillon', $evenement->fresh()->etatVenteOrganisateur()['raison']);
+
+        $evenement->update(['statut' => 'publié', 'billetterie_ouverte' => false, 'billetterie_ouvre_le' => now()->addDays(3)]);
+        $this->assertStringContainsString('ouverture le', $evenement->fresh()->etatVenteOrganisateur()['raison']);
+    }
+
+    public function test_un_profil_non_valide_ne_peut_pas_fixer_d_ouverture_differee(): void
+    {
+        $this->organisateur->update(['statut' => 'incomplet']);
+
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+            'billetterie_plus_tard' => 1,
+            'billetterie_ouvre_le' => now()->addDays(2)->format('Y-m-d\TH:i'),
+        ]);
+
+        // L'option n'est pas retenue : à la validation, la billetterie s'ouvre toute seule.
+        $evenement = Evenement::firstOrFail();
+        $this->assertTrue($evenement->billetterie_ouverte);
+        $this->assertNull($evenement->billetterie_ouvre_le);
+        $this->organisateur->update(['statut' => 'actif']);
+        $this->assertFalse($evenement->fresh()->billetteriePasOuverte());
+    }
+
+    public function test_un_seul_interrupteur_billetterie_et_le_message_public_suit_la_situation(): void
+    {
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+        ]);
+        $evenement = Evenement::firstOrFail();
+        $this->assertSame('ouverte', $evenement->etatVitrine());
+
+        // Fermée avant toute vente : « bientôt ouverte ».
+        $this->actingAs($this->organisateur)->post(route('admin.evenements.billetterie', $evenement->id), ['action' => 'fermer']);
+        $evenement = $evenement->fresh();
+        $this->assertSame('bientot', $evenement->etatVitrine());
+        $this->assertSame('sales_not_open', $evenement->raisonBlocageVente());
+
+        // Fermée alors que des billets sont déjà vendus : « clôturée ».
+        $evenement->update(['quota_vendu' => 5]);
+        $evenement = $evenement->fresh();
+        $this->assertSame('cloturee', $evenement->etatVitrine());
+        $this->assertSame('sales_closed', $evenement->raisonBlocageVente());
+        auth()->logout();
+        $this->get(route('evenements.public.show', $evenement))->assertOk()->assertSee('clôturées');
+
+        // Une date de réouverture annoncée redonne « bientôt ouverte », même après des ventes.
+        $evenement->update(['billetterie_ouvre_le' => now()->addDays(2)]);
+        $this->assertSame('bientot', $evenement->fresh()->etatVitrine());
+
+        // Réouverture.
+        $this->actingAs($this->organisateur)->post(route('admin.evenements.billetterie', $evenement->id), ['action' => 'ouvrir']);
+        $this->assertSame('ouverte', $evenement->fresh()->etatVitrine());
+    }
+
+    public function test_ouvrir_la_billetterie_avec_un_profil_non_valide_affiche_la_raison(): void
+    {
+        $this->envoyer([
+            'duree' => 'un',
+            'date_event' => $this->date(10, '20:00'),
+            'capacite' => 100,
+            'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+        ]);
+        $evenement = Evenement::firstOrFail();
+        $this->organisateur->update(['statut' => 'en_attente']);
+
+        $reponse = $this->actingAs($this->organisateur)
+            ->post(route('admin.evenements.billetterie', $evenement->id), ['action' => 'ouvrir']);
+
+        $reponse->assertRedirect(route('admin.evenements.show', $evenement->id));
+        $reponse->assertSessionHas('warning', fn ($m) => str_contains($m, 'après la validation de votre profil'));
+        $this->assertSame('bientot', $evenement->fresh()->etatVitrine());
+
+        $this->actingAs($this->organisateur)->get(route('admin.evenements.show', $evenement->id))
+            ->assertSee('Billetterie disponible après la validation de votre profil');
+    }
+
+    public function test_un_compte_rejete_ou_bloque_ne_peut_pas_creer_d_evenement(): void
+    {
+        foreach (['rejete', 'bloque'] as $statut) {
+            $this->organisateur->update(['statut' => $statut]);
+
+            $this->envoyer([
+                'duree' => 'un',
+                'date_event' => $this->date(10, '20:00'),
+                'capacite' => 100,
+                'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
+            ])->assertRedirect();
+        }
+
+        // Un compte rejeté ou bloqué ne crée rien (refusé par le contrôleur ou plus tôt).
+        $this->assertSame(0, Evenement::count());
+    }
+
     public function test_deux_tarifs_le_meme_jour_sont_refuses(): void
     {
         $this->envoyer([
