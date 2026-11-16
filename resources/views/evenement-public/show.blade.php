@@ -316,7 +316,7 @@
                                 <div class="achat-barre-n" data-nombre>Aucun billet choisi</div>
                                 <div class="achat-barre-t" data-total>0 FCFA</div>
                             </div>
-                            <button type="button" class="show-btn show-btn-primary" id="btnContinuerBarre" style="width:auto;">Continuer <i class="bi bi-arrow-down ms-1"></i></button>
+                            <button type="button" class="show-btn show-btn-primary" id="btnContinuerBarre" style="width:auto;"><span data-barre-libelle>Continuer</span> <i class="bi bi-arrow-down ms-1" data-barre-icone></i></button>
                         </div>
                         @endif
                     </div>
@@ -1123,7 +1123,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const visible = nombre > 0;
         barre.classList.toggle('is-visible', visible);
         document.body.classList.toggle('achat-barre-ouverte', visible);
+        majBoutonBarre();
     }
+
+    // Bouton de la barre mobile : tant qu'il manque une information, il mène
+    // au premier champ à remplir ; dès que tout est valide, il envoie
+    // directement le formulaire (même validation que le bouton Payer).
+    const btnBarre = document.getElementById('btnContinuerBarre');
+    const libelleBarre = btnBarre.querySelector('[data-barre-libelle]');
+    const iconeBarre = btnBarre.querySelector('[data-barre-icone]');
+    const champsRequis = () => Array.from(form.querySelectorAll('input[required], select[required], textarea[required]'))
+        .filter((c) => !c.disabled && c.type !== 'hidden');
+    const premierChampManquant = () => champsRequis().find((c) => !c.checkValidity());
+
+    function majBoutonBarre() {
+        const pret = !premierChampManquant();
+        libelleBarre.textContent = pret ? libelle.textContent : 'Continuer';
+        iconeBarre.className = pret ? 'bi bi-arrow-right ms-1' : 'bi bi-arrow-down ms-1';
+    }
+    form.addEventListener('input', majBoutonBarre);
+    form.addEventListener('change', majBoutonBarre);
 
     form.addEventListener('click', function (e) {
         const bouton = e.target.closest('button');
@@ -1134,9 +1153,16 @@ document.addEventListener('DOMContentLoaded', function () {
         rendre();
     });
 
-    document.getElementById('btnContinuerBarre').addEventListener('click', function () {
-        document.getElementById('nom_acheteur').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        document.getElementById('nom_acheteur').focus({ preventScroll: true });
+    btnBarre.addEventListener('click', function () {
+        const manquant = premierChampManquant();
+        if (manquant) {
+            manquant.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            manquant.focus({ preventScroll: true });
+            return;
+        }
+        // Tout est rempli : on passe par le bouton Payer pour garder exactement
+        // le même parcours (contrôles, état « Traitement… », envoi).
+        btnPayer.click();
     });
 
     form.addEventListener('submit', function (e) {

@@ -187,6 +187,54 @@ class PanierAchatPublicTest extends TestCase
         $this->assertSame(0, Ticket::count());
     }
 
+    public function test_le_statut_de_commande_suit_le_paiement(): void
+    {
+        $this->acheter([$this->tarifs['jour2'] => 2]);
+        $tickets = Ticket::orderBy('id')->get();
+        $premier = $tickets->first();
+        $session = ['paiement_tickets' => $tickets->pluck('id')->all()];
+        $statut = fn () => $this->withSession($session)->getJson(route('paiement.statut', $premier->id));
+
+        // Sans la session de l'acheteur : aucun accès.
+        $this->flushSession();
+        $this->getJson(route('paiement.statut', $premier->id))->assertForbidden();
+
+        $statut()->assertOk()->assertJson(['etat' => 'a_payer', 'redirection' => null])
+            ->assertJsonPath('secondes_restantes', fn ($s) => $s > 0 && $s <= 15 * 60);
+
+        // Transaction FedaPay tentée mais pas encore confirmée : attente.
+        Ticket::whereIn('id', $tickets->pluck('id'))->update(['fedapay_transaction_id' => 'TX-1']);
+        $statut()->assertJson(['etat' => 'verification']);
+
+        // Refus FedaPay.
+        Ticket::whereIn('id', $tickets->pluck('id'))->update(['statut_paiement' => 'échoué']);
+        $statut()->assertJson(['etat' => 'refuse']);
+
+        // Réservation expirée sans paiement tenté.
+        Ticket::whereIn('id', $tickets->pluck('id'))->update(['fedapay_transaction_id' => null]);
+        $statut()->assertJson(['etat' => 'expire']);
+
+        // Confirmé : redirection vers les billets.
+        Ticket::whereIn('id', $tickets->pluck('id'))->update(['statut_paiement' => 'payé']);
+        $statut()->assertJson(['etat' => 'paye', 'redirection' => route('confirmation.show', $premier->id)]);
+    }
+
+    public function test_la_page_de_paiement_affiche_l_etat_de_la_commande(): void
+    {
+        $this->acheter([$this->tarifs['jour2'] => 1]);
+        $ticket = Ticket::firstOrFail();
+        $session = ['paiement_tickets' => [$ticket->id]];
+
+        $this->withSession($session)->get(route('paiement.show', $ticket->id))
+            ->assertOk()
+            ->assertSee('Places réservées encore');
+
+        $ticket->update(['statut_paiement' => 'échoué', 'fedapay_transaction_id' => 'TX-2']);
+        $this->withSession($session)->get(route('paiement.show', $ticket->id))
+            ->assertOk()
+            ->assertSee('Refaire ma commande');
+    }
+
     public function test_un_panier_vide_est_refuse(): void
     {
         $this->acheter([$this->tarifs['jour2'] => 0])->assertSessionHas('error');

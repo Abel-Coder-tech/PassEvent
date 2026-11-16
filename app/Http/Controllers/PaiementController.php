@@ -202,8 +202,68 @@ class PaiementController extends Controller
 
         $publicKey = $this->fedapay->getPublicKey();
         $sandbox = $this->fedapay->isSandbox();
+        $etat = $this->etatCommande($ticket, $groupTickets);
 
-        return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox', 'montantTotal', 'lignesCommande', 'nombreBillets'));
+        return view('evenement-public.paiement', compact('ticket', 'publicKey', 'sandbox', 'montantTotal', 'lignesCommande', 'nombreBillets', 'etat'));
+    }
+
+    // Statut de la commande, interrogé par la page de paiement pendant l'attente.
+    // Ne renvoie aucune donnée personnelle : uniquement l'état et quoi faire.
+    public function statut($ticketId)
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        $this->verifierAccesAcheteur($ticket);
+
+        $groupe = str_starts_with((string) $ticket->transaction_id, 'GRP-')
+            ? Ticket::where('transaction_id', $ticket->transaction_id)->get()
+            : collect([$ticket]);
+
+        return response()->json($this->etatCommande($ticket, $groupe))
+            ->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * État lisible d'une commande en ligne, pour l'acheteur.
+     *
+     * - a_payer      : en attente, aucun paiement tenté → bouton Payer
+     * - verification : en attente, une transaction FedaPay existe → on attend
+     *                  la confirmation (webhook ou rapprochement)
+     * - paye         : confirmé → page de confirmation
+     * - refuse       : paiement refusé ou annulé chez FedaPay
+     * - expire       : réservation expirée sans paiement, places libérées
+     * - annule       : commande annulée ou remboursée
+     *
+     * @return array{etat: string, secondes_restantes: ?int, redirection: ?string}
+     */
+    private function etatCommande(Ticket $ticket, $groupe): array
+    {
+        $ticket->refresh();
+        $statut = $ticket->statut_paiement;
+        $transactionTentee = $groupe->contains(fn ($t) => ! empty($t->fedapay_transaction_id));
+
+        $etat = match (true) {
+            $statut === 'payé' => 'paye',
+            $statut === 'en_attente' && $transactionTentee => 'verification',
+            $statut === 'en_attente' => 'a_payer',
+            $statut === 'échoué' && $transactionTentee => 'refuse',
+            $statut === 'échoué' => 'expire',
+            default => 'annule',
+        };
+
+        // Réservation : temps restant pour payer (null = pas de limite connue).
+        $expire = $ticket->reservation_expire_le;
+        $secondes = $expire ? max(0, now()->diffInSeconds($expire, false)) : null;
+
+        // Un délai écoulé sans paiement tenté : la place va être libérée.
+        if ($etat === 'a_payer' && $secondes === 0) {
+            $etat = 'expire';
+        }
+
+        return [
+            'etat' => $etat,
+            'secondes_restantes' => $secondes !== null ? (int) $secondes : null,
+            'redirection' => $etat === 'paye' ? route('confirmation.show', $ticket->id) : null,
+        ];
     }
 
     // Accès au paiement via un lien signé (ex: ticket réservé depuis la file d'attente).
@@ -264,7 +324,7 @@ class PaiementController extends Controller
             };
 
             return redirect()->to($fallback)
-                ->with('error', 'Aucune transaction retournee par FedaPay.'); // Pas de transaction
+                ->with('error', 'Le paiement n\'a pas été finalisé. Vous pouvez réessayer.'); // Pas de transaction
         }
 
         // Commande de QR codes auto-générés : flux dédié (pas de ticket existant avant paiement)
@@ -426,11 +486,16 @@ class PaiementController extends Controller
                 }
             }
 
-            $fallback = match ($source) {
-                'agent_vente' => route('agent-vente.dashboard'),
-                'vente_manuelle' => route('ventes-manuelles.create'),
-                default => route('evenements.public.show', $ticket->evenement_id ?? 0),
-            };
+            // Acheteur en ligne : retour sur la page de paiement, qui affiche
+            // soit le refus (avec « Réessayer »), soit l'attente de confirmation
+            // et se met à jour seule quand le paiement est confirmé.
+            if (! in_array($source, ['agent_vente', 'vente_manuelle'], true)) {
+                return redirect()->route('paiement.show', $ticket->id);
+            }
+
+            $fallback = $source === 'agent_vente'
+                ? route('agent-vente.dashboard')
+                : route('ventes-manuelles.create');
 
             return redirect()->to($fallback)
                 ->with('error', 'Le paiement n\'a pas pu etre verifie. Veuillez reessayer.');
