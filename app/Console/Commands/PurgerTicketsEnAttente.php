@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Ticket;
 use App\Services\FedapayService;
+use App\Services\PaiementMapper;
 use App\Services\ReconciliationService;
 use App\Services\WaitlistPromotionService;
 use Illuminate\Console\Command;
@@ -47,6 +48,10 @@ class PurgerTicketsEnAttente extends Command
         $liberees = 0;
         $confirmees = 0;
         $conserves = 0;
+        // Chargement paresseux : on n'interroge FedaPay que si une réservation
+        // expirée n'a aucun ID de transaction enregistré.
+        $transactionsApprouvees = null;
+        $rechercheFedaPayIndisponible = false;
 
         foreach ($reservations->groupBy('evenement_id') as $evenementId => $groupe) {
             $promotionNecessaire = false;
@@ -55,7 +60,7 @@ class PurgerTicketsEnAttente extends Command
                 $fedapayId = $groupeTickets->first()->fedapay_transaction_id;
 
                 // Une transaction FedaPay existe : vérifier son statut réel avant toute décision
-                if ($fedapayId) {
+                if (filled($fedapayId)) {
                     $verification = $this->reconciliation->verifier($fedapayId);
 
                     if ($verification['ok'] && $verification['approuve']) {
@@ -118,7 +123,49 @@ class PurgerTicketsEnAttente extends Command
                     continue;
                 }
 
-                // Aucune transaction : abandon pur avant d'ouvrir FedaPay -> libérer la place
+                // Aucun ID enregistré (retour navigateur ET webhook perdus) :
+                // interroger FedaPay AVANT de libérer. Un paiement approuvé ne
+                // doit jamais être transformé en place libre.
+                $transaction = $this->transactionApprouveePour(
+                    $groupeTickets,
+                    $transactionsApprouvees,
+                    $rechercheFedaPayIndisponible
+                );
+
+                // Impossible de savoir si un paiement existe : ne jamais libérer
+                // à l'aveugle. Le prochain passage (ou le rapprochement) tranchera.
+                if ($rechercheFedaPayIndisponible) {
+                    Log::warning('Purge réservation en ligne - recherche FedaPay indisponible, réservation conservée', [
+                        'groupe' => $groupeTickets->first()->transaction_id,
+                    ]);
+                    $conserves += $groupeTickets->count();
+                    continue;
+                }
+
+                if ($transaction !== null) {
+                    $montantGroupe = $this->montantGroupeComplet($groupeTickets);
+                    $montantTransaction = (float) ($transaction['amount'] ?? 0);
+
+                    // Transaction trouvée mais montant incohérent : ne rien
+                    // libérer et ne pas confirmer, laisser le support trancher.
+                    if ($montantTransaction <= 0 || abs($montantGroupe - $montantTransaction) >= 1) {
+                        Log::warning('Purge réservation en ligne - montant FedaPay incohérent, réservation conservée', [
+                            'transaction_id' => (string) ($transaction['id'] ?? ''),
+                            'groupe' => $groupeTickets->first()->transaction_id,
+                            'montant_attendu' => $montantGroupe,
+                            'montant_transaction' => $montantTransaction,
+                        ]);
+                        $conserves += $groupeTickets->count();
+                        continue;
+                    }
+
+                    $confirmation = $this->confirmerGroupeApprouve($groupeTickets, $transaction);
+                    $confirmees += $confirmation['confirmes'];
+                    $conserves += $confirmation['conserves'];
+                    continue;
+                }
+
+                // Vraiment aucun paiement chez FedaPay : libération légitime.
                 $this->libererGroupe($groupeTickets);
                 $liberees += $groupeTickets->count();
                 $promotionNecessaire = true;
@@ -134,6 +181,99 @@ class PurgerTicketsEnAttente extends Command
         }
 
         return $liberees;
+    }
+
+    /**
+     * Montant total de la commande : tous les billets du groupe, y compris
+     * ceux déjà confirmés ou précédemment libérés.
+     *
+     * @param  \Illuminate\Support\Collection<int, Ticket>  $groupeTickets
+     */
+    protected function montantGroupeComplet($groupeTickets): float
+    {
+        $groupe = (string) $groupeTickets->first()->transaction_id;
+
+        if (str_starts_with($groupe, 'GRP-')) {
+            return (float) Ticket::where('transaction_id', $groupe)->sum('montant');
+        }
+
+        return (float) $groupeTickets->sum(fn (Ticket $ticket) => (float) $ticket->montant);
+    }
+
+    /**
+     * Cherche chez FedaPay un paiement approuvé correspondant au groupe, quand
+     * aucun ID de transaction n'a été enregistré. La liste des transactions
+     * approuvées est chargée une seule fois par exécution.
+     *
+     * @param  \Illuminate\Support\Collection<int, Ticket>  $groupeTickets
+     * @param  array<int, array<string, mixed>>|null  $cache
+     * @param  bool  $indisponible  positionné à vrai si FedaPay n'a pas pu être interrogé
+     * @return array<string, mixed>|null
+     */
+    protected function transactionApprouveePour($groupeTickets, ?array &$cache, bool &$indisponible): ?array
+    {
+        if ($cache === null) {
+            $cache = $this->fedapay->transactionsApprouvees(now()->subHours(48), 5);
+            $indisponible = $this->fedapay->rechercheIndisponible();
+        }
+
+        if ($indisponible || $cache === []) {
+            return null;
+        }
+
+        $references = [];
+
+        foreach ($groupeTickets as $ticket) {
+            $references[] = (string) $ticket->id;
+            $references[] = (string) $ticket->transaction_id;
+            $references[] = (string) $ticket->fedapay_transaction_id;
+        }
+
+        return $this->fedapay->transactionPourReferences($references, $cache);
+    }
+
+    /**
+     * Confirme un groupe dont le paiement approuvé a été retrouvé chez FedaPay.
+     * La place est déjà comptée (réservation) : confirmerTickets ne la recompte
+     * pas et se contente de lever la réservation, d'écrire le log et d'envoyer
+     * le billet.
+     *
+     * @param  \Illuminate\Support\Collection<int, Ticket>  $groupeTickets
+     * @param  array<string, mixed>  $transaction
+     * @return array{confirmes: int, conserves: int}
+     */
+    protected function confirmerGroupeApprouve($groupeTickets, array $transaction): array
+    {
+        $transactionId = (string) ($transaction['id'] ?? '');
+        $mode = $transaction['mode'] ?? $transaction['payment_method'] ?? null;
+
+        if (is_array($mode)) {
+            $mode = $mode['provider'] ?? $mode['name'] ?? null;
+        }
+
+        $telephone = $transaction['phone'] ?? null;
+
+        if (is_array($telephone)) {
+            $telephone = $telephone['number'] ?? $telephone['phone_number'] ?? null;
+        }
+
+        Log::warning('Purge réservation en ligne - paiement approuvé retrouvé sans ID, confirmation', [
+            'transaction_id' => $transactionId,
+            'groupe' => $groupeTickets->first()->transaction_id,
+            'montant' => (float) ($transaction['amount'] ?? 0),
+        ]);
+
+        $resultat = $this->reconciliation->confirmerTickets(
+            $groupeTickets,
+            $transactionId,
+            PaiementMapper::operateur(is_string($mode) ? $mode : null),
+            is_string($telephone) ? $telephone : null,
+        );
+
+        return [
+            'confirmes' => (int) ($resultat['confirmes'] ?? 0),
+            'conserves' => $groupeTickets->count(),
+        ];
     }
 
     /**

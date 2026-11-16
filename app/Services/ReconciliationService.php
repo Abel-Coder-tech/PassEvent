@@ -275,16 +275,7 @@ class ReconciliationService
             return ['success' => false, 'message' => 'Erreur lors de la confirmation des tickets.'];
         }
 
-        foreach ($ticketsConfirmes as $ticket) {
-            if (!$ticket->email_acheteur || !$ticket->estDelivrable()) {
-                continue;
-            }
-            try {
-                Mail::to($ticket->email_acheteur)->send(new TicketEmail(collect([$ticket])));
-            } catch (\Exception $e) {
-                Log::error('Reconciliation - email ticket non envoyé à ' . $ticket->email_acheteur . ' : ' . $e->getMessage());
-            }
-        }
+        $this->envoyerEmails(collect($ticketsConfirmes));
 
         return [
             'success' => true,
@@ -296,6 +287,55 @@ class ReconciliationService
             'ignores' => $ignores,
             'sans_place' => $sansPlace,
         ];
+    }
+
+    /**
+     * Envoie l'email des billets confirmés et trace l'envoi.
+     *
+     * Le marquage de email_envoye_at évite que le rattrapage
+     * `tickets:envoyer-emails` ne renvoie une deuxième copie du billet.
+     * Un échec est comptabilisé pour que le rattrapage réessaie (5 max).
+     *
+     * @param  Collection<int, Ticket>  $tickets
+     */
+    protected function envoyerEmails(Collection $tickets): void
+    {
+        foreach ($tickets as $ticket) {
+            if (!$ticket->email_acheteur || !$ticket->estDelivrable()) {
+                continue;
+            }
+
+            $this->envoyerEmail($ticket);
+        }
+    }
+
+    /**
+     * Envoie le billet et trace le résultat.
+     *
+     * @return bool Vrai si le serveur SMTP a accepté le message.
+     */
+    protected function envoyerEmail(Ticket $ticket): bool
+    {
+        try {
+            Mail::to($ticket->email_acheteur)->send(new TicketEmail(collect([$ticket])));
+
+            Ticket::whereKey($ticket->id)->update([
+                'email_envoye_at' => now(),
+                'email_derniere_erreur' => null,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            Ticket::whereKey($ticket->id)
+                ->whereNull('email_envoye_at')
+                ->increment('email_tentatives', 1, [
+                    'email_derniere_erreur' => mb_substr($e->getMessage(), 0, 500),
+                ]);
+
+            Log::error('Reconciliation - email ticket non envoyé à ' . $ticket->email_acheteur . ' : ' . $e->getMessage());
+
+            return false;
+        }
     }
 
     /**
@@ -361,17 +401,7 @@ class ReconciliationService
             return ['success' => false, 'message' => 'Erreur lors de la recréation du ticket.'];
         }
 
-        foreach ($tickets as $ticket) {
-            if (!$ticket->estDelivrable()) {
-                continue;
-            }
-            try {
-                $ticket->load('evenement', 'tarif');
-                Mail::to($ticket->email_acheteur)->send(new TicketEmail(collect([$ticket])));
-            } catch (\Exception $e) {
-                Log::error('Reconciliation - email ticket recréé non envoyé à ' . $ticket->email_acheteur . ' : ' . $e->getMessage());
-            }
-        }
+        $this->envoyerEmails($tickets);
 
         return [
             'success' => true,
@@ -417,10 +447,11 @@ class ReconciliationService
             return ['success' => false, 'message' => 'Ce billet ne peut pas être envoyé : son paiement n\'est pas confirmé.'];
         }
 
-        try {
-            Mail::to($ticket->email_acheteur)->send(new TicketEmail(collect([$ticket])));
-        } catch (\Exception $e) {
-            Log::error('Reconciliation - renvoi email ticket ' . $ticket->id . ' : ' . $e->getMessage());
+        if (! $ticket->email_acheteur) {
+            return ['success' => false, 'message' => 'Aucune adresse email n\'est renseignée pour ce billet.'];
+        }
+
+        if (! $this->envoyerEmail($ticket)) {
             return ['success' => false, 'message' => "Erreur lors de l'envoi de l'email."];
         }
 

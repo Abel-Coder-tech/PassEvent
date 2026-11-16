@@ -11,6 +11,9 @@ Artisan::command('inspire', function () {
 
 Schedule::command('evenements:terminer')->hourly();
 Schedule::command('tickets:purger-en-attente')->everyFifteenMinutes();
+// Filet de sécurité paiements : retrouve les transactions FedaPay approuvées
+// qu'un webhook/callback manquant n'a jamais rattachées à un billet.
+Schedule::command('paiements:rapprocher-fedapay')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('tickets:envoyer-emails')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('tickets:reconcilier')->hourly();
 Schedule::command('tickets:corriger-operateurs')->hourly();
