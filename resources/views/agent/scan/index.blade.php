@@ -630,11 +630,18 @@ function submitScan(code) {
                 if (data.ticket.transaction_id) details += '<div><strong>Transaction :</strong> ' + escapeHtml(data.ticket.transaction_id) + '</div>';
             }
             window.scanModal.success({ title: 'Ticket validé !', message: '', details: details });
-        } else if (data.ticket) {
+        } else if (data.resultat === 'pas_encore_ouvert') {
+            // Billet valide mais trop tôt : avertissement, pas un refus définitif.
             window.ScanSound.failure();
-            let details = '<div><strong>Déjà scanné par :</strong> ' + escapeHtml(data.ticket.nom || '') + '</div>';
-            if (data.ticket.date) details += '<div><strong>Le :</strong> ' + escapeHtml(data.ticket.date) + '</div>';
+            let details = data.ticket ? '<div><strong>Porteur :</strong> ' + escapeHtml(data.ticket.nom || '') + '</div><div><strong>Tarif :</strong> ' + escapeHtml(data.ticket.nom_tarif || '') + '</div>' : '';
+            window.scanModal.warning({ title: 'Pas encore ouvert', message: data.message || '', details: details });
+        } else if (data.resultat === 'deja_utilise') {
+            window.ScanSound.failure();
+            let details = '<div><strong>Porteur :</strong> ' + escapeHtml((data.ticket && data.ticket.nom) || '') + '</div>';
             window.scanModal.warning({ title: 'Ticket déjà scanné', message: data.message || '', details: details });
+        } else if (data.resultat === 'termine') {
+            window.ScanSound.failure();
+            window.scanModal.failure({ title: 'Événement terminé', message: data.message || '', details: '' });
         } else {
             window.ScanSound.failure();
             window.scanModal.failure({ title: 'Ticket invalide', message: data.message || 'Ce ticket n\'est pas valide.', details: '' });

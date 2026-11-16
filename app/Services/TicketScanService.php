@@ -29,7 +29,8 @@ class TicketScanService
             ];
         }
 
-        if ($ticket->evenement_id !== $agent->evenement_id) {
+        // Comparaison en entiers : selon le pilote SQL, l'un des deux peut arriver en texte ("12" !== 12).
+        if ((int) $ticket->evenement_id !== (int) $agent->evenement_id) {
             $this->logScan($agent, $code, 'invalide', 'Événement non autorisé');
 
             return [
@@ -91,14 +92,10 @@ class TicketScanService
 
             if (! $memeSession) {
                 if (now()->lt($jourBillet->date_debut)) {
-                    $raison = 'Billet valable un autre jour';
-                    $message = "Ce billet est valable {$libelle} ({$dateLabel}). Revenez ce jour-là.";
+                    return $this->pasEncoreOuvert($agent, $code, $ticket, $jourBillet->date_debut, $libelle);
+                }
 
-                    if (now()->toDateString() === $jourBillet->date_debut->toDateString()) {
-                        $raison = 'Session pas commencée';
-                        $message = 'La session de ce billet commence à '.$jourBillet->date_debut->format('H:i').'. Revenez à cette heure.';
-                    }
-                } elseif (now()->gt($jourBillet->finFenetreScan())) {
+                if (now()->gt($jourBillet->finFenetreScan())) {
                     $raison = 'Billet valable un autre jour';
                     $message = "Ce billet était valable {$libelle} ({$dateLabel}). Il n'est plus valable.";
                 } else {
@@ -119,6 +116,26 @@ class TicketScanService
         }
 
         if (! $jourScan) {
+            // Billet valide, mais aucune session en cours : l'événement n'a pas commencé ou est terminé.
+            $prochaine = $agent->evenement->dates()->where('date_debut', '>', now())->orderBy('date_debut')->first();
+            if ($prochaine) {
+                return $this->pasEncoreOuvert($agent, $code, $ticket, $prochaine->date_debut);
+            }
+
+            $derniere = $agent->evenement->dates()->orderByDesc('date_debut')->first();
+            if ($derniere && now()->gt($derniere->finFenetreScan())) {
+                $this->logScan($agent, $code, 'invalide', 'Événement terminé', $ticket->id);
+
+                return [
+                    'success' => false,
+                    'resultat' => 'termine',
+                    'raison' => 'Événement terminé',
+                    'message' => 'Cet événement est terminé depuis le '.$this->dateLisible($derniere->date_debut).'. Le billet n\'est plus utilisable.',
+                    'date_fin' => $derniere->finFenetreScan()->toIso8601String(),
+                    'ticket' => $this->contexteBillet($ticket),
+                ];
+            }
+
             $this->logScan($agent, $code, 'invalide', 'Pas de session aujourd\'hui', $ticket->id);
 
             return [
@@ -132,7 +149,7 @@ class TicketScanService
 
         $maintenant = now();
         if ($maintenant->lt($jourScan->date_debut)) {
-            $this->logScan($agent, $code, 'invalide', 'Session pas commencée', $ticket->id);
+            return $this->pasEncoreOuvert($agent, $code, $ticket, $jourScan->date_debut);
 
             return [
                 'success' => false,
@@ -187,6 +204,33 @@ class TicketScanService
                 'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
             ],
         ];
+    }
+
+    // Billet valide mais trop tôt : refus non définitif, l'appli affiche « Revenez le ... ».
+    private function pasEncoreOuvert(Agent $agent, string $code, Ticket $ticket, $debut, ?string $jour = null): array
+    {
+        $this->logScan($agent, $code, 'invalide', 'Événement pas encore commencé', $ticket->id);
+
+        $quand = $debut->isSameDay(now())
+            ? 'aujourd\'hui à '.$debut->format('H\hi')
+            : 'le '.$this->dateLisible($debut);
+
+        return [
+            'success' => false,
+            'resultat' => 'pas_encore_ouvert',
+            'raison' => 'Événement pas encore commencé',
+            'message' => $jour
+                ? "Ce billet est valide pour {$jour}. Revenez {$quand}."
+                : "Ce billet est valide. Revenez {$quand}.",
+            'date_debut' => $debut->toIso8601String(),
+            'ticket' => $this->contexteBillet($ticket),
+        ];
+    }
+
+    // Ex. « 31 décembre 2026 à 18h00 ».
+    private function dateLisible($date): string
+    {
+        return $date->copy()->locale('fr')->isoFormat('D MMMM YYYY [à] HH[h]mm');
     }
 
     // Type de billet (nom du tarif : SIMPLE, STANDARD, VIP, ...) et porteur.
