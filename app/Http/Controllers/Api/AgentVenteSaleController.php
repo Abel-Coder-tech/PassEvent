@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AgentVente;
 use App\Models\CodePromo;
 use App\Models\Ticket;
+use App\Services\AgentVentePanierService;
 use App\Services\AgentVenteSaleService;
 use App\Services\AgentVenteStatisticsService;
 use App\Services\QrCodeService;
@@ -20,6 +21,7 @@ class AgentVenteSaleController extends Controller
 {
     public function __construct(
         private AgentVenteSaleService $sales,
+        private AgentVentePanierService $panier,
         private AgentVenteStatisticsService $statistics
     ) {}
 
@@ -38,6 +40,10 @@ class AgentVenteSaleController extends Controller
             'methode_paiement' => ['nullable', 'string', 'in:cash,mobile_money,especes,mobile'],
             'code_promo' => ['nullable', 'string', 'max:50'],
             'quantite' => ['nullable', 'integer', 'min:1', 'max:20'],
+            // Panier multi-tarifs : tarif_id => quantité. Une ligne à 0 est
+            // simplement ignorée, comme sur la page publique.
+            'lignes' => ['nullable', 'array'],
+            'lignes.*' => ['nullable', 'integer', 'min:0', 'max:20'],
             'idempotency_key' => ['nullable', 'string', 'max:100'],
             'external_id' => ['nullable', 'string', 'max:100'],
         ], [
@@ -47,6 +53,9 @@ class AgentVenteSaleController extends Controller
             'tarif_id.exists' => 'Le tarif sélectionné est invalide.',
             'methode_paiement.in' => 'Méthode de paiement invalide. Choisissez espèces ou mobile money.',
             'quantite.max' => 'Vous ne pouvez pas vendre plus de 20 billets à la fois.',
+            'lignes.array' => 'Le panier est invalide.',
+            'lignes.*.integer' => 'La quantité d\'un billet est invalide.',
+            'lignes.*.max' => 'Pas plus de 20 billets par tarif et par vente.',
         ]);
 
         // La clé d'idempotence peut venir de l'en-tête Idempotency-Key ou du corps.
@@ -55,8 +64,17 @@ class AgentVenteSaleController extends Controller
             ?: ($validated['idempotency_key'] ?? $validated['external_id'] ?? '')
         ));
 
+        // Panier multi-tarifs : dès que le client envoie des lignes, c'est le
+        // service panier qui prend la main. Sans lignes, la vente mono-tarif
+        // historique reste inchangée (anciennes versions de l'application).
+        $lignes = collect($validated['lignes'] ?? [])
+            ->map(fn ($quantite) => (int) $quantite)
+            ->filter(fn ($quantite) => $quantite > 0)
+            ->all();
+        $panier = $lignes !== [];
+
         if ($evenement && ! $evenement->gratuit) {
-            if (empty($validated['tarif_id'])) {
+            if (! $panier && empty($validated['tarif_id'])) {
                 throw ValidationException::withMessages([
                     'tarif_id' => 'Veuillez sélectionner un tarif.',
                 ]);
@@ -69,7 +87,13 @@ class AgentVenteSaleController extends Controller
             }
         }
 
-        $result = $this->sales->create($agent, $validated, $request->ip(), $request->userAgent());
+        if ($panier) {
+            $validated['lignes'] = $lignes;
+        }
+
+        $result = $panier
+            ? $this->panier->create($agent, $validated, $request->ip(), $request->userAgent())
+            : $this->sales->create($agent, $validated, $request->ip(), $request->userAgent());
 
         $montant = (float) $result['montant_total'];
         $immediat = $result['statut'] === 'payé';
@@ -252,32 +276,67 @@ class AgentVenteSaleController extends Controller
         $evenement = $agent->evenement;
 
         $validated = $request->validate([
-            'tarif_id' => ['required', 'integer', 'exists:tarifs,id'],
+            // Mono-tarif (ancien format) ou panier (liste de tarifs choisis).
+            'tarif_id' => ['required_without:tarif_ids', 'nullable', 'integer', 'exists:tarifs,id'],
+            'tarif_ids' => ['required_without:tarif_id', 'nullable', 'array', 'min:1'],
+            'tarif_ids.*' => ['integer'],
             'code' => ['required', 'string', 'max:50'],
+        ], [
+            'tarif_ids.required_without' => 'Sélectionnez au moins un billet.',
         ]);
 
-        $tarif = $evenement?->tarifs()->find($validated['tarif_id']);
+        $tarifIds = collect($validated['tarif_ids'] ?? [])
+            ->push($validated['tarif_id'] ?? null)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-        if (! $tarif) {
+        $tarifs = $evenement?->tarifs()
+            ->whereIn('id', $tarifIds->all())
+            ->get()
+            ->keyBy('id') ?? collect();
+
+        if ($tarifs->isEmpty()) {
             return response()->json([
                 'valide' => false,
                 'message' => 'Le tarif sélectionné est invalide.',
             ], 200);
         }
 
-        try {
-            $codePromo = CodePromo::validerPour($validated['code'], $evenement, $tarif);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'valide' => false,
-                'message' => $e->validator->errors()->first('code_promo'),
-            ], 200);
-        }
+        $codePromo = CodePromo::where('code', strtoupper(trim($validated['code'])))
+            ->whereHas('tarif', fn ($q) => $q->where('evenement_id', $evenement->id))
+            ->first();
 
         if (! $codePromo) {
             return response()->json([
                 'valide' => false,
-                'message' => 'Ce code promo n\'est pas valide.',
+                'message' => 'Ce code promo n\'est pas valide pour cet événement.',
+            ], 200);
+        }
+
+        if (! $codePromo->estValide()) {
+            $message = match (true) {
+                ! $codePromo->actif => 'Ce code promo a été désactivé.',
+                $codePromo->date_expiration && $codePromo->date_expiration < now() => 'Ce code promo a expiré.',
+                $codePromo->max_utilisations && $codePromo->nb_utilisations >= $codePromo->max_utilisations => 'Ce code promo a atteint son nombre maximum d\'utilisations.',
+                default => 'Ce code promo n\'est pas valide.',
+            };
+
+            return response()->json([
+                'valide' => false,
+                'message' => $message,
+            ], 200);
+        }
+
+        // Un code est rattaché à un seul tarif : il ne s'applique que si ce
+        // tarif fait partie du panier.
+        $tarif = $tarifs->get((int) $codePromo->tarif_id);
+
+        if (! $tarif) {
+            return response()->json([
+                'valide' => false,
+                'message' => 'Ce code promo ne s\'applique à aucun des billets choisis.',
             ], 200);
         }
 
@@ -286,6 +345,8 @@ class AgentVenteSaleController extends Controller
         return response()->json([
             'valide' => true,
             'code' => $codePromo->code,
+            'tarif_id' => (int) $tarif->id,
+            'tarif_nom' => $tarif->getLabel(),
             'reduction' => (float) $reduction,
             'montant_unitaire' => max(0, (float) $tarif->prix - $reduction),
         ], 200);
