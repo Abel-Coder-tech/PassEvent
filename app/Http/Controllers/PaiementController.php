@@ -454,15 +454,17 @@ class PaiementController extends Controller
             }
 
             if ($ticket->statut_paiement === 'en_attente') {
-                try {
-                    Mail::to($ticket->email_acheteur)->send(new PaymentErrorAlert(
-                        $ticket->nom_acheteur,
-                        $ticket->evenement->titre,
-                        $transactionId
-                    ));
-                } catch (\Exception $e) {
-                    FacadesLog::error('Email incident paiement non envoye : '.$e->getMessage());
-                }
+                // Envoi après la réponse : un serveur mail lent ne doit pas
+                // bloquer l'acheteur sur « Confirmation de votre paiement… ».
+                $email = $ticket->email_acheteur;
+                $alerte = new PaymentErrorAlert($ticket->nom_acheteur, $ticket->evenement->titre, $transactionId);
+                dispatch(function () use ($email, $alerte) {
+                    try {
+                        Mail::to($email)->send($alerte);
+                    } catch (\Exception $e) {
+                        FacadesLog::error('Email incident paiement non envoye : '.$e->getMessage());
+                    }
+                })->afterResponse();
 
                 // Ne supprime les tickets que si le paiement a DÉFINITIVEMENT échoué.
                 // En cas de statut indéterminé (API injoignable, pending…), on garde les tickets :
