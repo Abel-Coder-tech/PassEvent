@@ -58,6 +58,7 @@ Route::get('/paiement/callback', [PaiementController::class, 'callback'])->name(
 Route::post('/paiement/webhook', [PaiementController::class, 'webhook'])->name('paiement.webhook')->middleware('throttle:120,1');
 
 Route::get('/paiement/{ticket}', [PaiementController::class, 'show'])->name('paiement.show');
+Route::get('/paiement/{ticket}/statut', [PaiementController::class, 'statut'])->name('paiement.statut')->middleware('throttle:60,1');
 Route::get('/paiement/lien/{ticket}', [PaiementController::class, 'accederDepuisLien'])->name('paiement.acces-lien')->middleware('signed');
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
 
