@@ -18,7 +18,7 @@ return new class extends Migration
         // Backfill : les billets déjà existants sont considérés comme déjà notifiés,
         // sinon le rattrapage tickets:envoyer-emails renverrait tout l'historique.
         DB::table('ticket')->whereNull('email_envoye_at')->update([
-            'email_envoye_at' => DB::raw('COALESCE(date_achat, NOW())'),
+            'email_envoye_at' => DB::raw('COALESCE(date_achat, CURRENT_TIMESTAMP)'),
         ]);
     }
 

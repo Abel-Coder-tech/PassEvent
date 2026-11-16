@@ -13,7 +13,12 @@ return new class extends Migration
             $table->string('telephone_paiement')->nullable()->after('telephone_acheteur');
         });
 
-        DB::statement("ALTER TABLE ticket MODIFY COLUMN methode_paiement ENUM('mtn', 'moov', 'celtiis', 'movimoney', 'especes') NULL");
+        // MODIFY COLUMN n'existe qu'en MySQL/MariaDB (SQLite des tests : rien à faire).
+
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+
+            DB::statement("ALTER TABLE ticket MODIFY COLUMN methode_paiement ENUM('mtn', 'moov', 'celtiis', 'movimoney', 'especes') NULL");
+        }
     }
 
     public function down(): void
@@ -22,6 +27,11 @@ return new class extends Migration
             $table->dropColumn('telephone_paiement');
         });
 
-        DB::statement("ALTER TABLE ticket MODIFY COLUMN methode_paiement ENUM('mtn', 'moov', 'celtiis') NULL");
+        // MODIFY COLUMN n'existe qu'en MySQL/MariaDB (SQLite des tests : rien à faire).
+
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+
+            DB::statement("ALTER TABLE ticket MODIFY COLUMN methode_paiement ENUM('mtn', 'moov', 'celtiis') NULL");
+        }
     }
 };
