@@ -233,34 +233,7 @@ class SuperAdminController extends Controller
         $messagesNonLus = Message::where('lu', false)->whereNull('user_id')->count();
         $newsletterCount = Newsletter::where('actif', true)->count();
 
-        // Renvoi de billet : recherche d'un achat réussi par code, email ou n° de paiement.
-        // Seuls les billets délivrables sont proposés (payés, non annulés, non expirés).
-        $rechercheBillet = trim((string) $request->input('billet', ''));
-
-        $billetsRenvoyables = Ticket::with('evenement')
-            ->where('statut_paiement', 'payé')
-            ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
-            ->whereNull('expire_at')
-            ->whereNotNull('email_acheteur')
-            ->where('email_acheteur', '!=', '')
-            ->when($rechercheBillet !== '', function ($q) use ($rechercheBillet) {
-                $motif = '%'.$rechercheBillet.'%';
-
-                $q->where(function ($sub) use ($motif) {
-                    $sub->where('code_unique', 'like', $motif)
-                        ->orWhere('email_acheteur', 'like', $motif)
-                        ->orWhere('nom_acheteur', 'like', $motif)
-                        ->orWhere('transaction_id', 'like', $motif)
-                        ->orWhere('fedapay_transaction_id', 'like', $motif);
-                });
-            })
-            ->orderByDesc('date_achat')
-            ->orderByDesc('id')
-            ->limit(10)
-            ->get();
-
         return view('superadmin.dashboard', compact(
-            'rechercheBillet', 'billetsRenvoyables',
             'totalUsers', 'totalEvenements', 'ticketsVendus',
             'recettesGlobales', 'evenementsActifs', 'scansPeriode',
             'ticketsEvolution', 'recettesEvolution', 'usersEvolution', 'evenementsEvolution',
