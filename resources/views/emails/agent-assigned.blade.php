@@ -42,7 +42,7 @@
                 <ol style="font-size:0.85rem;color:#555;padding-left:1.25rem;">
                     <li>Connectez-vous sur votre espace agent via le lien ci-dessous</li>
                     <li>Sur votre tableau de bord, cliquez sur "Accéder au scan"</li>
-                    <li>Saisissez votre code d'accès à 6 chiffres pour débloquer le scan</li>
+                    <li>Saisissez votre code d'accès à 4 chiffres pour débloquer le scan</li>
                     <li>Scannez les QR codes des tickets des participants</li>
                 </ol>
 

@@ -68,7 +68,7 @@
 
                         <div class="alert alert-info py-2" style="font-size:0.85rem;">
                             <i class="bi bi-info-circle me-1"></i>
-                            Un code d'accès à 6 chiffres sera généré automatiquement. L'agent recevra un email avec ses identifiants et les détails de l'événement.
+                            Un code d'accès à 4 chiffres sera généré automatiquement. L'agent recevra un email avec ses identifiants et les détails de l'événement.
                         </div>
 
                         <button type="submit" class="btn text-white w-100 py-2" style="background: #7c3aed;">

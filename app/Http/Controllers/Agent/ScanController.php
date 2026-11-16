@@ -27,7 +27,7 @@ class ScanController extends Controller
         $agent = Auth::guard('agent')->user();
 
         $request->validate([
-            'code_acces' => 'required|string|size:6',
+            'code_acces' => 'required|digits:4',
         ]);
 
         if ($agent->evenement->scanTermine()) {

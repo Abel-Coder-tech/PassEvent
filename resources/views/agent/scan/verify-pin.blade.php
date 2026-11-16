@@ -13,7 +13,7 @@
                     </div>
                 </div>
                 <h5 class="fw-bold">Code d'accès requis</h5>
-                <p class="text-muted small mb-4">Saisissez le code à 6 chiffres pour débuter le scan pour <strong>{{ Auth::guard('agent')->user()->evenement->titre }}</strong></p>
+                <p class="text-muted small mb-4">Saisissez le code à 4 chiffres pour débuter le scan pour <strong>{{ Auth::guard('agent')->user()->evenement->titre }}</strong></p>
 
                 @if($errors->any())
                     <div class="alert alert-danger py-2" style="font-size:0.85rem;border-radius:10px;">
@@ -26,8 +26,8 @@
                     <div class="mb-3">
                         <input type="text" name="code_acces" class="form-control text-center" 
                                style="font-size:2rem;letter-spacing:8px;font-weight:700;border-radius:10px;"
-                               maxlength="6" inputmode="numeric" pattern="[0-9]*" required autofocus
-                               placeholder="••••••">
+                               maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]*" required autofocus
+                               placeholder="••••">
                     </div>
                     <button type="submit" class="btn btn-violet w-100">
                         <i class="bi bi-unlock me-1"></i>Valider le code
