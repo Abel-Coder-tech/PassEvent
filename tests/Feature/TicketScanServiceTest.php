@@ -158,9 +158,11 @@ class TicketScanServiceTest extends TestCase
         $resultat = app(TicketScanService::class)->verifier($this->agent, 'PAX-DAY-FUTUR');
 
         $this->assertFalse($resultat['success']);
-        $this->assertSame('invalide', $resultat['resultat']);
-        $this->assertSame('Billet valable un autre jour', $resultat['raison']);
+        $this->assertSame('pas_encore_ouvert', $resultat['resultat']);
+        $this->assertSame('Événement pas encore commencé', $resultat['raison']);
         $this->assertStringContainsString('Jour 2', $resultat['message']);
+        $this->assertStringContainsString('Revenez', $resultat['message']);
+        $this->assertArrayHasKey('date_debut', $resultat);
     }
 
     public function test_un_billet_d_un_jour_passe_est_refuse(): void
@@ -223,6 +225,46 @@ class TicketScanServiceTest extends TestCase
         } finally {
             Carbon::setTestNow();
         }
+    }
+
+    public function test_un_evenement_pas_encore_commence_renvoie_pas_encore_ouvert(): void
+    {
+        $evenementId = $this->creerEvenement('Futur');
+        DB::table('evenement_dates')->where('evenement_id', $evenementId)->update(['date_debut' => now()->addDays(10)->setTime(18, 0)]);
+        $agent = $this->creerAgent($evenementId);
+        $this->creerTicket($evenementId, 'PAX-FUTUR', 'VIP');
+
+        $resultat = app(TicketScanService::class)->verifier($agent, 'PAX-FUTUR');
+
+        $this->assertFalse($resultat['success']);
+        $this->assertSame('pas_encore_ouvert', $resultat['resultat']);
+        $this->assertStringContainsString('Ce billet est valide. Revenez le', $resultat['message']);
+        $this->assertStringContainsString('à 18h00', $resultat['message']);
+        $this->assertSame(now()->addDays(10)->setTime(18, 0)->toIso8601String(), $resultat['date_debut']);
+        $this->assertSame('VIP', $resultat['ticket']['nom_tarif']);
+    }
+
+    public function test_un_evenement_termine_renvoie_termine(): void
+    {
+        $evenementId = $this->creerEvenement('Passé');
+        DB::table('evenement_dates')->where('evenement_id', $evenementId)->update(['date_debut' => now()->subDays(5)]);
+        $agent = $this->creerAgent($evenementId);
+        $this->creerTicket($evenementId, 'PAX-PASSE', 'VIP');
+
+        $resultat = app(TicketScanService::class)->verifier($agent, 'PAX-PASSE');
+
+        $this->assertSame('termine', $resultat['resultat']);
+        $this->assertSame('Événement terminé', $resultat['raison']);
+    }
+
+    public function test_un_identifiant_d_evenement_en_texte_ne_bloque_pas_le_billet(): void
+    {
+        $this->creerTicket($this->evenementId, 'PAX-TEXTE', 'VIP');
+        $this->agent->setRawAttributes([...$this->agent->getAttributes(), 'evenement_id' => (string) $this->evenementId]);
+
+        $resultat = app(TicketScanService::class)->verifier($this->agent, 'PAX-TEXTE');
+
+        $this->assertSame('valide', $resultat['resultat']);
     }
 
     private function creerJour(int $evenementId, Carbon $dateDebut, int $ordre): int
