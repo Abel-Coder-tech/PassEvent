@@ -140,7 +140,7 @@ class FedapayService
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer '.$secretKey,
                 'Accept' => 'application/json',
-            ])->get("{$baseUrl}/v1/transactions/{$transactionId}");
+            ])->connectTimeout(5)->timeout(10)->get("{$baseUrl}/v1/transactions/{$transactionId}");
 
             if ($response->successful()) {
                 $data = $response->json();
