@@ -131,7 +131,7 @@
                                         <p>{{ $texte }}</p>
                                         <div class="d-flex flex-wrap gap-2">
                                             <a class="show-btn-payer d-inline-block w-auto px-4 text-decoration-none" href="{{ route('evenements.public.show', $evenement) }}"><i class="bi bi-arrow-repeat me-1"></i> Refaire ma commande</a>
-                                            <a class="pay-btn-lien" href="{{ route('contact') }}?sujet={{ urlencode('Problème de paiement — commande '.$refCommande) }}">J'ai été débité</a>
+                                            <a class="pay-btn-lien" href="{{ route('tickets.recuperer') }}">J'ai été débité</a>
                                         </div>
                                     </div>
                                 </div>
@@ -162,7 +162,7 @@
         </div>
         <div class="pay-modal-actions" id="payModalEchec" hidden>
             <a class="show-btn-payer d-inline-block w-auto px-4 text-decoration-none" href="{{ route('evenements.public.show', $evenement) }}">Refaire ma commande</a>
-            <a class="pay-btn-lien" href="{{ route('contact') }}?sujet={{ urlencode('Problème de paiement — commande '.$refCommande) }}">J'ai été débité</a>
+            <a class="pay-btn-lien" href="{{ route('tickets.recuperer') }}">J'ai été débité</a>
         </div>
     </div>
 </div>
