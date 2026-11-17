@@ -336,6 +336,13 @@ class User extends Authenticatable
             $commissionCash += $evCash * $taux / 100;
         }
 
+        // Commissions des affiliés (co-parrainage) : à la charge de l'organisateur,
+        // donc retirées de son net. Toutes sont dues sauf celles annulées
+        // (en attente, disponibles ou déjà versées à l'affilié).
+        $commissionAffiliation = (float) AffiliateCommission::whereIn('evenement_id', $evenementsIds)
+            ->where('statut', '!=', 'annule')
+            ->sum('montant');
+
         // Tickets physiques (lots) : comptés à part, commission attendue séparée
         $physique = $this->statsPhysiques();
 
@@ -346,6 +353,7 @@ class User extends Authenticatable
             'commissionTotale' => round($commissionTotale, 2),
             'commissionMobile' => round($commissionMobile, 2),
             'commissionCash' => round($commissionCash, 2),
+            'commissionAffiliation' => round($commissionAffiliation, 2),
             'physiqueRecettes' => $physique['valeur'],
             'commissionPhysique' => $physique['commissionAttendue'],
             'physiqueQuantite' => $physique['quantite'],

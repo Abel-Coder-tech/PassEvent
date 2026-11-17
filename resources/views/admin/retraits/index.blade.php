@@ -24,7 +24,12 @@
                 <div class="metric-icon" style="background: rgba(152,145,155,0.1);"><i class="bi bi-percent" style="color: var(--gris);"></i></div>
                 <div class="metric-label">Commission ({{ $commissionPct }}%)</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ number_format($commissionTotale, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">Sur tous les tickets</div>
+                <div class="metric-subtitle">
+                    Sur tous les tickets
+                    @if($commissionAffiliation > 0)
+                        <br>+ {{ number_format($commissionAffiliation, 0, ',', ' ') }} F affiliés
+                    @endif
+                </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
@@ -33,7 +38,7 @@
                 <div class="metric-label">Solde disponible</div>
                 <div class="metric-value" style="font-size:1.3rem; color: var(--vert);">{{ number_format($soldeDisponible, 0, ',', ' ') }} F</div>
                 <div class="metric-subtitle">
-                    Net ({{ number_format(max(0, $mobileRecettes - $commissionTotale), 0, ',', ' ') }})
+                    Net ({{ number_format(max(0, $mobileRecettes - $commissionTotale - $commissionAffiliation), 0, ',', ' ') }})
                     - Retiré ({{ number_format($totalRetraits, 0, ',', ' ') }})
                 </div>
             </div>
