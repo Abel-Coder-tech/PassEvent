@@ -54,14 +54,17 @@ class DashboardController extends Controller
 
         // Calcul de la commission et des recettes nettes
         $commissionPct = $user->commissionPourcentage();
-        $commission = $user->statsFinancieres()['commissionTotale'];
-        $recettesNettes = $recettesTotales - $commission;
+        $statsFinancieres = $user->statsFinancieres();
+        $commission = $statsFinancieres['commissionTotale'];
+        // Commissions des affiliés : à la charge de l'organisateur
+        $commissionAffiliation = $statsFinancieres['commissionAffiliation'];
+        $recettesNettes = $recettesTotales - $commission - $commissionAffiliation;
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
 
-        $retirable = max(0, $mobileRecettes - $commission - $totalRetraits); // Seuls les paiements mobiles sont retirable
+        $retirable = max(0, $mobileRecettes - $commission - $commissionAffiliation - $totalRetraits); // Seuls les paiements mobiles sont retirable
 
         // Taux de scan (tickets utilisés / tickets vendus)
         $ticketsScannes = $ticketStats['tickets_scannes'];

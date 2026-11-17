@@ -52,7 +52,10 @@ class RetraitController extends Controller
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
 
-        $soldeDisponible = max(0, $mobileRecettes - $commissionImputee - $totalRetraits);
+        // Commissions des affiliés : dues par l'organisateur, prélevées comme la commission PaxEvent
+        $commissionAffiliation = $stats['commissionAffiliation'];
+
+        $soldeDisponible = max(0, $mobileRecettes - $commissionImputee - $commissionAffiliation - $totalRetraits);
 
         return [
             'totalTickets' => $totalTickets,
@@ -60,6 +63,7 @@ class RetraitController extends Controller
             'cashRecettes' => $cashRecettes,
             'commissionTotale' => $commissionTotale,
             'commissionImputee' => $commissionImputee,
+            'commissionAffiliation' => $commissionAffiliation,
             'totalRetraits' => $totalRetraits,
             'soldeDisponible' => $soldeDisponible,
         ];

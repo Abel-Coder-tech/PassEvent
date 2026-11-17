@@ -2279,14 +2279,15 @@ class SuperAdminController extends Controller
         $commissionPct = $user->commissionPourcentage();
         $statsFinancieres = $user->statsFinancieres();
         $commission = $statsFinancieres['commissionTotale'];
-        $recettesNettes = $totalRecettes - $commission;
+        $commissionAffiliation = $statsFinancieres['commissionAffiliation'];
+        $recettesNettes = $totalRecettes - $commission - $commissionAffiliation;
         $physiqueRecettes = $statsFinancieres['physiqueRecettes'];
         $physiqueQuantite = $statsFinancieres['physiqueQuantite'];
         $commissionPhysiqueTotale = $statsFinancieres['commissionPhysiqueTotale'];
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
-        $retirable = max(0, $mobileRecettes - $commission - $totalRetraits);
+        $retirable = max(0, $mobileRecettes - $commission - $commissionAffiliation - $totalRetraits);
 
         $historique = $this->historiqueAjustements('organisateur', $user->id);
 
