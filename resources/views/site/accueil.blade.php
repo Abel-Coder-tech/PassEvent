@@ -945,12 +945,12 @@
 .app-visuel.visible .app-cercle { transform: none; opacity: 1; }
 /* Entrée (après le cercle) puis croisement en boucle */
 .app-visuel.visible .app-tel-avant {
-    animation: app-entree-avant 1.2s .9s cubic-bezier(.2,.8,.2,1) both,
-               app-croise-avant 5s 2.1s ease-in-out infinite;
+    animation: app-entree-avant 2s .9s cubic-bezier(.2,.8,.2,1) both,
+               app-croise-avant 5s 2.9s ease-in-out infinite;
 }
 .app-visuel.visible .app-tel-arriere {
-    animation: app-entree-arriere 1.2s .9s cubic-bezier(.2,.8,.2,1) both,
-               app-croise-arriere 5s 2.1s ease-in-out infinite;
+    animation: app-entree-arriere 2s .9s cubic-bezier(.2,.8,.2,1) both,
+               app-croise-arriere 5s 2.9s ease-in-out infinite;
 }
 @keyframes app-entree-avant {
     from { opacity: 0; transform: translateY(-55%); }
