@@ -22,7 +22,6 @@
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
                 <h1 class="ev-hero-title">Retrouvez vos évènements préférés</h1>
-                <p class="ev-hero-sub ev-hero-genres">Festivals &mdash; Concerts &mdash; Galas &mdash; Conférences</p>
                 <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search" id="evSearchForm">
                     <div class="ev-search-wrap">
                         <i class="bi bi-search"></i>
@@ -61,28 +60,6 @@
                             <a href="{{ route('evenements.public', array_filter(['categorie' => $cat, 'q' => $q])) }}" class="ev-cat-pill {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ $cat }}</a>
                         @endforeach
                     </nav>
-                    <script>
-                        // Défilement automatique des catégories (pause au survol / toucher)
-                        (function () {
-                            const nav = document.querySelector('.ev-cats-defile');
-                            if (!nav || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-                            // Sur ordinateur, pas de défilement : les catégories sont centrées sur plusieurs lignes si besoin
-                            if (window.matchMedia('(min-width: 768px)').matches) return;
-                            let pause = false, sens = 1, pos = nav.scrollLeft;
-                            ['mouseenter', 'touchstart', 'focusin'].forEach(e => nav.addEventListener(e, () => pause = true, { passive: true }));
-                            ['mouseleave', 'touchend', 'focusout'].forEach(e => nav.addEventListener(e, () => { pause = false; pos = nav.scrollLeft; }, { passive: true }));
-                            (function tick() {
-                                const max = nav.scrollWidth - nav.clientWidth;
-                                if (!pause && max > 0) {
-                                    pos += 0.5 * sens;
-                                    if (pos >= max) { pos = max; sens = -1; }
-                                    if (pos <= 0) { pos = 0; sens = 1; }
-                                    nav.scrollLeft = pos;
-                                }
-                                requestAnimationFrame(tick);
-                            })();
-                        })();
-                    </script>
                 @endif
                 <div class="ev-hero-stats">
                     <span><strong>{{ $evenements->total() }}</strong> événement{{ $evenements->total() > 1 ? 's' : '' }}</span>
@@ -502,7 +479,7 @@
 .ev-hero-bg { overflow: hidden; }
 .ev-hero .ev-search-wrap { max-width: 560px; flex-basis: 100%; }
 .ev-hero .ev-hero-search { margin-bottom: .9rem; }
-/* Barre de recherche à bordure jaune, avec bouton Rechercher violet intégré à droite */
+/* Barre de recherche à bordure jaune, avec bouton Rechercher jaune intégré à droite */
 .ev-hero .ev-search-input {
     border-color: var(--accent, #FED514);
     padding-right: 7.2rem;
@@ -523,14 +500,14 @@
     font-weight: 700;
     border: 0;
     border-radius: 9px;
-    background: #542680;
-    color: #fff;
+    background: var(--accent, #FED514);
+    color: #211C31;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: filter .2s;
 }
-.ev-search-go:hover { filter: brightness(1.15); }
+.ev-search-go:hover { filter: brightness(0.95); }
 @media (max-width: 575.98px) {
     .ev-hero .ev-search-wrap { max-width: 82%; margin: 0 auto; }
     .ev-hero .ev-search-input { padding: .4rem 4.8rem .4rem 2rem; font-size: .78rem; border-radius: 9px; }
@@ -539,7 +516,6 @@
 }
 .ev-search-wrap .ev-search-go .bi-search { position: static; transform: none; color: inherit; }
 .ev-search-go:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.ev-hero-genres { color: var(--accent); white-space: nowrap; font-size: clamp(.7rem, 2.8vw, 1rem); margin-bottom: 1.5rem; }
 .ev-cats-defile {
     display: flex; gap: .5rem; overflow-x: auto; 
     -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: .25rem 0 .5rem; margin-bottom: 1rem;

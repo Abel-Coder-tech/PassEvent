@@ -819,6 +819,12 @@
                 <span class="app-chip"><i class="bi bi-phone me-1"></i> Nouveau</span>
                 <h2 class="app-titre"><span class="app-titre-pax">Pax</span><span class="app-titre-agent"><span class="app-titre-a">A</span>gent</span></h2>
                 <p class="app-sous-titre" id="appSousTitre">L'application mobile dédiée à vos agents de vente et de scan sur le terrain.</p>
+                <div class="app-acces">
+                    <a href="{{ route('dashboard') }}" class="app-acces-btn">
+                        <i class="bi bi-grid-1x2-fill me-2"></i>Disponible dans votre tableau de bord
+                    </a>
+                    <span class="app-acces-note"><i class="bi bi-info-circle me-1"></i>Réservé aux organisateurs : connectez-vous pour l'obtenir.</span>
+                </div>
             </div>
             <div class="app-visuel app-reveal">
                 <div class="app-scene" role="img" aria-label="Deux écrans de l'application mobile PaxAgent">
@@ -910,6 +916,15 @@
     color: #6b6474;
     transition: opacity .25s ease, transform .25s ease;
 }
+.app-acces { margin-top: 1.75rem; display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; }
+.app-acces-btn {
+    display: inline-flex; align-items: center; padding: .8rem 1.4rem; border-radius: 12px;
+    background: #542680; color: #fff; font-weight: 600; text-decoration: none;
+    box-shadow: 0 10px 24px rgba(84,38,128,0.25); transition: transform .2s, box-shadow .2s;
+}
+.app-acces-btn:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 14px 28px rgba(84,38,128,0.3); }
+.app-acces-note { font-size: .85rem; color: #8a8494; }
+.app-texte.visible .app-acces { animation: app-monte 0.6s 0.55s both; }
 .app-sous-titre.change { opacity: 0; transform: translateY(6px); }
 .section-app { overflow: hidden; }
 .app-visuel { position: relative; }
@@ -995,6 +1010,7 @@
 @media (max-width: 767.98px) {
     .app-band { grid-template-columns: 1fr; text-align: center; }
     .app-sous-titre { margin: 0 auto; }
+    .app-acces { align-items: center; }
     .app-titre { font-size: 3.6rem; }
     .app-sous-titre { font-size: 1.25rem; min-height: 4.5em; }
     .app-scene { max-width: 340px; }
