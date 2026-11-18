@@ -357,9 +357,6 @@
                 <div class="show-card show-card-left">
                     <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
                     <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="show-share-btn" onclick="shareEvent()" title="Partager">
-                            <i class="bi bi-share-fill"></i>
-                        </button>
                         <button type="button" class="show-share-btn" onclick="copyLink()" title="Copier le lien">
                             <i class="bi bi-link-45deg"></i>
                         </button>

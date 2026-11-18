@@ -61,7 +61,7 @@
     </table>
     <table class="type-footer" cellpadding="0" cellspacing="0">
         <tr>
-            <td class="tf-left">TICKETS {{ mb_strtoupper($lot->tarif?->nom ?? 'PASS') }} — {{ $lot->evenement?->titre }}</td>
+            <td class="tf-left">TICKETS {{ mb_strtoupper($lot->tarif?->nom ?? 'PASS') }} — {{ $lot->titreEvenement() }}</td>
             <td class="tf-right">© {{ date('Y') }} PaxEvent . Billetterie en ligne 100% Bénin</td>
         </tr>
     </table>

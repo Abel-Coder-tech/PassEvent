@@ -33,6 +33,7 @@ use App\Http\Controllers\StatistiqueController;
 use App\Http\Controllers\SuperAdmin\AffiliationController as SuperAdminAffiliationController;
 use App\Http\Controllers\SuperAdmin\ParametresController as SuperAdminParametresController;
 use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
+use App\Http\Controllers\SuperAdmin\QrExterneController;
 use App\Http\Controllers\SuperAdminAuthController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\TarifController;
@@ -170,6 +171,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/acheteurs', [SuperAdminController::class, 'acheteurs'])->name('acheteurs');
         Route::get('/acheteurs/export', [SuperAdminController::class, 'acheteursExport'])->name('acheteurs.export');
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
+        // QR codes pour des événements hors plateforme (template commun aux lots physiques)
+        Route::get('/qr-externes', [QrExterneController::class, 'index'])->name('qr-externes');
+        Route::post('/qr-externes', [QrExterneController::class, 'store'])->name('qr-externes.store');
+        Route::get('/qr-externes/{lot}/qr-pdf', [QrExterneController::class, 'telechargerQr'])->name('qr-externes.qr-pdf');
+        Route::delete('/qr-externes/{lot}', [QrExterneController::class, 'destroy'])->name('qr-externes.supprimer');
         Route::get('/tickets-physiques', [SuperAdminLotPhysiqueController::class, 'index'])->name('tickets-physiques');
         Route::get('/tickets-physiques/creer', [SuperAdminLotPhysiqueController::class, 'create'])->name('tickets-physiques.creer');
         Route::get('/tickets-physiques/planches', [SuperAdminLotPhysiqueController::class, 'telechargerPlanches'])->name('tickets-physiques.planches');

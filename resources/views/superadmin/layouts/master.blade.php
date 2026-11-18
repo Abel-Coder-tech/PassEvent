@@ -584,6 +584,9 @@
             <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.tickets-physiques*') ? 'active' : '' }}">
                 <i class="bi bi-ticket-perforated-fill"></i> Tickets physiques
             </a>
+            <a href="{{ route('superadmin.qr-externes') }}" class="sa-nav-link {{ request()->routeIs('superadmin.qr-externes*') ? 'active' : '' }}">
+                <i class="bi bi-qr-code"></i> QR hors plateforme
+            </a>
             <a href="{{ route('superadmin.moderation') }}" class="sa-nav-link {{ request()->routeIs('superadmin.moderation') ? 'active' : '' }}">
                 <i class="bi bi-shield-exclamation"></i> Moderation
             </a>

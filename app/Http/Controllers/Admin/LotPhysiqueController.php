@@ -264,7 +264,10 @@ class LotPhysiqueController extends Controller
 
         $lot->increment('download_count');
 
-        return $pdf->download('Planche-'.$lot->nom.'-'.$lot->evenement?->titre.'.pdf');
+        // « / » et « \\ » sont interdits dans un nom de fichier téléchargé
+        $nomFichier = str_replace(['/', '\\'], '-', 'Planche-'.$lot->nom.'-'.$lot->evenement?->titre);
+
+        return $pdf->download($nomFichier.'.pdf');
     }
 
     // Supprime un lot de tickets physiques et ses tickets (jamais si des tickets ont été scannés)
