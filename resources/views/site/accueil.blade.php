@@ -928,7 +928,7 @@
 .app-acces-br { display: none; }
 @media (max-width: 575.98px) {
     .app-acces-br { display: inline; }
-    .app-acces-texte { text-align: left; line-height: 1.3; }
+    .app-acces-texte { text-align: center; line-height: 1.3; }
 }
 .app-acces-btn:hover .bi { transform: translateX(4px); }
 .app-texte.visible .app-acces { animation: app-monte 0.6s 0.55s both; }
