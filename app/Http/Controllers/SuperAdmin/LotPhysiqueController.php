@@ -32,6 +32,7 @@ class LotPhysiqueController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $lots = LotPhysique::with('evenement', 'user', 'tarif')
+            ->where('externe', false)
             ->withCount(['tickets as nb_tickets'])
             ->withCount(['tickets as nb_annules' => fn ($q2) => $q2->where('annule', true)])
             ->withCount(['tickets as nb_scannes' => fn ($q2) => $q2->where('utilise', true)])
@@ -282,7 +283,7 @@ class LotPhysiqueController extends Controller
     // Télécharge la planche PDF d'un lot (côté super admin, sans limite)
     public function telechargerPlanche(LotPhysique $lot)
     {
-        $tickets = $lot->tickets()->where('annule', false)->orderBy('code_unique')->get();
+        $tickets = $lot->ticketsImprimables();
 
         if ($tickets->isEmpty()) {
             return back()->with('error', 'Aucun ticket valide à imprimer dans ce lot.');
@@ -295,13 +296,14 @@ class LotPhysiqueController extends Controller
             $pdf = LotPhysiquePdfService::generer($lot, $tickets);
         }
 
-        return $pdf->download('Planche-'.$lot->nom.'.pdf');
+        return $pdf->download('Planche-'.str_replace(['/', '\\'], '-', $lot->nom).'.pdf');
     }
 
     // Télécharge un PDF unique regroupant toutes les planches (côté super admin)
     public function telechargerPlanches()
     {
         $lots = LotPhysique::with('evenement', 'tarif')
+            ->where('externe', false)
             ->whereHas('tickets', fn ($q) => $q->where('annule', false))
             ->orderByDesc('created_at')
             ->get();
@@ -318,6 +320,10 @@ class LotPhysiqueController extends Controller
     // Détail d'un lot : tickets avec codes et QR
     public function show(LotPhysique $lot)
     {
+        if ($lot->externe) {
+            return redirect()->route('superadmin.tickets-physiques.template', $lot);
+        }
+
         $lot->load('evenement', 'user', 'tarif');
 
         $tickets = $lot->tickets()->orderBy('code_unique')->get();
@@ -519,7 +525,7 @@ class LotPhysiqueController extends Controller
 
     public function showTemplate(LotPhysique $lot)
     {
-        $tickets = $lot->tickets()->where('annule', false)->count();
+        $tickets = $lot->externe ? $lot->codesExternes()->count() : $lot->tickets()->where('annule', false)->count();
         $format = $lot->formatDetails();
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
         $qrX = $lot->qr_x ?? round(($format['largeur'] - $qrSize) / 2);
@@ -643,7 +649,7 @@ class LotPhysiqueController extends Controller
 
     public function previewTemplate(LotPhysique $lot)
     {
-        $ticket = $lot->tickets()->where('annule', false)->first();
+        $ticket = $lot->ticketsImprimables()->first();
 
         // Sans ticket valide, on compose l'aperçu sur un code d'exemple
         if (! $ticket) {

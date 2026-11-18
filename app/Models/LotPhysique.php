@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class LotPhysique extends Model
 {
@@ -44,6 +45,8 @@ class LotPhysique extends Model
         'quantite',
         'statut',
         'auto_genere',
+        'externe',
+        'nom_evenement',
         'montant_commission',
         'email_reception',
         'fedapay_transaction_id',
@@ -121,6 +124,7 @@ class LotPhysique extends Model
             'download_count' => 'integer',
             'commission_pourcentage' => 'decimal:2',
             'auto_genere' => 'boolean',
+            'externe' => 'boolean',
             'montant_commission' => 'decimal:2',
             'transmis_at' => 'datetime',
             'qr_x' => 'integer',
@@ -215,6 +219,34 @@ class LotPhysique extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'lot_physique_id');
+    }
+
+    // Codes d'un lot externe (événement hors plateforme)
+    public function codesExternes(): HasMany
+    {
+        return $this->hasMany(CodeQrExterne::class, 'lot_physique_id');
+    }
+
+    // Titre de l'événement affiché (plateforme ou saisi librement)
+    public function titreEvenement(): ?string
+    {
+        return $this->evenement?->titre ?? $this->nom_evenement;
+    }
+
+    // Tickets à imprimer : vrais tickets, ou codes externes présentés comme des tickets
+    // non enregistrés (les services PDF ne lisent que id et code_unique).
+    public function ticketsImprimables(): Collection
+    {
+        if (! $this->externe) {
+            return $this->tickets()->where('annule', false)->orderBy('code_unique')->get();
+        }
+
+        return $this->codesExternes()->orderBy('id')->get()->map(function (CodeQrExterne $c) {
+            $t = new Ticket;
+            $t->forceFill(['id' => $c->id, 'code_unique' => $c->code]);
+
+            return $t;
+        });
     }
 
     public function ticketsAnnules(): HasMany

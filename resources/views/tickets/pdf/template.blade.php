@@ -126,7 +126,7 @@
             $ev = $lot->evenement;
             $tarif = $lot->tarif;
             $legendParts = array_values(array_filter([
-                $ev?->titre,
+                $lot->titreEvenement(),
                 $ev?->date_event ? \Carbon\Carbon::parse($ev->date_event)->format('d/m/Y') : null,
                 $tarif?->nom,
                 $tarif && $tarif->prix !== null ? number_format((float) $tarif->prix, 0, ',', ' ').' FCFA' : null,
