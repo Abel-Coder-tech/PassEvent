@@ -16,6 +16,7 @@ Schedule::command('tickets:purger-en-attente')->everyFifteenMinutes();
 Schedule::command('paiements:rapprocher-fedapay')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('tickets:envoyer-emails')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('tickets:reconcilier')->hourly();
+Schedule::command('billetterie:notifier-ouverture')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('tickets:corriger-operateurs')->hourly();
 Schedule::command('affiliations:liberer-commissions')->hourly();
 Schedule::command('sanctum:prune-expired --hours=24')->daily();

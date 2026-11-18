@@ -383,6 +383,36 @@ class EvenementPublicController extends Controller
 
     // Liste d'attente d'un tarif complet (fenêtre de la page publique) : une
     // demande par email et par tarif, l'organisateur est prévenu à chaque fois.
+    // « Me prévenir » : enregistre l'email d'un visiteur pour l'avertir de
+    // l'ouverture de la billetterie (envoi par billetterie:notifier-ouverture).
+    public function alerterOuverture(Request $request, Evenement $evenement)
+    {
+        abort_if($evenement->statut !== 'publié', 404);
+
+        $validated = $request->validate([
+            'email' => 'required|email|max:255',
+        ], [
+            'email.required' => 'Indiquez votre email.',
+            'email.email' => 'Le format de l\'email est invalide.',
+        ]);
+
+        if ($evenement->billetteriePasOuverte()) {
+            \App\Models\BilletterieAlerte::firstOrCreate([
+                'evenement_id' => $evenement->id,
+                'email' => strtolower(trim($validated['email'])),
+            ]);
+            $message = 'C\'est noté ! Vous recevrez un email dès l\'ouverture de la billetterie.';
+        } else {
+            $message = 'La billetterie est déjà ouverte : vous pouvez réserver dès maintenant.';
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message]);
+        }
+
+        return back()->with('success', $message);
+    }
+
     public function inscrireListeAttente(Request $request, Evenement $evenement)
     {
         abort_if($evenement->statut !== 'publié', 404);

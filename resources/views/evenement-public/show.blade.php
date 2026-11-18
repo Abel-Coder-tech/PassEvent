@@ -159,34 +159,26 @@
                                 <div class="show-lock-icon" style="color:#8a8493;"><i class="bi bi-clock"></i></div>
                                 <h5 style="color:#6b6474; font-weight:700; margin-bottom:0.25rem;">Billetterie bientôt ouverte</h5>
                                 <p class="show-card-text mb-0">
+                                    {{ $textes['type'] === 'spectacle' ? 'Les billets ne sont pas encore en vente.' : 'Les inscriptions ne sont pas encore ouvertes.' }}
                                     @if($evenement->billetterie_ouvre_le)
-                                        Ouverture le {{ $evenement->billetterie_ouvre_le->isoFormat('D MMMM YYYY [à] HH[h]mm') }}. Revenez à cette date pour réserver.
+                                        Revenez le {{ $evenement->billetterie_ouvre_le->format('d/m/Y') }}.
                                     @else
-                                        {{ $textes['type'] === 'spectacle' ? 'Les billets ne sont pas encore en vente.' : 'Les inscriptions ne sont pas encore ouvertes.' }} Revenez bientôt.
+                                        Revenez bientôt.
                                     @endif
                                 </p>
                             </div>
-                            @if(! $evenement->gratuit && $lignesAchat->isNotEmpty())
-                                <hr class="my-3">
-                                <label class="show-label">Tarifs prévus</label>
-                                @foreach($lignesJours->merge($lignesPacks)->merge($lignesComplets) as $ligne)
-                                    <div class="achat-ligne" style="opacity:.6; grid-template-columns:1fr;">
-                                        <div class="achat-info">
-                                            <div class="achat-l1"><span class="achat-nom">{{ $ligne['nom'] }}</span> <span class="achat-sep">·</span> <span class="achat-montant" style="color:#6b6474;">{{ $ligne['prixLabel'] }}</span></div>
-                                            @if($ligne['duree'] || $ligne['economie'])
-                                                <div class="achat-l2">
-                                                    @if($ligne['duree'])<span class="achat-duree">{{ $ligne['duree'] }}</span>@endif
-                                                    @if($ligne['duree'] && $ligne['economie'])<span class="achat-sep">·</span>@endif
-                                                    @if($ligne['economie'])<span class="achat-eco" style="margin:0 .2rem 0 0;">Économisez {{ number_format($ligne['economie'], 0, ',', ' ') }} F</span>@endif
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @endif
-                            <button type="button" class="show-btn" disabled style="background:#e6e3eb; color:#6b6474; cursor:not-allowed; margin-top:.75rem;">
-                                <i class="bi bi-clock me-2"></i> Billetterie bientôt ouverte
-                            </button>
+                            {{-- Me prévenir : un email suffit, envoi automatique à l'ouverture --}}
+                            <div class="alerte-ouverture" id="alerteOuverture">
+                                <button type="button" class="show-btn show-btn-primary" id="btnMePrevenir">
+                                    <i class="bi bi-bell me-2"></i> Me prévenir à l'ouverture
+                                </button>
+                                <form class="alerte-form" id="formMePrevenir" action="{{ route('evenements.me-prevenir', $evenement) }}" method="POST" hidden>
+                                    @csrf
+                                    <input type="email" name="email" class="show-input" placeholder="votre@email.com" required autocomplete="email" aria-label="Votre email">
+                                    <button type="submit" class="show-btn show-btn-primary">Valider</button>
+                                </form>
+                                <p class="alerte-retour" id="retourMePrevenir" role="status" hidden></p>
+                            </div>
                         </div>
                     @else
                     <div class="show-card">
@@ -324,11 +316,12 @@
                 </div>
             </div>
 
-            <!-- Colonne droite : Co-parrainage + Programme + Partager + Question + Lieu + Autres événements -->
+            <!-- Colonne droite : Co-parrainage + Programme + Partager + Lieu + Question + Autres événements -->
             <div class="col-lg-4 show-event-sidebar">
 
                 @if($evenement->co_parrainage_actif && !$evenement->gratuit)
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.9rem;background:linear-gradient(90deg,rgba(254,213,20,0.12),rgba(84,38,128,0.08));border:1px solid rgba(254,213,20,0.5);border-radius:12px;padding:0.55rem 0.7rem;">
+                    {{-- Ordinateur uniquement : sur téléphone, le bloc est déjà affiché sous l'en-tête --}}
+                    <div class="d-none d-lg-flex" style="align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.9rem;background:linear-gradient(90deg,rgba(254,213,20,0.12),rgba(84,38,128,0.08));border:1px solid rgba(254,213,20,0.5);border-radius:12px;padding:0.55rem 0.7rem;">
                         <div style="display:flex;align-items:center;gap:0.5rem;min-width:0;">
                             <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#542680,#9972B0);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;"><i class="bi bi-share-fill"></i></div>
                             <div style="min-width:0;">
@@ -342,7 +335,7 @@
                     </div>
                 @endif
 
-                @if($evenement->dates->count() > 1)
+                @if($evenement->dates->count() > 1 && ! ($billetteriePasOuverte ?? false))
                     <!-- Programme -->
                     <div class="show-card show-card-left">
                         <h5 class="show-card-title"><i class="bi bi-calendar3"></i> Programme</h5>
@@ -363,7 +356,7 @@
                 <!-- Partager -->
                 <div class="show-card show-card-left">
                     <h5 class="show-card-title"><i class="bi bi-share"></i> Partager</h5>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="show-share-btn" onclick="shareEvent()" title="Partager">
                             <i class="bi bi-share-fill"></i>
                         </button>
@@ -376,22 +369,35 @@
                         <a href="https://wa.me/?text={{ urlencode($evenement->titre . ' - ' . url()->current()) }}" target="_blank" class="show-share-btn" title="Partager sur WhatsApp">
                             <i class="bi bi-whatsapp"></i>
                         </a>
+                        {{-- Instagram n'a pas de lien de partage web :
+                             on copie le lien de l'événement puis on ouvre l'application --}}
+                        <button type="button" class="show-share-btn" onclick="partagerVia('https://www.instagram.com/', 'Instagram', 'votre story ou votre bio')" title="Partager sur Instagram">
+                            <i class="bi bi-instagram"></i>
+                        </button>
                     </div>
-                </div>
-
-                <!-- Contacter -->
-                <div class="show-card show-card-left">
-                    <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
-                    <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
-                    <button type="button" class="show-btn show-btn-primary" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
-                        <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
-                    </button>
+                    @php $lienEvenement = route('evenements.public.show', $evenement); @endphp
+                    <div class="show-qr">
+                        {{-- Correction d'erreur « H » : le logo au centre ne gêne pas la lecture, comme sur les billets --}}
+                        <div class="show-qr-cadre">
+                            <img id="qrEvenement" src="{{ \App\Services\QrCodeService::generateDataUri($lienEvenement, 300, 'H') }}" alt="QR code vers la page de l'événement {{ $evenement->titre }}" width="96" height="96">
+                            <img id="qrLogo" class="show-qr-logo" src="{{ asset('images/paxevent_icone1.png') }}" alt="">
+                        </div>
+                        <div>
+                            <p>Partager votre QR code</p>
+                            <button type="button" class="show-btn" id="btnTelechargerQr" style="width:auto;padding:.4rem .8rem;font-size:.8rem;" data-nom="qr-{{ $evenement->slug ?? $evenement->id }}.png">
+                                <i class="bi bi-download me-1"></i> Télécharger
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Lieu -->
                 <div class="show-card show-card-left">
                     <h5 class="show-card-title"><i class="bi bi-pin-map"></i> Lieu</h5>
                     <div class="show-map">
+                        <a class="show-map-ouvrir" href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($evenement->lieu) }}" target="_blank" rel="noopener" aria-label="Ouvrir l'itinéraire vers {{ $evenement->lieu }} dans Google Maps">
+                            <span><i class="bi bi-cursor-fill me-1"></i> Suivre l'itinéraire</span>
+                        </a>
                         <iframe id="carteLieu" src="https://www.google.com/maps?q={{ urlencode($evenement->lieu) }}&output=embed" width="100%" height="220" style="border:0;" allowfullscreen="" loading="lazy" title="Carte : {{ $evenement->lieu }}"></iframe>
                     </div>
                     <p class="show-card-text mt-2 mb-2" style="font-size:0.85rem;" id="lieuTexte">{{ $evenement->lieu }}</p>
@@ -404,6 +410,15 @@
                         </a>
                         <button type="button" class="show-btn" id="btnMasquerItineraire" style="width:auto;">Masquer</button>
                     </div>
+                </div>
+
+                <!-- Contacter -->
+                <div class="show-card show-card-left">
+                    <h5 class="show-card-title"><i class="bi bi-envelope"></i> Une question ?</h5>
+                    <p class="show-card-text" style="margin-bottom:1rem;">Vous avez une question spécifique sur cet événement ? Contactez directement l'organisateur.</p>
+                    <button type="button" class="show-btn show-btn-primary" data-bs-toggle="modal" data-bs-target="#contactOrganisateurModal">
+                        <i class="bi bi-envelope me-2"></i> Contacter l'organisateur
+                    </button>
                 </div>
 
                 <!-- Autres événements -->
@@ -679,10 +694,67 @@
 
 /* ===== MAP ===== */
 .show-map {
+    position: relative;
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid #ede5f0;
 }
+/* Toute la carte est cliquable : ouvre la navigation Google Maps, qui suit la position */
+.show-map-ouvrir {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: .6rem;
+    text-decoration: none;
+}
+.show-map-ouvrir span {
+    background: #542680;
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: .4rem .7rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(33,28,49,.25);
+}
+.show-qr {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0ebf3;
+}
+.show-qr-cadre { position: relative; flex-shrink: 0; }
+.alerte-ouverture { margin-top: 1rem; }
+.alerte-form { display: flex; gap: .5rem; }
+.alerte-form .show-input { flex: 1; min-width: 0; }
+.alerte-form .show-btn { width: auto; white-space: nowrap; }
+.alerte-retour { margin: .6rem 0 0; font-size: .85rem; text-align: center; color: #1e7a46; }
+.alerte-retour.erreur { color: #c0392b; }
+.show-qr-logo {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 24px !important; height: 24px !important;
+    transform: translate(-50%, -50%);
+    padding: 3px !important;
+    border-radius: 50% !important;
+    border: 0 !important;
+    background: #fff;
+    object-fit: contain;
+}
+.show-qr #qrEvenement {
+    display: block;
+    width: 96px;
+    height: 96px;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #ede5f0;
+    border-radius: 10px;
+}
+.show-qr p { font-size: .8rem; color: #6b6474; margin: 0 0 .5rem; }
 
 /* ===== SHARE ===== */
 .show-share-btn {
@@ -1002,6 +1074,18 @@ function copyLink() {
     });
 }
 
+// Copie le lien de l'événement puis ouvre le réseau : le visiteur n'a plus qu'à coller.
+function partagerVia(url, reseau, ou) {
+    const ouvrir = () => window.open(url, '_blank', 'noopener');
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('Lien copié ! Collez-le dans ' + ou + ' sur ' + reseau + '.', 'success');
+        setTimeout(ouvrir, 900);
+    }).catch(() => {
+        showToast('Copiez le lien de la page, puis collez-le sur ' + reseau + '.', 'danger');
+        ouvrir();
+    });
+}
+
 function shareEvent() {
     var data = {
         title: @json($evenement->titre),
@@ -1025,6 +1109,82 @@ function showToast(message, type) {
     const toast = bootstrap.Toast.getOrCreateInstance(el, { autohide: true, delay: 3000 });
     toast.show();
 }
+
+// « Me prévenir à l'ouverture » : email seul, envoi sans recharger la page.
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('btnMePrevenir');
+    const form = document.getElementById('formMePrevenir');
+    const retour = document.getElementById('retourMePrevenir');
+    if (!btn || !form) return;
+    btn.addEventListener('click', function () {
+        btn.hidden = true;
+        form.hidden = false;
+        form.querySelector('input[type=email]').focus();
+    });
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const valider = form.querySelector('button[type=submit]');
+        valider.disabled = true;
+        retour.hidden = true;
+        try {
+            const r = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: new FormData(form),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (r.ok) {
+                form.hidden = true;
+                retour.classList.remove('erreur');
+                retour.textContent = d.message || 'C\'est noté !';
+            } else {
+                retour.classList.add('erreur');
+                retour.textContent = (d.errors && d.errors.email && d.errors.email[0]) || d.message || 'Une erreur est survenue. Réessayez.';
+            }
+        } catch (err) {
+            retour.classList.add('erreur');
+            retour.textContent = 'Connexion impossible. Réessayez.';
+        }
+        retour.hidden = false;
+        valider.disabled = false;
+    });
+});
+
+// QR code de partage : conversion en PNG pour pouvoir le publier partout.
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('btnTelechargerQr');
+    const img = document.getElementById('qrEvenement');
+    if (!btn || !img) return;
+    btn.addEventListener('click', function () {
+        const taille = 1024, marge = 64;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = taille;
+        const ctx = canvas.getContext('2d');
+        const source = new Image();
+        source.onload = function () {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, taille, taille);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(source, marge, marge, taille - 2 * marge, taille - 2 * marge);
+            // Logo au centre dans un rond blanc, comme sur les billets
+            const logo = document.getElementById('qrLogo');
+            if (logo && logo.complete && logo.naturalWidth) {
+                const r = taille * 0.11, c = taille / 2;
+                ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+                const cote = r * 1.5, ratio = logo.naturalWidth / logo.naturalHeight;
+                const w = ratio >= 1 ? cote : cote * ratio, h = ratio >= 1 ? cote / ratio : cote;
+                ctx.imageSmoothingEnabled = true;
+                ctx.drawImage(logo, c - w / 2, c - h / 2, w, h);
+            }
+            const a = document.createElement('a');
+            a.download = btn.dataset.nom;
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        };
+        source.src = img.src;
+    });
+});
 
 // Itinéraire : trajet affiché dans la carte depuis la position du visiteur
 // (demandée seulement au clic), puis lien de navigation Google Maps.

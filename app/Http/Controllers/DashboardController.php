@@ -59,6 +59,10 @@ class DashboardController extends Controller
         // Commissions des affiliés : à la charge de l'organisateur
         $commissionAffiliation = $statsFinancieres['commissionAffiliation'];
         $recettesNettes = $recettesTotales - $commission - $commissionAffiliation;
+        // Formule affichée sous le net total
+        $formuleNet = $commissionAffiliation > 0
+            ? 'Brut − Commission − Commission affiliation'
+            : 'Brut − Commission';
 
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
@@ -218,6 +222,7 @@ class DashboardController extends Controller
             'cashRecettes',
             'commission',
             'recettesNettes',
+            'formuleNet',
             'retirable',
             'commissionPct',
             'tauxScan',

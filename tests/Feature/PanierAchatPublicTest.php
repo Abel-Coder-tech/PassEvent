@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Mail\BilletterieOuverte;
+use App\Models\BilletterieAlerte;
 use App\Models\Evenement;
 use App\Models\EventWaitlist;
 use App\Models\Ticket;
@@ -187,6 +189,30 @@ class PanierAchatPublicTest extends TestCase
         $this->assertSame(0, Ticket::count());
     }
 
+    public function test_me_prevenir_enregistre_l_email_puis_previent_a_l_ouverture(): void
+    {
+        $this->evenement->update(['billetterie_ouverte' => false, 'billetterie_ouvre_le' => now()->addDay()]);
+
+        $this->postJson(route('evenements.me-prevenir', $this->evenement), ['email' => 'Awa@Example.test'])
+            ->assertOk()->assertJsonPath('message', fn ($m) => str_contains($m, 'noté'));
+        // Une deuxième demande ne crée pas de doublon.
+        $this->postJson(route('evenements.me-prevenir', $this->evenement), ['email' => 'awa@example.test'])->assertOk();
+        $this->postJson(route('evenements.me-prevenir', $this->evenement), ['email' => 'pas-un-email'])->assertStatus(422);
+        $this->assertSame(1, BilletterieAlerte::count());
+
+        // Billetterie encore fermée : rien n'est envoyé.
+        $this->artisan('billetterie:notifier-ouverture')->assertSuccessful();
+        Mail::assertNothingSent();
+
+        // Date d'ouverture atteinte : un seul envoi, puis plus rien.
+        $this->evenement->update(['billetterie_ouvre_le' => now()->subMinute()]);
+        $this->artisan('billetterie:notifier-ouverture')->assertSuccessful();
+        $this->artisan('billetterie:notifier-ouverture')->assertSuccessful();
+        Mail::assertSent(BilletterieOuverte::class, 1);
+        Mail::assertSent(BilletterieOuverte::class, fn ($m) => $m->hasTo('awa@example.test'));
+        $this->assertNotNull(BilletterieAlerte::first()->notifie_le);
+    }
+
     public function test_un_panier_vide_est_refuse(): void
     {
         $this->acheter([$this->tarifs['jour2'] => 0])->assertSessionHas('error');
@@ -311,6 +337,15 @@ class PanierAchatPublicTest extends TestCase
             $table->string('statut')->default('en_attente');
             $table->unsignedBigInteger('affiliate_payout_id')->nullable();
             $table->timestamps();
+        });
+
+        Schema::create('billetterie_alertes', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('evenement_id');
+            $table->string('email');
+            $table->timestamp('notifie_le')->nullable();
+            $table->timestamps();
+            $table->unique(['evenement_id', 'email']);
         });
 
         Schema::create('ticket', function (Blueprint $table) {

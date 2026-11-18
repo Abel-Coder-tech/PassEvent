@@ -21,26 +21,15 @@
     <div class="container position-relative" style="z-index:2;">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8">
-                <span class="ev-hero-chip">Tous les événements</span>
                 <h1 class="ev-hero-title">Retrouvez vos évènements préférés</h1>
-                <p class="ev-hero-sub" style="color:var(--accent);">Festivals &mdash; Concerts &mdash; Chills &mdash; Galas &mdash; Conférences </p>
+                <p class="ev-hero-sub ev-hero-genres">Festivals &mdash; Concerts &mdash; Galas &mdash; Conférences</p>
                 <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search" id="evSearchForm">
                     <div class="ev-search-wrap">
                         <i class="bi bi-search"></i>
                         <input type="search" name="q" id="evSearchInput" class="ev-search-input" placeholder="Nom, catégorie, lieu..." value="{{ $q ?? '' }}" autocomplete="off" @if($q) autofocus @endif>
+                        <button type="submit" class="ev-search-go">Rechercher</button>
                     </div>
                     @if($selectedCategorie)<input type="hidden" name="categorie" value="{{ $selectedCategorie }}">@endif
-                    @if($selectedDate)<input type="hidden" name="date" value="{{ $selectedDate }}">@endif
-                    <div class="ev-date-chips">
-                        @foreach(['aujourdhui' => "Aujourd'hui", 'weekend' => 'Ce week-end', 'mois' => 'Ce mois'] as $cle => $libelle)
-                            {{-- Un clic sur le filtre actif le retire --}}
-                            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate === $cle ? null : $cle])) }}"
-                               class="ev-date-chip {{ $selectedDate === $cle ? 'active' : '' }}">{{ $libelle }}</a>
-                        @endforeach
-                    </div>
-                    @if($q || $selectedCategorie || $selectedDate)
-                        <a href="{{ route('evenements.public') }}" class="ev-search-clear" title="Effacer les filtres"><i class="bi bi-x-lg"></i></a>
-                    @endif
                 </form>
                 <script>
                     // Recherche automatique : envoie le formulaire après une courte pause de saisie.
@@ -64,17 +53,41 @@
                         }
                     })();
                 </script>
+                {{-- Catégories qui défilent horizontalement --}}
                 @if($categories->isNotEmpty())
-                    <div class="ev-cat-row">
-                        <a href="{{ route('evenements.public', array_filter(['q' => $q, 'date' => $selectedDate])) }}" class="ev-cat-chip {{ !$selectedCategorie ? 'active' : '' }}">Tous</a>
+                    <nav class="ev-cats-defile" aria-label="Catégories">
+                        <a href="{{ route('evenements.public', array_filter(['q' => $q])) }}" class="ev-cat-pill {{ $selectedCategorie ? '' : 'active' }}">Toutes</a>
                         @foreach($categories as $cat)
-                            <a href="{{ route('evenements.public', ['categorie' => $cat, 'q' => $q, 'date' => $selectedDate]) }}" class="ev-cat-chip {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ ucfirst($cat) }}</a>
+                            <a href="{{ route('evenements.public', array_filter(['categorie' => $cat, 'q' => $q])) }}" class="ev-cat-pill {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ ucfirst($cat) }}</a>
                         @endforeach
-                    </div>
+                    </nav>
+                    <script>
+                        // Défilement automatique des catégories (pause au survol / toucher)
+                        (function () {
+                            const nav = document.querySelector('.ev-cats-defile');
+                            if (!nav || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                            let pause = false, sens = 1, pos = nav.scrollLeft;
+                            ['mouseenter', 'touchstart', 'focusin'].forEach(e => nav.addEventListener(e, () => pause = true, { passive: true }));
+                            ['mouseleave', 'touchend', 'focusout'].forEach(e => nav.addEventListener(e, () => { pause = false; pos = nav.scrollLeft; }, { passive: true }));
+                            (function tick() {
+                                const max = nav.scrollWidth - nav.clientWidth;
+                                if (!pause && max > 0) {
+                                    pos += 0.5 * sens;
+                                    if (pos >= max) { pos = max; sens = -1; }
+                                    if (pos <= 0) { pos = 0; sens = 1; }
+                                    nav.scrollLeft = pos;
+                                }
+                                requestAnimationFrame(tick);
+                            })();
+                        })();
+                    </script>
                 @endif
                 <div class="ev-hero-stats">
-                    <span><strong>{{ $evenements->total() }}</strong> événements</span>
+                    <span><strong>{{ $evenements->total() }}</strong> événement{{ $evenements->total() > 1 ? 's' : '' }}</span>
                     <span><strong>100%</strong> paiement sécurisé</span>
+                    @if($q || $selectedCategorie || $selectedDate)
+                        <a href="{{ route('evenements.public') }}" class="ev-effacer"><i class="bi bi-x-lg me-1"></i>Effacer les filtres</a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -85,7 +98,15 @@
 <section class="ev-grid-section">
     <div class="container">
         @if($evenements->count() > 0)
-            <div class="ev-grid">
+            {{-- Affichage en cartes ou en liste (choix mémorisé dans le navigateur) --}}
+            <div class="ev-vue-barre">
+                <span class="ev-vue-compte">{{ $evenements->total() }} événement{{ $evenements->total() > 1 ? 's' : '' }}</span>
+                <div class="ev-vue" role="group" aria-label="Affichage">
+                    <button type="button" class="ev-vue-btn active" data-vue="cartes" aria-pressed="true" title="Afficher en cartes"><i class="bi bi-grid-3x2-gap"></i></button>
+                    <button type="button" class="ev-vue-btn" data-vue="liste" aria-pressed="false" title="Afficher en liste"><i class="bi bi-list-ul"></i></button>
+                </div>
+            </div>
+            <div class="ev-grid" id="evGrille">
                 @foreach($evenements as $evenement)
                     @php
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
@@ -126,7 +147,9 @@
                                     <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}<br>
                                     <i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}
                                 </p>
-                                @if($evenement->gratuit)
+                                @if($evenement->etatVitrine() === 'bientot')
+                                    {{-- Billetterie pas encore ouverte : pas de prix affiché --}}
+                                @elseif($evenement->gratuit)
                                     <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
                                 @elseif($prixDernier)
                                     <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
@@ -172,17 +195,24 @@
             @endif
         @else
             <div class="ev-empty">
-                <i class="bi bi-calendar-x"></i>
-                <h5>Aucun événement trouvé</h5>
-                <p>
-                    @if($q || $selectedCategorie || $selectedDate)
-                        Essayez une autre catégorie ou un autre terme de recherche.
-                    @else
-                        Revenez plus tard pour découvrir nos prochains événements.
-                    @endif
-                </p>
+                <div class="ev-empty-icone"><i class="bi bi-calendar2-x"></i></div>
+                <h2 class="ev-empty-titre">Aucun événement trouvé</h2>
                 @if($q || $selectedCategorie || $selectedDate)
-                    <a href="{{ route('evenements.public') }}" class="btn-outline"><i class="bi bi-arrow-left me-1"></i> Voir tous</a>
+                    <p class="ev-empty-texte">Rien ne correspond à ces filtres pour le moment.</p>
+                    <div class="ev-empty-filtres">
+                        @if($q)
+                            <a href="{{ route('evenements.public', array_filter(['categorie' => $selectedCategorie, 'date' => $selectedDate])) }}" class="ev-empty-filtre">« {{ $q }} » <i class="bi bi-x"></i></a>
+                        @endif
+                        @if($selectedCategorie)
+                            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'date' => $selectedDate])) }}" class="ev-empty-filtre">{{ ucfirst($selectedCategorie) }} <i class="bi bi-x"></i></a>
+                        @endif
+                        @if($selectedDate)
+                            <a href="{{ route('evenements.public', array_filter(['q' => $q, 'categorie' => $selectedCategorie])) }}" class="ev-empty-filtre">{{ ['aujourdhui' => "Aujourd'hui", 'weekend' => 'Week-end', 'mois' => 'Ce mois'][$selectedDate] ?? $selectedDate }} <i class="bi bi-x"></i></a>
+                        @endif
+                    </div>
+                    <a href="{{ route('evenements.public') }}" class="ev-empty-action">Voir tous les événements</a>
+                @else
+                    <p class="ev-empty-texte">Aucun événement n'est publié pour l'instant. Revenez bientôt pour découvrir les prochains.</p>
                 @endif
             </div>
         @endif
@@ -231,7 +261,9 @@
                                 <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}<br>
                                 <i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}
                             </p>
-                            @if($evenement->gratuit)
+                            @if($evenement->etatVitrine() === 'bientot')
+                                {{-- Billetterie pas encore ouverte : pas de prix affiché --}}
+                            @elseif($evenement->gratuit)
                                 <div class="ev-card-price">Entrée <strong>Gratuit</strong></div>
                             @elseif($prixDernier)
                                 <div class="ev-card-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
@@ -461,6 +493,134 @@
     font-weight: 700;
 }
 
+/* Piste 2 : recherche, onglets de dates, liste de catégories */
+/* Le menu des catégories doit pouvoir déborder du hero, par-dessus la liste :
+   on coupe seulement les halos décoratifs, et le hero passe au-dessus. */
+.ev-hero { overflow: visible; z-index: 5; }
+.ev-hero-bg { overflow: hidden; }
+.ev-hero .ev-search-wrap { max-width: 560px; flex-basis: 100%; }
+.ev-hero .ev-hero-search { margin-bottom: .9rem; }
+/* Barre de recherche à bordure blanche, avec bouton Rechercher violet intégré à droite */
+.ev-hero .ev-search-input {
+    border-color: rgba(255,255,255,0.6);
+    padding-right: 7.2rem;
+}
+.ev-hero .ev-search-input:focus {
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+}
+.ev-hero .ev-search-wrap > .bi-search { color: rgba(255,255,255,0.75); }
+.ev-search-go {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    padding: 0 .9rem;
+    height: 34px;
+    font-size: .8rem;
+    font-weight: 700;
+    border: 0;
+    border-radius: 9px;
+    background: #542680;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter .2s;
+}
+.ev-search-go:hover { filter: brightness(1.15); }
+@media (max-width: 575.98px) {
+    .ev-hero .ev-search-wrap { max-width: 82%; margin: 0 auto; }
+    .ev-hero .ev-search-input { padding: .4rem 4.8rem .4rem 2rem; font-size: .78rem; border-radius: 9px; }
+    .ev-hero .ev-search-wrap > .bi-search { left: 10px; font-size: .78rem; }
+    .ev-search-go { height: 24px; padding: 0 .55rem; font-size: .68rem; border-radius: 6px; right: 3px; }
+}
+.ev-search-wrap .ev-search-go .bi-search { position: static; transform: none; color: inherit; }
+.ev-search-go:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.ev-hero-genres { color: var(--accent); white-space: nowrap; font-size: clamp(.7rem, 2.8vw, 1rem); margin-bottom: 1.5rem; }
+.ev-cats-defile {
+    display: flex; gap: .5rem; overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: .25rem 0 .5rem; margin-bottom: 1rem;
+}
+.ev-cats-defile > :first-child { margin-left: auto; }
+.ev-cats-defile > :last-child { margin-right: auto; }
+.ev-cats-defile::-webkit-scrollbar { display: none; }
+.ev-cat-pill {
+    flex: 0 0 auto; scroll-snap-align: start; padding: .4rem 1rem; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.85);
+    font-size: .85rem; text-decoration: none; white-space: nowrap; transition: background .2s, color .2s;
+}
+.ev-cat-pill:hover { color: #fff; border-color: #fff; }
+.ev-cat-pill.active { background: #fff; color: #542680; font-weight: 600; border-color: #fff; }
+.ev-segments {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 560px;
+    margin: 0 auto .6rem;
+    padding: 4px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.07);
+}
+.ev-segment {
+    padding: .55rem .25rem;
+    border-radius: 9px;
+    color: rgba(255,255,255,0.72);
+    font-size: .8rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .2s, color .2s;
+}
+.ev-segment:hover { color: #fff; }
+.ev-segment.active { background: #fff; color: #542680; }
+.ev-categorie { position: relative; max-width: 560px; margin: 0 auto 1.1rem; text-align: left; }
+.ev-categorie-btn {
+    width: 100%;
+    height: 44px;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.88);
+    font-size: .85rem;
+}
+.ev-categorie-btn:focus-visible, .ev-categorie.ouvert .ev-categorie-btn { outline: none; border-color: #9972B0; }
+.ev-categorie-btn .bi-chevron-down { color: rgba(255,255,255,0.6); transition: transform .2s; }
+.ev-categorie.ouvert .bi-chevron-down { transform: rotate(180deg); }
+.ev-categorie-liste {
+    position: absolute;
+    left: 0; right: 0; top: calc(100% + 6px);
+    z-index: 20;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 14px 34px rgba(33,28,49,.28);
+    max-height: 280px;
+    overflow-y: auto;
+}
+.ev-categorie-liste a {
+    display: block;
+    padding: .6rem .8rem;
+    border-radius: 8px;
+    color: #211C31;
+    font-size: .88rem;
+    text-decoration: none;
+}
+.ev-categorie-liste a:hover, .ev-categorie-liste a:focus-visible { background: #f1ebf6; color: #542680; outline: none; }
+.ev-categorie-liste a.active { background: #542680; color: #fff; font-weight: 600; }
+.ev-hero-stats { flex-wrap: wrap; gap: .5rem 2rem; }
+.ev-effacer { color: rgba(255,255,255,0.7); text-decoration: none; font-weight: 600; }
+.ev-effacer:hover { color: #fff; }
+@media (max-width: 575.98px) {
+    .ev-segment { font-size: .74rem; }
+}
+
 /* ===== Section Événements passés ===== */
 .ev-past-section {
     padding: 3rem 0;
@@ -674,17 +834,106 @@
 
 /* ===== État vide ===== */
 .ev-empty {
+    max-width: 440px;
+    margin: 1rem auto;
+    padding: 2.5rem 1.5rem;
     text-align: center;
-    padding: 4rem 0;
+    background: #faf8fc;
+    border: 1px dashed #ddd2e8;
+    border-radius: 18px;
 }
-.ev-empty i {
-    font-size: 3.5rem;
-    color: #c0c0c0;
-    display: block;
-    margin-bottom: 1rem;
+.ev-empty-icone {
+    width: 64px; height: 64px;
+    margin: 0 auto 1rem;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: #f1ebf6;
+    color: #542680;
+    font-size: 1.6rem;
 }
-.ev-empty h5 { color: #6c757d; margin-bottom: 0.3rem; }
-.ev-empty p { color: #9a9a9a; font-size: 0.9rem; }
+.ev-empty-titre { font-size: 1.15rem; font-weight: 700; color: #211C31; margin: 0 0 .35rem; }
+.ev-empty-texte { color: #6b6474; font-size: .9rem; margin: 0 0 1rem; }
+.ev-empty-filtres { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin-bottom: 1.25rem; }
+.ev-empty-filtre {
+    display: inline-flex; align-items: center; gap: .2rem;
+    padding: .3rem .5rem .3rem .75rem;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #e4dcec;
+    color: #4a4453;
+    font-size: .8rem; font-weight: 600;
+    text-decoration: none;
+}
+.ev-empty-filtre:hover { border-color: #542680; color: #542680; }
+.ev-empty-action {
+    display: inline-block;
+    padding: .65rem 1.4rem;
+    border-radius: 10px;
+    background: #542680;
+    color: #fff;
+    font-weight: 600; font-size: .88rem;
+    text-decoration: none;
+}
+.ev-empty-action:hover { background: #45206a; color: #fff; }
+
+/* ===== Choix de l'affichage ===== */
+.ev-vue-barre { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.ev-vue-compte { font-size: .85rem; color: #6b6474; font-weight: 600; }
+.ev-vue { display: inline-flex; padding: 3px; border-radius: 10px; background: #f1ebf6; }
+.ev-vue-btn {
+    width: 36px; height: 32px;
+    border: 0; border-radius: 8px;
+    background: transparent;
+    color: #8a8493;
+    font-size: 1rem;
+}
+.ev-vue-btn.active { background: #fff; color: #542680; box-shadow: 0 1px 4px rgba(33,28,49,.12); }
+.ev-vue-btn:focus-visible { outline: 2px solid #542680; outline-offset: 1px; }
+
+/* Affichage en liste : image à gauche, infos au centre, bouton à droite */
+.ev-grid.ev-liste { grid-template-columns: 1fr; gap: .75rem; }
+.ev-liste .ev-card { flex-direction: row; }
+.ev-liste .ev-card:hover { transform: none; }
+.ev-liste .ev-card-img { width: 180px; height: auto; min-height: 120px; flex-shrink: 0; }
+.ev-liste .ev-card-overlay { display: none; }
+.ev-liste .ev-card-gauge { display: none; }
+.ev-liste .ev-card-body {
+    flex: 1;
+    min-width: 0;
+    padding: .85rem 1.1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1.25rem;
+    align-content: center;
+}
+.ev-liste .ev-card-body > * { grid-column: 1; }
+.ev-liste .ev-card-body > .ev-card-btn {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: center;
+    width: auto;
+    min-width: 170px;
+    padding: .6rem 1.1rem;
+    text-align: center;
+    white-space: nowrap;
+}
+@media (max-width: 575px) {
+    .ev-liste .ev-card-img { width: 96px; min-height: 96px; }
+    .ev-liste .ev-card-badge { display: none; }
+    .ev-liste .ev-card-title { font-size: .92rem; }
+    .ev-liste .ev-card-body { grid-template-columns: 1fr; padding: .7rem .8rem; }
+    /* Mobile : bouton compact sous les infos */
+    .ev-liste .ev-card-body > .ev-card-btn {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
+        min-width: 0;
+        margin-top: .4rem;
+        padding: .35rem .8rem;
+        font-size: .75rem;
+    }
+}
+
 .btn-outline {
     display: inline-flex;
     align-items: center;
@@ -835,4 +1084,27 @@
     .ev-cta-icon { display: none; }
 }
 </style>
+<script>
+// Cartes / liste : bascule l'affichage et mémorise le choix.
+document.addEventListener('DOMContentLoaded', function () {
+    const grille = document.getElementById('evGrille');
+    const boutons = document.querySelectorAll('.ev-vue-btn');
+    if (!grille || !boutons.length) return;
+    function appliquer(vue) {
+        grille.classList.toggle('ev-liste', vue === 'liste');
+        boutons.forEach(b => {
+            const actif = b.dataset.vue === vue;
+            b.classList.toggle('active', actif);
+            b.setAttribute('aria-pressed', actif ? 'true' : 'false');
+        });
+    }
+    let vue = 'cartes';
+    try { vue = localStorage.getItem('pax-vue-evenements') || 'cartes'; } catch (e) {}
+    appliquer(vue);
+    boutons.forEach(b => b.addEventListener('click', function () {
+        appliquer(b.dataset.vue);
+        try { localStorage.setItem('pax-vue-evenements', b.dataset.vue); } catch (e) {}
+    }));
+});
+</script>
 @endsection

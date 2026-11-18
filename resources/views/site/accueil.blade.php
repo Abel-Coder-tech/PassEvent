@@ -1,5 +1,12 @@
 ﻿@extends('layouts.public')
 
+@push('meta')
+    {{-- Polices de remplacement pour le titre PaxAgent (voir .app-titre-pax / .app-titre-agent) --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@1,800&family=Merienda:wght@800&display=swap&text=PaxAgent" rel="stylesheet">
+@endpush
+
 @section('title', 'PaxEvent - Billeterie en ligne au Bénin')
 @section('description', 'PaxEvent, Billeterie Intélligente 100% Bénin — La solution simple et rapide pour gérer vos événements, acheter et vendre vos tickets en ligne. Festival, Concert, Conférence, Soirée...')
 @section('og_title', 'PaxEvent - Billeterie en ligne au Bénin')
@@ -470,7 +477,9 @@
                                         <i class="bi bi-geo-alt"></i> {{ $evenement->lieu }}
                                     </p>
                                     <div class="une-cta-row">
-                                        @if($evenement->gratuit)
+                                        @if($evenement->etatVitrine() === 'bientot')
+                                            {{-- Billetterie pas encore ouverte : pas de prix affiché --}}
+                                        @elseif($evenement->gratuit)
                                             <span class="une-price">Entrée <strong>Gratuit</strong></span>
                                         @elseif($prixDernier)
                                             <span class="une-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></span>
@@ -745,7 +754,9 @@
                                     <i class="bi bi-calendar3"></i> {{ $evenement->date_event->isoFormat('D MMM YYYY') }}<br>
                                     <i class="bi bi-geo-alt"></i> {{ Str::limit($evenement->lieu, 25) }}
                                 </p>
-                                @if($evenement->gratuit)
+                                @if($evenement->etatVitrine() === 'bientot')
+                                    {{-- Billetterie pas encore ouverte : pas de prix affiché --}}
+                                @elseif($evenement->gratuit)
                                     <div class="ev-price">Entrée <strong>Gratuit</strong></div>
                                 @elseif($prixDernier)
                                     <div class="ev-price">À partir de <strong>{{ number_format($prixDernier, 0, ',', ' ') }} F</strong></div>
@@ -800,7 +811,195 @@
     </div>
 </section>
 
+<!-- Annonce de l'application PaxAgent -->
+<section class="section-app">
+    <div class="container">
+        <div class="app-band">
+            <div class="app-texte app-reveal">
+                <span class="app-chip"><i class="bi bi-phone me-1"></i> Nouveau</span>
+                <h2 class="app-titre"><span class="app-titre-pax">Pax</span><span class="app-titre-agent"><span class="app-titre-a">A</span>gent</span></h2>
+                <p class="app-sous-titre" id="appSousTitre">L'application mobile dédiée à vos agents de vente et de scan sur le terrain.</p>
+            </div>
+            <div class="app-visuel app-reveal">
+                <div class="app-scene" role="img" aria-label="Deux écrans de l'application mobile PaxAgent">
+                    <img class="app-cercle" src="{{ asset('images/paxagent-cercle.webp') }}" alt="" width="900" height="900" loading="lazy">
+                    <img class="app-tel app-tel-arriere" src="{{ asset('images/paxagent-interface2.webp') }}" alt="" width="520" height="1309" loading="lazy">
+                    <img class="app-tel app-tel-avant" src="{{ asset('images/paxagent-interface1.webp') }}" alt="" width="520" height="1198" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    // Lance les animations PaxAgent quand la section arrive à l'écran.
+    (function () {
+        const blocs = document.querySelectorAll('.section-app .app-reveal');
+        if (!('IntersectionObserver' in window)) { blocs.forEach(b => b.classList.add('visible')); return; }
+        const obs = new IntersectionObserver(function (entrees) {
+            entrees.forEach(function (e) {
+                if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+            });
+        }, { threshold: 0.25 });
+        blocs.forEach(b => obs.observe(b));
+
+    })();
+</script>
+
 <style>
+.section-app {
+    padding: 1rem 0 5rem;
+    background: #fff;
+}
+.app-band {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 2rem;
+}
+.app-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+    background: #f1ebf6;
+    color: #542680;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.app-titre {
+    margin: 1rem 0 0.75rem;
+    font-size: 5.2rem;
+    line-height: 1;
+    color: #211C31;
+}
+/* Polices de marque : Neometric Black et Asuyo Kowe une fois les licences
+   commerciales obtenues ; en attendant, polices libres équivalentes. */
+/* Asuyo : déposer le fichier dans public/fonts/ pour qu'il soit utilisé */
+@font-face {
+    font-family: 'Asuyo';
+    src: url('{{ asset('fonts/Asuyo.woff2') }}') format('woff2'),
+         url('{{ asset('fonts/Asuyo.ttf') }}') format('truetype'),
+         url('{{ asset('fonts/Asuyo.otf') }}') format('opentype');
+    font-display: swap;
+}
+.app-titre-pax {
+    font-family: 'Neometric', 'Poppins', sans-serif;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -0.03em;
+}
+.app-titre-a {
+    /* « A » en capitale bien marquée dans la police manuscrite */
+    font-size: 1em;
+    line-height: 0;
+}
+.app-titre-agent {
+    font-family: 'Asuyo', 'Asuyo Kowe', 'Merienda', cursive;
+    font-weight: 400;
+    color: #542680;
+    margin-left: 0.08em;
+}
+.app-sous-titre {
+    max-width: 540px;
+    min-height: 3em;
+    margin: 0;
+    font-size: 1.55rem;
+    line-height: 1.5;
+    color: #6b6474;
+    transition: opacity .25s ease, transform .25s ease;
+}
+.app-sous-titre.change { opacity: 0; transform: translateY(6px); }
+.section-app { overflow: hidden; }
+.app-visuel { position: relative; }
+/* Scène 3D : cercle dégradé en fond, les trois écrans disposés en anneau */
+.app-scene {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1 / 1.05;
+    margin: 0 auto;
+    container-type: inline-size;
+}
+.app-cercle {
+    position: absolute;
+    left: 6%; top: 8%;
+    width: 88%; height: auto;
+    border-radius: 50%;
+    /* Le cercle monte d'abord depuis le bas, puis les écrans arrivent */
+    transform: translateY(60%) scale(0.85);
+    opacity: 0;
+    transition: transform 1s cubic-bezier(.2,.8,.2,1), opacity .7s ease;
+}
+/* Deux téléphones superposés, comme dans la vidéo : ils se croisent
+   (l'avant descend pendant que l'arrière monte), puis reviennent. */
+.app-tel {
+    position: absolute;
+    height: auto;
+    opacity: 0;
+    filter: drop-shadow(0 24px 30px rgba(33,28,49,0.28));
+}
+.app-tel-avant  { width: 42%; left: 18%; top: 4%;  z-index: 2; }
+.app-tel-arriere { width: 36%; left: 50%; top: 14%; z-index: 1; }
+.app-visuel.visible .app-cercle { transform: none; opacity: 1; }
+/* Entrée (après le cercle) puis croisement en boucle */
+.app-visuel.visible .app-tel-avant {
+    animation: app-entree-avant 1.2s .9s cubic-bezier(.2,.8,.2,1) both,
+               app-croise-avant 5s 2.1s ease-in-out infinite;
+}
+.app-visuel.visible .app-tel-arriere {
+    animation: app-entree-arriere 1.2s .9s cubic-bezier(.2,.8,.2,1) both,
+               app-croise-arriere 5s 2.1s ease-in-out infinite;
+}
+@keyframes app-entree-avant {
+    from { opacity: 0; transform: translateY(-55%); }
+    30%  { opacity: 1; }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes app-entree-arriere {
+    from { opacity: 0; transform: translateY(55%); }
+    30%  { opacity: 1; }
+    to   { opacity: 1; transform: none; }
+}
+/* L'avant descend sous le niveau de l'arrière, l'arrière monte au-dessus : ils se croisent */
+@keyframes app-croise-avant {
+    0%, 100% { opacity: 1; transform: translate(0, 0); }
+    50%      { opacity: 1; transform: translate(-3%, 14%); }
+}
+@keyframes app-croise-arriere {
+    0%, 100% { opacity: 1; transform: translate(0, 0); }
+    50%      { opacity: 1; transform: translate(4%, -16%); }
+}
+
+/* Apparition au défilement */
+.app-reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(.2,.7,.2,1);
+}
+.app-visuel.app-reveal { transform: translateY(40px) scale(0.92); transition-delay: 0.15s; }
+.app-reveal.visible { opacity: 1; transform: none; }
+.app-texte.visible .app-chip  { animation: app-monte 0.6s 0.1s both; }
+.app-texte.visible .app-titre { animation: app-monte 0.6s 0.25s both; }
+.app-texte.visible .app-sous-titre { animation: app-monte 0.6s 0.4s both; }
+@keyframes app-monte {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .app-reveal { opacity: 1; transform: none; transition: none; }
+    .app-cercle, .app-tel { opacity: 1 !important; transition: none !important; transform: none !important; }
+    .app-tel, .app-texte * { animation: none !important; }
+}
+@media (max-width: 767.98px) {
+    .app-band { grid-template-columns: 1fr; text-align: center; }
+    .app-sous-titre { margin: 0 auto; }
+    .app-titre { font-size: 3.6rem; }
+    .app-sous-titre { font-size: 1.25rem; min-height: 4.5em; }
+    .app-scene { max-width: 340px; }
+}
+
 .section-events {
     padding: 5rem 0;
     background: #fff;
