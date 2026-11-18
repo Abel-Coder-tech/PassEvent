@@ -502,16 +502,16 @@
 .ev-hero-bg { overflow: hidden; }
 .ev-hero .ev-search-wrap { max-width: 560px; flex-basis: 100%; }
 .ev-hero .ev-hero-search { margin-bottom: .9rem; }
-/* Barre de recherche à bordure blanche, avec bouton Rechercher violet intégré à droite */
+/* Barre de recherche à bordure jaune, avec bouton Rechercher violet intégré à droite */
 .ev-hero .ev-search-input {
-    border-color: rgba(255,255,255,0.6);
+    border-color: var(--accent, #FED514);
     padding-right: 7.2rem;
 }
 .ev-hero .ev-search-input:focus {
-    border-color: #fff;
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+    border-color: var(--accent, #FED514);
+    box-shadow: 0 0 0 3px rgba(254,213,20,0.18);
 }
-.ev-hero .ev-search-wrap > .bi-search { color: rgba(255,255,255,0.75); }
+.ev-hero .ev-search-wrap > .bi-search { color: var(--accent, #FED514); }
 .ev-search-go {
     position: absolute;
     top: 50%;
