@@ -58,7 +58,7 @@
                     <nav class="ev-cats-defile" aria-label="Catégories">
                         <a href="{{ route('evenements.public', array_filter(['q' => $q])) }}" class="ev-cat-pill {{ $selectedCategorie ? '' : 'active' }}">Toutes</a>
                         @foreach($categories as $cat)
-                            <a href="{{ route('evenements.public', array_filter(['categorie' => $cat, 'q' => $q])) }}" class="ev-cat-pill {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ ucfirst($cat) }}</a>
+                            <a href="{{ route('evenements.public', array_filter(['categorie' => $cat, 'q' => $q])) }}" class="ev-cat-pill {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ $cat }}</a>
                         @endforeach
                     </nav>
                     <script>
@@ -491,7 +491,7 @@
     font-size: 0.82rem;
 }
 .ev-hero-stats strong {
-    color: #9972B0;
+    color: var(--accent, #FED514);
     font-weight: 700;
 }
 
@@ -548,7 +548,8 @@
 .ev-cats-defile > :last-child { margin-right: auto; }
 .ev-cats-defile::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) {
-    .ev-cats-defile { flex-wrap: wrap; justify-content: center; overflow: visible; }
+    .ev-cats-defile { flex-wrap: nowrap; justify-content: center; overflow: visible; gap: .35rem; }
+    .ev-cat-pill { padding: .35rem .75rem; font-size: .8rem; }
     .ev-cats-defile > :first-child, .ev-cats-defile > :last-child { margin: 0; }
 }
 .ev-cat-pill {
