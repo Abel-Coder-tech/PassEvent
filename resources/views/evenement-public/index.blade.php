@@ -478,7 +478,7 @@
 .ev-hero { overflow: visible; z-index: 5; }
 .ev-hero-bg { overflow: hidden; }
 .ev-hero .ev-search-wrap { max-width: 560px; flex-basis: 100%; }
-.ev-hero .ev-hero-search { margin-bottom: .9rem; }
+.ev-hero .ev-hero-search { margin: 1.75rem 0 1.75rem; }
 /* Barre de recherche à bordure jaune, avec bouton Rechercher jaune intégré à droite */
 .ev-hero .ev-search-input {
     border-color: var(--accent, #FED514);

@@ -288,8 +288,19 @@
             padding: 0.25rem 0.5rem;
         }
 
+        .mobile-actions { display: none; }
+        .mobile-login {
+            font-size: .8rem; font-weight: 700; color: #fff; background: var(--violet);
+            border-radius: 4px; padding: 6px 12px;
+            box-shadow: 0 2px 8px rgba(84,38,128,0.25);
+            text-decoration: none; white-space: nowrap;
+        }
+        .mobile-login:hover { color: #fff; box-shadow: 0 4px 14px rgba(84,38,128,0.4); }
+
         @media (max-width: 991.98px) {
+            .mobile-actions { display: flex; align-items: center; gap: .4rem; margin-left: auto; }
             .mobile-toggle { display: block; }
+            .public-nav .nav-login { display: none; }
 
             .public-nav {
                 display: none;
@@ -998,9 +1009,13 @@
                 <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="52">
             </a>
 
-            <button class="mobile-toggle" id="navToggle" aria-label="Menu">
-                <i class="bi bi-list"></i>
-            </button>
+            {{-- Sur mobile : « Se connecter » reste visible à côté du menu --}}
+            <div class="mobile-actions">
+                <a href="{{ route('login') }}" class="mobile-login">Se connecter</a>
+                <button class="mobile-toggle" id="navToggle" aria-label="Menu">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
 
             <ul class="public-nav" id="publicNav">
                 <li><a href="{{ route('accueil') }}" class="{{ request()->routeIs('accueil') ? 'active' : '' }}">Accueil</a></li>
@@ -1008,7 +1023,7 @@
                 <li><a href="{{ route('aide') }}" class="{{ request()->routeIs('aide') ? 'active' : '' }}">Comment ça marche</a></li>
                 <li><a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">Contact</a></li>
                 <li><a href="{{ route('tickets.recuperer') }}" class="nav-recuperer {{ request()->routeIs('tickets.recuperer', 'tickets.rechercher') ? 'active' : '' }}">Récupérer un ticket</a></li>
-                <li><a href="{{ route('login') }}" style="display:inline-block;font-size:0.85rem;font-weight:600;margin-left:0.25rem;border:2px solid var(--violet);color:var(--violet);background-color:white;border-radius:6px;padding:6px 16px;text-decoration:none;">Se connecter</a></li>
+                <li class="nav-login"><a href="{{ route('login') }}" style="display:inline-block;font-size:0.85rem;font-weight:600;margin-left:0.25rem;border:2px solid var(--violet);color:var(--violet);background-color:white;border-radius:6px;padding:6px 16px;text-decoration:none;">Se connecter</a></li>
             </ul>
         </div>
     </header>
