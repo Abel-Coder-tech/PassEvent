@@ -659,7 +659,10 @@
     .une-content { padding: 1.1rem 1.2rem; }
     .une-title { font-size: 1.25rem; }
     .une-meta { font-size: 0.8rem; }
-    .une-cta-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .une-cta-row { flex-wrap: nowrap; gap: 0.5rem; }
+    .une-price { font-size: 0.8rem; white-space: nowrap; }
+    .une-price strong { font-size: 1rem; }
+    .une-cta { padding: 0.45rem 0.8rem; font-size: 0.8rem; white-space: nowrap; }
     .section-une { padding: 2.5rem 0; }
 }
 </style>
