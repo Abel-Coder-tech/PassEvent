@@ -155,7 +155,7 @@
                 <div class="metric-icon" style="background: rgba(18,151,110,0.1);"><i class="bi bi-cash-stack" style="color:var(--vert);"></i></div>
                 <div class="metric-label">Net total</div>
                 <div class="metric-value" style="font-size:1.2rem;color:var(--vert);">{{ number_format($recettesNettes, 0, ',', ' ') }} F</div>
-                <div class="metric-subtitle">Brut − Commission</div>
+                <div class="metric-subtitle">{{ $formuleNet }}</div>
             </div>
         </div>
     </div>

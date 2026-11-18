@@ -51,6 +51,7 @@ Route::get('/evenements', [EvenementPublicController::class, 'index'])->name('ev
 Route::get('/evenements/{evenement}', [EvenementPublicController::class, 'show'])->name('evenements.public.show');
 Route::get('/r/{code}', [EvenementPublicController::class, 'redirectAffilie'])->name('evenements.affilie.redirect');
 Route::post('/evenements/{evenement}/achat', [EvenementPublicController::class, 'achat'])->name('evenements.achat')->middleware('throttle:5,1');
+Route::post('/evenements/{evenement}/me-prevenir', [EvenementPublicController::class, 'alerterOuverture'])->name('evenements.me-prevenir')->middleware('throttle:10,1');
 Route::post('/evenements/{evenement}/liste-attente', [EvenementPublicController::class, 'inscrireListeAttente'])->name('evenements.liste-attente')->middleware('throttle:10,1');
 Route::post('/evenements/{evenement}/contacter-organisateur', [EvenementPublicController::class, 'contacterOrganisateur'])->name('evenements.contacter-organisateur')->middleware('throttle:5,10');
 

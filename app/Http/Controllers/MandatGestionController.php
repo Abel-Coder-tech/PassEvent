@@ -25,7 +25,7 @@ class MandatGestionController extends Controller
             $this->mandats->accorder($user, 'organisateur', $user->nom, $request->ip());
         }
 
-        return back()->with('success', 'PaxEvent est autorisé à gérer votre compte. La déclaration sur l\'honneur est disponible ci-dessous.');
+        return redirect(route('parametres.index') . '#contrat')->with('success', 'PaxEvent est autorisé à gérer votre compte. La déclaration sur l\'honneur est disponible ci-dessous.');
     }
 
     public function retirer(Request $request)
@@ -36,7 +36,7 @@ class MandatGestionController extends Controller
             $this->mandats->retirer($user, 'organisateur', $request->ip());
         }
 
-        return back()->with('success', 'Vous avez retiré l\'autorisation : PaxEvent ne peut plus agir à votre place.');
+        return redirect(route('parametres.index') . '#contrat')->with('success', 'Vous avez retiré l\'autorisation : PaxEvent ne peut plus agir à votre place.');
     }
 
     public function declaration()

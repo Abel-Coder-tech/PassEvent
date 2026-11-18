@@ -144,6 +144,9 @@
                 <button class="settings-nav-link" data-section="securite" onclick="showSection('securite', this)">
                     <i class="bi bi-shield-lock"></i> Securité
                 </button>
+                <button class="settings-nav-link" data-section="contrat" onclick="showSection('contrat', this)">
+                    <i class="bi bi-file-earmark-text"></i> Contrat & autorisations
+                </button>
                 <button class="settings-nav-link" data-section="notifications" onclick="showSection('notifications', this)">
                     <i class="bi bi-bell"></i> Notifications
                 </button>
@@ -313,6 +316,67 @@
                 </div>
             </div>
 
+            {{-- Contrat & autorisations --}}
+            <div id="section-contrat" class="settings-section">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h5><i class="bi bi-file-earmark-text me-2" style="color: var(--violet);"></i>Contrat & autorisations</h5>
+                    </div>
+                    <div class="panel-card-body">
+                        <div class="p-3 rounded mb-3" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
+                            <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Autorisation donnée à PaxEvent</div>
+                            @if(Auth::user()->mandat_actif)
+                                <div class="text-muted mb-2" style="font-size: 0.78rem;">
+                                    PaxEvent est autorisé à agir à votre place (depuis le {{ Auth::user()->mandat_accorde_le?->isoFormat('D MMM YYYY') }}). Vous pouvez retirer cette autorisation à tout moment : le retrait est immédiat.
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    @if(Auth::user()->mandat_pdf_chemin)
+                                        <a href="{{ route('admin.mandat.declaration') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
+                                            <i class="bi bi-file-pdf me-1"></i> Ma déclaration sur l'honneur
+                                        </a>
+                                    @endif
+                                    <form action="{{ route('admin.mandat.retirer') }}" method="POST" onsubmit="return confirm('Retirer l\'autorisation ? PaxEvent ne pourra plus agir à votre place.')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Retirer l'autorisation</button>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="text-muted mb-2" style="font-size: 0.78rem;">
+                                    Pour que PaxEvent puisse vous aider (compléter votre profil, créer vos événements, vos agents), autorisez-le en un clic. Une déclaration sur l'honneur datée est générée. Vous pouvez la retirer à tout moment.
+                                </div>
+                                <form action="{{ route('admin.mandat.accorder') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-vert" style="border-radius: 8px;"><i class="bi bi-shield-check me-1"></i> Autoriser PaxEvent à agir à ma place</button>
+                                </form>
+                            @endif
+                        </div>
+
+                        <div class="p-3 rounded mb-3" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Journal PaxEvent</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">Les actions réalisées par PaxEvent en votre nom, si vous lui avez demandé de l'aide.</div>
+                                </div>
+                                <a href="{{ route('admin.gestion.journal') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
+                                    <i class="bi bi-journal-text me-1"></i> Consulter
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded mb-3" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Contrat de prestation</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">Telecharger le contrat personnalise liant PaxEvent a votre structure.</div>
+                                </div>
+                                <a href="{{ route('contrat-prestation') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
+                                    <i class="bi bi-file-pdf me-1"></i> Telecharger (PDF)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {{-- Notifications --}}
             <div id="section-notifications" class="settings-section">
                 <div class="panel-card">
@@ -455,57 +519,6 @@
                             </div>
                         @endif
 
-                        <div class="p-3 rounded mt-4" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
-                            <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Autorisation donnée à PaxEvent</div>
-                            @if(Auth::user()->mandat_actif)
-                                <div class="text-muted mb-2" style="font-size: 0.78rem;">
-                                    PaxEvent est autorisé à agir à votre place (depuis le {{ Auth::user()->mandat_accorde_le?->isoFormat('D MMM YYYY') }}). Vous pouvez retirer cette autorisation à tout moment : le retrait est immédiat.
-                                </div>
-                                <div class="d-flex gap-2 flex-wrap">
-                                    @if(Auth::user()->mandat_pdf_chemin)
-                                        <a href="{{ route('admin.mandat.declaration') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
-                                            <i class="bi bi-file-pdf me-1"></i> Ma déclaration sur l'honneur
-                                        </a>
-                                    @endif
-                                    <form action="{{ route('admin.mandat.retirer') }}" method="POST" onsubmit="return confirm('Retirer l\'autorisation ? PaxEvent ne pourra plus agir à votre place.')">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Retirer l'autorisation</button>
-                                    </form>
-                                </div>
-                            @else
-                                <div class="text-muted mb-2" style="font-size: 0.78rem;">
-                                    Pour que PaxEvent puisse vous aider (compléter votre profil, créer vos événements, vos agents), autorisez-le en un clic. Une déclaration sur l'honneur datée est générée. Vous pouvez la retirer à tout moment.
-                                </div>
-                                <form action="{{ route('admin.mandat.accorder') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-vert" style="border-radius: 8px;"><i class="bi bi-shield-check me-1"></i> Autoriser PaxEvent à agir à ma place</button>
-                                </form>
-                            @endif
-                        </div>
-
-                        <div class="p-3 rounded mt-4" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Journal PaxEvent</div>
-                                    <div class="text-muted" style="font-size: 0.78rem;">Les actions réalisées par PaxEvent en votre nom, si vous lui avez demandé de l'aide.</div>
-                                </div>
-                                <a href="{{ route('admin.gestion.journal') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
-                                    <i class="bi bi-journal-text me-1"></i> Consulter
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="p-3 rounded mt-4" style="background: rgba(123,63,160,0.04); border: 1px solid rgba(123,63,160,0.15);">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold" style="color: var(--violet); font-size: 0.95rem;">Contrat de prestation</div>
-                                    <div class="text-muted" style="font-size: 0.78rem;">Telecharger le contrat personnalise liant PaxEvent a votre structure.</div>
-                                </div>
-                                <a href="{{ route('contrat-prestation') }}" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--violet); color: var(--violet); background: transparent;">
-                                    <i class="bi bi-file-pdf me-1"></i> Telecharger (PDF)
-                                </a>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
