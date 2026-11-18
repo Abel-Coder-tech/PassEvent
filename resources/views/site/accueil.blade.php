@@ -821,7 +821,7 @@
                 <p class="app-sous-titre" id="appSousTitre">L'application mobile dédiée à vos agents de vente et de scan sur le terrain.</p>
                 <div class="app-acces">
                     <a href="{{ route('inscriptions.organisateur') }}" class="app-acces-btn">
-                        <span class="app-acces-point"></span>Disponible dans votre tableau de bord <i class="bi bi-arrow-right"></i>
+                        <span class="app-acces-point"></span><span class="app-acces-texte">Disponible dans <br class="app-acces-br">votre tableau de bord</span> <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
@@ -925,6 +925,11 @@
 .app-acces-btn:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 14px 28px rgba(84,38,128,0.3); }
 .app-acces-point { width: 8px; height: 8px; border-radius: 50%; background: #5fd3a5; box-shadow: 0 0 0 3px rgba(95,211,165,0.3); }
 .app-acces-btn .bi { transition: transform .2s; }
+.app-acces-br { display: none; }
+@media (max-width: 575.98px) {
+    .app-acces-br { display: inline; }
+    .app-acces-texte { text-align: left; line-height: 1.3; }
+}
 .app-acces-btn:hover .bi { transform: translateX(4px); }
 .app-texte.visible .app-acces { animation: app-monte 0.6s 0.55s both; }
 .app-sous-titre.change { opacity: 0; transform: translateY(6px); }
