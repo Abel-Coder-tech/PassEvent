@@ -22,6 +22,33 @@ use Illuminate\Validation\ValidationException;
 
 class EvenementPublicController extends Controller
 {
+    // Libellés publics correctement accentués, indexés par clé normalisée
+    private const LIBELLES_CATEGORIES = [
+        'festival' => 'Festival',
+        'concert' => 'Concert',
+        'gala' => 'Gala',
+        'conference' => 'Conférence',
+        'webinaire' => 'Webinaire',
+        'match' => 'Match',
+        'spectacle' => 'Spectacle',
+        'seminaire' => 'Séminaire',
+        'soiree' => 'Soirée',
+        'formation' => 'Formation',
+        'exposition' => 'Exposition',
+        'atelier' => 'Atelier',
+    ];
+
+    // Catégories non affichées dans les filtres publics
+    private const CATEGORIES_MASQUEES = ['gala de prestige'];
+
+    // Clé de comparaison : minuscules, sans accents, espaces réduits, sans « s » final
+    private static function cleCategorie(string $valeur): string
+    {
+        $v = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $valeur)), 'UTF-8');
+        $v = strtr($v, ['é'=>'e','è'=>'e','ê'=>'e','ë'=>'e','à'=>'a','â'=>'a','î'=>'i','ï'=>'i','ô'=>'o','û'=>'u','ù'=>'u','ü'=>'u','ç'=>'c']);
+        return preg_replace('/(?<=\w)s$/u', '', $v);
+    }
+
     // Durée (en minutes) pendant laquelle une réservation en ligne non payée reste réservée.
     public const DUREE_RESERVATION_MINUTES = 15;
 
@@ -29,14 +56,28 @@ class EvenementPublicController extends Controller
     public function index(Request $request)
     {
         // Récupère les catégories disponibles pour les événements à venir
-        $categories = Evenement::withUpcomingDate()
+        $brutes = Evenement::withUpcomingDate()
             ->where('statut', 'publié')
             ->whereNotNull('categorie')
             ->distinct()
-            ->orderBy('categorie')
             ->pluck('categorie');
 
+        // Regroupe les variantes saisies (casse, accents, pluriel) sous un seul libellé
+        $groupes = [];
+        foreach ($brutes as $brute) {
+            $cle = self::cleCategorie($brute);
+            if ($cle === '' || in_array($cle, self::CATEGORIES_MASQUEES, true)) {
+                continue;
+            }
+            $groupes[$cle][] = $brute;
+        }
+        $categories = collect($groupes)
+            ->map(fn ($variantes, $cle) => self::LIBELLES_CATEGORIES[$cle] ?? mb_convert_case(trim($variantes[0]), MB_CASE_TITLE, 'UTF-8'))
+            ->sort()
+            ->values();
+
         $selectedCategorie = $request->input('categorie');
+        $variantesChoisies = $selectedCategorie ? ($groupes[self::cleCategorie($selectedCategorie)] ?? [$selectedCategorie]) : [];
         $selectedDate = $request->input('date');
         $q = $request->input('q');
 
@@ -46,7 +87,7 @@ class EvenementPublicController extends Controller
             ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
-            $query->where('categorie', $selectedCategorie);
+            $query->whereIn('categorie', $variantesChoisies);
         }
 
         if (Evenement::periodeFiltre($selectedDate)) {
