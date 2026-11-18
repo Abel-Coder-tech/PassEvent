@@ -66,6 +66,8 @@
                         (function () {
                             const nav = document.querySelector('.ev-cats-defile');
                             if (!nav || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                            // Sur ordinateur, pas de défilement : les catégories sont centrées sur plusieurs lignes si besoin
+                            if (window.matchMedia('(min-width: 768px)').matches) return;
                             let pause = false, sens = 1, pos = nav.scrollLeft;
                             ['mouseenter', 'touchstart', 'focusin'].forEach(e => nav.addEventListener(e, () => pause = true, { passive: true }));
                             ['mouseleave', 'touchend', 'focusout'].forEach(e => nav.addEventListener(e, () => { pause = false; pos = nav.scrollLeft; }, { passive: true }));
@@ -545,6 +547,10 @@
 .ev-cats-defile > :first-child { margin-left: auto; }
 .ev-cats-defile > :last-child { margin-right: auto; }
 .ev-cats-defile::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) {
+    .ev-cats-defile { flex-wrap: wrap; justify-content: center; overflow: visible; }
+    .ev-cats-defile > :first-child, .ev-cats-defile > :last-child { margin: 0; }
+}
 .ev-cat-pill {
     flex: 0 0 auto; scroll-snap-align: start; padding: .4rem 1rem; border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.85);
