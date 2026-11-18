@@ -820,10 +820,9 @@
                 <h2 class="app-titre"><span class="app-titre-pax">Pax</span><span class="app-titre-agent"><span class="app-titre-a">A</span>gent</span></h2>
                 <p class="app-sous-titre" id="appSousTitre">L'application mobile dédiée à vos agents de vente et de scan sur le terrain.</p>
                 <div class="app-acces">
-                    <a href="{{ route('dashboard') }}" class="app-acces-btn">
-                        <i class="bi bi-grid-1x2-fill me-2"></i>Disponible dans votre tableau de bord
+                    <a href="{{ route('inscriptions.organisateur') }}" class="app-acces-btn">
+                        <span class="app-acces-point"></span>Disponible dans votre tableau de bord <i class="bi bi-arrow-right"></i>
                     </a>
-                    <span class="app-acces-note"><i class="bi bi-info-circle me-1"></i>Réservé aux organisateurs : connectez-vous pour l'obtenir.</span>
                 </div>
             </div>
             <div class="app-visuel app-reveal">
@@ -918,12 +917,15 @@
 }
 .app-acces { margin-top: 1.75rem; display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; }
 .app-acces-btn {
-    display: inline-flex; align-items: center; padding: .8rem 1.4rem; border-radius: 12px;
+    display: inline-flex; align-items: center; gap: .6rem;
+    padding: .8rem 1.4rem; border-radius: 999px;
     background: #542680; color: #fff; font-weight: 600; text-decoration: none;
     box-shadow: 0 10px 24px rgba(84,38,128,0.25); transition: transform .2s, box-shadow .2s;
 }
 .app-acces-btn:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 14px 28px rgba(84,38,128,0.3); }
-.app-acces-note { font-size: .85rem; color: #8a8494; }
+.app-acces-point { width: 8px; height: 8px; border-radius: 50%; background: #5fd3a5; box-shadow: 0 0 0 3px rgba(95,211,165,0.3); }
+.app-acces-btn .bi { transition: transform .2s; }
+.app-acces-btn:hover .bi { transform: translateX(4px); }
 .app-texte.visible .app-acces { animation: app-monte 0.6s 0.55s both; }
 .app-sous-titre.change { opacity: 0; transform: translateY(6px); }
 .section-app { overflow: hidden; }
