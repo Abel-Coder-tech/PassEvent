@@ -98,8 +98,24 @@ class AffiliationController extends Controller
                 ];
             });
 
-        return view('admin.affiliations.index', compact('evenements', 'parEvenement', 'liens', 'commissions', 'stats', 'ventesParLien'));
+        // Commission générée par chaque lien (hors annulées)
+        $commissionsParLien = AffiliateCommission::whereIn('evenement_id', $evenementIds)
+            ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+            ->where('statut', '!=', 'annule')
+            ->whereNotNull('affiliate_event_link_id')
+            ->selectRaw('affiliate_event_link_id, SUM(montant) as total')
+            ->groupBy('affiliate_event_link_id')
+            ->pluck('total', 'affiliate_event_link_id');
 
-        return view('admin.affiliations.index', compact('evenements', 'parEvenement', 'liens', 'commissions', 'stats'));
+        // Classement des liens : ventes, puis clics
+        $liens = $liens->sortByDesc(fn ($l) => [(int) ($ventesParLien[$l->id] ?? 0), (int) $l->clics])->values();
+
+        $stats['conversion'] = $stats['clics'] > 0 ? round($stats['ventes'] / $stats['clics'] * 100, 1) : 0;
+        $stats['commissions_disponibles'] = (float) AffiliateCommission::whereIn('evenement_id', $evenementIds)
+            ->where('type', AffiliateCommission::TYPE_CO_PARRAINAGE)
+            ->where('statut', 'disponible')
+            ->sum('montant');
+
+        return view('admin.affiliations.index', compact('evenements', 'parEvenement', 'liens', 'commissions', 'stats', 'ventesParLien', 'commissionsParLien'));
     }
 }
