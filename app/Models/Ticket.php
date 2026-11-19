@@ -236,6 +236,13 @@ class Ticket extends Model
             ->count(\Illuminate\Support\Facades\DB::raw('DATE(created_at)'));
     }
 
+    // Exclut les billets des événements internes du super admin (QR imprimés pour un tiers) :
+    // ils ne doivent apparaître dans aucune liste, statistique ni transaction.
+    public function scopeHorsEvenementsInternes($query)
+    {
+        return $query->whereNotIn('evenement_id', Evenement::where('interne', true)->select('id'));
+    }
+
     public static function genererCodeSecurise(): string
     {
         do {

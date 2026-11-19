@@ -38,6 +38,11 @@ class Log extends Model
         });
     }
 
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
+    }
+
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);

@@ -110,25 +110,25 @@ class SuperAdminController extends Controller
         };
 
         // ---- KPI période courante ----
-        $ticketsQuery = Ticket::where('statut_paiement', 'payé');
+        $ticketsQuery = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé');
         $filtrerTickets($ticketsQuery, $start, $end);
         $ticketsVendus = (clone $ticketsQuery)->count();
         $recettesGlobales = (float) (clone $ticketsQuery)->sum('montant');
 
         $totalUsers = User::whereBetween('created_at', [$start, $end])->count();
-        $totalEvenements = Evenement::whereBetween('created_at', [$start, $end])->count();
-        $evenementsActifs = Evenement::where('statut', 'publié')->where('date_event', '>=', $now)
+        $totalEvenements = Evenement::visiblesPublic()->whereBetween('created_at', [$start, $end])->count();
+        $evenementsActifs = Evenement::visiblesPublic()->where('statut', 'publié')->where('date_event', '>=', $now)
             ->whereBetween('created_at', [$start, $end])->count();
         $scansPeriode = Log::where('type_operation', 'scan')
             ->whereBetween('created_at', [$start, $end])->count();
 
         // ---- KPI période précédente (évolution) ----
-        $prevTicketsQuery = Ticket::where('statut_paiement', 'payé');
+        $prevTicketsQuery = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé');
         $filtrerTickets($prevTicketsQuery, $prevStart, $prevEnd);
         $prevTickets = (clone $prevTicketsQuery)->count();
         $prevRecettes = (float) (clone $prevTicketsQuery)->sum('montant');
         $prevUsers = User::whereBetween('created_at', [$prevStart, $prevEnd])->count();
-        $prevEvenements = Evenement::whereBetween('created_at', [$prevStart, $prevEnd])->count();
+        $prevEvenements = Evenement::visiblesPublic()->whereBetween('created_at', [$prevStart, $prevEnd])->count();
 
         $ticketsEvolution = $this->evolution($prevTickets, $ticketsVendus);
         $recettesEvolution = $this->evolution($prevRecettes, $recettesGlobales);
@@ -164,14 +164,14 @@ class SuperAdminController extends Controller
             $day = $now->copy()->subDays($i);
             $ventes7Jours->push([
                 'date' => $day->isoFormat('D MMM'),
-                'tickets' => Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $day)->count(),
-                'revenus' => Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $day)->sum('montant'),
+                'tickets' => Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')->whereDate('date_achat', $day)->count(),
+                'revenus' => Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')->whereDate('date_achat', $day)->sum('montant'),
             ]);
         }
 
         $usersParRole = [
-            'etudiants' => Ticket::where('nom_tarif', 'like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
-            'externes' => Ticket::where('nom_tarif', 'not like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
+            'etudiants' => Ticket::horsEvenementsInternes()->where('nom_tarif', 'like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
+            'externes' => Ticket::horsEvenementsInternes()->where('nom_tarif', 'not like', '%tudiant%')->where('statut_paiement', 'payé')->distinct('email_acheteur')->count('email_acheteur'),
             'admins' => User::whereIn('role', ['admin', 'super_admin'])->count(),
         ];
 
@@ -205,19 +205,19 @@ class SuperAdminController extends Controller
             ->where('details->resultat', '!=', 'valide')
             ->where('created_at', '>=', $today)
             ->count();
-        $paiementsEchoues = Ticket::where('statut_paiement', 'échoué')->count();
+        $paiementsEchoues = Ticket::horsEvenementsInternes()->where('statut_paiement', 'échoué')->count();
         // Tickets suspects (>3 achats par même email/événement)
-        $ticketsDupliques = Ticket::select('email_acheteur', 'evenement_id', DB::raw('count(*) as total'))
+        $ticketsDupliques = Ticket::horsEvenementsInternes()->select('email_acheteur', 'evenement_id', DB::raw('count(*) as total'))
             ->where('statut_paiement', 'payé')
             ->groupBy('email_acheteur', 'evenement_id')
             ->having('total', '>', 3)
             ->get()->count();
 
         // Indicateurs financiers
-        $transactionsReussies = Ticket::where('statut_paiement', 'payé')->where('transaction_id', 'not like', 'GRATUIT-%')->count();
-        $transactionsEchouees = Ticket::where('statut_paiement', 'échoué')->count();
-        $montantsJournaliers = Ticket::where('statut_paiement', 'payé')->whereDate('date_achat', $today)->sum('montant');
-        $commissionParEvenement = Ticket::where('statut_paiement', 'payé')
+        $transactionsReussies = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')->where('transaction_id', 'not like', 'GRATUIT-%')->count();
+        $transactionsEchouees = Ticket::horsEvenementsInternes()->where('statut_paiement', 'échoué')->count();
+        $montantsJournaliers = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')->whereDate('date_achat', $today)->sum('montant');
+        $commissionParEvenement = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')
             ->select('evenement_id', DB::raw('SUM(montant) as total'))
             ->groupBy('evenement_id')
             ->get();
@@ -269,10 +269,10 @@ class SuperAdminController extends Controller
         ];
 
         if ($user->peut('organisateurs.consulter')) {
-            $donnees['organisateursEnAttente'] = User::where('role', 'admin')
+            $donnees['organisateursEnAttente'] = User::where('role', 'admin')->where('interne', false)
                 ->whereIn('statut', ['en_attente', 'corrections_apportees'])
                 ->orderBy('created_at', 'desc')->limit(6)->get();
-            $donnees['nbOrganisateursEnAttente'] = User::where('role', 'admin')
+            $donnees['nbOrganisateursEnAttente'] = User::where('role', 'admin')->where('interne', false)
                 ->whereIn('statut', ['en_attente', 'corrections_apportees'])->count();
         }
 
@@ -289,10 +289,10 @@ class SuperAdminController extends Controller
         }
 
         if ($user->peut('support.consulter')) {
-            $donnees['incidentsTechniques'] = Ticket::where('statut_paiement', 'en_attente')
+            $donnees['incidentsTechniques'] = Ticket::horsEvenementsInternes()->where('statut_paiement', 'en_attente')
                 ->whereNotNull('fedapay_transaction_id')
                 ->orderBy('created_at', 'desc')->limit(6)->get();
-            $donnees['nbIncidentsTechniques'] = Ticket::where('statut_paiement', 'en_attente')
+            $donnees['nbIncidentsTechniques'] = Ticket::horsEvenementsInternes()->where('statut_paiement', 'en_attente')
                 ->whereNotNull('fedapay_transaction_id')->count();
         }
 
@@ -421,7 +421,7 @@ class SuperAdminController extends Controller
     {
         [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
 
-        $tickets = Ticket::where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
+        $tickets = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
         $this->filtrerTickets($tickets, $operateur, $typeEvenement);
 
         $ticketsParJour = (clone $tickets)
@@ -445,7 +445,7 @@ class SuperAdminController extends Controller
     {
         [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
 
-        $tickets = Ticket::where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
+        $tickets = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
         $this->filtrerTickets($tickets, $operateur, $typeEvenement);
 
         $montantsParJour = (clone $tickets)
@@ -465,7 +465,7 @@ class SuperAdminController extends Controller
     {
         [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
 
-        $paiements = Ticket::whereIn('statut_paiement', ['payé', 'échoué'])
+        $paiements = Ticket::horsEvenementsInternes()->whereIn('statut_paiement', ['payé', 'échoué'])
             ->whereBetween('date_achat', [$start, $end]);
         $this->filtrerTickets($paiements, $operateur, $typeEvenement);
 
@@ -522,7 +522,7 @@ class SuperAdminController extends Controller
     {
         [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
 
-        $query = Evenement::withCount(['tickets as tickets_vendus' => function ($q) use ($start, $end, $operateur, $typeEvenement) {
+        $query = Evenement::where('interne', false)->withCount(['tickets as tickets_vendus' => function ($q) use ($start, $end, $operateur, $typeEvenement) {
             $q->where('statut_paiement', 'payé')->whereBetween('date_achat', [$start, $end]);
             if ($operateur) {
                 $q->where(function ($sub) use ($operateur) {
@@ -558,7 +558,7 @@ class SuperAdminController extends Controller
     {
         [$start, $end] = $this->periodeRange($periode, $dateDebut, $dateFin);
 
-        $base = Ticket::where('statut_paiement', 'payé')
+        $base = Ticket::horsEvenementsInternes()->where('statut_paiement', 'payé')
             ->whereBetween('date_achat', [$start, $end]);
 
         if ($typeEvenement) {
@@ -655,7 +655,7 @@ class SuperAdminController extends Controller
         $q = trim((string) $request->input('q'));
         $statut = $request->input('statut');
 
-        $organisateurs = User::where('role', 'admin')
+        $organisateurs = User::where('role', 'admin')->where('interne', false)
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('nom', 'like', "%{$q}%")
@@ -687,6 +687,7 @@ class SuperAdminController extends Controller
     public function evenements()
     {
         $evenements = Evenement::with('user')
+            ->where('interne', false)
             ->withCount(['tickets as tickets_vendus' => fn ($q) => $q->where('statut_paiement', 'payé')])
             ->withSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('created_at')
@@ -698,7 +699,7 @@ class SuperAdminController extends Controller
     // Liste des transactions financières
     public function transactions()
     {
-        $transactions = Ticket::whereNotNull('transaction_id')
+        $transactions = Ticket::horsEvenementsInternes()->whereNotNull('transaction_id')
             ->where('transaction_id', 'not like', 'GRATUIT-%')
             ->with('evenement')
             ->orderByDesc('created_at')
@@ -710,7 +711,7 @@ class SuperAdminController extends Controller
     // Liste de tous les tickets
     public function tickets()
     {
-        $allTickets = Ticket::with('evenement')->orderByDesc('created_at')->paginate(PerPage::resolve());
+        $allTickets = Ticket::horsEvenementsInternes()->with('evenement')->orderByDesc('created_at')->paginate(PerPage::resolve());
 
         return view('superadmin.tickets', compact('allTickets'));
     }
@@ -734,7 +735,7 @@ class SuperAdminController extends Controller
             ->paginate(PerPage::resolve())
             ->withQueryString();
 
-        $evenements = Evenement::orderByDesc('created_at')->get(['id', 'titre']);
+        $evenements = Evenement::visiblesPublic()->orderByDesc('created_at')->get(['id', 'titre']);
 
         return view('superadmin.acheteurs', compact('acheteurs', 'evenements'));
     }
@@ -799,7 +800,7 @@ class SuperAdminController extends Controller
         $fin = $request->input('fin');
         $statut = $request->input('statut');
 
-        $query = Ticket::with('evenement');
+        $query = Ticket::horsEvenementsInternes()->with('evenement');
 
         if ($q !== '') {
             $query->where(function ($b) use ($q) {
@@ -845,7 +846,7 @@ class SuperAdminController extends Controller
     // Statistiques par événement
     public function statistiques()
     {
-        $evenements = Evenement::select('id', 'titre', 'capacite', 'quota_vendu', 'date_event', 'statut', 'gratuit')
+        $evenements = Evenement::visiblesPublic()->select('id', 'titre', 'capacite', 'quota_vendu', 'date_event', 'statut', 'gratuit')
             ->withCount('dates')
             ->withSum(['tickets as recettes' => fn ($q) => $q->where('statut_paiement', 'payé')], 'montant')
             ->orderByDesc('date_event')
@@ -1184,7 +1185,7 @@ class SuperAdminController extends Controller
         $stats = [];
 
         if ($membre->peut('organisateurs.consulter')) {
-            $stats['organisateurs_attente'] = User::where('role', 'admin')
+            $stats['organisateurs_attente'] = User::where('role', 'admin')->where('interne', false)
                 ->whereIn('statut', ['en_attente', 'corrections_apportees'])->count();
         }
         if ($membre->peut('retraits.consulter')) {

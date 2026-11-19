@@ -227,6 +227,12 @@ class LotPhysique extends Model
         return $this->hasMany(CodeQrExterne::class, 'lot_physique_id');
     }
 
+    // Lot géré dans « QR hors plateforme » : sans événement, ou pour un événement interne
+    public function horsPlateforme(): bool
+    {
+        return $this->externe || (bool) $this->evenement?->interne;
+    }
+
     // Titre de l'événement affiché (plateforme ou saisi librement)
     public function titreEvenement(): ?string
     {

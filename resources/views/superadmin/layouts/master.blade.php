@@ -578,11 +578,14 @@
             </a>
             @endif
             @if(!$estEquipe)
-            <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements*') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.evenements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements', 'superadmin.evenements.*') ? 'active' : '' }}">
                 <i class="bi bi-calendar-event-fill"></i> Événements
             </a>
             <a href="{{ route('superadmin.tickets-physiques') }}" class="sa-nav-link {{ request()->routeIs('superadmin.tickets-physiques*') ? 'active' : '' }}">
                 <i class="bi bi-ticket-perforated-fill"></i> Tickets physiques
+            </a>
+            <a href="{{ route('superadmin.evenements-internes') }}" class="sa-nav-link {{ request()->routeIs('superadmin.evenements-internes*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-plus-fill"></i> Événements internes
             </a>
             <a href="{{ route('superadmin.qr-externes') }}" class="sa-nav-link {{ request()->routeIs('superadmin.qr-externes*') ? 'active' : '' }}">
                 <i class="bi bi-qr-code"></i> QR hors plateforme
