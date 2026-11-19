@@ -109,6 +109,9 @@
         </div>
     </div>
 
+    {{-- Emplacement de la barre d'achat mobile, juste après l'image --}}
+    <div class="achat-emplacement d-lg-none" id="barreEmplacement"></div>
+
     <div class="container">
         <div class="row g-5 py-4">
             <!-- Colonne gauche : Description + Achat -->
@@ -527,6 +530,10 @@
 }
 .achat-barre-n{font-size:.75rem;color:#6b6474}
 .achat-barre-t{font-size:1.1rem;font-weight:800;color:#211C31}
+@media (max-width:991.98px){
+  .achat-barre.is-visible.en-ligne{position:static;box-shadow:none;border-top:0;border-bottom:1px solid #e6e3eb}
+  body.achat-barre-en-ligne{padding-bottom:0}
+}
 .achat-barre.est-vide #btnContinuerBarre{flex:1;max-width:60%;justify-content:center;padding:.75rem 1rem;font-size:1rem}
 </style>
 </div>
@@ -1294,6 +1301,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // Bouton de la barre mobile : tant qu'il manque une information, il mène
     // au premier champ à remplir ; dès que tout est valide, il envoie
     // directement le formulaire (même validation que le bouton Payer).
+    // Barre mobile : juste après l'image tant que cet endroit est à l'écran (ou plus bas),
+    // puis fixée en bas de l'écran une fois qu'on a défilé au-delà.
+    const emplacement = document.getElementById('barreEmplacement');
+    if (emplacement && 'IntersectionObserver' in window) {
+        emplacement.appendChild(barre);
+        barre.classList.add('en-ligne');
+        document.body.classList.add('achat-barre-en-ligne');
+        new IntersectionObserver(function (entrees) {
+            const e = entrees[0];
+            const auDessus = !e.isIntersecting && e.boundingClientRect.top < 0;
+            // On réserve la hauteur pour que la page ne saute pas quand la barre se détache
+            emplacement.style.minHeight = auDessus ? barre.offsetHeight + 'px' : '';
+            barre.classList.toggle('en-ligne', !auDessus);
+            document.body.classList.toggle('achat-barre-en-ligne', !auDessus);
+        }).observe(emplacement);
+    }
+
     const btnBarre = document.getElementById('btnContinuerBarre');
     const libelleBarre = btnBarre.querySelector('[data-barre-libelle]');
     const iconeBarre = btnBarre.querySelector('[data-barre-icone]');

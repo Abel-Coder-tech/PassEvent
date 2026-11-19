@@ -672,6 +672,7 @@
 <section class="section-events">
     <div class="container">
         <!-- Barre de recherche, catégories et choix d'affichage (même style que la page Événements) -->
+        <div class="outils-evenements">
         <form action="{{ route('accueil') }}#evenements" method="GET" class="filter-search" id="evenements">
             <div class="search-wrap">
                 <i class="bi bi-search search-icon"></i>
@@ -695,6 +696,7 @@
                 <button type="button" class="vue-btn active" data-vue="cartes" aria-pressed="true" title="Afficher en cartes"><i class="bi bi-grid-3x2-gap"></i></button>
                 <button type="button" class="vue-btn" data-vue="liste" aria-pressed="false" title="Afficher en liste"><i class="bi bi-list-ul"></i></button>
             </div>
+        </div>
         </div>
         <script>
             // Recherche automatique : envoie le formulaire après une courte pause de saisie.
@@ -1052,7 +1054,7 @@
 }
 
 .section-events {
-    padding: 5rem 0;
+    padding: 3rem 0 5rem;
     background: #fff;
 }
 .section-header {
@@ -1085,6 +1087,16 @@
 }
 
 .filter-search { margin-bottom: 1rem; scroll-margin-top: 90px; }
+/* Ordinateur : recherche, catégories et affichage sur une seule ligne */
+@media (min-width: 992px) {
+    .outils-evenements { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; }
+    .outils-evenements .filter-search { flex: 0 0 380px; margin: 0; }
+    .outils-evenements .search-wrap { max-width: none; margin: 0; }
+    .outils-evenements .filtres-barre { flex: 1; min-width: 0; margin: 0; }
+    .outils-evenements .cats-defile > :first-child { margin-left: 0; }
+    .outils-evenements .cats-defile > :last-child { margin-right: 0; }
+    .outils-evenements .vue-btn { height: 42px; }
+}
 .search-wrap { position: relative; max-width: 560px; margin: 0 auto; }
 .search-input::-webkit-search-cancel-button { display: none; }
 .search-icon {
