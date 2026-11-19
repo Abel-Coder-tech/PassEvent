@@ -15,13 +15,15 @@ class SitePublicController extends Controller
     public function accueil(Request $request)
     {
         // Récupère les catégories disponibles
-        $categories = Evenement::where('statut', '=', 'publié')
+        $brutes = Evenement::where('statut', '=', 'publié')
             ->visiblesPublic()
             ->where('date_event', '>=', now())
             ->whereNotNull('categorie')
             ->distinct()
-            ->orderBy('categorie')
             ->pluck('categorie');
+        // Mêmes catégories dédoublonnées que la page Événements
+        [$categoriesFiltre, $groupes] = EvenementPublicController::regrouperCategories($brutes);
+        $categories = $categoriesFiltre;
 
         $selectedCategorie = $request->input('categorie');
         $selectedDate = $request->input('date');
@@ -34,7 +36,7 @@ class SitePublicController extends Controller
             ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
-            $query->where('categorie', '=', $selectedCategorie);
+            $query->whereIn('categorie', EvenementPublicController::variantesCategorie($groupes, $selectedCategorie));
         }
 
         if (Evenement::periodeFiltre($selectedDate)) {
@@ -63,7 +65,7 @@ class SitePublicController extends Controller
             ->limit(6)
             ->get();
 
-        return view('site.accueil', compact('evenementsVedettes', 'evenementsUne', 'categories', 'selectedCategorie', 'selectedDate', 'q'));
+        return view('site.accueil', compact('evenementsVedettes', 'evenementsUne', 'categories', 'categoriesFiltre', 'selectedCategorie', 'selectedDate', 'q'));
     }
 
     // Page d'aide / FAQ
