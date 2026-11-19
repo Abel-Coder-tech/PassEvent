@@ -510,9 +510,9 @@
 .ev-search-go:hover { filter: brightness(0.95); }
 @media (max-width: 575.98px) {
     .ev-hero .ev-search-wrap { max-width: 82%; margin: 0 auto; }
-    .ev-hero .ev-search-input { padding: .4rem 4.8rem .4rem 2rem; font-size: .78rem; border-radius: 9px; }
+    .ev-hero .ev-search-input { padding: .6rem 5rem .6rem 2rem; font-size: .78rem; border-radius: 9px; }
     .ev-hero .ev-search-wrap > .bi-search { left: 10px; font-size: .78rem; }
-    .ev-search-go { height: 24px; padding: 0 .55rem; font-size: .68rem; border-radius: 6px; right: 3px; }
+    .ev-search-go { height: 30px; padding: 0 .55rem; font-size: .68rem; border-radius: 6px; right: 3px; }
 }
 .ev-search-wrap .ev-search-go .bi-search { position: static; transform: none; color: inherit; }
 .ev-search-go:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
