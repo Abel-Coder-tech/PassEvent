@@ -34,6 +34,7 @@ use App\Http\Controllers\SuperAdmin\AffiliationController as SuperAdminAffiliati
 use App\Http\Controllers\SuperAdmin\ParametresController as SuperAdminParametresController;
 use App\Http\Controllers\SuperAdmin\LotPhysiqueController as SuperAdminLotPhysiqueController;
 use App\Http\Controllers\SuperAdmin\QrExterneController;
+use App\Http\Controllers\SuperAdmin\EvenementInterneController;
 use App\Http\Controllers\SuperAdminAuthController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\TarifController;
@@ -171,6 +172,13 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/acheteurs', [SuperAdminController::class, 'acheteurs'])->name('acheteurs');
         Route::get('/acheteurs/export', [SuperAdminController::class, 'acheteursExport'])->name('acheteurs.export');
         Route::get('/scans', [SuperAdminController::class, 'scans'])->name('scans');
+        // Événements internes (masqués du public) : création, tarifs et agents
+        Route::get('/evenements-internes', [EvenementInterneController::class, 'index'])->name('evenements-internes');
+        Route::get('/evenements-internes/creer', [EvenementInterneController::class, 'create'])->name('evenements-internes.creer');
+        Route::post('/evenements-internes', [EvenementInterneController::class, 'store'])->name('evenements-internes.store');
+        Route::get('/evenements-internes/{evenement}', [EvenementInterneController::class, 'show'])->name('evenements-internes.voir');
+        Route::post('/evenements-internes/{evenement}/agents', [EvenementInterneController::class, 'ajouterAgent'])->name('evenements-internes.agents');
+        Route::post('/evenements-internes/{evenement}/agents/{id}/basculer', [EvenementInterneController::class, 'basculerAgent'])->whereNumber('id')->name('evenements-internes.agents.basculer');
         // QR codes pour des événements hors plateforme (template commun aux lots physiques)
         Route::get('/qr-externes', [QrExterneController::class, 'index'])->name('qr-externes');
         Route::post('/qr-externes', [QrExterneController::class, 'store'])->name('qr-externes.store');
@@ -296,7 +304,7 @@ Route::middleware(['auth', 'gestion.org'])->get('/generate-sitemap', function ()
         ->add(Url::create(url('/affiliation')))
         ->add(Url::create(url('/contrat-prestation')));
 
-    Evenement::where('statut', '=', 'publié', 'and')->get()->each(function ($evenement) use ($sitemap) {
+    Evenement::where('statut', '=', 'publié', 'and')->visiblesPublic()->get()->each(function ($evenement) use ($sitemap) {
         $sitemap->add(
             Url::create(url('/evenements/'.$evenement->slug))
                 ->setLastModificationDate($evenement->updated_at ? \Carbon\Carbon::parse($evenement->updated_at) : \Carbon\Carbon::now())

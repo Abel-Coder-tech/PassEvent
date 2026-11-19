@@ -33,6 +33,7 @@ class LotPhysiqueController extends Controller
 
         $lots = LotPhysique::with('evenement', 'user', 'tarif')
             ->where('externe', false)
+            ->whereDoesntHave('evenement', fn ($e) => $e->where('interne', true))
             ->withCount(['tickets as nb_tickets'])
             ->withCount(['tickets as nb_annules' => fn ($q2) => $q2->where('annule', true)])
             ->withCount(['tickets as nb_scannes' => fn ($q2) => $q2->where('utilise', true)])
@@ -63,7 +64,7 @@ class LotPhysiqueController extends Controller
         $global = ['quantite' => 0, 'valeur' => 0.0, 'commission' => 0.0];
         $organisateurs = [];
 
-        foreach (User::whereIn('id', $userIds)->orderBy('nom')->get(['id', 'nom']) as $user) {
+        foreach (User::whereIn('id', $userIds)->where('interne', false)->orderBy('nom')->get(['id', 'nom']) as $user) {
             $stats = $user->statsPhysiques();
 
             if ($stats['quantite'] === 0 && $stats['commissionPayee'] <= 0) {
@@ -93,7 +94,7 @@ class LotPhysiqueController extends Controller
     // Formulaire de création d'un lot
     public function create()
     {
-        $organisateurs = User::where('role', 'admin')->orderBy('nom')->get();
+        $organisateurs = User::where('role', 'admin')->where('interne', false)->orderBy('nom')->get();
 
         return view('superadmin.lots-physiques.create', compact('organisateurs'));
     }
@@ -320,7 +321,7 @@ class LotPhysiqueController extends Controller
     // Détail d'un lot : tickets avec codes et QR
     public function show(LotPhysique $lot)
     {
-        if ($lot->externe) {
+        if ($lot->horsPlateforme()) {
             return redirect()->route('superadmin.tickets-physiques.template', $lot);
         }
 

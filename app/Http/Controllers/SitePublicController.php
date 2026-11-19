@@ -16,6 +16,7 @@ class SitePublicController extends Controller
     {
         // Récupère les catégories disponibles
         $categories = Evenement::where('statut', '=', 'publié')
+            ->visiblesPublic()
             ->where('date_event', '>=', now())
             ->whereNotNull('categorie')
             ->distinct()
@@ -27,6 +28,7 @@ class SitePublicController extends Controller
         $q = $request->input('q');
 
         $query = Evenement::with('tarifs', 'user:id,statut')
+            ->visiblesPublic()
             ->where('statut', '=', 'publié')
             ->where('date_event', '>=', now())
             ->orderBy('date_event', 'asc');
@@ -53,6 +55,7 @@ class SitePublicController extends Controller
 
         // Événements "à la une" : sélection superadmin, défilement dans le carrousel
         $evenementsUne = Evenement::ALaUne()
+            ->visiblesPublic()
             ->where('statut', 'publié')
             ->where('date_event', '>=', now())
             ->whereHas('user', fn ($q) => $q->where('statut', 'actif'))

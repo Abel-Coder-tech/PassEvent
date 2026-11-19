@@ -57,6 +57,7 @@ class EvenementPublicController extends Controller
     {
         // Récupère les catégories disponibles pour les événements à venir
         $brutes = Evenement::withUpcomingDate()
+            ->visiblesPublic()
             ->where('statut', 'publié')
             ->whereNotNull('categorie')
             ->distinct()
@@ -82,6 +83,7 @@ class EvenementPublicController extends Controller
         $q = $request->input('q');
 
         $query = Evenement::with('tarifs', 'dates', 'user:id,statut')
+            ->visiblesPublic()
             ->withUpcomingDate()
             ->where('statut', 'publié')
             ->orderBy('date_event', 'asc');
@@ -108,6 +110,7 @@ class EvenementPublicController extends Controller
 
         // Événements passés (publiés ou terminés) affichés en bas de page
         $evenementsPasses = Evenement::with('tarifs', 'dates', 'user:id,statut')
+            ->visiblesPublic()
             ->whereIn('statut', ['publié', 'terminé'])
             ->where(function ($query) {
                 $query->where(function ($withDates) {
@@ -128,6 +131,7 @@ class EvenementPublicController extends Controller
     // Affiche la page publique d'un événement avec tarifs et disponibilité
     public function show(Evenement $evenement, Request $request)
     {
+        abort_if($evenement->interne, 404); // Événement interne : jamais public
         // SEO : redirection 301 de l'ancien format /evenements/{id} vers /evenements/{slug}.
         // On lit le segment d'URL (et non request()->route('evenement') qui contient le modèle lié).
         $segment = (string) request()->segment(2);
@@ -171,6 +175,7 @@ class EvenementPublicController extends Controller
     // (tarif_id + quantite) et l'inscription seule sur liste d'attente.
     public function achat(Evenement $evenement, Request $request, PaymentMonitoringService $paymentMonitoring)
     {
+        abort_if($evenement->interne, 404); // Événement interne : jamais public
         if ($evenement->statut !== 'publié') {
             abort(404);
         }
@@ -428,6 +433,7 @@ class EvenementPublicController extends Controller
     // l'ouverture de la billetterie (envoi par billetterie:notifier-ouverture).
     public function alerterOuverture(Request $request, Evenement $evenement)
     {
+        abort_if($evenement->interne, 404); // Événement interne : jamais public
         abort_if($evenement->statut !== 'publié', 404);
 
         $validated = $request->validate([
@@ -456,6 +462,7 @@ class EvenementPublicController extends Controller
 
     public function inscrireListeAttente(Request $request, Evenement $evenement)
     {
+        abort_if($evenement->interne, 404); // Événement interne : jamais public
         abort_if($evenement->statut !== 'publié', 404);
 
         if ($evenement->billetteriePasOuverte()) {
@@ -559,6 +566,7 @@ class EvenementPublicController extends Controller
     // Permet à un utilisateur de contacter l'organisateur d'un événement
     public function contacterOrganisateur(Evenement $evenement, Request $request)
     {
+        abort_if($evenement->interne, 404); // Événement interne : jamais public
         if ($evenement->statut !== 'publié') {
             abort(404); // Événement non publié
         }
@@ -626,7 +634,7 @@ class EvenementPublicController extends Controller
     {
         $lien = \App\Models\AffiliateEventLink::with('evenement.dates')->where('code', $code)->firstOrFail();
         $evenement = $lien->evenement;
-        if (! $evenement || ! in_array($evenement->statut, ['publié', 'terminé'], true)) {
+        if (! $evenement || $evenement->interne || ! in_array($evenement->statut, ['publié', 'terminé'], true)) {
             abort(404);
         }
 

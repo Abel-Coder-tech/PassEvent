@@ -61,6 +61,7 @@ class User extends Authenticatable
     ];
 
     protected $fillable = [
+        'interne',
         'nom',
         'prenom',
         'organisation',
@@ -121,10 +122,29 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    // Compte propriétaire des événements internes du super admin.
+    // Il ne se connecte jamais (mot de passe aléatoire, connexion refusée) et
+    // n'apparaît pas dans les listes d'organisateurs.
+    public static function compteInterne(): self
+    {
+        return self::firstOrCreate(
+            ['email' => 'evenements-internes@paxevent.com'],
+            [
+                'nom' => 'PaxEvent',
+                'prenom' => 'Événements internes',
+                'mot_de_passe' => bcrypt(\Illuminate\Support\Str::random(40)),
+                'role' => 'admin',
+                'statut' => 'actif',
+                'interne' => true,
+            ]
+        );
+    }
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'interne' => 'boolean',
             'notif_email_evenement' => 'boolean',
             'notif_email_ticket' => 'boolean',
             'notif_email_paiement' => 'boolean',

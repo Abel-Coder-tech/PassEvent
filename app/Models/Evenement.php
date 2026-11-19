@@ -40,6 +40,9 @@ class Evenement extends Model
         'quota_vendu',
         'image',
         'statut',
+        'interne',
+        'auteur_nom',
+        'auteur_prenom',
         'type_evenement',
         'gratuit',
         'ventes_fermees',
@@ -59,6 +62,7 @@ class Evenement extends Model
         return [
             'date_event' => 'datetime',
             'gratuit' => 'boolean',
+            'interne' => 'boolean',
             'ventes_fermees' => 'boolean',
             'billetterie_ouverte' => 'boolean',
             'billetterie_ouvre_le' => 'datetime',
@@ -123,6 +127,20 @@ class Evenement extends Model
     }
 
     // Scope : événements mis à la une, triés par ordre
+    // Événements visibles du public : exclut les événements internes du super admin
+    public function scopeVisiblesPublic(Builder $query): Builder
+    {
+        return $query->where('interne', false);
+    }
+
+    // Auteur affiché d'un événement interne (« Prénom Nom »)
+    public function auteurComplet(): ?string
+    {
+        $nom = trim(($this->auteur_prenom ?? '').' '.($this->auteur_nom ?? ''));
+
+        return $nom !== '' ? $nom : null;
+    }
+
     public function scopeALaUne($query)
     {
         return $query->where('a_la_une', true)

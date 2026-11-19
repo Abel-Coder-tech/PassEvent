@@ -294,7 +294,7 @@
 @endif
 
 <div class="lot-info mb-3 d-flex flex-wrap gap-3 align-items-center">
-    <a href="{{ $lot->externe ? route('superadmin.qr-externes') : route('superadmin.tickets-physiques') }}" class="btn btn-sm btn-outline-secondary">
+    <a href="{{ $lot->horsPlateforme() ? route('superadmin.qr-externes') : route('superadmin.tickets-physiques') }}" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Retour
     </a>
     <span><i class="bi bi-ticket-perforated me-1" style="color:var(--sa-primary);"></i><strong>{{ $lot->nom }}</strong></span>
@@ -305,12 +305,12 @@
     <a href="{{ route('superadmin.tickets-physiques.template.preview', $lot) }}" target="_blank" class="btn btn-sm btn-preview">
         <i class="bi bi-eye me-1"></i>Visualiser
     </a>
-    @if($lot->externe)
+    @if($lot->horsPlateforme())
     <a href="{{ route('superadmin.qr-externes.qr-pdf', $lot) }}" class="btn btn-sm btn-outline-secondary ms-auto">
         <i class="bi bi-qr-code me-1"></i>QR codes (PDF)
     </a>
     @endif
-    <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="btn btn-sm btn-download {{ $lot->externe ? '' : 'ms-auto' }}">
+    <a href="{{ route('superadmin.tickets-physiques.planche', $lot) }}" class="btn btn-sm btn-download {{ $lot->horsPlateforme() ? '' : 'ms-auto' }}">
         <i class="bi bi-download me-1"></i>Télécharger la planche
     </a>
 </div>
