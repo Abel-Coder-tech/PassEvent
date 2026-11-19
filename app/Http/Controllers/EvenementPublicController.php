@@ -42,6 +42,32 @@ class EvenementPublicController extends Controller
     private const CATEGORIES_MASQUEES = ['gala de prestige'];
 
     // Clé de comparaison : minuscules, sans accents, espaces réduits, sans « s » final
+    // Regroupe les variantes saisies (casse, accents, pluriel) sous un seul libellé.
+    // Renvoie [libellés triés, variantes par clé]. Partagé avec la page d'accueil.
+    public static function regrouperCategories(iterable $brutes): array
+    {
+        $groupes = [];
+        foreach ($brutes as $brute) {
+            $cle = self::cleCategorie($brute);
+            if ($cle === '' || in_array($cle, self::CATEGORIES_MASQUEES, true)) {
+                continue;
+            }
+            $groupes[$cle][] = $brute;
+        }
+        $categories = collect($groupes)
+            ->map(fn ($variantes, $cle) => self::LIBELLES_CATEGORIES[$cle] ?? mb_convert_case(trim($variantes[0]), MB_CASE_TITLE, 'UTF-8'))
+            ->sort()
+            ->values();
+
+        return [$categories, $groupes];
+    }
+
+    // Valeurs brutes en base correspondant à la catégorie choisie
+    public static function variantesCategorie(array $groupes, ?string $choisie): array
+    {
+        return $choisie ? ($groupes[self::cleCategorie($choisie)] ?? [$choisie]) : [];
+    }
+
     private static function cleCategorie(string $valeur): string
     {
         $v = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $valeur)), 'UTF-8');
@@ -63,22 +89,10 @@ class EvenementPublicController extends Controller
             ->distinct()
             ->pluck('categorie');
 
-        // Regroupe les variantes saisies (casse, accents, pluriel) sous un seul libellé
-        $groupes = [];
-        foreach ($brutes as $brute) {
-            $cle = self::cleCategorie($brute);
-            if ($cle === '' || in_array($cle, self::CATEGORIES_MASQUEES, true)) {
-                continue;
-            }
-            $groupes[$cle][] = $brute;
-        }
-        $categories = collect($groupes)
-            ->map(fn ($variantes, $cle) => self::LIBELLES_CATEGORIES[$cle] ?? mb_convert_case(trim($variantes[0]), MB_CASE_TITLE, 'UTF-8'))
-            ->sort()
-            ->values();
+        [$categories, $groupes] = self::regrouperCategories($brutes);
 
         $selectedCategorie = $request->input('categorie');
-        $variantesChoisies = $selectedCategorie ? ($groupes[self::cleCategorie($selectedCategorie)] ?? [$selectedCategorie]) : [];
+        $variantesChoisies = self::variantesCategorie($groupes, $selectedCategorie);
         $selectedDate = $request->input('date');
         $q = $request->input('q');
 

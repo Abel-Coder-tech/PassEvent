@@ -671,29 +671,31 @@
 <!-- Evenements a venir -->
 <section class="section-events">
     <div class="container">
-        <!-- Barre de recherche -->
-        <form action="{{ route('accueil') }}#evenements" method="GET" class="filter-search mb-4" id="evenements">
+        <!-- Barre de recherche, catégories et choix d'affichage (même style que la page Événements) -->
+        <form action="{{ route('accueil') }}#evenements" method="GET" class="filter-search" id="evenements">
             <div class="search-wrap">
                 <i class="bi bi-search search-icon"></i>
                 <input type="search" name="q" id="accueilSearchInput" class="search-input" placeholder="Nom, catégorie, lieu..." value="{{ $q ?? '' }}" autocomplete="off" @if($q) autofocus @endif>
+                <button type="submit" class="search-go">Rechercher</button>
             </div>
             @if($selectedCategorie)
                 <input type="hidden" name="categorie" value="{{ $selectedCategorie }}">
             @endif
-            @if($selectedDate)
-                <input type="hidden" name="date" value="{{ $selectedDate }}">
-            @endif
-            <div class="date-chips">
-                @foreach(['aujourdhui' => "Aujourd'hui", 'weekend' => 'Ce week-end', 'mois' => 'Ce mois'] as $cle => $libelle)
-                    {{-- Un clic sur le filtre actif le retire --}}
-                    <a href="{{ route('accueil', array_filter(['q' => $q, 'categorie' => $selectedCategorie, 'date' => $selectedDate === $cle ? null : $cle])) }}#evenements"
-                       class="date-chip {{ $selectedDate === $cle ? 'active' : '' }}">{{ $libelle }}</a>
-                @endforeach
-            </div>
-            @if($q || $selectedCategorie || $selectedDate)
-                <a href="{{ route('accueil') }}#evenements" class="btn-clear" title="Effacer les filtres"><i class="bi bi-x-lg"></i></a>
-            @endif
         </form>
+        <div class="filtres-barre">
+            @if($categoriesFiltre->isNotEmpty())
+                <nav class="cats-defile" aria-label="Catégories">
+                    <a href="{{ route('accueil', array_filter(['q' => $q])) }}#evenements" class="cat-pill {{ $selectedCategorie ? '' : 'active' }}">Toutes</a>
+                    @foreach($categoriesFiltre as $cat)
+                        <a href="{{ route('accueil', array_filter(['categorie' => $cat, 'q' => $q])) }}#evenements" class="cat-pill {{ $selectedCategorie === $cat ? 'active' : '' }}">{{ $cat }}</a>
+                    @endforeach
+                </nav>
+            @endif
+            <div class="vue-choix" role="group" aria-label="Affichage">
+                <button type="button" class="vue-btn active" data-vue="cartes" aria-pressed="true" title="Afficher en cartes"><i class="bi bi-grid-3x2-gap"></i></button>
+                <button type="button" class="vue-btn" data-vue="liste" aria-pressed="false" title="Afficher en liste"><i class="bi bi-list-ul"></i></button>
+            </div>
+        </div>
         <script>
             // Recherche automatique : envoie le formulaire après une courte pause de saisie.
             (function () {
@@ -717,7 +719,7 @@
         </script>
 
         @if($evenementsVedettes->isNotEmpty())
-            <div class="events-grid">
+            <div class="events-grid" id="eventsGrid">
                 @foreach($evenementsVedettes as $evenement)
                     @php
                         $placesRestantes = max(0, $evenement->capacite - $evenement->quota_vendu);
@@ -812,6 +814,29 @@
             </div>
         @endif
     </div>
+<script>
+    // Affichage en cartes (par défaut) ou en liste, choix mémorisé
+    (function () {
+        const grille = document.getElementById('eventsGrid');
+        const boutons = document.querySelectorAll('.vue-btn');
+        if (!grille) { document.querySelector('.vue-choix')?.setAttribute('hidden', ''); return; }
+        function appliquer(vue) {
+            grille.classList.toggle('mode-liste', vue === 'liste');
+            boutons.forEach(b => {
+                const actif = b.dataset.vue === vue;
+                b.classList.toggle('active', actif);
+                b.setAttribute('aria-pressed', actif);
+            });
+        }
+        let vue = 'cartes';
+        try { vue = localStorage.getItem('accueilVue') === 'liste' ? 'liste' : 'cartes'; } catch (e) {}
+        appliquer(vue);
+        boutons.forEach(b => b.addEventListener('click', function () {
+            appliquer(b.dataset.vue);
+            try { localStorage.setItem('accueilVue', b.dataset.vue); } catch (e) {}
+        }));
+    })();
+</script>
 </section>
 
 <!-- Annonce de l'application PaxAgent -->
@@ -1059,66 +1084,66 @@
     margin: 0;
 }
 
-.filter-search {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    scroll-margin-top: 90px;
-}
-.search-wrap {
-    position: relative;
-    flex: 1 1 220px;
-    max-width: 320px;
-}
+.filter-search { margin-bottom: 1rem; scroll-margin-top: 90px; }
+.search-wrap { position: relative; max-width: 560px; margin: 0 auto; }
 .search-input::-webkit-search-cancel-button { display: none; }
-.date-chips { display: flex; gap: 0.4rem; }
-.date-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.6rem 0.9rem;
-    border: 1.5px solid #e5e5e5;
-    border-radius: 12px;
-    background: #fff;
-    color: #555;
-    font-size: 0.82rem;
-    font-weight: 600;
-    white-space: nowrap;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-.date-chip:hover { border-color: #542680; color: #542680; }
-.date-chip.active {
-    background: linear-gradient(135deg, #542680, #9972B0);
-    border-color: transparent;
-    color: #fff;
-}
-@media (max-width: 575.98px) {
-    .search-wrap { max-width: none; flex-basis: 100%; }
-    .date-chip { padding: 0.45rem 0.7rem; }
-}
 .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9a9a9a;
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #542680;
 }
 .search-input {
-    width: 100%;
-    padding: 0.65rem 1rem 0.65rem 2.6rem;
-    border: 1.5px solid #e5e5e5;
-    border-radius: 12px;
-    font-size: 0.88rem;
-    background: #f8f7fa;
-    outline: none;
-    transition: all 0.2s;
+    width: 100%; padding: 0.75rem 7.2rem 0.75rem 2.6rem;
+    border: 1.5px solid #542680; border-radius: 12px;
+    font-size: 0.9rem; background: #fff; outline: none; transition: box-shadow .2s;
 }
-.search-input:focus {
-    border-color: #542680;
-    background: #fff;
-    box-shadow: 0 0 0 4px rgba(84,38,128,0.08);
+.search-input:focus { box-shadow: 0 0 0 3px rgba(84,38,128,0.15); }
+.search-go {
+    position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+    height: 34px; padding: 0 .9rem; border: 0; border-radius: 9px;
+    background: #542680; color: #fff; font-size: .8rem; font-weight: 700;
+}
+.search-go:hover { background: #3f1c60; }
+.search-go:focus-visible { outline: 2px solid #542680; outline-offset: 2px; }
+.filtres-barre { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
+.cats-defile {
+    flex: 1; min-width: 0; display: flex; gap: .5rem; overflow-x: auto; padding: .25rem 0;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.cats-defile::-webkit-scrollbar { display: none; }
+.cats-defile > :first-child { margin-left: auto; }
+.cats-defile > :last-child { margin-right: auto; }
+.cat-pill {
+    flex: 0 0 auto; padding: .4rem 1rem; border-radius: 999px; border: 1px solid #e2dde8;
+    color: #4a4553; background: #fff; font-size: .85rem; text-decoration: none; white-space: nowrap; transition: all .2s;
+}
+.cat-pill:hover { border-color: #542680; color: #542680; }
+.cat-pill.active { background: #542680; border-color: #542680; color: #fff; font-weight: 600; }
+.vue-choix { display: flex; flex: none; border: 1px solid #e2dde8; border-radius: 10px; overflow: hidden; background: #fff; }
+.vue-btn { width: 38px; height: 34px; border: 0; background: transparent; color: #7a7482; display: grid; place-items: center; }
+.vue-btn + .vue-btn { border-left: 1px solid #e2dde8; }
+.vue-btn.active { background: #f1ebf6; color: #542680; }
+.vue-btn:focus-visible { outline: 2px solid #542680; outline-offset: -2px; }
+@media (max-width: 575.98px) {
+    .search-wrap { max-width: 82%; }
+    .search-input { padding: .6rem 5rem .6rem 2rem; font-size: .78rem; border-radius: 9px; }
+    .search-icon { left: 10px; font-size: .78rem; }
+    .search-go { height: 30px; padding: 0 .55rem; font-size: .68rem; border-radius: 6px; right: 3px; }
+}
+
+/* Affichage en liste */
+.events-grid.mode-liste { grid-template-columns: 1fr !important; gap: .75rem; }
+.events-grid.mode-liste .ev-card { flex-direction: row; align-items: stretch; }
+.events-grid.mode-liste .ev-img { flex: 0 0 200px; height: auto; min-height: 140px; }
+.events-grid.mode-liste .ev-body { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr auto; column-gap: 1.5rem; align-content: center; }
+.events-grid.mode-liste .ev-title, .events-grid.mode-liste .ev-meta, .events-grid.mode-liste .ev-gauge { grid-column: 1; }
+.events-grid.mode-liste .ev-price, .events-grid.mode-liste .ev-btn { grid-column: 2; justify-self: end; align-self: center; }
+.events-grid.mode-liste .ev-price { grid-row: 1 / span 2; }
+.events-grid.mode-liste .ev-btn { grid-row: 3; }
+@media (max-width: 575.98px) {
+    .events-grid.mode-liste .ev-img { flex-basis: 110px; min-height: 0; }
+    .events-grid.mode-liste .ev-body { display: block; padding: .7rem .8rem; }
+    .events-grid.mode-liste .ev-gauge, .events-grid.mode-liste .ev-btn, .events-grid.mode-liste .ev-img-overlay { display: none; }
+    .events-grid.mode-liste .ev-title { font-size: .9rem; }
 }
 .btn-search {
     background: linear-gradient(135deg, #542680, #9972B0);
