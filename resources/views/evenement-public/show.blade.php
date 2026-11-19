@@ -303,7 +303,8 @@
                         </form>
 
                         {{-- Barre du panier, fixée en bas de l'écran sur téléphone --}}
-                        <div class="achat-barre" id="barrePanier">
+                        <div class="achat-barre" id="barrePanier"
+                             data-libelle-depart="{{ $evenement->gratuit ? $evenement->getTextes()['participer_gratuit'] : $evenement->getTextes()['acheter'] }}">
                             <div>
                                 <div class="achat-barre-n" data-nombre>Aucun billet choisi</div>
                                 <div class="achat-barre-t" data-total>0 FCFA</div>
@@ -526,6 +527,7 @@
 }
 .achat-barre-n{font-size:.75rem;color:#6b6474}
 .achat-barre-t{font-size:1.1rem;font-weight:800;color:#211C31}
+.achat-barre.est-vide #btnContinuerBarre{flex:1;max-width:60%;justify-content:center;padding:.75rem 1rem;font-size:1rem}
 </style>
 </div>
 
@@ -1275,11 +1277,17 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-nombre]').forEach((el) => { el.textContent = texteNombre; });
         document.querySelectorAll('[data-total]').forEach((el) => { el.textContent = nombre === 0 ? '0 FCFA' : fmt(total); });
 
+        // Barre mobile : avant tout choix, elle affiche le prix de départ et invite à prendre un billet
+        if (nombre === 0) {
+            barre.querySelector('[data-nombre]').textContent = 'À partir de';
+            barre.querySelector('[data-total]').textContent = prixDepart > 0 ? fmt(prixDepart) : 'Gratuit';
+        }
+
         libelle.textContent = nombre > 0 && total <= 0 ? 'Réserver gratuitement' : 'Payer avec FedaPay';
 
-        const visible = nombre > 0;
-        barre.classList.toggle('is-visible', visible);
-        document.body.classList.toggle('achat-barre-ouverte', visible);
+        barre.classList.add('is-visible');
+        document.body.classList.add('achat-barre-ouverte');
+        barre.classList.toggle('est-vide', nombre === 0);
         majBoutonBarre();
     }
 
@@ -1293,7 +1301,16 @@ document.addEventListener('DOMContentLoaded', function () {
         .filter((c) => !c.disabled && c.type !== 'hidden');
     const premierChampManquant = () => champsRequis().find((c) => !c.checkValidity());
 
+    // Prix le plus bas parmi les tarifs encore disponibles
+    const disponibles = lignes.filter((l) => parseInt(l.dataset.max, 10) > 0);
+    const prixDepart = Math.min(...(disponibles.length ? disponibles : lignes).map((l) => parseFloat(l.dataset.prix) || 0));
+
     function majBoutonBarre() {
+        if (barre.classList.contains('est-vide')) {
+            libelleBarre.textContent = barre.dataset.libelleDepart || 'Acheter';
+            iconeBarre.className = 'bi bi-ticket-perforated ms-1';
+            return;
+        }
         const pret = !premierChampManquant();
         libelleBarre.textContent = pret ? libelle.textContent : 'Continuer';
         iconeBarre.className = pret ? 'bi bi-arrow-right ms-1' : 'bi bi-arrow-down ms-1';
@@ -1311,6 +1328,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     btnBarre.addEventListener('click', function () {
+        // Aucun billet choisi : on descend jusqu'aux tarifs
+        if (barre.classList.contains('est-vide')) {
+            (disponibles[0] || lignes[0] || form).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
         const manquant = premierChampManquant();
         if (manquant) {
             manquant.scrollIntoView({ behavior: 'smooth', block: 'center' });

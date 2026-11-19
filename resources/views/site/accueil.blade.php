@@ -831,7 +831,7 @@
             <div class="app-visuel app-reveal">
                 <div class="app-scene" role="img" aria-label="Deux écrans de l'application mobile PaxAgent">
                     <img class="app-cercle" src="{{ asset('images/paxagent-cercle.webp') }}" alt="" width="900" height="900" loading="lazy">
-                    <img class="app-tel app-tel-arriere" src="{{ asset('images/paxagent-interface2.webp') }}" alt="" width="520" height="1309" loading="lazy">
+                    <img class="app-tel app-tel-arriere" src="{{ asset('images/paxagent-interface2.webp') }}" alt="" width="520" height="1310" loading="lazy">
                     <img class="app-tel app-tel-avant" src="{{ asset('images/paxagent-interface1.webp') }}" alt="" width="520" height="1198" loading="lazy">
                 </div>
             </div>
