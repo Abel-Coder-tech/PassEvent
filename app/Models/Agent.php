@@ -94,6 +94,6 @@ class Agent extends Authenticatable
     {
         return Log::where('agent_id', $this->id)->where('type_operation', 'scan')
             ->with('ticket')
-            ->whereHas('ticket', fn ($q) => $q->where('evenement_id', $evenementId));
+            ->pourEvenement($evenementId);
     }
 }
