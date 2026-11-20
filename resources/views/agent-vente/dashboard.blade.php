@@ -1,305 +1,368 @@
 @extends('layouts.agent-vente')
 
-@section('title', 'Tableau de bord - ' . $agent->evenement->titre)
+@section('title', 'Point de vente — ' . $agent->evenement->titre)
 
 @section('content')
-@php $textes = $agent->evenement->getTextes(); @endphp
-<div class="container py-4">
-    {{-- En-tête --}}
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
-        <div class="d-flex align-items-center gap-3">
-            <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{ $agent->nom }}</span>
-            <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Déconnecter
-                </button>
-            </form>
-        </div>
-    </div>
+@php
+    $textes = $agent->evenement->getTextes();
+    $estSpectacle = $textes['type'] === 'spectacle';
+    $especesOk = $agent->evenement->ventesEspecesActivees();
+    $cashBloque = ! $agent->evenement->gratuit && ! $especesOk;
+    $paiementDefaut = old('methode_paiement', $cashBloque ? 'mobile_money' : 'cash');
+    $tarifsPack = $tarifs->whereNull('evenement_date_id');
+    $joursAvecTarifs = $agent->evenement->dates->filter(
+        fn ($jour) => $tarifs->where('evenement_date_id', $jour->id)->isNotEmpty()
+    );
+@endphp
 
-    @if (session('success'))
-    <div class="alert alert-success py-2 small" id="successAlert">
-        <i class="bi bi-check-circle"></i> {{ session('success') }}
-        @if (session('ticket_created'))
-        <a href="{{ route('agent-vente.ticket.pdf', session('ticket_created')) }}"
-            class="btn btn-sm btn-outline-success ms-3" target="_blank">
-            <i class="bi bi-filetype-pdf"></i> Télécharger PDF
-        </a>
-        @endif
-    </div>
-    @endif
+<div class="av-app">
+    @include('agent-vente.partials.header', ['section' => 'Point de vente'])
 
-    {{-- Cartes stats --}}
-    <div class="row g-3 mb-4" id="statsCards">
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-purple-50">
-                <div class="card-body text-center py-3">
-                    <div class="text-purple-700 fw-bold fs-3" id="statTotalTickets">{{ $stats['total_tickets'] }}</div>
-                    <small class="text-muted">Tickets vendus</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-green-50">
-                <div class="card-body text-center py-3">
-                    <div class="text-green-700 fw-bold fs-3" id="statMontantTotal">{{ number_format($stats['montant_total'], 0, ',', ' ') }} F</div>
-                    <small class="text-muted">Montant total</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-blue-50">
-                <div class="card-body text-center py-3">
-                    <div class="text-blue-700 fw-bold fs-3" id="statAujourdHui">{{ $stats['aujourd_hui'] }}</div>
-                    <small class="text-muted">Aujourd'hui</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-amber-50">
-                <div class="card-body text-center py-3">
-                    <div class="text-amber-700 fw-bold fs-3" id="statMontantAjd">{{ number_format($stats['montant_ajd'], 0, ',', ' ') }} F</div>
-                    <small class="text-muted">Montant aujourd'hui</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        {{-- Formulaire de vente --}}
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white border-bottom-0 pt-3 px-3">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-cart-plus"></i> Nouvelle vente</h6>
-                </div>
-                <div class="card-body px-3">
-                    <form method="POST" action="{{ route('agent-vente.vendre') }}" id="venteForm">
-                        @csrf
-                        <div class="mb-2">
-                            <label class="form-label small fw-medium">Nom de l'acheteur</label>
-                            <input type="text" name="nom_acheteur" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small fw-medium">Email</label>
-                            <input type="email" name="email_acheteur" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small fw-medium">N° WhatsApp <span class="text-muted">(facultatif)</span></label>
-                            <input type="tel" name="whatsapp_acheteur" class="form-control form-control-sm" placeholder="+229 XX XX XX XX">
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small fw-medium">Tarif</label>
-                            <select name="tarif_id" class="form-select form-select-sm" required>
-                                <option value="">Sélectionner...</option>
-                                @php
-                                    $tarifsPack = $tarifs->whereNull('evenement_date_id');
-                                    $joursAvecTarifs = $agent->evenement->dates->filter(
-                                        fn ($jour) => $tarifs->where('evenement_date_id', $jour->id)->isNotEmpty()
-                                    );
-                                @endphp
-                                @if($tarifsPack->isNotEmpty())
-                                    <optgroup label="{{ $agent->evenement->estMultiJour() ? 'Tous les jours (pack)' : 'Tarifs' }}">
-                                        @foreach($tarifsPack as $tarif)
-                                            @php $restantes = $agent->evenement->placesRestantesPourTarif($tarif); @endphp
-                                            <option value="{{ $tarif->id }}" {{ $restantes <= 0 ? 'disabled' : '' }}>
-                                                {{ $tarif->getLabel() }} &mdash; {{ number_format($tarif->prix, 0, ',', ' ') }} F
-                                                @if($restantes <= 0) (épuisé) @else ({{ $restantes }} restantes) @endif
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endif
-                                @foreach($joursAvecTarifs as $jour)
-                                    <optgroup label="{{ $jour->libelle() }} — {{ $jour->date_debut->isoFormat('ddd D MMM · HH:mm') }}">
-                                        @foreach($tarifs->where('evenement_date_id', $jour->id) as $tarif)
-                                            @php $restantes = $agent->evenement->placesRestantesPourTarif($tarif); @endphp
-                                            <option value="{{ $tarif->id }}" {{ $restantes <= 0 ? 'disabled' : '' }}>
-                                                {{ $tarif->getLabel() }} &mdash; {{ number_format($tarif->prix, 0, ',', ' ') }} F
-                                                @if($restantes <= 0) (épuisé) @else ({{ $restantes }} restantes) @endif
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                                @if($tarifs->isEmpty())
-                                    <option value="" disabled>Aucun tarif disponible</option>
-                                @endif
-                            </select>
-                            @if($agent->evenement->estMultiJour())
-                                <small class="text-muted d-block mt-1">
-                                    {{ $agent->evenement->placesRestantesTotales() }} places au total
-                                    @foreach($agent->evenement->placesParJour()->reject(fn ($ligne) => $ligne['termine']) as $ligne)
-                                        · {{ $ligne['jour']->libelle() }} : {{ $ligne['restantes'] > 0 ? $ligne['restantes'] : 'complet' }}
-                                    @endforeach
-                                </small>
-                            @endif
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small fw-medium">Code promo <span class="text-muted">(facultatif)</span></label>
-                            <input type="text" name="code_promo" class="form-control form-control-sm" maxlength="50" placeholder="Ex: BIENVENUE10">
-                            @error('code_promo')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small fw-medium">Paiement</label>
-                            @php $especesOk = $agent->evenement->ventesEspecesActivees(); @endphp
-                            @if(!$agent->evenement->gratuit && !$especesOk)
-                                <div class="alert alert-warning py-1 px-2 mb-1" style="font-size:0.78rem;border-radius:6px;">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>
-                                    Espèces bloquées — {{ $agent->evenement->ticketsEnLigneCount() }}/{{ (int) ceil($agent->evenement->capacite * 15 / 100) }} tickets vendus en ligne.
-                                </div>
-                            @endif
-                            <select name="methode_paiement" class="form-select form-select-sm" id="methodePaiement" required>
-                                <option value="">Choisir...</option>
-                                <option value="cash" {{ !$especesOk ? 'disabled' : '' }}>{{ $especesOk ? 'Espèces (Cash)' : 'Espèces (bloquées)' }}</option>
-                                <option value="mobile_money">Mobile</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn w-100 text-white py-2 fw-medium" id="btnVente" style="background: #7c3aed;">
-                            <i class="bi bi-check-lg"></i> <span id="btnVenteLabel">{{ $textes['type'] === 'spectacle' ? 'Vendre le billet' : 'Enregistrer l\'inscription' }}</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        {{-- Dernières ventes --}}
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white border-bottom-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Ventes du jour</h6>
-                    <div class="d-flex align-items-center gap-2">
-                        <small class="text-muted">
-                            <i class="bi bi-arrow-repeat"></i> Actualisation automatique
-                        </small>
-                        <a href="{{ route('agent-vente.historique') }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
-                            <i class="bi bi-list-ul"></i> Historique
+    <main class="av-main">
+        @if (session('success'))
+            <div class="av-alert av-alert--success" id="successAlert" role="status">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                <div class="av-alert-body">
+                    <strong>Vente enregistrée</strong>
+                    <span>{{ session('success') }}</span>
+                    @if (session('ticket_created'))
+                        <a href="{{ route('agent-vente.ticket.pdf', session('ticket_created')) }}" target="_blank" rel="noopener">
+                            <i class="bi bi-filetype-pdf" aria-hidden="true"></i> Ouvrir le billet PDF
                         </a>
-                    </div>
+                    @endif
                 </div>
-                <div class="card-body px-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light small">
-                                <tr>
-                                    <th class="ps-3">Heure</th>
-                                    <th>Acheteur</th>
-                                    <th>WhatsApp</th>
-                                    <th>N° paiement</th>
-                                    <th>Tarif</th>
-                                    <th>Montant</th>
-                                    <th>Paiement</th>
-                                    <th class="pe-3">PDF</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historiqueBody">
-                                @forelse ($ticketsAujourdHui as $ticket)
-                                <tr>
-                                    <td class="ps-3 small">{{ $ticket->date_achat->format('H:i') }}</td>
-                                    <td class="small">{{ $ticket->nom_acheteur }}</td>
-                                    <td class="small">{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
-                                    <td class="small">{{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</td>
-                                    <td class="small">{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
-                                    @if($ticket->montant > 0)
-                                    <td class="small fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                                    <td class="small">{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}</td>
-                                    @else
-                                    <td class="small text-muted">Gratuit</td>
-                                    <td class="small">—</td>
-                                    @endif
-                                    <td class="pe-3">
-                                        <a href="{{ route('agent-vente.ticket.pdf', $ticket) }}"
-                                            class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
-                                            <i class="bi bi-filetype-pdf"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-3 small">
-                                        <i class="bi bi-inbox"></i> Aucune vente aujourd'hui
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                <button type="button" class="av-alert-close js-alert-close" aria-label="Fermer la notification">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="av-alert av-alert--error" role="alert">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <div class="av-alert-body">
+                    <strong>Vérifiez les informations saisies</strong>
+                    <ul>
+                        @foreach ($errors->all() as $erreur)
+                            <li>{{ $erreur }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        @endif
 
-<style>
-.bg-purple-50 { background: #f5f3ff; }
-.text-purple-700 { color: #7c3aed; }
-.bg-green-50 { background: #f0fdf4; }
-.text-green-700 { color: #16a34a; }
-.bg-blue-50 { background: #eff6ff; }
-.text-blue-700 { color: #2563eb; }
-.bg-amber-50 { background: #fffbeb; }
-.text-amber-700 { color: #d97706; }
-</style>
+        <section class="av-stats" aria-label="Statistiques de vente">
+            <article class="av-stat">
+                <span class="av-stat-icon av-stat-icon--violet"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
+                <div><strong id="statTotalTickets">{{ $stats['total_tickets'] }}</strong><span>Billets vendus</span></div>
+            </article>
+            <article class="av-stat">
+                <span class="av-stat-icon av-stat-icon--green"><i class="bi bi-cash-stack" aria-hidden="true"></i></span>
+                <div><strong id="statMontantTotal">{{ number_format($stats['montant_total'], 0, ',', ' ') }} F</strong><span>Montant total</span></div>
+            </article>
+            <article class="av-stat">
+                <span class="av-stat-icon av-stat-icon--blue"><i class="bi bi-calendar-check" aria-hidden="true"></i></span>
+                <div><strong id="statAujourdHui">{{ $stats['aujourd_hui'] }}</strong><span>Aujourd'hui</span></div>
+            </article>
+            <article class="av-stat">
+                <span class="av-stat-icon av-stat-icon--amber"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span>
+                <div><strong id="statMontantAjd">{{ number_format($stats['montant_ajd'], 0, ',', ' ') }} F</strong><span>Montant du jour</span></div>
+            </article>
+        </section>
+
+        <div class="av-grid">
+            <section class="av-card av-sale" aria-labelledby="avSaleTitle">
+                <div class="av-card-head">
+                    <div>
+                        <span class="av-kicker">Nouvelle vente</span>
+                        <h1 id="avSaleTitle">{{ $estSpectacle ? 'Vendre un billet' : 'Enregistrer une inscription' }}</h1>
+                    </div>
+                    <span class="av-live"><span aria-hidden="true"></span> En direct</span>
+                </div>
+
+                <form method="POST" action="{{ route('agent-vente.vendre') }}" id="venteForm">
+                    @csrf
+
+                    <fieldset class="av-block">
+                        <legend><span class="av-num">1</span> Acheteur</legend>
+                        <div class="av-fields">
+                            <label class="av-field av-field--wide">
+                                <span>Nom complet <em>*</em></span>
+                                <input type="text" name="nom_acheteur" value="{{ old('nom_acheteur') }}" placeholder="Ex : Adja Koné" autocomplete="name" required>
+                                @error('nom_acheteur') <small class="av-error">{{ $message }}</small> @enderror
+                            </label>
+                            <label class="av-field">
+                                <span>Email <em>*</em></span>
+                                <input type="email" name="email_acheteur" value="{{ old('email_acheteur') }}" placeholder="adja@email.com" autocomplete="email" inputmode="email" required>
+                                @error('email_acheteur') <small class="av-error">{{ $message }}</small> @enderror
+                            </label>
+                            <label class="av-field">
+                                <span>WhatsApp <small>(facultatif)</small></span>
+                                <input type="tel" name="whatsapp_acheteur" value="{{ old('whatsapp_acheteur') }}" placeholder="+229 62 83 66 29" autocomplete="tel" inputmode="tel">
+                                @error('whatsapp_acheteur') <small class="av-error">{{ $message }}</small> @enderror
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="av-block">
+                        <legend><span class="av-num">2</span> Billet ou tarif</legend>
+
+                        @if ($tarifs->isEmpty())
+                            <p class="av-empty-inline">Aucun tarif disponible pour cet événement.</p>
+                        @else
+                            <div class="av-tarifs" id="listeTarifs">
+                                @if ($tarifsPack->isNotEmpty())
+                                    <p class="av-group-label">{{ $agent->evenement->estMultiJour() ? 'Tous les jours (pack)' : 'Tarifs' }}</p>
+                                    @foreach ($tarifsPack as $tarif)
+                                        @php $restantes = $agent->evenement->placesRestantesPourTarif($tarif); @endphp
+                                        <label class="av-tarif{{ $restantes <= 0 ? ' is-disabled' : '' }}" data-prix="{{ (float) $tarif->prix }}">
+                                            <input type="radio" name="tarif_id" value="{{ $tarif->id }}" data-prix="{{ (float) $tarif->prix }}" {{ $restantes <= 0 ? 'disabled' : '' }} @checked(old('tarif_id') == $tarif->id) required>
+                                            <span class="av-tarif-info">
+                                                <strong>{{ $tarif->getLabel() }}</strong>
+                                                <small class="{{ $restantes <= 0 ? 'is-full' : '' }}">{{ $restantes <= 0 ? 'Complet' : $restantes . ' place(s) restante(s)' }}</small>
+                                            </span>
+                                            <span class="av-tarif-price">{{ $tarif->prix > 0 ? number_format($tarif->prix, 0, ',', ' ') . ' F' : 'Gratuit' }}</span>
+                                            <span class="av-tarif-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                        </label>
+                                    @endforeach
+                                @endif
+
+                                @foreach ($joursAvecTarifs as $jour)
+                                    <p class="av-group-label">{{ $jour->libelle() }} — {{ $jour->date_debut->isoFormat('ddd D MMM · HH:mm') }}</p>
+                                    @foreach ($tarifs->where('evenement_date_id', $jour->id) as $tarif)
+                                        @php $restantes = $agent->evenement->placesRestantesPourTarif($tarif); @endphp
+                                        <label class="av-tarif{{ $restantes <= 0 ? ' is-disabled' : '' }}" data-prix="{{ (float) $tarif->prix }}">
+                                            <input type="radio" name="tarif_id" value="{{ $tarif->id }}" data-prix="{{ (float) $tarif->prix }}" {{ $restantes <= 0 ? 'disabled' : '' }} @checked(old('tarif_id') == $tarif->id) required>
+                                            <span class="av-tarif-info">
+                                                <strong>{{ $tarif->getLabel() }}</strong>
+                                                <small class="{{ $restantes <= 0 ? 'is-full' : '' }}">{{ $restantes <= 0 ? 'Complet' : $restantes . ' place(s) restante(s)' }}</small>
+                                            </span>
+                                            <span class="av-tarif-price">{{ $tarif->prix > 0 ? number_format($tarif->prix, 0, ',', ' ') . ' F' : 'Gratuit' }}</span>
+                                            <span class="av-tarif-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                        </label>
+                                    @endforeach
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @error('tarif_id') <small class="av-error">{{ $message }}</small> @enderror
+
+                        @if ($agent->evenement->estMultiJour())
+                            <p class="av-capacity">
+                                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                {{ $agent->evenement->placesRestantesTotales() }} place(s) au total
+                                @foreach ($agent->evenement->placesParJour()->reject(fn ($ligne) => $ligne['termine']) as $ligne)
+                                    · {{ $ligne['jour']->libelle() }} : {{ $ligne['restantes'] > 0 ? $ligne['restantes'] : 'complet' }}
+                                @endforeach
+                            </p>
+                        @endif
+                    </fieldset>
+
+                    <fieldset class="av-block">
+                        <legend><span class="av-num">3</span> Paiement</legend>
+                        <div class="av-pay" role="radiogroup" aria-label="Moyen de paiement">
+                            <label class="av-pay-option{{ $paiementDefaut === 'cash' ? ' is-selected' : '' }}{{ $cashBloque ? ' is-disabled' : '' }}">
+                                <input type="radio" name="methode_paiement" value="cash" @checked($paiementDefaut === 'cash') {{ $cashBloque ? 'disabled' : '' }} required>
+                                <span class="av-pay-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
+                                <span class="av-pay-text"><strong>Espèces</strong><small>Encaissement immédiat</small></span>
+                            </label>
+                            <label class="av-pay-option{{ $paiementDefaut === 'mobile_money' ? ' is-selected' : '' }}">
+                                <input type="radio" name="methode_paiement" value="mobile_money" @checked($paiementDefaut === 'mobile_money') required>
+                                <span class="av-pay-icon"><i class="bi bi-phone" aria-hidden="true"></i></span>
+                                <span class="av-pay-text"><strong>Mobile money</strong><small>Paiement par FedaPay</small></span>
+                            </label>
+                        </div>
+
+                        @if ($cashBloque)
+                            <p class="av-warning">
+                                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                                Espèces bloquées — {{ $agent->evenement->ticketsEnLigneCount() }}/{{ (int) ceil($agent->evenement->capacite * 15 / 100) }} tickets vendus en ligne.
+                            </p>
+                        @endif
+                        @error('methode_paiement') <small class="av-error">{{ $message }}</small> @enderror
+
+                        <details class="av-promo" @if ($errors->has('code_promo')) open @endif>
+                            <summary><i class="bi bi-ticket-perforated" aria-hidden="true"></i> Code promo <span>(facultatif)</span><i class="bi bi-chevron-down av-promo-chevron" aria-hidden="true"></i></summary>
+                            <label class="av-field">
+                                <span class="visually-hidden">Code promo</span>
+                                <input type="text" name="code_promo" value="{{ old('code_promo') }}" maxlength="50" placeholder="Ex : BIENVENUE10" autocomplete="off">
+                            </label>
+                            @error('code_promo') <small class="av-error">{{ $message }}</small> @enderror
+                        </details>
+                    </fieldset>
+
+                    <div class="av-checkout">
+                        <div class="av-total">
+                            <span>Montant du billet</span>
+                            <strong id="avTotal">—</strong>
+                        </div>
+                        <button type="submit" class="av-submit" id="btnVente">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                            <span id="btnVenteLabel">{{ $estSpectacle ? 'Vendre le billet' : "Enregistrer l'inscription" }}</span>
+                        </button>
+                        <p class="av-hint" id="avHint"><i class="bi bi-whatsapp" aria-hidden="true"></i> Le billet QR sera envoyé par e-mail.</p>
+                    </div>
+                </form>
+            </section>
+
+            <section class="av-card av-history" aria-labelledby="avHistoryTitle">
+                <div class="av-card-head">
+                    <div>
+                        <span class="av-kicker">Suivi</span>
+                        <h2 id="avHistoryTitle">Ventes du jour</h2>
+                    </div>
+                    <a class="av-link" href="{{ route('agent-vente.historique') }}">
+                        Historique <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <p class="av-refresh"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Actualisation automatique</p>
+
+                <div class="av-sales" id="historiqueBody">
+                    @forelse ($ticketsAujourdHui as $ticket)
+                        @include('agent-vente.partials.vente-card', ['ticket' => $ticket])
+                    @empty
+                        <div class="av-empty"><i class="bi bi-inbox" aria-hidden="true"></i><span>Aucune vente aujourd'hui</span></div>
+                    @endforelse
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
 @endsection
+
+@push('styles')
+@include('agent-vente.partials.styles')
+
+@endpush
 
 @push('scripts')
 <script>
-let historiqueInterval;
+(function () {
+    const form = document.getElementById('venteForm');
+    const labelVente = @json($estSpectacle ? 'Vendre le billet' : "Enregistrer l'inscription");
+    const routeHistorique = @json(route('agent-vente.historique.json'));
 
-function chargerHistorique() {
-    fetch('{{ route("agent-vente.historique.json") }}')
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('statTotalTickets').textContent = data.total_tickets;
-            document.getElementById('statMontantTotal').textContent = data.montant_total;
-            document.getElementById('statAujourdHui').textContent = data.aujourd_hui;
-            document.getElementById('statMontantAjd').textContent = data.montant_ajd;
+    function formatMontant(valeur) {
+        return new Intl.NumberFormat('fr-FR').format(Number(valeur) || 0);
+    }
 
-            const tbody = document.getElementById('historiqueBody');
-            if (data.tickets.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3 small"><i class="bi bi-inbox"></i> Aucune vente aujourd\'hui</td></tr>';
-            } else {
-                tbody.innerHTML = data.tickets.map(t => `
-                    <tr>
-                        <td class="ps-3 small">${escapeHtml(t.date)}</td>
-                        <td class="small">${escapeHtml(t.nom)}</td>
-                        <td class="small">${escapeHtml(t.tarif)}</td>
-                        ${t.montant_val > 0 ? `
-                        <td class="small fw-medium">${escapeHtml(t.montant)}</td>
-                        <td class="small">${escapeHtml(t.methode_label)}</td>
-                        ` : `
-                        <td class="small text-muted">Gratuit</td>
-                        <td class="small">—</td>
-                        `}
-                        <td class="pe-3">
-                            <a href="/vente/tickets/${escapeHtml(t.id)}/pdf" class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
-                                <i class="bi bi-filetype-pdf"></i>
-                            </a>
-                        </td>
-                    </tr>
-                `).join('');
-            }
+    function selectedTarif() {
+        return document.querySelector('input[name="tarif_id"]:checked');
+    }
+
+    function selectedPaiement() {
+        const input = document.querySelector('input[name="methode_paiement"]:checked');
+        return input ? input.value : 'cash';
+    }
+
+    function updateTarifs() {
+        const tarif = selectedTarif();
+        const total = document.getElementById('avTotal');
+        if (total) {
+            total.textContent = tarif
+                ? (Number(tarif.dataset.prix) > 0 ? formatMontant(tarif.dataset.prix) + ' F' : 'Gratuit')
+                : '—';
+        }
+        document.querySelectorAll('.av-tarif').forEach(function (carte) {
+            carte.classList.toggle('is-selected', !!tarif && carte.contains(tarif));
         });
-}
+        updatePaiement();
+    }
 
-document.addEventListener('DOMContentLoaded', function () {
-    historiqueInterval = setInterval(chargerHistorique, 10000);
-
-    const methodeSelect = document.getElementById('methodePaiement');
-    const btnLabel = document.getElementById('btnVenteLabel');
-    if (methodeSelect && btnLabel) {
-        const labelVente = @json($textes['type'] === 'spectacle' ? 'Vendre le billet' : "Enregistrer l'inscription");
-        methodeSelect.addEventListener('change', function() {
-            btnLabel.textContent = this.value === 'mobile_money' ? 'Payer via FedaPay' : labelVente;
+    function updatePaiement() {
+        const mobile = selectedPaiement() === 'mobile_money';
+        const label = document.getElementById('btnVenteLabel');
+        const hint = document.getElementById('avHint');
+        if (label) label.textContent = mobile ? 'Payer via FedaPay' : labelVente;
+        if (hint) {
+            hint.innerHTML = mobile
+                ? '<i class="bi bi-phone" aria-hidden="true"></i> L\'acheteur paiera via Mobile Money.'
+                : '<i class="bi bi-whatsapp" aria-hidden="true"></i> Le billet QR sera envoyé par e-mail.';
+        }
+        document.querySelectorAll('.av-pay-option').forEach(function (option) {
+            const input = option.querySelector('input');
+            option.classList.toggle('is-selected', !!input && input.checked);
         });
     }
 
-    setTimeout(() => {
-        const alert = document.getElementById('successAlert');
-        if (alert) alert.style.display = 'none';
-    }, 8000);
-});
+    function saleCard(t) {
+        const gratuit = Number(t.montant_val) <= 0;
+        const montant = gratuit ? 'Gratuit' : escapeHtml(t.montant);
+        const methode = gratuit ? '—' : escapeHtml(t.methode_label);
+        const phone = t.whatsapp || t.telephone || '';
+        const phoneHtml = phone
+            ? '<span class="av-sale-phone">' + escapeHtml(phone) + '</span>'
+            : '<span class="av-sale-phone"></span>';
+        return '<article class="av-sale">'
+            + '<div class="av-sale-top"><span class="av-sale-time">' + escapeHtml(t.date) + '</span>'
+            + '<span class="av-sale-amount">' + montant + '</span></div>'
+            + '<strong class="av-sale-name">' + escapeHtml(t.nom) + '</strong>'
+            + '<div class="av-sale-meta">' + escapeHtml(t.tarif) + ' · ' + methode + '</div>'
+            + '<div class="av-sale-bottom">' + phoneHtml
+            + '<a class="av-pdf" href="/vente/tickets/' + encodeURIComponent(t.id) + '/pdf" target="_blank" rel="noopener" aria-label="Ouvrir le billet PDF de ' + escapeHtml(t.nom) + '">'
+            + '<i class="bi bi-filetype-pdf" aria-hidden="true"></i> PDF</a></div>'
+            + '</article>';
+    }
+
+    function renderHistorique(data) {
+        const ids = {
+            statTotalTickets: data.total_tickets,
+            statMontantTotal: data.montant_total,
+            statAujourdHui: data.aujourd_hui,
+            statMontantAjd: data.montant_ajd
+        };
+        Object.keys(ids).forEach(function (id) {
+            const element = document.getElementById(id);
+            if (element && data[id] !== undefined) element.textContent = data[id];
+        });
+
+        const body = document.getElementById('historiqueBody');
+        if (!body || !Array.isArray(data.tickets)) return;
+        body.innerHTML = data.tickets.length
+            ? data.tickets.map(saleCard).join('')
+            : '<div class="av-empty"><i class="bi bi-inbox" aria-hidden="true"></i><span>Aucune vente aujourd\'hui</span></div>';
+    }
+
+    function chargerHistorique() {
+        if (document.hidden) return;
+        fetch(routeHistorique, { headers: { 'Accept': 'application/json' } })
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (data) { if (data) renderHistorique(data); })
+            .catch(function () {});
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('input[name="tarif_id"]').forEach(function (input) {
+            input.addEventListener('change', updateTarifs);
+        });
+        document.querySelectorAll('input[name="methode_paiement"]').forEach(function (input) {
+            input.addEventListener('change', updatePaiement);
+        });
+        updateTarifs();
+
+        if (form) {
+            form.addEventListener('submit', function () {
+                if (selectedPaiement() !== 'mobile_money') return;
+                const bouton = document.getElementById('btnVente');
+                const label = document.getElementById('btnVenteLabel');
+                if (bouton) bouton.disabled = true;
+                if (label) label.textContent = 'Redirection vers le paiement…';
+            });
+        }
+
+        document.querySelectorAll('.js-alert-close').forEach(function (bouton) {
+            bouton.addEventListener('click', function () {
+                const alerte = bouton.closest('.av-alert');
+                if (alerte) alerte.remove();
+            });
+        });
+
+        const alerte = document.getElementById('successAlert');
+        if (alerte) setTimeout(function () { alerte.remove(); }, 8000);
+
+        chargerHistorique();
+        setInterval(chargerHistorique, 10000);
+    });
+})();
 </script>
 @endpush

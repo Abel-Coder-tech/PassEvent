@@ -2,7 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#542680">
+    <meta name="color-scheme" content="light">
     <title>@yield('title', 'Agent de vente') — PassEvent</title>
     <script>document.documentElement.classList.add('fouc');</script>
     <style>html.fouc body{visibility:hidden!important}</style>

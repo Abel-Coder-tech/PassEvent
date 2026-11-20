@@ -130,6 +130,8 @@ class AuthController extends Controller
                 'montant_val' => $t->montant,
                 'methode' => $t->methode_paiement,
                 'methode_label' => Ticket::methodePaiementLabel($t->methode_paiement),
+                'whatsapp' => $t->whatsapp_acheteur,
+                'telephone' => $t->telephone_paiement ?? $t->telephone_acheteur,
                 'date' => $t->date_achat->format('H:i'),
             ]);
 
