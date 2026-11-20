@@ -56,7 +56,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <div class="position-relative w-100" style="max-width: 320px;">
             <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--gris); font-size: 0.9rem;"></i>
-            <input type="text" class="form-control ps-5 py-2 border rounded-3" id="searchInput" placeholder="Rechercher un code…" style="border-color: #e2e0e4; font-size: 0.88rem;">
+            <input type="text" class="form-control ps-5 py-2 border rounded-3" id="searchInput" placeholder="Rechercher un code…" style="border-color: var(--ligne); font-size: 0.88rem;">
         </div>
     </div>
 
@@ -116,7 +116,7 @@
                                         <form action="{{ route('admin.codes-promos.destroy', [$evenement->id, $code->id]) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;" onclick="return confirm('Désactiver ce code ?')">
+                                            <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid var(--danger); color: var(--danger); background: transparent;" onclick="return confirm('Désactiver ce code ?')">
                                                 <i class="bi bi-x-circle me-1"></i>Désactiver
                                             </button>
                                         </form>
@@ -190,7 +190,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label fw-semibold">Aperçu du format</label>
-                        <div class="p-2 rounded" style="background: #f5f5f5; font-family: 'Courier New', monospace; font-weight: 700; font-size: 1rem; color: var(--violet);" id="previewCode">
+                        <div class="p-2 rounded" style="background: var(--gris-clair); font-family: 'Courier New', monospace; font-weight: 700; font-size: 1rem; color: var(--violet);" id="previewCode">
                             PRÉFIXE-XXXXXX
                         </div>
                     </div>

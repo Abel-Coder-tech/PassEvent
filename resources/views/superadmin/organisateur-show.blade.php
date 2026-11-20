@@ -56,7 +56,7 @@
                     <p class="small mb-0"><i class="bi bi-telephone"></i> {{ $user->telephone }}</p>
                 @endif
                 @if($user->type)
-                    <p class="small mb-0 mt-1"><i class="bi bi-tag"></i> {{ ucfirst($user->type) }}</p>
+                    <p class="small mb-0 mt-1"><i class="bi bi-tag"></i> {{ $user->type_libelle }}</p>
                 @endif
                 @if($user->document_justificatif)
                     <div class="mt-3 pt-2 border-top">

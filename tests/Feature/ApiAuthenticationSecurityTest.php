@@ -7,6 +7,7 @@ use App\Models\AgentVente;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -120,6 +121,52 @@ class ApiAuthenticationSecurityTest extends TestCase
         // Après la durée de blocage, la connexion est de nouveau possible.
         Carbon::setTestNow(now()->addMinutes(16));
         $this->postJson('/api/agent/login', ['email' => 'bloque@example.test', 'password' => 'bon-mot-de-passe'])->assertOk();
+    }
+
+    public function test_pin_est_hache_et_limite_par_ip_sans_bloquer_le_compte(): void
+    {
+        $this->insertEvent(90);
+        $agentId = DB::table('agents')->insertGetId([
+            'nom' => 'Agent PIN',
+            'email' => 'pin@example.test',
+            'password' => bcrypt('test-password'),
+            'evenement_id' => 90,
+            'code_acces' => Hash::make('1234'),
+            'actif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $jeton = Agent::findOrFail($agentId)->createToken('agent', ['agent:read'])->plainTextToken;
+
+        $ipBloquee = '198.51.100.10';
+        $autreIp = '203.0.113.20';
+        RateLimiter::clear('agent-pin:ip:'.$ipBloquee);
+        RateLimiter::clear('agent-pin:ip:'.$autreIp);
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->withToken($jeton)
+                ->withServerVariables(['REMOTE_ADDR' => $ipBloquee])
+                ->postJson('/api/agent/scan/pin', ['code_acces' => '9999'])
+                ->assertStatus(422)
+                ->assertJsonPath('code', 'pin_invalid');
+        }
+
+        $this->withToken($jeton)
+            ->withServerVariables(['REMOTE_ADDR' => $ipBloquee])
+            ->postJson('/api/agent/scan/pin', ['code_acces' => '1234'])
+            ->assertStatus(429)
+            ->assertJsonPath('code', 'pin_throttled')
+            ->assertHeader('Retry-After');
+
+        // Le compte reste utilisable depuis une autre adresse IP.
+        $this->withToken($jeton)
+            ->withServerVariables(['REMOTE_ADDR' => $autreIp])
+            ->postJson('/api/agent/scan/pin', ['code_acces' => '1234'])
+            ->assertOk()
+            ->assertJsonStructure(['scan_token']);
+
+        $this->assertNotSame('1234', DB::table('agents')->where('id', $agentId)->value('code_acces'));
+        $this->assertSame(0, DB::table('agents')->where('id', $agentId)->value('tentatives_code'));
     }
 
     public function test_agent_login_issues_a_token_that_expires_after_fourteen_days(): void

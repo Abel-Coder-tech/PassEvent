@@ -39,7 +39,7 @@
     <div class="row g-2 mt-3 mb-4">
         <div class="col-6 col-md">
             <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-icon" style="background: rgba(135,66,139,0.08); color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(123,63,160,0.08); color: var(--violet);">
                     <i class="bi bi-ticket-perforated"></i>
                 </div>
                 <div class="metric-label">Total tickets</div>
@@ -67,6 +67,7 @@
                 <div class="metric-subtitle">entrees validees</div>
             </div>
         </div>
+        @if(Auth::user()->type === 'universitaire')
         <div class="col-6 col-md">
             <div class="metric-card" style="border-top-color: var(--aubergine);">
                 <div class="metric-icon" style="background: rgba(109,78,114,0.08); color: var(--aubergine);">
@@ -77,6 +78,7 @@
                 <div class="metric-subtitle">avec code promo</div>
             </div>
         </div>
+        @endif
         <div class="col-6 col-md">
             <div class="metric-card" style="border-top-color: var(--danger);">
                 <div class="metric-icon" style="background: rgba(231,76,60,0.08); color: var(--danger);">
@@ -89,7 +91,7 @@
         </div>
         <div class="col-6 col-md">
             <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-icon" style="background: rgba(135,66,139,0.08); color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(123,63,160,0.08); color: var(--violet);">
                     <i class="bi bi-graph-up"></i>
                 </div>
                 <div class="metric-label">Taux de reussite</div>
@@ -169,7 +171,7 @@
         <div class="panel-card-header">
             <h5><i class="bi bi-list-ul me-2"></i>Liste des tickets</h5>
             @if($filtres['search'] !== '')
-                <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet);">
+                <span class="badge" style="background: rgba(123,63,160,0.1); color: var(--violet);">
                     <i class="bi bi-search me-1"></i> "{{ $filtres['search'] }}"
                 </span>
             @endif
@@ -252,7 +254,7 @@
                                     <td colspan="2" class="text-muted small">Entrée gratuite</td>
                                     @endif
                                     <td>
-                                        <span class="{{ $badgeClass }}" style="{{ is_string($badgeClass) && str_contains($badgeClass, 'status-badge') ? '' : '' }}">
+                                        <span class="{{ $badgeClass }}" "{{ is_string($badgeClass) && str_contains($badgeClass, 'status-badge') ? '' : '' }}">
                                             {{ $statusLabel }}
                                         </span>
                                     </td>

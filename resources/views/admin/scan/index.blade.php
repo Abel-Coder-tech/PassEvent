@@ -25,7 +25,7 @@
         margin: 0 auto;
     }
     .scanner-area {
-        background: #1a1a2e;
+        background: var(--sombre);
         border-radius: 16px;
         overflow: hidden;
         position: relative;
@@ -57,13 +57,13 @@
         transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
     .scanner-area.scan-ok .scan-frame {
-        border: 2px solid #28a745;
+        border: 2px solid var(--vert);
         box-shadow: 0 0 0 3px rgba(40,167,69,0.35), 0 0 22px rgba(40,167,69,0.55);
     }
     .scanner-area.scan-ok .scan-corners::before,
     .scanner-area.scan-ok .scan-corners::after,
     .scanner-area.scan-ok .scan-corners .corner-bl,
-    .scanner-area.scan-ok .scan-corners .corner-br { border-color: #28a745; }
+    .scanner-area.scan-ok .scan-corners .corner-br { border-color: var(--vert); }
     .scan-region-highlight { opacity: 0; }
     .scan-line {
         position: absolute;
@@ -80,8 +80,8 @@
     }
     .scanner-area.scanning .scan-line { display: block; }
     .scanner-area.detecting .scan-line {
-        background: linear-gradient(90deg, transparent, #28a745, transparent);
-        box-shadow: 0 0 10px #28a745;
+        background: linear-gradient(90deg, transparent, var(--vert), transparent);
+        box-shadow: 0 0 10px var(--vert);
     }
     .scanner-area.verifying .scan-line { animation-play-state: paused; }
     @keyframes scanSweep {
@@ -102,7 +102,7 @@
         display: block;
         height: 100%;
         width: 0;
-        background: #28a745;
+        background: var(--vert);
         transition: width 0.1s linear;
     }
     .scan-corners {
@@ -155,8 +155,8 @@
         border-left: 4px solid var(--danger);
     }
     .result-warning {
-        background: rgba(243,156,18,0.08);
-        border-left: 4px solid #f39c12;
+        background: rgba(214,137,16,0.08);
+        border-left: 4px solid var(--warning);
     }
     .pulse-success {
         animation: pulseGreen 0.5s ease-in-out;
@@ -194,10 +194,10 @@
         <div class="d-flex align-items-center justify-content-between mb-3 p-3" style="background: linear-gradient(135deg, rgba(123,63,160,0.06), rgba(46,125,79,0.06)); border-radius: 14px;">
             <div class="d-flex align-items-center gap-3">
                 <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123,63,160,0.1); display: flex; align-items: center; justify-content: center;">
-                    <i class="bi bi-calendar-event" style="color: #7B3FA0; font-size: 1.2rem;"></i>
+                    <i class="bi bi-calendar-event" style="color: var(--violet-clair); font-size: 1.2rem;"></i>
                 </div>
                 <div>
-                    <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">Événement en cours</div>
+                    <div style="font-size: 0.75rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.5px;">Événement en cours</div>
                     <div class="fw-bold" style="font-size: 1rem;">{{ $accessEvenement->titre }}</div>
                 </div>
             </div>
@@ -282,9 +282,9 @@
                     </div>
                     <div class="panel-card-body">
                         <div class="d-flex align-items-center gap-2 mb-3 p-2" style="background: rgba(123,63,160,0.06); border-radius: 10px;">
-                            <i class="bi bi-calendar-event" style="color: #7B3FA0; font-size: 1.1rem;"></i>
+                            <i class="bi bi-calendar-event" style="color: var(--violet-clair); font-size: 1.1rem;"></i>
                             <div class="min-w-0">
-                                <div style="font-size: 0.72rem; color: #888;">Événement en cours</div>
+                                <div style="font-size: 0.72rem; color: var(--gris);">Événement en cours</div>
                                 <div class="fw-semibold" style="font-size: 0.88rem;">{{ $accessEvenement->titre }}</div>
                             </div>
                         </div>
@@ -381,8 +381,8 @@
 // salle d'evenement) unpkg seul echoue et la camera devient inutilisable.
 (function () {
     var sources = [
-        'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
-        'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+        style='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+        style='https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
     ];
     var index = 0;
     function loadNext() {

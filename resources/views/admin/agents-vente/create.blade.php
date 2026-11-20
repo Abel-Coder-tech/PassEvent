@@ -47,7 +47,7 @@
                             Un email sera envoyé automatiquement avec les identifiants de connexion
                             et le code de vente à 6 chiffres.
                         </div>
-                        <button type="submit" class="btn text-white w-100 py-2" style="background: #7c3aed;">
+                        <button type="submit" class="btn text-white w-100 py-2" style="background: var(--violet-clair);">
                             <i class="bi bi-person-plus"></i> Créer l'agent 
                         </button>
                     </form>

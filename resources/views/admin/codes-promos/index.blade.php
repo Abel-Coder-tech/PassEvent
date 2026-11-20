@@ -23,7 +23,7 @@
         <a href="{{ route('admin.codes-promos.export', ['evenement_id' => $selectedEvent]) }}" class="btn btn-secondary-custom btn-sm" style="border-radius: 6px;">
             <i class="bi bi-download me-1"></i> <span class="btn-text">Exporter</span>
         </a>
-        <button type="button" class="btn btn-sm btn-generer-promo" style="background:#7B3FA0;color:#fff;border-radius:6px;" data-bs-toggle="modal" data-bs-target="#modalCreate" onclick="updateTarifs()">
+        <button type="button" class="btn btn-sm btn-generer-promo" style="background:var(--violet-clair);color:#fff;border-radius:6px;" data-bs-toggle="modal" data-bs-target="#modalCreate" onclick="updateTarifs()">
             <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">Générer code promo</span>
         </button>
     </div>
@@ -35,7 +35,7 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
             <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-icon" style="background: rgba(135,66,139,0.1); color: var(--violet);">
+                <div class="metric-icon" style="background: rgba(123,63,160,0.1); color: var(--violet);">
                     <i class="bi bi-tag"></i>
                 </div>
                 <div class="metric-label">Total codes</div>
@@ -160,9 +160,9 @@
                                     </td>
                                     <td>
                                         @if($code->type_reduction === 'pourcentage')
-                                            <span class="badge" style="background: rgba(135,66,139,0.12); color: var(--violet); font-weight: 600;">-{{ $code->valeur_reduction }}%</span>
+                                            <span class="badge" style="background: rgba(123,63,160,0.12); color: var(--violet); font-weight: 600;">-{{ $code->valeur_reduction }}%</span>
                                         @else
-                                            <span class="badge" style="background: rgba(135,66,139,0.12); color: var(--violet); font-weight: 600;">-{{ number_format($code->valeur_reduction, 0, ',', ' ') }} F</span>
+                                            <span class="badge" style="background: rgba(123,63,160,0.12); color: var(--violet); font-weight: 600;">-{{ number_format($code->valeur_reduction, 0, ',', ' ') }} F</span>
                                         @endif
                                     </td>
                                     <td>
@@ -221,7 +221,7 @@
                 <div class="text-center py-5">
                     <i class="bi bi-tags" style="font-size: 3rem; color: var(--gris); opacity: 0.3;"></i>
                     <p class="text-muted mt-3 mb-0">Aucun code promo trouvé.</p>
-                    <button type="button" class="btn btn-sm mt-2" style="background:#7B3FA0;color:#fff;border-radius:8px;" data-bs-toggle="modal" data-bs-target="#modalCreate">
+                    <button type="button" class="btn btn-sm mt-2" style="background:var(--violet-clair);color:#fff;border-radius:8px;" data-bs-toggle="modal" data-bs-target="#modalCreate">
                         <i class="bi bi-plus-lg me-1"></i> Générer votre premier code
                     </button>
                 </div>
@@ -234,7 +234,7 @@
 <div class="modal fade" id="modalCreate" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none;">
-            <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--gris-clair); padding: 1rem 1.25rem;">
                 <h5 class="modal-title" style="color: var(--violet);">
                     <i class="bi bi-magic me-2"></i>Générer des codes promo
                 </h5>
@@ -299,7 +299,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.25rem;">
+                <div class="modal-footer" style="border-top: 1px solid var(--gris-clair); padding: 1rem 1.25rem;">
                     <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal" style="border-radius: 8px;">Annuler</button>
                     <button type="submit" class="btn btn-vert" style="border-radius: 8px;">
                         <i class="bi bi-check-lg me-1"></i> Générer

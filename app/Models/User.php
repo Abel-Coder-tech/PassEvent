@@ -299,6 +299,22 @@ class User extends Authenticatable
         return $this->hasMany(DemandeRemboursement::class, 'organisateur_id');
     }
 
+    // Libellé du type de profil, identique dans les paramètres et les statistiques
+    public function getTypeLibelleAttribute(): string
+    {
+        return match ($this->type) {
+            'universitaire' => 'Universitaire',
+            'particulier' => 'Particulier',
+            'organisation' => match ($this->type_detail) {
+                'association' => 'Association / ONG',
+                'entreprise' => 'Entreprise',
+                default => 'Organisation',
+            },
+            'professionnel' => 'Professionnel',
+            default => $this->type ? ucfirst($this->type) : 'Non renseigné',
+        };
+    }
+
     public function getSoldeAttribute(): float
     {
         $evenementsIds = $this->evenements()->pluck('id');

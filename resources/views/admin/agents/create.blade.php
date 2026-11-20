@@ -39,12 +39,12 @@
                             <div class="position-relative">
                                 <input type="password" name="password" id="agent_password" class="form-control @error('password') is-invalid @enderror" required placeholder="Min. 8 caractères" minlength="8" oninput="checkPasswordStrengthAgent(this.value)">
                                 <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                                    <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                    <i class="bi bi-eye" style="color: var(--gris);"></i>
                                 </button>
                             </div>
                             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <div id="passwordMeterAgent" class="mt-2" style="display:none;">
-                                <div style="height:3px;background:#e9ecef;border-radius:2px;overflow:hidden;">
+                                <div style="height:3px;background:var(--ligne);border-radius:2px;overflow:hidden;">
                                     <div id="passwordBarAgent" style="height:100%;width:0;border-radius:2px;transition:width .3s,background .3s;"></div>
                                 </div>
                                 <div id="passwordLabelAgent" class="mt-1" style="font-size:0.78rem;font-weight:600;"></div>
@@ -71,7 +71,7 @@
                             Un code d'accès à 4 chiffres sera généré automatiquement. L'agent recevra un email avec ses identifiants et les détails de l'événement.
                         </div>
 
-                        <button type="submit" class="btn text-white w-100 py-2" style="background: #7c3aed;">
+                        <button type="submit" class="btn text-white w-100 py-2" style="background: var(--violet-clair);">
                             <i class="bi bi-person-plus me-1"></i> Créer l'agent de scan
                         </button>
                     </form>

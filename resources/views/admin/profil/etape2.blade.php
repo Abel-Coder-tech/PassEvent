@@ -10,28 +10,28 @@
         padding: 1.5rem; box-shadow: 0 4px 24px rgba(0,0,0,0.04);
     }
     .wizard-step { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem; }
-    .wizard-step .step { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #ccc; font-weight: 500; }
-    .wizard-step .step.active { color: #542680; font-weight: 700; }
-    .wizard-step .step.done { color: #2e7d4f; font-weight: 600; }
-    .wizard-step .num { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; background: #e0dde3; color: #fff; flex-shrink: 0; }
-    .wizard-step .active .num { background: #542680; }
-    .wizard-step .done .num { background: #2e7d4f; }
-    .wizard-step .connector { width: 24px; height: 2px; background: #e0dde3; }
-    .wizard-step .connector.done { background: #2e7d4f; }
-    .type-card { border: 2px solid #e0dde3; border-radius: 14px; padding: 1.25rem 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; height: 100%; }
-    .type-card:hover { border-color: #9972B0; background: #faf8fb; }
-    .type-card.selected { border-color: #542680; background: #f5f0f9; }
-    .type-card .icon { font-size: 1.5rem; color: #542680; margin-bottom: 0.4rem; }
-    .type-card .name { font-weight: 700; font-size: 0.85rem; color: #1d1d1f; margin-bottom: 0.2rem; }
-    .type-card .desc { font-size: 0.72rem; color: #6c757d; line-height: 1.3; }
+    .wizard-step .step { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--gris); font-weight: 500; }
+    .wizard-step .step.active { color: var(--violet); font-weight: 700; }
+    .wizard-step .step.done { color: var(--vert); font-weight: 600; }
+    .wizard-step .num { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; background: var(--ligne); color: #fff; flex-shrink: 0; }
+    .wizard-step .active .num { background: var(--violet); }
+    .wizard-step .done .num { background: var(--vert); }
+    .wizard-step .connector { width: 24px; height: 2px; background: var(--ligne); }
+    .wizard-step .connector.done { background: var(--vert); }
+    .type-card { border: 2px solid var(--ligne); border-radius: 14px; padding: 1.25rem 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; height: 100%; }
+    .type-card:hover { border-color: var(--violet-clair); background: #faf8fb; }
+    .type-card.selected { border-color: var(--violet); background: var(--violet-pale); }
+    .type-card .icon { font-size: 1.5rem; color: var(--violet); margin-bottom: 0.4rem; }
+    .type-card .name { font-weight: 700; font-size: 0.85rem; color: var(--sombre); margin-bottom: 0.2rem; }
+    .type-card .desc { font-size: 0.72rem; color: var(--gris-fonce); line-height: 1.3; }
     input[type="radio"] { display: none; }
     .toggle-group { display: flex; gap: 0.5rem; }
-    .toggle-btn { flex: 1; text-align: center; padding: 0.5rem 0.3rem; border-radius: 10px; border: 1.5px solid #e0dde3; cursor: pointer; font-weight: 600; font-size: 0.78rem; background: #fff; transition: 0.2s; color: #495057; }
-    .toggle-btn:hover { border-color: #9972B0; }
-    .toggle-btn.active { background: #f5f0f9; border-color: #542680; color: #542680; }
+    .toggle-btn { flex: 1; text-align: center; padding: 0.5rem 0.3rem; border-radius: 10px; border: 1.5px solid var(--ligne); cursor: pointer; font-weight: 600; font-size: 0.78rem; background: #fff; transition: 0.2s; color: #495057; }
+    .toggle-btn:hover { border-color: var(--violet-clair); }
+    .toggle-btn.active { background: var(--violet-pale); border-color: var(--violet); color: var(--violet); }
     .toggle-btn input { display: none; }
-    .doc-info { background: #f8f6f9; border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.82rem; color: #495057; }
-    .doc-info i { color: #542680; margin-right: 0.35rem; }
+    .doc-info { background: var(--gris-clair); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.82rem; color: #495057; }
+    .doc-info i { color: var(--violet); margin-right: 0.35rem; }
     @media (max-width: 575.98px) {
         .type-card { padding: 0.9rem 0.4rem; }
         .type-card .icon { font-size: 1.15rem; }
@@ -47,7 +47,7 @@
             <div class="connector"></div>
             <div class="step"><span class="num">2</span> Récapitulatif</div>
         </div>
-        <hr style="margin:0.75rem 0 1.25rem;border-color:#f0eeec;">
+        <hr style="margin:0.75rem 0 1.25rem;border-color:var(--gris-clair);">
 
         @if($errors->any())
             <div id="error-summary-server" class="alert alert-danger py-2" style="font-size:.85rem;border-radius:10px;">
@@ -58,7 +58,7 @@
         @endif
 
         <div style="margin-bottom:1.5rem;">
-            <p style="font-size:0.9rem;color:#6c757d;margin:0;">Complétez votre profil pour pouvoir créer et gérer des événements.</p>
+            <p style="font-size:0.9rem;color:var(--gris-fonce);margin:0;">Complétez votre profil pour pouvoir créer et gérer des événements.</p>
         </div>
 
         <form id="step2-form" method="POST" action="{{ route('profil.post-step2') }}" enctype="multipart/form-data" novalidate>
@@ -221,7 +221,7 @@
                 @error('signature') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
-            <button type="submit" class="btn btn-primary w-100" style="background:#542680;border:none;border-radius:10px;padding:0.7rem 1rem;font-weight:600;">Suivant</button>
+            <button type="submit" class="btn btn-primary w-100" style="background:var(--violet);border:none;border-radius:10px;padding:0.7rem 1rem;font-weight:600;">Suivant</button>
         </form>
     </div>
 </div>

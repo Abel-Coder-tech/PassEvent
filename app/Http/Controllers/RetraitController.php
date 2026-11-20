@@ -7,8 +7,11 @@ use App\Mail\RetraitConfirmed;
 use App\Mail\RetraitRejected;
 use App\Mail\RetraitRequested;
 use App\Models\Message;
+use App\Models\Evenement;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Services\PaiementMapper;
+use App\Services\TicketStatisticsService;
 use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,7 +72,7 @@ class RetraitController extends Controller
         ];
     }
 
-    public function index()
+    public function index(TicketStatisticsService $ticketStatistics)
     {
         $user = Auth::user();
         $data = $this->getSoldeDisponible($user);
@@ -78,10 +81,48 @@ class RetraitController extends Controller
             ->orderByDesc('created_at')
             ->paginate(PerPage::resolve());
 
+        // Répartition des paiements, affichée ici pour accompagner les retraits.
+        $evenementsIds = Evenement::where('user_id', $user->id)->pluck('id');
+        $paiementStats = $ticketStatistics->repartitionPaiements($evenementsIds);
+        $operateursRaw = $paiementStats['operateurs'];
+
+        $operateursAffiches = ['mtn', 'moov', 'celtiis'];
+        $reseauxConfig = [];
+        foreach ($operateursAffiches as $operateur) {
+            $reseauxConfig[$operateur] = [
+                'label' => PaiementMapper::operateurLabel($operateur),
+                'icon' => 'bi-phone',
+            ];
+        }
+        $reseauxConfig['autres'] = ['label' => 'Autres / Indéterminé', 'icon' => 'bi-phone'];
+
+        $reseauxPaiement = collect();
+        foreach ($reseauxConfig as $key => $cfg) {
+            if ($key === 'autres') {
+                $autres = $operateursRaw->reject(fn ($data, $k) => in_array($k, $operateursAffiches));
+                $reseauxPaiement->put('autres', (object) [
+                    'total' => (int) $autres->sum('total'),
+                    'montant' => (int) $autres->sum('montant'),
+                ]);
+            } else {
+                $donnees = $operateursRaw->get($key);
+                $reseauxPaiement->put($key, (object) [
+                    'total' => $donnees ? (int) $donnees->total : 0,
+                    'montant' => $donnees ? (int) $donnees->montant : 0,
+                ]);
+            }
+        }
+
+        $moyensPaiement = $paiementStats['moyens'];
+
         return view('admin.retraits.index', array_merge($data, [
             'retraits' => $retraits,
             'commissionPct' => $user->commissionPourcentage(),
             'numerosRetrait' => $user->numerosRetrait()->orderByDesc('id')->get(),
+            'reseauxPaiement' => $reseauxPaiement,
+            'reseauxConfig' => $reseauxConfig,
+            'moyensPaiement' => $moyensPaiement,
+            'ticketsVendus' => $moyensPaiement->sum('total'),
         ]));
     }
 

@@ -6,6 +6,7 @@ use App\Models\Ticket;
 use App\Models\Evenement;
 use App\Models\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StatistiqueController extends Controller
@@ -30,6 +31,7 @@ class StatistiqueController extends Controller
 
         $stats = $this->computeStats($query, $prevQuery, $periode);
         $ventesParJour = $this->getVentesParJour($startDate, $evenementsIds);
+        $ventesCategories = $this->categoriesVentes(Auth::user()?->type);
         $topEvenements = $this->getTopEvenements($evenementsIds);
         $paiementsParReseau = $this->getPaiementsParReseau($startDate, $evenementsIds);
         $activiteParJourSemaine = $this->getActiviteParJourSemaine($startDate, $evenementsIds);
@@ -42,6 +44,7 @@ class StatistiqueController extends Controller
         return view('admin.statistiques.index', compact(
             'stats',
             'ventesParJour',
+            'ventesCategories',
             'topEvenements',
             'paiementsParReseau',
             'activiteParJourSemaine',
@@ -94,6 +97,7 @@ class StatistiqueController extends Controller
             'taux_scan' => $tauxScan,
             'taux_echec' => $tauxEchec,
             'periode_label' => $this->getPeriodeLabel($periode),
+            'periode_graphique' => $this->getPeriodeGraphiqueLabel($periode),
         ];
     }
 
@@ -118,7 +122,37 @@ class StatistiqueController extends Controller
         };
     }
 
-    // Récupère les ventes par jour avec ventilation étudiants/externes/manuelles
+    // Libellé lisible utilisé dans le titre du graphe
+    private function getPeriodeGraphiqueLabel(string $periode): string
+    {
+        return match ($periode) {
+            '7' => '7 derniers jours',
+            '30' => '30 derniers jours',
+            '90' => '3 derniers mois',
+            'annee' => 'cette année',
+            default => 'depuis le début',
+        };
+    }
+
+    // Ventilation du graphe : les catégories universitaires n'ont de sens
+    // que pour un profil universitaire.
+    private function categoriesVentes(?string $typeProfil): array
+    {
+        if ($typeProfil === 'universitaire') {
+            return [
+                ['key' => 'etudiants', 'label' => 'Étudiants', 'couleur' => '#12976e', 'fond' => 'rgba(18,151,110,0.1)'],
+                ['key' => 'externes', 'label' => 'Externes', 'couleur' => '#87428b', 'fond' => 'rgba(135,66,139,0.1)'],
+                ['key' => 'especes', 'label' => 'Vente en espèce', 'couleur' => '#428c79', 'fond' => 'rgba(66,140,121,0.1)'],
+            ];
+        }
+
+        return [
+            ['key' => 'en_ligne', 'label' => 'Vente en ligne', 'couleur' => '#12976e', 'fond' => 'rgba(18,151,110,0.1)'],
+            ['key' => 'especes', 'label' => 'Vente en espèce', 'couleur' => '#87428b', 'fond' => 'rgba(135,66,139,0.1)'],
+        ];
+    }
+
+    // Récupère les ventes par jour avec ventilation adaptée au type de profil
     private function getVentesParJour(\Carbon\Carbon $startDate, $evenementsIds): array
     {
         $data = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'payé')
@@ -127,7 +161,10 @@ class StatistiqueController extends Controller
                 DB::raw('DATE(created_at) as date'),
                 DB::raw("COUNT(CASE WHEN nom_tarif LIKE '%tudiant%' THEN 1 END) as etudiants"),
                 DB::raw("COUNT(CASE WHEN nom_tarif NOT LIKE '%tudiant%' THEN 1 END) as externes"),
-                DB::raw("COUNT(CASE WHEN methode_paiement = 'especes' THEN 1 END) as manuelles")
+                // En ligne : lien public ou vente agent réglée via FedaPay.
+                DB::raw("COUNT(CASE WHEN methode_paiement NOT IN ('cash', 'especes') THEN 1 END) as en_ligne"),
+                // Espèces : choix « espèce » de l'agent ou de l'organisateur.
+                DB::raw("COUNT(CASE WHEN methode_paiement IN ('cash', 'especes') THEN 1 END) as especes")
             )
             ->groupBy('date')
             ->orderBy('date')
@@ -138,7 +175,8 @@ class StatistiqueController extends Controller
                 'date' => $row->date,
                 'etudiants' => (int) $row->etudiants,
                 'externes' => (int) $row->externes,
-                'manuelles' => (int) $row->manuelles,
+                'en_ligne' => (int) $row->en_ligne,
+                'especes' => (int) $row->especes,
             ];
         })->toArray();
     }
@@ -240,7 +278,7 @@ class StatistiqueController extends Controller
         return $result;
     }
 
-    // Résumé financier avec commissions, frais FedaPay et remboursements
+    // Résumé financier avec commissions et remboursements
     private function getResumeFinancier(\Carbon\Carbon $startDate, $evenementsIds): array
     {
         $tickets = Ticket::whereIn('evenement_id', $evenementsIds)
@@ -260,14 +298,12 @@ class StatistiqueController extends Controller
             ->where('statut_paiement', 'remboursé')
             ->where('created_at', '>=', $startDate)
             ->sum('montant');
-        $fraisFedaPay = $revenusBruts * 3.5 / 100;
-        $net = $revenusBruts - $commission - $fraisFedaPay - $remboursements;
+        $net = $revenusBruts - $commission - $remboursements;
 
         return [
             'revenus_bruts' => $revenusBruts,
             'gratuits' => $gratuits,
             'commission' => $commission,
-            'frais_fedapay' => $fraisFedaPay,
             'remboursements' => $remboursements,
             'net_reverser' => $net,
         ];

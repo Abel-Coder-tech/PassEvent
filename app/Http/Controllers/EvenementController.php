@@ -30,7 +30,10 @@ class EvenementController extends Controller
         $evenements = Evenement::where('user_id', $user->id)
             ->with('dates')
             ->withExists(['ventesPayeesHorsBilletsPhysiques as has_successful_non_physical_sales'])
-            ->withCount(['tickets' => fn($q) => $q->where('statut_paiement', 'payé')])
+            ->withCount([
+                'tickets as billets_en_ligne' => fn($q) => $q->where('statut_paiement', 'payé')->whereNull('lot_physique_id'),
+                'tickets as billets_physiques' => fn($q) => $q->where('statut_paiement', 'payé')->whereNotNull('lot_physique_id'),
+            ])
             ->orderBy('date_event', 'asc')
             ->paginate(\App\Support\PerPage::resolve());
 
@@ -436,6 +439,10 @@ class EvenementController extends Controller
         $statsVentes = $ticketStatistics->ventesEvenement($evenement->id);
         $ventes = $statsVentes['ventes'];
         $revenus = $statsVentes['revenus'];
+        $billetsEnLigne = (int) $evenement->tickets()
+            ->where('statut_paiement', 'payé')->whereNull('lot_physique_id')->count();
+        $billetsPhysiques = (int) $evenement->tickets()
+            ->where('statut_paiement', 'payé')->whereNotNull('lot_physique_id')->count();
         $placesRestantes = $evenement->placesRestantesTotales();
         $tauxRemplissage = $evenement->tauxRemplissage();
         $tarifs = $evenement->tarifs()->with('jour')->get();
@@ -443,7 +450,8 @@ class EvenementController extends Controller
         $scanAccessCodes = $evenement->scanAccessCodes()->orderByDesc('created_at')->get();
 
         return view('evenements.show', compact(
-            'evenement', 'ventes', 'revenus', 'placesRestantes', 'tauxRemplissage', 'tarifs', 'scanAccessCodes', 'jours'
+            'evenement', 'ventes', 'revenus', 'billetsEnLigne', 'billetsPhysiques',
+            'placesRestantes', 'tauxRemplissage', 'tarifs', 'scanAccessCodes', 'jours'
         ));
     }
 

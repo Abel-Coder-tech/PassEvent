@@ -198,6 +198,17 @@ class ProfilController extends Controller
             return redirect()->route('dashboard');
         }
 
+        // L'organisateur doit accepter les CGU avant de soumettre son profil.
+        // En mode « Gérer », PaxEvent finalise le profil pour son compte.
+        if (! session()->has('gestion')) {
+            $request->validate([
+                'cgu' => ['required', 'accepted'],
+            ], [
+                'cgu.required' => 'Vous devez accepter les conditions générales d\'utilisation pour soumettre votre profil.',
+                'cgu.accepted' => 'Vous devez accepter les conditions générales d\'utilisation pour soumettre votre profil.',
+            ]);
+        }
+
         $data = session('profil', []);
         if (empty($data['type']) || empty($data['document_justificatif']) || empty($data['signature'])) {
             return redirect()->route('profil.step2');

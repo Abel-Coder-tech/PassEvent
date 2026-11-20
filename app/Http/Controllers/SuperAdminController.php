@@ -1489,14 +1489,69 @@ class SuperAdminController extends Controller
         ];
     }
 
-    // Logs système complets
-    public function logsSysteme()
+    // Journal général de toutes les opérations, toutes organisations confondues
+    public function logsSysteme(Request $request)
     {
-        $logs = Log::with('ticket.evenement')
-            ->orderByDesc('created_at')
-            ->paginate(PerPage::resolve());
+        $type = $request->input('type');
+        $q = $request->input('q');
+        $periode = $request->input('periode', '30');
+        $startDate = $this->getStartDateLogs($periode);
 
-        return view('superadmin.logs', compact('logs'));
+        $query = Log::with('ticket.evenement')
+            ->where('created_at', '>=', $startDate);
+
+        if ($type) {
+            $query->where('type_operation', $type);
+        }
+
+        if ($q) {
+            $query->where(function ($sub) use ($q) {
+                $sub->whereHas('ticket', function ($t) use ($q) {
+                    $t->where('nom_acheteur', 'like', '%'.$q.'%')
+                        ->orWhere('email_acheteur', 'like', '%'.$q.'%')
+                        ->orWhere('code_unique', 'like', '%'.$q.'%');
+                })->orWhere('ip', 'like', '%'.$q.'%');
+            });
+        }
+
+        $logs = $query->orderByDesc('created_at')->paginate(PerPage::resolve())->withQueryString();
+
+        $base = Log::where('created_at', '>=', $startDate);
+        $clone = fn () => clone $base;
+        $stats = [
+            'total' => $clone()->count(),
+            'achats' => $clone()->where('type_operation', 'achat')->count(),
+            'envois' => $clone()->where('type_operation', 'envoi')->count(),
+            'scans' => $clone()->where('type_operation', 'scan')->count(),
+            'echecs' => $clone()->where('type_operation', 'echec_paiement')->count(),
+        ];
+
+        $types = [
+            'achat' => ['label' => 'Achat', 'color' => 'var(--sa-primary)'],
+            'envoi' => ['label' => 'Envoi ticket', 'color' => 'var(--sa-success)'],
+            'scan' => ['label' => 'Scan', 'color' => 'var(--sa-primary)'],
+            'recuperation' => ['label' => 'Récupération', 'color' => 'var(--sa-warning)'],
+            'paiement' => ['label' => 'Suivi paiement', 'color' => 'var(--sa-primary)'],
+            'echec_paiement' => ['label' => 'Paiement échoué', 'color' => 'var(--sa-danger)'],
+            'erreur_paiement' => ['label' => 'Anomalie paiement', 'color' => 'var(--sa-danger)'],
+            'reconciliation' => ['label' => 'Réconciliation', 'color' => 'var(--sa-warning)'],
+            'remboursement' => ['label' => 'Remboursement', 'color' => 'var(--sa-warning)'],
+            'code_promo' => ['label' => 'Code promo', 'color' => 'var(--sa-success)'],
+        ];
+
+        return view('superadmin.logs', compact('logs', 'stats', 'types', 'type', 'q', 'periode'));
+    }
+
+    // Début de la période retenue pour le journal
+    private function getStartDateLogs(string $periode): Carbon
+    {
+        return match ($periode) {
+            '7' => now()->copy()->subDays(7),
+            '30' => now()->copy()->subDays(30),
+            '90' => now()->copy()->subDays(90),
+            'annee' => now()->copy()->startOfYear(),
+            default => now()->copy()->subYears(10),
+        };
     }
 
     // Page de modération des événements annulés

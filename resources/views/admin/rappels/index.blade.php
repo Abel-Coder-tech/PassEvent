@@ -40,7 +40,7 @@
                                 onsubmit="return confirm('Envoyer un rappel à tous les acheteurs de « {{ $evenement->titre }} » ?');">
                                 @csrf
                                 <input type="hidden" name="evenement_id" value="{{ $evenement->id }}">
-                                <button type="submit" class="btn btn-sm text-white" style="background: #7c3aed;"
+                                <button type="submit" class="btn btn-sm text-white" style="background: var(--violet-clair);"
                                     {{ $evenement->tickets_count === 0 ? 'disabled' : '' }}>
                                     <i class="bi bi-envelope"></i> Envoyer le rappel
                                 </button>

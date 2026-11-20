@@ -16,10 +16,15 @@ class AgentAssigned extends Mailable
     public Agent $agent;
     public string $motDePasse;
 
-    public function __construct(Agent $agent, string $motDePasse)
+    /// Code PIN en clair, communiqué une seule fois par e-mail.
+    /// La base ne stocke que son hash bcrypt.
+    public string $codeAcces;
+
+    public function __construct(Agent $agent, string $motDePasse, string $codeAcces = '')
     {
         $this->agent = $agent;
         $this->motDePasse = $motDePasse;
+        $this->codeAcces = $codeAcces;
     }
 
     public function envelope(): Envelope

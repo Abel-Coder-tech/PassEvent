@@ -66,7 +66,7 @@
                         <input type="hidden" name="evenement_id" value="{{ $agentVente->evenement_id }}">
                         <div class="mb-3">
                             <label class="form-label small fw-medium">Événement</label>
-                            <div class="form-control d-flex align-items-center justify-content-between" style="background:#f8f9fa;">
+                            <div class="form-control d-flex align-items-center justify-content-between" style="background:var(--gris-clair);">
                                 <span class="small">{{ $agentVente->evenement->titre }}</span>
                                 <span class="badge bg-secondary">Affectation actuelle</span>
                             </div>
@@ -76,7 +76,7 @@
                         </div>
                         @endif
 
-                        <button type="submit" class="btn text-white w-100 py-2" style="background: #7c3aed;">
+                        <button type="submit" class="btn text-white w-100 py-2" style="background: var(--violet-clair);">
                             <i class="bi bi-check-lg me-1"></i> Enregistrer
                         </button>
                     </form>

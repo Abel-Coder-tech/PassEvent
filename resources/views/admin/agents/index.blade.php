@@ -7,10 +7,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="fw-bold mb-0"><i class="bi bi-people"></i> Agents de scan</h5>
         <div class="d-flex gap-2 flex-wrap">
-            <button type="button" class="btn btn-sm text-white" style="background: #7B3FA0;" onclick="openDemande('augmentation_agents')">
+            <button type="button" class="btn btn-sm text-white" style="background: var(--violet-clair);" onclick="openDemande('augmentation_agents')">
                 <i class="bi bi-plus-circle"></i> Demander plus d'agents
             </button>
-            <a href="{{ route('admin.agents.create') }}" class="btn btn-sm text-white" style="background: #7c3aed;">
+            <a href="{{ route('admin.agents.create') }}" class="btn btn-sm text-white" style="background: var(--violet-clair);">
                 <i class="bi bi-plus-lg"></i> Nouvel agent
             </a>
         </div>
@@ -24,7 +24,7 @@
     <div class="text-center py-5 text-muted">
         <i class="bi bi-people" style="font-size: 3rem;"></i>
         <p class="mt-2">Aucun agent de scan pour le moment.</p>
-        <a href="{{ route('admin.agents.create') }}" class="btn btn-sm text-white" style="background: #7c3aed;">
+        <a href="{{ route('admin.agents.create') }}" class="btn btn-sm text-white" style="background: var(--violet-clair);">
             Créer un agent
         </a>
     </div>
@@ -52,7 +52,7 @@
                             <a href="{{ route('admin.evenements.show', $agent->evenement) }}"
                                 class="text-decoration-none">{{ $agent->evenement->titre }}</a>
                         </td>
-                        <td><code>{{ $agent->code_acces }}</code></td>
+                        <td class="text-muted small">Envoyé par e-mail (stocké haché)</td>
                         <td class="text-center">
                             <span class="badge bg-{{ $agent->actif ? 'success' : 'secondary' }}">
                                 {{ $agent->actif ? 'Actif' : 'Inactif' }}

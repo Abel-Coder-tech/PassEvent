@@ -98,7 +98,7 @@
         position: absolute;
         cursor: pointer;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #ccc;
+        background-color: var(--gris);
         transition: 0.3s;
         border-radius: 24px;
     }
@@ -178,7 +178,7 @@
                             @method('PUT')
 
                             {{-- Avatar --}}
-                            <div class="d-flex align-items-center gap-3 mb-4 pb-4" style="border-bottom: 1px solid #f0f0f0;">
+                            <div class="d-flex align-items-center gap-3 mb-4 pb-4" style="border-bottom: 1px solid var(--gris-clair);">
                                 <div class="avatar-wrapper">
                                     @if(Auth::user()->avatar)
                                         <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="avatar-image">
@@ -226,7 +226,7 @@
                             {{-- Type de compte --}}
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size: 0.82rem;">Type de compte</label>
-                                <input type="text" class="form-control" value="{{ Auth::user()->type === 'universitaire' ? 'Universitaire' : 'Professionnel' }}" readonly style="background: #f5f5f5;">
+                                <input type="text" class="form-control" value="{{ Auth::user()->type_libelle }}" readonly style="background: var(--gris-clair);">
                                 <small class="text-muted">Le type de compte ne peut pas être modifié.</small>
                             </div>
 
@@ -247,7 +247,7 @@
                                 @error('description')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid #f0f0f0;">
+                            <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid var(--gris-clair);">
                                 <span class="text-muted" style="font-size: 0.78rem;">
                                     <i class="bi bi-clock me-1"></i>Derniere modification : {{ Auth::user()->updated_at->diffForHumans() }}
                                 </span>
@@ -278,7 +278,7 @@
                                 <div class="position-relative">
                                     <input type="password" name="mot_de_passe_actuel" id="param_actuel" class="form-control" required>
                                     <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                                        <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                        <i class="bi bi-eye" style="color: var(--gris);"></i>
                                     </button>
                                 </div>
                                 @error('mot_de_passe_actuel')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
@@ -290,7 +290,7 @@
                                     <div class="position-relative">
                                         <input type="password" name="mot_de_passe" id="param_new" class="form-control" required>
                                         <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                            <i class="bi bi-eye" style="color: var(--gris);"></i>
                                         </button>
                                     </div>
                                     @error('mot_de_passe')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
@@ -300,13 +300,13 @@
                                     <div class="position-relative">
                                         <input type="password" name="mot_de_passe_confirmation" id="param_confirm" class="form-control" required>
                                         <button type="button" class="btn position-absolute border-0 bg-transparent toggle-password" style="right: 4px; top: 50%; transform: translateY(-50%); padding: 4px; z-index: 5;">
-                                            <i class="bi bi-eye" style="color: #9a9a9a;"></i>
+                                            <i class="bi bi-eye" style="color: var(--gris);"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="pt-3" style="border-top: 1px solid #f0f0f0;">
+                            <div class="pt-3" style="border-top: 1px solid var(--gris-clair);">
                                 <button type="submit" class="btn btn-vert" style="border-radius: 8px;">
                                     <i class="bi bi-lock me-1"></i> Modifier le mot de passe
                                 </button>
@@ -434,7 +434,7 @@
                                 </label>
                             </div>
 
-                            <div class="pt-3" style="border-top: 1px solid #f0f0f0;">
+                            <div class="pt-3" style="border-top: 1px solid var(--gris-clair);">
                                 <button type="submit" class="btn btn-vert" style="border-radius: 8px;">
                                     <i class="bi bi-check-lg me-1"></i> Enregistrer les preferences
                                 </button>
@@ -459,7 +459,7 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3" style="border-top: 1px solid #f0f0f0; padding-top: 1.25rem;">
+                        <div class="d-flex justify-content-between align-items-center mb-3" style="border-top: 1px solid var(--gris-clair); padding-top: 1.25rem;">
                             <div>
                                 <div class="fw-bold" style="font-size: 0.95rem;">Numéros de retrait</div>
                                 <div class="text-muted" style="font-size: 0.78rem;">Veuillez ajouter vos numéros de retraits. Ils seront utilisé lors d'une demande de retrait.</div>
@@ -507,7 +507,7 @@
                                                     <form action="{{ route('parametres.numeros-retrait.destroy', $numero) }}" method="POST" onsubmit="return confirm('Supprimer ce numéro de retrait ?');">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Supprimer" style="color: #e74c3c;">
+                                                        <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Supprimer" style="color: var(--danger);">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
@@ -558,9 +558,9 @@
                                     </div>
                                 </div>
                             @else
-                                <div class="p-3 rounded mb-4" style="background: rgba(243,156,18,0.06); border-left: 4px solid #f39c12;">
+                                <div class="p-3 rounded mb-4" style="background: rgba(214,137,16,0.06); border-left: 4px solid var(--warning);">
                                     <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-exclamation-triangle" style="color: #f39c12; font-size: 1.25rem;"></i>
+                                        <i class="bi bi-exclamation-triangle" style="color: var(--warning); font-size: 1.25rem;"></i>
                                         <div>
                                             <div class="fw-semibold" style="font-size: 0.88rem;">Scan non configure</div>
                                             <div class="text-muted" style="font-size: 0.78rem;">Aucun code d'acces n'est defini. Configurez-en un pour permettre le scan des tickets.</div>
@@ -569,7 +569,7 @@
                                 </div>
                             @endif
 
-                            <div class="pt-3" style="border-top: 1px solid #f0f0f0;">
+                            <div class="pt-3" style="border-top: 1px solid var(--gris-clair);">
                                 <button type="submit" class="btn btn-vert" style="border-radius: 8px;">
                                     <i class="bi bi-check-lg me-1"></i> Enregistrer le code
                                 </button>
@@ -600,13 +600,13 @@
                             </div>
                         </div>
 
-                        <div class="p-3 rounded" style="background: rgba(243,156,18,0.04); border: 1px solid rgba(243,156,18,0.15);">
+                        <div class="p-3 rounded" style="background: rgba(214,137,16,0.04); border: 1px solid rgba(214,137,16,0.15);">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="fw-bold" style="color: #f39c12; font-size: 0.95rem;">Exporter mes donnees</div>
+                                    <div class="fw-bold" style="color: var(--warning); font-size: 0.95rem;">Exporter mes donnees</div>
                                     <div class="text-muted" style="font-size: 0.78rem;">Telecharger une copie de toutes vos donnees personnelles et de vos evenements.</div>
                                 </div>
-                                <button type="button" class="btn btn-sm" style="border-radius: 8px; border: 1px solid #f39c12; color: #f39c12; background: transparent;">
+                                <button type="button" class="btn btn-sm" style="border-radius: 8px; border: 1px solid var(--warning); color: var(--warning); background: transparent;">
                                     <i class="bi bi-download me-1"></i> Exporter
                                 </button>
                             </div>
@@ -623,7 +623,7 @@
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 14px; border: none;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold" style="color: #1a1a2e;"><i class="bi bi-wallet2 me-2" style="color: var(--violet);"></i> Ajouter un numéro de retrait</h5>
+                <h5 class="fw-bold" style="color: var(--sombre);"><i class="bi bi-wallet2 me-2" style="color: var(--violet);"></i> Ajouter un numéro de retrait</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -634,7 +634,7 @@
                         <div class="row g-2" id="reseauCartes">
                             @foreach($reseauxConfig as $key => $cfg)
                             <div class="col-4">
-                                <label class="reseau-carte text-center w-100" data-reseau="{{ $key }}" style="cursor:pointer; display:block; border:1px solid #e5e0e8; border-radius:10px; padding:0.75rem 0.25rem; transition: all .15s;">
+                                <label class="reseau-carte text-center w-100" data-reseau="{{ $key }}" style="cursor:pointer; display:block; border:1px solid var(--ligne); border-radius:10px; padding:0.75rem 0.25rem; transition: all .15s;">
                                     <input type="radio" name="operateur" value="{{ $key }}" hidden style="display:none;" required>
                                     <i class="{{ $cfg['icon'] }}" style="font-size:1.25rem; color:var(--violet); display:block; margin-bottom:0.25rem;"></i>
                                     <span style="font-size:0.72rem; font-weight:600; color:#444;">{{ $cfg['label'] }}</span>
@@ -655,7 +655,7 @@
                         @error('mobile')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         <small class="text-muted">Doit correspondre au réseau sélectionné</small>
                     </div>
-                    <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, #7B3FA0, #9c4db8); color: #fff; font-weight:700; border-radius:10px; border:none;">
+                    <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, var(--violet-clair), var(--violet-clair)); color: #fff; font-weight:700; border-radius:10px; border:none;">
                         <i class="bi bi-check-lg me-1"></i> Sauvegarder
                     </button>
                 </form>
