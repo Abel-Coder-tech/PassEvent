@@ -55,8 +55,8 @@
                             <a href="{{ route('admin.evenements.show', $agent->evenement) }}"
                                 class="text-decoration-none">{{ $agent->evenement->titre }}</a>
                         </td>
-                        <td class="text-center">{{ $agent->tickets_count }}</td>
-                        <td class="text-end">{{ number_format($agent->montant_total, 0, ',', ' ') }} F</td>
+                        <td class="text-center">{{ (int) $agent->ventes_count }}</td>
+                        <td class="text-end">{{ number_format($agent->ventes_montant ?? 0, 0, ',', ' ') }} F</td>
                         <td class="text-center">
                             <span class="badge bg-{{ $agent->actif ? 'success' : 'secondary' }}">
                                 {{ $agent->actif ? 'Actif' : 'Inactif' }}
