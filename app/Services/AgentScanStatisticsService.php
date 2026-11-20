@@ -34,7 +34,7 @@ class AgentScanStatisticsService
         $logs = $agent->logs()->where('type_operation', LogOperationType::Scan->value);
 
         if ($evenementId !== null) {
-            $logs->whereHas('ticket', fn (Builder $query) => $query->where('evenement_id', $evenementId));
+            $logs->pourEvenement($evenementId);
         }
 
         $todayStart = today()->startOfDay();
@@ -47,7 +47,10 @@ class AgentScanStatisticsService
             )
             ->selectRaw("SUM(CASE WHEN {$resultColumn} = ? THEN 1 ELSE 0 END) as valides", [ScanResult::Valid->value])
             ->selectRaw("SUM(CASE WHEN {$resultColumn} = ? THEN 1 ELSE 0 END) as deja_utilises", [ScanResult::AlreadyUsed->value])
-            ->selectRaw("SUM(CASE WHEN {$resultColumn} != ? THEN 1 ELSE 0 END) as invalides", [ScanResult::Valid->value])
+            ->selectRaw(
+                "SUM(CASE WHEN {$resultColumn} IS NULL OR {$resultColumn} NOT IN (?, ?) THEN 1 ELSE 0 END) as invalides",
+                [ScanResult::Valid->value, ScanResult::AlreadyUsed->value]
+            )
             ->first();
 
         return [

@@ -47,4 +47,18 @@ class Log extends Model
     {
         return $this->belongsTo(Ticket::class);
     }
+
+    // Scans rattachés à un événement : l'événement est enregistré dans les détails
+    // du scan (y compris pour un code inconnu, sans ticket). Repli sur le ticket
+    // pour les anciens logs qui n'ont pas cette information.
+    public function scopePourEvenement($query, int $evenementId)
+    {
+        return $query->where(function ($q) use ($evenementId) {
+            $q->where('details->evenement_id', $evenementId)
+                ->orWhere(function ($q) use ($evenementId) {
+                    $q->whereNull('details->evenement_id')
+                        ->whereHas('ticket', fn ($t) => $t->where('evenement_id', $evenementId));
+                });
+        });
+    }
 }
