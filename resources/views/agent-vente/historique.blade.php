@@ -1,141 +1,64 @@
 @extends('layouts.agent-vente')
 
-@section('title', 'Historique des ventes - ' . $agent->evenement->titre)
+@section('title', 'Historique des ventes — ' . $agent->evenement->titre)
 
 @section('content')
-@php $textes = $agent->evenement->getTextes(); @endphp
-<div class="container py-4">
-    {{-- En-tête --}}
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
-        <div class="d-flex align-items-center gap-3">
-            <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{ $agent->nom }}</span>
-            <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Déconnecter
-                </button>
-            </form>
-        </div>
-    </div>
+<div class="av-app">
+    @include('agent-vente.partials.header', ['section' => 'Historique'])
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <h5 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Historique des ventes</h5>
-        <a href="{{ route('agent-vente.dashboard') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Retour au tableau de bord
-        </a>
-    </div>
+    <main class="av-main">
+        <section class="av-card" aria-labelledby="avHistoriqueTitle">
+            <div class="av-card-head">
+                <div>
+                    <span class="av-kicker">Suivi</span>
+                    <h1 id="avHistoriqueTitle">Historique des ventes</h1>
+                </div>
+                <a class="av-link av-back" href="{{ route('agent-vente.dashboard') }}">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Point de vente
+                </a>
+            </div>
 
-    {{-- Filtres par période --}}
-    <div class="card border-0 shadow-sm rounded-3 mb-3">
-        <div class="card-body py-2">
-            <form method="GET" action="{{ route('agent-vente.historique') }}" class="d-flex flex-wrap align-items-center gap-2 mb-0">
+            <div class="av-filters" role="group" aria-label="Filtrer par période">
                 @foreach ([
-                    'aujourdhui' => 'Aujourd\'hui',
+                    'aujourdhui' => "Aujourd'hui",
                     'hier' => 'Hier',
                     'semaine' => 'Cette semaine',
                     'mois' => 'Ce mois',
                     'tout' => 'Tout',
                 ] as $value => $label)
-                <button type="submit" name="periode" value="{{ $value }}"
-                    class="btn btn-sm {{ $periode === $value ? 'text-white' : 'btn-outline-secondary' }}"
-                    style="{{ $periode === $value ? 'background: #7c3aed; border-color: #7c3aed;' : '' }}">
-                    {{ $label }}
-                </button>
+                    <a class="av-filter{{ $periode === $value ? ' is-active' : '' }}"
+                       href="{{ route('agent-vente.historique', ['periode' => $value]) }}"
+                       @if ($periode === $value) aria-current="page" @endif>{{ $label }}</a>
                 @endforeach
-            </form>
-        </div>
-    </div>
-
-    {{-- Récapitulatif de la période filtrée --}}
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-purple-50">
-                <div class="card-body text-center py-3">
-                    <div class="text-purple-700 fw-bold fs-3">{{ $tickets->total() }}</div>
-                    <small class="text-muted">Ventes (page)</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 bg-green-50">
-                <div class="card-body text-center py-3">
-                    <div class="text-green-700 fw-bold fs-3">{{ number_format($montantFiltre, 0, ',', ' ') }} F</div>
-                    <small class="text-muted">Montant de la page</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Tableau paginé --}}
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body px-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle mb-0">
-                    <thead class="table-light small">
-                        <tr>
-                            <th class="ps-3">Date</th>
-                            <th>Acheteur</th>
-                            <th>WhatsApp</th>
-                            <th>N° paiement</th>
-                            <th>Tarif</th>
-                            <th>Montant</th>
-                            <th>Paiement</th>
-                            <th class="pe-3">PDF</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($tickets as $ticket)
-                        <tr>
-                            <td class="ps-3 small">{{ $ticket->date_achat->format('d/m/Y H:i') }}</td>
-                            <td class="small">{{ $ticket->nom_acheteur }}</td>
-                            <td class="small">{{ $ticket->whatsapp_acheteur ?? '—' }}</td>
-                            <td class="small">{{ $ticket->telephone_paiement ?? $ticket->telephone_acheteur ?? '—' }}</td>
-                            <td class="small">{{ $ticket->tarif?->getLabel() ?? 'N/A' }}</td>
-                            @if($ticket->montant > 0)
-                            <td class="small fw-medium">{{ number_format($ticket->montant, 0, ',', ' ') }} F</td>
-                            <td class="small">{{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}</td>
-                            @else
-                            <td class="small text-muted">Gratuit</td>
-                            <td class="small">—</td>
-                            @endif
-                            <td class="pe-3">
-                                <a href="{{ route('agent-vente.ticket.pdf', $ticket) }}"
-                                    class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank">
-                                    <i class="bi bi-filetype-pdf"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4 small">
-                                <i class="bi bi-inbox"></i> Aucune vente pour cette période
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
 
-            <div class="p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div class="small text-muted">
-                    {{ $tickets->total() }} vente(s) au total
-                    @if($periode !== 'tout')
-                    <span class="text-muted">— période sélectionnée</span>
-                    @endif
-                </div>
-                <div>
-                    {{ $tickets->appends(['periode' => $periode])->links() }}
-                </div>
+            <div class="av-summary" style="padding: 0 16px 14px;" aria-label="Récapitulatif de la page">
+                <article class="av-stat">
+                    <span class="av-stat-icon av-stat-icon--violet"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
+                    <div><strong>{{ $tickets->total() }}</strong><span>Vente(s) au total</span></div>
+                </article>
+                <article class="av-stat">
+                    <span class="av-stat-icon av-stat-icon--green"><i class="bi bi-cash-stack" aria-hidden="true"></i></span>
+                    <div><strong>{{ number_format($montantFiltre, 0, ',', ' ') }} F</strong><span>Montant de la page</span></div>
+                </article>
             </div>
-        </div>
-    </div>
+
+            <div class="av-sales" style="padding-top: 0;">
+                @forelse ($tickets as $ticket)
+                    @include('agent-vente.partials.vente-card', ['ticket' => $ticket, 'afficherDate' => true])
+                @empty
+                    <div class="av-empty"><i class="bi bi-inbox" aria-hidden="true"></i><span>Aucune vente pour cette période</span></div>
+                @endforelse
+            </div>
+
+            <div class="av-pagination">
+                {{ $tickets->appends(['periode' => $periode])->links() }}
+            </div>
+        </section>
+    </main>
 </div>
-
-<style>
-.bg-purple-50 { background: #f5f3ff; }
-.text-purple-700 { color: #7c3aed; }
-.bg-green-50 { background: #f0fdf4; }
-.text-green-700 { color: #16a34a; }
-</style>
 @endsection
+
+@push('styles')
+@include('agent-vente.partials.styles')
+@endpush

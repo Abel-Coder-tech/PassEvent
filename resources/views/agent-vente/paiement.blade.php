@@ -1,131 +1,129 @@
 @extends('layouts.agent-vente')
 
-@section('title', 'Paiement Mobile - ' . $agent->evenement->titre)
+@section('title', 'Paiement mobile — ' . $agent->evenement->titre)
 
 @section('content')
-<div class="container py-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <img src="{{ asset_v('images/logo_paxevent.png') }}" alt="PaxEvent" height="60">
-        <div class="d-flex align-items-center gap-3">
-            <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{ $agent->nom }}</span>
-            <form method="POST" action="{{ route('agent-vente.logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Déconnecter
-                </button>
-            </form>
-        </div>
-    </div>
+<div class="av-app">
+    @include('agent-vente.partials.header', ['section' => 'Paiement'])
 
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-7 col-lg-6">
-            <div class="card border-0 shadow-sm mb-3" style="border-radius: 16px;">
-                <div class="card-body p-4 text-center">
-                    <div class="mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 64px; height: 64px; background: #f5f3ff;">
-                            <i class="bi bi-wallet2" style="font-size: 1.75rem; color: #7c3aed;"></i>
-                        </div>
-                        <h5 class="fw-bold mb-1">Paiement Mobile</h5>
-                        <p class="text-muted small mb-0">Le client doit payer pour finaliser la vente</p>
-                    </div>
-
-                    <div class="p-3 rounded-3 mb-3 text-start" style="background: #f8f6f9;">
-                        <div class="row g-2" style="font-size: 0.88rem;">
-                            <div class="col-6">
-                                <span class="text-muted">Client :</span><br>
-                                <strong>{{ $ticket->nom_acheteur }}</strong>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span class="text-muted">Montant :</span><br>
-                                <strong style="color: #7c3aed;">{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</strong>
-                            </div>
-                            <div class="col-6">
-                                <span class="text-muted">Email :</span><br>
-                                <strong>{{ $ticket->email_acheteur }}</strong>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span class="text-muted">{{ $ticket->aUnCodeDefinitif() ? 'Ticket' : 'Référence' }} :</span><br>
-                                <code class="fw-bold" style="background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid #eee;">{{ $ticket->aUnCodeDefinitif() ? $ticket->code_unique : $ticket->transaction_id }}</code>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if($publicKey)
-                        <button type="button" id="btnFedaPay" class="btn w-100 py-3" style="background: #7c3aed; color: #fff; border-radius: 10px; font-size: 1rem; font-weight: 700; border: none;">
-                            <i class="bi bi-shield-lock me-2"></i> Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
-                        </button>
-                    @else
-                        <div class="alert alert-warning py-2 mb-0" style="border-radius: 10px; font-size: 0.85rem;">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
-                            Le paiement mobile est temporairement indisponible. Utilisez les espèces.
-                        </div>
-                    @endif
-
-                    <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
-                        <small class="text-muted" style="font-size: 0.75rem;">Paiement sécurisé par</small>
-                        <strong style="color: #7c3aed; font-size: 0.9rem;">FedaPay</strong>
-                    </div>
-
-                    <div id="paymentError" class="mt-3" style="display: none; color: #dc3545; font-size: 0.85rem;"></div>
-
-                    <a href="{{ route('agent-vente.dashboard') }}" class="btn btn-sm btn-outline-secondary mt-3">
-                        <i class="bi bi-arrow-left"></i> Annuler et revenir
-                    </a>
+    <main class="av-main">
+        <section class="av-card" aria-labelledby="avPaiementTitle">
+            <div class="av-card-head">
+                <div>
+                    <span class="av-kicker">Paiement mobile</span>
+                    <h1 id="avPaiementTitle">Finaliser la vente</h1>
                 </div>
+                <span class="av-live"><span aria-hidden="true"></span> Sécurisé</span>
             </div>
-        </div>
-    </div>
+
+            <div style="padding: 0 16px 16px;">
+                <p class="av-refresh" style="padding: 0 0 12px;">
+                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                    Le client doit payer pour finaliser la vente.
+                </p>
+
+                <div class="av-recap" aria-label="Détails de la vente">
+                    <div class="av-recap-ligne">
+                        <span>Client</span>
+                        <strong>{{ $ticket->nom_acheteur }}</strong>
+                    </div>
+                    <div class="av-recap-ligne av-recap-ligne--montant">
+                        <span>Montant</span>
+                        <strong>{{ number_format($ticket->montant, 0, ',', ' ') }} FCFA</strong>
+                    </div>
+                    <div class="av-recap-ligne">
+                        <span>Email</span>
+                        <strong>{{ $ticket->email_acheteur }}</strong>
+                    </div>
+                    <div class="av-recap-ligne">
+                        <span>{{ $ticket->aUnCodeDefinitif() ? 'Ticket' : 'Référence' }}</span>
+                        <code>{{ $ticket->aUnCodeDefinitif() ? $ticket->code_unique : $ticket->transaction_id }}</code>
+                    </div>
+                </div>
+
+                @if ($publicKey)
+                    <button type="button" id="btnFedaPay" class="av-action">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                        Payer {{ number_format($ticket->montant, 0, ',', ' ') }} FCFA
+                    </button>
+                    <p class="av-secure">Paiement sécurisé par <strong>FedaPay</strong></p>
+                @else
+                    <div class="av-alert av-alert--error" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                        <div class="av-alert-body">
+                            <strong>Paiement indisponible</strong>
+                            <span>Le paiement mobile est temporairement indisponible. Utilisez les espèces.</span>
+                        </div>
+                    </div>
+                @endif
+
+                <div id="paymentError" class="av-error-box" style="display: none;" role="alert"></div>
+
+                <a href="{{ route('agent-vente.dashboard') }}" class="av-footer-link av-back">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Annuler et revenir au point de vente
+                </a>
+            </div>
+        </section>
+    </main>
 </div>
 @endsection
+
+@push('styles')
+@include('agent-vente.partials.styles')
+@endpush
 
 @push('scripts')
 <script src="https://cdn.fedapay.com/checkout.js?v=1.1.3"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const btn = document.getElementById('btnFedaPay');
-    const errorDiv = document.getElementById('paymentError');
-    const callbackUrl = '{{ route('paiement.callback') }}?ticket={{ $ticket->id }}&source=agent_vente';
-
     if (!btn) return;
 
-    if (typeof FedaPay === 'undefined') {
-        errorDiv.textContent = 'Erreur de chargement du module de paiement. Actualisez la page.';
+    const errorDiv = document.getElementById('paymentError');
+    const callbackUrl = @json(route('paiement.callback').'?ticket='.$ticket->id.'&source=agent_vente');
+
+    function afficherErreur(message) {
+        if (!errorDiv) return;
+        errorDiv.textContent = message;
         errorDiv.style.display = 'block';
+    }
+
+    if (typeof FedaPay === 'undefined') {
+        afficherErreur('Erreur de chargement du module de paiement. Actualisez la page.');
         return;
     }
 
-    const nameParts = '{{ $ticket->nom_acheteur }}'.trim().split(' ');
-    const firstname = nameParts.slice(0, -1).join(' ') || nameParts[0] || 'Client';
-    const lastname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    const nom = @json($ticket->nom_acheteur).trim().split(' ');
+    const firstname = nom.slice(0, -1).join(' ') || nom[0] || 'Client';
+    const lastname = nom.length > 1 ? nom[nom.length - 1] : '';
 
     FedaPay.init(btn, {
-        public_key: '{{ $publicKey }}',
-        environment: '{{ $sandbox ? 'sandbox' : 'live' }}',
+        public_key: @json($publicKey),
+        environment: @json($sandbox ? 'sandbox' : 'live'),
         transaction: {
             amount: {{ (int) $ticket->montant }},
-            description: 'Ticket - {{ $ticket->evenement->titre }}',
-            external_id: '{{ $ticket->id }}',
+            description: @json('Ticket - '.$ticket->evenement->titre),
+            external_id: @json((string) $ticket->id),
             custom_metadata: {
-                ticket_id: '{{ $ticket->id }}',
-                group_transaction_id: '{{ $ticket->transaction_id }}'
+                ticket_id: @json((string) $ticket->id),
+                group_transaction_id: @json($ticket->transaction_id)
             }
         },
         customer: {
-            email: '{{ $ticket->email_acheteur }}',
+            email: @json($ticket->email_acheteur),
             firstname: firstname,
             lastname: lastname
         },
         currency: {
             iso: 'XOF'
         },
-        onComplete: function(data) {
+        onComplete: function (data) {
             if (data.transaction && data.transaction.id) {
-                var pm = data.transaction.payment_method || 'mobile_money';
-                var ph = data.transaction.phone || '';
+                const pm = data.transaction.payment_method || 'mobile_money';
+                const ph = data.transaction.phone || '';
                 window.location.href = callbackUrl + '&id=' + data.transaction.id + '&status=' + (data.transaction.status || 'approved') + '&payment_method=' + pm + '&phone=' + ph;
             } else {
-                errorDiv.textContent = 'Paiement annulé ou fermé. Vous pouvez réessayer.';
-                errorDiv.style.display = 'block';
+                afficherErreur('Paiement annulé ou fermé. Vous pouvez réessayer.');
             }
         }
     });
