@@ -125,7 +125,7 @@
                                         @if($attente = $listeAttente->get($tarif->id))
                                             <form action="{{ route('admin.tarifs.liste-attente.notifier', [$evenement->id, $tarif->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Prévenir les {{ $attente->personnes }} personne(s) inscrite(s) que des places sont disponibles ?')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm me-1" style="background:#FED514;color:#211C31;font-weight:600;" title="Avant d'envoyer, ajoutez des places avec Modifier">
+                                                <button type="submit" class="btn btn-sm me-1" style="background:var(--accent);color:var(--sombre);font-weight:600;" title="Avant d'envoyer, ajoutez des places avec Modifier">
                                                     <i class="bi bi-send me-1"></i> Envoyer la notification ({{ $attente->personnes }})
                                                 </button>
                                             </form>

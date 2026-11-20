@@ -24,7 +24,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
                     <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
-                        style="width: 64px; height: 64px; background: #f5f3ff;">
+                        style="width: 64px; height: 64px; background: var(--violet-pale);">
                         <i class="bi bi-person text-purple-700" style="font-size: 2rem;"></i>
                     </div>
                     <h5 class="fw-bold">{{ $agent->nom }}</h5>
@@ -39,7 +39,7 @@
                         </a>
                     </p>
                     <div class="text-start small mt-3 pt-2 border-top">
-                        <div class="mb-1"><strong>Code d'accès :</strong> <code>{{ $agent->code_acces }}</code></div>
+                        <div class="mb-1"><strong>Code d'accès :</strong> <span class="text-muted">Envoyé par e-mail (stocké haché)</span></div>
                         <div class="mb-1"><strong>Dernier accès :</strong> {{ $agent->dernier_acces ? $agent->dernier_acces->format('d/m/Y H:i') : 'Jamais' }}</div>
                         <div class="mb-1"><strong>Créé le :</strong> {{ $agent->created_at->format('d/m/Y H:i') }}</div>
                     </div>
@@ -212,11 +212,11 @@
 </div>
 
 <style>
-.bg-purple-50 { background: #f5f3ff; }
-.text-purple-700 { color: #7c3aed; }
-.bg-green-50 { background: #f0fdf4; }
+.bg-purple-50 { background: var(--violet-pale); }
+.text-purple-700 { color: var(--violet-clair); }
+.bg-green-50 { background: var(--vert-pale); }
 .text-green-700 { color: #16a34a; }
-.bg-blue-50 { background: #eff6ff; }
-.text-blue-700 { color: #2563eb; }
+.bg-blue-50 { background: var(--info-pale); }
+.text-blue-700 { color: var(--info); }
 </style>
 @endsection

@@ -37,7 +37,7 @@
                 <p style="color: var(--gris); max-width: 380px; margin: 0 auto 1.5rem; line-height: 1.6;">
                     {{ $message }}
                 </p>
-                <div style="background: #f8f6f9; border-radius: 12px; padding: 1rem 1.5rem; display: inline-block; margin-bottom: 1.5rem;">
+                <div style="background: var(--gris-clair); border-radius: 12px; padding: 1rem 1.5rem; display: inline-block; margin-bottom: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <i class="bi bi-clock-history" style="color: var(--violet); font-size: 1.25rem;"></i>
                         <span style="font-size: 0.9rem; color: var(--sombre); font-weight: 600;">
@@ -56,7 +56,7 @@
                 </div>
                 @elseif($statut === 'corrections_demandees')
                 <div style="font-size: 4rem; margin-bottom: 1rem;">
-                    <i class="bi bi-pencil-square" style="color: #e0a800;"></i>
+                    <i class="bi bi-pencil-square" style="color: var(--warning);"></i>
                 </div>
                 <h3 style="font-weight: 700; color: var(--sombre); margin-bottom: 0.75rem;">
                     Corrections demandées
@@ -121,7 +121,7 @@
                 <p style="color: var(--gris); max-width: 380px; margin: 0 auto 1.5rem; line-height: 1.6;">
                     {{ $message }}
                 </p>
-                <div style="background: #f8f6f9; border-radius: 12px; padding: 1rem 1.5rem; display: inline-block; margin-bottom: 1.5rem;">
+                <div style="background: var(--gris-clair); border-radius: 12px; padding: 1rem 1.5rem; display: inline-block; margin-bottom: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <i class="bi bi-clock-history" style="color: var(--violet); font-size: 1.25rem;"></i>
                         <span style="font-size: 0.9rem; color: var(--sombre); font-weight: 600;">

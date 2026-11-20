@@ -7,6 +7,7 @@ use App\Models\Log;
 use App\Services\TicketScanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 
 class ScanController extends Controller
@@ -39,25 +40,17 @@ class ScanController extends Controller
             return redirect()->route('agent.login')->withErrors(['email' => 'Compte désactivé.']);
         }
 
-        $key = 'agent-pin:' . $agent->id . ':' . $request->ip(); // Clé de rate limiting par agent et IP
+        // Limitation par IP uniquement : un tiers ne peut pas bloquer un agent.
+        $key = 'agent-pin:ip:' . $request->ip();
 
-        if (RateLimiter::tooManyAttempts($key, 5)) { // Max 5 tentatives par fenêtre
+        if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
             return back()->withErrors(['code_acces' => "Trop de tentatives. Réessayez dans {$seconds} secondes."])->onlyInput('code_acces');
         }
 
-        if ($agent->bloque_jusqua && $agent->bloque_jusqua->isFuture()) { // Agent temporairement bloqué
-            $minutes = now()->diffInMinutes($agent->bloque_jusqua);
-            return back()->withErrors(['code_acces' => "Code bloqué. Réessayez dans {$minutes} minutes."])->onlyInput('code_acces');
-        }
-
-        if ($request->code_acces !== $agent->code_acces) {
-            RateLimiter::hit($key, 300); // Bloque pendant 5 minutes après tentative échouée
+        if (! Hash::check($request->code_acces, (string) $agent->code_acces)) {
+            RateLimiter::hit($key, 300);
             $agent->increment('tentatives_code');
-
-            if ($agent->tentatives_code >= 10) { // Blocage automatique après 10 échecs
-                $agent->update(['bloque_jusqua' => now()->addMinutes(30)]);
-            }
 
             return back()->withErrors(['code_acces' => 'Code d\'accès incorrect.'])->onlyInput('code_acces');
         }

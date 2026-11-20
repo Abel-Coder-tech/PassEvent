@@ -32,7 +32,7 @@
                     <p style="margin:0.25rem 0;font-size:0.85rem;color:#542680;">
                         <strong>Email :</strong> {{ $agent->email }}<br>
                         <strong>Mot de passe :</strong> <code style="background:#fff;padding:0.2rem 0.5rem;border-radius:4px;">{{ $motDePasse }}</code><br>
-                        <strong>Code d'accès scan :</strong> <code style="background:#fff;padding:0.2rem 0.5rem;border-radius:4px;font-size:1.1rem;letter-spacing:2px;">{{ $agent->code_acces }}</code>
+                        <strong>Code d'accès scan :</strong> <code style="background:#fff;padding:0.2rem 0.5rem;border-radius:4px;font-size:1.1rem;letter-spacing:2px;">{{ $codeAcces }}</code>
                     </p>
                 </div>
 

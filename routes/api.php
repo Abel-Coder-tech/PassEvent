@@ -7,9 +7,16 @@ use App\Http\Controllers\Api\AgentVenteAuthController;
 use App\Http\Controllers\Api\AgentVenteDashboardController;
 use App\Http\Controllers\Api\AgentVenteNotificationController;
 use App\Http\Controllers\Api\AgentVenteSaleController;
+use App\Http\Controllers\AppReleaseController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/agent/login', [AgentAuthController::class, 'login'])->middleware(['connexion.verrou', 'throttle:login']);
+
+// Dernière version de l'application, pour les agents authentifiés (scan et vente).
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/app/paxagent/latest', [AppReleaseController::class, 'latest'])
+        ->name('app.latest');
+});
 
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(function () {
     Route::get('/agent/me', [AgentAuthController::class, 'me']);

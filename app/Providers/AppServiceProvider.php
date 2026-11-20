@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Pagination\Paginator;
@@ -29,6 +30,16 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::defaultView('vendor.pagination.pass');
         Paginator::defaultSimpleView('vendor.pagination.pass');
+
+        // Téléchargement de l'APK : lecture seule, aucun upload n'est exposé.
+        Gate::define('download-app', function ($user): bool {
+            if ($user instanceof \App\Models\Agent || $user instanceof \App\Models\AgentVente) {
+                return true;
+            }
+
+            return $user instanceof \App\Models\User
+                && in_array($user->role, ['admin', 'super_admin'], true);
+        });
 
         RateLimiter::for('login', function (Request $request) {
             $identity = strtolower(trim((string) $request->input('email')));

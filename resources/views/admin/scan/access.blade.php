@@ -49,7 +49,7 @@
         <div id="stepSelect">
             <div class="text-center mb-4">
                 <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(123,63,160,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                    <i class="bi bi-qr-code-scan" style="font-size: 2rem; color: #7B3FA0;"></i>
+                    <i class="bi bi-qr-code-scan" style="font-size: 2rem; color: var(--violet-clair);"></i>
                 </div>
                 <h4 class="fw-bold mb-1">Sélectionnez un événement</h4>
                 <p class="text-muted" style="font-size: 0.9rem;">Choisissez l'événement que vous voulez scanner</p>
@@ -64,11 +64,11 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-3 min-w-0">
                             <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123,63,160,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="bi bi-calendar-event" style="color: #7B3FA0; font-size: 1.1rem;"></i>
+                                <i class="bi bi-calendar-event" style="color: var(--violet-clair); font-size: 1.1rem;"></i>
                             </div>
                             <div class="min-w-0">
                                 <div class="fw-semibold" style="font-size: 0.95rem;">{{ $evt->titre }}</div>
-                                <div style="font-size: 0.78rem; color: #888;">
+                                <div style="font-size: 0.78rem; color: var(--gris);">
                                     {{ $evt->date_event->isoFormat('D MMM YYYY') }} · {{ $evt->lieu }}
                                 </div>
                             </div>
@@ -90,7 +90,7 @@
         <div id="stepCode" style="display: none;">
             <div class="text-center mb-4">
                 <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(123,63,160,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                    <i class="bi bi-shield-lock" style="font-size: 2rem; color: #7B3FA0;"></i>
+                    <i class="bi bi-shield-lock" style="font-size: 2rem; color: var(--violet-clair);"></i>
                 </div>
                 <h4 class="fw-bold mb-1" id="codeTitle">Code d'accès</h4>
                 <p class="text-muted mb-0" style="font-size: 0.9rem;">Entrez le code d'accès pour <strong id="codeEventName">—</strong></p>

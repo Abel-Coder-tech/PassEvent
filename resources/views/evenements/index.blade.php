@@ -21,7 +21,7 @@
     <p class="text-muted mb-4" style="font-size: 0.9rem; margin-top: -0.5rem;">
         {{ $totalEvenements }} événement{{ $totalEvenements > 1 ? 's' : '' }} · {{ number_format($totalBilletsVendus, 0, ',', ' ') }} billet{{ $totalBilletsVendus > 1 ? 's' : '' }} vendu{{ $totalBilletsVendus > 1 ? 's' : '' }}
         <span class="d-inline-flex align-items-center gap-2 ms-0 ms-sm-3 mt-1 mt-sm-0" style="vertical-align: middle; white-space: nowrap;">
-            <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.72rem;padding:0.25rem 0.55rem;" onclick="openDemande('evenement_a_la_une')">
+            <button type="button" class="btn btn-sm" style="background:var(--violet-clair);color:#fff;border-radius:8px;font-weight:600;font-size:0.72rem;padding:0.25rem 0.55rem;" onclick="openDemande('evenement_a_la_une')">
                 <i class="bi bi-star me-1"></i><span class="d-none d-sm-inline">Mettre un événement à la une</span><span class="d-sm-none">À la une</span>
             </button>
             <button type="button" class="btn btn-sm" style="background:var(--violet);color:#fff;border-radius:8px;font-weight:600;font-size:0.72rem;padding:0.25rem 0.55rem;" onclick="openDemande('booster_promouvoir')">
@@ -63,13 +63,13 @@
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 w-100">
             <div class="position-relative w-100" style="max-width: 320px;">
                 <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--gris); font-size: 0.9rem;"></i>
-                <input type="text" class="form-control ps-5 py-2 border rounded-3" id="searchInput" placeholder="Rechercher un événement…" style="border-color: #e2e0e4; font-size: 0.88rem;">
+                <input type="text" class="form-control ps-5 py-2 border rounded-3" id="searchInput" placeholder="Rechercher un événement…" style="border-color: var(--ligne); font-size: 0.88rem;">
             </div>
             <div class="d-flex gap-2 flex-wrap" id="filterBtns">
                 <button class="btn btn-sm filter-btn active" data-filter="all" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid var(--vert); background: var(--vert); color: #fff;">Tous</button>
-                <button class="btn btn-sm filter-btn" data-filter="en-cours" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid #e2e0e4; color: var(--sombre); background: var(--blanc);">En cours</button>
-                <button class="btn btn-sm filter-btn" data-filter="a-venir" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid #e2e0e4; color: var(--sombre); background: var(--blanc);">À venir</button>
-                <button class="btn btn-sm filter-btn" data-filter="termines" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid #e2e0e4; color: var(--sombre); background: var(--blanc);">Terminés</button>
+                <button class="btn btn-sm filter-btn" data-filter="en-cours" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid var(--ligne); color: var(--sombre); background: var(--blanc);">En cours</button>
+                <button class="btn btn-sm filter-btn" data-filter="a-venir" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid var(--ligne); color: var(--sombre); background: var(--blanc);">À venir</button>
+                <button class="btn btn-sm filter-btn" data-filter="termines" style="border-radius: 20px; font-size: 0.82rem; padding: 0.35rem 1rem; border: 1px solid var(--ligne); color: var(--sombre); background: var(--blanc);">Terminés</button>
             </div>
         </div>
     </div>
@@ -83,9 +83,11 @@
                 $isToday = $evenement->date_event->isToday();
                 $suppressionBloquee = $evenement->suppressionOrganisateurBloquee();
 
-                $ventes = $evenement->tickets_count ?? $evenement->quota_vendu;
+                // La capacité ne s'applique qu'aux billets en ligne.
+                $enLigne = (int) ($evenement->billets_en_ligne ?? 0);
+                $physiques = (int) ($evenement->billets_physiques ?? 0);
                 $capacite = $evenement->capacite;
-                $remplissage = $capacite > 0 ? round(($ventes / $capacite) * 100) : 0;
+                $remplissage = $capacite > 0 ? min(100, round(($enLigne / $capacite) * 100)) : 0;
 
                 $revenus = $evenement->tickets()->where('statut_paiement', 'payé')->sum('montant');
 
@@ -131,7 +133,7 @@
                         <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                         @if($evenement->statut === 'publié' || $evenement->statut === 'brouillon')
                             @if($evenement->billetteriePasOuverte())
-                                <span class="badge ms-2" style="font-size:0.7rem; background:#6b6474;">Billetterie fermée</span>
+                                <span class="badge ms-2" style="font-size:0.7rem; background:var(--gris-fonce);">Billetterie fermée</span>
                             @else
                                 <span class="badge ms-2" style="font-size:0.7rem; background:var(--vert);">Ventes ouvertes</span>
                             @endif
@@ -145,7 +147,7 @@
                         <i class="bi bi-geo-alt me-1"></i>{{ $evenement->lieu }}
                         @if($evenement->categorie)
                             <span class="mx-2">·</span>
-                            <span class="badge" style="background: rgba(135,66,139,0.1); color: var(--violet); font-size: 0.75rem; border-radius: 12px;">
+                            <span class="badge" style="background: rgba(123,63,160,0.1); color: var(--violet); font-size: 0.75rem; border-radius: 12px;">
                                 {{ ucfirst($evenement->categorie) }}
                             </span>
                         @endif
@@ -155,7 +157,12 @@
                     <div class="row align-items-center g-3 mb-3">
                         <div class="col-12 col-md-6">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span style="font-size: 0.85rem; font-weight: 600;">{{ $ventes }} / {{ $capacite }} billets</span>
+                                <span style="font-size: 0.85rem; font-weight: 600;">
+                                    {{ $enLigne }} / {{ $capacite }} billets en ligne
+                                    @if($physiques > 0)
+                                        <span style="font-size: 0.72rem; font-weight: 500; color: var(--gris);">+ {{ $physiques }} physiques (hors capacité)</span>
+                                    @endif
+                                </span>
                                 <span style="font-size: 0.85rem; font-weight: 700; color: {{ $progressColor }};">{{ $remplissage }}%</span>
                             </div>
                             <div class="progress-bar-custom">
@@ -185,7 +192,7 @@
                             <form action="{{ route('admin.evenements.billetterie', $evenement->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 <input type="hidden" name="action" value="{{ $evenement->billetteriePasOuverte() ? 'ouvrir' : 'fermer' }}">
-                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; {{ $evenement->billetteriePasOuverte() ? 'background:var(--vert);color:#fff;border:none;' : 'border:1px solid #6b6474;color:#6b6474;background:transparent;' }}" title="{{ $evenement->billetteriePasOuverte() ? 'Ouvrir la billetterie' : 'Fermer la billetterie' }}">
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; {{ $evenement->billetteriePasOuverte() ? 'background:var(--vert);color:#fff;border:none;' : 'border:1px solid var(--gris-fonce);color:var(--gris-fonce);background:transparent;' }}" title="{{ $evenement->billetteriePasOuverte() ? 'Ouvrir la billetterie' : 'Fermer la billetterie' }}">
                                     <i class="bi {{ $evenement->billetteriePasOuverte() ? 'bi-unlock' : 'bi-lock' }}"></i>
                                 </button>
                             </form>
@@ -197,7 +204,7 @@
                             <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet événement ? Cette action est irréversible.')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;" title="Supprimer">
+                                <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid var(--danger); color: var(--danger); background: transparent;" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -214,7 +221,7 @@
                                 <form action="{{ route('admin.evenements.destroy', $evenement->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler cet événement ?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;">
+                                    <button type="submit" class="btn btn-sm" style="border-radius: 6px; border: 1px solid var(--danger); color: var(--danger); background: transparent;">
                                         <i class="bi bi-x-circle me-1"></i>Annuler
                                     </button>
                                 </form>

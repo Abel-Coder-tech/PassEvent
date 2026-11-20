@@ -11,6 +11,7 @@ use App\Http\Controllers\Agent\ScanController as AgentScanController;
 use App\Http\Controllers\AgentVente\AuthController as AgentVenteAuthController;
 use App\Http\Controllers\Affiliate\AuthController as AffiliateAuthController;
 use App\Http\Controllers\Affiliate\DashboardController as AffiliateDashboardController;
+use App\Http\Controllers\AppReleaseController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CodePromoController;
 use App\Http\Controllers\DashboardController;
@@ -19,7 +20,6 @@ use App\Http\Controllers\EvenementPublicController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\InscriptionController;
-use App\Http\Controllers\LogController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\ParametresController;
@@ -386,6 +386,13 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
     });
 });
 
+// Téléchargement de l'APK : session organisateur OU token d'agent, avec lien
+// signé de 15 minutes. Aucune route d'upload n'est exposée.
+Route::middleware(['auth:web,sanctum', 'no_cache'])->group(function () {
+    Route::get('/app/paxagent/{release}', [AppReleaseController::class, 'download'])
+        ->name('app.download');
+});
+
 // ============================================================
 // Routes protégées (admin)
 // ============================================================
@@ -507,10 +514,6 @@ Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache'])->group(fu
     Route::post('/admin/demande-superadmin', [DemandeSuperAdminController::class, 'store'])
         ->name('demande-superadmin.store')
         ->middleware('throttle:5,10');
-
-    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
-    Route::get('/admin/logs/{id}/detail', [LogController::class, 'detail'])->name('logs.detail');
-    Route::post('/admin/logs/recuperer', [LogController::class, 'recuperer'])->name('logs.recuperer');
 
     Route::get('/admin/retraits', [RetraitController::class, 'index'])->name('admin.retraits.index');
     Route::post('/admin/retraits', [RetraitController::class, 'store'])->middleware('throttle:5,1')->name('admin.retraits.store');

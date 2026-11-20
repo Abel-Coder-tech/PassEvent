@@ -206,7 +206,7 @@
                         @foreach($logs as $log)
                             <div class="d-flex align-items-start gap-3 px-3 py-3 border-bottom">
                                 <div class="mt-1">
-                                    <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 32px; height: 32px; background: {{ $log->type_operation === 'scan' ? 'rgba(18,151,110,0.08)' : ($log->type_operation === 'remboursement' ? 'rgba(231,76,60,0.08)' : 'rgba(135,66,139,0.08)') }};">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 32px; height: 32px; background: {{ $log->type_operation === 'scan' ? 'rgba(18,151,110,0.08)' : ($log->type_operation === 'remboursement' ? 'rgba(231,76,60,0.08)' : 'rgba(123,63,160,0.08)') }};">
                                         <i class="bi bi-{{ $log->type_operation === 'scan' ? 'qr-code-scan' : ($log->type_operation === 'remboursement' ? 'arrow-return-left' : 'info-circle') }}"
                                            style="color: {{ $log->type_operation === 'scan' ? 'var(--vert)' : ($log->type_operation === 'remboursement' ? 'var(--danger)' : 'var(--violet)') }}; font-size: 0.85rem;"></i>
                                     </div>

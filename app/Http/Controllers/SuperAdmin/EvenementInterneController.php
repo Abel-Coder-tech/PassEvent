@@ -221,16 +221,17 @@ class EvenementInterneController extends Controller
         }
 
         $motDePasse = Str::random(10);
+        $codeAcces = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
 
         $agent = Agent::create([
             'nom' => $validated['nom'],
             'email' => $validated['email'],
             'password' => Hash::make($motDePasse),
             'evenement_id' => $evenement->id,
-            'code_acces' => str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT),
+            'code_acces' => Hash::make($codeAcces),
             'actif' => true,
         ]);
-        $mail = new AgentAssigned($agent, $motDePasse);
+        $mail = new AgentAssigned($agent, $motDePasse, $codeAcces);
         $libelle = 'Agent de scan';
 
         try {

@@ -7,7 +7,9 @@
 @section('styles')
 <style>
     @media (max-width: 575.98px) {
-        .top-bar-right .btn-reduire-commission .btn-text { display: inline; }
+        .top-bar-right { flex-wrap: nowrap; gap: .35rem; }
+        .top-bar-right .btn-reduire-commission .btn-text,
+        .top-bar-right .btn-vert .btn-text { display: inline; }
         .top-bar-right .btn-reduire-commission { white-space: nowrap; }
     }
 </style>
@@ -19,35 +21,19 @@
 @endsection
 
 @section('topbar-actions')
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="btn-group d-none d-md-inline-flex" role="group">
-            <a href="{{ route('statistiques.index', ['periode' => '7']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '7' ? 'active' : '' }}" style="border-radius: 6px 0 0 6px; padding: 0.3rem 0.75rem; font-size: 0.78rem;">7 jours</a>
-            <a href="{{ route('statistiques.index', ['periode' => '30']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '30' ? 'active' : '' }}" style="border-radius: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">30 jours</a>
-            <a href="{{ route('statistiques.index', ['periode' => '90']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === '90' ? 'active' : '' }}" style="border-radius: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">3 mois</a>
-            <a href="{{ route('statistiques.index', ['periode' => 'annee']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === 'annee' ? 'active' : '' }}" style="border-radius: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">Cette annee</a>
-            <a href="{{ route('statistiques.index', ['periode' => 'tout']) }}" class="btn btn-sm btn-secondary-custom {{ $periode === 'tout' ? 'active' : '' }}" style="border-radius: 0 6px 6px 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; border-left: none;">Tout</a>
-        </div>
-        <button type="button" class="btn btn-sm btn-reduire-commission" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('reduction_commission')">
-            <i class="bi bi-percent me-1"></i> <span class="btn-text">Réduire ma commission</span>
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-reduire-commission" style="background:var(--violet-clair);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('reduction_commission')">
+            <i class="bi bi-percent me-1"></i> <span class="btn-text">Réduire<span class="d-none d-sm-inline"> ma commission</span></span>
         </button>
     </div>
 @endsection
 
 @section('content')
 <div class="page-content">
-    <div class="d-md-none mb-3">
-        <label class="form-label fw-semibold" style="font-size: 0.78rem;">Période</label>
-        <select class="form-select" onchange="if(this.value){window.location.href=this.value;}">
-            <option value="{{ route('statistiques.index', ['periode' => '7']) }}" {{ $periode === '7' ? 'selected' : '' }}>7 jours</option>
-            <option value="{{ route('statistiques.index', ['periode' => '30']) }}" {{ $periode === '30' ? 'selected' : '' }}>30 jours</option>
-            <option value="{{ route('statistiques.index', ['periode' => '90']) }}" {{ $periode === '90' ? 'selected' : '' }}>3 mois</option>
-            <option value="{{ route('statistiques.index', ['periode' => 'annee']) }}" {{ $periode === 'annee' ? 'selected' : '' }}>Cette année</option>
-            <option value="{{ route('statistiques.index', ['periode' => 'tout']) }}" {{ $periode === 'tout' ? 'selected' : '' }}>Tout</option>
-        </select>
-    </div>
     <p class="text-muted mb-4" style="font-size: 0.9rem;">
         <i class="bi bi-calendar3 me-1"></i>
-        Période selectionnée : <strong>{{ $stats['periode_label'] }}</strong>
+        Période sélectionnée : <strong>{{ $stats['periode_label'] }}</strong>
+        <span class="mx-1">·</span> Profil : <strong>{{ Auth::user()->type_libelle }}</strong>
     </p>
 
     {{-- KPIs --}}
@@ -71,7 +57,7 @@
         <div class="col-6 col-lg-3">
             <div class="metric-card" style="border-top-color: var(--violet);">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="metric-icon" style="background: rgba(135,66,139,0.1); color: var(--violet);">
+                    <div class="metric-icon" style="background: rgba(123,63,160,0.1); color: var(--violet);">
                         <i class="bi bi-currency-exchange"></i>
                     </div>
                     <span class="badge {{ $stats['revenus_evolution'] >= 0 ? 'bg-success' : 'bg-danger' }}" style="font-size: 0.7rem; white-space: nowrap;">
@@ -116,7 +102,16 @@
         <div class="col-lg-8">
             <div class="panel-card">
                 <div class="panel-card-header">
-                    <h5><i class="bi bi-graph-up me-2" style="color: var(--vert);"></i>Ventes de tickets - 30 derniers jours</h5>
+                    <div class="d-flex align-items-center justify-content-between gap-2 flex-nowrap w-100">
+                        <h5 class="mb-0 text-truncate" style="min-width: 0;"><i class="bi bi-graph-up me-2" style="color: var(--vert);"></i>Ventes de tickets — {{ $stats['periode_graphique'] }}</h5>
+                        <select class="form-select form-select-sm w-auto flex-shrink-0" aria-label="Choisir une période" onchange="if(this.value){window.location.href=this.value;}">
+                            <option value="{{ route('statistiques.index', ['periode' => '7']) }}" @selected($periode === '7')>7 jours</option>
+                            <option value="{{ route('statistiques.index', ['periode' => '30']) }}" @selected($periode === '30')>30 jours</option>
+                            <option value="{{ route('statistiques.index', ['periode' => '90']) }}" @selected($periode === '90')>3 mois</option>
+                            <option value="{{ route('statistiques.index', ['periode' => 'annee']) }}" @selected($periode === 'annee')>Cette année</option>
+                            <option value="{{ route('statistiques.index', ['periode' => 'tout']) }}" @selected($periode === 'tout')>Tout</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="panel-card-body">
                     <div style="height: 300px;">
@@ -133,8 +128,8 @@
                 </div>
                 <div class="panel-card-body p-0">
                     @forelse($topEvenements as $index => $event)
-                        <div class="d-flex align-items-center p-3" style="border-bottom: 1px solid #f5f5f5;">
-                            <div class="d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; border-radius: 50%; background: {{ $index === 0 ? 'rgba(135,66,139,0.15)' : ($index === 1 ? 'rgba(18,151,110,0.12)' : 'rgba(152,145,155,0.15)') }}; color: {{ $index === 0 ? 'var(--violet)' : ($index === 1 ? 'var(--vert)' : 'var(--gris)') }}; font-weight: 800; font-size: 0.75rem; flex-shrink: 0;">
+                        <div class="d-flex align-items-center p-3" style="border-bottom: 1px solid var(--gris-clair);">
+                            <div class="d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; border-radius: 50%; background: {{ $index === 0 ? 'rgba(123,63,160,0.15)' : ($index === 1 ? 'rgba(18,151,110,0.12)' : 'rgba(152,145,155,0.15)') }}; color: {{ $index === 0 ? 'var(--violet)' : ($index === 1 ? 'var(--vert)' : 'var(--gris)') }}; font-weight: 800; font-size: 0.75rem; flex-shrink: 0;">
                                 {{ $index + 1 }}
                             </div>
                             <div class="ms-3 flex-1 min-w-0">
@@ -164,11 +159,11 @@
                         <canvas id="canauxChart"></canvas>
                     </div>
                     <div class="mt-3">
-                        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid #f5f5f5;">
+                        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--gris-clair);">
                             <span class="text-muted" style="font-size: 0.82rem;"><i class="bi bi-envelope me-1" style="color: var(--vert);"></i> Email</span>
                             <span class="fw-bold" style="font-size: 0.82rem;">--%</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid #f5f5f5;">
+                        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--gris-clair);">
                             <span class="text-muted" style="font-size: 0.82rem;"><i class="bi bi-chat-dots me-1" style="color: #25D366;"></i> WhatsApp</span>
                             <span class="fw-bold" style="font-size: 0.82rem;">--%</span>
                         </div>
@@ -196,12 +191,12 @@
                                 </span>
                             </div>
                             <div class="progress-bar-custom">
-                                <div class="progress-bar-fill" style="width: {{ $reseau['percentage'] }}%; background: {{ $key === 'mtn' ? '#ffcc00' : ($key === 'moov' ? '#0066cc' : ($key === 'celtiis' ? '#cc0000' : '#888888')) }};"></div>
+                                <div class="progress-bar-fill" style="width: {{ $reseau['percentage'] }}%; background: {{ $key === 'mtn' ? '#ffcc00' : ($key === 'moov' ? '#0066cc' : ($key === 'celtiis' ? '#cc0000' : 'var(--gris)')) }};"></div>
                             </div>
                             <span class="text-muted" style="font-size: 0.72rem;">{{ $reseau['percentage'] }}% des paiements</span>
                         </div>
                     @endforeach
-                    <div class="mt-3 pt-3" style="border-top: 1px solid #f0f0f0;">
+                    <div class="mt-3 pt-3" style="border-top: 1px solid var(--gris-clair);">
                         <div class="row g-2 text-center">
                             <div class="col-6">
                                 <div class="mini-stat">
@@ -243,23 +238,19 @@
                     <h5><i class="bi bi-calculator me-2" style="color: var(--violet);"></i>Resume financier</h5>
                 </div>
                 <div class="panel-card-body">
-                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid var(--gris-clair);">
                         <span class="text-muted">Revenus bruts</span>
                         <span class="fw-bold">{{ number_format($resumeFinancier['revenus_bruts'], 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid var(--gris-clair);">
                         <span class="text-muted">Tickets gratuits (seuil &lt; 100)</span>
                         <span class="fw-bold">{{ $resumeFinancier['gratuits'] }}</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid var(--gris-clair);">
                         <span class="text-muted">Commission PaxEvent : {{ $commissionPct }}%</span>
                         <span class="fw-bold" style="color: var(--vert);">{{ number_format($resumeFinancier['commission'], 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
-                        <span class="text-muted">Frais FedaPay : 3.5%</span>
-                        <span class="fw-bold">{{ number_format($resumeFinancier['frais_fedapay'], 0, ',', ' ') }} FCFA</span>
-                    </div>
-                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2 py-2" style="border-bottom: 1px solid var(--gris-clair);">
                         <span class="text-muted">Remboursements</span>
                         <span class="fw-bold" style="color: var(--danger);">-{{ number_format($resumeFinancier['remboursements'], 0, ',', ' ') }} FCFA</span>
                     </div>
@@ -284,7 +275,7 @@
                         </p>
                     </div>
 
-                    <div class="mt-3 p-3 rounded" style="background: rgba(135,66,139,0.05);">
+                    <div class="mt-3 p-3 rounded" style="background: rgba(123,63,160,0.05);">
                         <p class="mb-2 fw-semibold" style="font-size: 0.9rem; color: var(--violet);">
                             <i class="bi bi-lightbulb me-1"></i> Conseil
                         </p>
@@ -314,33 +305,17 @@ const ventesChart = new Chart(document.getElementById('ventesChart'), {
     data: {
         labels: ventesLabels,
         datasets: [
+            @foreach($ventesCategories as $categorie)
             {
-                label: 'Etudiants',
-                data: ventesData.map(d => d.etudiants),
-                borderColor: '#12976e',
-                backgroundColor: 'rgba(18,151,110,0.1)',
+                label: @json($categorie['label']),
+                data: ventesData.map(d => d[@json($categorie['key'])] ?? 0),
+                borderColor: @json($categorie['couleur']),
+                backgroundColor: @json($categorie['fond']),
                 tension: 0.3,
                 fill: true,
                 pointRadius: 3,
-            },
-            {
-                label: 'Externes',
-                data: ventesData.map(d => d.externes),
-                borderColor: '#87428b',
-                backgroundColor: 'rgba(135,66,139,0.1)',
-                tension: 0.3,
-                fill: true,
-                pointRadius: 3,
-            },
-            {
-                label: 'Vente manuelle',
-                data: ventesData.map(d => d.manuelles),
-                borderColor: '#428c79',
-                backgroundColor: 'rgba(66,140,121,0.1)',
-                tension: 0.3,
-                fill: true,
-                pointRadius: 3,
-            }
+            }{{ $loop->last ? '' : ',' }}
+            @endforeach
         ]
     },
     options: {

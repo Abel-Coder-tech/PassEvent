@@ -113,30 +113,30 @@
                     </div>
                     <div class="panel-card-body">
                         <div id="recapContent" style="font-size:0.9rem;">
-                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;">
+                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--gris-clair);">
                                 <span class="text-muted">Événement</span>
                                 <span class="fw-semibold" id="recapEvent">—</span>
                             </div>
-                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;">
+                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--gris-clair);">
                                 <span class="text-muted">Statut</span>
                                 <span class="fw-semibold" id="recapStatut">Externe</span>
                             </div>
-                            <div class="py-2" style="border-bottom:1px solid #f5f5f5;" id="recapBillets">
+                            <div class="py-2" style="border-bottom:1px solid var(--gris-clair);" id="recapBillets">
                                 <div id="recapLignes"><span class="text-muted">Aucun billet</span></div>
                             </div>
-                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;" id="recapQuantiteRow">
+                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--gris-clair);" id="recapQuantiteRow">
                                 <span class="text-muted">Quantité</span>
                                 <span class="fw-semibold" id="recapQuantite">1</span>
                             </div>
-                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;">
+                            <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--gris-clair);">
                                 <span class="text-muted">Moyen de paiement</span>
                                 <span class="fw-semibold" id="recapPaiement">Espèces</span>
                             </div>
-                            <div class="d-flex justify-content-between py-2 d-none" id="recapPromoRow" style="border-bottom:1px solid #f5f5f5;">
+                            <div class="d-flex justify-content-between py-2 d-none" id="recapPromoRow" style="border-bottom:1px solid var(--gris-clair);">
                                 <span class="text-muted">Code promo</span>
                                 <span class="fw-semibold" id="recapPromo" style="color: var(--vert);">—</span>
                             </div>
-                            <div class="d-flex justify-content-between py-3 mt-1" style="border-top:2px solid #f0f0f0;">
+                            <div class="d-flex justify-content-between py-3 mt-1" style="border-top:2px solid var(--gris-clair);">
                                 <span class="fw-bold" style="font-size:1rem;" id="recapTotalLabel">Total à encaisser</span>
                                 <span class="fw-bold" style="font-size:1.2rem; color: var(--vert);" id="recapTotal">0 FCFA</span>
                             </div>
@@ -167,7 +167,7 @@
                 </div>
                 <div class="panel-card-body" style="padding: 0; max-height: 600px; overflow-y: auto;">
                     @forelse($ventesJour as $vente)
-                        <div class="px-3 py-3" style="border-bottom: 1px solid #f5f5f5;">
+                        <div class="px-3 py-3" style="border-bottom: 1px solid var(--gris-clair);">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <div class="fw-semibold" style="font-size: 0.92rem;">{{ $vente->nom_acheteur }}</div>
                                 <div class="fw-bold" style="font-size: 0.9rem; color: var(--vert);">{{ number_format($vente->montant, 0, ',', ' ') }} FCFA</div>
@@ -213,10 +213,10 @@
 <style>
 .vm-billets{display:flex;flex-direction:column;gap:8px}
 .vm-section{font-size:.75rem;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
-.vm-ligne{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;border:1.5px solid #e6e3eb;border-radius:12px;padding:10px 12px;background:#fff}
+.vm-ligne{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;border:1.5px solid var(--ligne);border-radius:12px;padding:10px 12px;background:#fff}
 .vm-ligne.is-on{border-color:var(--violet);background:#faf7fc}
 .vm-ligne.is-off{opacity:.6}
-.vm-step{display:inline-flex;align-items:center;border:1.5px solid #d9d4df;border-radius:10px;overflow:hidden}
+.vm-step{display:inline-flex;align-items:center;border:1.5px solid var(--ligne);border-radius:10px;overflow:hidden}
 .vm-step button{width:44px;height:44px;border:0;background:#fff;color:var(--violet);font-size:1.2rem}
 .vm-step button:disabled{color:#c9c3d1}
 .vm-step span{min-width:28px;text-align:center;font-weight:700}

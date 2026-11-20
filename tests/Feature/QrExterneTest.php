@@ -222,12 +222,16 @@ class QrExterneTest extends TestCase
 
         // Identifiants tels qu'envoyés par email
         $motDePasse = null;
-        Mail::assertSent(AgentAssigned::class, function ($mail) use (&$motDePasse) {
+        $codeAcces = null;
+        Mail::assertSent(AgentAssigned::class, function ($mail) use (&$motDePasse, &$codeAcces) {
             $motDePasse = $mail->motDePasse;
+            $codeAcces = $mail->codeAcces;
 
             return true;
         });
+        $this->assertMatchesRegularExpression('/^\d{4}$/', (string) $codeAcces);
         $agent = Agent::where('email', 'mobile@example.test')->firstOrFail();
+        $this->assertNotSame($codeAcces, $agent->code_acces, 'Le PIN ne doit pas être stocké en clair.');
         $codes = Ticket::where('evenement_id', $evenement->id)->pluck('code_unique');
         $this->app['auth']->forgetGuards();
 
@@ -245,8 +249,8 @@ class QrExterneTest extends TestCase
         $this->withToken($jeton)->getJson('/api/agent/dashboard')->assertOk();
 
         // 3. Code PIN (mauvais puis bon) → jeton de scan
-        $this->withToken($jeton)->postJson('/api/agent/scan/pin', ['code_acces' => $agent->code_acces === '0000' ? '1111' : '0000'])->assertStatus(422);
-        $pin = $this->withToken($jeton)->postJson('/api/agent/scan/pin', ['code_acces' => $agent->code_acces]);
+        $this->withToken($jeton)->postJson('/api/agent/scan/pin', ['code_acces' => $codeAcces === '0000' ? '1111' : '0000'])->assertStatus(422);
+        $pin = $this->withToken($jeton)->postJson('/api/agent/scan/pin', ['code_acces' => $codeAcces]);
         $pin->assertOk();
         $jetonScan = $pin->json('scan_token');
         $this->assertNotEmpty($jetonScan);

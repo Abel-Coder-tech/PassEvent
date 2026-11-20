@@ -24,7 +24,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
                     <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
-                        style="width: 64px; height: 64px; background: #f5f3ff;">
+                        style="width: 64px; height: 64px; background: var(--violet-pale);">
                         <i class="bi bi-person text-purple-700" style="font-size: 2rem;"></i>
                     </div>
                     <h5 class="fw-bold">{{ $agentVente->nom }}</h5>
@@ -205,11 +205,11 @@
 </div>
 
 <style>
-.bg-purple-50 { background: #f5f3ff; }
-.text-purple-700 { color: #7c3aed; }
-.bg-green-50 { background: #f0fdf4; }
+.bg-purple-50 { background: var(--violet-pale); }
+.text-purple-700 { color: var(--violet-clair); }
+.bg-green-50 { background: var(--vert-pale); }
 .text-green-700 { color: #16a34a; }
-.bg-blue-50 { background: #eff6ff; }
-.text-blue-700 { color: #2563eb; }
+.bg-blue-50 { background: var(--info-pale); }
+.text-blue-700 { color: var(--info); }
 </style>
 @endsection

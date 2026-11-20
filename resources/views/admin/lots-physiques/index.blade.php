@@ -12,35 +12,35 @@
     <style>
     .steps-bar { display: flex; align-items: center; margin-bottom: .9rem; }
     .step-item { display: flex; align-items: center; flex: 1; min-width: 0; }
-    .step-dot { width: 28px; height: 28px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0; transition: all .3s; }
-    .step-label { font-size: .7rem; color: #6c757d; margin-left: .4rem; white-space: nowrap; }
-    .step-line { flex: 1; height: 2px; background: #e9ecef; margin: 0 .5rem; min-width: 12px; transition: background .3s; border-radius: 2px; }
-    .step-item.done .step-dot { background: #198754; color: #fff; }
-    .step-item.done .step-label { color: #198754; }
-    .step-item.done .step-line { background: #198754; }
-    .step-item.active .step-dot { background: #542680; color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
-    .step-item.active .step-label { color: #542680; font-weight: 700; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--ligne); color: var(--gris-fonce); display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0; transition: all .3s; }
+    .step-label { font-size: .7rem; color: var(--gris-fonce); margin-left: .4rem; white-space: nowrap; }
+    .step-line { flex: 1; height: 2px; background: var(--ligne); margin: 0 .5rem; min-width: 12px; transition: background .3s; border-radius: 2px; }
+    .step-item.done .step-dot { background: var(--vert); color: #fff; }
+    .step-item.done .step-label { color: var(--vert); }
+    .step-item.done .step-line { background: var(--vert); }
+    .step-item.active .step-dot { background: var(--violet); color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
+    .step-item.active .step-label { color: var(--violet); font-weight: 700; }
 
     #modalGenerer .modal-dialog { flex-direction: column; align-items: stretch; width: min(500px, 97vw); max-width: min(500px, 97vw); }
     #modalGenerer .modal-dialog > * { width: 100%; }
     #modalGenerer .modal-content { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
     #modalGenerer .modal-body { max-height: calc(100vh - 210px); overflow-y: auto; }
 
-    .event-card { cursor: pointer; border: 1.5px solid #e9ecef; border-radius: 12px; padding: .8rem .9rem; transition: all .18s; height: 100%; position: relative; }
+    .event-card { cursor: pointer; border: 1.5px solid var(--ligne); border-radius: 12px; padding: .8rem .9rem; transition: all .18s; height: 100%; position: relative; }
     .event-card:hover { border-color: #c4a6dd; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(84,38,128,.08); }
-    .event-card.selected { border-color: #542680; background: rgba(84,38,128,.04); }
-    .event-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #dee2e6; display: flex; align-items: center; justify-content: center; color: transparent; font-size: .85rem; transition: all .18s; flex-shrink: 0; }
-    .event-card.selected .event-check { background: #542680; border-color: #542680; color: #fff; }
+    .event-card.selected { border-color: var(--violet); background: rgba(84,38,128,.04); }
+    .event-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--ligne); display: flex; align-items: center; justify-content: center; color: transparent; font-size: .85rem; transition: all .18s; flex-shrink: 0; }
+    .event-card.selected .event-check { background: var(--violet); border-color: var(--violet); color: #fff; }
 
     .tarif-row { padding: .8rem 0; border-bottom: 1px solid #f1f0f3; }
     .tarif-row:last-child { border-bottom: none; }
     .stepper { display: inline-flex; align-items: center; background: #f4f2f7; border-radius: 10px; padding: 3px; }
-    .st-btn { width: 28px; height: 28px; border: none; background: #fff; border-radius: 8px; color: #542680; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: all .15s; }
-    .st-btn:hover { background: #542680; color: #fff; }
-    .stepper input { width: 52px; border: none; background: transparent; text-align: center; font-weight: 700; color: #1d1d1f; outline: none; -moz-appearance: textfield; }
+    .st-btn { width: 28px; height: 28px; border: none; background: #fff; border-radius: 8px; color: var(--violet); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .st-btn:hover { background: var(--violet); color: #fff; }
+    .stepper input { width: 52px; border: none; background: transparent; text-align: center; font-weight: 700; color: var(--sombre); outline: none; -moz-appearance: textfield; }
     .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-    .recap-ligne { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px dashed #e9ecef; font-size: .88rem; }
+    .recap-ligne { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px dashed var(--ligne); font-size: .88rem; }
     .recap-ligne:last-child { border-bottom: none; }
     .total-block { background: linear-gradient(135deg, rgba(84,38,128,.06), rgba(124,58,237,.06)); border-radius: 12px; padding: .8rem 1rem; }
     </style>
@@ -56,7 +56,7 @@
     <div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
         <div class="col">
             <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-icon" style="background: rgba(135,66,139,0.1);"><i class="bi bi-ticket-perforated" style="color: var(--violet);"></i></div>
+                <div class="metric-icon" style="background: rgba(123,63,160,0.1);"><i class="bi bi-ticket-perforated" style="color: var(--violet);"></i></div>
                 <div class="metric-label">Tickets generes</div>
                 <div class="metric-value" style="font-size:1.3rem;">{{ $nbTickets }}</div>
                 <div class="metric-subtitle">Dont {{ $nbAnnules }} annule(s)</div>
@@ -93,10 +93,10 @@
         <i class="bi bi-ticket-perforated" style="font-size:3rem;"></i>
         <p class="mt-2">Aucun lot de tickets physiques pour le moment.</p>
         <p style="font-size:0.85rem;">Generez vos QR codes vous-meme en quelques clics, ou faites une demande a l'equipe PaxEvent.</p>
-        <button type="button" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="ouvrirModal()">
+        <button type="button" class="btn btn-sm text-white" style="background:var(--violet-clair);border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="ouvrirModal()">
             <i class="bi bi-qr-code me-1"></i> Générer mes QR codes
         </button>
-        <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
+        <button type="button" class="btn btn-sm" style="background:var(--violet-clair);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
             <i class="bi bi-envelope me-1"></i> Demander des QR codes
         </button>
     </div>
@@ -105,10 +105,10 @@
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <strong><i class="bi bi-stack me-1"></i> Mes lots de tickets physiques</strong>
             <div class="d-flex gap-2 flex-wrap">
-                <button type="button" class="btn btn-sm text-white" style="background:#7c3aed;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="ouvrirModal()">
+                <button type="button" class="btn btn-sm text-white" style="background:var(--violet-clair);border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="ouvrirModal()">
                     <i class="bi bi-qr-code me-1"></i> Générer mes QR codes
                 </button>
-                <button type="button" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
+                <button type="button" class="btn btn-sm" style="background:var(--violet-clair);color:#fff;border-radius:8px;font-weight:600;font-size:0.78rem;" onclick="openDemande('ticket_physique')">
                     <i class="bi bi-envelope me-1"></i> Demander des QR codes
                 </button>
             </div>
@@ -133,8 +133,8 @@
                     <tr>
                         <td class="ps-3 fw-medium">
                             {{ $lot->nom }}
-                            @if($lot->auto_genere)<span class="badge" style="background:#7c3aed;font-size:.62rem;">AUTO</span>
-                            @else<span class="badge" style="background:#7B3FA0;font-size:.62rem;">DEMANDE</span>@endif
+                            @if($lot->auto_genere)<span class="badge" style="background:var(--violet-clair);font-size:.62rem;">AUTO</span>
+                            @else<span class="badge" style="background:var(--violet-clair);font-size:.62rem;">DEMANDE</span>@endif
                         </td>
                         <td>
                             @if($lot->evenement)
@@ -158,12 +158,12 @@
                         <td class="text-end pe-3">
                             <div class="d-inline-flex gap-1 align-items-center">
                             @if($lot->statut === \App\Models\LotPhysique::STATUT_ATTENTE_PAIEMENT && $lot->reference_paiement)
-                                <a href="{{ route('admin.lots-physiques.checkout', $lot->reference_paiement) }}" class="btn btn-sm text-white" style="background:#f59e0b;">
+                                <a href="{{ route('admin.lots-physiques.checkout', $lot->reference_paiement) }}" class="btn btn-sm text-white" style="background:var(--warning);">
                                     <i class="bi bi-credit-card"></i> Payer
                                 </a>
 
                             @elseif($lot->estTransmis && $lot->nb_tickets - $lot->nb_annules > 0)
-                                <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm text-white" style="background:#7c3aed;">
+                                <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm text-white" style="background:var(--violet-clair);">
                                     <i class="bi bi-download"></i> Planche PDF
                                 </a>
                                 {{-- Sur une demande, le QR est positionné par le super admin : pas d'éditeur ici --}}
@@ -218,7 +218,7 @@
 
             <div class="modal-content">
                 <div class="modal-header py-3 px-3">
-                    <h6 class="modal-title fw-bold"><i class="bi bi-qr-code me-1" style="color:#542680;"></i> Générer mes QR codes</h6>
+                    <h6 class="modal-title fw-bold"><i class="bi bi-qr-code me-1" style="color:var(--violet);"></i> Générer mes QR codes</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
 
@@ -273,8 +273,8 @@
                         </div>
                         <div id="tarifsListe"></div>
                         <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
-                            <span class="small text-muted"><strong id="totalBillets" style="color:#1d1d1f;">0</strong> billet(s)</span>
-                            <span class="small" id="ligneTotalPayer">Total à payer : <strong id="totalPayer" style="font-size:1.15rem;color:#542680;">0 F</strong></span>
+                            <span class="small text-muted"><strong id="totalBillets" style="color:var(--sombre);">0</strong> billet(s)</span>
+                            <span class="small" id="ligneTotalPayer">Total à payer : <strong id="totalPayer" style="font-size:1.15rem;color:var(--violet);">0 F</strong></span>
                         </div>
                         <div class="row g-2 align-items-center mt-2">
                             <div class="col-auto" style="width:38px;"><i class="bi bi-envelope text-muted"></i></div>
@@ -293,7 +293,7 @@
                         <div id="recapLignes" class="mb-2"></div>
                         <div class="total-block d-flex justify-content-between align-items-center mb-3">
                             <span class="fw-semibold small" id="recapTotalLibelle">Total à payer</span>
-                            <strong id="recapTotal" style="font-size:1.25rem;color:#542680;">0 F</strong>
+                            <strong id="recapTotal" style="font-size:1.25rem;color:var(--violet);">0 F</strong>
                         </div>
                         <div id="recapEmail" class="small text-muted mb-3"></div>
                         <div id="recapGratuitMessage" class="alert alert-success border py-2 mb-0" style="font-size:.78rem;display:none;">
@@ -309,7 +309,7 @@
                 <div class="modal-footer py-2 px-3">
                     <button type="button" class="btn btn-sm btn-secondary-custom" id="btnRetourGen" style="visibility:hidden;" onclick="retourEtape()">Retour</button>
                     <button type="button" class="btn btn-sm btn-secondary-custom" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-sm text-white" id="btnPrincipal" style="background:#542680;border-radius:8px;font-weight:600;min-width:190px;" disabled onclick="actionPrincipale()">Suivant</button>
+                    <button type="button" class="btn btn-sm text-white" id="btnPrincipal" style="background:var(--violet);border-radius:8px;font-weight:600;min-width:190px;" disabled onclick="actionPrincipale()">Suivant</button>
                 </div>
             </div>
         </form>
@@ -321,13 +321,13 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-center" style="border:none;border-radius:16px;">
             <div class="modal-body p-4">
-                <div id="iconeResultat" class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:64px;height:64px;border-radius:50%;font-size:1.8rem;background:rgba(25,135,84,.12);color:#198754;">
+                <div id="iconeResultat" class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:64px;height:64px;border-radius:50%;font-size:1.8rem;background:rgba(25,135,84,.12);color:var(--vert);">
                     <i class="bi bi-check-lg"></i>
                 </div>
                 <h5 class="fw-bold mb-2" id="titreResultat"></h5>
                 <p class="text-muted small mb-3" id="texteResultat"></p>
                 <div id="listeTelecharges" class="text-start mb-3"></div>
-                <button type="button" class="btn btn-sm text-white px-4" style="background:#542680;border-radius:8px;font-weight:600;" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-sm text-white px-4" style="background:var(--violet);border-radius:8px;font-weight:600;" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>
@@ -550,7 +550,7 @@ function afficherResultat(cfg) {
             '<div class="d-flex justify-content-between align-items-center py-1 border-bottom">' +
             '<span class="small"><strong>' + lot.quantite + '</strong>&nbsp;&times;&nbsp;' + escapeHtml(lot.nom) + '</span>' +
             (lot.telecharger
-                ? '<a href="' + lot.telecharger + '" class="btn btn-sm text-white" style="background:#542680;border-radius:8px;"><i class="bi bi-download"></i> Planche PDF</a>'
+                ? '<a href="' + lot.telecharger + '" class="btn btn-sm text-white" style="background:var(--violet);border-radius:8px;"><i class="bi bi-download"></i> Planche PDF</a>'
                 : '') +
             '</div>');
     });

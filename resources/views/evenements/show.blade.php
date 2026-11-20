@@ -36,6 +36,7 @@
                 <div>
                     <div class="metric-label">Tickets vendus</div>
                     <div class="metric-value">{{ $ventes }}</div>
+                    <div class="metric-subtitle">{{ $billetsEnLigne }} en ligne · {{ $billetsPhysiques }} physiques</div>
                 </div>
                 <div class="metric-icon" style="background: rgba(18,151,110,0.1);">🎫</div>
             </div>
@@ -70,7 +71,7 @@
                     <div class="metric-label">Remplissage</div>
                     <div class="metric-value">{{ number_format($tauxRemplissage, 0) }}%</div>
                 </div>
-                <div class="metric-icon" style="background: rgba(135,66,139,0.1);">📊</div>
+                <div class="metric-icon" style="background: rgba(123,63,160,0.1);">📊</div>
             </div>
         </div>
     </div>
@@ -92,7 +93,7 @@
                         <strong>Lieu :</strong> {{ $evenement->lieu }}
                     </div>
                     <div class="col-md-6 mb-3">
-                        <strong>Capacité :</strong> {{ $evenement->capacite }}
+                        <strong>Capacité :</strong> {{ $evenement->capacite }} places en ligne
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Statut :</strong>
@@ -110,7 +111,7 @@
                     <div class="col-md-6 mb-3">
                         <strong>Type :</strong>
                         @php $typeLabel = match($evenement->type_evenement) { 'formation' => 'Formation', 'conference' => 'Conférence', default => 'Spectacle / Soirée' }; @endphp
-                        <span class="badge" style="background: rgba(135,66,139,0.12); color: var(--violet);">{{ $typeLabel }}</span>
+                        <span class="badge" style="background: rgba(123,63,160,0.12); color: var(--violet);">{{ $typeLabel }}</span>
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Ventes :</strong>
@@ -237,7 +238,7 @@
                     @error('co_parrainage_pourcentage') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 @endif
 
-                <div class="alert alert-warning d-flex align-items-start gap-2 mt-3 mb-0" style="border:none;background:#fff8e1;border-radius:12px;padding:0.75rem 1rem;border-left:4px solid #e0a800;">
+                <div class="alert alert-warning d-flex align-items-start gap-2 mt-3 mb-0" style="border:none;background:var(--warning-pale);border-radius:12px;padding:0.75rem 1rem;border-left:4px solid var(--warning);">
                     <i class="bi bi-exclamation-triangle-fill" style="color:#8b6914;"></i>
                     <small style="color:#6c5b3a;">La commission de co-parrainage est <strong style="color:#8b6914;">à votre charge</strong> (l'organisateur) : elle est prélevée sur vos recettes et s'ajoute à la commission PaxEvent. Elle n'est jamais facturée à l'acheteur du billet.</small>
                 </div>
@@ -300,9 +301,9 @@
                 @if($scanAccessCodes->count() > 0)
                     <div class="mb-3" style="max-height: 200px; overflow-y: auto;">
                         @foreach($scanAccessCodes as $sac)
-                            <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                            <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom: 1px solid var(--gris-clair);">
                                 <div class="d-flex align-items-center gap-2 min-w-0">
-                                    <i class="bi bi-key" style="color: {{ $sac->actif ? 'var(--vert)' : '#ccc' }}; font-size: 0.9rem;"></i>
+                                    <i class="bi bi-key" style="color: {{ $sac->actif ? 'var(--vert)' : 'var(--gris)' }}; font-size: 0.9rem;"></i>
                                     <code style="font-size: 0.82rem; letter-spacing: 1px;">{{ $sac->code }}</code>
                                     <button type="button" class="js-copier-code btn btn-sm p-0" data-code="{{ $sac->code }}" title="Copier le code" style="color: #999; font-size: 0.8rem; line-height: 1;">
                                         <i class="bi bi-clipboard"></i>
@@ -314,7 +315,7 @@
                                 <form action="{{ route('admin.evenements.scan-codes.destroy', [$evenement->id, $sac->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce code ? Les agents utilisant ce code perdront l\'accès au scan.')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm p-1" style="color: #ccc;">
+                                    <button type="submit" class="btn btn-sm p-1" style="color: var(--gris);">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -342,7 +343,7 @@
             <div class="panel-card-body">
                 @php $etatVente = $evenement->etatVenteOrganisateur(); @endphp
                 @unless($evenement->organisateurEnCoursDeValidation())
-                <div class="mb-3 p-2 rounded" style="font-size:0.84rem; {{ $etatVente['ouverte'] ? 'background:#e8f5ee;color:#1e6b43;' : 'background:#f1ebf6;color:#3f1c60;' }}">
+                <div class="mb-3 p-2 rounded" style="font-size:0.84rem; {{ $etatVente['ouverte'] ? 'background:#e8f5ee;color:#1e6b43;' : 'background:var(--violet-pale);color:var(--violet-fonce);' }}">
                     <i class="bi {{ $etatVente['ouverte'] ? 'bi-check-circle-fill' : 'bi-info-circle-fill' }} me-1"></i>{{ $etatVente['raison'] }}
                 </div>
                 @endunless
@@ -350,13 +351,13 @@
                     <div class="alert alert-warning py-2 mb-3" style="font-size:0.84rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ session('warning') }}</div>
                 @endif
                 @if($evenement->organisateurEnCoursDeValidation())
-                    <div class="p-2 rounded mb-3" style="font-size:0.84rem;background:#f1ebf6;color:#3f1c60;">
+                    <div class="p-2 rounded mb-3" style="font-size:0.84rem;background:var(--violet-pale);color:var(--violet-fonce);">
                         <i class="bi bi-hourglass-split me-1"></i>Billetterie disponible après la validation de votre profil par PaxEvent.
                     </div>
                     <button type="button" class="btn btn-secondary w-100 py-2" disabled style="opacity:.55;cursor:not-allowed;"><i class="bi bi-lock me-1"></i> Ouvrir la billetterie</button>
                 @elseif($evenement->billetteriePasOuverte())
                     <p class="mb-2" style="font-size:0.85rem;">
-                        <span class="badge" style="background:#6b6474;">Pas encore ouverte</span>
+                        <span class="badge" style="background:var(--gris-fonce);">Pas encore ouverte</span>
                         @if($evenement->billetterie_ouvre_le)
                             <span class="text-muted ms-1">ouverture le {{ $evenement->billetterie_ouvre_le->isoFormat('D MMM YYYY [à] HH[h]mm') }}</span>
                         @endif
@@ -383,7 +384,7 @@
                         <label class="form-label small fw-semibold mb-1" for="ouvre_le">Réouverture automatique (facultatif)</label>
                         <input type="datetime-local" class="form-control form-control-sm mb-2 @error('ouvre_le') is-invalid @enderror" id="ouvre_le" name="ouvre_le" value="{{ old('ouvre_le') }}">
                         @error('ouvre_le') <div class="invalid-feedback d-block mb-2">{{ $message }}</div> @enderror
-                        <button type="submit" class="btn w-100 py-2 fw-semibold" style="border-radius:8px; border:1px solid #6b6474; color:#6b6474; background:transparent;">
+                        <button type="submit" class="btn w-100 py-2 fw-semibold" style="border-radius:8px; border:1px solid var(--gris-fonce); color:var(--gris-fonce); background:transparent;">
                             <i class="bi bi-clock me-1"></i> Fermer la billetterie
                         </button>
                     </form>

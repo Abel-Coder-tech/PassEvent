@@ -80,12 +80,12 @@ class AgentController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'evenement_id' => $evenement->id,
-            'code_acces' => $codeAcces,
+            'code_acces' => Hash::make($codeAcces),
             'actif' => true,
         ]);
 
         try {
-            Mail::to($agent->email)->send(new AgentAssigned($agent, $request->password));
+            Mail::to($agent->email)->send(new AgentAssigned($agent, $request->password, $codeAcces));
         } catch (\Exception $e) {
             // L'agent est créé même si l'email échoue
         }

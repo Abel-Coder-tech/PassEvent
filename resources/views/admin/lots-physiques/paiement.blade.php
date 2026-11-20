@@ -13,14 +13,14 @@
     <style>
     .steps-bar { display: flex; align-items: center; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: .25rem; }
     .step-item { display: flex; align-items: center; flex: 1; min-width: max-content; }
-    .step-dot { width: 30px; height: 30px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; flex-shrink: 0; transition: all .3s; }
-    .step-label { font-size: .72rem; color: #6c757d; margin-left: .4rem; white-space: nowrap; }
-    .step-line { flex: 1; height: 2px; background: #e9ecef; margin: 0 .5rem; min-width: 16px; transition: background .3s; }
-    .step-item.done .step-dot { background: #198754; color: #fff; }
-    .step-item.done .step-label { color: #198754; }
-    .step-item.done .step-line { background: #198754; }
-    .step-item.active .step-dot { background: #542680; color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
-    .step-item.active .step-label { color: #542680; font-weight: 700; }
+    .step-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--ligne); color: var(--gris-fonce); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; flex-shrink: 0; transition: all .3s; }
+    .step-label { font-size: .72rem; color: var(--gris-fonce); margin-left: .4rem; white-space: nowrap; }
+    .step-line { flex: 1; height: 2px; background: var(--ligne); margin: 0 .5rem; min-width: 16px; transition: background .3s; }
+    .step-item.done .step-dot { background: var(--vert); color: #fff; }
+    .step-item.done .step-label { color: var(--vert); }
+    .step-item.done .step-line { background: var(--vert); }
+    .step-item.active .step-dot { background: var(--violet); color: #fff; box-shadow: 0 0 0 4px rgba(84,38,128,.15); }
+    .step-item.active .step-label { color: var(--violet); font-weight: 700; }
     </style>
 
     <!-- Barre de progression : étape Événement validée, paiement en cours -->
@@ -38,13 +38,13 @@
         <div class="col-12 col-md-8 col-lg-6">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
-                    <strong><i class="bi bi-qr-code me-1" style="color:#542680;"></i> Commande {{ $reference }}</strong>
+                    <strong><i class="bi bi-qr-code me-1" style="color:var(--violet);"></i> Commande {{ $reference }}</strong>
                 </div>
                 <div class="card-body p-3 p-md-4">
                     @foreach($lots as $lot)
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
                         <span>
-                            <span class="badge me-1" style="background:#542680;color:#fff;">{{ $lot->tarif?->nom ?? 'Pass' }}</span>
+                            <span class="badge me-1" style="background:var(--violet);color:#fff;">{{ $lot->tarif?->nom ?? 'Pass' }}</span>
                             {{ $lot->quantite }} ticket(s)
                         </span>
                         <span class="fw-semibold">{{ number_format($lot->montant_commission, 0, ',', ' ') }} F</span>
@@ -53,7 +53,7 @@
 
                     <div class="d-flex justify-content-between align-items-center pt-3 pb-2">
                         <span class="fw-semibold">Total à payer</span>
-                        <strong style="font-size:1.4rem;color:#542680;">{{ number_format($total, 0, ',', ' ') }} F</strong>
+                        <strong style="font-size:1.4rem;color:var(--violet);">{{ number_format($total, 0, ',', ' ') }} F</strong>
                     </div>
 
                     <div class="alert alert-light border py-2 mb-3" style="font-size:.78rem;">
@@ -68,10 +68,10 @@
                         Réception envoyée à <strong>{{ $lots->first()->email_reception }}</strong>.
                     </div>
 
-                    <button type="button" id="btnFedaPay" class="btn w-100 text-white" style="background:#542680;border-radius:10px;font-weight:700;padding:.7rem;">
+                    <button type="button" id="btnFedaPay" class="btn w-100 text-white" style="background:var(--violet);border-radius:10px;font-weight:700;padding:.7rem;">
                         <i class="bi bi-shield-lock me-1"></i> Payer {{ number_format($total, 0, ',', ' ') }} F avec FedaPay
                     </button>
-                    <div id="paymentError" class="mt-3" style="display:none;color:#dc3545;font-size:.85rem;"></div>
+                    <div id="paymentError" class="mt-3" style="display:none;color:var(--danger);font-size:.85rem;"></div>
 
                     <div class="text-center mt-3">
                         <a href="{{ route('admin.lots-physiques.index') }}" class="text-decoration-none" style="font-size:.82rem;">

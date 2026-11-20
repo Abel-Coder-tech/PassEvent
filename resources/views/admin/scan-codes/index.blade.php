@@ -60,7 +60,7 @@
                         <td class="text-end pe-3">
                             <form action="{{ route('admin.evenements.scan-codes.generate', $evenement->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-sm py-1 px-2" style="background:#7B3FA0;color:#fff;border-radius:6px;">
+                                <button type="submit" class="btn btn-sm py-1 px-2" style="background:var(--violet-clair);color:#fff;border-radius:6px;">
                                     <i class="bi bi-plus-lg"></i> Générer
                                 </button>
                             </form>
@@ -93,21 +93,21 @@
                 @if ($codes->count() > 0)
                 <div class="d-flex flex-column gap-2 mt-3 mb-3">
                     @foreach ($codes as $sac)
-                    <div class="d-flex align-items-center justify-content-between gap-2 rounded-3 px-2 py-2" style="background:#f8f7fa;">
+                    <div class="d-flex align-items-center justify-content-between gap-2 rounded-3 px-2 py-2" style="background:var(--gris-clair);">
                         <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-key" style="color:{{ $sac->actif ? '#7B3FA0' : '#bbb' }};font-size:0.85rem;"></i>
+                            <i class="bi bi-key" style="color:{{ $sac->actif ? 'var(--violet-clair)' : '#bbb' }};font-size:0.85rem;"></i>
                             <code style="font-size:0.82rem;letter-spacing:1px;">{{ $sac->code }}</code>
                             @if(!$sac->actif)
                             <span class="badge bg-secondary" style="font-size:0.6rem;">Inactif</span>
                             @endif
                         </div>
                         <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                            <button type="button" class="js-copier-code btn btn-sm p-1" data-code="{{ $sac->code }}" title="Copier le code" style="color:#7B3FA0;line-height:1;">
+                            <button type="button" class="js-copier-code btn btn-sm p-1" data-code="{{ $sac->code }}" title="Copier le code" style="color:var(--violet-clair);line-height:1;">
                                 <i class="bi bi-clipboard"></i>
                             </button>
                             <form action="{{ route('admin.evenements.scan-codes.destroy', [$evenement->id, $sac->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce code ?')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm p-1" style="color:#dc3545;line-height:1;" title="Supprimer">
+                                <button type="submit" class="btn btn-sm p-1" style="color:var(--danger);line-height:1;" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -121,7 +121,7 @@
 
                 <form action="{{ route('admin.evenements.scan-codes.generate', $evenement->id) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-sm w-100" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;">
+                    <button type="submit" class="btn btn-sm w-100" style="background:var(--violet-clair);color:#fff;border-radius:8px;font-weight:600;">
                         <i class="bi bi-plus-lg me-1"></i> Générer un code d'accès
                     </button>
                 </form>

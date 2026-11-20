@@ -11,10 +11,10 @@
 
 @section('content')
 <div class="page-content">
-    <div class="alert mb-4 d-flex align-items-start" style="background: rgba(243,156,18,0.06); border-left: 4px solid #f39c12; border-radius: 8px; padding: 1rem 1.25rem;">
-        <i class="bi bi-info-circle me-2 mt-1" style="color: #f39c12; font-size: 1.25rem;"></i>
+    <div class="alert mb-4 d-flex align-items-start" style="background: rgba(214,137,16,0.06); border-left: 4px solid var(--warning); border-radius: 8px; padding: 1rem 1.25rem;">
+        <i class="bi bi-info-circle me-2 mt-1" style="color: var(--warning); font-size: 1.25rem;"></i>
         <div>
-            <strong style="color: #f39c12; font-size: 0.85rem;">Politique de remboursement</strong>
+            <strong style="color: var(--warning); font-size: 0.85rem;">Politique de remboursement</strong>
             <p class="mb-0 text-muted" style="font-size: 0.82rem;">
                 Vous pouvez demander un remboursement pour tout ticket payé. La demande sera traitée par l'équipe PaxEvent.
             </p>
@@ -25,7 +25,7 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
             <div class="metric-card" style="border-top-color: var(--violet);">
-                <div class="metric-icon" style="background: rgba(135,66,139,0.1); color: var(--violet);"><i class="bi bi-ticket"></i></div>
+                <div class="metric-icon" style="background: rgba(123,63,160,0.1); color: var(--violet);"><i class="bi bi-ticket"></i></div>
                 <div class="metric-label">Tickets payés</div>
                 <div class="metric-value" style="font-size: 1.5rem;">{{ number_format($stats['payes']) }}</div>
             </div>
@@ -57,7 +57,7 @@
     @if($demandes->count() > 0)
     <div class="panel-card mb-4">
         <div class="panel-card-header">
-            <h5><i class="bi bi-clock-history me-2" style="color: #f39c12;"></i>Vos demandes de remboursement</h5>
+            <h5><i class="bi bi-clock-history me-2" style="color: var(--warning);"></i>Vos demandes de remboursement</h5>
         </div>
         <div class="panel-card-body p-0">
             <div class="table-responsive">
@@ -74,9 +74,9 @@
                             <td class="fw-bold">{{ number_format($d->montant_total, 0, ',', ' ') }} F</td>
                             <td>
                                 @if($d->statut === 'en_attente')
-                                    <span class="badge" style="background:rgba(243,156,18,0.12);color:#f39c12;">En attente</span>
+                                    <span class="badge" style="background:rgba(214,137,16,0.12);color:var(--warning);">En attente</span>
                                 @elseif($d->statut === 'en_cours')
-                                    <span class="badge" style="background:rgba(52,152,219,0.12);color:#2563eb;">En cours</span>
+                                    <span class="badge" style="background:rgba(47,128,184,0.12);color:var(--info);">En cours</span>
                                 @elseif($d->statut === 'rembourse')
                                     <span class="badge" style="background:rgba(18,151,110,0.12);color:var(--vert);">Remboursé</span>
                                 @else
@@ -213,7 +213,7 @@
 <div class="modal fade" id="modalDemande" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none;">
-            <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--gris-clair); padding: 1rem 1.25rem;">
                 <h5 class="modal-title" style="color: var(--violet);"><i class="bi bi-arrow-return-left me-2"></i>Demander un remboursement</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -233,7 +233,7 @@
                         <textarea name="motif" class="form-control" rows="3" placeholder="Expliquez la raison du remboursement..." required minlength="5"></textarea>
                         @error('motif')<div class="text-danger mt-1" style="font-size: 0.78rem;">{{ $message }}</div>@enderror
                     </div>
-                    <div class="alert alert-warning" style="border-radius: 8px; font-size: 0.82rem; background: rgba(243,156,18,0.06); border: none;">
+                    <div class="alert alert-warning" style="border-radius: 8px; font-size: 0.82rem; background: rgba(214,137,16,0.06); border: none;">
                         <i class="bi bi-exclamation-triangle me-1"></i>
                         <strong>Attention :</strong> Cette demande sera traitée par l'équipe PaxEvent. Vous serez notifié de la décision.
                     </div>
@@ -251,7 +251,7 @@
 <div class="modal fade" id="modalAnnuler" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px; border: none;">
-            <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--gris-clair); padding: 1rem 1.25rem;">
                 <h5 class="modal-title" style="color: var(--danger);"><i class="bi bi-arrow-counterclockwise me-2"></i>Annuler le remboursement</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>

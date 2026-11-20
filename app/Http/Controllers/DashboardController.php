@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EventStatus;
+use App\Models\AppRelease;
 use App\Models\CodePromo;
 use App\Models\Evenement;
 use App\Models\Ticket;
 use App\Models\Withdrawal;
 use App\Services\CodePromoStatisticsService;
-use App\Services\PaiementMapper;
 use App\Services\TicketStatisticsService;
 use Illuminate\Support\Facades\Auth;
 
@@ -177,41 +177,7 @@ class DashboardController extends Controller
         // Calcul du remplissage moyen de tous les événements
         $remplissageMoyen = $evenements->avg(fn ($e) => $e->tauxRemplissage());
 
-        // Statistiques par opérateur mobile (uniquement les paiements mobile money)
-        $paiementStats = $ticketStatistics->repartitionPaiements($evenementsIds);
-        $operateursRaw = $paiementStats['operateurs'];
-
-        // Répartition par opérateur mobile : seuls MTN, Moov et Celtiis sont affichés,
-        // tout autre réseau détecté (Orange, Wave, etc.) est regroupé dans « Autres / Indéterminé »
-        $reseauxConfig = [];
-        $operateursAffiches = ['mtn', 'moov', 'celtiis'];
-        foreach ($operateursAffiches as $operateur) {
-            $reseauxConfig[$operateur] = [
-                'label' => PaiementMapper::operateurLabel($operateur),
-                'icon' => 'bi-phone',
-            ];
-        }
-        $reseauxConfig['autres'] = ['label' => 'Autres / Indéterminé', 'icon' => 'bi-phone'];
-
-        $reseauxPaiement = collect();
-        foreach ($reseauxConfig as $key => $cfg) {
-            if ($key === 'autres') {
-                $autres = $operateursRaw->reject(fn ($data, $k) => in_array($k, $operateursAffiches));
-                $reseauxPaiement->put('autres', (object) [
-                    'total' => (int) $autres->sum('total'),
-                    'montant' => (int) $autres->sum('montant'),
-                ]);
-            } else {
-                $data = $operateursRaw->get($key);
-                $reseauxPaiement->put($key, (object) [
-                    'total' => $data ? (int) $data->total : 0,
-                    'montant' => $data ? (int) $data->montant : 0,
-                ]);
-            }
-        }
-
-        // Répartition par moyen de paiement (mobile money / carte bancaire / espèces)
-        $moyensPaiement = $paiementStats['moyens'];
+        $appRelease = AppRelease::latest();
 
         return view('dashboard', compact(
             'totalEvenements',
@@ -241,9 +207,7 @@ class DashboardController extends Controller
             'scanPct',
             'activiteRecents',
             'remplissageMoyen',
-            'reseauxPaiement',
-            'reseauxConfig',
-            'moyensPaiement',
+            'appRelease',
         ));
     }
 }

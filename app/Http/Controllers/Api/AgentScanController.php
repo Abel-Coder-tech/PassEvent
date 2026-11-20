@@ -8,7 +8,6 @@ use App\Services\AgentScanStatisticsService;
 use App\Services\TicketScanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -34,36 +33,22 @@ class AgentScanController extends Controller
             return response()->json(['message' => 'account_disabled'], 403);
         }
 
-        if ($agent->bloque_jusqua && Carbon::parse($agent->bloque_jusqua)->isFuture()) {
-            $seconds = now()->diffInSeconds(Carbon::parse($agent->bloque_jusqua));
-            return response()->json([
-                'message' => 'Code bloqué. Réessayez dans '.ceil($seconds/60).' minutes.',
-                'code' => 'pin_blocked',
-                'retry_after' => $seconds,
-            ], 429);
-        }
+        // Limitation par IP (3 essais / 5 min). Contrairement à un blocage par
+        // compte, un tiers ne peut pas verrouiller un agent pendant un événement.
+        $key = 'agent-pin:ip:'.$request->ip();
 
-        $key = 'agent-pin:'.$agent->id;
-
-        if (RateLimiter::tooManyAttempts($key, 5)) {
+        if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
             return response()->json([
                 'message' => "Trop de tentatives. Réessayez dans {$seconds} secondes.",
                 'code' => 'pin_throttled',
                 'retry_after' => $seconds,
-            ], 429);
+            ], 429)->header('Retry-After', (string) $seconds);
         }
 
-        if ($request->code_acces !== $agent->code_acces) {
+        if (! Hash::check($request->code_acces, (string) $agent->code_acces)) {
             RateLimiter::hit($key, 300);
             $agent->increment('tentatives_code');
-
-            if ($agent->tentatives_code >= 10) {
-                $agent->update([
-                    'bloque_jusqua' => now()->addMinutes(30),
-                    'tentatives_code' => 10,
-                ]);
-            }
 
             return response()->json([
                 'message' => 'Code d\'accès incorrect.',
