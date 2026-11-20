@@ -15,6 +15,7 @@ class AgentVenteStatisticsService
     {
         $tickets = Ticket::query()
             ->where('agent_vente_id', $agent->id)
+            ->delivrables() // Seuls les billets réellement payés comptent dans les ventes
             ->when($evenementId !== null, fn ($query) => $query->where('evenement_id', $evenementId));
 
         $todayStart = today()->startOfDay();

@@ -29,6 +29,9 @@ class AgentVenteController extends Controller
             $q->where('user_id', auth()->id());
         })
             ->with('evenement')
+            // Totaux calculés depuis les billets réellement payés (même règle que la fiche agent)
+            ->withCount(['tickets as ventes_count' => fn ($q) => $q->delivrables()])
+            ->withSum(['tickets as ventes_montant' => fn ($q) => $q->delivrables()], 'montant')
             ->latest()
             ->paginate(\App\Support\PerPage::resolve());
 
@@ -116,6 +119,7 @@ class AgentVenteController extends Controller
 
         // Ventes et historique limités à l'événement actuellement assigné
         $tickets = $agentVente->tickets()
+            ->delivrables()
             ->where('evenement_id', $agentVente->evenement_id)
             ->with('tarif')
             ->latest('date_achat')
@@ -126,6 +130,7 @@ class AgentVenteController extends Controller
 
         $statsGlobales = $statistics->pourAgent($agentVente);
         $ticketsGlobaux = $agentVente->ticketsGlobaux()
+            ->delivrables()
             ->paginate(\App\Support\PerPage::resolve(), ['*'], 'page_tickets')
             ->appends(request()->query());
 
