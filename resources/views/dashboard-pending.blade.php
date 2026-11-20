@@ -22,10 +22,10 @@
                     <a href="{{ route('profil.step2') }}" class="btn btn-vert btn-sm">
                         <i class="bi bi-arrow-right-circle me-1"></i> Continuer
                     </a>
-                    <a href="{{ route('logout') }}" class="btn btn-secondary-custom btn-sm"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <button type="button" class="btn btn-secondary-custom btn-sm"
+                       data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                         <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
-                    </a>
+                    </button>
                 </div>
                 @elseif($statut === 'corrections_apportees')
                 <div style="font-size: 4rem; margin-bottom: 1rem;">
@@ -49,10 +49,10 @@
                     <a href="{{ route('parametres.index') }}" class="btn btn-vert btn-sm">
                         <i class="bi bi-pencil me-1"></i> Modifier mon profil
                     </a>
-                    <a href="{{ route('logout') }}" class="btn btn-secondary-custom btn-sm"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <button type="button" class="btn btn-secondary-custom btn-sm"
+                       data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                         <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
-                    </a>
+                    </button>
                 </div>
                 @elseif($statut === 'corrections_demandees')
                 <div style="font-size: 4rem; margin-bottom: 1rem;">
@@ -74,10 +74,10 @@
                             <i class="bi bi-send me-1"></i> Soumettre à nouveau
                         </button>
                     </form>
-                    <a href="{{ route('logout') }}" class="btn btn-secondary-custom btn-sm"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <button type="button" class="btn btn-secondary-custom btn-sm"
+                       data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                         <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
-                    </a>
+                    </button>
                 </div>
                 @elseif($statut === 'rejete')
                 <div style="font-size: 4rem; margin-bottom: 1rem;">
@@ -90,10 +90,10 @@
                     {{ $message }}
                 </p>
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
-                    <a href="{{ route('logout') }}" class="btn btn-secondary-custom btn-sm"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <button type="button" class="btn btn-secondary-custom btn-sm"
+                       data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                         <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
-                    </a>
+                    </button>
                 </div>
                 @elseif($statut === 'bloque')
                 <div style="font-size: 4rem; margin-bottom: 1rem;">
@@ -106,10 +106,10 @@
                     {{ $message }}
                 </p>
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
-                    <a href="{{ route('logout') }}" class="btn btn-secondary-custom btn-sm"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <button type="button" class="btn btn-secondary-custom btn-sm"
+                       data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                         <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
-                    </a>
+                    </button>
                 </div>
                 @else
                 <div style="font-size: 4rem; margin-bottom: 1rem;">
@@ -133,10 +133,10 @@
                     <a href="{{ route('parametres.index') }}" class="btn btn-vert btn-sm">
                         <i class="bi bi-pencil me-1"></i> Modifier mon profil
                     </a>
-                    <a href="{{ route('logout') }}" class="btn btn-secondary-custom btn-sm"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <button type="button" class="btn btn-secondary-custom btn-sm"
+                       data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                         <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
-                    </a>
+                    </button>
                 </div>
                 @endif
                 @if(in_array($statut, \App\Models\User::STATUTS_EN_COURS_DE_VALIDATION, true))
@@ -150,7 +150,6 @@
                     <a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom btn-sm">Mes événements</a>
                 </div>
                 @endif
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
             </div>
         </div>
     </div>

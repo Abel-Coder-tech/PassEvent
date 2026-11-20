@@ -165,12 +165,16 @@ class EvenementCreationAssistantTest extends TestCase
             $this->organisateur->update(['statut' => $statut]);
             Evenement::query()->delete();
 
+            $redirectionAttendue = $statut === 'incomplet'
+                ? route('dashboard')
+                : route('admin.evenements.index');
+
             $this->envoyer([
                 'duree' => 'un',
                 'date_event' => $this->date(10, '20:00'),
                 'capacite' => 100,
                 'tarifs' => [['nom' => 'Standard', 'prix' => 1000, 'qte' => 100]],
-            ])->assertRedirect(route('admin.evenements.index'));
+            ])->assertRedirect($redirectionAttendue);
 
             $evenement = Evenement::firstOrFail();
             $this->assertSame('publié', $evenement->statut, $statut);

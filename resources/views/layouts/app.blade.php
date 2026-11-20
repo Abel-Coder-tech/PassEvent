@@ -201,6 +201,14 @@
             background: rgba(255,255,255,0.07);
         }
 
+        .sidebar button.nav-link {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+        }
+
         .sidebar .nav-link.active {
             color: #fff;
             background: rgba(123, 63, 160, 0.32);
@@ -875,6 +883,23 @@
         </div>
 
         <nav class="sidebar-nav">
+            @if(auth()->user()->statut === 'incomplet')
+            <div class="sidebar-section-label">Principal</div>
+            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
+            </a>
+            <a href="{{ route('admin.evenements.create') }}" class="nav-link {{ request()->routeIs('admin.evenements.create') ? 'active' : '' }}">
+                <i class="bi bi-plus-lg"></i> Créer un événement
+            </a>
+
+            <div class="sidebar-section-label">Compte</div>
+            <a href="{{ route('profil.step2') }}" class="nav-link {{ request()->routeIs('profil.*') ? 'active' : '' }}">
+                <i class="bi bi-person-check"></i> Compléter mon profil
+            </a>
+            <button type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+                <i class="bi bi-box-arrow-left"></i> Déconnexion
+            </button>
+            @else
             <div class="sidebar-section-label">Principal</div>
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
@@ -944,10 +969,10 @@
             <a href="{{ route('evenements.public') }}" target="_blank" class="nav-link">
                 <i class="bi bi-globe2"></i> Voir le site
             </a>
-            <a href="{{ route('logout') }}" class="nav-link" onclick="event.preventDefault();document.getElementById('logout-sidebar-form').submit();">
+            <button type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                 <i class="bi bi-box-arrow-left"></i> Déconnexion
-            </a>
-            <form id="logout-sidebar-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+            </button>
+            @endif
         </nav>
 
         <div class="sidebar-user">
@@ -975,6 +1000,7 @@
             </div>
         </div>
         <div class="top-bar-right">
+            @if(auth()->user()->statut !== 'incomplet')
             @php $topbarUnread = \App\Models\Message::where('lu', false)->where('user_id', auth()->id())->count(); @endphp
             <a href="{{ route('admin.messages.index') }}" class="btn btn-sm position-relative" style="border-radius:10px;border:1px solid #e5e5e5;background:var(--blanc);" title="Notifications">
                 <i class="bi bi-bell" style="font-size:1.05rem;"></i>
@@ -982,6 +1008,7 @@
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc3545;font-size:0.6rem;">{{ $topbarUnread }}</span>
                 @endif
             </a>
+            @endif
             @yield('topbar-actions')
             @if(Auth::user()->statut !== 'bloque')
             <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm {{ request()->routeIs('admin.evenements.create', 'admin.evenements.edit', 'admin.evenements.show', 'admin.codes-promos.*') ? 'd-none d-sm-inline-flex' : '' }}">
@@ -1094,6 +1121,7 @@ function copierTexte(texte, apres) {
 }
 </script>
 @yield('scripts')
+@yield('chart-scripts')
 
 @auth
     @if(auth()->user()->role !== 'super_admin')
@@ -1102,6 +1130,30 @@ function copierTexte(texte, apres) {
     </button>
     @endif
     @include('partials.demande-superadmin-modal')
+
+    {{-- Confirmation de déconnexion --}}
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+                <div class="modal-header border-0 pb-0 pt-3 px-3">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="logoutConfirmModalLabel" style="font-weight:800;color:var(--sombre);font-size:1rem;">
+                        <i class="bi bi-box-arrow-right" style="color:var(--danger);"></i> Se déconnecter
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body px-3 py-2">
+                    <p class="mb-0" style="color:var(--gris-fonce);font-size:.85rem;">Souhaitez-vous vraiment vous déconnecter ?</p>
+                </div>
+                <div class="modal-footer border-0 pt-0 px-3 pb-3 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="background:var(--gris-clair);color:var(--sombre);border-radius:8px;font-weight:600;">Non</button>
+                    <form action="{{ route('logout') }}" method="POST" class="m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-sm" style="background:var(--danger);color:#fff;border-radius:8px;font-weight:700;">Oui</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endauth
 <script>document.documentElement.classList.remove('fouc');</script>
 </body>

@@ -59,7 +59,7 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login')->withHeaders([
+        return redirect('/login')->with('status', 'Vous êtes déconnecté. À bientôt sur PaxEvent !')->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => 'Thu, 01 Jan 1970 00:00:00 GMT',

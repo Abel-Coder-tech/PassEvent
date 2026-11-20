@@ -181,6 +181,11 @@
         .sa-sidebar-footer .user-role { font-size: 0.65rem; opacity: 0.5; }
         .sa-sidebar-footer a { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
         .sa-sidebar-footer a:hover { color: #fff; }
+        .sa-sidebar-footer button.sa-logout-btn {
+            border: 0; background: none; padding: 0;
+            color: rgba(255,255,255,0.5); font-size: 0.9rem; cursor: pointer;
+        }
+        .sa-sidebar-footer button.sa-logout-btn:hover { color: #fff; }
 
         .sa-main {
             margin-left: 250px;
@@ -695,10 +700,9 @@
                 <div class="user-name">{{ trim(($saUser->prenom ?? '') . ' ' . $saUser->nom) }}</div>
                 <div class="user-role">{{ $saUser->estSuperAdmin() ? 'Super Admin' : $saUser->libelleRoleEquipe() }}</div>
             </div>
-            <a href="{{ route('superadmin.logout') }}" onclick="event.preventDefault(); document.getElementById('sa-logout-form').submit();" title="Deconnexion">
+            <button type="button" class="sa-logout-btn" data-bs-toggle="modal" data-bs-target="#saLogoutConfirmModal" title="Déconnexion" aria-label="Déconnexion">
                 <i class="bi bi-box-arrow-right"></i>
-            </a>
-            <form id="sa-logout-form" action="{{ route('superadmin.logout') }}" method="POST" style="display:none;">@csrf</form>
+            </button>
         </div>
     </aside>
 
@@ -753,5 +757,29 @@ function escapeHtml(str){if(!str)return'';var d=document.createElement('div');d.
 function showToast(type,message){var c=document.getElementById('toast-container');if(!c||!message)return;var i=type==='success'?'bi-check-circle-fill':'bi-x-circle-fill';var cl=type==='success'?'#27ae60':'#e74c3c';var t=document.createElement('div');t.className='toast-item toast-'+type;var msg=document.createElement('span');msg.className='toast-msg';msg.textContent=message;t.innerHTML='<i class="bi '+i+'" style="color:'+cl+';font-size:1.3rem"></i>';t.appendChild(msg);if(type==='error'){var a=document.createElement('div');a.className='toast-actions';a.innerHTML='<button class="toast-btn toast-btn-retry" onclick="location.reload()">Réessayer</button><button class="toast-btn toast-btn-cancel" onclick="this.closest(\'.toast-item\').remove()">Annuler</button>';t.appendChild(a)}else{var b=document.createElement('button');b.className='toast-close';b.innerHTML='&times;';b.onclick=function(){t.remove()};t.appendChild(b)}c.appendChild(t);if(type!=='error'){setTimeout(function(){t.style.animation='toastOut 0.3s ease forwards';setTimeout(function(){t.remove()},300)},4000)}}
 </script>
 @stack('scripts')
+
+{{-- Confirmation de déconnexion (espace superadmin) --}}
+<div class="modal fade" id="saLogoutConfirmModal" tabindex="-1" aria-labelledby="saLogoutConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+            <div class="modal-header border-0 pb-0 pt-3 px-3">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="saLogoutConfirmModalLabel" style="font-weight:800;color:#211c31;font-size:1rem;">
+                    <i class="bi bi-box-arrow-right" style="color:#e74c3c;"></i> Se déconnecter
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body px-3 py-2">
+                <p class="mb-0" style="color:#625c6b;font-size:.85rem;">Souhaitez-vous vraiment vous déconnecter ?</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 px-3 pb-3 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" style="color:#211c31;border-radius:8px;font-weight:600;">Non</button>
+                <form action="{{ route('superadmin.logout') }}" method="POST" class="m-0">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-danger" style="border-radius:8px;font-weight:700;">Oui</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

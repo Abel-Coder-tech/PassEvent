@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'affiliate' => \App\Http\Middleware\CheckAffiliate::class,
             'profil_verifie' => \App\Http\Middleware\CheckProfilActif::class,
             'compte_actif' => \App\Http\Middleware\CheckCompteActif::class,
+            'compte_incomplet' => \App\Http\Middleware\RestreindreCompteIncomplet::class,
             'connexion.verrou' => \App\Http\Middleware\BloquerTentativesConnexion::class,
             'gestion.org' => \App\Http\Middleware\GestionOrganisateurMiddleware::class,
             'no_cache' => \App\Http\Middleware\NoCache::class,

@@ -5,6 +5,12 @@
 @section('page-subtitle', 'Accédez à votre tableau de bord')
 
 @section('card-content')
+@if (session('status'))
+    <div class="alert alert-success d-flex align-items-center gap-2" role="status">
+        <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+        <span>{{ session('status') }}</span>
+    </div>
+@endif
 @if (session('success'))
     <div class="success-icon text-center"><i class="bi bi-check-circle-fill"></i></div>
     <h2 style="font-size:1.3rem;font-weight:800;color:#211C31;text-align:center;margin-bottom:0.5rem;">Inscription réussie !</h2>

@@ -5,20 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Ticket;
 use App\Models\Evenement;
 use App\Models\Log;
+use App\Services\VentesChartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StatistiqueController extends Controller
 {
+    private VentesChartService $ventesChart;
+
+    public function __construct(VentesChartService $ventesChart)
+    {
+        $this->ventesChart = $ventesChart;
+    }
 
 
     // Page principale des statistiques avec tous les graphiques
     public function index(Request $request)
     {
-        $periode = $request->input('periode', '30'); // Défaut : 30 jours
+        $periode = $this->ventesChart->normaliserPeriode($request->input('periode'));
 
-        $startDate = $this->getStartDate($periode);
+        $startDate = $this->ventesChart->startDate($periode);
 
         // Récupère les IDs des événements de l'organisateur
         $evenementsIds = \Illuminate\Support\Facades\Auth::id()
@@ -26,12 +33,13 @@ class StatistiqueController extends Controller
             : [];
 
         $query = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $startDate);
-        $prevQuery = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $this->getStartDate($periode, true)) // Période précédente
+        $prevQuery = Ticket::whereIn('evenement_id', $evenementsIds)->where('created_at', '>=', $this->ventesChart->startDate($periode, true)) // Période précédente
             ->where('created_at', '<', $startDate);
 
         $stats = $this->computeStats($query, $prevQuery, $periode);
-        $ventesParJour = $this->getVentesParJour($startDate, $evenementsIds);
-        $ventesCategories = $this->categoriesVentes(Auth::user()?->type);
+        $ventesParJour = $this->ventesChart->ventesParJour($startDate, $evenementsIds);
+        $ventesCategories = $this->ventesChart->categories(Auth::user()?->type);
+        $periodeGraphique = $this->ventesChart->libellePeriode($periode);
         $topEvenements = $this->getTopEvenements($evenementsIds);
         $paiementsParReseau = $this->getPaiementsParReseau($startDate, $evenementsIds);
         $activiteParJourSemaine = $this->getActiviteParJourSemaine($startDate, $evenementsIds);
@@ -50,22 +58,9 @@ class StatistiqueController extends Controller
             'activiteParJourSemaine',
             'resumeFinancier',
             'paiementsEchoues',
-            'periode'
+            'periode',
+            'periodeGraphique'
         ))->with('commissionPct', \Illuminate\Support\Facades\Auth::user()?->commissionPourcentage() ?? 10);
-    }
-
-    // Calcule la date de début selon la période (avec support période précédente)
-    private function getStartDate(string $periode, bool $previous = false): \Carbon\Carbon
-    {
-        $now = now();
-
-        return match ($periode) {
-            '7' => $now->copy()->subDays($previous ? 14 : 7),
-            '30' => $now->copy()->subDays($previous ? 60 : 30),
-            '90' => $now->copy()->subDays($previous ? 180 : 90),
-            'annee' => $now->copy()->startOfYear()->subYears($previous ? 1 : 0),
-            default => now()->copy()->subYears(10),
-        };
     }
 
     // Calcule les statistiques principales avec évolution par rapport à la période précédente
@@ -83,7 +78,7 @@ class StatistiqueController extends Controller
         $totalPayes = $ticketsVendus;
         $tauxScan = $totalPayes > 0 ? round(($scannes / $totalPayes) * 100, 1) : 0;
 
-        $echecs = Ticket::where('created_at', '>=', $this->getStartDate($periode))
+        $echecs = Ticket::where('created_at', '>=', $this->ventesChart->startDate($periode))
             ->where('statut_paiement', '!=', 'payé')
             ->count();
         $totalTentatives = $ticketsVendus + $echecs;
@@ -97,7 +92,7 @@ class StatistiqueController extends Controller
             'taux_scan' => $tauxScan,
             'taux_echec' => $tauxEchec,
             'periode_label' => $this->getPeriodeLabel($periode),
-            'periode_graphique' => $this->getPeriodeGraphiqueLabel($periode),
+            'periode_graphique' => $this->ventesChart->libellePeriode($periode),
         ];
     }
 
@@ -120,65 +115,6 @@ class StatistiqueController extends Controller
             'annee' => 'Cette annee',
             default => 'Tout',
         };
-    }
-
-    // Libellé lisible utilisé dans le titre du graphe
-    private function getPeriodeGraphiqueLabel(string $periode): string
-    {
-        return match ($periode) {
-            '7' => '7 derniers jours',
-            '30' => '30 derniers jours',
-            '90' => '3 derniers mois',
-            'annee' => 'cette année',
-            default => 'depuis le début',
-        };
-    }
-
-    // Ventilation du graphe : les catégories universitaires n'ont de sens
-    // que pour un profil universitaire.
-    private function categoriesVentes(?string $typeProfil): array
-    {
-        if ($typeProfil === 'universitaire') {
-            return [
-                ['key' => 'etudiants', 'label' => 'Étudiants', 'couleur' => '#12976e', 'fond' => 'rgba(18,151,110,0.1)'],
-                ['key' => 'externes', 'label' => 'Externes', 'couleur' => '#87428b', 'fond' => 'rgba(135,66,139,0.1)'],
-                ['key' => 'especes', 'label' => 'Vente en espèce', 'couleur' => '#428c79', 'fond' => 'rgba(66,140,121,0.1)'],
-            ];
-        }
-
-        return [
-            ['key' => 'en_ligne', 'label' => 'Vente en ligne', 'couleur' => '#12976e', 'fond' => 'rgba(18,151,110,0.1)'],
-            ['key' => 'especes', 'label' => 'Vente en espèce', 'couleur' => '#87428b', 'fond' => 'rgba(135,66,139,0.1)'],
-        ];
-    }
-
-    // Récupère les ventes par jour avec ventilation adaptée au type de profil
-    private function getVentesParJour(\Carbon\Carbon $startDate, $evenementsIds): array
-    {
-        $data = Ticket::whereIn('evenement_id', $evenementsIds)->where('statut_paiement', 'payé')
-            ->where('created_at', '>=', $startDate)
-            ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw("COUNT(CASE WHEN nom_tarif LIKE '%tudiant%' THEN 1 END) as etudiants"),
-                DB::raw("COUNT(CASE WHEN nom_tarif NOT LIKE '%tudiant%' THEN 1 END) as externes"),
-                // En ligne : lien public ou vente agent réglée via FedaPay.
-                DB::raw("COUNT(CASE WHEN methode_paiement NOT IN ('cash', 'especes') THEN 1 END) as en_ligne"),
-                // Espèces : choix « espèce » de l'agent ou de l'organisateur.
-                DB::raw("COUNT(CASE WHEN methode_paiement IN ('cash', 'especes') THEN 1 END) as especes")
-            )
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        return $data->map(function ($row) {
-            return [
-                'date' => $row->date,
-                'etudiants' => (int) $row->etudiants,
-                'externes' => (int) $row->externes,
-                'en_ligne' => (int) $row->en_ligne,
-                'especes' => (int) $row->especes,
-            ];
-        })->toArray();
     }
 
     // Top 4 des événements par nombre de tickets vendus

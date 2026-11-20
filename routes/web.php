@@ -289,7 +289,7 @@ Route::prefix('equipe')->name('equipe.')->middleware('no_cache')->group(function
     });
 });
 // Routes globales Spatie Sitemap
-Route::middleware(['auth', 'gestion.org'])->get('/generate-sitemap', function () {
+Route::middleware(['auth', 'gestion.org', 'compte_incomplet'])->get('/generate-sitemap', function () {
     $sitemap = Sitemap::create()
         ->add(Url::create(url('/')))
         ->add(Url::create(url('/evenements')))
@@ -388,7 +388,7 @@ Route::prefix('affilie')->name('affiliate.')->group(function () {
 
 // Téléchargement de l'APK : session organisateur OU token d'agent, avec lien
 // signé de 15 minutes. Aucune route d'upload n'est exposée.
-Route::middleware(['auth:web,sanctum', 'no_cache'])->group(function () {
+Route::middleware(['auth:web,sanctum', 'no_cache', 'compte_incomplet'])->group(function () {
     Route::get('/app/paxagent/{release}', [AppReleaseController::class, 'download'])
         ->name('app.download');
 });
@@ -396,7 +396,7 @@ Route::middleware(['auth:web,sanctum', 'no_cache'])->group(function () {
 // ============================================================
 // Routes protégées (admin)
 // ============================================================
-Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache'])->group(function () {
+Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache', 'compte_incomplet'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/gestion/quitter', [\App\Http\Controllers\GestionOrganisateurController::class, 'quitter'])->name('admin.gestion.quitter');
     Route::post('/mandat/accorder', [\App\Http\Controllers\MandatGestionController::class, 'accorder'])->name('admin.mandat.accorder');
@@ -427,7 +427,7 @@ Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache'])->group(fu
     Route::get('/contrat-prestation', [EvenementController::class, 'contratPrestation'])->name('contrat-prestation');
 });
 
-Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache'])->group(function () {
+Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache', 'compte_incomplet'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('evenements', EvenementController::class);
 
