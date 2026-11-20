@@ -11,12 +11,14 @@
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
+    @if(Auth::user()->statut !== 'incomplet')
     <li class="breadcrumb-item"><a href="{{ route('admin.evenements.index') }}">Événements</a></li>
+    @endif
     <li class="breadcrumb-item active" aria-current="page">{{ $edition ? 'Modifier' : 'Créer' }}</li>
 @endsection
 
 @section('topbar-actions')
-<a href="{{ route('admin.evenements.index') }}" class="btn btn-secondary-custom">
+<a href="{{ Auth::user()->statut === 'incomplet' ? route('dashboard') : route('admin.evenements.index') }}" class="btn btn-secondary-custom">
     <i class="bi bi-arrow-left me-1"></i> Retour
 </a>
 @endsection

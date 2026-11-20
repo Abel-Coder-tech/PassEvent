@@ -328,6 +328,12 @@ class EvenementController extends Controller
             ? 'Brouillon enregistré. Vous pourrez le publier depuis vos événements.'
             : ($gratuit ? 'Événement gratuit créé avec succès.' : 'Événement créé avec succès.');
 
+        // Un compte incomplet ne peut pas accéder à la liste des événements :
+        // on le ramène à son tableau de bord réduit après la création.
+        if (Auth::user()->statut === 'incomplet') {
+            return redirect()->route('dashboard')->with('success', $message.' Finalisez votre profil pour accéder aux autres rubriques.');
+        }
+
         return redirect()->route('admin.evenements.index')->with('success', $message);
     }
 

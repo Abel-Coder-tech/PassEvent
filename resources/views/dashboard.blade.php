@@ -204,15 +204,7 @@
     {{-- Activité : graphique + événements récents --}}
     <div class="row g-3 mb-4">
         <div class="col-lg-7">
-            <div class="panel-card">
-                <div class="panel-card-header">
-                    <h5><i class="bi bi-graph-up" style="color:var(--vert);"></i> Ventes — 7 derniers jours</h5>
-                    <span class="status-badge status-en-cours">{{ array_sum($ventes7Jours ?? []) }} tickets</span>
-                </div>
-                <div class="panel-card-body">
-                    <div style="position:relative;height:200px;"><canvas id="ventesChart"></canvas></div>
-                </div>
-            </div>
+            @include('partials.ventes-chart', ['routePeriode' => 'dashboard'])
         </div>
         <div class="col-lg-5">
             <div class="panel-card">
@@ -316,54 +308,4 @@
     </div>
 
 </div>
-@endsection
-
-@section('scripts')
-<script>
-    const canvas = document.getElementById('ventesChart');
-    if (canvas) {
-        const data = @json($ventes7Jours);
-        const labels = @json($joursLabels);
-        new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: labels.map((_, i) => i === labels.length - 1 ? '#12976e' : '#b2e0d6'),
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    barPercentage: 0.6,
-                    categoryPercentage: 0.72,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#211c31',
-                        padding: 10,
-                        cornerRadius: 8,
-                        callbacks: { label: c => c.parsed.y + ' tickets' }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(33,28,49,0.05)', drawBorder: false },
-                        ticks: { color: '#98919b', font: { size: 10 }, stepSize: 1 },
-                        border: { display: false }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#98919b', font: { size: 10 } },
-                        border: { display: false }
-                    }
-                }
-            }
-        });
-    }
-</script>
 @endsection

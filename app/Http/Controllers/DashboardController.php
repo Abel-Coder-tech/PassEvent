@@ -10,14 +10,22 @@ use App\Models\Ticket;
 use App\Models\Withdrawal;
 use App\Services\CodePromoStatisticsService;
 use App\Services\TicketStatisticsService;
+use App\Services\VentesChartService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     // Tableau de bord principal de l'organisateur avec toutes ses statistiques
-    public function index(TicketStatisticsService $ticketStatistics, CodePromoStatisticsService $codePromoStatistics)
+    public function index(Request $request, TicketStatisticsService $ticketStatistics, CodePromoStatisticsService $codePromoStatistics, VentesChartService $ventesChart)
     {
         $user = Auth::user();
+
+        // Un compte incomplet n'a accès qu'à la création d'événement et à la
+        // finalisation de son profil : aucun indicateur, aucune autre rubrique.
+        if ($user->statut === 'incomplet') {
+            return view('dashboard-incomplet');
+        }
 
         // Redirige vers page d'attente si le profil n'est pas validé
         if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees' && $user->statut !== 'corrections_apportees' && $user->statut !== 'bloque') {
@@ -88,17 +96,11 @@ class DashboardController extends Controller
         $codesGeneres = $promoStats['total'];
         $codesUtilises = $promoStats['utilises'];
 
-        $joursLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-        $ventes7Jours = [];
-        $ventesParJour = $ticketStatistics->ventesParJour($evenementsIds);
-        $today = today();
-
-        for ($i = 6; $i >= 0; $i--) {
-            $date = $today->copy()->subDays($i);
-            $ventes7Jours[] = (int) $ventesParJour->get($date->toDateString(), 0);
-        }
-
-        $ventesToday = $ventes7Jours[6];
+        // Graphe de ventes : mêmes données et même filtre que la page Statistiques.
+        $periode = $ventesChart->normaliserPeriode($request->input('periode'));
+        $ventesParJour = $ventesChart->ventesParJour($ventesChart->startDate($periode), $evenementsIds);
+        $ventesCategories = $ventesChart->categories($user->type);
+        $periodeGraphique = $ventesChart->libellePeriode($periode);
 
         $eventEnCours = Evenement::where('user_id', $user->id)
             ->where('statut', 'publié')
@@ -198,9 +200,10 @@ class DashboardController extends Controller
             'codesPromos',
             'codesGeneres',
             'codesUtilises',
-            'ventes7Jours',
-            'joursLabels',
-            'ventesToday',
+            'ventesParJour',
+            'ventesCategories',
+            'periode',
+            'periodeGraphique',
             'eventEnCours',
             'scanTotal',
             'scanValides',
