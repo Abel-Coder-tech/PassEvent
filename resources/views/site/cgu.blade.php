@@ -177,16 +177,33 @@
                                 <li>Du manque à gagner de l'Organisateur en cas de dysfonctionnement temporaire de la plateforme indépendant de sa volonté.</li>
                             </ul>
 
-                            <h6 class="fw-bold mt-4 mb-2">14. Modification des CGU</h6>
+                            <h6 class="fw-bold mt-4 mb-2">14. Propriété intellectuelle, prohibition du plagiat et du clonage par IA</h6>
+                            <p class="mb-1 fw-semibold">14.1. Titularité des droits</p>
+                            <p>La plateforme PaxEvent, l'ensemble de ses composants (notamment architectures informatiques, codes sources, codes objets, algorithmes, interfaces graphiques, bases de données, workflows, documentations et signes distinctifs) ainsi que ses mises à jour et évolutions, sont la propriété exclusive, intégrale et inaliénable de PaxEvent (ou de ses ayants droit). L'accès et l'utilisation de la plateforme accordés à l'Organisateur ne constituent en aucun cas un transfert de propriété ou une cession de droits de propriété intellectuelle.</p>
+                            <p class="mb-1 fw-semibold">14.2. Interdictions expresses et usage d'outils d'IA</p>
+                            <p>Il est strictement interdit à tout Organisateur, ainsi qu'à ses préposés, collaborateurs, clients ou à tout tiers agissant directement ou indirectement pour son compte, par quelque moyen que ce soit :</p>
+                            <ul>
+                                <li><strong>Reproduction et dénaturation :</strong> De copier, dupliquer, reproduire, modifier, adapter, traduire, paramétrer, décompiler, désassembler ou procéder à l'ingénierie inverse (reverse engineering) de tout ou partie de la plateforme PaxEvent pour créer ou tenter de créer des œuvres dérivées, des logiciels ou des services similaires ou concurrents.</li>
+                                <li><strong>Plagiat, clonage et extraction assistés par IA :</strong> D'utiliser, d'entraîner, d'alimenter ou d'injecter des données, codes, interfaces ou éléments structurants issus de PaxEvent dans des modèles d'intelligence artificielle (générative ou non), des algorithmes d'apprentissage automatique (machine learning), des agents autonomes ou des outils de grattage de données (data scraping), aux fins de reconstituer, cloner, plagier, automatiser ou reproduire tout ou partie des fonctionnalités, processus métier ou éléments visuels de la plateforme.</li>
+                            </ul>
+                            <p class="mb-1 fw-semibold">14.3. Poursuites judiciaires et sanctions</p>
+                            <p>Toute violation ou suspicion légitime de violation des dispositions du présent article constitue une contrefaçon, un acte de concurrence déloyale et une atteinte grave aux droits de propriété intellectuelle de PaxEvent.</p>
+                            <p>En cas de constatation d'un tel agissement :</p>
+                            <ul>
+                                <li>PaxEvent se réserve le droit de suspendre ou résilier immédiatement, sans préavis ni indemnité, l'accès de l'Organisateur défaillant à la plateforme.</li>
+                                <li>L'Organisateur contrevenant fera l'objet de poursuites judiciaires immédiates (tant au civil qu'au pénal) devant les tribunaux et juridictions compétents et répondra de l'ensemble des préjudices matériels, financiers et moraux subis par PaxEvent.</li>
+                            </ul>
+
+                            <h6 class="fw-bold mt-4 mb-2">15. Modification des CGU</h6>
                             <p>PaxEvent se réserve le droit de modifier les présentes CGU à tout moment afin de les adapter aux évolutions techniques ou réglementaires du droit béninois. Les modifications entrent en vigueur dès leur publication en ligne sur le site.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">15. Litiges</h6>
+                            <h6 class="fw-bold mt-4 mb-2">16. Litiges</h6>
                             <p>Les présentes CGU sont régies par le droit béninois. En cas de contestation sur l'interprétation ou l'exécution des présentes, et à défaut de résolution amiable, le litige sera porté devant les tribunaux compétents de Cotonou.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">16. Loi applicable et juridiction</h6>
+                            <h6 class="fw-bold mt-4 mb-2">17. Loi applicable et juridiction</h6>
                             <p>Les présentes CGU sont soumises au droit béninois. En cas de litige, les tribunaux compétents sont ceux du Bénin.</p>
 
-                            <h6 class="fw-bold mt-4 mb-2">17. Contact</h6>
+                            <h6 class="fw-bold mt-4 mb-2">18. Contact</h6>
                             <p>Pour toute question relative à l'utilisation de la plateforme, à l'achat de tickets d'événements, ou à l'application des présentes conditions générales d'utilisation et de vente, vous pouvez nous contacter :</p>
                             <ul>
                                 <li><strong>Email :</strong> <a href="mailto:contact@paxevent.com">contact@paxevent.com</a></li>
