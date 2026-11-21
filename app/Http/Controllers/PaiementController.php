@@ -801,8 +801,18 @@ class PaiementController extends Controller
 
         $data = $request->all();
 
-        // L'événement peut être direct (transaction) ou enveloppé (Event.data.transaction)
-        $tx = $data['data']['transaction'] ?? $data['transaction'] ?? $data['data'] ?? $data;
+        // Les événements FedaPay ont la forme {"name": "transaction.approved", "entity": {...}}.
+        // On garde aussi les anciennes formes (transaction directe ou Event.data.transaction).
+        $nomEvenement = is_string($data['name'] ?? null) ? $data['name'] : null;
+
+        // Événements qui ne concernent pas une transaction (client, payout…) : on accuse
+        // réception pour que FedaPay ne les renvoie pas en boucle, sans alerte.
+        if ($nomEvenement !== null && ! str_starts_with($nomEvenement, 'transaction.')) {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        $tx = $data['entity'] ?? $data['data']['transaction'] ?? $data['transaction'] ?? $data['data'] ?? $data;
+        $tx = is_array($tx) ? $tx : [];
 
         $transactionId = (string) ($tx['id'] ?? $data['id'] ?? '');
         $webhookStatus = $tx['status'] ?? $data['status'] ?? null;
@@ -810,7 +820,11 @@ class PaiementController extends Controller
         if ($transactionId === '') {
             $this->paymentMonitoring->record(
                 'payload_webhook_invalide',
-                ['source' => 'webhook'],
+                [
+                    'source' => 'webhook',
+                    'evenement' => $nomEvenement,
+                    'cles_recues' => implode(', ', array_slice(array_keys($data), 0, 15)),
+                ],
                 $request,
                 null,
                 'erreur_paiement',
