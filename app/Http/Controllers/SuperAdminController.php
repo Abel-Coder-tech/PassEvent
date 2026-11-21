@@ -1500,8 +1500,16 @@ class SuperAdminController extends Controller
         $query = Log::with('ticket.evenement')
             ->where('created_at', '>=', $startDate);
 
+        $types = $this->typesJournal();
+        $categorie = $request->input('categorie');
+
         if ($type) {
             $query->where('type_operation', $type);
+        } elseif (in_array($categorie, ['billetterie', 'administration'], true)) {
+            $typesAdmin = array_keys(array_filter($types, fn ($t) => $t['groupe'] === 'administration'));
+            $categorie === 'administration'
+                ? $query->whereIn('type_operation', $typesAdmin)
+                : $query->whereNotIn('type_operation', $typesAdmin);
         }
 
         if ($q) {
@@ -1510,7 +1518,9 @@ class SuperAdminController extends Controller
                     $t->where('nom_acheteur', 'like', '%'.$q.'%')
                         ->orWhere('email_acheteur', 'like', '%'.$q.'%')
                         ->orWhere('code_unique', 'like', '%'.$q.'%');
-                })->orWhere('ip', 'like', '%'.$q.'%');
+                })->orWhere('ip', 'like', '%'.$q.'%')
+                    ->orWhere('details', 'like', '%'.$q.'%')
+                    ->orWhere('details', 'like', '%'.trim(json_encode($q), '"').'%');
             });
         }
 
@@ -1526,20 +1536,61 @@ class SuperAdminController extends Controller
             'echecs' => $clone()->where('type_operation', 'echec_paiement')->count(),
         ];
 
-        $types = [
-            'achat' => ['label' => 'Achat', 'color' => 'var(--sa-primary)'],
-            'envoi' => ['label' => 'Envoi ticket', 'color' => 'var(--sa-success)'],
-            'scan' => ['label' => 'Scan', 'color' => 'var(--sa-primary)'],
-            'recuperation' => ['label' => 'Récupération', 'color' => 'var(--sa-warning)'],
-            'paiement' => ['label' => 'Suivi paiement', 'color' => 'var(--sa-primary)'],
-            'echec_paiement' => ['label' => 'Paiement échoué', 'color' => 'var(--sa-danger)'],
-            'erreur_paiement' => ['label' => 'Anomalie paiement', 'color' => 'var(--sa-danger)'],
-            'reconciliation' => ['label' => 'Réconciliation', 'color' => 'var(--sa-warning)'],
-            'remboursement' => ['label' => 'Remboursement', 'color' => 'var(--sa-warning)'],
-            'code_promo' => ['label' => 'Code promo', 'color' => 'var(--sa-success)'],
-        ];
+        $typesAdmin = array_keys(array_filter($types, fn ($t) => $t['groupe'] === 'administration'));
+        $stats['admin'] = $clone()->whereIn('type_operation', $typesAdmin)->count();
 
-        return view('superadmin.logs', compact('logs', 'stats', 'types', 'type', 'q', 'periode'));
+        return view('superadmin.logs', compact('logs', 'stats', 'types', 'type', 'q', 'periode', 'categorie'));
+    }
+
+    // Types d'opérations du journal général, regroupés en billetterie / administration
+    private function typesJournal(): array
+    {
+        $b = fn ($label, $color) => ['label' => $label, 'color' => $color, 'groupe' => 'billetterie'];
+        $a = fn ($label, $color) => ['label' => $label, 'color' => $color, 'groupe' => 'administration'];
+
+        return [
+            'achat' => $b('Achat', 'var(--sa-primary)'),
+            'envoi' => $b('Envoi ticket', 'var(--sa-success)'),
+            'scan' => $b('Scan', 'var(--sa-primary)'),
+            'recuperation' => $b('Récupération', 'var(--sa-warning)'),
+            'paiement' => $b('Suivi paiement', 'var(--sa-primary)'),
+            'echec_paiement' => $b('Paiement échoué', 'var(--sa-danger)'),
+            'erreur_paiement' => $b('Anomalie paiement', 'var(--sa-danger)'),
+            'reconciliation' => $b('Réconciliation', 'var(--sa-warning)'),
+            'remboursement' => $b('Remboursement', 'var(--sa-warning)'),
+            'code_promo' => $b('Code promo', 'var(--sa-success)'),
+            'lot_physique' => $b('Lot physique', 'var(--sa-primary)'),
+            'lot_physique_auto' => $b('Lot physique auto', 'var(--sa-primary)'),
+            'lot_evenement_interne' => $b('Lot événement interne', 'var(--sa-primary)'),
+
+            'organisateur_supprime' => $a('Organisateur supprimé', 'var(--sa-danger)'),
+            'organisateur_approuve' => $a('Organisateur approuvé', 'var(--sa-success)'),
+            'organisateur_rejete' => $a('Organisateur rejeté', 'var(--sa-danger)'),
+            'organisateur_suspendu' => $a('Organisateur suspendu', 'var(--sa-danger)'),
+            'organisateur_reactive' => $a('Organisateur réactivé', 'var(--sa-success)'),
+            'organisateur_corrections' => $a('Corrections demandées', 'var(--sa-warning)'),
+            'organisateur_cree_par_paxevent' => $a('Organisateur créé par PaxEvent', 'var(--sa-primary)'),
+            'gestion_organisateur' => $a('Gestion organisateur', 'var(--sa-primary)'),
+            'mandat_gestion' => $a('Mandat de gestion', 'var(--sa-primary)'),
+            'email_organisateur' => $a('Email organisateur', 'var(--sa-primary)'),
+            'evenement_annule' => $a('Événement annulé', 'var(--sa-danger)'),
+            'retrait_approuve' => $a('Retrait approuvé', 'var(--sa-success)'),
+            'retrait_confirme' => $a('Retrait confirmé', 'var(--sa-success)'),
+            'retrait_rejete' => $a('Retrait rejeté', 'var(--sa-danger)'),
+            'demande_modification_tarif_approuve' => $a('Tarif modifié (approuvé)', 'var(--sa-success)'),
+            'demande_modification_tarif_refuse' => $a('Modif. tarif refusée', 'var(--sa-danger)'),
+            'ajustement' => $a('Ajustement', 'var(--sa-warning)'),
+            'lot_physique_transmis' => $a('Lot physique transmis', 'var(--sa-primary)'),
+            'lot_physique_annulation' => $a('Lot physique annulé', 'var(--sa-danger)'),
+            'lot_physique_supprime' => $a('Lot physique supprimé', 'var(--sa-danger)'),
+            'lot_physique_ticket_supprime' => $a('Ticket physique supprimé', 'var(--sa-danger)'),
+            'equipe_ajoutee' => $a('Membre équipe ajouté', 'var(--sa-success)'),
+            'equipe_roles_modifies' => $a('Rôles équipe modifiés', 'var(--sa-warning)'),
+            'equipe_statut_modifie' => $a('Statut équipe modifié', 'var(--sa-warning)'),
+            'equipe_supprimee' => $a('Membre équipe supprimé', 'var(--sa-danger)'),
+            'notification_repondue' => $a('Notification répondue', 'var(--sa-primary)'),
+            'newsletter' => $a('Newsletter', 'var(--sa-primary)'),
+        ];
     }
 
     // Début de la période retenue pour le journal
