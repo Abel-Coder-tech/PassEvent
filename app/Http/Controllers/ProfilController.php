@@ -12,6 +12,16 @@ use Illuminate\Support\Facades\Storage;
 
 class ProfilController extends Controller
 {
+    // Page affichée quand un compte incomplet clique sur une rubrique fermée.
+    public function incomplet()
+    {
+        if (auth()->user()->statut !== 'incomplet') {
+            return redirect()->route('dashboard');
+        }
+
+        return view('profil-incomplet');
+    }
+
     // Vérifie si l'utilisateur a le droit d'accéder à la complétion du profil
     private function checkAccess()
     {

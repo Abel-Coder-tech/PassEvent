@@ -62,7 +62,7 @@ class CompteIncompletRestrictionTest extends TestCase
 
     public function test_un_compte_incomplet_peut_finaliser_son_profil(): void
     {
-        foreach (['profil.step2', 'profil.post-step2', 'profil.recap', 'profil.submit', 'dashboard', 'logout'] as $route) {
+        foreach (['profil.incomplet', 'profil.step2', 'profil.post-step2', 'profil.recap', 'profil.submit', 'dashboard', 'logout'] as $route) {
             $this->middlewarePour($this->utilisateur('incomplet'))
                 ->handle($this->requete($route), fn () => 'ok');
 
@@ -82,7 +82,7 @@ class CompteIncompletRestrictionTest extends TestCase
 
         $this->assertFalse($appele);
         $this->assertInstanceOf(RedirectResponse::class, $reponse);
-        $this->assertSame(route('dashboard'), $reponse->getTargetUrl());
+        $this->assertSame(route('profil.incomplet'), $reponse->getTargetUrl());
     }
 
     public function test_une_requete_json_est_refusee_avec_403(): void
