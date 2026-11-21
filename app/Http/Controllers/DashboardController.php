@@ -21,12 +21,6 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Un compte incomplet n'a accès qu'à la création d'événement et à la
-        // finalisation de son profil : aucun indicateur, aucune autre rubrique.
-        if ($user->statut === 'incomplet') {
-            return view('dashboard-incomplet');
-        }
-
         // Redirige vers page d'attente si le profil n'est pas validé
         if ($user->statut !== 'actif' && $user->statut !== 'incomplet' && $user->statut !== 'corrections_demandees' && $user->statut !== 'corrections_apportees' && $user->statut !== 'bloque') {
             $message = '';

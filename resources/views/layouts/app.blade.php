@@ -883,23 +883,6 @@
         </div>
 
         <nav class="sidebar-nav">
-            @if(auth()->user()->statut === 'incomplet')
-            <div class="sidebar-section-label">Principal</div>
-            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
-            </a>
-            <a href="{{ route('admin.evenements.create') }}" class="nav-link {{ request()->routeIs('admin.evenements.create') ? 'active' : '' }}">
-                <i class="bi bi-plus-lg"></i> Créer un événement
-            </a>
-
-            <div class="sidebar-section-label">Compte</div>
-            <a href="{{ route('profil.step2') }}" class="nav-link {{ request()->routeIs('profil.*') ? 'active' : '' }}">
-                <i class="bi bi-person-check"></i> Compléter mon profil
-            </a>
-            <button type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
-                <i class="bi bi-box-arrow-left"></i> Déconnexion
-            </button>
-            @else
             <div class="sidebar-section-label">Principal</div>
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
@@ -972,7 +955,6 @@
             <button type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                 <i class="bi bi-box-arrow-left"></i> Déconnexion
             </button>
-            @endif
         </nav>
 
         <div class="sidebar-user">
@@ -1000,7 +982,6 @@
             </div>
         </div>
         <div class="top-bar-right">
-            @if(auth()->user()->statut !== 'incomplet')
             @php $topbarUnread = \App\Models\Message::where('lu', false)->where('user_id', auth()->id())->count(); @endphp
             <a href="{{ route('admin.messages.index') }}" class="btn btn-sm position-relative" style="border-radius:10px;border:1px solid #e5e5e5;background:var(--blanc);" title="Notifications">
                 <i class="bi bi-bell" style="font-size:1.05rem;"></i>
@@ -1008,7 +989,6 @@
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc3545;font-size:0.6rem;">{{ $topbarUnread }}</span>
                 @endif
             </a>
-            @endif
             @yield('topbar-actions')
             @if(Auth::user()->statut !== 'bloque')
             <a href="{{ route('admin.evenements.create') }}" class="btn btn-vert btn-sm {{ request()->routeIs('admin.evenements.create', 'admin.evenements.edit', 'admin.evenements.show', 'admin.codes-promos.*') ? 'd-none d-sm-inline-flex' : '' }}">

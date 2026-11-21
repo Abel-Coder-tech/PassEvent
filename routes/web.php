@@ -406,6 +406,7 @@ Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache', 'compte_in
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::prefix('profil')->name('profil.')->group(function () {
+        Route::get('/incomplet', [ProfilController::class, 'incomplet'])->name('incomplet');
         Route::get('/type', [ProfilController::class, 'step2'])->name('step2');
         Route::post('/type', [ProfilController::class, 'postStep2'])->name('post-step2');
         Route::get('/recapitulatif', [ProfilController::class, 'recap'])->name('recap');

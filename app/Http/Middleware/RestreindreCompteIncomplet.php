@@ -16,6 +16,7 @@ class RestreindreCompteIncomplet
     private const ROUTES_AUTORISEES = [
         'dashboard',
         'logout',
+        'profil.incomplet',
         'profil.step2',
         'profil.post-step2',
         'profil.recap',
@@ -44,6 +45,6 @@ class RestreindreCompteIncomplet
             return response()->json(['message' => $message], 403);
         }
 
-        return redirect()->route('dashboard')->with('error', $message);
+        return redirect()->route('profil.incomplet');
     }
 }
