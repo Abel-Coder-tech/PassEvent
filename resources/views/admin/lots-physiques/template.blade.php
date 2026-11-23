@@ -318,7 +318,8 @@
     </div>
     @endif
 
-    <div class="lot-info mb-3 d-flex flex-wrap gap-3 align-items-center">
+    <div class="lot-info mb-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+      <div class="d-flex flex-wrap gap-2 align-items-center" style="column-gap:.9rem !important;">
         <a href="{{ route('admin.lots-physiques.index') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Retour
         </a>
@@ -327,12 +328,15 @@
         <span><i class="bi bi-tag me-1"></i>{{ $lot->tarif?->nom ?? '—' }}</span>
         <span><i class="bi bi-123 me-1"></i>{{ $tickets }} ticket(s)</span>
         <span class="format-badge"><i class="bi bi-aspect-ratio"></i><span id="formatBadgeLabel">{{ $format['label'] }}</span></span>
+      </div>
+      <div class="d-flex gap-2 align-items-center flex-nowrap">
         <a href="{{ route('admin.lots-physiques.template.preview', $lot) }}" target="_blank" class="btn btn-sm btn-preview">
             <i class="bi bi-eye me-1"></i>Visualiser
         </a>
-        <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm btn-download ms-auto">
-            <i class="bi bi-download me-1"></i>Télécharger la planche
+        <a href="{{ route('admin.lots-physiques.download', $lot) }}" class="btn btn-sm btn-download text-nowrap" title="Télécharger la planche PDF">
+            <i class="bi bi-download me-1"></i>Télécharger
         </a>
+      </div>
     </div>
 
     <form method="POST" action="{{ route('admin.lots-physiques.template.save', $lot) }}" enctype="multipart/form-data" id="formTemplate">
@@ -501,9 +505,9 @@
             <div class="d-flex align-items-center gap-2 mb-2 px-1" style="font-size:.82rem;">
                 <i class="bi bi-eye" style="color:var(--violet, #542680);"></i>
                 <strong>Aperçu en direct</strong>
-                <span class="text-muted">— mis à jour à chaque modification enregistrée</span>
+                <span class="text-muted">— le vrai rendu imprimé (QR, code pass, recadrage), mis à jour après chaque enregistrement</span>
             </div>
-            <iframe id="apercuFrame" title="Aperçu du ticket" style="width:100%;height:320px;border:1px solid #eee;border-radius:6px;background:#f8f9fa;"></iframe>
+            <iframe id="apercuFrame" title="Aperçu du ticket" style="width:100%;height:160px;border:1px solid #eee;border-radius:6px;background:#f8f9fa;"></iframe>
         </div>
     </div>
 
@@ -1367,7 +1371,12 @@
     function rafraichirApercu() {
         if (!apercuFrame || !lienApercu || !hasStored) { if (apercuCard) apercuCard.style.display = hasStored ? '' : 'none'; return; }
         apercuCard.style.display = '';
-        apercuFrame.src = lienApercu.href + (lienApercu.href.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now() + '#toolbar=0&navpanes=0';
+        // Hauteur selon les proportions du ticket (bracelet très allongé, A5 presque carré)
+        var f = currentFmt();
+        var largeurTicket = f.largeur_totale || f.largeur;
+        var h = apercuFrame.clientWidth * (f.hauteur / largeurTicket) + 24;
+        apercuFrame.style.height = Math.round(Math.max(90, Math.min(420, h))) + 'px';
+        apercuFrame.src = lienApercu.href + (lienApercu.href.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now() + '#toolbar=0&navpanes=0&view=FitH';
     }
     function modifie() {
         if (!pret) return;

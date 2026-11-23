@@ -13,9 +13,16 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        // Anti-clickjacking : interdit tout encadrement du site (frame/iframe/embed)
-        $response->headers->set('X-Frame-Options', 'DENY');
-        $response->headers->set('Content-Security-Policy', "frame-ancestors 'none'");
+        // Anti-clickjacking : interdit tout encadrement du site (frame/iframe/embed).
+        // Seul l'aperçu PDF d'un template peut être encadré, et uniquement par le site
+        // lui-même (aperçu en direct de l'éditeur).
+        if ($request->routeIs('admin.lots-physiques.template.preview', 'superadmin.tickets-physiques.template.preview')) {
+            $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+            $response->headers->set('Content-Security-Policy', "frame-ancestors 'self'");
+        } else {
+            $response->headers->set('X-Frame-Options', 'DENY');
+            $response->headers->set('Content-Security-Policy', "frame-ancestors 'none'");
+        }
 
         // Anti-sniffing MIME
         $response->headers->set('X-Content-Type-Options', 'nosniff');
