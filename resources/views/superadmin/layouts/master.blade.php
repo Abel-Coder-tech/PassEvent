@@ -566,6 +566,9 @@
             <a href="{{ route('superadmin.securite') }}" class="sa-nav-link {{ request()->routeIs('superadmin.securite') ? 'active' : '' }}">
                 <i class="bi bi-shield-fill"></i> Sécurité
             </a>
+            <a href="{{ route('superadmin.journal-securite') }}" class="sa-nav-link {{ request()->routeIs('superadmin.journal-securite') ? 'active' : '' }}">
+                <i class="bi bi-shield-exclamation"></i> Journal de sécurité
+            </a>
             <a href="{{ route('superadmin.consentements') }}" class="sa-nav-link {{ request()->routeIs('superadmin.consentements') ? 'active' : '' }}">
                 <i class="bi bi-shield-check"></i> Consentements cookies
             </a>

@@ -23,3 +23,5 @@ Schedule::command('sanctum:prune-expired --hours=24')->daily();
 Schedule::command('ventes:purger-idempotences')->daily();
 // Sauvegarde de la base chaque nuit à 3 h (14 jours conservés), en plus de celles de l'hébergeur
 Schedule::command('paxevent:sauvegarder-base')->dailyAt('03:00')->withoutOverlapping(60);
+// Journal de sécurité : entrées de plus de 90 jours et blocages d'IP expirés
+Schedule::command('securite:purger')->dailyAt('03:30');

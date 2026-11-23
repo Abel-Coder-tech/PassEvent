@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SecuriteService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -28,6 +29,11 @@ class BloquerTentativesConnexion
 
         foreach ([[$cleCompte, self::MAX_PAR_COMPTE], [$cleIp, self::MAX_PAR_IP]] as [$cle, $max]) {
             if (RateLimiter::tooManyAttempts($cle, $max)) {
+                app(SecuriteService::class)->enregistrer('connexion_bloquee', $request, [
+                    'identifiant' => $this->identifiant($request),
+                    'regle' => $cle === $cleIp ? 'trop_d_essais_ip' : 'trop_d_essais_compte',
+                ]);
+
                 return $this->bloque($request, RateLimiter::availableIn($cle));
             }
         }
@@ -37,11 +43,26 @@ class BloquerTentativesConnexion
         if ($this->estEchec($request, $reponse)) {
             RateLimiter::hit($cleCompte, self::DUREE_SECONDES);
             RateLimiter::hit($cleIp, self::DUREE_SECONDES);
+            app(SecuriteService::class)->enregistrer('connexion_echouee', $request, [
+                'identifiant' => $this->identifiant($request),
+            ]);
         } elseif ($reponse->isSuccessful() || $reponse->isRedirection()) {
             RateLimiter::clear($cleCompte);
         }
 
         return $reponse;
+    }
+
+    // Identifiant tenté (email, pseudo de l'équipe ou téléphone d'agent)
+    private function identifiant(Request $request): ?string
+    {
+        foreach (['email', 'pseudo', 'telephone', 'login', 'identifiant'] as $champ) {
+            if ($request->filled($champ) && is_string($request->input($champ))) {
+                return trim($request->input($champ));
+            }
+        }
+
+        return null;
     }
 
     private function cles(Request $request): array

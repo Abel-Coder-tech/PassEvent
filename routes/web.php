@@ -204,6 +204,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::delete('/tickets-physiques/{lot}', [SuperAdminLotPhysiqueController::class, 'destroy'])->name('tickets-physiques.supprimer');
         Route::get('/statistiques', [SuperAdminController::class, 'statistiques'])->name('statistiques');
         Route::get('/securite', [SuperAdminController::class, 'securite'])->name('securite');
+        Route::get('/journal-securite', [\App\Http\Controllers\SuperAdmin\JournalSecuriteController::class, 'index'])->name('journal-securite');
+        Route::post('/journal-securite/bloquer', [\App\Http\Controllers\SuperAdmin\JournalSecuriteController::class, 'bloquer'])->name('journal-securite.bloquer');
+        Route::delete('/journal-securite/ips/{ipBloquee}', [\App\Http\Controllers\SuperAdmin\JournalSecuriteController::class, 'debloquer'])->name('journal-securite.debloquer');
         Route::get('/consentements', [SuperAdminController::class, 'consentements'])->name('consentements');
         Route::get('/consentements/export', [SuperAdminController::class, 'consentementsExport'])->name('consentements.export');
         Route::get('/notifications', [SuperAdminController::class, 'notifications'])->name('notifications');

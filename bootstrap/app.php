@@ -35,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // En-têtes de sécurité sur toutes les réponses
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
+        // Journal de sécurité : IP bloquées, robots d'attaque, liens suspects, attaques
+        $middleware->append(\App\Http\Middleware\DetecterAttaques::class);
+
         // Le site est servi derrière le proxy local de l'hébergeur : on ne lit les en-têtes
         // X-Forwarded-* (IP du visiteur, HTTPS) que s'ils viennent d'une adresse locale ou
         // privée. Une requête venue directement d'Internet ne peut donc plus inventer son
