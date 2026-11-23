@@ -35,8 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // En-têtes de sécurité sur toutes les réponses
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
-        // Le site est servi derrière un proxy/Apache : autoriser X-Forwarded-* (HTTPS, IP)
-        $middleware->trustProxies(at: '*');
+        // Le site est servi derrière le proxy local de l'hébergeur : on ne lit les en-têtes
+        // X-Forwarded-* (IP du visiteur, HTTPS) que s'ils viennent d'une adresse locale ou
+        // privée. Une requête venue directement d'Internet ne peut donc plus inventer son
+        // IP avec un faux X-Forwarded-For (journaux faussés, limite d'essais contournée).
+        $middleware->trustProxies(at: [
+            '127.0.0.1', '::1',
+            '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16',
+            'fc00::/7',
+        ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\CheckInactivite::class, // Deconnexion aphe 30 min d'inactivite

@@ -4,6 +4,32 @@
 @section('page-title', 'Securite')
 
 @section('content')
+@php
+    $ipVue = request()->ip();
+    $remoteAddr = request()->server('REMOTE_ADDR');
+    $xff = request()->header('X-Forwarded-For');
+    $ipPrivee = ! filter_var($ipVue, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+@endphp
+<div class="sa-card mb-4">
+    <div class="sa-card-header"><span><i class="bi bi-hdd-network me-2" style="color: var(--sa-primary);"></i>Votre connexion vue par PaxEvent</span></div>
+    <div class="sa-card-body" style="font-size:.85rem;">
+        <div class="row g-2">
+            <div class="col-md-3"><div class="text-muted" style="font-size:.72rem;">IP retenue (journaux, limites d'essais)</div><code>{{ $ipVue }}</code></div>
+            <div class="col-md-3"><div class="text-muted" style="font-size:.72rem;">Adresse de connexion (REMOTE_ADDR)</div><code>{{ $remoteAddr }}</code></div>
+            <div class="col-md-4"><div class="text-muted" style="font-size:.72rem;">En-tête X-Forwarded-For</div><code>{{ $xff ?: '—' }}</code></div>
+            <div class="col-md-2"><div class="text-muted" style="font-size:.72rem;">HTTPS détecté</div><strong style="color:{{ request()->isSecure() ? 'var(--sa-success)' : 'var(--sa-danger)' }};">{{ request()->isSecure() ? 'Oui' : 'Non' }}</strong></div>
+        </div>
+        <div class="mt-2" style="font-size:.78rem;color:{{ $ipPrivee || ! request()->isSecure() ? 'var(--sa-danger)' : 'var(--sa-text-muted)' }};">
+            @if($ipPrivee)
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>L'IP retenue est une adresse interne : le proxy de l'hébergeur n'est pas reconnu, toutes les visites semblent venir de la même adresse.
+            @elseif(! request()->isSecure())
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>Le HTTPS n'est pas détecté : le proxy de l'hébergeur n'est pas reconnu.
+            @else
+                <i class="bi bi-check-circle-fill me-1" style="color:var(--sa-success);"></i>L'IP retenue doit être votre IP publique (comparez avec un site comme « quel est mon IP »).
+            @endif
+        </div>
+    </div>
+</div>
 <div class="row g-3 mb-4">
     <div class="col-lg-4">
         <div class="sa-card">
