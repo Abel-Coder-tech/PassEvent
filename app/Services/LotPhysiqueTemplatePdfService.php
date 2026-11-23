@@ -226,8 +226,10 @@ class LotPhysiqueTemplatePdfService
         $ticketOrientation = $format['orientation'] ?? 'landscape';
         $orientation = $format['page_orientation'] ?? $ticketOrientation;
 
-        $pageW = $orientation === 'landscape' ? 297 : 210;
-        $pageH = $orientation === 'landscape' ? 210 : 297;
+        // Feuille sur mesure (bracelet) ou A4
+        $pageW = $format['page']['largeur'] ?? ($orientation === 'landscape' ? 297 : 210);
+        $pageH = $format['page']['hauteur'] ?? ($orientation === 'landscape' ? 210 : 297);
+        $marge = $format['marge'] ?? self::MARGE;
 
         // Le slot peut être plus large que le visuel (bracelet : bande blanche de pliage à droite)
         $slotW = $format['largeur_totale'] ?? $format['largeur'];
@@ -237,8 +239,8 @@ class LotPhysiqueTemplatePdfService
 
         $blockW = $cols * $slotW + ($cols - 1) * self::GOUTTIERE;
         $blockH = $rows * $slotH + ($rows - 1) * self::GOUTTIERE;
-        $startX = ($format['alignement'] ?? null) === 'gauche' ? self::MARGE : ($pageW - $blockW) / 2;
-        $startY = max(($pageH - $blockH) / 2, self::MARGE);
+        $startX = ($format['alignement'] ?? null) === 'gauche' ? $marge : ($pageW - $blockW) / 2;
+        $startY = max(($pageH - $blockH) / 2, $marge);
 
         $positions = [];
         for ($r = 0; $r < $rows; $r++) {
@@ -331,6 +333,8 @@ class LotPhysiqueTemplatePdfService
 
         // Signature PaxEvent dans la marge : texte plus petit si la marge basse est réduite
         $signBottom = $layout['marge_bas'] >= 8 ? 2.0 : 0.5;
+        // Pas de place pour la signature (feuille bracelet sans marge) : on ne l'imprime pas
+        $avecSignature = $layout['marge_bas'] >= 3;
         $signFont = $layout['marge_bas'] >= 8 ? 9 : 6.5;
 
         // La résolution des images de fond DomPDF dépend uniquement de l'option `dpi`
@@ -345,11 +349,16 @@ class LotPhysiqueTemplatePdfService
         $pdf = Pdf::loadView('tickets.pdf.template', array_merge(compact(
             'lot', 'pages', 'qrs', 'templateUrl',
             'layout', 'pageLargeur', 'pageHauteur', 'format',
-            'signBottom', 'signFont', 'signFontPt', 'paxFontPt', 'zoom',
+            'signBottom', 'signFont', 'signFontPt', 'paxFontPt', 'zoom', 'avecSignature',
             'imgW', 'imgH', 'imgLeft', 'imgTop',
             'faviconDataUri', 'faviconSize', 'codesVerticaux'
         ), $geo));
-        $pdf->setPaper('a4', $layout['orientation']);
+        if (isset($format['page'])) {
+            // Feuille sur mesure : dimensions en points (1 mm = 2,8346 pt)
+            $pdf->setPaper([0, 0, $layout['page_largeur'] * 72 / 25.4, $layout['page_hauteur'] * 72 / 25.4]);
+        } else {
+            $pdf->setPaper('a4', $layout['orientation']);
+        }
         $pdf->setOption('dpi', 300);
         $pdf->render();
 

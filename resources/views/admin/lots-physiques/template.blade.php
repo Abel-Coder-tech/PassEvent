@@ -579,7 +579,7 @@
                             </div>
                             <div class="help-alert mb-2">
                                 <i class="bi bi-smartwatch mt-1"></i>
-                                <span><strong>Bracelet :</strong> image de 22 × 1,8 cm (2598 × 213 px en 300 DPI), 10 bracelets par A4 paysage, calés à gauche. Chaque bracelet fait 25 cm : le visuel puis 3 cm blancs à droite pour le pliage. La zone QR fait 1,90 × 1,42 cm : comme sur les tickets, avec le code pass dedans, tourné à la verticale à droite du QR. Imprimez le PDF à 100 % (taille réelle), sans « ajuster à la page ».</span>
+                                <span><strong>Bracelet :</strong> image de 22 × 1,8 cm (2598 × 213 px en 300 DPI), 10 bracelets par feuille de 25 × 19 cm, sans marge. Chaque bracelet fait 25 cm (toute la largeur de la feuille) : le visuel puis 3 cm blancs à droite pour le pliage. La zone QR fait 1,90 × 1,42 cm : comme sur les tickets, avec le code pass dedans, tourné à la verticale à droite du QR. Imprimez le PDF à 100 % (taille réelle), sans « ajuster à la page ».</span>
                             </div>
                             <div class="help-alert mb-0">
                                 <i class="bi bi-lightbulb-fill mt-1"></i>
@@ -785,7 +785,10 @@
 
     function syncFormatHint(f) {
         var pageOri = f.page_orientation || f.orientation;
-        if (formatHint) formatHint.textContent = f.colonnes + '×' + f.lignes + ' tickets par page A4 ' + (pageOri === 'landscape' ? '(page paysage)' : '(page portrait)') + ' — ticket ' + f.largeur + '×' + f.hauteur + ' mm.';
+        var feuille = f.page
+            ? 'feuille de ' + (f.page.largeur / 10).toString().replace('.', ',') + ' × ' + (f.page.hauteur / 10).toString().replace('.', ',') + ' cm'
+            : 'page A4 ' + (pageOri === 'landscape' ? '(page paysage)' : '(page portrait)');
+        if (formatHint) formatHint.textContent = f.colonnes + '×' + f.lignes + ' tickets par ' + feuille + ' — ticket ' + f.largeur + '×' + f.hauteur + ' mm.';
         if (formatBadgeLabel) formatBadgeLabel.textContent = f.label;
     }
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Planche de tickets - {{ $lot->nom }}</title>
     <style>
-        @page { size: A4 {{ $layout['orientation'] }}; margin: 0; }
+        @page { size: {{ $pageLargeur }}mm {{ $pageHauteur }}mm; margin: 0; }
         html, body { font-family: 'DejaVu Sans', sans-serif; margin: 0; padding: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -152,8 +152,10 @@
                 $tarif && $tarif->prix !== null ? number_format((float) $tarif->prix, 0, ',', ' ').' FCFA' : null,
             ]));
         @endphp
+        @if($avecSignature ?? true)
         <span class="marge-sign" style="left: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFontPt }}pt;">{{ implode(' — ', $legendParts) }}</span>
         <span class="marge-sign" style="right: {{ $layout['marge_gauche'] }}mm; bottom: {{ $signBottom }}mm; font-size: {{ $signFontPt }}pt;">© {{ date('Y') }} PaxEvent · Billetterie en ligne 100% Bénin</span>
+        @endif
     </div>
 @endforeach
 </body>
