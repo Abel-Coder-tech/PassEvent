@@ -61,6 +61,7 @@ class AffiliationCommissionTest extends TestCase
 
         Schema::create('ticket', function (Blueprint $table) {
             $table->id();
+            $table->timestamp('expire_at')->nullable();
             $table->foreignId('evenement_id')->constrained('evenement')->cascadeOnDelete();
             $table->foreignId('tarif_id')->nullable();
             $table->unsignedBigInteger('evenement_date_id')->nullable();

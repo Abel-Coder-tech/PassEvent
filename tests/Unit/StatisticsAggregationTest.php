@@ -45,6 +45,7 @@ class StatisticsAggregationTest extends TestCase
             $table->string('statut_paiement')->nullable();
             $table->boolean('utilise')->default(false);
             $table->boolean('annule')->default(false);
+            $table->timestamp('expire_at')->nullable(); // réservation non payée expirée (cf. scope delivrables)
             $table->string('nom_tarif')->nullable();
             $table->string('transaction_id')->nullable();
             $table->decimal('montant', 10, 2)->default(0);
@@ -135,7 +136,7 @@ class StatisticsAggregationTest extends TestCase
         $service = app(TicketStatisticsService::class);
         $stats = $service->organisateur(\App\Models\Ticket::query());
 
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
         $this->assertSame([
             'total_tickets' => 4,
             'valides' => 1,
@@ -166,7 +167,7 @@ class StatisticsAggregationTest extends TestCase
             'termines' => 1,
             'total_billets_vendus' => 17,
         ], app(EvenementStatisticsService::class)->pourOrganisateur(8));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_physical_ticket_counters_are_aggregated_in_one_query(): void
@@ -187,7 +188,7 @@ class StatisticsAggregationTest extends TestCase
         );
 
         $this->assertSame(['total' => 2, 'annules' => 1, 'scannes' => 1], $stats);
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_organizer_dashboard_ticket_metrics_use_few_aggregate_queries(): void
@@ -261,24 +262,24 @@ class StatisticsAggregationTest extends TestCase
             'recettes_especes' => 50.0,
             'tickets_scannes' => 1,
         ], $tickets->tableauDeBord([1]));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
 
         DB::flushQueryLog();
         $this->assertSame(1, (int) $tickets->ventesParJour([1])->get(today()->toDateString()));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
 
         DB::flushQueryLog();
         $paiements = $tickets->repartitionPaiements([1]);
         $this->assertSame(1, (int) $paiements['operateurs']->get('mtn')->total);
         $this->assertSame(1, (int) $paiements['moyens']->get('especes')->total);
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
 
         DB::flushQueryLog();
         $this->assertSame(
             ['total' => 2, 'utilises' => 1],
             app(CodePromoStatisticsService::class)->pourEvenements([1])
         );
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_ticket_alerts_and_event_revenue_use_single_aggregate_queries(): void
@@ -331,14 +332,14 @@ class StatisticsAggregationTest extends TestCase
             'reussies' => 2,
             'echouees' => 1,
         ], $service->alertes([30]));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
 
         DB::flushQueryLog();
         $this->assertSame([
             'ventes' => 2,
             'revenus' => 300.0,
         ], $service->ventesEvenement(30));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_scan_counters_and_admin_metrics_are_aggregated(): void
@@ -364,17 +365,17 @@ class StatisticsAggregationTest extends TestCase
             'valides' => 2,
             'deja_utilises' => 1,
         ], $service->apiCounters($agent));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
         DB::flushQueryLog();
         $this->assertSame([
             'total_scans' => 4,
             'scans_ajd' => 3,
             'valides' => 2,
             'deja_utilises' => 1,
-            'invalides' => 2,
+            'invalides' => 1, // « déjà utilisé » n'est plus compté comme invalide (pas de double comptage)
             'dernier_acces' => null,
         ], $service->adminStats($agent));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_event_scan_page_metrics_use_one_aggregate_query(): void
@@ -398,7 +399,7 @@ class StatisticsAggregationTest extends TestCase
             'scans_valides' => 1,
             'scans_invalides' => 2,
         ], app(AgentScanStatisticsService::class)->evenement(40));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_agent_vente_metrics_share_aggregates_and_keep_grouped_breakdowns(): void
@@ -453,10 +454,12 @@ class StatisticsAggregationTest extends TestCase
         DB::flushQueryLog();
         $stats = $service->pourAgent($agent, 30);
 
-        $this->assertCount(4, DB::getQueryLog());
-        $this->assertSame(3, $stats['total_tickets']);
-        $this->assertSame(170.0, $stats['montant_total']);
-        $this->assertSame(2, $stats['aujourd_hui']);
+        // Seuls les billets délivrables (payés, non annulés, non expirés) comptent :
+        // le billet « en attente » de 20 est exclu.
+        $this->assertCount(4, $this->requetes());
+        $this->assertSame(2, $stats['total_tickets']);
+        $this->assertSame(150.0, $stats['montant_total']);
+        $this->assertSame(1, $stats['aujourd_hui']);
         $this->assertCount(2, $stats['par_tarif']);
         $this->assertCount(2, $stats['par_methode']);
         DB::flushQueryLog();
@@ -464,14 +467,14 @@ class StatisticsAggregationTest extends TestCase
             'aujourd_hui' => 1,
             'montant_ajd' => 100.0,
         ], $service->ventesDuJour($agent));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
 
         $evenement = new Evenement();
         $evenement->id = 30;
         DB::flushQueryLog();
         $parAgent = $service->pourEvenement($evenement, [12]);
         $this->assertSame(2, (int) $parAgent->get(12)->firstWhere('methode_paiement', 'mtn')->total);
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
     }
 
     public function test_affiliate_link_and_commission_metrics_are_aggregated(): void
@@ -500,7 +503,7 @@ class StatisticsAggregationTest extends TestCase
             'liens_actifs' => 1,
             'clics' => 13,
         ], $service->links($affiliate));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
 
         DB::flushQueryLog();
         $this->assertSame([
@@ -510,6 +513,20 @@ class StatisticsAggregationTest extends TestCase
             'disponible' => 7.0,
             'paye' => 11.0,
         ], $service->commissions($affiliate, 30, true));
-        $this->assertCount(1, DB::getQueryLog());
+        $this->assertCount(1, $this->requetes());
+    }
+
+    /**
+     * Requêtes exécutées depuis le dernier flushQueryLog() (typage explicite :
+     * l'éditeur interprète mal le type de retour de la façade DB).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function requetes(): array
+    {
+        /** @var \Illuminate\Database\Connection $connexion */
+        $connexion = DB::connection();
+
+        return $connexion->getQueryLog();
     }
 }

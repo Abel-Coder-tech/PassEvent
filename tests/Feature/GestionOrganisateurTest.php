@@ -199,6 +199,7 @@ class GestionOrganisateurTest extends TestCase
         $vendu = $this->creerEvenement($this->organisateur->id);
         Schema::create('ticket', function (Blueprint $table) {
             $table->id();
+            $table->timestamp('expire_at')->nullable();
             $table->unsignedBigInteger('evenement_id');
             $table->string('statut_paiement')->default('en_attente');
             $table->timestamps();

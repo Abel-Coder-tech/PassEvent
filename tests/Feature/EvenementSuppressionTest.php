@@ -62,6 +62,7 @@ class EvenementSuppressionTest extends TestCase
         if (! Schema::hasTable('ticket')) {
             Schema::create('ticket', function (Blueprint $table) {
                 $table->id();
+                $table->timestamp('expire_at')->nullable();
                 $table->unsignedBigInteger('evenement_id');
                 $table->unsignedBigInteger('evenement_date_id')->nullable();
                 $table->string('statut_paiement')->default('en_attente');

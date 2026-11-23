@@ -633,6 +633,7 @@ class EvenementCreationAssistantTest extends TestCase
 
         Schema::create('ticket', function (Blueprint $table) {
             $table->id();
+            $table->timestamp('expire_at')->nullable();
             $table->unsignedBigInteger('evenement_id');
             $table->unsignedBigInteger('evenement_date_id')->nullable();
             $table->timestamps();
