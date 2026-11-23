@@ -291,14 +291,14 @@ class LotTemplateIntegrationTest extends TestCase
         // Les lignes de coupe traversent toute la feuille
         $this->assertSame(0, $layout['coupe_gauche']);
         $this->assertSame(297, $layout['coupe_largeur']);
-        // 25,2 cm au total (22,2 de visuel + 3 cm blancs pour le pliage), calé à gauche
-        $this->assertSame(252, $layout['slot_largeur']);
-        $this->assertSame(222, $layout['visuel_largeur']);
+        // 25 cm au total (22 de visuel + 3 cm blancs pour le pliage), calé à gauche
+        $this->assertSame(250, $layout['slot_largeur']);
+        $this->assertSame(220, $layout['visuel_largeur']);
         $this->assertEqualsWithDelta(Pdf::MARGE, $layout['positions'][0]['x'], 0.001);
-        // 10 × 19 mm + 9 × 1 mm = 199 mm, dans les 202 mm utiles de l'A4 paysage
-        $this->assertEqualsWithDelta(199, $layout['bloc_hauteur'], 0.001);
+        // 10 × 18 mm + 9 × 1 mm = 189 mm, dans les 202 mm utiles de l'A4 paysage
+        $this->assertEqualsWithDelta(189, $layout['bloc_hauteur'], 0.001);
         $this->assertGreaterThanOrEqual(Pdf::MARGE, $layout['bloc_haut']);
-        $this->assertEqualsWithDelta(1, $layout['positions'][1]['y'] - $layout['positions'][0]['y'] - 19, 0.001);
+        $this->assertEqualsWithDelta(1, $layout['positions'][1]['y'] - $layout['positions'][0]['y'] - 18, 0.001);
         // La ligne de coupe tombe au milieu du millimètre entre deux bracelets
         $this->assertEqualsWithDelta($layout['positions'][1]['y'] - 0.5, $layout['coupes_h'][0], 0.001);
     }
@@ -307,14 +307,14 @@ class LotTemplateIntegrationTest extends TestCase
     {
         $br = $this->formats()['br'];
         // Même avec une taille demandée différente, la zone reste 19 × 14,2 mm
-        $geo = Pdf::geometry(40, null, null, 222, 19, $br);
+        $geo = Pdf::geometry(40, null, null, 220, 18, $br);
 
         $this->assertSame(19.0, $geo['zoneW']);
         $this->assertSame(14.2, $geo['zoneH']);
         $this->assertSame(13.7, $geo['qrSize']);
         $this->assertTrue($geo['codeVertical']);
         $this->assertEqualsWithDelta(10.2 - 0.25, $geo['zoneX'], 0.001);
-        $this->assertEqualsWithDelta((19 - 14.2) / 2, $geo['zoneY'], 0.001);
+        $this->assertEqualsWithDelta((18 - 14.2) / 2, $geo['zoneY'], 0.001);
         // Code pass dans la zone, à droite du QR, et la zone suit les marges standard
         $this->assertEqualsWithDelta($geo['zoneX'] + 0.25 + 13.7 + Pdf::PAX_GAP, $geo['codeX'], 0.001);
         $this->assertEqualsWithDelta(
@@ -322,6 +322,6 @@ class LotTemplateIntegrationTest extends TestCase
             $geo['zoneW'], 0.001
         );
         $this->assertLessThanOrEqual($geo['zoneX'] + $geo['zoneW'], $geo['codeX'] + $geo['codeW']);
-        $this->assertLessThanOrEqual(19, $geo['zoneY'] + $geo['zoneH']);
+        $this->assertLessThanOrEqual(18, $geo['zoneY'] + $geo['zoneH']);
     }
 }

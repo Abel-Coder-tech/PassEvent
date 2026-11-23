@@ -99,7 +99,7 @@
                                         <option value="v1">VIP (18×7)</option>
                                         <option value="v2">VIP 2 (9,9×7)</option>
                                         <option value="a5">A5 (21 × 14,8)</option>
-                                        <option value="br">Bracelet (22,2×1,9)</option>
+                                        <option value="br">Bracelet (22×1,8)</option>
                                         <option value="custom">Personnalisé (dimensions sur mesure)</option>
                                     </select>
                                     <div class="champ-erreur" id="err_format">@error('format'){{ $message }}@enderror</div>

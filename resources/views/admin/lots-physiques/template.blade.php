@@ -575,7 +575,7 @@
                             </div>
                             <div class="help-alert mb-2">
                                 <i class="bi bi-smartwatch mt-1"></i>
-                                <span><strong>Bracelet :</strong> image de 22,2 × 1,9 cm (2622 × 224 px en 300 DPI), 10 bracelets par A4 paysage, calés à gauche. Chaque bracelet fait 25,2 cm : le visuel puis 3 cm blancs à droite pour le pliage. La zone QR fait 1,90 × 1,42 cm : comme sur les tickets, avec le code pass dedans, tourné à la verticale à droite du QR. Imprimez le PDF à 100 % (taille réelle), sans « ajuster à la page ».</span>
+                                <span><strong>Bracelet :</strong> image de 22 × 1,8 cm (2598 × 213 px en 300 DPI), 10 bracelets par A4 paysage, calés à gauche. Chaque bracelet fait 25 cm : le visuel puis 3 cm blancs à droite pour le pliage. La zone QR fait 1,90 × 1,42 cm : comme sur les tickets, avec le code pass dedans, tourné à la verticale à droite du QR. Imprimez le PDF à 100 % (taille réelle), sans « ajuster à la page ».</span>
                             </div>
                             <div class="help-alert mb-0">
                                 <i class="bi bi-lightbulb-fill mt-1"></i>
