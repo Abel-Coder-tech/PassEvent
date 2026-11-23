@@ -130,7 +130,15 @@ class Evenement extends Model
     // Événements visibles du public : exclut les événements internes du super admin
     public function scopeVisiblesPublic(Builder $query): Builder
     {
-        return $query->where('interne', false);
+        // Organisateur à la corbeille : ses événements disparaissent du public
+        return $query->where('interne', false)
+            ->whereHas('user', fn (Builder $u) => $u->whereNull('users.deleted_at'));
+    }
+
+    // Organisateur placé dans la corbeille
+    public function organisateurALaCorbeille(): bool
+    {
+        return (bool) $this->user?->trashed();
     }
 
     // Auteur affiché d'un événement interne (« Prénom Nom »)
@@ -233,7 +241,7 @@ class Evenement extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function tarifs(): HasMany

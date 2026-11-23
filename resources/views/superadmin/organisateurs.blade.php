@@ -36,6 +36,10 @@
                     <option value="bloque" {{ request('statut') === 'bloque' ? 'selected' : '' }}>Bloqué</option>
                     <option value="rejete" {{ request('statut') === 'rejete' ? 'selected' : '' }}>Rejeté</option>
                 </select>
+                @php($nbCorbeille = \App\Models\User::onlyTrashed()->where('role', 'admin')->count())
+                <a href="{{ route('superadmin.organisateurs.corbeille') }}" class="btn btn-sm" style="background:#f1f2f6;border:1px solid #e3e6ed;color:#555;border-radius:8px;font-size:0.8rem;" title="Organisateurs supprimés, restaurables">
+                    <i class="bi bi-trash3 me-1"></i>Corbeille @if($nbCorbeille)<span class="badge rounded-pill" style="background:var(--sa-danger);">{{ $nbCorbeille }}</span>@endif
+                </a>
                 <span class="text-muted text-nowrap" style="font-size:0.8rem;"><span id="organisateurs-count">{{ $organisateurs->total() }}</span> total</span>
             </div>
         </div>

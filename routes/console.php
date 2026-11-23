@@ -21,3 +21,5 @@ Schedule::command('tickets:corriger-operateurs')->hourly();
 Schedule::command('affiliations:liberer-commissions')->hourly();
 Schedule::command('sanctum:prune-expired --hours=24')->daily();
 Schedule::command('ventes:purger-idempotences')->daily();
+// Sauvegarde de la base chaque nuit à 3 h (14 jours conservés), en plus de celles de l'hébergeur
+Schedule::command('paxevent:sauvegarder-base')->dailyAt('03:00')->withoutOverlapping(60);

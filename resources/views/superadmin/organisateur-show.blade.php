@@ -583,7 +583,7 @@
                         <button type="submit" class="sa-btn sa-btn-success"><i class="bi bi-play-fill"></i> Réactiver</button>
                     </form>
                 @endif
-                <form action="{{ route('superadmin.organisateurs.supprimer', $user) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $user->nom }} ? Cette action est irréversible.')">
+                <form action="{{ route('superadmin.organisateurs.supprimer', $user) }}" method="POST" onsubmit="return confirm('Mettre {{ $user->nom }} à la corbeille ? Il ne pourra plus se connecter et ses événements seront masqués. Vous pourrez le restaurer depuis la corbeille.')">
                     @csrf
                     <button type="submit" class="sa-btn sa-btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
                 </form>

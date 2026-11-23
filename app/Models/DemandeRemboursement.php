@@ -30,7 +30,7 @@ class DemandeRemboursement extends Model
 
     public function organisateur(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'organisateur_id');
+        return $this->belongsTo(User::class, 'organisateur_id')->withTrashed();
     }
 
     public function evenement(): BelongsTo
@@ -45,6 +45,6 @@ class DemandeRemboursement extends Model
 
     public function traiteePar(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'traitee_par');
+        return $this->belongsTo(User::class, 'traitee_par')->withTrashed();
     }
 }

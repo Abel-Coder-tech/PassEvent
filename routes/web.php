@@ -136,6 +136,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs/{user}/rejeter', [SuperAdminController::class, 'rejeterOrganisateur'])->name('organisateurs.rejeter');
         Route::post('/organisateurs/{user}/corrections', [SuperAdminController::class, 'demanderCorrectionsOrganisateur'])->name('organisateurs.corrections');
         Route::post('/organisateurs/{user}/supprimer', [SuperAdminController::class, 'supprimerOrganisateur'])->name('organisateurs.supprimer');
+        Route::get('/organisateurs-corbeille', [SuperAdminController::class, 'corbeilleOrganisateurs'])->name('organisateurs.corbeille');
+        Route::post('/organisateurs-corbeille/{id}/restaurer', [SuperAdminController::class, 'restaurerOrganisateur'])->whereNumber('id')->name('organisateurs.restaurer');
+        Route::post('/organisateurs-corbeille/{id}/supprimer-definitivement', [SuperAdminController::class, 'supprimerDefinitivementOrganisateur'])->whereNumber('id')->name('organisateurs.supprimer-definitivement');
         Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
         Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
         Route::get('/organisateurs/{user}/contrat', [SuperAdminController::class, 'voirContrat'])->name('organisateurs.contrat');

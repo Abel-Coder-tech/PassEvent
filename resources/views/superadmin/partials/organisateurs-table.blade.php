@@ -49,7 +49,7 @@
                                 @csrf
                                 <button type="submit" class="sa-btn sa-btn-sm sa-btn-warning" title="Suspendre"><i class="bi bi-pause-fill"></i></button>
                             </form>
-                            <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
+                            <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Mettre {{ $org->nom }} à la corbeille ? Il ne pourra plus se connecter et ses événements seront masqués. Vous pourrez le restaurer depuis la corbeille.')">
                                 @csrf
                                 <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                             </form>
@@ -58,12 +58,12 @@
                                 @csrf
                                 <button type="submit" class="sa-btn sa-btn-sm sa-btn-success" title="Réactiver"><i class="bi bi-play-fill"></i></button>
                             </form>
-                            <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
+                            <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Mettre {{ $org->nom }} à la corbeille ? Il ne pourra plus se connecter et ses événements seront masqués. Vous pourrez le restaurer depuis la corbeille.')">
                                 @csrf
                                 <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                             </form>
                         @else
-                            <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement {{ $org->nom }} ? Cette action est irréversible.')">
+                            <form action="{{ route('superadmin.organisateurs.supprimer', $org) }}" method="POST" class="d-inline" onsubmit="return confirm('Mettre {{ $org->nom }} à la corbeille ? Il ne pourra plus se connecter et ses événements seront masqués. Vous pourrez le restaurer depuis la corbeille.')">
                                 @csrf
                                 <button type="submit" class="sa-btn sa-btn-sm sa-btn-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
                             </form>

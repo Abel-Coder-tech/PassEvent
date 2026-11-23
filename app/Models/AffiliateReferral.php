@@ -31,7 +31,7 @@ class AffiliateReferral extends Model
 
     public function organisateur(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'organisateur_id');
+        return $this->belongsTo(User::class, 'organisateur_id')->withTrashed();
     }
 
     public function premierEvenement(): BelongsTo

@@ -1233,7 +1233,7 @@ class SuperAdminController extends Controller
             ],
         ]);
 
-        $membre->delete();
+        $membre->mettreALaCorbeille(auth('superadmin')->user()?->email);
 
         return back()->with('success', 'Membre supprime.');
     }
@@ -1563,7 +1563,9 @@ class SuperAdminController extends Controller
             'lot_physique_auto' => $b('Lot physique auto', 'var(--sa-primary)'),
             'lot_evenement_interne' => $b('Lot événement interne', 'var(--sa-primary)'),
 
-            'organisateur_supprime' => $a('Organisateur supprimé', 'var(--sa-danger)'),
+            'organisateur_supprime' => $a('Organisateur mis à la corbeille', 'var(--sa-danger)'),
+            'organisateur_restaure' => $a('Organisateur restauré', 'var(--sa-success)'),
+            'organisateur_supprime_definitivement' => $a('Organisateur supprimé définitivement', 'var(--sa-danger)'),
             'organisateur_approuve' => $a('Organisateur approuvé', 'var(--sa-success)'),
             'organisateur_rejete' => $a('Organisateur rejeté', 'var(--sa-danger)'),
             'organisateur_suspendu' => $a('Organisateur suspendu', 'var(--sa-danger)'),
@@ -2320,16 +2322,71 @@ class SuperAdminController extends Controller
             return back()->with('error', 'Action non autorisée.'); // Seuls les admins peuvent être supprimés
         }
 
-        $user->delete(); // Suppression en cascade
+        // Corbeille : le compte est masqué et ne peut plus se connecter, mais rien n'est
+        // effacé (événements, ventes, retraits). Restaurable depuis la corbeille.
+        $user->mettreALaCorbeille(auth('superadmin')->user()?->email);
 
         Log::create([ // Log de suppression
             'type_operation' => 'organisateur_supprime',
             'ticket_id' => null,
-            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email]),
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'nom' => $user->nom, 'mode' => 'corbeille']),
             'ip' => request()->ip(),
         ]);
 
         return redirect()->route('superadmin.organisateurs')
+            ->with('success', "Organisateur {$user->nom} placé dans la corbeille. Vous pouvez le restaurer depuis la corbeille.");
+    }
+
+    // Corbeille des comptes organisateurs supprimés
+    public function corbeilleOrganisateurs()
+    {
+        $comptes = User::onlyTrashed()
+            ->where('role', 'admin')
+            ->withCount('evenements')
+            ->orderByDesc('deleted_at')
+            ->paginate(PerPage::resolve());
+
+        return view('superadmin.organisateurs-corbeille', compact('comptes'));
+    }
+
+    // Restaure un organisateur de la corbeille, avec son statut d'avant
+    public function restaurerOrganisateur(int $id)
+    {
+        $user = User::onlyTrashed()->where('role', 'admin')->findOrFail($id);
+        $user->restaurerDeLaCorbeille();
+
+        Log::create([
+            'type_operation' => 'organisateur_restaure',
+            'ticket_id' => null,
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'nom' => $user->nom]),
+            'ip' => request()->ip(),
+        ]);
+
+        return redirect()->route('superadmin.organisateurs.corbeille')
+            ->with('success', "Organisateur {$user->nom} restauré avec toutes ses données.");
+    }
+
+    // Suppression définitive (irréversible) d'un compte déjà dans la corbeille
+    public function supprimerDefinitivementOrganisateur(Request $request, int $id)
+    {
+        $this->exigerSuperAdmin();
+        $user = User::onlyTrashed()->where('role', 'admin')->findOrFail($id);
+
+        $request->validate(['confirmation' => 'required|in:'.$user->email], [
+            'confirmation.in' => 'Tapez exactement l\'email du compte pour confirmer.',
+            'confirmation.required' => 'Tapez l\'email du compte pour confirmer.',
+        ]);
+
+        Log::create([
+            'type_operation' => 'organisateur_supprime_definitivement',
+            'ticket_id' => null,
+            'details' => $this->avecActeur(['user_id' => $user->id, 'email' => $user->email, 'nom' => $user->nom]),
+            'ip' => request()->ip(),
+        ]);
+
+        $user->forceDelete(); // efface aussi ses événements, ventes, retraits… (cascade)
+
+        return redirect()->route('superadmin.organisateurs.corbeille')
             ->with('success', "Organisateur {$user->nom} supprimé définitivement.");
     }
 
@@ -2445,6 +2502,7 @@ class SuperAdminController extends Controller
             ->whereIn('type_operation', [
                 'organisateur_approuve', 'organisateur_rejete', 'organisateur_suspendu',
                 'organisateur_reactive', 'organisateur_corrections', 'organisateur_supprime',
+                'organisateur_restaure',
             ])->orderBy('created_at', 'desc')->limit(12)->get()]);
     }
 

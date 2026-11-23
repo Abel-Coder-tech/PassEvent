@@ -18,6 +18,9 @@ class EventVisibilityTest extends TestCase
         if (! Schema::hasTable('users')) {
             Schema::create('users', function (Blueprint $table) {
                 $table->id();
+                $table->softDeletes();
+                $table->string('statut_avant_suppression', 30)->nullable();
+                $table->string('supprime_par')->nullable();
                 $table->string('nom');
                 $table->string('email')->unique();
                 $table->string('mot_de_passe');

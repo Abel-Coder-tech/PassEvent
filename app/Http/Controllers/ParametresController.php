@@ -146,7 +146,7 @@ class ParametresController extends Controller
         }
 
         Auth::logout();
-        $user->delete();
+        $user->mettreALaCorbeille($user->email); // corbeille : restaurable par PaxEvent
 
         return redirect('/login')->with('success', 'Votre compte a ete supprime.');
     }

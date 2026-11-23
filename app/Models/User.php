@@ -4,13 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+
+    // Statut d'un compte placé dans la corbeille (invisible, connexion impossible)
+    public const STATUT_SUPPRIME = 'supprime';
+
+    /**
+     * Met le compte à la corbeille : rien n'est effacé (événements, ventes, retraits…),
+     * le compte est masqué et ne peut plus se connecter. Restaurable avec restaurerDeLaCorbeille().
+     */
+    public function mettreALaCorbeille(?string $par = null): void
+    {
+        $this->statut_avant_suppression = $this->statut;
+        $this->statut = self::STATUT_SUPPRIME;
+        $this->supprime_par = $par;
+        $this->save();
+        $this->tokens()->delete(); // déconnecte les sessions API éventuelles
+        $this->delete();
+    }
+
+    // Restaure un compte de la corbeille avec le statut qu'il avait avant
+    public function restaurerDeLaCorbeille(): void
+    {
+        $this->restore();
+        $this->statut = $this->statut_avant_suppression ?: 'suspendu';
+        $this->statut_avant_suppression = null;
+        $this->supprime_par = null;
+        $this->save();
+    }
 
     public const ROLES_EQUIPE = [
         'validateur' => [

@@ -146,6 +146,7 @@ class EvenementPublicController extends Controller
     public function show(Evenement $evenement, Request $request)
     {
         abort_if($evenement->interne, 404); // Événement interne : jamais public
+        abort_if($evenement->organisateurALaCorbeille(), 404); // Organisateur à la corbeille
         // SEO : redirection 301 de l'ancien format /evenements/{id} vers /evenements/{slug}.
         // On lit le segment d'URL (et non request()->route('evenement') qui contient le modèle lié).
         $segment = (string) request()->segment(2);
@@ -190,6 +191,7 @@ class EvenementPublicController extends Controller
     public function achat(Evenement $evenement, Request $request, PaymentMonitoringService $paymentMonitoring)
     {
         abort_if($evenement->interne, 404); // Événement interne : jamais public
+        abort_if($evenement->organisateurALaCorbeille(), 404); // Organisateur à la corbeille
         if ($evenement->statut !== 'publié') {
             abort(404);
         }
@@ -448,6 +450,7 @@ class EvenementPublicController extends Controller
     public function alerterOuverture(Request $request, Evenement $evenement)
     {
         abort_if($evenement->interne, 404); // Événement interne : jamais public
+        abort_if($evenement->organisateurALaCorbeille(), 404); // Organisateur à la corbeille
         abort_if($evenement->statut !== 'publié', 404);
 
         $validated = $request->validate([
@@ -477,6 +480,7 @@ class EvenementPublicController extends Controller
     public function inscrireListeAttente(Request $request, Evenement $evenement)
     {
         abort_if($evenement->interne, 404); // Événement interne : jamais public
+        abort_if($evenement->organisateurALaCorbeille(), 404); // Organisateur à la corbeille
         abort_if($evenement->statut !== 'publié', 404);
 
         if ($evenement->billetteriePasOuverte()) {
@@ -581,6 +585,7 @@ class EvenementPublicController extends Controller
     public function contacterOrganisateur(Evenement $evenement, Request $request)
     {
         abort_if($evenement->interne, 404); // Événement interne : jamais public
+        abort_if($evenement->organisateurALaCorbeille(), 404); // Organisateur à la corbeille
         if ($evenement->statut !== 'publié') {
             abort(404); // Événement non publié
         }
@@ -648,7 +653,7 @@ class EvenementPublicController extends Controller
     {
         $lien = \App\Models\AffiliateEventLink::with('evenement.dates')->where('code', $code)->firstOrFail();
         $evenement = $lien->evenement;
-        if (! $evenement || $evenement->interne || ! in_array($evenement->statut, ['publié', 'terminé'], true)) {
+        if (! $evenement || $evenement->interne || $evenement->organisateurALaCorbeille() || ! in_array($evenement->statut, ['publié', 'terminé'], true)) {
             abort(404);
         }
 
