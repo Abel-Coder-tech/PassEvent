@@ -13,8 +13,13 @@ class LotPhysiqueTemplatePdfService
     // Marge externe autour du bloc de tickets
     public const MARGE = 4; // mm
 
-    // Gouttière (zone de découpe) entre les tickets
-    public const GOUTTIERE = 2; // mm
+    // Gouttière (zone de découpe) entre les tickets : la ligne de coupe est au milieu
+    public const GOUTTIERE = 1; // mm
+
+    // Bracelet : le code pass vertical est dans la zone, à droite du QR
+    // (mêmes valeurs que le code sous le QR des autres formats, tournées)
+    public const CODE_V_ECART = self::PAX_GAP; // mm  entre le QR et le code
+    public const CODE_V_LARGEUR = self::PAX_LINE_HEIGHT; // mm
 
     // Marges internes de la zone blanche qui entoure le QR : haut 0,25 — gauche/droite
     // = marge du haut (0,2 au minimum). Le code pass est dans la zone, sous le QR :
@@ -57,6 +62,17 @@ class LotPhysiqueTemplatePdfService
     }
 
     /**
+     * Plus grand QR dont la zone blanche (avec le code pass) tient dans le ticket.
+     */
+    public static function qrMaxPour(float $slotW, float $slotH): float
+    {
+        $parHauteur = $slotH - (self::QR_TOP + self::PAX_GAP + self::PAX_LINE_HEIGHT + self::PAX_BOTTOM);
+        $parLargeur = $slotW - 2 * self::padX();
+
+        return round(max(2, min($parHauteur, $parLargeur)), 1);
+    }
+
+    /**
      * Géométrie (mm, relative au ticket) de la zone blanche et du code pass.
      *
      * La zone entoure le QR avec des marges identiques (0,25 mm) et le code pass
@@ -68,8 +84,12 @@ class LotPhysiqueTemplatePdfService
      * @param  float|null  $qrY  position du QR, ou null pour centrer
      * @return array<string, float>
      */
-    public static function geometry(?float $qrSize, ?float $qrX, ?float $qrY, float $slotW, float $slotH): array
+    public static function geometry(?float $qrSize, ?float $qrX, ?float $qrY, float $slotW, float $slotH, ?array $format = null): array
     {
+        if (! empty($format['zone_fixe'])) {
+            return self::geometryZoneFixe($format, $qrX, $qrY, $slotW, $slotH);
+        }
+
         $padX = self::padX();
         $padTop = self::QR_TOP;
         $gap = self::PAX_GAP;
@@ -79,6 +99,8 @@ class LotPhysiqueTemplatePdfService
             $qrSize = self::qrMin();
         }
         $qrSize = round(max((float) $qrSize, 2), 2);
+        // La zone blanche (QR + marges + code pass) ne peut pas dépasser le ticket
+        $qrSize = min($qrSize, self::qrMaxPour($slotW, $slotH));
 
         $zoneW = round($qrSize + 2 * $padX, 2);
         $bandH = round(self::PAX_LINE_HEIGHT + self::PAX_BOTTOM, 2);
@@ -106,6 +128,87 @@ class LotPhysiqueTemplatePdfService
     }
 
     /**
+     * Géométrie d'un format à zone QR fixe (bracelet) : la zone standard tournée,
+     * QR à gauche et code pass vertical à l'intérieur, à droite du QR.
+     */
+    private static function geometryZoneFixe(array $format, ?float $qrX, ?float $qrY, float $slotW, float $slotH): array
+    {
+        $zoneW = (float) $format['zone_fixe']['largeur'];
+        $zoneH = (float) $format['zone_fixe']['hauteur'];
+        $qrSize = (float) $format['qr_defaut'];
+        $padTop = round(($zoneH - $qrSize) / 2, 2);
+        $padX = $padTop; // même marge à gauche qu'en haut et en bas
+
+        $codeV = ! empty($format['code_vertical']);
+        $encombrement = $zoneW;
+
+        [$defX, $defY] = LotPhysique::qrPositionDefaut($format, $qrSize);
+        $zoneX = min(max(($qrX ?? $defX) - $padX, 0.0), max($slotW - $encombrement, 0.0));
+        $zoneY = min(max(($qrY ?? $defY) - $padTop, 0.0), max($slotH - $zoneH, 0.0));
+
+        return [
+            'qrSize' => $qrSize,
+            'padX' => $padX,
+            'padTop' => $padTop,
+            'zoneX' => round($zoneX, 2),
+            'zoneY' => round($zoneY, 2),
+            'zoneW' => $zoneW,
+            'zoneH' => $zoneH,
+            'gap' => 0.0,
+            'bandTop' => $zoneH,
+            'paxBandH' => 0.0,
+            'paxLineH' => self::PAX_LINE_HEIGHT,
+            'paxFont' => self::PAX_FONT,
+            'paxBottom' => 0.0,
+            'codeVertical' => $codeV,
+            'codeX' => round($zoneX + $padX + $qrSize + self::CODE_V_ECART, 2),
+            'codeY' => round($zoneY, 2),
+            'codeW' => self::CODE_V_LARGEUR,
+            'codeH' => $zoneH,
+        ];
+    }
+
+    /**
+     * Code pass écrit à la verticale (lu de bas en haut) en PNG transparent :
+     * DomPDF gère mal le texte pivoté, on le dessine donc avec GD.
+     */
+    public static function codeVerticalDataUri(string $code, float $wMm, float $hMm): ?string
+    {
+        $font = base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ttf');
+        if (! function_exists('imagettftext') || ! is_file($font)) {
+            return null;
+        }
+
+        $dpi = 600;
+        $w = (int) round($wMm / 25.4 * $dpi);
+        $h = (int) round($hMm / 25.4 * $dpi);
+
+        // Taille de police ajustée pour que le texte tienne dans la bande
+        $box = imagettfbbox(100, 0, $font, $code);
+        $longueur = abs($box[2] - $box[0]);
+        $epaisseur = abs($box[1] - $box[7]);
+        $taille = 100 * min(($h * 0.9) / $longueur, ($w * 0.72) / $epaisseur);
+
+        $box = imagettfbbox($taille, 0, $font, $code);
+        $longueur = abs($box[2] - $box[0]);
+        $epaisseur = abs($box[1] - $box[7]);
+
+        $im = imagecreatetruecolor($w, $h);
+        imagesavealpha($im, true);
+        imagefill($im, 0, 0, imagecolorallocatealpha($im, 0, 0, 0, 127));
+        // Angle 90 : la ligne de base est verticale, le texte monte de bas en haut
+        $x = (int) round(($w + $epaisseur) / 2 - abs($box[1]));
+        $y = (int) round(($h + $longueur) / 2);
+        imagettftext($im, $taille, 90, $x, $y, imagecolorallocate($im, 0, 0, 0), $font, $code);
+
+        ob_start();
+        imagepng($im);
+        $png = ob_get_clean();
+
+        return 'data:image/png;base64,'.base64_encode($png);
+    }
+
+    /**
      * Détails du format d'un lot (prédéfini ou sur mesure, sinon format par défaut).
      */
     public static function formatDetails(LotPhysique $lot): array
@@ -126,14 +229,15 @@ class LotPhysiqueTemplatePdfService
         $pageW = $orientation === 'landscape' ? 297 : 210;
         $pageH = $orientation === 'landscape' ? 210 : 297;
 
-        $slotW = $format['largeur'];
+        // Le slot peut être plus large que le visuel (bracelet : bande blanche de pliage à droite)
+        $slotW = $format['largeur_totale'] ?? $format['largeur'];
         $slotH = $format['hauteur'];
         $cols = $format['colonnes'];
         $rows = $format['lignes'];
 
         $blockW = $cols * $slotW + ($cols - 1) * self::GOUTTIERE;
         $blockH = $rows * $slotH + ($rows - 1) * self::GOUTTIERE;
-        $startX = ($pageW - $blockW) / 2;
+        $startX = ($format['alignement'] ?? null) === 'gauche' ? self::MARGE : ($pageW - $blockW) / 2;
         $startY = max(($pageH - $blockH) / 2, self::MARGE);
 
         $positions = [];
@@ -161,6 +265,7 @@ class LotPhysiqueTemplatePdfService
             'page_largeur' => $pageW,
             'page_hauteur' => $pageH,
             'slot_largeur' => $slotW,
+            'visuel_largeur' => $format['largeur'], // partie imprimée (image + QR)
             'slot_hauteur' => $slotH,
             'colonnes' => $cols,
             'lignes' => $rows,
@@ -171,6 +276,9 @@ class LotPhysiqueTemplatePdfService
             'bloc_gauche' => round($startX, 2),
             'bloc_haut' => round($startY, 2),
             'bloc_largeur' => round($blockW, 2),
+            // Étendue des lignes de coupe horizontales : le bloc, ou toute la largeur de la feuille
+            'coupe_gauche' => ! empty($format['coupe_pleine_largeur']) ? 0 : round($startX, 2),
+            'coupe_largeur' => ! empty($format['coupe_pleine_largeur']) ? $pageW : round($blockW, 2),
             'bloc_hauteur' => round($blockH, 2),
             'marge_gauche' => round($startX, 2),
             'marge_bas' => round($pageH - ($startY + $blockH), 2),
@@ -198,18 +306,24 @@ class LotPhysiqueTemplatePdfService
         $zoom = self::zoomEffectif($lot);
 
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
-        $qrX = $lot->qr_x ?? round(($layout['slot_largeur'] - $qrSize) / 2);
-        $qrY = $lot->qr_y ?? round(($layout['slot_hauteur'] - $qrSize) / 2);
-        $geo = self::geometry($qrSize, $qrX, $qrY, $layout['slot_largeur'], $layout['slot_hauteur']);
+        [$defX, $defY] = LotPhysique::qrPositionDefaut($format, (float) $qrSize);
+        $qrX = $lot->qr_x ?? $defX;
+        $qrY = $lot->qr_y ?? $defY;
+        $geo = self::geometry($qrSize, $qrX, $qrY, $layout['visuel_largeur'], $layout['slot_hauteur'], $format);
+
+        // Bracelet : code pass vertical dessiné en image pour chaque ticket
+        $codesVerticaux = ! empty($geo['codeVertical'])
+            ? $tickets->mapWithKeys(fn (Ticket $t) => [$t->id => self::codeVerticalDataUri($t->code_unique, $geo['codeW'], $geo['codeH'])])
+            : collect();
 
         // Favicon PaxEvent incrusté au centre du QR (même principe que le ticket en ligne).
         $faviconDataUri = TicketPdfService::faviconDataUri();
         $faviconSize = round($geo['qrSize'] * 0.20, 2);
 
         // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
-        $imgW = $layout['slot_largeur'] * $zoom / 100;
+        $imgW = $layout['visuel_largeur'] * $zoom / 100;
         $imgH = $templateW > 0 ? $imgW * $templateH / $templateW : $layout['slot_hauteur'] * $zoom / 100;
-        $imgLeft = ($layout['slot_largeur'] - $imgW) / 2;
+        $imgLeft = ($layout['visuel_largeur'] - $imgW) / 2;
         $imgTop = ($layout['slot_hauteur'] - $imgH) / 2;
 
         $pageLargeur = $layout['page_largeur'];
@@ -233,7 +347,7 @@ class LotPhysiqueTemplatePdfService
             'layout', 'pageLargeur', 'pageHauteur', 'format',
             'signBottom', 'signFont', 'signFontPt', 'paxFontPt', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop',
-            'faviconDataUri', 'faviconSize'
+            'faviconDataUri', 'faviconSize', 'codesVerticaux'
         ), $geo));
         $pdf->setPaper('a4', $layout['orientation']);
         $pdf->setOption('dpi', 300);
@@ -256,27 +370,33 @@ class LotPhysiqueTemplatePdfService
         $zoom = self::zoomEffectif($lot);
 
         $format = self::formatDetails($lot);
-        $slotW = $format['largeur'];
+        // Ticket complet (bracelet : visuel + bande blanche de pliage) et partie visuelle
+        $slotW = $format['largeur_totale'] ?? $format['largeur'];
+        $visuelW = $format['largeur'];
         $slotH = $format['hauteur'];
 
-        // Image : taille = slot × zoom, centrée, recadrée par le débordement caché
-        $imgW = $slotW * $zoom / 100;
+        // Image : taille = visuel × zoom, centrée sur le visuel, recadrée par le débordement caché
+        $imgW = $visuelW * $zoom / 100;
         $imgH = $templateW > 0 ? $imgW * $templateH / $templateW : $slotH * $zoom / 100;
-        $imgLeft = ($slotW - $imgW) / 2;
+        $imgLeft = ($visuelW - $imgW) / 2;
         $imgTop = ($slotH - $imgH) / 2;
 
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
-        $qrX = $lot->qr_x ?? round(($slotW - $qrSize) / 2);
-        $qrY = $lot->qr_y ?? round(($slotH - $qrSize) / 2);
-        $geo = self::geometry($qrSize, $qrX, $qrY, $slotW, $slotH);
+        [$defX, $defY] = LotPhysique::qrPositionDefaut($format, (float) $qrSize);
+        $qrX = $lot->qr_x ?? $defX;
+        $qrY = $lot->qr_y ?? $defY;
+        $geo = self::geometry($qrSize, $qrX, $qrY, $visuelW, $slotH, $format);
+        $codeVerticalUri = ! empty($geo['codeVertical'])
+            ? self::codeVerticalDataUri($ticket->code_unique, $geo['codeW'], $geo['codeH'])
+            : null;
 
         $faviconDataUri = TicketPdfService::faviconDataUri();
         $faviconSize = round($geo['qrSize'] * 0.20, 2);
 
         $html = view('tickets.pdf.ticket-preview', array_merge(compact(
-            'templateUrl', 'qrDataUri', 'slotW', 'slotH', 'zoom',
+            'templateUrl', 'qrDataUri', 'slotW', 'visuelW', 'slotH', 'zoom',
             'imgW', 'imgH', 'imgLeft', 'imgTop',
-            'faviconDataUri', 'faviconSize'
+            'faviconDataUri', 'faviconSize', 'codeVerticalUri'
         ), $geo))->with('codeUnique', $ticket->code_unique)->render();
 
         $pdf = Pdf::loadHtml($html);

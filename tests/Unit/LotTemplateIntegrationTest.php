@@ -172,6 +172,19 @@ class LotTemplateIntegrationTest extends TestCase
         $this->assertNull(LotPhysique::formatPersonnalise(100, 0));
     }
 
+    public function test_format_personnalise_conserve_les_dixiemes_de_millimetre(): void
+    {
+        $details = LotPhysique::formatPersonnalise(250.5, 25.5);
+
+        $this->assertSame(250.5, $details['largeur']);
+        $this->assertSame(25.5, $details['hauteur']);
+        $this->assertSame('Personnalisé (250.5×25.5)', $details['label']);
+
+        $layout = Pdf::layoutPage($details);
+        $this->assertSame(1, $layout['colonnes']);
+        $this->assertSame(7, $layout['lignes']);
+    }
+
     public function test_format_personnalise_portrait_sur_page_portrait(): void
     {
         $details = LotPhysique::formatPersonnalise(148, 210);
@@ -266,5 +279,49 @@ class LotTemplateIntegrationTest extends TestCase
         $this->assertSame($cols, $php['colonnes']);
         $this->assertSame($rows, $php['lignes']);
         $this->assertSame($orientation, $php['orientation']);
+    }
+
+    public function test_bracelet_dix_par_page_a4_paysage_avec_un_mm_entre_deux(): void
+    {
+        $layout = Pdf::layoutPage($this->formats()['br']);
+
+        $this->assertSame('landscape', $layout['orientation']);
+        $this->assertSame(10, $layout['par_page']);
+        $this->assertCount(9, $layout['coupes_h']);
+        // Les lignes de coupe traversent toute la feuille
+        $this->assertSame(0, $layout['coupe_gauche']);
+        $this->assertSame(297, $layout['coupe_largeur']);
+        // 25,2 cm au total (22,2 de visuel + 3 cm blancs pour le pliage), calé à gauche
+        $this->assertSame(252, $layout['slot_largeur']);
+        $this->assertSame(222, $layout['visuel_largeur']);
+        $this->assertEqualsWithDelta(Pdf::MARGE, $layout['positions'][0]['x'], 0.001);
+        // 10 × 19 mm + 9 × 1 mm = 199 mm, dans les 202 mm utiles de l'A4 paysage
+        $this->assertEqualsWithDelta(199, $layout['bloc_hauteur'], 0.001);
+        $this->assertGreaterThanOrEqual(Pdf::MARGE, $layout['bloc_haut']);
+        $this->assertEqualsWithDelta(1, $layout['positions'][1]['y'] - $layout['positions'][0]['y'] - 19, 0.001);
+        // La ligne de coupe tombe au milieu du millimètre entre deux bracelets
+        $this->assertEqualsWithDelta($layout['positions'][1]['y'] - 0.5, $layout['coupes_h'][0], 0.001);
+    }
+
+    public function test_bracelet_zone_qr_fixe_et_code_pass_vertical(): void
+    {
+        $br = $this->formats()['br'];
+        // Même avec une taille demandée différente, la zone reste 19 × 14,2 mm
+        $geo = Pdf::geometry(40, null, null, 222, 19, $br);
+
+        $this->assertSame(19.0, $geo['zoneW']);
+        $this->assertSame(14.2, $geo['zoneH']);
+        $this->assertSame(13.7, $geo['qrSize']);
+        $this->assertTrue($geo['codeVertical']);
+        $this->assertEqualsWithDelta(10.2 - 0.25, $geo['zoneX'], 0.001);
+        $this->assertEqualsWithDelta((19 - 14.2) / 2, $geo['zoneY'], 0.001);
+        // Code pass dans la zone, à droite du QR, et la zone suit les marges standard
+        $this->assertEqualsWithDelta($geo['zoneX'] + 0.25 + 13.7 + Pdf::PAX_GAP, $geo['codeX'], 0.001);
+        $this->assertEqualsWithDelta(
+            Pdf::QR_TOP + 13.7 + Pdf::PAX_GAP + Pdf::PAX_LINE_HEIGHT + Pdf::PAX_BOTTOM,
+            $geo['zoneW'], 0.001
+        );
+        $this->assertLessThanOrEqual($geo['zoneX'] + $geo['zoneW'], $geo['codeX'] + $geo['codeW']);
+        $this->assertLessThanOrEqual(19, $geo['zoneY'] + $geo['zoneH']);
     }
 }

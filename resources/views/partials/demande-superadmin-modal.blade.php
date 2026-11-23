@@ -98,18 +98,20 @@
                                         <option value="s2">Standard 2 (14×7)</option>
                                         <option value="v1">VIP (18×7)</option>
                                         <option value="v2">VIP 2 (9,9×7)</option>
+                                        <option value="a5">A5 (21 × 14,8)</option>
+                                        <option value="br">Bracelet (22,2×1,9)</option>
                                         <option value="custom">Personnalisé (dimensions sur mesure)</option>
                                     </select>
                                     <div class="champ-erreur" id="err_format">@error('format'){{ $message }}@enderror</div>
                                 </div>
                                 <div class="col-6" id="demande_largeur_group" style="display:none;">
                                     <label class="form-label fw-semibold" style="font-size:0.82rem;">Largeur (mm)</label>
-                                    <input type="number" name="largeur_personnalisee" id="demande_largeur" class="form-control form-control-sm" min="30" max="200">
+                                    <input type="number" name="largeur_personnalisee" id="demande_largeur" class="form-control form-control-sm" min="20" max="289" step="0.1">
                                     <div class="champ-erreur" id="err_largeur_personnalisee">@error('largeur_personnalisee'){{ $message }}@enderror</div>
                                 </div>
                                 <div class="col-6" id="demande_hauteur_group" style="display:none;">
                                     <label class="form-label fw-semibold" style="font-size:0.82rem;">Hauteur (mm)</label>
-                                    <input type="number" name="hauteur_personnalisee" id="demande_hauteur" class="form-control form-control-sm" min="30" max="200">
+                                    <input type="number" name="hauteur_personnalisee" id="demande_hauteur" class="form-control form-control-sm" min="20" max="289" step="0.1">
                                     <div class="champ-erreur" id="err_hauteur_personnalisee">@error('hauteur_personnalisee'){{ $message }}@enderror</div>
                                 </div>
                             </div>

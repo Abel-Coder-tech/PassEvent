@@ -315,8 +315,9 @@ class LotPhysiqueController extends Controller
         $tickets = $lot->tickets()->where('annule', false)->count();
         $format = $lot->formatDetails();
         $qrSize = $lot->qr_size ?? $format['qr_defaut'];
-        $qrX = $lot->qr_x ?? round(($format['largeur'] - $qrSize) / 2);
-        $qrY = $lot->qr_y ?? round(($format['hauteur'] - $qrSize) / 2);
+        [$defX, $defY] = LotPhysique::qrPositionDefaut($format, (float) $qrSize);
+        $qrX = $lot->qr_x ?? $defX;
+        $qrY = $lot->qr_y ?? $defY;
         $formats = array_map(fn ($f) => $f['label'], LotPhysique::FORMATS);
         $formats[LotPhysique::FORMAT_CUSTOM] = 'Personnalisé (dimensions sur mesure)';
 
@@ -325,6 +326,33 @@ class LotPhysiqueController extends Controller
 
     // Sauvegarde du template image + coordonnées QR
     public function saveTemplate(Request $request, LotPhysique $lot)
+    {
+        $reponse = $this->enregistrerTemplate($request, $lot);
+
+        if (! $request->expectsJson()) {
+            return $reponse;
+        }
+
+        // Sauvegarde automatique de l'éditeur : réponse JSON au lieu de la redirection
+        session()->forget('_old_input');
+        if ($erreur = session()->pull('error')) {
+            return response()->json(['message' => $erreur], 422);
+        }
+        if ($erreurs = session()->pull('errors')) {
+            return response()->json(['message' => $erreurs->first()], 422);
+        }
+        session()->forget('success');
+
+        $lot->refresh();
+
+        return response()->json([
+            'message' => 'Enregistré',
+            'template_url' => $lot->template_path ? $lot->template_url : null,
+            'heure' => now()->format('H:i'),
+        ]);
+    }
+
+    private function enregistrerTemplate(Request $request, LotPhysique $lot)
     {
         if ($lot->user_id !== Auth::id()) {
             abort(403);
@@ -341,9 +369,9 @@ class LotPhysiqueController extends Controller
         $hasTemplate = $lot->template_path && Storage::disk('public')->exists($lot->template_path);
 
         $rules = [
-            'format' => ['required', 'in:s1,s2,v1,v2,a5,custom'],
-            'largeur_personnalisee' => 'nullable|numeric|min:1|max:10000',
-            'hauteur_personnalisee' => 'nullable|numeric|min:1|max:10000',
+            'format' => ['required', 'in:s1,s2,v1,v2,a5,br,custom'],
+            'largeur_personnalisee' => 'nullable|numeric|min:20|max:289',
+            'hauteur_personnalisee' => 'nullable|numeric|min:20|max:289',
             'qr_x' => 'nullable|numeric|min:0',
             'qr_y' => 'nullable|numeric|min:0',
             'qr_size' => ['nullable', 'numeric', 'min:1', 'max:10000'],
@@ -371,8 +399,10 @@ class LotPhysiqueController extends Controller
             'template_zoom.max' => 'Le zoom ne peut pas dépasser 150 %.',
             'largeur_personnalisee.numeric' => 'La largeur personnalisée doit être un nombre.',
             'hauteur_personnalisee.numeric' => 'La hauteur personnalisée doit être un nombre.',
-            'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 1 mm.',
-            'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 1 mm.',
+            'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 20 mm (2 cm).',
+            'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 20 mm (2 cm).',
+            'largeur_personnalisee.max' => 'La largeur ne peut pas dépasser 289 mm (feuille A4).',
+            'hauteur_personnalisee.max' => 'La hauteur ne peut pas dépasser 289 mm (feuille A4).',
         ]);
 
         if ($validated['format'] === LotPhysique::FORMAT_CUSTOM) {
@@ -384,20 +414,25 @@ class LotPhysiqueController extends Controller
             }
 
             $validated = array_merge($validated, $request->validate([
-                'largeur_personnalisee' => 'required|numeric|min:1|max:10000',
-                'hauteur_personnalisee' => 'required|numeric|min:1|max:10000',
+                'largeur_personnalisee' => 'required|numeric|min:20|max:289',
+                'hauteur_personnalisee' => 'required|numeric|min:20|max:289',
             ], [
                 'largeur_personnalisee.required' => 'Les dimensions du ticket personnalisé n\'ont pas été calculées depuis l\'image. Veuillez réimporter l\'image du ticket.',
                 'hauteur_personnalisee.required' => 'Les dimensions du ticket personnalisé n\'ont pas été calculées depuis l\'image. Veuillez réimporter l\'image du ticket.',
                 'largeur_personnalisee.numeric' => 'La largeur personnalisée doit être un nombre.',
                 'hauteur_personnalisee.numeric' => 'La hauteur personnalisée doit être un nombre.',
-                'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 1 mm.',
-                'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 1 mm.',
+                'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 20 mm (2 cm).',
+                'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 20 mm (2 cm).',
+                'largeur_personnalisee.max' => 'La largeur ne peut pas dépasser 289 mm (feuille A4).',
+                'hauteur_personnalisee.max' => 'La hauteur ne peut pas dépasser 289 mm (feuille A4).',
             ]));
 
             $formatDef = LotPhysique::formatPersonnalise((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee']);
             if ($formatDef === null) {
                 return back()->withInput()->with('error', 'Dimensions personnalisées invalides.');
+            }
+            if (! LotPhysique::tientSurA4((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee'])) {
+                return back()->withInput()->with('error', 'Ce ticket est plus grand qu\'une feuille A4 (28,9 × 20,2 cm au maximum, marges comprises). Vérifiez la largeur et la hauteur saisies.');
             }
         } else {
             $formatDef = LotPhysique::FORMATS[$validated['format']];
@@ -421,15 +456,19 @@ class LotPhysiqueController extends Controller
         }
 
         // QR code : garde les valeurs du lot si le format n'a pas changé, sinon défauts du format
-        $qrSize = array_key_exists('qr_size', $validated) && $validated['qr_size'] !== null ? (float) $validated['qr_size'] : ($lot->qr_size ?? $formatDef['qr_defaut']);
-        $qrX = array_key_exists('qr_x', $validated) && $validated['qr_x'] !== null ? (int) $validated['qr_x'] : ($lot->qr_x ?? round(($formatDef['largeur'] - $qrSize) / 2));
-        $qrY = array_key_exists('qr_y', $validated) && $validated['qr_y'] !== null ? (int) $validated['qr_y'] : ($lot->qr_y ?? round(($formatDef['hauteur'] - $qrSize) / 2));
+        $qrSize = array_key_exists('qr_size', $validated) && $validated['qr_size'] !== null ? round((float) $validated['qr_size'], 1) : ($lot->qr_size ?? $formatDef['qr_defaut']);
+        $qrX = array_key_exists('qr_x', $validated) && $validated['qr_x'] !== null ? round((float) $validated['qr_x'], 1) : ($lot->qr_x ?? LotPhysique::qrPositionDefaut($formatDef, (float) $qrSize)[0]);
+        $qrY = array_key_exists('qr_y', $validated) && $validated['qr_y'] !== null ? round((float) $validated['qr_y'], 1) : ($lot->qr_y ?? LotPhysique::qrPositionDefaut($formatDef, (float) $qrSize)[1]);
+        // Bracelet : la zone QR a une taille fixe, le QR aussi
+        if (! empty($formatDef['zone_fixe'])) {
+            $qrSize = (float) $formatDef['qr_defaut'];
+        }
         $zoom = isset($validated['template_zoom']) ? (int) $validated['template_zoom'] : ($lot->template_zoom ?? 100);
 
         $lot->update([
             'format' => $validated['format'],
-            'largeur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) round((float) $validated['largeur_personnalisee']) : null,
-            'hauteur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? (int) round((float) $validated['hauteur_personnalisee']) : null,
+            'largeur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? round((float) $validated['largeur_personnalisee'], 1) : null,
+            'hauteur_personnalisee' => $validated['format'] === LotPhysique::FORMAT_CUSTOM ? round((float) $validated['hauteur_personnalisee'], 1) : null,
             'qr_x' => $qrX,
             'qr_y' => $qrY,
             'qr_size' => $qrSize,

@@ -65,12 +65,25 @@
             white-space: nowrap;
             line-height: {{ $paxLineH }}mm;
         }
+        .code-vertical {
+            position: absolute;
+            overflow: hidden;
+        }
+        .code-vertical img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+        }
     </style>
 </head>
 <body>
 <div class="ticket">
     @if ($templateUrl)
-    <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
+    {{-- Visuel recadré à sa largeur : la bande de pliage éventuelle (bracelet) reste blanche --}}
+    <div style="position: absolute; left: 0; top: 0; width: {{ $visuelW ?? $slotW }}mm; height: {{ $slotH }}mm; overflow: hidden;">
+        <img src="{{ $templateUrl }}" alt="" class="ticket-bg" style="left: {{ $imgLeft }}mm; top: {{ $imgTop }}mm; width: {{ $imgW }}mm; height: {{ $imgH }}mm;">
+    </div>
 @endif
     <div class="qr-zone">
         <div class="qr-wrap">
@@ -79,10 +92,17 @@
                 <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon" style="width: {{ $faviconSize }}mm; height: {{ $faviconSize }}mm; margin-top: -{{ $faviconSize / 2 }}mm; margin-left: -{{ $faviconSize / 2 }}mm;">
             @endif
         </div>
+        @unless(!empty($codeVertical))
         <div class="pax-band">
             <div class="pax-code">{{ $codeUnique ?? 'PAX-XXXXX' }}</div>
         </div>
+        @endunless
     </div>
+    @if(!empty($codeVertical) && !empty($codeVerticalUri))
+        <div class="code-vertical" style="left: {{ $codeX }}mm; top: {{ $codeY }}mm; width: {{ $codeW }}mm; height: {{ $codeH }}mm;">
+            <img src="{{ $codeVerticalUri }}" alt="" style="width: {{ $codeW }}mm; height: {{ $codeH }}mm;">
+        </div>
+    @endif
 </div>
 </body>
 </html>

@@ -115,7 +115,40 @@ class LotPhysique extends Model
             'lignes' => 2,
             'qr_defaut' => 50,
         ],
+        // Bracelet Tyvek 22,2 × 1,9 cm : 10 par A4 paysage (1 mm entre deux bracelets).
+        // La zone blanche a une taille fixe : c'est la zone des autres formats tournée
+        // d'un quart de tour (QR 13,7 mm, code pass vertical à l'intérieur, à droite).
+        // Largeur = 0,25 + 13,7 + 0,1 + 3,3 + 1,65 = 19 mm ; hauteur = 13,7 + 2 × 0,25.
+        'br' => [
+            'label' => 'Bracelet (22,2×1,9)',
+            'largeur' => 222,
+            'hauteur' => 19,
+            'orientation' => 'landscape',
+            'colonnes' => 1,
+            'lignes' => 10,
+            'qr_defaut' => 13.7,
+            'zone_fixe' => ['largeur' => 19.0, 'hauteur' => 14.2],
+            'code_vertical' => true,
+            'qr_x_defaut' => 10.2, // zone à ~1 cm du bord gauche
+            'qr_y_defaut' => 2.65, // zone centrée verticalement
+            // Bande blanche de 3 cm à droite du visuel pour le pliage :
+            // le bracelet fait 25,2 cm au total, calé à gauche de la feuille.
+            'largeur_totale' => 252,
+            'alignement' => 'gauche',
+            'coupe_pleine_largeur' => true, // lignes de coupe d'un bord à l'autre de la feuille
+        ],
     ];
+
+    public const FORMAT_BRACELET = 'br';
+
+    // Position par défaut du QR (mm) : celle du format, sinon centrée dans le ticket
+    public static function qrPositionDefaut(array $format, float $qrSize): array
+    {
+        return [
+            $format['qr_x_defaut'] ?? round(($format['largeur'] - $qrSize) / 2),
+            $format['qr_y_defaut'] ?? round(($format['hauteur'] - $qrSize) / 2),
+        ];
+    }
 
     protected function casts(): array
     {
@@ -127,14 +160,14 @@ class LotPhysique extends Model
             'externe' => 'boolean',
             'montant_commission' => 'decimal:2',
             'transmis_at' => 'datetime',
-            'qr_x' => 'integer',
-            'qr_y' => 'integer',
-            'qr_size' => 'integer',
+            'qr_x' => 'float',
+            'qr_y' => 'float',
+            'qr_size' => 'float',
             'template_zoom' => 'integer',
             'pdf_par_page' => 'integer',
             'format' => 'string',
-            'largeur_personnalisee' => 'integer',
-            'hauteur_personnalisee' => 'integer',
+            'largeur_personnalisee' => 'float',
+            'hauteur_personnalisee' => 'float',
         ];
     }
 
@@ -156,11 +189,20 @@ class LotPhysique extends Model
         return self::FORMATS[$format];
     }
 
+    // Le ticket (mm) tient-il sur une feuille A4, marges de 4 mm comprises ?
+    public static function tientSurA4(float $largeur, float $hauteur): bool
+    {
+        $grand = max($largeur, $hauteur);
+        $petit = min($largeur, $hauteur);
+
+        return $grand <= 289 && $petit <= 202;
+    }
+
     // Construit le gabarit d'un ticket aux dimensions personnalisées (mm), calé sur une page A4
     public static function formatPersonnalise(float $largeur, float $hauteur): ?array
     {
-        $largeur = round($largeur);
-        $hauteur = round($hauteur);
+        $largeur = round($largeur, 1);
+        $hauteur = round($hauteur, 1);
 
         if ($largeur < 1 || $hauteur < 1) {
             return null;
@@ -170,17 +212,19 @@ class LotPhysique extends Model
         $pageLargeur = $orientation === 'landscape' ? 297 : 210;
         $pageHauteur = $orientation === 'landscape' ? 210 : 297;
 
-        // Mêmes marges / gouttières que le service PDF (MARGE 4 mm, GOUTTIERE 2 mm)
+        // Mêmes marges / gouttières que le service PDF (MARGE 4 mm, GOUTTIERE 1 mm)
         $marge = 4;
-        $gouttiere = 2;
+        $gouttiere = 1;
         $colonnes = max(1, (int) floor(($pageLargeur - 2 * $marge + $gouttiere) / ($largeur + $gouttiere)));
         $lignes = max(1, (int) floor(($pageHauteur - 2 * $marge + $gouttiere) / ($hauteur + $gouttiere)));
 
         $qr = (int) round(min($largeur, $hauteur) * 0.3);
         $qr = max(30, min(48, $qr));
 
+        $affiche = static fn (float $v): string => rtrim(rtrim(number_format($v, 1, '.', ''), '0'), '.');
+
         return [
-            'label' => 'Personnalisé ('.(int) $largeur.'×'.(int) $hauteur.')',
+            'label' => 'Personnalisé ('.$affiche($largeur).'×'.$affiche($hauteur).')',
             'largeur' => $largeur,
             'hauteur' => $hauteur,
             'orientation' => $orientation,

@@ -210,9 +210,9 @@ class DemandeSuperAdminController extends Controller
 
         $validated = $request->validate([
             'template_image' => ['required', 'image', 'mimes:png', 'max:10240'],
-            'format' => ['required', 'in:s1,s2,v1,v2,custom'],
-            'largeur_personnalisee' => 'nullable|integer|min:30|max:200',
-            'hauteur_personnalisee' => 'nullable|integer|min:30|max:200',
+            'format' => ['required', 'in:s1,s2,v1,v2,a5,br,custom'],
+            'largeur_personnalisee' => 'nullable|numeric|min:20|max:289',
+            'hauteur_personnalisee' => 'nullable|numeric|min:20|max:289',
         ], [
             'template_image.required' => 'Veuillez joindre votre image de ticket.',
             'template_image.image' => 'Le fichier doit être une image.',
@@ -227,19 +227,28 @@ class DemandeSuperAdminController extends Controller
 
         if ($validated['format'] === LotPhysique::FORMAT_CUSTOM) {
             $validated = array_merge($validated, $request->validate([
-                'largeur_personnalisee' => 'required|integer|min:30|max:200',
-                'hauteur_personnalisee' => 'required|integer|min:30|max:200',
+                'largeur_personnalisee' => 'required|numeric|min:20|max:289',
+                'hauteur_personnalisee' => 'required|numeric|min:20|max:289',
             ], [
                 'largeur_personnalisee.required' => 'Renseignez la largeur de votre ticket (mm).',
                 'hauteur_personnalisee.required' => 'Renseignez la hauteur de votre ticket (mm).',
+                'largeur_personnalisee.min' => 'La largeur doit être d\'au moins 20 mm (2 cm).',
+                'hauteur_personnalisee.min' => 'La hauteur doit être d\'au moins 20 mm (2 cm).',
             ]));
+
+            // Comme dans l'éditeur : le ticket doit tenir sur une feuille A4 (dans un sens ou l'autre)
+            if (! LotPhysique::tientSurA4((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee'])) {
+                throw ValidationException::withMessages([
+                    'largeur_personnalisee' => 'Ce ticket est plus grand qu\'une feuille A4 (28,9 × 20,2 cm au maximum, marges comprises).',
+                ]);
+            }
 
             if (LotPhysique::formatPersonnalise((float) $validated['largeur_personnalisee'], (float) $validated['hauteur_personnalisee']) === null) {
                 return null;
             }
 
-            $largeur = (int) $validated['largeur_personnalisee'];
-            $hauteur = (int) $validated['hauteur_personnalisee'];
+            $largeur = round((float) $validated['largeur_personnalisee'], 1);
+            $hauteur = round((float) $validated['hauteur_personnalisee'], 1);
         }
 
         return [

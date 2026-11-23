@@ -116,6 +116,8 @@ class LotTemplateGeometrieTest extends TestCase
         // Meme calcul que zoneDims() dans les vues Blade admin et superadmin.
         foreach ([15.0, 30.0, 48.0] as $qr) {
             $geo = S::geometry($qr, null, null, self::SLOT_W, self::SLOT_H);
+            // Comme qrMaxMm() côté JS : la zone doit tenir dans le ticket
+            $qr = min($qr, S::qrMaxPour(self::SLOT_W, self::SLOT_H));
 
             $padX = max(S::QR_SIDE, S::QR_TOP);
             $w = round($qr + $padX * 2, 2);
@@ -131,5 +133,30 @@ class LotTemplateGeometrieTest extends TestCase
                 "Position du code JS pour {$qr} mm."
             );
         }
+    }
+
+    public function test_le_qr_est_limite_pour_que_la_zone_tienne_dans_le_ticket(): void
+    {
+        // Standard : 137 × 49 mm. Un QR de 80 mm déborderait : il est ramené à la hauteur utile.
+        $geo = \App\Services\LotPhysiqueTemplatePdfService::geometry(80, 10, 0, 137, 49);
+
+        $this->assertSame(\App\Services\LotPhysiqueTemplatePdfService::qrMaxPour(137, 49), $geo['qrSize']);
+        $this->assertLessThanOrEqual(49, $geo['zoneH']);
+        $this->assertLessThanOrEqual(137, $geo['zoneW']);
+    }
+
+    public function test_position_et_taille_au_dixieme_de_millimetre(): void
+    {
+        $geo = \App\Services\LotPhysiqueTemplatePdfService::geometry(30.5, 12.3, 4.7, 137, 49);
+
+        $this->assertSame(30.5, $geo['qrSize']);
+        $this->assertEqualsWithDelta(12.3 - $geo['padX'], $geo['zoneX'], 0.001);
+    }
+
+    public function test_un_ticket_personnalise_doit_tenir_sur_une_feuille_a4(): void
+    {
+        $this->assertTrue(\App\Models\LotPhysique::tientSurA4(140, 50));
+        $this->assertTrue(\App\Models\LotPhysique::tientSurA4(202, 289));
+        $this->assertFalse(\App\Models\LotPhysique::tientSurA4(437.6, 156.4)); // 1654 px lus à 96 DPI
     }
 }

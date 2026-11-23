@@ -74,6 +74,16 @@
             line-height: {{ $paxLineH }}mm;
         }
 
+        .code-vertical {
+            position: absolute;
+            overflow: hidden;
+        }
+        .code-vertical img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+        }
         .coupe-h, .coupe-v {
             position: absolute;
             border: 0;
@@ -99,7 +109,10 @@
             @php $pos = $layout['positions'][$slotIdx % $layout['par_page']]; @endphp
             <div class="slot" style="left: {{ $pos['x'] }}mm; top: {{ $pos['y'] }}mm; width: {{ $layout['slot_largeur'] }}mm; height: {{ $layout['slot_hauteur'] }}mm;">
                 @if ($templateUrl)
-                    <div class="ticket-bg"></div>
+                    {{-- Visuel recadré à sa largeur : la bande de pliage éventuelle reste blanche --}}
+                    <div style="position: absolute; left: 0; top: 0; width: {{ $layout['visuel_largeur'] }}mm; height: {{ $layout['slot_hauteur'] }}mm; overflow: hidden;">
+                        <div class="ticket-bg"></div>
+                    </div>
                 @endif
                 <div class="qr-zone" style="left: {{ $zoneX }}mm; top: {{ $zoneY }}mm; width: {{ $zoneW }}mm; height: {{ $zoneH }}mm;">
                     <div class="qr-wrap" style="left: {{ $padX }}mm; top: {{ $padTop }}mm; width: {{ $qrSize }}mm; height: {{ $qrSize }}mm;">
@@ -108,15 +121,22 @@
                             <img src="{{ $faviconDataUri }}" alt="" class="qr-favicon" style="width: {{ $faviconSize }}mm; height: {{ $faviconSize }}mm; margin-top: -{{ $faviconSize / 2 }}mm; margin-left: -{{ $faviconSize / 2 }}mm;">
                         @endif
                     </div>
+                    @unless(!empty($codeVertical))
                     <div class="pax-band" style="top: {{ $bandTop }}mm; left: 0; width: 100%; height: {{ $paxBandH }}mm; padding: 0 0 {{ $paxBottom }}mm;">
                         <div class="pax-code">{{ $ticket->code_unique }}</div>
                     </div>
+                    @endunless
                 </div>
+                @if(!empty($codeVertical) && !empty($codesVerticaux[$ticket->id]))
+                    <div class="code-vertical" style="left: {{ $codeX }}mm; top: {{ $codeY }}mm; width: {{ $codeW }}mm; height: {{ $codeH }}mm;">
+                        <img src="{{ $codesVerticaux[$ticket->id] }}" alt="{{ $ticket->code_unique }}" style="width: {{ $codeW }}mm; height: {{ $codeH }}mm;">
+                    </div>
+                @endif
             </div>
         @endforeach
 
         @foreach($layout['coupes_h'] as $y)
-            <div class="coupe-h" style="top: {{ $y }}mm; left: {{ $layout['bloc_gauche'] }}mm; width: {{ $layout['bloc_largeur'] }}mm;"></div>
+            <div class="coupe-h" style="top: {{ $y }}mm; left: {{ $layout['coupe_gauche'] }}mm; width: {{ $layout['coupe_largeur'] }}mm;"></div>
         @endforeach
         @foreach($layout['coupes_v'] as $x)
             <div class="coupe-v" style="left: {{ $x }}mm; top: {{ $layout['bloc_haut'] }}mm; height: {{ $layout['bloc_hauteur'] }}mm;"></div>
