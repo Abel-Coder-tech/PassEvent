@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Agent;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,7 +13,10 @@ class EnsureAgentIsActive
     {
         $agent = $request->user();
 
-        if (!$agent) {
+        // L'identité vient toujours du token (JWT/Sanctum). Un token émis pour
+        // un autre type de compte (organisateur, agent de vente) ne doit jamais
+        // ouvrir l'espace scan, même s'il porte une capability « agent:read ».
+        if (! $agent instanceof Agent) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 

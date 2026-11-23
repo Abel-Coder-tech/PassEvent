@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\SendTicketEmailJob;
 use App\Models\Agent;
 use App\Models\AgentVente;
+use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -251,6 +254,110 @@ class ApiAuthenticationSecurityTest extends TestCase
             ->assertNotFound();
 
         $this->assertNull(DB::table('agent_vente_notifications')->where('id', $notificationId)->value('lu_at'));
+    }
+
+    public function test_un_token_d_un_autre_type_de_compte_ne_peut_pas_acceder_a_l_api_scan(): void
+    {
+        $this->insertEvent(1);
+        $vendeur = $this->createSalesAgent(1, 'vente-token@example.test');
+        $organisateurId = DB::table('users')->insertGetId([
+            'nom' => 'Organisateur',
+            'prenom' => 'Test',
+            'email' => 'organisateur-token@example.test',
+            'password' => bcrypt('test-password'),
+            'role' => 'admin',
+            'actif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $jetons = [
+            'agent de vente' => $vendeur->createToken('foreign', ['agent:read', 'agent:scan'])->plainTextToken,
+            'organisateur' => User::findOrFail($organisateurId)->createToken('foreign', ['agent:read', 'agent:scan'])->plainTextToken,
+        ];
+
+        foreach ($jetons as $type => $jeton) {
+            foreach (['/api/agent/me', '/api/agent/dashboard'] as $uri) {
+                $this->withToken($jeton)->getJson($uri)
+                    ->assertUnauthorized("Un token {$type} ne doit pas ouvrir {$uri}.");
+            }
+
+            $this->withToken($jeton)
+                ->postJson('/api/agent/scan/pin', ['code_acces' => '1234'])
+                ->assertUnauthorized();
+        }
+    }
+
+    public function test_renvoi_de_billet_ignore_un_destinataire_modifie_dans_le_lien(): void
+    {
+        Queue::fake();
+        $this->insertEvent(1);
+        $agent = $this->createSalesAgent(1, 'resend@example.test');
+        $ticketId = DB::table('ticket')->insertGetId([
+            'evenement_id' => 1,
+            'agent_vente_id' => $agent->id,
+            'code_unique' => 'PAX-RESEND',
+            'statut_paiement' => 'payé',
+            'email_acheteur' => 'acheteur@example.test',
+            'annule' => false,
+            'date_achat' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $jeton = $agent->createToken('security-test', ['agent_vente:read', 'agent_vente:sell'])->plainTextToken;
+
+        $this->withToken($jeton)
+            ->postJson(
+                "/api/agent-vente/sales/{$ticketId}/resend?email=attaquant-url@example.test&destinataire=attaquant-url@example.test",
+                ['email' => 'attaquant-corps@example.test', 'destinataire' => 'attaquant-corps@example.test']
+            )
+            ->assertOk();
+
+        // Le destinataire est lu sur le billet, jamais dans l'URL ni dans le
+        // corps : modifier la requête ne peut pas détourner l'envoi.
+        Queue::assertPushed(SendTicketEmailJob::class, fn ($job) => $job->toEmail === 'acheteur@example.test');
+        Queue::assertNotPushed(SendTicketEmailJob::class, fn ($job) => $job->toEmail === 'attaquant-url@example.test');
+        Queue::assertNotPushed(SendTicketEmailJob::class, fn ($job) => $job->toEmail === 'attaquant-corps@example.test');
+    }
+
+    public function test_un_token_d_un_autre_type_de_compte_ne_peut_pas_acceder_a_l_api_vente(): void
+    {
+        $this->insertEvent(1);
+        $scanAgentId = DB::table('agents')->insertGetId([
+            'nom' => 'Scan',
+            'email' => 'scan-token@example.test',
+            'password' => bcrypt('test-password'),
+            'evenement_id' => 1,
+            'actif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $organisateurId = DB::table('users')->insertGetId([
+            'nom' => 'Organisateur',
+            'prenom' => 'Vente',
+            'email' => 'organisateur-vente-token@example.test',
+            'password' => bcrypt('test-password'),
+            'role' => 'admin',
+            'actif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $jetons = [
+            'agent de scan' => Agent::findOrFail($scanAgentId)->createToken('foreign', ['agent_vente:read', 'agent_vente:sell'])->plainTextToken,
+            'organisateur' => User::findOrFail($organisateurId)->createToken('foreign', ['agent_vente:read', 'agent_vente:sell'])->plainTextToken,
+        ];
+
+        foreach ($jetons as $type => $jeton) {
+            foreach (['/api/agent-vente/me', '/api/agent-vente/dashboard'] as $uri) {
+                $this->withToken($jeton)->getJson($uri)
+                    ->assertUnauthorized("Un token {$type} ne doit pas ouvrir {$uri}.");
+            }
+
+            $this->withToken($jeton)
+                ->postJson('/api/agent-vente/sales', [])
+                ->assertUnauthorized();
+        }
     }
 
     public function test_scan_agent_cannot_scan_a_ticket_from_another_event(): void
@@ -566,6 +673,20 @@ class ApiAuthenticationSecurityTest extends TestCase
             });
         }
 
+        if (! Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('nom')->nullable();
+                $table->string('prenom')->nullable();
+                $table->string('email')->unique();
+                $table->string('password');
+                $table->string('role')->nullable();
+                $table->boolean('actif')->default(true);
+                $table->softDeletes();
+                $table->timestamps();
+            });
+        }
+
         if (! Schema::hasTable('agents')) {
             Schema::create('agents', function (Blueprint $table) {
                 $table->id();
@@ -627,9 +748,12 @@ class ApiAuthenticationSecurityTest extends TestCase
                 $table->unsignedBigInteger('agent_vente_id')->nullable();
                 $table->string('code_unique')->unique();
                 $table->string('statut_paiement')->default('payé');
+                $table->string('email_acheteur')->nullable();
                 $table->boolean('annule')->default(false);
                 $table->dateTime('expire_at')->nullable();
                 $table->dateTime('date_achat')->nullable();
+                $table->timestamp('dernier_renvoi_at')->nullable();
+                $table->unsignedInteger('renvoi_count')->default(0);
                 $table->timestamps();
             });
         }
@@ -646,6 +770,23 @@ class ApiAuthenticationSecurityTest extends TestCase
                 $table->json('data')->nullable();
                 $table->timestamp('lu_at')->nullable();
                 $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('journal_actions')) {
+            Schema::create('journal_actions', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('ticket_id')->nullable();
+                $table->unsignedBigInteger('agent_vente_id')->nullable();
+                $table->unsignedBigInteger('evenement_id')->nullable();
+                $table->string('action', 50);
+                $table->string('statut_avant', 30)->nullable();
+                $table->string('statut_apres', 30)->nullable();
+                $table->string('reference', 255)->nullable();
+                $table->json('details')->nullable();
+                $table->string('ip', 45)->nullable();
+                $table->string('user_agent', 255)->nullable();
+                $table->timestamp('created_at');
             });
         }
 

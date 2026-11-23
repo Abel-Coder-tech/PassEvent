@@ -77,6 +77,24 @@ class AppReleaseDownloadTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_modifier_luid_dans_un_lien_signe_est_refuse(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $other = User::factory()->create(['role' => 'admin']);
+        $release = $this->release();
+        $url = $this->signedUrl($release, $user->id);
+
+        // On ne change que la valeur de uid : la signature ne couvre plus le
+        // lien, et le contrôleur recalcule l'identité depuis la session/JWT.
+        $modifiee = preg_replace(
+            '/([?&]uid=)\d+/',
+            '${1}'.$other->id,
+            $url
+        );
+
+        $this->actingAs($user)->get($modifiee)->assertForbidden();
+    }
+
     public function test_une_version_non_publiee_n_est_pas_downloadable(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
