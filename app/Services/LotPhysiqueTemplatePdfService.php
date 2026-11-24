@@ -237,8 +237,11 @@ class LotPhysiqueTemplatePdfService
         $cols = $format['colonnes'];
         $rows = $format['lignes'];
 
-        $blockW = $cols * $slotW + ($cols - 1) * self::GOUTTIERE;
-        $blockH = $rows * $slotH + ($rows - 1) * self::GOUTTIERE;
+        // Espace entre tickets : celui du format (0 pour le bracelet), sinon 1 mm
+        $gouttiere = $format['gouttiere'] ?? self::GOUTTIERE;
+
+        $blockW = $cols * $slotW + ($cols - 1) * $gouttiere;
+        $blockH = $rows * $slotH + ($rows - 1) * $gouttiere;
         $startX = ($format['alignement'] ?? null) === 'gauche' ? $marge : ($pageW - $blockW) / 2;
         $startY = max(($pageH - $blockH) / 2, $marge);
 
@@ -246,19 +249,20 @@ class LotPhysiqueTemplatePdfService
         for ($r = 0; $r < $rows; $r++) {
             for ($c = 0; $c < $cols; $c++) {
                 $positions[] = [
-                    'x' => round($startX + $c * ($slotW + self::GOUTTIERE), 2),
-                    'y' => round($startY + $r * ($slotH + self::GOUTTIERE), 2),
+                    'x' => round($startX + $c * ($slotW + $gouttiere), 2),
+                    'y' => round($startY + $r * ($slotH + $gouttiere), 2),
                 ];
             }
         }
 
+        $sansCoupe = ! empty($format['sans_coupe']);
         $coupesH = [];
-        for ($r = 1; $r < $rows; $r++) {
-            $coupesH[] = round($startY + $r * ($slotH + self::GOUTTIERE) - self::GOUTTIERE / 2, 2);
+        for ($r = 1; $r < $rows && ! $sansCoupe; $r++) {
+            $coupesH[] = round($startY + $r * ($slotH + $gouttiere) - $gouttiere / 2, 2);
         }
         $coupesV = [];
-        for ($c = 1; $c < $cols; $c++) {
-            $coupesV[] = round($startX + $c * ($slotW + self::GOUTTIERE) - self::GOUTTIERE / 2, 2);
+        for ($c = 1; $c < $cols && ! $sansCoupe; $c++) {
+            $coupesV[] = round($startX + $c * ($slotW + $gouttiere) - $gouttiere / 2, 2);
         }
 
         return [
@@ -279,8 +283,8 @@ class LotPhysiqueTemplatePdfService
             'bloc_haut' => round($startY, 2),
             'bloc_largeur' => round($blockW, 2),
             // Étendue des lignes de coupe horizontales : le bloc, ou toute la largeur de la feuille
-            'coupe_gauche' => ! empty($format['coupe_pleine_largeur']) ? 0 : round($startX, 2),
-            'coupe_largeur' => ! empty($format['coupe_pleine_largeur']) ? $pageW : round($blockW, 2),
+            'coupe_gauche' => round($startX, 2),
+            'coupe_largeur' => round($blockW, 2),
             'bloc_hauteur' => round($blockH, 2),
             'marge_gauche' => round($startX, 2),
             'marge_bas' => round($pageH - ($startY + $blockH), 2),

@@ -281,7 +281,7 @@ class LotTemplateIntegrationTest extends TestCase
         $this->assertSame($orientation, $php['orientation']);
     }
 
-    public function test_bracelet_dix_par_feuille_de_25_sur_19_avec_un_mm_entre_deux(): void
+    public function test_bracelet_dix_par_feuille_de_25_sur_19_bord_a_bord(): void
     {
         $layout = Pdf::layoutPage($this->formats()['br']);
 
@@ -289,35 +289,33 @@ class LotTemplateIntegrationTest extends TestCase
         $this->assertSame(250, $layout['page_largeur']);
         $this->assertSame(190, $layout['page_hauteur']);
         $this->assertSame(10, $layout['par_page']);
-        $this->assertCount(9, $layout['coupes_h']);
-        // Les lignes de coupe traversent toute la feuille
-        $this->assertSame(0, $layout['coupe_gauche']);
-        $this->assertSame(250, $layout['coupe_largeur']);
-        // 25 cm au total (22 de visuel + 3 cm blancs pour le pliage) : toute la largeur, sans marge
+        // 25 × 1,9 cm par bracelet (22 de visuel + 3 cm blancs pour le pliage)
         $this->assertSame(250, $layout['slot_largeur']);
         $this->assertSame(220, $layout['visuel_largeur']);
+        $this->assertSame(19, $layout['slot_hauteur']);
+        // 10 × 19 mm = 190 mm : bord à bord, sans marge ni espace ni ligne de coupe
+        $this->assertEqualsWithDelta(190, $layout['bloc_hauteur'], 0.001);
+        $this->assertEqualsWithDelta(0, $layout['bloc_haut'], 0.001);
+        $this->assertEqualsWithDelta(0, $layout['marge_bas'], 0.001);
         $this->assertEqualsWithDelta(0, $layout['positions'][0]['x'], 0.001);
-        // 10 × 18 mm + 9 × 1 mm = 189 mm sur 190 : 0,5 mm en haut et en bas
-        $this->assertEqualsWithDelta(189, $layout['bloc_hauteur'], 0.001);
-        $this->assertEqualsWithDelta(0.5, $layout['bloc_haut'], 0.001);
-        $this->assertEqualsWithDelta(0.5, $layout['marge_bas'], 0.001);
-        $this->assertEqualsWithDelta(1, $layout['positions'][1]['y'] - $layout['positions'][0]['y'] - 18, 0.001);
-        // La ligne de coupe tombe au milieu du millimètre entre deux bracelets
-        $this->assertEqualsWithDelta($layout['positions'][1]['y'] - 0.5, $layout['coupes_h'][0], 0.001);
+        $this->assertEqualsWithDelta(19, $layout['positions'][1]['y'], 0.001);
+        $this->assertEqualsWithDelta(171, $layout['positions'][9]['y'], 0.001);
+        $this->assertSame([], $layout['coupes_h']);
+        $this->assertSame([], $layout['coupes_v']);
     }
 
     public function test_bracelet_zone_qr_fixe_et_code_pass_vertical(): void
     {
         $br = $this->formats()['br'];
         // Même avec une taille demandée différente, la zone reste 19 × 14,2 mm
-        $geo = Pdf::geometry(40, null, null, 220, 18, $br);
+        $geo = Pdf::geometry(40, null, null, 220, 19, $br);
 
         $this->assertSame(19.0, $geo['zoneW']);
         $this->assertSame(14.2, $geo['zoneH']);
         $this->assertSame(13.7, $geo['qrSize']);
         $this->assertTrue($geo['codeVertical']);
         $this->assertEqualsWithDelta(10.2 - 0.25, $geo['zoneX'], 0.001);
-        $this->assertEqualsWithDelta((18 - 14.2) / 2, $geo['zoneY'], 0.001);
+        $this->assertEqualsWithDelta((19 - 14.2) / 2, $geo['zoneY'], 0.001);
         // Code pass dans la zone, à droite du QR, et la zone suit les marges standard
         $this->assertEqualsWithDelta($geo['zoneX'] + 0.25 + 13.7 + Pdf::PAX_GAP, $geo['codeX'], 0.001);
         $this->assertEqualsWithDelta(
@@ -325,6 +323,6 @@ class LotTemplateIntegrationTest extends TestCase
             $geo['zoneW'], 0.001
         );
         $this->assertLessThanOrEqual($geo['zoneX'] + $geo['zoneW'], $geo['codeX'] + $geo['codeW']);
-        $this->assertLessThanOrEqual(18, $geo['zoneY'] + $geo['zoneH']);
+        $this->assertLessThanOrEqual(19, $geo['zoneY'] + $geo['zoneH']);
     }
 }

@@ -84,6 +84,10 @@
             top: 0;
             display: block;
         }
+        @if(!empty($format['sans_coupe']))
+        /* Feuille prédécoupée (bracelet) : aucun contour, les tickets se touchent */
+        .slot { box-shadow: none; }
+        @endif
         .coupe-h, .coupe-v {
             position: absolute;
             border: 0;
