@@ -1,59 +1,199 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PaxEvent
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Billetterie en ligne 100 % Bénin : les organisateurs créent leurs événements et vendent leurs billets en ligne (Mobile Money via FedaPay), sur le terrain grâce à leurs agents de vente, ou sous forme de tickets et bracelets imprimés. Le contrôle d'accès se fait par scan de QR code.
 
-## About Laravel
+Site : [paxevent.com](https://paxevent.com)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Sommaire
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Les espaces](#les-espaces)
+- [Fonctionnalités](#fonctionnalités)
+- [Technologies](#technologies)
+- [Installation en local](#installation-en-local)
+- [Configuration (.env)](#configuration-env)
+- [Tâches planifiées](#tâches-planifiées)
+- [Commandes utiles](#commandes-utiles)
+- [Tickets physiques et bracelets](#tickets-physiques-et-bracelets)
+- [Tests](#tests)
+- [Déploiement](#déploiement)
+- [Sécurité](#sécurité)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Les espaces
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Espace | Accès | Pour qui |
+|---|---|---|
+| **Site public** | `/` | Acheteurs : catalogue des événements, achat de billets, récupération de billets |
+| **Organisateur** | `/login` puis `/dashboard` | Création d'événements et de tarifs, ventes, agents, tickets physiques, statistiques, retraits |
+| **Super admin** | `/superadmin` | Propriétaire de la plateforme : validation des organisateurs, retraits, remboursements, journaux, sécurité |
+| **Équipe** | `/equipe` | Membres de l'équipe PaxEvent, avec des droits limités par rôle |
+| **Agent de scan** | `/agent` et API | Contrôle des billets à l'entrée |
+| **Agent de vente** | `/vente` et API | Vente de billets sur le terrain (espèces ou Mobile Money) |
+| **Affilié** | `/affilie` | Liens d'affiliation et commissions |
 
-## Laravel Sponsors
+## Fonctionnalités
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Billetterie**
+- Événements sur un ou plusieurs jours, tarifs avec quotas, billets gratuits, codes promo
+- Paiement Mobile Money via **FedaPay** (MTN, Moov, Celtiis), webhook et rapprochement automatique des paiements
+- Billet PDF avec QR code envoyé par email, récupération du billet par l'acheteur
+- Demandes de remboursement et demandes de modification de tarif
 
-### Premium Partners
+**Organisateurs**
+- Inscription avec validation par PaxEvent, contrat de prestation généré en PDF
+- Agents de scan et agents de vente, attribués par événement
+- Statistiques de ventes et de scans, retraits des recettes (commission PaxEvent déduite)
+- Gestion d'un compte par PaxEvent avec mandat (journal des actions effectuées)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**Tickets physiques**
+- Planches PDF de tickets ou de bracelets à partir de l'image du design de l'organisateur
+- Éditeur visuel : placement du QR au dixième de millimètre, zoom, aperçu en direct, sauvegarde automatique
+- QR codes pour des événements hors plateforme
 
-## Contributing
+**Super admin**
+- Organisateurs : validation, suspension, **corbeille** (suppression réversible, restauration à l'identique)
+- Journal général des opérations (billetterie et actions administratives) avec recherche
+- **Journal de sécurité** : connexions échouées, requêtes suspectes, blocage d'IP
+- Sauvegarde quotidienne de la base de données
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**Application mobile PaxAgent** (Android) : scan et vente pour les agents, via l'API (`routes/api.php`, authentification Sanctum).
 
-## Code of Conduct
+## Technologies
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **PHP 8.2+**, **Laravel 12**, MySQL / MariaDB
+- **Blade**, Bootstrap, Tailwind CSS 4, Vite
+- **DomPDF** (billets, planches, contrats), **bacon/bacon-qr-code** (QR codes)
+- **FedaPay** (paiements), **Laravel Sanctum** (API des agents), **Socialite** (connexion Google)
 
-## Security Vulnerabilities
+## Installation en local
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Prérequis : PHP 8.2+ avec les extensions `gd` (et FreeType) et `pdo_mysql`, Composer, Node.js, MySQL.
 
-## License
+```bash
+git clone https://github.com/Abel-Coder-tech/PassEvent.git
+cd PassEvent
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
+# Renseigner la base de données dans .env, puis :
+php artisan migrate
+php artisan storage:link
+
+npm run dev           # assets en développement
+php artisan serve     # http://localhost:8000
+```
+
+Pour faire tourner la file d'attente (emails) et les tâches planifiées en local :
+
+```bash
+php artisan queue:work
+php artisan schedule:work
+```
+
+## Configuration (.env)
+
+En plus des variables Laravel habituelles (`APP_*`, `DB_*`, `MAIL_*`) :
+
+| Variable | Rôle |
+|---|---|
+| `FEDAPAY_PUBLIC_KEY`, `FEDAPAY_SECRET_KEY` | Clés API FedaPay |
+| `FEDAPAY_SANDBOX` | `true` en test, `false` en production |
+| `FEDAPAY_WEBHOOK_SECRET` | Secret de signature du webhook FedaPay (**obligatoire en production**) |
+| `SUPPORT_MAIL_*` | Boîte email du support (notifications, alertes) |
+| `PAYMENT_ALERT_EMAIL` | Destinataire des alertes de paiement et de sécurité |
+| `PAYMENT_ALERT_COOLDOWN_MINUTES`, `PAYMENT_FAILURE_ALERT_THRESHOLD`, `PAYMENT_FAILURE_ALERT_WINDOW_MINUTES` | Réglage des alertes de paiement |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Connexion avec Google |
+| `SANCTUM_ABSOLUTE_EXPIRATION` | Durée de vie des jetons de l'application agents |
+| `QUEUE_CONNECTION` | `database` : les emails partent par la file d'attente |
+
+Ne jamais committer le fichier `.env`.
+
+## Tâches planifiées
+
+Le planificateur Laravel doit tourner chaque minute (tâche cron sur le serveur) :
+
+```
+* * * * * cd /chemin/vers/PassEvent && php artisan schedule:run >> /dev/null 2>&1
+```
+
+| Commande | Fréquence | Rôle |
+|---|---|---|
+| `paiements:rapprocher-fedapay` | 5 min | Rattache aux billets les paiements FedaPay approuvés restés orphelins |
+| `tickets:envoyer-emails` | 5 min | Envoie les billets par email |
+| `billetterie:notifier-ouverture` | 5 min | Prévient de l'ouverture d'une billetterie |
+| `tickets:purger-en-attente` | 15 min | Libère les réservations non payées expirées |
+| `evenements:terminer` | 1 h | Passe les événements terminés au statut « terminé » |
+| `tickets:reconcilier`, `tickets:corriger-operateurs` | 1 h | Cohérence des billets et des opérateurs de paiement |
+| `affiliations:liberer-commissions` | 1 h | Libère les commissions d'affiliation |
+| `paxevent:sauvegarder-base` | 3 h 00 | Sauvegarde de la base (14 jours conservés) |
+| `securite:purger` | 3 h 30 | Nettoie le journal de sécurité (90 jours) et les blocages expirés |
+| `sanctum:prune-expired`, `ventes:purger-idempotences` | 1 jour | Nettoyage |
+
+## Commandes utiles
+
+```bash
+php artisan paxevent:sauvegarder-base       # sauvegarde manuelle → storage/app/private/backups
+php artisan evenements:recalculer-compteurs # recalcule les compteurs de billets des événements
+php artisan profils:normaliser-types        # harmonise les types de profils organisateurs
+php artisan consentements:purger            # purge les consentements cookies expirés
+```
+
+## Tickets physiques et bracelets
+
+Les formats sont définis dans `App\Models\LotPhysique::FORMATS` et mis en page par `App\Services\LotPhysiqueTemplatePdfService`.
+
+| Format | Ticket | Feuille | Par feuille |
+|---|---|---|---|
+| Standard | 13,7 × 4,9 cm | A4 paysage | 8 |
+| Standard 2 | 13,2 × 6,6 cm | A4 paysage | 6 |
+| VIP | 18 × 7 cm | A4 portrait | 3 |
+| VIP 2 | 9,9 × 7 cm | A4 portrait | 3 |
+| A5 | 20,2 × 14,3 cm | A4 portrait | 2 |
+| **Bracelet** | **22 × 1,9 cm** + 3 cm blancs (25 × 1,9 cm) | **25 × 19 cm** sur mesure | 10 |
+| Personnalisé | de 2 cm jusqu'au format A4 | A4 | calculé |
+
+- Sur A4 : marges de 4 mm, 1 mm entre deux tickets avec la ligne de coupe au milieu.
+- **Bracelet** : 10 bracelets bord à bord sur la feuille de 25 × 19 cm, sans marge, sans espace et sans ligne de coupe. Zone QR fixe (1,90 × 1,42 cm) avec le code pass à la verticale. Image attendue : 2598 × 224 px (300 DPI). À imprimer en format personnalisé 25 × 19 cm, à 100 %.
+- Les dimensions et la position du QR sont enregistrées au dixième de millimètre.
+
+## Tests
+
+```bash
+php artisan test
+```
+
+Les tests utilisent SQLite en mémoire (`phpunit.xml`) et créent eux-mêmes les tables dont ils ont besoin. Quand une colonne est ajoutée à une table utilisée par une requête testée, il faut aussi l'ajouter dans ces tables de test : avec SQLite, un nom de colonne inconnu entre guillemets est lu comme un texte, sans erreur.
+
+## Déploiement
+
+Production hébergée chez o2switch (Apache, cPanel). Après chaque mise en ligne :
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm run build
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:clear
+```
+
+Vérifier ensuite :
+- que la tâche cron `schedule:run` est active ;
+- dans **Super admin → Sécurité**, que l'encadré « Votre connexion » affiche bien l'IP publique du visiteur et HTTPS = Oui.
+
+## Sécurité
+
+- Les comptes supprimés passent par une corbeille ; la suppression définitive se confirme en saisissant l'email du compte.
+- Connexions limitées en nombre d'essais, sessions sans « se souvenir de moi », en-têtes de sécurité sur toutes les réponses.
+- Journal de sécurité et blocage d'IP dans le super admin ; les mots de passe et jetons ne sont jamais enregistrés.
+- Pour signaler une faille, écrire au support de PaxEvent plutôt que d'ouvrir une issue publique.
+
+---
+
+© PaxEvent. Tous droits réservés. Ce code n'est pas sous licence libre : toute reproduction ou réutilisation est interdite sans autorisation (voir les CGU, article 14).
