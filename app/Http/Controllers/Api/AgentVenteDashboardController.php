@@ -129,6 +129,7 @@ class AgentVenteDashboardController extends Controller
             'organisateur' => $evenement->user ? [
                 'nom' => trim(($evenement->user->prenom ?? '').' '.($evenement->user->nom ?? '')),
                 'email' => $evenement->user->email,
+                'telephone' => $evenement->user->telephone,
             ] : null,
             'tarifs' => $sales->tarifs($evenement),
             'ventes_especes' => $cash,

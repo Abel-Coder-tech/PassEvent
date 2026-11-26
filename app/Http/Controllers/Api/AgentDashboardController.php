@@ -49,6 +49,7 @@ class AgentDashboardController extends Controller
             'organisateur' => $organisateur ? [
                 'nom' => trim(($organisateur->prenom ?? '').' '.$organisateur->nom),
                 'email' => $organisateur->email,
+                'telephone' => $organisateur->telephone,
             ] : null,
             'stats' => [
                 'total' => $total,
