@@ -24,7 +24,7 @@ class CodePromoController extends Controller
 
         // Formulaire de création : uniquement les événements à venir
         $evenementsCreation = Evenement::where('user_id', $user->id)
-            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', \App\Models\Evenement::seuilDebutEnVente()))
             ->orderBy('date_event')
             ->get();
 

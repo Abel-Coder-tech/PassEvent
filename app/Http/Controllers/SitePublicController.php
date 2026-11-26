@@ -17,7 +17,7 @@ class SitePublicController extends Controller
         // Récupère les catégories disponibles
         $brutes = Evenement::where('statut', '=', 'publié')
             ->visiblesPublic()
-            ->where('date_event', '>=', now())
+            ->where('date_event', '>=', Evenement::seuilDebutEnVente())
             ->whereNotNull('categorie')
             ->distinct()
             ->pluck('categorie');
@@ -32,7 +32,7 @@ class SitePublicController extends Controller
         $query = Evenement::with('tarifs', 'user:id,statut')
             ->visiblesPublic()
             ->where('statut', '=', 'publié')
-            ->where('date_event', '>=', now())
+            ->where('date_event', '>=', Evenement::seuilDebutEnVente())
             ->orderBy('date_event', 'asc');
 
         if ($selectedCategorie) {
@@ -59,7 +59,7 @@ class SitePublicController extends Controller
         $evenementsUne = Evenement::ALaUne()
             ->visiblesPublic()
             ->where('statut', 'publié')
-            ->where('date_event', '>=', now())
+            ->where('date_event', '>=', Evenement::seuilDebutEnVente())
             ->whereHas('user', fn ($q) => $q->where('statut', 'actif'))
             ->with('tarifs', 'user:id,statut')
             ->limit(6)

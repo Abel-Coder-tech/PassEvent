@@ -129,10 +129,10 @@ class EvenementPublicController extends Controller
             ->where(function ($query) {
                 $query->where(function ($withDates) {
                     $withDates->whereHas('dates')
-                        ->whereDoesntHave('dates', fn ($dates) => $dates->where('date_debut', '>=', now()));
+                        ->whereDoesntHave('dates', fn ($dates) => $dates->where('date_debut', '>=', Evenement::seuilDebutEnVente()));
                 })->orWhere(function ($withoutDates) {
                     $withoutDates->whereDoesntHave('dates')
-                        ->where('date_event', '<', now());
+                        ->where('date_event', '<', Evenement::seuilDebutEnVente());
                 });
             })
             ->orderBy('date_event', 'desc')

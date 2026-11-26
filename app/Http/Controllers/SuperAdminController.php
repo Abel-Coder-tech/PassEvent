@@ -117,7 +117,7 @@ class SuperAdminController extends Controller
 
         $totalUsers = User::whereBetween('created_at', [$start, $end])->count();
         $totalEvenements = Evenement::visiblesPublic()->whereBetween('created_at', [$start, $end])->count();
-        $evenementsActifs = Evenement::visiblesPublic()->where('statut', 'publié')->where('date_event', '>=', $now)
+        $evenementsActifs = Evenement::visiblesPublic()->where('statut', 'publié')->where('date_event', '>=', Evenement::seuilDebutEnVente())
             ->whereBetween('created_at', [$start, $end])->count();
         $scansPeriode = Log::where('type_operation', 'scan')
             ->whereBetween('created_at', [$start, $end])->count();

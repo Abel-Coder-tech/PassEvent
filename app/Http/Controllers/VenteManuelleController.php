@@ -35,7 +35,7 @@ class VenteManuelleController extends Controller
         // Événements éligibles (publiés ou brouillons, pas encore passés)
         $evenements = Evenement::where('user_id', $user->id)
             ->whereIn('statut', ['publié', 'brouillon'])
-            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', \App\Models\Evenement::seuilDebutEnVente()))
             ->orderBy('date_event', 'asc')
             ->get();
 

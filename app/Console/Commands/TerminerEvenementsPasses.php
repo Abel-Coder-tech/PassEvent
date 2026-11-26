@@ -13,9 +13,19 @@ class TerminerEvenementsPasses extends Command
 
     public function handle()
     {
-        $count = Evenement::where('statut', 'publié')
-            ->where('date_event', '<', now()->subHours(6))
-            ->update(['statut' => 'terminé']);
+        // Terminé 24 h après le début de la DERNIÈRE session (la billetterie
+        // reste ouverte le jour même ; un événement sur plusieurs jours n'est
+        // pas clos après son premier jour).
+        $count = 0;
+        Evenement::where('statut', 'publié')
+            ->where('date_event', '<', Evenement::seuilDebutEnVente())
+            ->with('dates')
+            ->each(function (Evenement $evenement) use (&$count) {
+                if ($evenement->evenementPasse()) {
+                    $evenement->update(['statut' => 'terminé']);
+                    $count++;
+                }
+            });
 
         $this->info("{$count} événement(s) marqué(s) comme terminés.");
     }

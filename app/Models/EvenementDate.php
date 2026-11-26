@@ -58,13 +58,13 @@ class EvenementDate extends Model
         return $this->date_debut->copy()->addHours(Evenement::DUREE_SCAN_HEURES);
     }
 
-    // Fin de la vente pour ce jour : minuit du jour de la session.
+    // Fin de la vente pour ce jour : 24 h après le début de la session.
     public function finVente(): \Carbon\CarbonInterface
     {
-        return $this->date_debut->copy()->endOfDay();
+        return $this->date_debut->copy()->addHours(Evenement::DUREE_VENTE_APRES_DEBUT_HEURES);
     }
 
-    // Jour terminé pour la vente (minuit passé).
+    // Jour terminé pour la vente (24 h après son début).
     public function estTermine(): bool
     {
         return now()->gt($this->finVente());

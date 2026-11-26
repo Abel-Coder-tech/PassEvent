@@ -25,8 +25,20 @@ class Evenement extends Model
     /** @var array<int, int> */
     private array $occupationCache = [];
 
-    // Intervalle (en heures) après l'heure de début pendant lequel le scan reste valide
-    public const DUREE_SCAN_HEURES = 6;
+    // Intervalle (en heures) après l'heure de début pendant lequel le scan reste
+    // valide : aligné sur la vente (un billet acheté le jour même doit passer).
+    public const DUREE_SCAN_HEURES = 24;
+
+    // La billetterie reste ouverte le jour même : elle ne se ferme que 24 h
+    // après l'heure de début de la (dernière) session.
+    public const DUREE_VENTE_APRES_DEBUT_HEURES = 24;
+
+    // Seuil « encore en vente » pour les requêtes : une session qui a commencé
+    // il y a moins de 24 h est toujours achetable.
+    public static function seuilDebutEnVente(): \Illuminate\Support\Carbon
+    {
+        return now()->subHours(self::DUREE_VENTE_APRES_DEBUT_HEURES);
+    }
 
     protected $fillable = [
         'user_id',
@@ -158,7 +170,8 @@ class Evenement extends Model
 
     public function scopeWithUpcomingDate(Builder $query): Builder
     {
-        $now = now();
+        // Une session commencée il y a moins de 24 h est encore en vente.
+        $now = static::seuilDebutEnVente();
 
         return $query->where(function (Builder $upcoming) use ($now) {
             $upcoming->whereHas('dates', fn (Builder $dates) => $dates->where('date_debut', '>=', $now))
@@ -176,7 +189,8 @@ class Evenement extends Model
         $now = now();
 
         return match ($filtre) {
-            'aujourdhui' => [$now, $now->copy()->endOfDay()],
+            // « Aujourd'hui » inclut les événements déjà commencés ce jour (encore en vente)
+            'aujourdhui' => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
             'weekend' => [
                 $now->isWeekend() ? $now : $now->copy()->next(\Carbon\Carbon::SATURDAY)->startOfDay(),
                 ($now->isSunday() ? $now->copy() : $now->copy()->next(\Carbon\Carbon::SUNDAY))->endOfDay(),
@@ -380,7 +394,7 @@ class Evenement extends Model
         });
     }
 
-    // Fin de la vente des packs : minuit du premier jour payant (repli sur le
+    // Fin de la vente des packs : 24 h après le début du premier jour payant (repli sur le
     // dernier jour si tous les jours sont gratuits). `null` = pas de limite
     // propre aux packs (événement mono-jour ou gratuit).
     public function finVentePacks(): ?\Carbon\CarbonInterface
@@ -827,11 +841,19 @@ class Evenement extends Model
         return $this->raisonBlocageVente() === null;
     }
 
+    // Fin de la billetterie : 24 h après le début de la dernière session.
+    public function finVente(): ?\Illuminate\Support\Carbon
+    {
+        return $this->derniereDateVente()?->copy()->addHours(self::DUREE_VENTE_APRES_DEBUT_HEURES);
+    }
+
+    // Événement passé pour la vente (et l'accès des agents) : 24 h après le
+    // début de la dernière session, pas dès son heure de début.
     public function evenementPasse(): bool
     {
-        $derniere = $this->derniereDateVente();
+        $fin = $this->finVente();
 
-        return $derniere !== null && $derniere->isPast();
+        return $fin !== null && $fin->isPast();
     }
 
     // Session (jour) à utiliser pour le scan à l'instant présent.
@@ -846,7 +868,9 @@ class Evenement extends Model
         $enCours = $this->dates()
             ->where('date_debut', '<=', $maintenant)
             ->where('date_debut', '>=', $maintenant->copy()->subHours(self::DUREE_SCAN_HEURES))
-            ->orderBy('date_debut')
+            // Fenêtres de 24 h : deux sessions rapprochées peuvent se chevaucher,
+            // on retient la plus récente déjà commencée.
+            ->reorder('date_debut', 'desc')
             ->first();
 
         if ($enCours) {

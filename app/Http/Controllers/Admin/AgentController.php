@@ -135,7 +135,7 @@ class AgentController extends Controller
 
         // Cibles de réaffectation : événements à venir de l'organisateur, hors annulation
         $evenements = Evenement::where('user_id', auth()->id())
-            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', \App\Models\Evenement::seuilDebutEnVente()))
             ->where('statut', '!=', 'annulé')
             ->orderBy('date_event')
             ->get();
