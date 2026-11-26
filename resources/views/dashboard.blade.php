@@ -96,19 +96,12 @@
             <a href="{{ route('admin.evenements.index') }}" class="app-btn"><i class="bi bi-calendar-week"></i> Mes événements</a>
             <a href="{{ route('scan.index') }}" class="app-btn"><i class="bi bi-qr-code-scan"></i> Scanner</a>
             @if($appRelease)
-            <a href="{{ URL::temporarySignedRoute('app.download', now()->addMinutes(15), ['release' => $appRelease->id, 'uid' => Auth::id()]) }}" class="app-btn primary">
-                <i class="bi bi-phone"></i> PaxAgent v{{ $appRelease->version_code }}
+            <a href="{{ URL::temporarySignedRoute('app.download', now()->addMinutes(15), ['release' => $appRelease->id, 'uid' => Auth::id()]) }}" class="app-btn primary" title="Télécharger l'application PaxAgent {{ $appRelease->version_name }} pour vos agents (Android)">
+                <i class="bi bi-download"></i> App PaxAgent
             </a>
             @endif
         </div>
     </div>
-
-    @if($appRelease)
-    <div class="mb-3" style="font-size:0.72rem;color:var(--gris);">
-        PaxAgent {{ $appRelease->version_name }} (build {{ $appRelease->version_code }}) · SHA-256 :
-        <code style="font-size:0.7rem;">{{ $appRelease->sha256 }}</code>
-    </div>
-    @endif
 
     {{-- Indicateurs clés --}}
     <div class="row g-3 mb-4">

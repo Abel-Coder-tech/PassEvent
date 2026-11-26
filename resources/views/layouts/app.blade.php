@@ -218,11 +218,11 @@
         .sidebar .nav-link.active i { color: var(--accent); }
 
         .profil-btn {
-            border: 0; background: transparent; padding: 0; line-height: 1;
-            color: var(--sombre); font-size: 2rem; cursor: pointer;
-            display: inline-flex; align-items: center; flex-shrink: 0;
+            width: 38px; height: 38px; border-radius: 50%; border: 0; padding: 0;
+            background: var(--violet); color: #fff; font-weight: 700; font-size: 0.78rem;
+            display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;
         }
-        .profil-btn:hover, .profil-btn[aria-expanded="true"] { color: #000; opacity: .75; }
+        .profil-btn:hover, .profil-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(123,63,160,0.25); }
         .profil-menu { min-width: 220px; border-radius: 12px; border: 1px solid #ececec; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 0.4rem; margin-top: 0.4rem !important; }
         .profil-menu-entete { padding: 0.45rem 0.75rem 0.2rem; }
         .profil-menu-nom { font-weight: 700; font-size: 0.85rem; color: var(--sombre); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -953,7 +953,7 @@
             @endif
             <div class="dropdown">
                 <button type="button" class="profil-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mon compte" title="{{ Auth::user()->nom }}">
-                    <i class="bi bi-person-circle"></i>
+                    {{ strtoupper(mb_substr(Auth::user()->nom, 0, 2)) }}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end profil-menu">
                     <li class="profil-menu-entete">
