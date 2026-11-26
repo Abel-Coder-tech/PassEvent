@@ -15,7 +15,7 @@
         <div class="alert alert-danger">
             <i class="bi bi-exclamation-triangle me-2"></i>Votre compte a été désactivé par l'organisateur.
         </div>
-    @elseif($evenement->date_event < now())
+    @elseif($evenement->evenementPasse())
         <div class="alert alert-warning">
             <i class="bi bi-clock me-2"></i>L'événement <strong>{{ $evenement->titre }}</strong> est terminé ({{ $evenement->date_event->format('d/m/Y') }}).
         </div>

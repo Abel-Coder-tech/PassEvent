@@ -13,7 +13,7 @@ class TerminerEvenementsPasses extends Command
 
     public function handle()
     {
-        // Terminé 24 h après le début de la DERNIÈRE session (la billetterie
+        // Terminé 12 h après le début de la DERNIÈRE session (la billetterie
         // reste ouverte le jour même ; un événement sur plusieurs jours n'est
         // pas clos après son premier jour).
         $count = 0;

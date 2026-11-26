@@ -79,8 +79,8 @@
         @forelse($evenements as $evenement)
             @php
                 $now = now();
-                $isPast = $evenement->date_event < $now;
-                $isToday = $evenement->date_event->isToday();
+                $isPast = $evenement->evenementPasse(); // 12 h après le début de la dernière session
+                $isToday = ! $isPast && ($evenement->date_event->isToday() || $evenement->date_event <= $now); // en cours
                 $suppressionBloquee = $evenement->suppressionOrganisateurBloquee();
 
                 // La capacité ne s'applique qu'aux billets en ligne.

@@ -87,11 +87,11 @@ class EvenementModificationLockTest extends TestCase
         ]);
         $this->ajouterScan($evenement, '2026-11-09 11:00:00', 'valide');
 
-        // Fin de fenêtre de scan (24 h) le 11/11 à 10h, + 12 h.
-        Carbon::setTestNow('2026-11-11 21:59:59');
+        // Fin de fenêtre de scan (12 h) le 10/11 à 22h, + 12 h.
+        Carbon::setTestNow('2026-11-11 09:59:59');
         $this->assertFalse($evenement->modificationGlobaleVerrouillee());
 
-        Carbon::setTestNow('2026-11-11 22:00:00');
+        Carbon::setTestNow('2026-11-11 10:00:00');
         $this->assertTrue($evenement->modificationGlobaleVerrouillee());
     }
 
@@ -127,17 +127,17 @@ class EvenementModificationLockTest extends TestCase
         $this->assertTrue($session->date_debut->isFuture());
     }
 
-    public function test_jour_scan_actuel_reste_ouvert_24h_apres_le_debut(): void
+    public function test_jour_scan_actuel_reste_ouvert_12h_apres_le_debut(): void
     {
         $evenement = $this->creerEvenement(['2026-11-10 08:00:00']);
 
-        // Le soir même et jusqu'au lendemain 8h, la session est toujours scannable.
-        Carbon::setTestNow('2026-11-11 07:30:00');
+        // Jusqu'à 20h le jour même, la session est toujours scannable.
+        Carbon::setTestNow('2026-11-10 19:30:00');
         $session = $evenement->jourScanActuel();
         $this->assertNotNull($session);
         $this->assertFalse($session->finFenetreScan()->isPast());
 
-        Carbon::setTestNow('2026-11-11 08:30:00');
+        Carbon::setTestNow('2026-11-10 20:30:00');
         $this->assertTrue($evenement->scanTermine());
     }
 
@@ -154,10 +154,10 @@ class EvenementModificationLockTest extends TestCase
     {
         $evenement = $this->creerEvenement(['2026-11-10 20:00:00']);
 
-        Carbon::setTestNow('2026-11-11 18:00:00');
+        Carbon::setTestNow('2026-11-11 06:00:00');
         $this->assertFalse($evenement->scanTermine());
 
-        Carbon::setTestNow('2026-11-11 20:30:00');
+        Carbon::setTestNow('2026-11-11 08:30:00');
         $this->assertTrue($evenement->scanTermine());
     }
 

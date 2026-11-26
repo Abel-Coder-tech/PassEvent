@@ -128,7 +128,7 @@ class MultiDayEvenementTest extends TestCase
         $this->assertSame(1, $evenement->occupationJour($jour));
     }
 
-    public function test_un_tarif_jour_est_vendable_24h_apres_son_debut(): void
+    public function test_un_tarif_jour_est_vendable_12h_apres_son_debut(): void
     {
         Carbon::setTestNow('2026-11-20 10:00');
         $evenement = $this->creerEvenement(10);
@@ -136,15 +136,15 @@ class MultiDayEvenementTest extends TestCase
         $this->creerJour($evenement->id, Carbon::parse('2026-11-21 08:00'), 1, 5);
         $tarifJour1 = $this->creerTarif($evenement->id, $jour1);
 
-        // Le jour a commencé mais il reste vendable 24 h après son début.
-        Carbon::setTestNow('2026-11-21 07:30');
+        // Le jour a commencé mais il reste vendable 12 h après son début.
+        Carbon::setTestNow('2026-11-20 19:30');
         $this->assertTrue($tarifJour1->fresh()->estEncoreVendable());
 
-        Carbon::setTestNow('2026-11-21 08:01');
+        Carbon::setTestNow('2026-11-20 20:01');
         $this->assertFalse($tarifJour1->fresh()->estEncoreVendable());
     }
 
-    public function test_le_pack_n_est_plus_vendable_24h_apres_le_premier_jour_payant(): void
+    public function test_le_pack_n_est_plus_vendable_12h_apres_le_premier_jour_payant(): void
     {
         Carbon::setTestNow('2026-11-20 09:00');
         $evenement = $this->creerEvenement(10);
@@ -156,10 +156,10 @@ class MultiDayEvenementTest extends TestCase
 
         $this->assertSame($jour1->id, $evenement->premierJourPayant()?->id);
 
-        Carbon::setTestNow('2026-11-21 09:59');
+        Carbon::setTestNow('2026-11-20 21:59');
         $this->assertTrue($pack->fresh()->estEncoreVendable());
 
-        Carbon::setTestNow('2026-11-21 10:01');
+        Carbon::setTestNow('2026-11-20 22:01');
         $this->assertFalse($pack->fresh()->estEncoreVendable());
     }
 
@@ -180,8 +180,8 @@ class MultiDayEvenementTest extends TestCase
         Carbon::setTestNow('2026-11-21 15:00');
         $this->assertTrue($pack->fresh()->estEncoreVendable());
 
-        // 24 h après le début du premier jour payant : le pack est fermé.
-        Carbon::setTestNow('2026-11-22 10:01');
+        // 12 h après le début du premier jour payant : le pack est fermé.
+        Carbon::setTestNow('2026-11-21 22:01');
         $this->assertFalse($pack->fresh()->estEncoreVendable());
     }
 

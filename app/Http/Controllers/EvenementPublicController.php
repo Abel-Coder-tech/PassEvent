@@ -200,8 +200,8 @@ class EvenementPublicController extends Controller
             return back()->with('error', 'La billetterie de cet événement n\'est pas encore ouverte.');
         }
 
-        $derniereDate = $evenement->derniereDate();
-        if ($derniereDate && $derniereDate->date_debut->isPast()) {
+        // Vente ouverte jusqu'à 12 h après le début de la dernière session
+        if ($evenement->evenementPasse()) {
             return back()->with('error', 'La vente est clôturée pour cet événement.'); // Vente expirée
         }
 

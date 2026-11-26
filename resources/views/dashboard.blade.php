@@ -209,8 +209,8 @@
                     @forelse($evenementsRecents as $evenement)
                         @php
                             $now = now();
-                            $isPast = $evenement->date_event < $now;
-                            $isToday = $evenement->date_event->isToday();
+                            $isPast = $evenement->evenementPasse(); // 12 h après le début de la dernière session
+                            $isToday = ! $isPast && ($evenement->date_event->isToday() || $evenement->date_event <= $now); // en cours
                             if ($evenement->statut === 'terminé' || $evenement->statut === 'annulé' || ($isPast && $evenement->statut === 'publié')) {
                                 $statusLabel = 'Terminé'; $dotColor = 'var(--gris)'; $pill = 'status-brouillon';
                             } elseif ($isToday) {

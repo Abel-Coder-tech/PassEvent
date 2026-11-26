@@ -93,7 +93,7 @@
                         $remplissage = (int) round($evenement->tauxRemplissage());
                         $prixDernier = $evenement->prixAPartirDe();
                         $venteCloturee = $evenement->etatVitrine() === 'cloturee';
-                        $estPasse = $evenement->dates->max(fn ($d) => $d->date_debut) ? $evenement->dates->max(fn ($d) => $d->date_debut)->lt(now()) : $evenement->date_event->isPast();
+                        $estPasse = $evenement->evenementPasse(); // 12 h après le début de la dernière session
                         $textes = $evenement->getTextes();
                     @endphp
                     <div class="ev-grid-col">
@@ -215,7 +215,7 @@
                     $remplissage = (int) round($evenement->tauxRemplissage());
                     $prixDernier = $evenement->prixAPartirDe();
                     $venteCloturee = $evenement->etatVitrine() === 'cloturee';
-                    $estPasse = $evenement->date_event->isPast();
+                    $estPasse = $evenement->evenementPasse();
                     $textes = $evenement->getTextes();
                 @endphp
                 <div class="ev-grid-col">

@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-// La billetterie reste ouverte le jour même : elle se ferme 24 h après le début.
+// La billetterie reste ouverte le jour même : elle se ferme 12 h après le début.
 class BilletterieOuverteJourMemeTest extends TestCase
 {
     use RefreshDatabase;
@@ -30,17 +30,17 @@ class BilletterieOuverteJourMemeTest extends TestCase
         $this->assertTrue(Evenement::withUpcomingDate()->whereKey($e->id)->exists());
     }
 
-    public function test_la_vente_se_ferme_24h_apres_le_debut(): void
+    public function test_la_vente_se_ferme_12h_apres_le_debut(): void
     {
-        $e = $this->evenement(now()->subHours(25));
+        $e = $this->evenement(now()->subHours(13));
         $this->assertTrue($e->evenementPasse());
         $this->assertFalse(Evenement::withUpcomingDate()->whereKey($e->id)->exists());
     }
 
-    public function test_la_commande_ne_termine_l_evenement_qu_apres_24h(): void
+    public function test_la_commande_ne_termine_l_evenement_qu_apres_12h(): void
     {
         $encours = $this->evenement(now()->subHours(10));
-        $fini = $this->evenement(now()->subHours(30));
+        $fini = $this->evenement(now()->subHours(14));
 
         $this->artisan('evenements:terminer')->assertSuccessful();
 
