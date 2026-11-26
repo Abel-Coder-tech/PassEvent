@@ -18,6 +18,7 @@ Site : [paxevent.com](https://paxevent.com)
 - [Tickets physiques et bracelets](#tickets-physiques-et-bracelets)
 - [Tests](#tests)
 - [Déploiement](#déploiement)
+- [Application PaxAgent (APK)](#application-paxagent-apk)
 - [Sécurité](#sécurité)
 
 ---
@@ -186,6 +187,39 @@ php artisan view:clear
 Vérifier ensuite :
 - que la tâche cron `schedule:run` est active ;
 - dans **Super admin → Sécurité**, que l'encadré « Votre connexion » affiche bien l'IP publique du visiteur et HTTPS = Oui.
+
+## Application PaxAgent (APK)
+
+L'appli mobile des agents (scan et vente) est distribuée hors Play Store. Le dashboard organisateur propose la dernière version publiée, et le mail envoyé à la création d'un agent contient un lien de téléchargement (signé, valable 7 jours, coupé si l'agent est désactivé).
+
+**1. Construire l'APK** (dépôt `pax_scan`) : incrémenter le numéro après le `+` de `version:` dans `pubspec.yaml`, puis :
+
+```bash
+flutter build apk --release
+# → build/app/outputs/flutter-apk/app-release.apk
+```
+
+L'APK doit être signé avec la clé de release (`android/key.properties`) : Android refuse une mise à jour signée avec une autre clé. Ne jamais perdre ni changer cette clé.
+
+**2. L'envoyer sur le serveur** (hors du dossier public, par exemple `~/tmp/`), puis publier :
+
+```bash
+php artisan paxagent:publier ~/tmp/app-release.apk --nom-version=1.0.0 --build=7 \
+    --notes="Code d'accès à 4 chiffres"
+```
+
+La commande copie le fichier dans `storage/app/private/apps/`, calcule son SHA-256 et l'enregistre. Options : `--obligatoire` (mise à jour imposée), `--brouillon` (enregistré sans être proposé).
+
+**Serveur** : par défaut (Apache/o2switch), PHP envoie le fichier par morceaux. Sur Nginx, mettre `PAXAGENT_X_ACCEL=true` et déclarer la location interne :
+
+```nginx
+location /protected/apps/ {
+    internal;
+    alias /chemin/vers/passevent/storage/app/private/apps/;
+}
+```
+
+Vérifier que `storage/` n'est jamais accessible depuis le web : seul `public/` doit l'être.
 
 ## Sécurité
 

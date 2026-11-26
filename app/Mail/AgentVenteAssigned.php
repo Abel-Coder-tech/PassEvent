@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Http\Controllers\AppReleaseController;
 use App\Models\AgentVente;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -13,10 +14,15 @@ class AgentVenteAssigned extends Mailable
 {
     use Queueable, SerializesModels;
 
+    /// Lien signé (7 jours) vers l'APK PaxAgent, null si aucune version publiée.
+    public ?string $lienApp;
+
     public function __construct(
         public AgentVente $agent,
         public string $motDePasse,
-    ) {}
+    ) {
+        $this->lienApp = AppReleaseController::lienPourAgent('vente', $agent->id);
+    }
 
     public function envelope(): Envelope
     {

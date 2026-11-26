@@ -52,8 +52,20 @@ class AppReleaseDownloadTest extends TestCase
         $this->actingAs($user)
             ->get($this->signedUrl($release, $user->id))
             ->assertOk()
-            ->assertHeader('X-Accel-Redirect', '/protected/apps/PaxAgent-test.apk')
+            ->assertDownload('PaxAgent-1.0.0-v4.apk')
             ->assertHeader('Content-Type', 'application/vnd.android.package-archive');
+    }
+
+    public function test_avec_nginx_le_fichier_est_delegue_par_x_accel(): void
+    {
+        config(['app.paxagent_x_accel' => true]);
+        $user = User::factory()->create(['role' => 'admin']);
+        $release = $this->release();
+
+        $this->actingAs($user)
+            ->get($this->signedUrl($release, $user->id))
+            ->assertOk()
+            ->assertHeader('X-Accel-Redirect', '/protected/apps/PaxAgent-test.apk');
     }
 
     public function test_un_lien_sans_signature_est_refuse(): void

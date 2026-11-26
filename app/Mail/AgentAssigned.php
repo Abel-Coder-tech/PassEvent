@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Http\Controllers\AppReleaseController;
 use App\Models\Agent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -20,11 +21,15 @@ class AgentAssigned extends Mailable
     /// La base ne stocke que son hash bcrypt.
     public string $codeAcces;
 
+    /// Lien signé (7 jours) vers l'APK PaxAgent, null si aucune version publiée.
+    public ?string $lienApp;
+
     public function __construct(Agent $agent, string $motDePasse, string $codeAcces = '')
     {
         $this->agent = $agent;
         $this->motDePasse = $motDePasse;
         $this->codeAcces = $codeAcces;
+        $this->lienApp = AppReleaseController::lienPourAgent('scan', $agent->id);
     }
 
     public function envelope(): Envelope

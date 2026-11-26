@@ -399,6 +399,14 @@ Route::middleware(['auth:web,sanctum', 'no_cache', 'compte_incomplet'])->group(f
         ->name('app.download');
 });
 
+// Lien du mail de création d'agent : l'agent n'a pas encore de session, la
+// signature (7 jours) et le contrôle « compte actif » font office d'accès.
+Route::get('/app/paxagent/agent/{type}/{agent}', [AppReleaseController::class, 'downloadForAgent'])
+    ->whereIn('type', ['scan', 'vente'])
+    ->whereNumber('agent')
+    ->middleware(['no_cache', 'throttle:20,1'])
+    ->name('app.download.agent');
+
 // ============================================================
 // Routes protégées (admin)
 // ============================================================

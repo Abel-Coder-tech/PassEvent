@@ -138,4 +138,12 @@ return [
 
     'max_downloads' => 3,
 
+    /*
+    | Téléchargement de l'APK PaxAgent : à false (défaut, Apache/o2switch),
+    | PHP envoie le fichier par morceaux. À true, Nginx le sert lui-même via
+    | X-Accel-Redirect (location interne /protected/apps/ requise).
+    */
+
+    'paxagent_x_accel' => (bool) env('PAXAGENT_X_ACCEL', false),
+
 ];

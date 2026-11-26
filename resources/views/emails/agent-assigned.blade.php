@@ -36,6 +36,19 @@
                     </p>
                 </div>
 
+
+                @if($lienApp)
+                <div style="background:#f6f2f9;border-radius:12px;padding:1.25rem;margin:1.25rem 0;text-align:center;">
+                    <p style="margin:0 0 0.75rem;font-size:0.9rem;color:#542680;font-weight:700;">Installez l'application PaxAgent (Android)</p>
+                    <a href="{{ $lienApp }}" style="display:inline-block;background:#542680;color:#fff;text-decoration:none;padding:0.8rem 2rem;border-radius:12px;font-weight:700;font-size:0.9rem;">
+                        Télécharger PaxAgent
+                    </a>
+                    <p style="margin:0.75rem 0 0;font-size:0.75rem;color:#777;">
+                        Lien valable 7 jours. À l'ouverture du fichier, autorisez l'installation depuis cette source si Android le demande.
+                    </p>
+                </div>
+                @endif
+
                 <p style="font-size:0.85rem;color:#555;">
                     <strong>Comment procéder ?</strong>
                 </p>

@@ -12,8 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Diffusion de l'APK PaxAgent.
  *
  * Le fichier n'est jamais dans public/ : il vit dans
- * storage/app/private/apps/ et Nginx le sert via X-Accel-Redirect, donc PHP
- * ne charge jamais les ~70 Mo en mémoire.
+ * storage/app/private/apps/. Il est envoyé par morceaux (Apache), ou servi
+ * par Nginx via X-Accel-Redirect si PAXAGENT_X_ACCEL=true.
  */
 class AppReleaseController extends Controller
 {
@@ -36,6 +36,51 @@ class AppReleaseController extends Controller
             'Ce lien n\'est pas destiné à votre compte.',
         );
 
+        return $this->servir($release);
+    }
+
+    /**
+     * Lien envoyé dans le mail de création d'un agent.
+     *
+     * L'agent n'a pas encore l'appli, donc pas de session : le lien signé
+     * (7 jours) suffit. Il sert toujours la dernière version publiée et
+     * cesse de fonctionner si l'agent est supprimé ou désactivé.
+     */
+    public function downloadForAgent(Request $request, string $type, int $agent): Response
+    {
+        abort_unless($request->hasValidSignature(), 403, 'Lien de téléchargement expiré.');
+
+        $modele = match ($type) {
+            'scan' => \App\Models\Agent::class,
+            'vente' => \App\Models\AgentVente::class,
+            default => abort(404),
+        };
+
+        $compte = $modele::find($agent);
+        abort_unless($compte !== null && $compte->actif, 403, 'Ce compte agent n\'est plus actif.');
+
+        $release = AppRelease::latest();
+        abort_if($release === null, 404, 'Aucune version de PaxAgent n\'est disponible.');
+
+        return $this->servir($release);
+    }
+
+    /** Lien à mettre dans le mail d'un agent, ou null si aucune version n'est publiée. */
+    public static function lienPourAgent(string $type, int $agentId): ?string
+    {
+        if (AppRelease::latest() === null) {
+            return null;
+        }
+
+        return URL::temporarySignedRoute(
+            'app.download.agent',
+            now()->addDays(7),
+            ['type' => $type, 'agent' => $agentId],
+        );
+    }
+
+    private function servir(AppRelease $release): Response
+    {
         // `path` ne doit contenir qu'un nom de fichier, jamais un chemin.
         $path = basename((string) $release->path);
         abort_unless($path !== '' && $path === $release->path, 404);
@@ -49,14 +94,23 @@ class AppReleaseController extends Controller
             $release->version_code,
         );
 
-        return response('', 200, [
+        $entetes = [
             'Content-Type' => 'application/vnd.android.package-archive',
-            'Content-Disposition' => 'attachment; filename="'.$nom.'"',
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, max-age=0, must-revalidate',
+        ];
+
+        if (config('app.paxagent_x_accel')) {
             // Nginx intercepte cet en-tête et sert le fichier lui-même.
-            'X-Accel-Redirect' => '/protected/apps/'.$path,
-        ]);
+            return response('', 200, $entetes + [
+                'Content-Disposition' => 'attachment; filename="'.$nom.'"',
+                'X-Accel-Redirect' => '/protected/apps/'.$path,
+            ]);
+        }
+
+        // Apache (o2switch) : envoi par morceaux, le fichier n'est jamais
+        // chargé entièrement en mémoire.
+        return response()->download($file, $nom, $entetes);
     }
 
     /**
