@@ -23,7 +23,7 @@ class PublierPaxAgent extends Command
         {apk : Chemin du fichier .apk signé (build release)}
         {--nom-version= : Nom de version, ex. 1.0.0 (pubspec.yaml, avant le +)}
         {--build= : Numéro de build, ex. 7 (pubspec.yaml, après le +)}
-        {--package=com.example.pax_scan : applicationId Android}
+        {--package=com.paxevent.agent : applicationId Android}
         {--notes= : Nouveautés de la version}
         {--obligatoire : Mise à jour obligatoire}
         {--brouillon : Enregistrer sans publier}';

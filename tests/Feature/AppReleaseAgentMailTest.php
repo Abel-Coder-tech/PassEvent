@@ -67,7 +67,7 @@ class AppReleaseAgentMailTest extends TestCase
 
         return AppRelease::create([
             'platform' => 'android',
-            'package_name' => 'com.example.pax_scan',
+            'package_name' => 'com.paxevent.agent',
             'version_code' => 7,
             'version_name' => '1.0.0',
             'sha256' => str_repeat('a', 64),

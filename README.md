@@ -195,7 +195,7 @@ L'appli mobile des agents (scan et vente) est distribuée hors Play Store. Le da
 **1. Construire l'APK** (dépôt `pax_scan`) : incrémenter le numéro après le `+` de `version:` dans `pubspec.yaml`, puis :
 
 ```bash
-flutter build apk --release
+flutter build apk --release --target-platform android-arm,android-arm64
 # → build/app/outputs/flutter-apk/app-release.apk
 ```
 
