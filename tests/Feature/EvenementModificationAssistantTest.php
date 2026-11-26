@@ -223,6 +223,27 @@ class EvenementModificationAssistantTest extends TestCase
         ])->all();
     }
 
+    public function test_l_image_se_change_meme_billetterie_ouverte_et_billets_vendus(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $evenement = $this->creerMono();
+        $evenement->update(['billetterie_ouverte' => true, 'image' => 'evenements/ancienne.jpg']);
+        [$standard, $etudiant] = $evenement->tarifs()->orderBy('id')->get()->all();
+        $standard->update(['quantite_vendue' => 30]);
+
+        $this->modifier($evenement, [
+            'duree' => 'un', 'date_event' => $evenement->date_event->format('Y-m-d\TH:i'), 'capacite' => $evenement->capacite,
+            'tarifs' => [
+                ['id' => $standard->id, 'nom' => $standard->nom, 'prix' => (int) $standard->prix, 'qte' => $standard->quantite_disponible],
+                ['id' => $etudiant->id, 'nom' => $etudiant->nom, 'prix' => (int) $etudiant->prix, 'qte' => $etudiant->quantite_disponible],
+            ],
+            'image' => \Illuminate\Http\UploadedFile::fake()->image('affiche.jpg', 600, 800),
+        ])->assertSessionHasNoErrors()->assertRedirect(route('admin.evenements.index'));
+
+        $this->assertNotSame('evenements/ancienne.jpg', $evenement->fresh()->image);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($evenement->fresh()->image);
+    }
+
     protected function creerMono(): Evenement
     {
         $this->envoyer([

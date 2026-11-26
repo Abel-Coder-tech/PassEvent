@@ -217,44 +217,18 @@
         }
         .sidebar .nav-link.active i { color: var(--accent); }
 
-        .sidebar-user {
-            padding: 0.9rem 1.1rem;
-            border-top: 1px solid rgba(255,255,255,0.09);
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
-            flex-shrink: 0;
+        .profil-btn {
+            border: 0; background: transparent; padding: 0; line-height: 1;
+            color: var(--sombre); font-size: 2rem; cursor: pointer;
+            display: inline-flex; align-items: center; flex-shrink: 0;
         }
-
-        .sidebar-user-avatar {
-            width: 36px;
-            height: 36px;
-            background: var(--violet);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.75rem;
-            flex-shrink: 0;
-        }
-
-        .sidebar-user-info { overflow: hidden; }
-
-        .sidebar-user-name {
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.82rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sidebar-user-role {
-            color: #918a9e;
-            font-size: 0.7rem;
-        }
+        .profil-btn:hover, .profil-btn[aria-expanded="true"] { color: #000; opacity: .75; }
+        .profil-menu { min-width: 220px; border-radius: 12px; border: 1px solid #ececec; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 0.4rem; margin-top: 0.4rem !important; }
+        .profil-menu-entete { padding: 0.45rem 0.75rem 0.2rem; }
+        .profil-menu-nom { font-weight: 700; font-size: 0.85rem; color: var(--sombre); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profil-menu-role { font-size: 0.72rem; color: var(--gris); }
+        .profil-menu .dropdown-item { border-radius: 8px; font-size: 0.85rem; padding: 0.5rem 0.75rem; display: flex; align-items: center; gap: 0.6rem; }
+        .profil-menu .dropdown-divider { margin: 0.3rem 0; }
 
         .sidebar-overlay {
             display: none;
@@ -945,25 +919,7 @@
                 <i class="bi bi-bar-chart-line"></i> Statistiques
             </a>
 
-            <div class="sidebar-section-label">Compte</div>
-            <a href="{{ route('parametres.index') }}" class="nav-link {{ request()->routeIs('parametres.*') ? 'active' : '' }}">
-                <i class="bi bi-gear"></i> Paramètres
-            </a>
-            <a href="{{ route('evenements.public') }}" target="_blank" class="nav-link">
-                <i class="bi bi-globe2"></i> Voir le site
-            </a>
-            <button type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
-                <i class="bi bi-box-arrow-left"></i> Déconnexion
-            </button>
         </nav>
-
-        <div class="sidebar-user">
-            <div class="sidebar-user-avatar">{{ strtoupper(substr(Auth::user()->nom, 0, 2)) }}</div>
-            <div class="sidebar-user-info">
-                <div class="sidebar-user-name">{{ Auth::user()->nom }}</div>
-                <div class="sidebar-user-role">{{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Organisateur' }}</div>
-            </div>
-        </div>
 
     </div>
 @endauth
@@ -995,6 +951,22 @@
                 <i class="bi bi-plus-lg me-1"></i> <span class="btn-text">@if(request()->routeIs('statistiques.index')) Créer @else Créer un événement @endif</span>
             </a>
             @endif
+            <div class="dropdown">
+                <button type="button" class="profil-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mon compte" title="{{ Auth::user()->nom }}">
+                    <i class="bi bi-person-circle"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end profil-menu">
+                    <li class="profil-menu-entete">
+                        <div class="profil-menu-nom">{{ Auth::user()->nom }}</div>
+                        <div class="profil-menu-role">{{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Organisateur' }}</div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ route('parametres.index') }}"><i class="bi bi-gear"></i> Paramètres</a></li>
+                    <li><a class="dropdown-item" href="{{ route('evenements.public') }}" target="_blank"><i class="bi bi-globe2"></i> Voir le site</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal"><i class="bi bi-box-arrow-left"></i> Déconnexion</button></li>
+                </ul>
+            </div>
         </div>
     </div>
 

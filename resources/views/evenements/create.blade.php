@@ -245,7 +245,7 @@
                                 <label class="wz-drop" for="image" id="wz-drop">
                                     <img id="wz-img" alt="Aperçu de l'image choisie" class="d-none">
                                     <span class="d-block fw-semibold text-dark mb-1" id="wz-drop-titre">Glissez une image ici ou cliquez pour choisir</span>
-                                    <span class="d-block small">JPG ou PNG, 2 Mo maximum{{ $edition && $evenement->image ? ' · laissez vide pour garder l\'image actuelle' : '' }}</span>
+                                    <span class="d-block small">JPG ou PNG · les grandes photos sont réduites automatiquement{{ $edition && $evenement->image ? ' · laissez vide pour garder l\'image actuelle' : '' }}</span>
                                 </label>
                                 <input type="file" class="visually-hidden" id="image" name="image" accept="image/*">
                                 <div id="wz-img-trop-lourde" class="text-danger small mt-1 d-none">
@@ -467,7 +467,7 @@
     const MAX_JOURS = {{ \App\Http\Controllers\EvenementController::MAX_JOURS }};
     const MAX_TARIFS = {{ \App\Http\Controllers\EvenementController::MAX_TARIFS }};
     const MIN_DATE = @json($minDate);
-    const CLE_BROUILLON = style='paxevent:creation-evenement:{{ Auth::id() }}';
+    const CLE_BROUILLON = 'paxevent:creation-evenement:{{ Auth::id() }}';
     // Modification : verrous et données de l'événement existant (null à la création)
     const EDITION = @json($edition);
     const verrouJour = (date) => !!EDITION && !!date && EDITION.joursVerrouilles.includes(String(date).slice(0, 10));
@@ -1060,8 +1060,49 @@
             champImage.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
-    champImage.addEventListener('change', () => {
-        const f = champImage.files[0];
+    // Les photos de téléphone dépassent souvent la limite d'envoi (2 Mo côté
+    // PHP, parfois 1 Mo côté Nginx) : on réduit l'image dans le navigateur
+    // avant l'envoi (1600 px max, JPEG). Une image déjà légère est gardée telle quelle.
+    const LIMITE_LEGERE = 900 * 1024;
+    const COTE_MAX = 1600;
+    async function compresserImage(fichier) {
+        if (!fichier.type.startsWith('image/') || fichier.type === 'image/gif' || fichier.size <= LIMITE_LEGERE) return fichier;
+        try {
+            const bitmap = await createImageBitmap(fichier);
+            const ratio = Math.min(1, COTE_MAX / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(bitmap.width * ratio);
+            canvas.height = Math.round(bitmap.height * ratio);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff'; // fond blanc pour les PNG transparents
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            bitmap.close && bitmap.close();
+            let blob = null;
+            for (const qualite of [0.85, 0.75, 0.6]) {
+                blob = await new Promise((ok) => canvas.toBlob(ok, 'image/jpeg', qualite));
+                if (blob && blob.size <= LIMITE_LEGERE) break;
+            }
+            if (!blob || blob.size >= fichier.size) return fichier;
+            const nom = fichier.name.replace(/\.[^.]+$/, '') + '.jpg';
+            return new File([blob], nom, { type: 'image/jpeg', lastModified: Date.now() });
+        } catch (e) {
+            return fichier; // format non lisible par le navigateur : envoi tel quel
+        }
+    }
+
+    champImage.addEventListener('change', async () => {
+        let f = champImage.files[0];
+        if (f) {
+            $('#wz-drop-titre').textContent = 'Optimisation de l’image…';
+            const reduit = await compresserImage(f);
+            if (reduit !== f) {
+                const dt = new DataTransfer();
+                dt.items.add(reduit);
+                champImage.files = dt.files;
+                f = reduit;
+            }
+        }
         $('#wz-img-trop-lourde').classList.toggle('d-none', !(f && f.size > 2 * 1024 * 1024));
         if (!f) return;
         if (urlImage) URL.revokeObjectURL(urlImage);
