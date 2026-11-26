@@ -183,8 +183,9 @@ class LotPhysiqueController extends Controller
         }
 
         // Prix du ticket physique = prix du tarif choisi ; commission % facultative (sinon taux événement)
-        $commission = $validated['commission_pourcentage'] !== null && $validated['commission_pourcentage'] !== ''
-            ? (float) $validated['commission_pourcentage']
+        $commissionSaisie = $validated['commission_pourcentage'] ?? null;
+        $commission = $commissionSaisie !== null && $commissionSaisie !== ''
+            ? (float) $commissionSaisie
             : null;
 
         // Les codes uniques sont générés AVANT l'insertion : écrire un
@@ -207,7 +208,7 @@ class LotPhysiqueController extends Controller
                         'commission_pourcentage' => $commission,
                         'nom' => $validated['nom'],
                         'quantite' => $validated['quantite'],
-                        'statut' => LotPhysique::STATUT_GENERE,
+                        'statut' => LotPhysique::STATUT_PAYE, // généré par PaxEvent : considéré comme payé
                         'download_count' => 0,
                     ]);
 
