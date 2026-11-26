@@ -47,4 +47,21 @@ class BilletterieOuverteJourMemeTest extends TestCase
         $this->assertSame('publié', $encours->fresh()->statut);
         $this->assertSame('terminé', $fini->fresh()->statut);
     }
+
+    public function test_rouvrir_remet_en_vente_un_evenement_termine_trop_tot(): void
+    {
+        $enCours = $this->evenement(now()->subHour());
+        $enCours->update(['statut' => 'terminé']);
+        $fini = $this->evenement(now()->subHours(14));
+        $fini->update(['statut' => 'terminé']);
+
+        $this->artisan('evenements:rouvrir --essai')->assertSuccessful();
+        $this->assertSame('terminé', $enCours->fresh()->statut);
+
+        $this->artisan('evenements:rouvrir')->assertSuccessful();
+        $this->assertSame('publié', $enCours->fresh()->statut);
+        $this->assertSame('terminé', $fini->fresh()->statut);
+        $this->assertNull($enCours->fresh()->raisonBlocageVente());
+        $this->assertFalse($enCours->fresh()->scanTermine());
+    }
 }
