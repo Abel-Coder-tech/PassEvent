@@ -64,4 +64,16 @@ class BilletterieOuverteJourMemeTest extends TestCase
         $this->assertNull($enCours->fresh()->raisonBlocageVente());
         $this->assertFalse($enCours->fresh()->scanTermine());
     }
+
+    public function test_la_page_detail_n_affiche_pas_cloture_juste_apres_le_debut(): void
+    {
+        $e = $this->evenement(now()->subMinutes(5));
+
+        $this->get(route('evenements.public.show', $e))
+            ->assertOk()
+            ->assertViewHas('evenementPasse', false);
+
+        $e->update(['date_event' => now()->subHours(13)]);
+        $this->get(route('evenements.public.show', $e))->assertViewHas('evenementPasse', true);
+    }
 }

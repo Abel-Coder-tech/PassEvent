@@ -177,7 +177,7 @@ class EvenementPublicController extends Controller
         $estComplet = $evenement->estComplet() || (! $evenement->gratuit && $tarifs->isEmpty());
         $venteCloturee = $evenement->etatVitrine() === 'cloturee'; // Billetterie fermée après des ventes
         $derniereDate = $evenement->derniereDate();
-        $evenementPasse = $derniereDate && $derniereDate->date_debut->lt(now());
+        $evenementPasse = $evenement->evenementPasse(); // 12 h après le début de la dernière session
 
         // Événement publié à l'avance : la billetterie n'a pas encore ouvert.
         $billetteriePasOuverte = $evenement->etatVitrine() === 'bientot' && ! $evenementPasse;
