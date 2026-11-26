@@ -87,10 +87,11 @@ class EvenementModificationLockTest extends TestCase
         ]);
         $this->ajouterScan($evenement, '2026-11-09 11:00:00', 'valide');
 
-        Carbon::setTestNow('2026-11-11 03:59:59');
+        // Fin de fenêtre de scan (24 h) le 11/11 à 10h, + 12 h.
+        Carbon::setTestNow('2026-11-11 21:59:59');
         $this->assertFalse($evenement->modificationGlobaleVerrouillee());
 
-        Carbon::setTestNow('2026-11-11 04:00:00');
+        Carbon::setTestNow('2026-11-11 22:00:00');
         $this->assertTrue($evenement->modificationGlobaleVerrouillee());
     }
 
@@ -126,16 +127,18 @@ class EvenementModificationLockTest extends TestCase
         $this->assertTrue($session->date_debut->isFuture());
     }
 
-    public function test_jour_scan_actuel_renvoie_la_session_terminee_du_jour(): void
+    public function test_jour_scan_actuel_reste_ouvert_24h_apres_le_debut(): void
     {
         $evenement = $this->creerEvenement(['2026-11-10 08:00:00']);
 
-        Carbon::setTestNow('2026-11-10 15:00:00');
-
+        // Le soir même et jusqu'au lendemain 8h, la session est toujours scannable.
+        Carbon::setTestNow('2026-11-11 07:30:00');
         $session = $evenement->jourScanActuel();
-
         $this->assertNotNull($session);
-        $this->assertTrue($session->finFenetreScan()->isPast());
+        $this->assertFalse($session->finFenetreScan()->isPast());
+
+        Carbon::setTestNow('2026-11-11 08:30:00');
+        $this->assertTrue($evenement->scanTermine());
     }
 
     public function test_jour_scan_actuel_est_null_hors_session(): void
@@ -151,10 +154,10 @@ class EvenementModificationLockTest extends TestCase
     {
         $evenement = $this->creerEvenement(['2026-11-10 20:00:00']);
 
-        Carbon::setTestNow('2026-11-10 22:00:00');
+        Carbon::setTestNow('2026-11-11 18:00:00');
         $this->assertFalse($evenement->scanTermine());
 
-        Carbon::setTestNow('2026-11-11 02:30:00');
+        Carbon::setTestNow('2026-11-11 20:30:00');
         $this->assertTrue($evenement->scanTermine());
     }
 
