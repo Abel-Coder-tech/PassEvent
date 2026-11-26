@@ -20,7 +20,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" style="font-size:0.8rem;font-weight:600;">Organisateur</label>
-                            <select name="user_id" id="sel_organisateur" class="sa-form-control" required>
+                            <select name="user_id" id="sel_organisateur" class="sa-form-control" required data-recherche="1">
                                 <option value="">-- Choisir un organisateur --</option>
                                 @foreach($organisateurs as $org)
                                 <option value="{{ $org->id }}">{{ $org->nom }}</option>
@@ -35,7 +35,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" style="font-size:0.8rem;font-weight:600;">Evenement</label>
-                            <select name="evenement_id" id="sel_evenement" class="sa-form-control" required disabled>
+                            <select name="evenement_id" id="sel_evenement" class="sa-form-control" required disabled data-recherche="1">
                                 <option value="">-- Choisir un organisateur d'abord --</option>
                             </select>
                             @error('evenement_id')<small class="text-danger">{{ $message }}</small>@enderror
