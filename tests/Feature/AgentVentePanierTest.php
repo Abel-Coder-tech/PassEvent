@@ -93,6 +93,32 @@ class AgentVentePanierTest extends TestCase
 
     }
 
+    public function test_l_agent_vend_encore_11h30_apres_le_debut(): void
+    {
+        // Session démarrée il y a 11 h 30 : la vente mobile doit rester ouverte.
+        DB::table('evenement')->where('id', $this->evenementId)->update(['date_event' => now()->subMinutes(690), 'statut' => 'publié']);
+        DB::table('evenement_dates')->insert(['evenement_id' => $this->evenementId, 'date_debut' => now()->subMinutes(690), 'ordre' => 0]);
+
+        $resultat = $this->service()->create($this->agent->fresh(), [
+            'nom_acheteur' => 'Awa Kone',
+            'email_acheteur' => 'awa@example.test',
+            'methode_paiement' => 'cash',
+            'lignes' => [$this->standardId => 1],
+        ]);
+        $this->assertSame('payé', $resultat['statut']);
+
+        // 12 h 30 après le début : la vente est fermée.
+        DB::table('evenement')->where('id', $this->evenementId)->update(['date_event' => now()->subMinutes(750)]);
+        DB::table('evenement_dates')->where('evenement_id', $this->evenementId)->update(['date_debut' => now()->subMinutes(750)]);
+        $this->expectException(ValidationException::class);
+        $this->service()->create($this->agent->fresh(), [
+            'nom_acheteur' => 'Awa Kone',
+            'email_acheteur' => 'awa@example.test',
+            'methode_paiement' => 'cash',
+            'lignes' => [$this->standardId => 1],
+        ]);
+    }
+
     public function test_le_code_promo_s_applique_uniquement_a_son_tarif(): void
     {
         DB::table('codes_promos')->insert([

@@ -47,6 +47,29 @@ class TicketScanServiceTest extends TestCase
         ]);
     }
 
+    public function test_le_scan_reste_ouvert_11h30_apres_le_debut_puis_se_ferme_a_12h(): void
+    {
+        // La session a commencé il y a 30 min (setUp) : on avance de 11 h.
+        $this->creerTicket($this->evenementId, 'PAX-TARD', 'SIMPLE');
+        $this->creerTicket($this->evenementId, 'PAX-TROP-TARD', 'SIMPLE');
+        $service = app(TicketScanService::class);
+        $depart = now();
+
+        try {
+            Carbon::setTestNow($depart->copy()->addHours(11));
+            $evenement = $this->agent->evenement()->first();
+            $this->assertFalse($evenement->evenementPasse(), 'Accès agent (middlewares)');
+            $this->assertFalse($evenement->scanTermine(), 'API scan');
+            $this->assertTrue($service->verifier($this->agent, 'PAX-TARD')['success']);
+
+            Carbon::setTestNow($depart->copy()->addHours(12));
+            $this->assertFalse($service->verifier($this->agent, 'PAX-TROP-TARD')['success']);
+            $this->assertTrue($evenement->fresh()->evenementPasse());
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_un_ticket_non_paye_est_traite_comme_introuvable(): void
     {
         $this->creerTicket($this->evenementId, 'PAX-UNPAID', 'SIMPLE', 'en_attente');
