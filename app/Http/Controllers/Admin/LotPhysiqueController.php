@@ -67,8 +67,9 @@ class LotPhysiqueController extends Controller
     // Événements éligibles à l'auto-génération (à venir, avec au moins un tarif actif)
     private function evenementsAuto($user)
     {
+        // À venir ou en cours (même règle que la vente : 12 h après le début de la dernière session)
         return $user->evenements()
-            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->withUpcomingDate()
             ->orderBy('date_event')
             ->with('tarifs')
             ->get()
@@ -114,7 +115,7 @@ class LotPhysiqueController extends Controller
         ]);
 
         $evenement = Evenement::where('user_id', $user->id)->find($data['evenement_id']);
-        if (! $evenement || ($evenement->date_event && $evenement->date_event->isPast())) {
+        if (! $evenement || $evenement->evenementPasse()) {
             return back()->with('error', 'Événement introuvable ou déjà passé.');
         }
 

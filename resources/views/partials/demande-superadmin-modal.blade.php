@@ -1,7 +1,7 @@
 @php
     $evenementsPourDemande = Auth::user()->evenements()
         ->with(['tarifs' => fn ($q) => $q->where('statut', 'actif')->orderBy('prix')])
-        ->where('date_event', '>=', now())
+        ->withUpcomingDate() // à venir ou en cours (12 h après le début)
         ->orderBy('date_event')
         ->get();
 

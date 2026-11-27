@@ -109,8 +109,10 @@ class LotPhysiqueController extends Controller
         ]
         );
 
+        // Événements encore en vente : à venir ou en cours (12 h après le début de
+        // la dernière session), y compris un multijours dont le 1er jour est passé.
         $evenements = Evenement::where('user_id', $request->user_id)
-            ->where(fn ($q) => $q->whereNull('date_event')->orWhere('date_event', '>=', now()))
+            ->withUpcomingDate()
             ->orderBy('date_event', 'asc')
             ->get(['id', 'titre', 'date_event']);
 
@@ -166,6 +168,10 @@ class LotPhysiqueController extends Controller
 
         if ($evenement->user_id !== (int) $validated['user_id']) {
             return back()->withInput()->with('error', 'Cet événement n\'appartient pas à l\'organisateur sélectionné.');
+        }
+
+        if ($evenement->evenementPasse()) {
+            return back()->withInput()->with('error', 'Cet événement est terminé : impossible d\'y générer des tickets physiques.');
         }
 
         if (! $evenement->gratuit) {

@@ -73,8 +73,9 @@ class DemandeSuperAdminController extends Controller
         if (! empty($validated['evenement_id'])) {
             $evenement = Evenement::where('user_id', $user->id)->findOrFail($validated['evenement_id']);
 
-            // Règle métier : les demandes liées à un événement se font avant sa date
-            if ($evenement->date_event && $evenement->date_event->isPast()) {
+            // Règle métier : demandes possibles tant que l'événement n'est pas
+            // terminé (12 h après le début de sa dernière session)
+            if ($evenement->evenementPasse()) {
                 return back()->withInput($request->input())
                     ->withErrors(['evenement_id' => 'Cet événement est déjà passé : les demandes le concernant ne sont plus possibles.']);
             }
