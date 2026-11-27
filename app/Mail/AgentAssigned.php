@@ -24,12 +24,16 @@ class AgentAssigned extends Mailable
     /// Lien signé (7 jours) vers l'APK PaxAgent, null si aucune version publiée.
     public ?string $lienApp;
 
+    public \Illuminate\Support\Carbon $lienExpireLe;
+
     public function __construct(Agent $agent, string $motDePasse, string $codeAcces = '')
     {
         $this->agent = $agent;
         $this->motDePasse = $motDePasse;
         $this->codeAcces = $codeAcces;
-        $this->lienApp = AppReleaseController::lienPourAgent('scan', $agent->id);
+        $finEvenement = $agent->evenement?->finVente();
+        $this->lienApp = AppReleaseController::lienPourAgent('scan', $agent->id, $finEvenement);
+        $this->lienExpireLe = AppReleaseController::expirationLienAgent($finEvenement);
     }
 
     public function envelope(): Envelope

@@ -60,6 +60,13 @@ class AgentController extends Controller
 
         $evenement = Evenement::findOrFail($request->evenement_id);
 
+        // Même règle que l'agent de vente : plus d'affectation après la fin
+        // (12 h après le début de la dernière session)
+        if ($evenement->evenementPasse()) {
+            ActivityLogger::failure('agent_scan.create', 'Événement déjà passé', $evenement, ['email' => $request->email], $request);
+            return back()->with('error', 'Cet événement est déjà passé : impossible d\'y affecter un agent de scan.');
+        }
+
         $nbActifs = $evenement->agents()->where('actif', true)->count();
         $limite = $evenement->limiteAgentsScan();
         if ($limite !== null && $nbActifs >= $limite) {

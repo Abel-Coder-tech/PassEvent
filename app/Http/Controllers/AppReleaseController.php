@@ -66,7 +66,10 @@ class AppReleaseController extends Controller
     }
 
     /** Lien à mettre dans le mail d'un agent, ou null si aucune version n'est publiée. */
-    public static function lienPourAgent(string $type, int $agentId): ?string
+    // Lien valable jusqu'à la fin de l'événement (fermeture des ventes et du
+    // scan), au minimum 7 jours : un agent peut être désigné plus d'un mois
+    // avant. Il est coupé plus tôt si l'agent est désactivé.
+    public static function lienPourAgent(string $type, int $agentId, ?\DateTimeInterface $jusquA = null): ?string
     {
         if (AppRelease::latest() === null) {
             return null;
@@ -74,9 +77,16 @@ class AppReleaseController extends Controller
 
         return URL::temporarySignedRoute(
             'app.download.agent',
-            now()->addDays(7),
+            self::expirationLienAgent($jusquA),
             ['type' => $type, 'agent' => $agentId],
         );
+    }
+
+    public static function expirationLienAgent(?\DateTimeInterface $jusquA = null): \Illuminate\Support\Carbon
+    {
+        $minimum = now()->addDays(7);
+
+        return $jusquA !== null && $minimum->lt($jusquA) ? \Illuminate\Support\Carbon::instance($jusquA) : $minimum;
     }
 
     private function servir(AppRelease $release): Response
