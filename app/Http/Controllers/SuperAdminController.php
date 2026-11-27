@@ -1723,7 +1723,12 @@ class SuperAdminController extends Controller
         $commission = round(($evenement->recettes ?? 0) * $commissionPct / 100, 2);
         $recettesNettes = ($evenement->recettes ?? 0) - $commission;
 
+        // Derniers billets en ligne, tous statuts (le statut est affiché : un
+        // paiement échoué n'apparaît pas comme une vente). Les billets des lots
+        // physiques sont exclus (planches générées, pas des ventes).
         $tickets = Ticket::where('evenement_id', $evenement->id)
+            ->whereNull('lot_physique_id')
+            ->where(fn ($q) => $q->whereNull('source')->orWhere('source', '!=', 'physique'))
             ->with('tarif')
             ->latest('date_achat')
             ->limit(20)
@@ -1793,8 +1798,11 @@ class SuperAdminController extends Controller
 
         $historique = $this->historiqueAjustements('evenement', $evenement->id);
 
+        // En ligne, espèces et physiques séparés, puis total et commissions
+        $bilan = app(\App\Services\BilanFinancier::class)->pourEvenements(collect([$evenement]));
+
         return view('superadmin.evenement-show', compact(
-            'evenement', 'mobileRecettes', 'cashRecettes', 'mobileVentes', 'cashVentes',
+            'bilan', 'evenement', 'mobileRecettes', 'cashRecettes', 'mobileVentes', 'cashVentes',
             'commissionPct', 'commission', 'recettesNettes',
             'tickets', 'ticketsScannes', 'agentsScan', 'agentsVente',
             'agentsScanList', 'agentsVenteList',
@@ -2451,7 +2459,11 @@ class SuperAdminController extends Controller
         $totalRetraits = (float) Withdrawal::where('user_id', $user->id)
             ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
             ->sum('montant');
-        $retirable = max(0, $mobileRecettes - $commission - $commissionAffiliation - $totalRetraits);
+        // Même calcul que la page Retraits de l'organisateur
+        $solde = $user->soldeRetrait();
+        $retirable = $solde['soldeDisponible'];
+        $bilan = app(\App\Services\BilanFinancier::class)->pourEvenements($evenements);
+        $retraitsHistorique = Withdrawal::where('user_id', $user->id)->latest()->get();
 
         $historique = $this->historiqueAjustements('organisateur', $user->id);
 
@@ -2497,13 +2509,93 @@ class SuperAdminController extends Controller
             'mobileRecettes', 'cashRecettes', 'commissionPct',
             'commission', 'recettesNettes', 'retirable',
             'physiqueRecettes', 'commissionPhysiqueTotale', 'physiqueQuantite',
-            'historique'
+            'historique', 'bilan', 'solde', 'retraitsHistorique'
         ) + ['interventions' => Log::where('details', 'like', '%"user_id":'.$user->id.'%')
             ->whereIn('type_operation', [
                 'organisateur_approuve', 'organisateur_rejete', 'organisateur_suspendu',
                 'organisateur_reactive', 'organisateur_corrections', 'organisateur_supprime',
                 'organisateur_restaure',
             ])->orderBy('created_at', 'desc')->limit(12)->get()]);
+    }
+
+    // Fiche Excel de l'organisateur : historique de ses retraits, bilan par
+    // événement et récapitulatif (encaissé, versé, reste à verser).
+    public function exporterRetraitsOrganisateur(User $user)
+    {
+        if ($user->role !== 'admin') {
+            abort(404);
+        }
+
+        $organisation = $user->organisation ?: trim($user->nom.' '.$user->prenom);
+        $titre = ['Fiche des retraits — '.$organisation, 'Organisateur : '.trim($user->nom.' '.$user->prenom).' · '.$user->email.($user->telephone ? ' · '.$user->telephone : ''), 'Éditée le '.now()->format('d/m/Y à H:i')];
+        $statuts = ['payé' => 'Payé', 'rejeté' => 'Rejeté', 'en_cours' => 'En cours', 'en_attente' => 'En attente', 'approuvé' => 'Approuvé'];
+
+        // 1. Historique des retraits (tous statuts, du plus ancien au plus récent)
+        $retraits = Withdrawal::where('user_id', $user->id)->orderBy('created_at')->get();
+        $lignesRetraits = $retraits->map(fn (Withdrawal $w) => [
+            $w->id,
+            $organisation,
+            $w->created_at,
+            (float) $w->montant,
+            $statuts[$w->status] ?? ucfirst((string) $w->status),
+            $w->processed_at,
+            $w->nom,
+            strtoupper((string) $w->reseau),
+            $w->mobile,
+            (float) $w->commission_percentage,
+            (string) $w->admin_notes,
+        ])->all();
+        $totalPaye = (float) $retraits->where('status', 'payé')->sum('montant');
+
+        // 2. Bilan par événement (les retraits portent sur le solde global, pas sur un événement)
+        $evenements = Evenement::where('user_id', $user->id)->orderBy('date_event')->get();
+        $bilanService = app(\App\Services\BilanFinancier::class);
+        $lignesEvenements = $evenements->map(function (Evenement $e) use ($bilanService) {
+            $b = $bilanService->pourEvenements(collect([$e]));
+
+            return [
+                $e->titre,
+                $e->date_event,
+                ucfirst((string) $e->statut),
+                (float) $b['mobile'],
+                (float) $b['especes'],
+                (float) $b['physique'],
+                (float) $b['montant_genere'],
+                (float) ($b['commission_ventes'] + $b['commission_physique'] + $b['commission_affiliation']),
+                (float) $b['net_organisateur'],
+            ];
+        })->all();
+        $somme = fn (int $i) => (float) array_sum(array_column($lignesEvenements, $i));
+
+        // 3. Récapitulatif : même calcul que la page Retraits de l'organisateur
+        $solde = $user->soldeRetrait();
+        $recap = [
+            ['Mobile Money encaissé par PaxEvent', (float) $solde['mobileRecettes']],
+            ['Commissions prélevées (PaxEvent + affiliés)', (float) ($solde['commissionImputee'] + $solde['commissionAffiliation'])],
+            ['Retraits payés', (float) $solde['retraitsPayes']],
+            ['Retraits en attente / en cours', (float) $solde['retraitsEnCours']],
+            ['Reste à verser (retirable)', (float) $solde['soldeDisponible']],
+        ];
+
+        $fichier = 'Retraits-'.\Illuminate\Support\Str::slug($organisation).'-'.now()->format('Y-m-d').'.xlsx';
+
+        return (new \App\Support\XlsxWriter)
+            ->onglet('Retraits',
+                ['N°', 'Organisation', 'Date et heure de la demande', 'Montant', 'Statut', 'Traité le', 'Bénéficiaire', 'Réseau', 'Numéro', 'Commission (%)', 'Note'],
+                $lignesRetraits,
+                ['Date et heure de la demande' => 'date', 'Montant' => 'montant', 'Traité le' => 'date'],
+                $titre,
+                ['', 'Total payé', '', $totalPaye, '', '', '', '', '', '', '']
+            )
+            ->onglet('Par événement',
+                ['Événement', 'Date', 'Statut', 'Mobile Money (PaxEvent)', 'Espèces', 'Billets physiques', 'Montant généré', 'Commissions', 'Net organisateur'],
+                $lignesEvenements,
+                ['Date' => 'date', 'Mobile Money (PaxEvent)' => 'montant', 'Espèces' => 'montant', 'Billets physiques' => 'montant', 'Montant généré' => 'montant', 'Commissions' => 'montant', 'Net organisateur' => 'montant'],
+                $titre,
+                ['Total', '', '', $somme(3), $somme(4), $somme(5), $somme(6), $somme(7), $somme(8)]
+            )
+            ->onglet('Récapitulatif', ['Rubrique', 'Montant'], $recap, ['Montant' => 'montant'], $titre)
+            ->telecharger($fichier);
     }
 
     // Aperçu du contrat de prestation d'un organisateur (avant validation du compte)

@@ -373,6 +373,52 @@ class User extends Authenticatable
     }
 
     // Statistiques financières de l'organisateur avec commissions effectives par événement
+    // Solde retirable par l'organisateur (Mobile Money encaissé par PaxEvent,
+    // moins commissions et retraits en attente / en cours / payés).
+    public function soldeRetrait(): array
+    {
+        $stats = $this->statsFinancieres();
+
+        $totalTickets = $stats['totalTickets'];
+        $mobileRecettes = $stats['mobileRecettes'];
+        $cashRecettes = $stats['cashRecettes'];
+
+        $commissionTotale = $stats['commissionTotale'];
+
+        // Commission directe sur mobile money
+        $commissionMobile = $stats['commissionMobile'];
+
+        // Commission des espèces absorbée proportionnellement par le mobile money
+        $commissionCash = $stats['commissionCash'];
+        $commissionCashAbsorbee = $mobileRecettes > 0 ? $commissionCash : 0;
+
+        // Commission totale imputée au mobile money
+        $commissionImputee = $commissionMobile + $commissionCashAbsorbee;
+
+        // Inclut les retraits en_attente, en_cours ET payé pour bloquer les doubles retraits
+        $totalRetraits = (float) Withdrawal::where('user_id', $this->id)
+            ->whereIn('status', ['en_attente', 'en_cours', 'payé'])
+            ->sum('montant');
+
+        // Commissions des affiliés : dues par l'organisateur, prélevées comme la commission PaxEvent
+        $commissionAffiliation = $stats['commissionAffiliation'];
+
+        $soldeDisponible = max(0, $mobileRecettes - $commissionImputee - $commissionAffiliation - $totalRetraits);
+
+        return [
+            'totalTickets' => $totalTickets,
+            'mobileRecettes' => $mobileRecettes,
+            'cashRecettes' => $cashRecettes,
+            'commissionTotale' => $commissionTotale,
+            'commissionImputee' => $commissionImputee,
+            'commissionAffiliation' => $commissionAffiliation,
+            'totalRetraits' => $totalRetraits,
+            'retraitsPayes' => (float) Withdrawal::where('user_id', $this->id)->where('status', 'payé')->sum('montant'),
+            'retraitsEnCours' => (float) Withdrawal::where('user_id', $this->id)->whereIn('status', ['en_attente', 'en_cours'])->sum('montant'),
+            'soldeDisponible' => $soldeDisponible,
+        ];
+    }
+
     public function statsFinancieres(): array
     {
         $evenementsIds = $this->evenements()->pluck('id');

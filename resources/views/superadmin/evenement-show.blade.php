@@ -24,71 +24,47 @@
     $labelAgentsEffectif = $limiteAgents === null ? 'illimité' : ($limiteAgents . ' agents');
 @endphp
 
-<div class="row g-2 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="sa-card text-center py-3">
-            <div class="fw-bold fs-4" style="color: var(--sa-primary);">{{ $evenement->quota_vendu }} / {{ $evenement->capacite }}</div>
-            <small class="text-muted">Places vendues</small>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="sa-card text-center py-3">
-            <div class="fw-bold fs-4" style="color: var(--sa-success);">{{ $evenement->tickets_vendus ?? 0 }}</div>
-            <small class="text-muted">Tickets payés</small>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="sa-card text-center py-3">
-            <div class="fw-bold fs-4" style="color: #3498db;">{{ number_format($evenement->recettes ?? 0, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Recettes</small>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="sa-card text-center py-3">
-            <div class="fw-bold fs-4" style="color: var(--sa-danger);">{{ number_format($commission, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Commission ({{ $commissionPct }}%)</small>
-        </div>
-    </div>
-</div>
-
-<div class="row g-2 mb-4">
+<div class="row g-2 mb-3">
     <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-2">
-            <div class="fw-bold" style="color:#3498db;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Mobile ({{ $mobileVentes ?? 0 }} vente{{ ($mobileVentes ?? 0) > 1 ? 's' : '' }})</small>
+        <div class="sa-card text-center py-3">
+            <div class="fw-bold fs-5" style="color: var(--sa-primary);">{{ $evenement->quota_vendu }} / {{ $evenement->capacite }}</div>
+            <small class="text-muted">Places en ligne vendues</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-2">
-            <div class="fw-bold" style="color:#f39c12;">{{ number_format($cashRecettes, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Espèces ({{ $cashVentes ?? 0 }} vente{{ ($cashVentes ?? 0) > 1 ? 's' : '' }})</small>
+        <div class="sa-card text-center py-3">
+            <div class="fw-bold fs-5" style="color: #3498db;">{{ $bilan['ventes_nb'] }}</div>
+            <small class="text-muted">Billets vendus (en ligne + espèces)</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-2">
-            <div class="fw-bold" style="color:var(--sa-success);">{{ number_format($recettesNettes, 0, ',', ' ') }} F</div>
-            <small class="text-muted">Net (après commission)</small>
+        <div class="sa-card text-center py-3">
+            <div class="fw-bold fs-5" style="color: #7B3FA0;">{{ $bilan['physique_nb'] }}</div>
+            <small class="text-muted">Billets physiques</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-2">
-            <div class="fw-bold" style="color: var(--sa-primary);">{{ $ticketsScannes }}</div>
+        <div class="sa-card text-center py-3">
+            <div class="fw-bold fs-5" style="color: var(--sa-primary);">{{ $ticketsScannes }}</div>
             <small class="text-muted">Tickets scannés</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-2">
-            <div class="fw-bold" style="color: var(--sa-success);">{{ $agentsScan }}</div>
+        <div class="sa-card text-center py-3">
+            <div class="fw-bold fs-5" style="color: var(--sa-success);">{{ $agentsScan }}</div>
             <small class="text-muted">Agents scan liés</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-2">
-            <div class="fw-bold" style="color: #3498db;">{{ $agentsVente }}</div>
+        <div class="sa-card text-center py-3">
+            <div class="fw-bold fs-5" style="color: #3498db;">{{ $agentsVente }}</div>
             <small class="text-muted">Agents vente liés</small>
         </div>
     </div>
 </div>
+
+@include('superadmin.partials.bilan-financier', ['bilan' => $bilan])
+
 <div class="row g-2 mb-4">
     <div class="col-6 col-md-3">
         <div class="sa-card text-center py-2">
@@ -406,12 +382,12 @@
 
 <div class="sa-card mb-4">
     <div class="sa-card-header">
-        <span><i class="bi bi-ticket me-2" style="color: var(--sa-success);"></i>Derniers tickets</span>
+        <span><i class="bi bi-ticket me-2" style="color: var(--sa-success);"></i>Derniers billets en ligne</span>
     </div>
     <div class="sa-card-body p-0">
         <table class="sa-table">
             <thead>
-                <tr><th>Date</th><th>Acheteur</th><th>Email</th><th>WhatsApp</th><th>N° paiement</th><th>Tarif</th><th>Montant</th><th>Méthode</th></tr>
+                <tr><th>Date</th><th>Acheteur</th><th>Email</th><th>WhatsApp</th><th>N° paiement</th><th>Tarif</th><th>Montant</th><th>Paiement</th></tr>
             </thead>
             <tbody>
                 @forelse($tickets as $ticket)
@@ -422,17 +398,38 @@
                     <td>@if($ticket->whatsapp_acheteur){{ $ticket->whatsapp_acheteur }}@else <span class="text-muted">—</span> @endif</td>
                     <td>@if($ticket->telephone_paiement){{ $ticket->telephone_paiement }}@elseif($ticket->telephone_acheteur){{ $ticket->telephone_acheteur }}@else <span class="text-muted">—</span> @endif</td>
                     <td>{{ $ticket->nom_tarif }}</td>
+                    @php $estPaye = $ticket->statut_paiement === 'payé'; @endphp
                     <td>
-                        @if($ticket->montant > 0)
+                        @if($ticket->montant <= 0)
+                        <span class="text-muted">Gratuit</span>
+                        @elseif($estPaye)
                         <span class="fw-bold" style="color: var(--sa-success);">{{ number_format($ticket->montant, 0, ',', ' ') }} F</span>
                         @else
-                        <span class="text-muted">Gratuit</span>
+                        <span class="text-muted" style="text-decoration: line-through;">{{ number_format($ticket->montant, 0, ',', ' ') }} F</span>
                         @endif
                     </td>
-                    <td>@if($ticket->montant > 0){{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}@else — @endif</td>
+                    <td>
+                        @switch($ticket->statut_paiement)
+                            @case('payé')
+                                @if($ticket->montant > 0){{ \App\Models\Ticket::methodePaiementLabel($ticket->methode_paiement) }}@else — @endif
+                                @break
+                            @case('échoué')
+                                <span class="sa-badge sa-badge-danger">Paiement échoué</span>
+                                @break
+                            @case('en_attente')
+                                <span class="sa-badge sa-badge-warning">Non payé (en attente)</span>
+                                @break
+                            @case('remboursé')
+                                <span class="sa-badge" style="background:#eee;color:#555;">Remboursé</span>
+                                @break
+                            @default
+                                <span class="sa-badge sa-badge-danger">Non payé</span>
+                        @endswitch
+                        @if($ticket->annule)<span class="sa-badge" style="background:#eee;color:#555;">Annulé</span>@endif
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center text-muted py-3">Aucun ticket vendu</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-3">Aucun billet en ligne</td></tr>
                 @endforelse
             </tbody>
         </table>

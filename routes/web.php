@@ -141,6 +141,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/organisateurs-corbeille/{id}/supprimer-definitivement', [SuperAdminController::class, 'supprimerDefinitivementOrganisateur'])->whereNumber('id')->name('organisateurs.supprimer-definitivement');
         Route::post('/organisateurs/{user}/email', [SuperAdminController::class, 'envoyerEmailOrganisateur'])->name('organisateurs.email');
         Route::get('/organisateurs/{user}', [SuperAdminController::class, 'voirOrganisateur'])->name('organisateurs.voir');
+        Route::get('/organisateurs/{user}/retraits-excel', [SuperAdminController::class, 'exporterRetraitsOrganisateur'])->name('organisateurs.retraits-excel');
         Route::get('/organisateurs/{user}/contrat', [SuperAdminController::class, 'voirContrat'])->name('organisateurs.contrat');
         Route::post('/organisateurs/{user}/contrat/figer', [\App\Http\Controllers\ContratOrganisateurController::class, 'figer'])->name('organisateurs.contrat.figer');
         Route::get('/organisateurs/{user}/contrat/fige', [\App\Http\Controllers\ContratOrganisateurController::class, 'voirFige'])->name('organisateurs.contrat.fige');

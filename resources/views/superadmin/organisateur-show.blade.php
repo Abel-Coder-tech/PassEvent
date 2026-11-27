@@ -231,55 +231,53 @@
     </div>
 </div>
 
-<div class="row g-2 mb-3">
-        <div class="col-6 col-md-3">
-            <div class="sa-card text-center py-2">
-                <div class="fw-bold" style="color:#3498db;">{{ number_format($mobileRecettes, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Mobile (FedaPay)</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="sa-card text-center py-2">
-                <div class="fw-bold" style="color:#f39c12;">{{ number_format($cashRecettes, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Espèces</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="sa-card text-center py-2">
-                <div class="fw-bold" style="color:var(--sa-danger);">{{ number_format($commission, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Commission ({{ $commissionPct }}%)</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="sa-card text-center py-2">
-                <div class="fw-bold" style="color:var(--sa-success);">{{ number_format($retirable, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Retirable</small>
-            </div>
-        </div>
-    </div>
+@include('superadmin.partials.bilan-financier', ['bilan' => $bilan, 'solde' => $solde])
 
-    @if($physiqueRecettes > 0 || $commissionPhysiqueTotale > 0 || $physiqueQuantite > 0)
-    <div class="row g-2 mb-3">
-        <div class="col-6 col-md-4">
-            <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
-                <div class="fw-bold" style="color:#7B3FA0;">{{ number_format($physiqueQuantite, 0, ',', ' ') }}</div>
-                <small class="text-muted">Tickets physiques générés</small>
-            </div>
+    {{-- Historique complet des retraits de l'organisateur (jamais supprimé) --}}
+    <div class="sa-card mb-4">
+        <div class="sa-card-header">
+            <span><i class="bi bi-clock-history me-2" style="color: var(--sa-primary);"></i>Historique des retraits</span>
+            <span class="d-flex align-items-center gap-2">
+                <span class="text-muted" style="font-size:0.78rem;">
+                    {{ $retraitsHistorique->count() }} demande{{ $retraitsHistorique->count() > 1 ? 's' : '' }} ·
+                    payé : {{ number_format($solde['retraitsPayes'], 0, ',', ' ') }} F
+                </span>
+                @if(Route::has('superadmin.organisateurs.retraits-excel') && auth('superadmin')->user()?->estSuperAdmin())
+                <a href="{{ route('superadmin.organisateurs.retraits-excel', $user) }}" class="sa-btn sa-btn-sm sa-btn-success" style="text-decoration:none;">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Télécharger (Excel)
+                </a>
+                @endif
+            </span>
         </div>
-        <div class="col-6 col-md-4">
-            <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
-                <div class="fw-bold" style="color:#7B3FA0;">{{ number_format($physiqueRecettes, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Valeur totale (guichet)</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-4">
-            <div class="sa-card text-center py-2" style="border:1px dashed #c9a8e0;">
-                <div class="fw-bold" style="color:#e67e22;">{{ number_format($commissionPhysiqueTotale, 0, ',', ' ') }} F</div>
-                <small class="text-muted">Commission</small>
+        <div class="sa-card-body p-0">
+            <div class="table-responsive">
+                <table class="sa-table mb-0">
+                    <thead>
+                        <tr><th>Demandé le</th><th>Montant</th><th>Bénéficiaire</th><th>Réseau / numéro</th><th>Statut</th><th>Traité le</th><th>Note</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($retraitsHistorique as $retrait)
+                            @php
+                                $couleurs = ['payé' => 'sa-badge-success', 'rejeté' => 'sa-badge-danger', 'en_cours' => 'sa-badge-warning', 'en_attente' => 'sa-badge-warning'];
+                                $libelles = ['payé' => 'Payé', 'rejeté' => 'Rejeté', 'en_cours' => 'En cours', 'en_attente' => 'En attente', 'approuvé' => 'Approuvé'];
+                            @endphp
+                            <tr>
+                                <td style="font-size:0.78rem;">{{ $retrait->created_at?->isoFormat('D MMM YYYY HH:mm') }}</td>
+                                <td class="fw-bold">{{ number_format($retrait->montant, 0, ',', ' ') }} F</td>
+                                <td>{{ $retrait->nom }}</td>
+                                <td style="font-size:0.8rem;">{{ strtoupper((string) $retrait->reseau) }} · {{ $retrait->mobile }}</td>
+                                <td><span class="sa-badge {{ $couleurs[$retrait->status] ?? '' }}">{{ $libelles[$retrait->status] ?? ucfirst((string) $retrait->status) }}</span></td>
+                                <td style="font-size:0.78rem;">{{ $retrait->processed_at?->isoFormat('D MMM YYYY HH:mm') ?? '—' }}</td>
+                                <td style="font-size:0.78rem;max-width:220px;">{{ $retrait->admin_notes ?: '—' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7" class="text-center text-muted py-3">Aucune demande de retrait.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    @endif
 
     <div class="sa-card mb-4">
         <div class="sa-card-header">
