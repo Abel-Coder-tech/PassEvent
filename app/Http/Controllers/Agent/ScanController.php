@@ -40,8 +40,9 @@ class ScanController extends Controller
             return redirect()->route('agent.login')->withErrors(['email' => 'Compte désactivé.']);
         }
 
-        // Limitation par IP uniquement : un tiers ne peut pas bloquer un agent.
-        $key = 'agent-pin:ip:' . $request->ip();
+        // Limitation par agent ET par IP : un tiers ne peut pas bloquer un agent,
+        // et un agent qui se trompe ne bloque pas ses collègues sur le même wifi.
+        $key = 'agent-pin:' . $agent->id . ':' . $request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);

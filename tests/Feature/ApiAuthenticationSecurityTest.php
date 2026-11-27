@@ -89,7 +89,9 @@ class ApiAuthenticationSecurityTest extends TestCase
         $wrongPassword->assertUnauthorized();
         $this->assertSame($unknown->json(), $wrongPassword->json());
 
-        for ($attempt = 0; $attempt < 3; $attempt++) {
+        // 5 essais par compte et par minute (la limite par IP, plus large,
+        // laisse se connecter toute une équipe derrière le même wifi)
+        for ($attempt = 0; $attempt < 4; $attempt++) {
             $this->postJson('/api/agent/login', [
                 'email' => 'known@example.test',
                 'password' => 'wrong-password',

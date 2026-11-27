@@ -148,7 +148,8 @@ class QrExterneTest extends TestCase
         $this->withToken($token)->postJson('/api/agent/scan/verify', ['code' => $code])
             ->assertOk()->assertJsonPath('success', true);
 
-        // Un second passage est détecté
+        // Un second passage est détecté (au-delà du délai de rescan du même agent)
+        $this->travel(\App\Services\TicketScanService::DELAI_RESCAN_SECONDES + 1)->seconds();
         $this->withToken($token)->postJson('/api/agent/scan/verify', ['code' => $code])
             ->assertOk()->assertJsonPath('success', false);
 
@@ -259,6 +260,7 @@ class QrExterneTest extends TestCase
         // 4. Scans
         $this->withToken($jetonScan)->postJson('/api/agent/scan/verify', ['code' => $codes[0]])
             ->assertOk()->assertJsonPath('resultat', 'valide');
+        $this->travel(\App\Services\TicketScanService::DELAI_RESCAN_SECONDES + 1)->seconds();
         $this->withToken($jetonScan)->postJson('/api/agent/scan/verify', ['code' => $codes[0]])
             ->assertOk()->assertJsonPath('resultat', 'deja_utilise');
         $this->withToken($jetonScan)->postJson('/api/agent/scan/verify', ['code' => 'PAX-FAUX99'])

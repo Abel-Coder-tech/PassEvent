@@ -11,6 +11,10 @@ use Illuminate\Support\Carbon;
 
 class TicketScanService
 {
+    // Fenêtre pendant laquelle un rescan du même billet par le même agent est
+    // confirmé (coupure réseau, réponse perdue) au lieu d'être refusé.
+    public const DELAI_RESCAN_SECONDES = 60;
+
     public function verifier(Agent $agent, string $code): array
     {
         $ticket = Ticket::trouverParCodeSaisi($code);
@@ -177,21 +181,56 @@ class TicketScanService
         // au même instant sont traités l'un après l'autre. Sans lui, les deux
         // pouvaient passer le contrôle « déjà scanné » avant que l'un n'enregistre
         // son scan (double entrée avec un seul billet).
-        $dejaScanne = DB::transaction(function () use ($agent, $code, $ticket, $jourScan) {
+        $verdict = DB::transaction(function () use ($agent, $code, $ticket, $jourScan) {
             Ticket::whereKey($ticket->id)->lockForUpdate()->first();
 
-            if ($ticket->dejaScanneEntre($jourScan->date_debut, $jourScan->finFenetreScan())) {
-                $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné pour cette session', $ticket->id);
+            $dernierValide = Log::where('ticket_id', $ticket->id)
+                ->where('type_operation', 'scan')
+                ->where('details->resultat', 'valide')
+                ->whereBetween('created_at', [$jourScan->date_debut, $jourScan->finFenetreScan()])
+                ->latest('id')
+                ->first();
 
-                return true;
+            if (! $dernierValide) {
+                $this->logScan($agent, $code, 'valide', 'Scan réussi', $ticket->id);
+
+                return ['valide', null];
             }
 
-            $this->logScan($agent, $code, 'valide', 'Scan réussi', $ticket->id);
+            // Rescan par le MÊME agent juste après (réseau lent, réponse perdue,
+            // double déclenchement) : c'est la même personne devant lui, on
+            // confirme au lieu d'afficher « déjà scanné » et de créer un litige.
+            if ((int) $dernierValide->agent_id === (int) $agent->id
+                && $dernierValide->created_at->gte(now()->subSeconds(self::DELAI_RESCAN_SECONDES))) {
+                $this->logScan($agent, $code, 'deja_utilise', 'Rescan du même agent (déjà validé)', $ticket->id);
 
-            return false;
+                return ['revalide', $dernierValide->created_at];
+            }
+
+            $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné pour cette session', $ticket->id);
+
+            return ['deja', null];
         });
 
-        if ($dejaScanne) {
+        if ($verdict[0] === 'revalide') {
+            $secondes = max(1, (int) $verdict[1]->diffInSeconds(now()));
+
+            return [
+                'success' => true,
+                'resultat' => 'valide',
+                'raison' => 'Déjà validé par vous',
+                'message' => "Billet déjà validé par vous il y a {$secondes} s : la personne peut entrer.",
+                'rescan' => true,
+                'ticket' => [
+                    ...$this->contexteBillet($ticket),
+                    'email' => $ticket->email_acheteur,
+                    'montant' => number_format($ticket->montant, 0, ',', ' '),
+                    'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
+                ],
+            ];
+        }
+
+        if ($verdict[0] === 'deja') {
             // Le billet reste valable : seul le scan du jour est refusé.
             $multiJours = $agent->evenement->dates()->count() > 1;
 

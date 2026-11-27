@@ -121,7 +121,12 @@ class TicketScanServiceTest extends TestCase
 
         $service = app(TicketScanService::class);
         $premier = $service->verifier($this->agent, 'PAX-DOUBLE');
-        $second = $service->verifier($this->agent, 'PAX-DOUBLE');
+        Carbon::setTestNow(now()->addSeconds(TicketScanService::DELAI_RESCAN_SECONDES + 1));
+        try {
+            $second = $service->verifier($this->agent, 'PAX-DOUBLE');
+        } finally {
+            Carbon::setTestNow();
+        }
 
         $this->assertTrue($premier['success']);
         $this->assertSame('deja_utilise', $second['resultat']);
@@ -233,7 +238,9 @@ class TicketScanServiceTest extends TestCase
         $jour1 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
         $this->assertTrue($jour1['success']);
 
+        Carbon::setTestNow(now()->addSeconds(TicketScanService::DELAI_RESCAN_SECONDES + 1));
         $doublonJour1 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
+        Carbon::setTestNow();
         $this->assertFalse($doublonJour1['success']);
         $this->assertSame('deja_utilise', $doublonJour1['resultat']);
 
@@ -243,6 +250,7 @@ class TicketScanServiceTest extends TestCase
             $this->assertTrue($jour2['success']);
             $this->assertSame('valide', $jour2['resultat']);
 
+            Carbon::setTestNow(now()->addSeconds(TicketScanService::DELAI_RESCAN_SECONDES + 1));
             $doublonJour2 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
             $this->assertSame('deja_utilise', $doublonJour2['resultat']);
         } finally {
@@ -318,6 +326,37 @@ class TicketScanServiceTest extends TestCase
         ]);
 
         return $evenementId;
+    }
+
+    public function test_un_rescan_du_meme_agent_juste_apres_est_confirme(): void
+    {
+        // Réseau lent : la 1re réponse s'est perdue, l'agent rescanne la même personne
+        $this->creerTicket($this->evenementId, 'PAX-RESCAN', 'VIP');
+        $service = app(TicketScanService::class);
+
+        $this->assertTrue($service->verifier($this->agent, 'PAX-RESCAN')['success']);
+        $rescan = $service->verifier($this->agent, 'PAX-RESCAN');
+
+        $this->assertTrue($rescan['success']);
+        $this->assertSame('valide', $rescan['resultat']);
+        $this->assertTrue($rescan['rescan']);
+        $this->assertStringContainsString('déjà validé par vous', $rescan['message']);
+        // Un seul scan « valide » enregistré pour ce billet
+        $this->assertSame(1, \App\Models\Log::where('type_operation', 'scan')->where('details->resultat', 'valide')->count());
+    }
+
+    public function test_le_meme_billet_chez_un_autre_agent_est_refuse_meme_juste_apres(): void
+    {
+        // Capture d'écran partagée : 2e personne à une autre porte
+        $this->creerTicket($this->evenementId, 'PAX-PARTAGE', 'VIP');
+        $service = app(TicketScanService::class);
+        $autreAgent = $this->creerAgent($this->evenementId);
+
+        $this->assertTrue($service->verifier($this->agent, 'PAX-PARTAGE')['success']);
+        $autre = $service->verifier($autreAgent, 'PAX-PARTAGE');
+
+        $this->assertFalse($autre['success']);
+        $this->assertSame('deja_utilise', $autre['resultat']);
     }
 
     private function creerAgent(int $evenementId): Agent

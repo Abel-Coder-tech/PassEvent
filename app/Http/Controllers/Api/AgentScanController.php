@@ -33,9 +33,10 @@ class AgentScanController extends Controller
             return response()->json(['message' => 'account_disabled'], 403);
         }
 
-        // Limitation par IP (3 essais / 5 min). Contrairement à un blocage par
-        // compte, un tiers ne peut pas verrouiller un agent pendant un événement.
-        $key = 'agent-pin:ip:'.$request->ip();
+        // Limitation par agent ET par IP (3 essais / 5 min) : un tiers ne peut pas
+        // verrouiller un agent depuis une autre connexion, et un agent qui se
+        // trompe ne bloque pas ses collègues sur le même wifi (même IP publique).
+        $key = 'agent-pin:'.$agent->id.':'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
@@ -65,12 +66,12 @@ class AgentScanController extends Controller
         // Un seul token scan actif par agent
         $agent->tokens()->where('name', 'agent-scan')->delete();
 
-        $token = $agent->createToken('agent-scan', ['agent:scan'], now()->addHours(8))->plainTextToken;
+        $token = $agent->createToken('agent-scan', ['agent:scan'], now()->addHours(\App\Models\Evenement::DUREE_SCAN_HEURES))->plainTextToken;
         $tokenModel = $agent->tokens()->where('name', 'agent-scan')->latest()->first();
 
         return response()->json([
             'scan_token' => $token,
-            'expires_at' => $tokenModel && $tokenModel->expires_at ? $tokenModel->expires_at->toIso8601String() : now()->addHours(8)->toIso8601String(),
+            'expires_at' => $tokenModel && $tokenModel->expires_at ? $tokenModel->expires_at->toIso8601String() : now()->addHours(\App\Models\Evenement::DUREE_SCAN_HEURES)->toIso8601String(),
             'evenement' => [
                 'titre' => $agent->evenement?->titre,
             ],

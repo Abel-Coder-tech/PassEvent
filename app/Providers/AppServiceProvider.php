@@ -47,7 +47,10 @@ class AppServiceProvider extends ServiceProvider
 
             return [
                 Limit::perMinute(5)->by('login-account:'.hash('sha256', $identity.'|'.$ip)),
-                Limit::perMinute(5)->by('login-ip:'.$ip),
+                // Par IP : assez large pour toute une équipe d'agents derrière le même
+                // wifi / la même box (une seule IP publique) qui se connecte à l'ouverture.
+                // Le vol de mot de passe reste bloqué par la limite par compte ci-dessus.
+                Limit::perMinute(30)->by('login-ip:'.$ip),
             ];
         });
 
