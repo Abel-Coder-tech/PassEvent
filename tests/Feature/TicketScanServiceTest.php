@@ -121,12 +121,7 @@ class TicketScanServiceTest extends TestCase
 
         $service = app(TicketScanService::class);
         $premier = $service->verifier($this->agent, 'PAX-DOUBLE');
-        Carbon::setTestNow(now()->addSeconds(TicketScanService::DELAI_RESCAN_SECONDES + 1));
-        try {
-            $second = $service->verifier($this->agent, 'PAX-DOUBLE');
-        } finally {
-            Carbon::setTestNow();
-        }
+        $second = $service->verifier($this->agent, 'PAX-DOUBLE');
 
         $this->assertTrue($premier['success']);
         $this->assertSame('deja_utilise', $second['resultat']);
@@ -238,9 +233,7 @@ class TicketScanServiceTest extends TestCase
         $jour1 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
         $this->assertTrue($jour1['success']);
 
-        Carbon::setTestNow(now()->addSeconds(TicketScanService::DELAI_RESCAN_SECONDES + 1));
         $doublonJour1 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
-        Carbon::setTestNow();
         $this->assertFalse($doublonJour1['success']);
         $this->assertSame('deja_utilise', $doublonJour1['resultat']);
 
@@ -250,7 +243,6 @@ class TicketScanServiceTest extends TestCase
             $this->assertTrue($jour2['success']);
             $this->assertSame('valide', $jour2['resultat']);
 
-            Carbon::setTestNow(now()->addSeconds(TicketScanService::DELAI_RESCAN_SECONDES + 1));
             $doublonJour2 = $service->verifier($this->agent, 'PAX-PACK-MULTI');
             $this->assertSame('deja_utilise', $doublonJour2['resultat']);
         } finally {
@@ -328,21 +320,24 @@ class TicketScanServiceTest extends TestCase
         return $evenementId;
     }
 
-    public function test_un_rescan_du_meme_agent_juste_apres_est_confirme(): void
+    public function test_un_billet_reste_devant_la_camera_est_refuse_des_le_2e_passage(): void
     {
-        // Réseau lent : la 1re réponse s'est perdue, l'agent rescanne la même personne
-        $this->creerTicket($this->evenementId, 'PAX-RESCAN', 'VIP');
-        $service = app(TicketScanService::class);
+        // QR laissé devant la caméra : l'appli le relit aussitôt, gratuit ou payant
+        foreach (['PAX-GRATUIT' => 0, 'PAX-PAYANT' => 5000] as $code => $montant) {
+            $this->creerTicket($this->evenementId, $code, 'Standard');
+            DB::table('ticket')->where('code_unique', $code)->update(['montant' => $montant]);
+            $service = app(TicketScanService::class);
 
-        $this->assertTrue($service->verifier($this->agent, 'PAX-RESCAN')['success']);
-        $rescan = $service->verifier($this->agent, 'PAX-RESCAN');
-
-        $this->assertTrue($rescan['success']);
-        $this->assertSame('valide', $rescan['resultat']);
-        $this->assertTrue($rescan['rescan']);
-        $this->assertStringContainsString('déjà validé par vous', $rescan['message']);
-        // Un seul scan « valide » enregistré pour ce billet
-        $this->assertSame(1, \App\Models\Log::where('type_operation', 'scan')->where('details->resultat', 'valide')->count());
+            $this->assertTrue($service->verifier($this->agent, $code)['success']);
+            foreach ([1, 2, 3] as $passage) {
+                $r = $service->verifier($this->agent, $code);
+                $this->assertFalse($r['success'], "{$code} passage {$passage}");
+                $this->assertSame('deja_utilise', $r['resultat']);
+                $this->assertStringContainsString('déjà validé par vous', $r['message']);
+            }
+        }
+        // Un seul scan « valide » par billet
+        $this->assertSame(2, \App\Models\Log::where('type_operation', 'scan')->where('details->resultat', 'valide')->count());
     }
 
     public function test_le_meme_billet_chez_un_autre_agent_est_refuse_meme_juste_apres(): void
@@ -357,6 +352,7 @@ class TicketScanServiceTest extends TestCase
 
         $this->assertFalse($autre['success']);
         $this->assertSame('deja_utilise', $autre['resultat']);
+        $this->assertStringContainsString('par un autre agent', $autre['message']);
     }
 
     private function creerAgent(int $evenementId): Agent

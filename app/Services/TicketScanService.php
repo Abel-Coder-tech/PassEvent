@@ -11,9 +11,6 @@ use Illuminate\Support\Carbon;
 
 class TicketScanService
 {
-    // Fenêtre pendant laquelle un rescan du même billet par le même agent est
-    // confirmé (coupure réseau, réponse perdue) au lieu d'être refusé.
-    public const DELAI_RESCAN_SECONDES = 60;
 
     public function verifier(Agent $agent, string $code): array
     {
@@ -197,50 +194,31 @@ class TicketScanService
                 return ['valide', null];
             }
 
-            // Rescan par le MÊME agent juste après (réseau lent, réponse perdue,
-            // double déclenchement) : c'est la même personne devant lui, on
-            // confirme au lieu d'afficher « déjà scanné » et de créer un litige.
-            if ((int) $dernierValide->agent_id === (int) $agent->id
-                && $dernierValide->created_at->gte(now()->subSeconds(self::DELAI_RESCAN_SECONDES))) {
-                $this->logScan($agent, $code, 'deja_utilise', 'Rescan du même agent (déjà validé)', $ticket->id);
-
-                return ['revalide', $dernierValide->created_at];
-            }
-
+            // Billet déjà validé : TOUJOURS refusé, gratuit ou payant, quel que
+            // soit l'agent (un QR laissé devant la caméra ne doit jamais
+            // repasser au vert).
             $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné pour cette session', $ticket->id);
 
-            return ['deja', null];
+            return ['deja', $dernierValide];
         });
-
-        if ($verdict[0] === 'revalide') {
-            $secondes = max(1, (int) $verdict[1]->diffInSeconds(now()));
-
-            return [
-                'success' => true,
-                'resultat' => 'valide',
-                'raison' => 'Déjà validé par vous',
-                'message' => "Billet déjà validé par vous il y a {$secondes} s : la personne peut entrer.",
-                'rescan' => true,
-                'ticket' => [
-                    ...$this->contexteBillet($ticket),
-                    'email' => $ticket->email_acheteur,
-                    'montant' => number_format($ticket->montant, 0, ',', ' '),
-                    'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
-                ],
-            ];
-        }
 
         if ($verdict[0] === 'deja') {
             // Le billet reste valable : seul le scan du jour est refusé.
             $multiJours = $agent->evenement->dates()->count() > 1;
 
+            // Précise qui l'a validé et quand : l'agent comprend qu'il vient
+            // lui-même de laisser entrer cette personne (QR resté devant la caméra).
+            $premier = $verdict[1];
+            $quand = $premier->created_at->isToday() ? 'à '.$premier->created_at->format('H:i') : 'le '.$premier->created_at->format('d/m à H:i');
+            $par = (int) $premier->agent_id === (int) $agent->id ? 'par vous' : 'par un autre agent';
+
             return [
                 'success' => false,
                 'resultat' => 'deja_utilise',
                 'raison' => 'Déjà scanné aujourd\'hui',
-                'message' => $multiJours
-                    ? 'Ce billet a déjà été scanné aujourd\'hui. Il reste valable pour les prochains jours.'
-                    : 'Ce billet a déjà été scanné aujourd\'hui.',
+                'message' => "Entrée refusée : billet déjà validé {$par} {$quand}."
+                    .($multiJours ? ' Il reste valable pour les prochains jours.' : ''),
+                'deja_valide_le' => $premier->created_at->toIso8601String(),
                 'ticket' => $this->contexteBillet($ticket),
             ];
         }
