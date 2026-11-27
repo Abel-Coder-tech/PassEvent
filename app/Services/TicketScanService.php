@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Log;
 use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 
 class TicketScanService
@@ -172,9 +173,25 @@ class TicketScanService
             ];
         }
 
-        if ($ticket->dejaScanneEntre($jourScan->date_debut, $jourScan->finFenetreScan())) {
-            $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné pour cette session', $ticket->id);
+        // Verrou sur la ligne du billet : deux agents qui scannent le même billet
+        // au même instant sont traités l'un après l'autre. Sans lui, les deux
+        // pouvaient passer le contrôle « déjà scanné » avant que l'un n'enregistre
+        // son scan (double entrée avec un seul billet).
+        $dejaScanne = DB::transaction(function () use ($agent, $code, $ticket, $jourScan) {
+            Ticket::whereKey($ticket->id)->lockForUpdate()->first();
 
+            if ($ticket->dejaScanneEntre($jourScan->date_debut, $jourScan->finFenetreScan())) {
+                $this->logScan($agent, $code, 'deja_utilise', 'Déjà scanné pour cette session', $ticket->id);
+
+                return true;
+            }
+
+            $this->logScan($agent, $code, 'valide', 'Scan réussi', $ticket->id);
+
+            return false;
+        });
+
+        if ($dejaScanne) {
             // Le billet reste valable : seul le scan du jour est refusé.
             $multiJours = $agent->evenement->dates()->count() > 1;
 
@@ -188,8 +205,6 @@ class TicketScanService
                 'ticket' => $this->contexteBillet($ticket),
             ];
         }
-
-        $this->logScan($agent, $code, 'valide', 'Scan réussi', $ticket->id);
 
         return [
             'success' => true,

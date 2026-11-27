@@ -25,7 +25,7 @@
                 <form action="{{ route('evenements.public') }}" method="GET" class="ev-hero-search" id="evSearchForm">
                     <div class="ev-search-wrap">
                         <i class="bi bi-search"></i>
-                        <input type="search" name="q" id="evSearchInput" class="ev-search-input" placeholder="Nom, catégorie, lieu..." value="{{ $q ?? '' }}" autocomplete="off" @if($q) autofocus @endif>
+                        <input type="search" name="q" id="evSearchInput" class="ev-search-input" placeholder="Rechercher un événement…" aria-label="Rechercher un événement par nom, catégorie ou lieu" value="{{ $q ?? '' }}" autocomplete="off" @if($q) autofocus @endif>
                         <button type="submit" class="ev-search-go">Rechercher</button>
                     </div>
                     @if($selectedCategorie)<input type="hidden" name="categorie" value="{{ $selectedCategorie }}">@endif
@@ -484,6 +484,9 @@
     border-color: var(--accent, #FED514);
     padding-right: 7.2rem;
 }
+/* Écran étroit : « Rechercher un év… » plutôt qu'un texte coupé net */
+.ev-search-input { text-overflow: ellipsis; }
+.ev-search-input::placeholder { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
 .ev-hero .ev-search-input:focus {
     border-color: var(--accent, #FED514);
     box-shadow: 0 0 0 3px rgba(254,213,20,0.18);

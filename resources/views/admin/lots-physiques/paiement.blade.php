@@ -58,7 +58,7 @@
 
                     <div class="alert alert-light border py-2 mb-3" style="font-size:.78rem;">
                         <i class="bi bi-info-circle me-1"></i>
-                        Vérifiez le récapitulatif, puis cliquez sur « Payer avec FedaPay » pour ouvrir le paiement.
+                        Vérifiez le récapitulatif, puis cliquez sur « Payer avec Mobile Money » pour ouvrir le paiement.
                         Commission de génération (5 % du prix des billets), payée d'avance et non remboursable.
                         @if($estDemande)
                             Votre template est déjà envoyé avec la demande : après le paiement, le super admin positionne les QR codes dessus puis vous transmet la planche.
@@ -69,7 +69,7 @@
                     </div>
 
                     <button type="button" id="btnFedaPay" class="btn w-100 text-white" style="background:var(--violet);border-radius:10px;font-weight:700;padding:.7rem;">
-                        <i class="bi bi-shield-lock me-1"></i> Payer {{ number_format($total, 0, ',', ' ') }} F avec FedaPay
+                        <i class="bi bi-shield-lock me-1"></i> Payer {{ number_format($total, 0, ',', ' ') }} F avec Mobile Money
                     </button>
                     <div id="paymentError" class="mt-3" style="display:none;color:var(--danger);font-size:.85rem;"></div>
 

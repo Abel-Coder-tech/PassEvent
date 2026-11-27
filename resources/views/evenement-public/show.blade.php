@@ -300,7 +300,7 @@
                                 <span class="show-total-price" data-total>0 FCFA</span>
                             </div>
                             <button type="submit" class="show-btn show-btn-primary" id="btnPayer" {{ $lignesAchat->isEmpty() ? 'disabled' : '' }}>
-                                <i class="bi bi-shield-lock me-2"></i> <span data-libelle>Payer avec FedaPay</span>
+                                <i class="bi bi-shield-lock me-2"></i> <span data-libelle>Payer avec Mobile Money</span>
                             </button>
                             <p class="show-secure"><i class="bi bi-shield-check me-1" style="color:var(--violet);"></i> Paiement 100% sécurisé — Ticket PDF envoyé par email</p>
                         </form>
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', function () {
             barre.querySelector('[data-total]').textContent = prixDepart > 0 ? fmt(prixDepart) : 'Gratuit';
         }
 
-        libelle.textContent = nombre > 0 && total <= 0 ? 'Réserver gratuitement' : 'Payer avec FedaPay';
+        libelle.textContent = nombre > 0 && total <= 0 ? 'Réserver gratuitement' : 'Payer avec Mobile Money';
 
         barre.classList.add('is-visible');
         document.body.classList.add('achat-barre-ouverte');

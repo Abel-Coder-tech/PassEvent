@@ -228,7 +228,7 @@
                     </button>
                     <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="border:1px solid #e0dde3;border-radius:8px;">Annuler</button>
                     <button type="submit" class="btn btn-sm" style="background:#7B3FA0;color:#fff;border-radius:8px;font-weight:600;">
-                        <i class="bi bi-lock me-1"></i> Payer via FedaPay
+                        <i class="bi bi-lock me-1"></i> Payer avec Mobile Money
                     </button>
                 </div>
             </form>

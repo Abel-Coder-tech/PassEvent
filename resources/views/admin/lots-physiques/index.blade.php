@@ -301,7 +301,7 @@
                             Événement gratuit : aucun paiement requis. Vos planches PDF seront générées immédiatement.
                         </div>
                         <div id="recapPaiementMessage" class="alert alert-light border py-2 mb-0" style="font-size:.78rem;display:none;">
-                            La fenêtre de paiement FedaPay s’ouvrira après confirmation de ce récapitulatif.
+                            La fenêtre de paiement Mobile Money s’ouvrira après confirmation de ce récapitulatif.
                         </div>
                     </div>
                 </div>
@@ -455,7 +455,7 @@ function majBouton() {
         btn.disabled = false;
         btn.innerHTML = chemin === 'gratuit'
             ? '<i class="bi bi-magic me-1"></i> Générer mes QR codes'
-            : '<i class="bi bi-shield-lock me-1"></i> Payer avec FedaPay';
+            : '<i class="bi bi-shield-lock me-1"></i> Payer avec Mobile Money';
         return;
     }
     let totalBillets = 0;

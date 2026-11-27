@@ -296,10 +296,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateUI() {
         const mobile = isMobile();
 
-        document.getElementById('btnLabel').textContent = mobile ? 'Payer via FedaPay' : 'Enregistrer la vente';
+        document.getElementById('btnLabel').textContent = mobile ? 'Payer avec Mobile Money' : 'Enregistrer la vente';
 
         document.getElementById('submitInfo').innerHTML = mobile
-            ? '<i class="bi bi-phone me-1"></i> L\'acheteur paiera via FedaPay (Mobile Money)'
+            ? '<i class="bi bi-phone me-1"></i> L\'acheteur paiera par Mobile Money'
             : '<i class="bi bi-whatsapp me-1" style="color: #25D366;"></i>Le billet QR sera envoyé par mail';
 
         document.getElementById('digitalInfo').classList.toggle('d-none', !mobile);
@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (typeof FedaPay === 'undefined') {
                     alert('Le widget FedaPay n\'a pas pu être chargé. Veuillez réessayer.');
                     btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Payer via FedaPay';
+                    btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Payer avec Mobile Money';
                     return;
                 }
 
@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else {
                             alert('Paiement annulé ou fermé. Vous pouvez réessayer.');
                             btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Payer via FedaPay';
+                            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>Payer avec Mobile Money';
                         }
                     }
                 });
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Une erreur est survenue (code ' + status + '). Vérifiez votre saisie et réessayez.');
             }
             btnSubmit.disabled = false;
-            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + (isMobile() ? 'Payer via FedaPay' : 'Enregistrer la vente');
+            btnSubmit.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + (isMobile() ? 'Payer avec Mobile Money' : 'Enregistrer la vente');
         });
     });
 

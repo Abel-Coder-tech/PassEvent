@@ -273,7 +273,7 @@
         const mobile = selectedPaiement() === 'mobile_money';
         const label = document.getElementById('btnVenteLabel');
         const hint = document.getElementById('avHint');
-        if (label) label.textContent = mobile ? 'Payer via FedaPay' : labelVente;
+        if (label) label.textContent = mobile ? 'Payer avec Mobile Money' : labelVente;
         if (hint) {
             hint.innerHTML = mobile
                 ? '<i class="bi bi-phone" aria-hidden="true"></i> L\'acheteur paiera via Mobile Money.'
