@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AgentVente;
 
 use App\Http\Controllers\Controller;
 use App\Models\CodePromo;
+use App\Models\AgentVente;
 use App\Models\Evenement;
 use App\Models\Tarif;
 use App\Models\Ticket;
@@ -14,6 +15,7 @@ use App\Services\PaiementMapper;
 use App\Services\QrCodeService;
 use App\Services\TicketPdfService;
 use App\Support\PerPage;
+use App\Support\SessionMarker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +48,14 @@ class AuthController extends Controller
             'password.string' => 'Le mot de passe doit être une chaîne de caractères.',
         ]);
 
+        // Session unique : refus de la seconde connexion avant même d'ouvrir
+        // une session, pour ne pas déconnecter le premier appareil.
+        $agent = AgentVente::where('email', $credentials['email'])->first();
+        if ($agent && $agent->sessionEstActive()) {
+            return back()->with('error', 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous d’abord.')
+                ->onlyInput('email');
+        }
+
         if (Auth::guard('agent_vente')->attempt($credentials)) {
             $agent = Auth::guard('agent_vente')->user();
 
@@ -60,6 +70,15 @@ class AuthController extends Controller
 
                 return back()->withErrors(['email' => 'L\'événement est déjà terminé.']);
             }
+
+            $cle = SessionMarker::nouvelleCle();
+            if (! $agent->reserverSession($cle)) {
+                Auth::guard('agent_vente')->logout();
+
+                return back()->with('error', 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous d’abord.')
+                    ->onlyInput('email');
+            }
+            $request->session()->put('agent_vente_session_cle', $cle);
 
             $agent->update(['dernier_acces' => now()]);
 
@@ -414,9 +433,15 @@ class AuthController extends Controller
     }
 
     // Déconnecte l'agent de vente
-    public function logout(): RedirectResponse
+    public function logout(Request $request): RedirectResponse
     {
+        $agent = Auth::guard('agent_vente')->user();
+        if ($agent) {
+            $agent->fermerSession($request->session()->get('agent_vente_session_cle'));
+        }
+
         Auth::guard('agent_vente')->logout();
+        $request->session()->forget('agent_vente_session_cle');
 
         return redirect()->route('agent-vente.login');
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Agent;
+use App\Support\SessionMarker;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +19,15 @@ class EnsureAgentIsActive
         // ouvrir l'espace scan, même s'il porte une capability « agent:read ».
         if (! $agent instanceof Agent) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // Session unique : un jeton qui ne correspond plus à la session ouverte
+        // (autre appareil connecté, déconnexion, expiration) est refusé.
+        if ($agent->session_cle !== null) {
+            $cle = SessionMarker::cleDepuis($request->user()?->currentAccessToken());
+            if (! $agent->sessionEstActive() || ! SessionMarker::correspond($cle, $agent->session_cle)) {
+                return response()->json(['message' => 'session_remplacee'], 401);
+            }
         }
 
         if (isset($agent->actif) && !$agent->actif) {

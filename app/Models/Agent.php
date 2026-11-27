@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSessionUnique;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Agent extends Authenticatable
 {
     use HasApiTokens;
+    use HasSessionUnique;
 
     protected $table = 'agents';
 

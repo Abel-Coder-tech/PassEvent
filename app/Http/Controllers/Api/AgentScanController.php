@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Support\SessionMarker;
 use App\Services\AgentScanStatisticsService;
 use App\Services\TicketScanService;
 use Illuminate\Http\JsonResponse;
@@ -63,10 +64,19 @@ class AgentScanController extends Controller
         ]);
         RateLimiter::clear($key);
 
-        // Un seul token scan actif par agent
+        // Une seule session par compte : le jeton de scan porte la même clé
+        // que le jeton de connexion, pour être révoqué avec lui.
+        $cle = SessionMarker::cleDepuis($request->user()?->currentAccessToken())
+            ?? $agent->session_cle
+            ?? SessionMarker::nouvelleCle();
+        $agent->ouvrirSession($cle);
         $agent->tokens()->where('name', 'agent-scan')->delete();
 
-        $token = $agent->createToken('agent-scan', ['agent:scan'], now()->addHours(\App\Models\Evenement::DUREE_SCAN_HEURES))->plainTextToken;
+        $token = $agent->createToken(
+            'agent-scan',
+            ['agent:scan', SessionMarker::ability($cle)],
+            now()->addHours(\App\Models\Evenement::DUREE_SCAN_HEURES)
+        )->plainTextToken;
         $tokenModel = $agent->tokens()->where('name', 'agent-scan')->latest()->first();
 
         return response()->json([
@@ -190,9 +200,22 @@ class AgentScanController extends Controller
 
     public function exit(Request $request): JsonResponse
     {
-        $token = $request->user()?->currentAccessToken();
-        if ($token && $token->name === 'agent-scan') {
-            $token->delete();
+        /** @var Agent|null $agent */
+        $agent = $request->user();
+        $token = $agent?->currentAccessToken();
+        $cle = SessionMarker::cleDepuis($token);
+
+        if ($agent) {
+            // Quitter le scan libère le compte : une autre personne pourra se
+            // connecter avec le même identifiant.
+            $agent->fermerSession($cle);
+            foreach ($agent->tokens()->get() as $jeton) {
+                if ($cle === null
+                    || $jeton->id === $token?->id
+                    || SessionMarker::correspond(SessionMarker::cleDepuis($jeton), $cle)) {
+                    $jeton->delete();
+                }
+            }
         }
 
         return response()->json(['message' => 'scan_exited'], 200);

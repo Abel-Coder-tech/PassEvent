@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\AgentVente;
+use App\Support\SessionMarker;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +17,13 @@ class EnsureAgentVenteIsActive
         // Un token d'agent de scan ne doit jamais ouvrir l'espace de vente.
         if (! $agent instanceof AgentVente) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if ($agent->session_cle !== null) {
+            $cle = SessionMarker::cleDepuis($request->user()?->currentAccessToken());
+            if (! $agent->sessionEstActive() || ! SessionMarker::correspond($cle, $agent->session_cle)) {
+                return response()->json(['message' => 'session_remplacee'], 401);
+            }
         }
 
         if (! $agent->actif) {

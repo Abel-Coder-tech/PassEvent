@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Support\SessionMarker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -41,7 +42,17 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'L\'événement est terminé. Accès refusé.'])->onlyInput('email');
         }
 
+        // Un seul poste peut utiliser ce compte : la réservation atomique
+        // refuse la deuxième connexion sans déconnecter le premier (message
+        // flash, pas d'erreur de validation pour ne pas alimenter le verrou).
+        $cle = SessionMarker::nouvelleCle();
+        if (! $agent->reserverSession($cle)) {
+            return back()->with('error', 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous d’abord.')
+                ->onlyInput('email');
+        }
+
         Auth::guard('agent')->login($agent, $request->boolean('remember'));
+        $request->session()->put('agent_session_cle', $cle);
 
         $agent->update(['dernier_acces' => now()]);
 
@@ -65,7 +76,13 @@ class AuthController extends Controller
     // Déconnecte l'agent et invalide la session
     public function logout(Request $request)
     {
+        $agent = Auth::guard('agent')->user();
+        if ($agent) {
+            $agent->fermerSession($request->session()->get('agent_session_cle'));
+        }
+
         Auth::guard('agent')->logout();
+        $request->session()->forget('agent_session_cle');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('agent.login');

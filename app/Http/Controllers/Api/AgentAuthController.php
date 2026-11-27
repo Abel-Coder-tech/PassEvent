@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Support\SessionMarker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -42,12 +43,22 @@ class AgentAuthController extends Controller
             return response()->json(['message' => 'event_ended'], 403);
         }
 
+        // Un seul appareil peut utiliser ce compte à la fois. La réservation
+        // est atomique : la seconde connexion est refusée sans toucher à la
+        // session déjà ouverte, même si les deux requêtes arrivent ensemble.
+        $cle = SessionMarker::nouvelleCle();
+        if (! $agent->reserverSession($cle)) {
+            return response()->json([
+                'message' => 'deja_connecte',
+                'detail' => 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous d’abord.',
+            ], 409);
+        }
+
         $agent->update(['dernier_acces' => now()]);
 
-        // Multi-appareils autorisé pour le login
         $token = $agent->createToken(
             'agent-app',
-            ['agent:read'],
+            ['agent:read', SessionMarker::ability($cle)],
             now()->addMinutes((int) config('sanctum.expiration'))
         )->plainTextToken;
 
@@ -91,12 +102,19 @@ class AgentAuthController extends Controller
     {
         $agent = $request->user();
         if ($agent) {
-            // Révoque le token courant (auth ou scan) + tous les tokens scan
+            $cle = SessionMarker::cleDepuis($agent->currentAccessToken());
+            $agent->fermerSession($cle);
+
+            // Révoque le token courant et le token de scan du même appareil.
             $current = $agent->currentAccessToken();
             if ($current) {
                 $current->delete();
             }
-            $agent->tokens()->where('name', 'agent-scan')->delete();
+            foreach ($agent->tokens()->get() as $token) {
+                if (SessionMarker::correspond(SessionMarker::cleDepuis($token), $cle)) {
+                    $token->delete();
+                }
+            }
         }
 
         return response()->json(['message' => 'logged_out'], 200);
@@ -104,7 +122,10 @@ class AgentAuthController extends Controller
 
     public function logoutAll(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
+        /** @var Agent $agent */
+        $agent = $request->user();
+        $agent->fermerSession();
+        $agent->tokens()->delete();
 
         return response()->json(['message' => 'logged_out_all'], 200);
     }

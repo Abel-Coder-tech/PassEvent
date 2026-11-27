@@ -701,6 +701,8 @@ class ApiAuthenticationSecurityTest extends TestCase
                 $table->unsignedInteger('tentatives_code')->default(0);
                 $table->timestamp('bloque_jusqua')->nullable();
                 $table->timestamp('dernier_acces')->nullable();
+                $table->string('session_cle', 64)->nullable();
+                $table->timestamp('session_expire_le')->nullable();
                 $table->timestamps();
             });
         }
@@ -717,6 +719,8 @@ class ApiAuthenticationSecurityTest extends TestCase
                 $table->unsignedInteger('tickets_count')->default(0);
                 $table->decimal('montant_total', 12, 2)->default(0);
                 $table->timestamp('dernier_acces')->nullable();
+                $table->string('session_cle', 64)->nullable();
+                $table->timestamp('session_expire_le')->nullable();
                 $table->timestamps();
             });
         }

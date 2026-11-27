@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AgentVente;
 use App\Models\AgentVenteNotification;
 use App\Models\JournalAction;
+use App\Support\SessionMarker;
 use App\Services\AgentVenteSaleService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
@@ -55,13 +56,22 @@ class AgentVenteAuthController extends Controller
             return response()->json(['message' => $raison], 403);
         }
 
+        // Un seul appareil peut vendre avec ce compte à la fois.
+        $cle = SessionMarker::nouvelleCle();
+        if (! $agent->reserverSession($cle)) {
+            return response()->json([
+                'message' => 'deja_connecte',
+                'detail' => 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous d’abord.',
+            ], 409);
+        }
+
         $agent->update(['dernier_acces' => now()]);
 
         $sessionStartedAt = now();
         $expiresAt = $sessionStartedAt->copy()->addMinutes((int) config('sanctum.expiration'));
         $token = $agent->createToken(
             'agent-vente-app',
-            $this->tokenAbilities($sessionStartedAt),
+            $this->tokenAbilities($sessionStartedAt, $cle),
             $expiresAt
         )->plainTextToken;
 
@@ -93,8 +103,13 @@ class AgentVenteAuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $token = $request->user()?->currentAccessToken();
+        /** @var AgentVente|null $agent */
+        $agent = $request->user();
+        $token = $agent?->currentAccessToken();
 
+        if ($agent) {
+            $agent->fermerSession(SessionMarker::cleDepuis($token));
+        }
         if ($token) {
             $token->delete();
         }
@@ -104,7 +119,10 @@ class AgentVenteAuthController extends Controller
 
     public function logoutAll(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
+        /** @var AgentVente $agent */
+        $agent = $request->user();
+        $agent->fermerSession();
+        $agent->tokens()->delete();
 
         return response()->json(['message' => 'logged_out_all'], 200);
     }
@@ -141,6 +159,7 @@ class AgentVenteAuthController extends Controller
 
         $agent->update(['password' => Hash::make($validated['password'])]);
 
+        $agent->fermerSession();
         $agent->tokens()->delete();
 
         JournalAction::enregistrer([
@@ -174,6 +193,7 @@ class AgentVenteAuthController extends Controller
         $absoluteExpiresAt = $this->absoluteExpiresAt($sessionStartedAt);
 
         if ($absoluteExpiresAt->isPast()) {
+            $agent->fermerSession(SessionMarker::cleDepuis($current instanceof PersonalAccessToken ? $current : null));
             if ($current instanceof PersonalAccessToken) {
                 $current->delete();
             }
@@ -190,9 +210,16 @@ class AgentVenteAuthController extends Controller
             $expiresAt = $absoluteExpiresAt->copy();
         }
 
+        $cle = SessionMarker::cleDepuis($current instanceof PersonalAccessToken ? $current : null)
+            ?? $agent->session_cle
+            ?? SessionMarker::nouvelleCle();
+        if (! $agent->sessionEstActive()) {
+            $agent->ouvrirSession($cle);
+        }
+
         $token = $agent->createToken(
             'agent-vente-app',
-            $this->tokenAbilities($sessionStartedAt),
+            $this->tokenAbilities($sessionStartedAt, $cle),
             $expiresAt
         )->plainTextToken;
 
@@ -208,13 +235,14 @@ class AgentVenteAuthController extends Controller
         ], 200);
     }
 
-    private function tokenAbilities(CarbonInterface $sessionStartedAt): array
+    private function tokenAbilities(CarbonInterface $sessionStartedAt, string $cle): array
     {
         return [
             'agent_vente:read',
             'agent_vente:sell',
             // ISO 8601 pour conserver explicitement le fuseau horaire.
             self::SESSION_STARTED_MARKER.$sessionStartedAt->toIso8601String(),
+            SessionMarker::ability($cle),
         ];
     }
 
