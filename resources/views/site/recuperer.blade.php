@@ -23,7 +23,7 @@
                             </div>
                             <h4 class="fw-bold mb-2">Récupérer mon ticket</h4>
                             <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                Entrez votre ID de transaction : vos billets seront renvoyés à l'adresse email de votre choix.
+                                Entrez l'ID de transaction et le numéro de téléphone utilisé lors de l'achat : vos billets seront envoyés à l'adresse email de votre choix.
                             </p>
                         </div>
 
@@ -32,15 +32,22 @@
 
                             <div class="mb-3 text-start">
                                 <label for="transaction_id" class="form-label fw-bold">ID de transaction</label>
-                                <input type="text" class="form-control @error('transaction_id') is-invalid @enderror" id="transaction_id" name="transaction_id" placeholder="ex : 2847331" value="{{ old('transaction_id') }}" required>
-                                <small class="text-muted">Il figure sur le SMS ou le reçu de paiement FedaPay.</small>
+                                <input type="text" class="form-control @error('transaction_id') is-invalid @enderror" id="transaction_id" name="transaction_id" placeholder="ex : 123456789" value="{{ old('transaction_id') }}" required>
+                                <small class="text-muted">Il figure sur le SMS ou le reçu FedaPay, dans l'email de confirmation (« Référence ») et sur votre billet PDF.</small>
                                 @error('transaction_id')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
                             </div>
 
+                            <div class="mb-3">
+                                <label for="telephone" class="form-label fw-bold">Numéro de téléphone utilisé lors de l'achat</label>
+                                <input type="tel" class="form-control @error('telephone') is-invalid @enderror" id="telephone" name="telephone" placeholder="ex : 01 97 00 00 00" value="{{ old('telephone') }}" autocomplete="tel" required>
+                                <small class="text-muted">Le numéro WhatsApp saisi à l'achat ou celui qui a payé en Mobile Money.</small>
+                                @error('telephone')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
+                            </div>
+
                             <div class="mb-4 text-start">
-                                <label for="email" class="form-label fw-bold">Email de récupération</label>
+                                <label for="email" class="form-label fw-bold">Email où recevoir vos billets</label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="vous@exemple.com" value="{{ old('email') }}" required>
-                                <small class="text-muted">Vous recevrez vos billets à cette adresse. Elle peut être différente de l'email utilisé lors de l'achat.</small>
+                                <small class="text-muted">Elle peut être différente de l'email utilisé lors de l'achat (par exemple si vous n'y avez plus accès).</small>
                                 @error('email')<div class="text-danger mt-1" style="font-size:0.82rem;">{{ $message }}</div>@enderror
                             </div>
 

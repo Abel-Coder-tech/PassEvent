@@ -157,7 +157,8 @@ class PaiementController extends Controller
         if ((float) $commande->sum('montant') <= 0) { // Commande entièrement gratuite
             $freeTickets = $commande;
 
-            $groupId = 'GRATUIT-'.$freeTickets->first()->id;
+            // Identifiant aléatoire : un « GRATUIT-<id> » serait devinable (récupération de billets)
+            $groupId = 'GRATUIT-'.strtoupper(\Illuminate\Support\Str::random(16));
             foreach ($freeTickets as $ft) {
                 $reservationDejaComptee = $ft->reservation_expire_le !== null;
                 $ft->update([

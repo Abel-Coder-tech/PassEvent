@@ -412,8 +412,7 @@
                 const firstKey = Object.keys(data.errors)[0];
                 showSummary(data.errors[firstKey][0]);
             }
-        }).catch(function(err) {
-            console.error(err);
+        }).catch(function() {
             showSummary('Une erreur est survenue. Veuillez réessayer.');
         }).finally(function() {
             button.disabled = false;

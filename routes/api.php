@@ -75,6 +75,7 @@ Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
             ->middleware('throttle:10,1')
             ->name('sales.resend');
         Route::post('/sales/{ticket}/cancel', [AgentVenteSaleController::class, 'cancel'])
+            ->middleware('throttle:20,1')
             ->name('sales.cancel');
     });
 });

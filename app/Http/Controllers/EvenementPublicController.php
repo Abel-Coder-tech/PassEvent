@@ -384,7 +384,8 @@ class EvenementPublicController extends Controller
         if ($estGratuit) {
             // Commande entièrement gratuite (événement gratuit, jours à 0 F ou promo 100 %) :
             // confirmation immédiate. quota_vendu a déjà été compté à la réservation.
-            $freeGroupId = 'GRATUIT-'.$tickets[0]->id;
+            // Identifiant aléatoire : un « GRATUIT-<id> » serait devinable (récupération de billets)
+            $freeGroupId = 'GRATUIT-'.strtoupper(Str::random(16));
             foreach ($tickets as $t) {
                 $t->update([
                     'statut_paiement' => 'payé',

@@ -65,7 +65,7 @@ Route::get('/paiement/lien/{ticket}', [PaiementController::class, 'accederDepuis
 Route::get('/confirmation/{ticket}', [PaiementController::class, 'confirmation'])->name('confirmation.show');
 
 Route::get('/recuperer', [TicketController::class, 'recuperer'])->name('tickets.recuperer');
-Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher')->middleware('throttle:10,1');
+Route::post('/recuperer', [TicketController::class, 'rechercher'])->name('tickets.rechercher')->middleware('throttle:3,1');
 Route::get('/ticket/{ticket}/telecharger', [TicketController::class, 'downloadTicket'])->name('tickets.telecharger')->middleware('signed');
 Route::get('/ticket/{ticket}/telecharger-tous', [TicketController::class, 'downloadAll'])->name('tickets.telecharger-tous')->middleware('signed');
 
@@ -436,7 +436,7 @@ Route::middleware(['auth', 'gestion.org', 'compte_actif', 'no_cache', 'compte_in
         Route::put('/notifications', [ParametresController::class, 'notifications'])->name('notifications.update');
         Route::put('/scan', [ParametresController::class, 'scan'])->name('scan.update');
         Route::post('/supprimer-compte', [ParametresController::class, 'supprimerCompte'])->name('compte.delete');
-        Route::post('/numeros-retrait', [ParametresController::class, 'storeNumeroRetrait'])->name('numeros-retrait.store');
+        Route::post('/numeros-retrait', [ParametresController::class, 'storeNumeroRetrait'])->middleware('throttle:3,1')->name('numeros-retrait.store');
         Route::delete('/numeros-retrait/{numero}', [ParametresController::class, 'destroyNumeroRetrait'])->name('numeros-retrait.destroy');
     });
 

@@ -50,9 +50,10 @@
                             <div class="row g-2 mb-3" style="font-size: 0.88rem;">
                                 <div class="col-12">
                                     <span class="text-muted">Acheteur :</span><br>
-                                    <strong>{{ $ticket->nom_acheteur }}</strong>
+                                    {{-- Données de l'acheteur masquées : la page ne sert qu'à récupérer le billet --}}
+                                    <strong>{{ \Illuminate\Support\Str::mask((string) $ticket->nom_acheteur, '•', 3) }}</strong>
                                     <span class="text-muted ms-3">Email :</span>
-                                    <strong>{{ $ticket->email_acheteur }}</strong>
+                                    <strong>{{ \Illuminate\Support\Str::mask((string) $ticket->email_acheteur, '•', 2, max(0, strpos((string) $ticket->email_acheteur, '@') - 2)) }}</strong>
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted">Type :</span><br>
@@ -65,7 +66,8 @@
                                 <div class="col-6">
                                     <span class="text-muted">Code :</span><br>
                                     @if($isPaid)
-                                        <code class="fw-bold">{{ $ticket->code_unique }}</code>
+                                        {{-- Le code complet (valeur du QR) n'est jamais affiché ici : il est dans le PDF --}}
+                                        <code class="fw-bold">{{ \Illuminate\Support\Str::mask($ticket->code_unique, '•', 4, -3) }}</code>
                                     @else
                                         <span class="text-muted fst-italic">Communiqué après confirmation du paiement</span>
                                     @endif

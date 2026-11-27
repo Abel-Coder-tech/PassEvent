@@ -172,7 +172,7 @@
                                         <div style="font-size: 0.82rem;">{{ $ticket->date_achat->format('d/m/Y') }}</div>
                                         <small class="text-muted" style="font-size: 0.72rem;">{{ $ticket->date_achat->format('H:i') }}</small>
                                     </td>
-                                    <td><code style="font-size: 0.72rem;">{{ Str::limit($ticket->transaction_id ?? '—', 20) }}</code></td>
+                                    <td><code style="font-size: 0.72rem;">{{ $ticket->transactionMasquee() }}</code></td>
                                     <td>
                                         @if($ticket->statut_paiement === 'remboursé')
                                             <span class="badge" style="background:rgba(18,151,110,0.12);color:var(--vert);font-size:0.68rem;">Remboursé</span>

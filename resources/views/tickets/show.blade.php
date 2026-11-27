@@ -124,7 +124,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Transaction ID</label>
-                            <div class="fw-semibold" style="font-size: 0.85rem;">{{ $ticket->transaction_id ?? '—' }}</div>
+                            <div class="fw-semibold" style="font-size: 0.85rem;">{{ $ticket->transactionMasquee() }}</div>
                         </div>
                         @if($ticket->code_promo_utilise)
                             <div class="col-md-4">

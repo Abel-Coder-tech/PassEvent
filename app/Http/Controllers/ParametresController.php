@@ -158,7 +158,9 @@ class ParametresController extends Controller
             'operateur' => 'required|in:mtn,moov,celtiis',
             'nom' => 'required|string|max:255',
             'mobile' => 'required|string|max:50',
+            'password_numero' => 'required|string',
         ], [
+            'password_numero.required' => 'Saisissez votre mot de passe pour confirmer.',
             'operateur.required' => 'Veuillez choisir un opérateur.',
             'operateur.in' => 'L\'opérateur choisi est invalide.',
             'nom.required' => 'Le nom du bénéficiaire est obligatoire.',
@@ -167,7 +169,19 @@ class ParametresController extends Controller
             'mobile.max' => 'Le numéro ne doit pas dépasser 50 caractères.',
         ]);
 
-        Auth::user()->numerosRetrait()->create($validated);
+        // Sécurité : un numéro de retrait reçoit l'argent de l'organisateur.
+        // Le mot de passe est exigé, même avec une session ouverte.
+        if (! Hash::check($validated['password_numero'], (string) Auth::user()->getAuthPassword())) {
+            return redirect(route('parametres.index').'#paiement')
+                ->withErrors(['password_numero' => 'Mot de passe incorrect.'])
+                ->withInput($request->except('password_numero'));
+        }
+
+        Auth::user()->numerosRetrait()->create([
+            'operateur' => $validated['operateur'],
+            'nom' => $validated['nom'],
+            'mobile' => $validated['mobile'],
+        ]);
 
         return redirect(route('parametres.index') . '#paiement')->with('success_numero_retrait', 'Numéro de retrait ajouté avec succès.');
     }

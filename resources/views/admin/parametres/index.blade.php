@@ -619,6 +619,15 @@
 </div>
 
 {{-- Modal ajouter un numéro de retrait --}}
+@if($errors->hasAny(['password_numero', 'operateur', 'nom', 'mobile']))
+<script>
+    // Erreur à l'ajout d'un numéro : on rouvre la fenêtre pour afficher le message
+    document.addEventListener('DOMContentLoaded', function () {
+        var m = document.getElementById('modalAjouterNumero');
+        if (m && window.bootstrap) { bootstrap.Modal.getOrCreateInstance(m).show(); }
+    });
+</script>
+@endif
 <div class="modal fade" id="modalAjouterNumero" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 14px; border: none;">
@@ -654,6 +663,12 @@
                         <input type="text" name="mobile" class="form-control" placeholder="Ex: +229 6X XX XX XX" required>
                         @error('mobile')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
                         <small class="text-muted">Doit correspondre au réseau sélectionné</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:0.82rem; font-weight:600;" for="password_numero">Votre mot de passe <span class="text-danger">*</span></label>
+                        <input type="password" name="password_numero" id="password_numero" class="form-control @error('password_numero') is-invalid @enderror" autocomplete="current-password" required>
+                        @error('password_numero')<div class="text-danger mt-1" style="font-size:0.78rem;">{{ $message }}</div>@enderror
+                        <small class="text-muted">Pour votre sécurité, l'ajout d'un numéro qui recevra vos retraits est confirmé par votre mot de passe.</small>
                     </div>
                     <button type="submit" class="btn w-100 py-2" style="background: linear-gradient(135deg, var(--violet-clair), var(--violet-clair)); color: #fff; font-weight:700; border-radius:10px; border:none;">
                         <i class="bi bi-check-lg me-1"></i> Sauvegarder

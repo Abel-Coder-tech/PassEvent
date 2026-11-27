@@ -1723,10 +1723,11 @@ class SuperAdminController extends Controller
         $commission = round(($evenement->recettes ?? 0) * $commissionPct / 100, 2);
         $recettesNettes = ($evenement->recettes ?? 0) - $commission;
 
-        // Derniers billets en ligne, tous statuts (le statut est affiché : un
-        // paiement échoué n'apparaît pas comme une vente). Les billets des lots
-        // physiques sont exclus (planches générées, pas des ventes).
+        // Derniers billets VENDUS : uniquement les paiements réussis (les
+        // paiements échoués ou abandonnés n'apparaissent pas). Les billets des
+        // lots physiques sont exclus (planches générées, pas des ventes).
         $tickets = Ticket::where('evenement_id', $evenement->id)
+            ->where('statut_paiement', 'payé')
             ->whereNull('lot_physique_id')
             ->where(fn ($q) => $q->whereNull('source')->orWhere('source', '!=', 'physique'))
             ->with('tarif')

@@ -346,51 +346,73 @@ class TicketController extends Controller
     {
         $request->validate([
             'transaction_id' => 'required|string|max:255',
+            'telephone' => 'required|string|max:30',
             'email' => 'required|email',
         ], [
             'transaction_id.required' => 'L\'ID de transaction est requis.',
             'transaction_id.string' => 'L\'ID de transaction doit être une chaîne de caractères.',
             'transaction_id.max' => 'L\'ID de transaction ne peut pas dépasser 255 caractères.',
-            'email.required' => 'L\'email de récupération est requis.',
-            'email.email' => 'L\'email de récupération doit être une adresse email valide.',
+            'telephone.required' => 'Le numéro de téléphone utilisé lors de l\'achat est requis.',
+            'email.required' => 'L\'email où recevoir vos billets est requis.',
+            'email.email' => 'L\'email doit être une adresse email valide.',
         ]);
 
         $transactionId = trim((string) $request->transaction_id);
         $emailRecuperation = trim((string) $request->email);
+        $champs = $request->only('transaction_id', 'telephone', 'email');
 
+        // L'acheteur peut recevoir ses billets sur une AUTRE adresse (email ou
+        // téléphone perdu). L'ID seul ne suffit pas : les ID FedaPay sont des
+        // numéros qui se suivent, donc devinables. Il faut aussi le numéro de
+        // téléphone de l'acheteur (WhatsApp saisi à l'achat ou numéro Mobile Money).
+        $refus = 'Aucun billet ne correspond à cet ID de transaction et à ce numéro de téléphone.';
+
+        $telephone = substr(preg_replace('/\D/', '', (string) $request->telephone), -8);
+        if (strlen($telephone) < 8) {
+            return back()->with('error', $refus)->withInput($champs);
+        }
+
+        // Billets payés en ligne uniquement : ni gratuits, ni physiques, ni annulés
         $tickets = Ticket::with('evenement.dates', 'tarif')
             ->where('transaction_id', $transactionId)
+            ->where('statut_paiement', 'payé')
+            ->where('montant', '>', 0)
+            ->whereNull('lot_physique_id')
+            ->where(fn ($q) => $q->whereNull('annule')->orWhere('annule', false))
             ->orderBy('date_achat', 'desc')
             ->get();
 
+        // Le numéro saisi doit être celui de l'acheteur (comparaison sur les 8
+        // derniers chiffres : indicatif +229 / 01 facultatifs)
+        $finTel = fn ($n) => substr(preg_replace('/\D/', '', (string) $n), -8);
+        $tickets = $tickets->filter(fn (Ticket $t) => in_array($telephone, array_filter([
+            $finTel($t->whatsapp_acheteur), $finTel($t->telephone_acheteur), $finTel($t->telephone_paiement),
+        ], fn ($v) => strlen($v) === 8), true))->values();
+
         if ($tickets->isEmpty()) {
-            return back()->with('error', 'Aucun billet trouvé pour cet ID de transaction. Vérifiez la référence saisie (elle figure sur le SMS ou le reçu FedaPay).');
+            // Message neutre : ne révèle ni si la transaction existe, ni lequel des deux est faux
+            return back()->with('error', $refus)->withInput($champs);
         }
 
-        // Seuls les billets payants et confirmés peuvent être renvoyés (gratuits exclus).
-        $aRenvoyer = $tickets
-            ->where('statut_paiement', 'payé')
-            ->where('montant', '>', 0);
+        SendTicketEmailJob::dispatchAfterResponse($tickets->pluck('id')->all(), $emailRecuperation);
 
-        if ($aRenvoyer->isNotEmpty()) {
-            SendTicketEmailJob::dispatchAfterResponse($aRenvoyer->pluck('id')->all(), $emailRecuperation);
-
-            foreach ($aRenvoyer as $ticket) {
-                Log::create([
-                    'ticket_id' => $ticket->id,
-                    'type_operation' => 'recuperation',
-                    'details' => ['email_recuperation' => strtolower($emailRecuperation)],
-                    'ip' => $request->ip(),
-                    'user_agent' => (string) $request->userAgent(),
-                ]);
-            }
-
-            session()->flash('success', $aRenvoyer->count() > 1
-                ? "Vos {$aRenvoyer->count()} billets ont été renvoyés à {$emailRecuperation}."
-                : "Votre billet a été renvoyé à {$emailRecuperation}.");
-        } else {
-            session()->flash('error', 'Aucun billet confirmé à récupérer pour cette transaction (billets non payés ou gratuits exclus).');
+        foreach ($tickets as $ticket) {
+            Log::create([
+                'ticket_id' => $ticket->id,
+                'type_operation' => 'recuperation',
+                'details' => [
+                    'email_recuperation' => strtolower($emailRecuperation),
+                    'email_acheteur' => strtolower((string) $ticket->email_acheteur),
+                    'autre_email' => strtolower($emailRecuperation) !== strtolower((string) $ticket->email_acheteur),
+                ],
+                'ip' => $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+            ]);
         }
+
+        session()->flash('success', $tickets->count() > 1
+            ? "Vos {$tickets->count()} billets ont été envoyés à {$emailRecuperation}."
+            : "Votre billet a été envoyé à {$emailRecuperation}.");
 
         return view('site.resultats', compact('tickets'));
     }

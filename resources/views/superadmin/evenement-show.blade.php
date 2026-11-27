@@ -25,38 +25,50 @@
 @endphp
 
 <div class="row g-2 mb-3">
-    <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-3">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
             <div class="fw-bold fs-5" style="color: var(--sa-primary);">{{ $evenement->quota_vendu }} / {{ $evenement->capacite }}</div>
             <small class="text-muted">Places en ligne vendues</small>
         </div>
     </div>
-    <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-3">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
             <div class="fw-bold fs-5" style="color: #3498db;">{{ $bilan['ventes_nb'] }}</div>
             <small class="text-muted">Billets vendus (en ligne + espèces)</small>
         </div>
     </div>
-    <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-3">
-            <div class="fw-bold fs-5" style="color: #7B3FA0;">{{ $bilan['physique_nb'] }}</div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
+            <div class="fw-bold fs-5" style="color: #7B3FA0;">{{ number_format($bilan['physique_nb'], 0, ',', ' ') }}</div>
             <small class="text-muted">Billets physiques</small>
         </div>
     </div>
-    <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-3">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
             <div class="fw-bold fs-5" style="color: var(--sa-primary);">{{ $ticketsScannes }}</div>
             <small class="text-muted">Tickets scannés</small>
         </div>
     </div>
-    <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-3">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
+            <div class="fw-bold fs-5" style="color: #3498db;">{{ number_format($bilan['mobile'], 0, ',', ' ') }} F</div>
+            <small class="text-muted">Encaissé en ligne (Mobile Money)</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
+            <div class="fw-bold fs-5" style="color: var(--sa-danger);">{{ number_format($bilan['commission_ventes'] + $bilan['commission_physique'], 0, ',', ' ') }} F</div>
+            <small class="text-muted">Commission totale PaxEvent</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
             <div class="fw-bold fs-5" style="color: var(--sa-success);">{{ $agentsScan }}</div>
             <small class="text-muted">Agents scan liés</small>
         </div>
     </div>
-    <div class="col-6 col-md-2">
-        <div class="sa-card text-center py-3">
+    <div class="col-6 col-md-3">
+        <div class="sa-card text-center py-3 h-100">
             <div class="fw-bold fs-5" style="color: #3498db;">{{ $agentsVente }}</div>
             <small class="text-muted">Agents vente liés</small>
         </div>
@@ -382,7 +394,7 @@
 
 <div class="sa-card mb-4">
     <div class="sa-card-header">
-        <span><i class="bi bi-ticket me-2" style="color: var(--sa-success);"></i>Derniers billets en ligne</span>
+        <span><i class="bi bi-ticket me-2" style="color: var(--sa-success);"></i>Derniers billets vendus</span>
     </div>
     <div class="sa-card-body p-0">
         <table class="sa-table">
@@ -429,7 +441,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center text-muted py-3">Aucun billet en ligne</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-3">Aucun billet vendu</td></tr>
                 @endforelse
             </tbody>
         </table>

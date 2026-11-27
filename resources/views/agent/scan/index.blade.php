@@ -477,7 +477,6 @@ function showCameraError(message) {
     showScannerChrome(false);
     setCameraButton(false);
     setCameraStatus(message, true);
-    if (lastCameraError) { console.warn('Scan agent - erreur camera :', lastCameraError); }
 }
 
 async function stopCamera() {
@@ -627,7 +626,6 @@ function submitScan(code) {
                 if (data.ticket.nom) details += '<div><strong>Porteur :</strong> ' + escapeHtml(data.ticket.nom) + '</div>';
                 if (data.ticket.nom_tarif) details += '<div><strong>Tarif :</strong> ' + escapeHtml(data.ticket.nom_tarif) + '</div>';
                 if (data.ticket.montant) details += '<div><strong>Montant :</strong> ' + escapeHtml(data.ticket.montant) + '</div>';
-                if (data.ticket.transaction_id) details += '<div><strong>Transaction :</strong> ' + escapeHtml(data.ticket.transaction_id) + '</div>';
             }
             window.scanModal.success({ title: 'Ticket validé !', message: '', details: details });
         } else if (data.resultat === 'pas_encore_ouvert') {

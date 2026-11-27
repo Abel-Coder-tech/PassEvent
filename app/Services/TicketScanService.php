@@ -200,7 +200,8 @@ class TicketScanService
                 ...$this->contexteBillet($ticket),
                 'email' => $ticket->email_acheteur,
                 'montant' => number_format($ticket->montant, 0, ',', ' '),
-                'transaction_id' => $ticket->transaction_id,
+                // L'ID de transaction n'est jamais envoyé aux agents de scan (il
+                // permet de récupérer les billets sur un autre email).
                 'date_achat' => $ticket->date_achat ? $ticket->date_achat->format('d/m/Y H:i') : null,
             ],
         ];

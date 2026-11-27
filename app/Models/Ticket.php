@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -198,6 +199,17 @@ class Ticket extends Model
         return $this->hasMany(Notification::class);
     }
 
+    // Demandes de remboursement auxquelles ce billet est rattaché.
+    public function demandesRemboursement(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            DemandeRemboursement::class,
+            'demande_remboursement_ticket',
+            'ticket_id',
+            'demande_remboursement_id',
+        );
+    }
+
     // Trace des actions (création, confirmation, annulation, expiration, renvoi)
     public function journalActions(): HasMany
     {
@@ -245,9 +257,13 @@ class Ticket extends Model
 
     public static function genererCodeSecurise(): string
     {
+        // Le code est la valeur du QR : il ne doit pas être devinable par
+        // force brute, même avec un scan authentifié. 12 caractères aléatoires
+        // (~78 bits) remplacent l'ancien suffixe de 5 caractères (~26 bits).
         do {
-            $code = 'PAX-' . strtoupper(Str::random(5));
+            $code = 'PAX-' . strtoupper(Str::random(12));
         } while (self::where('code_unique', $code)->exists());
+
         return $code;
     }
 
@@ -273,6 +289,16 @@ class Ticket extends Model
         return $code !== ''
             && $code !== 'TMP'
             && ! str_starts_with($code, self::PREFIXE_RESERVATION);
+    }
+
+    // ID de transaction masqué, pour tout écran vu par quelqu'un d'autre que
+    // l'acheteur (organisateur…) : connaître l'ID complet permet de récupérer
+    // les billets sur n'importe quel email (page « Récupérer mon billet »).
+    public function transactionMasquee(): string
+    {
+        $id = (string) $this->transaction_id;
+
+        return mb_strlen($id) > 8 ? \Illuminate\Support\Str::mask($id, '•', 4, -4) : ($id !== '' ? '••••' : '—');
     }
 
     // Référence à afficher à l'acheteur/à l'agent avant confirmation.
