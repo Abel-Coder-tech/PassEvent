@@ -191,4 +191,24 @@ class AppReleaseAgentMailTest extends TestCase
         $this->assertNull(AppRelease::latest());
         @unlink($source);
     }
+
+    public function test_l_appli_d_un_agent_recoit_un_lien_de_mise_a_jour_utilisable_sans_session(): void
+    {
+        $this->release();
+        $agent = $this->agentScan();
+        $token = $agent->createToken('agent-auth', ['agent:read'])->plainTextToken;
+
+        $reponse = $this->withToken($token)->getJson('/api/app/paxagent/latest')->assertOk();
+        $this->assertSame(7, $reponse->json('version_code'));
+        $url = $reponse->json('url');
+        $this->assertStringContainsString('/app/paxagent/agent/scan/'.$agent->id, $url);
+
+        // Ouvert dans le navigateur du téléphone : aucune session, aucun jeton
+        $this->app['auth']->forgetGuards();
+        $this->get($url)->assertOk();
+
+        // Agent désactivé : le lien ne marche plus
+        $agent->update(['actif' => false]);
+        $this->get($url)->assertForbidden();
+    }
 }

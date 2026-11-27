@@ -143,14 +143,34 @@ class AppReleaseController extends Controller
             'published_at' => $release->published_at?->toIso8601String(),
             'sha256' => $release->sha256,
             'size_bytes' => $release->size_bytes,
-            'url' => URL::temporarySignedRoute(
-                'app.download',
-                now()->addMinutes(15),
-                [
-                    'release' => $release->id,
-                    'uid' => $request->user()->getAuthIdentifier(),
-                ],
-            ),
+            'url' => $this->lienPourDemandeur($request, $release),
         ]);
+    }
+
+    // L'appli ouvre ce lien dans le navigateur du téléphone, sans session :
+    // un agent reçoit son lien personnel signé (comme dans son email, coupé
+    // s'il est désactivé) ; un organisateur garde le lien lié à son compte.
+    private function lienPourDemandeur(Request $request, AppRelease $release): string
+    {
+        $user = $request->user();
+        $type = match (true) {
+            $user instanceof \App\Models\Agent => 'scan',
+            $user instanceof \App\Models\AgentVente => 'vente',
+            default => null,
+        };
+
+        if ($type !== null) {
+            return URL::temporarySignedRoute(
+                'app.download.agent',
+                now()->addMinutes(30),
+                ['type' => $type, 'agent' => $user->getKey()],
+            );
+        }
+
+        return URL::temporarySignedRoute(
+            'app.download',
+            now()->addMinutes(15),
+            ['release' => $release->id, 'uid' => $user->getAuthIdentifier()],
+        );
     }
 }

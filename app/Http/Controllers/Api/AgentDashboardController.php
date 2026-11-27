@@ -45,6 +45,7 @@ class AgentDashboardController extends Controller
                 'date_event' => $evenement && $evenement->date_event ? $evenement->date_event->toDateString() : null,
                 'derniere_date' => $evenement?->derniereDateVente()?->toDateString(),
                 'lieu' => $evenement?->lieu,
+                ...($evenement ? $evenement->etatPourAgents() : ['etat' => null, 'prochain_debut' => null]),
             ],
             'organisateur' => $organisateur ? [
                 'nom' => trim(($organisateur->prenom ?? '').' '.$organisateur->nom),

@@ -98,6 +98,7 @@ class AgentVenteDashboardController extends Controller
                 'date_event' => $evenement->date_event?->toIso8601String(),
                 'derniere_date' => $evenement->derniereDateVente()?->toIso8601String(),
                 'lieu' => $evenement->lieu,
+                ...$evenement->etatPourAgents(),
                 'categorie' => $evenement->categorie,
                 'type_evenement' => $evenement->type_evenement,
                 'statut' => $evenement->statut,

@@ -662,6 +662,37 @@ class Evenement extends Model
         return $debuts;
     }
 
+    /**
+     * État affiché par le badge du tableau de bord des agents.
+     *
+     * Même fenêtre que le scan : une session est « en cours » de son début
+     * jusqu'à DUREE_SCAN_HEURES après. Sinon « a_venir » (avec le début de
+     * la prochaine session) ou « termine ».
+     *
+     * @return array{etat: string, prochain_debut: ?string}
+     */
+    public function etatPourAgents(): array
+    {
+        $maintenant = now();
+        $prochain = null;
+
+        foreach ($this->datesDebut() as $debut) {
+            $fin = $debut->copy()->addHours(self::DUREE_SCAN_HEURES);
+            if ($debut->lte($maintenant) && $maintenant->lte($fin)) {
+                return ['etat' => 'en_cours', 'prochain_debut' => null];
+            }
+            if ($debut->gt($maintenant) && ($prochain === null || $debut->lt($prochain))) {
+                $prochain = $debut;
+            }
+        }
+
+        if ($prochain !== null) {
+            return ['etat' => 'a_venir', 'prochain_debut' => $prochain->toIso8601String()];
+        }
+
+        return ['etat' => 'termine', 'prochain_debut' => null];
+    }
+
     // L'événement est-il terminé pour le scan ? On se base sur la fin de la
     // dernière fenêtre de scan (début + tolérance), et non sur l'heure de début :
     // une session qui commence la veille et finit après minuit reste scannable.
