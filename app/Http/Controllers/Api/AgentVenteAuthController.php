@@ -105,7 +105,11 @@ class AgentVenteAuthController extends Controller
     {
         /** @var AgentVente|null $agent */
         $agent = $request->user();
-        $token = $agent?->currentAccessToken();
+        // Route hors contrôle « agent actif » : seul un jeton d'agent de vente est accepté
+        if (! $agent instanceof AgentVente) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+        $token = $agent->currentAccessToken();
 
         if ($agent) {
             $agent->fermerSession(SessionMarker::cleDepuis($token));

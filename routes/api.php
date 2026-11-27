@@ -23,9 +23,12 @@ Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(
     Route::get('/agent/dashboard', [AgentDashboardController::class, 'show']);
     Route::get('/agent/scans', [AgentScanController::class, 'liste']);
     Route::post('/agent/scan/pin', [AgentScanController::class, 'pin']);
-    Route::post('/agent/logout', [AgentAuthController::class, 'logout']);
     Route::post('/agent/logout-all', [AgentAuthController::class, 'logoutAll']);
 });
+
+// Déconnexion toujours possible (événement terminé, compte désactivé…) :
+// elle libère la session unique pour un autre appareil.
+Route::middleware(['auth:sanctum'])->post('/agent/logout', [AgentAuthController::class, 'logout']);
 
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:scan'])->group(function () {
     Route::post('/agent/scan/verify', [AgentScanController::class, 'verify'])->middleware('throttle:120,1');
@@ -56,9 +59,11 @@ Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
         Route::post('/password', [AgentVenteAuthController::class, 'changePassword'])->middleware('throttle:10,1');
         Route::post('/refresh-token', [AgentVenteAuthController::class, 'refreshToken'])->middleware('throttle:10,1');
 
-        Route::post('/logout', [AgentVenteAuthController::class, 'logout']);
         Route::post('/logout-all', [AgentVenteAuthController::class, 'logoutAll']);
     });
+
+    // Déconnexion toujours possible : elle libère la session unique.
+    Route::middleware(['auth:sanctum'])->post('/logout', [AgentVenteAuthController::class, 'logout']);
 
     Route::middleware(['auth:sanctum', 'agent.vente.api', 'abilities:agent_vente:sell'])->group(function () {
         Route::post('/sales/promo', [AgentVenteSaleController::class, 'verifierCodePromo'])->middleware('throttle:60,1');

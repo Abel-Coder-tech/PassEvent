@@ -8,9 +8,36 @@ use Illuminate\Support\Carbon;
  * Session unique par compte : une clé aléatoire est enregistrée à la
  * connexion et effacée à la déconnexion. Tant que la clé est active, toute
  * autre connexion avec le même identifiant est refusée.
+ *
+ * La réservation suit l'activité : chaque requête de l'appareil connecté la
+ * prolonge. Un appareil abandonné sans déconnexion (réseau coupé à la
+ * déconnexion, appli réinstallée, téléphone perdu) libère le compte au bout
+ * de RESERVATION_MINUTES, au lieu de le bloquer pendant des jours.
  */
 trait HasSessionUnique
 {
+    public const RESERVATION_MINUTES = 30;
+
+    /**
+     * Appelé à chaque requête authentifiée : vrai si [$cle] est bien la
+     * session de ce compte. Prolonge la réservation ; une réservation expirée
+     * mais jamais reprise par un autre appareil est simplement renouvelée.
+     */
+    public function garderSession(?string $cle): bool
+    {
+        if ($cle === null || ! hash_equals((string) $this->session_cle, $cle)) {
+            return false;
+        }
+
+        // Écriture au plus toutes les 5 minutes
+        $seuil = now()->addMinutes(self::RESERVATION_MINUTES - 5);
+        if (empty($this->session_expire_le) || Carbon::parse($this->session_expire_le)->lt($seuil)) {
+            $this->forceFill(['session_expire_le' => now()->addMinutes(self::RESERVATION_MINUTES)])->save();
+        }
+
+        return true;
+    }
+
     public function sessionEstActive(): bool
     {
         if (empty($this->session_cle)) {
@@ -23,7 +50,7 @@ trait HasSessionUnique
 
     public function ouvrirSession(string $cle): void
     {
-        $expireLe = now()->addMinutes((int) config('sanctum.expiration', 20160));
+        $expireLe = now()->addMinutes(self::RESERVATION_MINUTES);
 
         $this->forceFill([
             'session_cle' => $cle,
@@ -38,7 +65,7 @@ trait HasSessionUnique
      */
     public function reserverSession(string $cle): bool
     {
-        $expireLe = now()->addMinutes((int) config('sanctum.expiration', 20160));
+        $expireLe = now()->addMinutes(self::RESERVATION_MINUTES);
 
         $reserve = $this->newQuery()
             ->whereKey($this->getKey())

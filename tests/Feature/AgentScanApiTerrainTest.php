@@ -124,4 +124,72 @@ class AgentScanApiTerrainTest extends TestCase
         ]);
         $log->forceFill(['created_at' => $quand])->save();
     }
+
+    public function test_apres_deconnexion_un_autre_telephone_se_connecte_tout_de_suite(): void
+    {
+        $this->agent('a1@test.local', '1111');
+        $telephoneA = $this->connecter('a1@test.local');
+
+        // Tant que le téléphone A est connecté : le téléphone B est refusé
+        $this->postJson('/api/agent/login', ['email' => 'a1@test.local', 'password' => 'Secret@123'])
+            ->assertStatus(409)->assertJson(['message' => 'deja_connecte']);
+
+        // A se déconnecte : B se connecte immédiatement
+        $this->withToken($telephoneA)->postJson('/api/agent/logout')->assertOk();
+        $this->app['auth']->forgetGuards();
+        $this->postJson('/api/agent/login', ['email' => 'a1@test.local', 'password' => 'Secret@123'])->assertOk();
+    }
+
+    public function test_un_telephone_abandonne_sans_deconnexion_libere_le_compte_apres_30_minutes(): void
+    {
+        $this->agent('a1@test.local', '1111');
+        $telephoneA = $this->connecter('a1@test.local');
+
+        // Appli réinstallée / réseau coupé à la déconnexion : A disparaît sans se déconnecter
+        $this->travel(31)->minutes();
+        $this->app['auth']->forgetGuards();
+        $this->postJson('/api/agent/login', ['email' => 'a1@test.local', 'password' => 'Secret@123'])->assertOk();
+
+        // L'ancien téléphone A ne peut plus rien faire
+        $this->withToken($telephoneA)->getJson('/api/agent/me')->assertStatus(401);
+    }
+
+    public function test_le_telephone_connecte_garde_sa_place_meme_apres_une_longue_pause(): void
+    {
+        $this->agent('a1@test.local', '1111');
+        $telephoneA = $this->connecter('a1@test.local');
+
+        $this->travel(2)->hours();
+        $this->withToken($telephoneA)->getJson('/api/agent/me')->assertOk();
+
+        // Sa place est de nouveau réservée : un autre téléphone est refusé
+        $this->app['auth']->forgetGuards();
+        $this->postJson('/api/agent/login', ['email' => 'a1@test.local', 'password' => 'Secret@123'])->assertStatus(409);
+    }
+
+    public function test_la_deconnexion_libere_le_compte_meme_evenement_termine(): void
+    {
+        $this->agent('a1@test.local', '1111');
+        $telephoneA = $this->connecter('a1@test.local');
+        $agent = Agent::where('email', 'a1@test.local')->first();
+
+        $agent->update(['actif' => false]);
+        $this->withToken($telephoneA)->postJson('/api/agent/logout')->assertOk();
+        $this->assertNull($agent->fresh()->session_cle);
+    }
+
+    public function test_agent_de_vente_deconnexion_puis_autre_telephone(): void
+    {
+        \App\Models\AgentVente::create(['nom' => 'Vendeur', 'email' => 'v1@test.local', 'password' => Hash::make('Secret@123'),
+            'evenement_id' => $this->evenement->id, 'actif' => true]);
+        $login = fn () => $this->postJson('/api/agent-vente/login', ['email' => 'v1@test.local', 'password' => 'Secret@123']);
+
+        $telephoneA = $login()->assertOk()->json('token');
+        $this->app['auth']->forgetGuards();
+        $login()->assertStatus(409);
+
+        $this->withToken($telephoneA)->postJson('/api/agent-vente/logout')->assertOk();
+        $this->app['auth']->forgetGuards();
+        $login()->assertOk();
+    }
 }

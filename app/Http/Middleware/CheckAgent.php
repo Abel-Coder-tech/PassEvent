@@ -19,7 +19,7 @@ class CheckAgent
 
         if ($agent->session_cle !== null) {
             $cle = $request->session()->get('agent_session_cle');
-            if (! $agent->sessionEstActive() || ! SessionMarker::correspond($cle, $agent->session_cle)) {
+            if (! $agent->garderSession($cle)) {
                 auth('agent')->logout();
                 $request->session()->forget('agent_session_cle');
 

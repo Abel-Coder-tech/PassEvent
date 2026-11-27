@@ -21,7 +21,7 @@ class EnsureAgentVenteIsActive
 
         if ($agent->session_cle !== null) {
             $cle = SessionMarker::cleDepuis($request->user()?->currentAccessToken());
-            if (! $agent->sessionEstActive() || ! SessionMarker::correspond($cle, $agent->session_cle)) {
+            if (! $agent->garderSession($cle)) {
                 return response()->json(['message' => 'session_remplacee'], 401);
             }
         }

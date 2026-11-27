@@ -101,6 +101,10 @@ class AgentAuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $agent = $request->user();
+        // Route hors contrôle « agent actif » : seul un jeton d'agent de scan est accepté
+        if (! $agent instanceof Agent) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
         if ($agent) {
             $cle = SessionMarker::cleDepuis($agent->currentAccessToken());
             $agent->fermerSession($cle);

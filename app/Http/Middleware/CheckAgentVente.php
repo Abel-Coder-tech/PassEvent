@@ -19,7 +19,7 @@ class CheckAgentVente
 
         if ($agent->session_cle !== null) {
             $cle = $request->session()->get('agent_vente_session_cle');
-            if (! $agent->sessionEstActive() || ! SessionMarker::correspond($cle, $agent->session_cle)) {
+            if (! $agent->garderSession($cle)) {
                 auth('agent_vente')->logout();
                 $request->session()->forget('agent_vente_session_cle');
 
