@@ -86,4 +86,42 @@ class AgentScanApiTerrainTest extends TestCase
 
         $this->assertTrue(\Illuminate\Support\Carbon::parse($expire)->gte(now()->addHours(Evenement::DUREE_SCAN_HEURES)->subMinute()));
     }
+
+    public function test_l_historique_est_pagine_par_10_avec_filtres(): void
+    {
+        $agent = $this->agent('a1@test.local', '1111');
+        $autre = $this->agent('a2@test.local', '2222');
+        // 15 scans aujourd'hui (10 valides, 5 refusés), 8 hier, + 3 d'un autre agent
+        foreach (range(1, 15) as $i) {
+            $this->logScan($agent, $i <= 10 ? 'valide' : 'deja_utilise', now()->subMinutes($i));
+        }
+        foreach (range(1, 8) as $i) {
+            $this->logScan($agent, 'valide', now()->subDay()->subMinutes($i));
+        }
+        foreach (range(1, 3) as $i) {
+            $this->logScan($autre, 'valide', now());
+        }
+        $token = $this->connecter('a1@test.local');
+
+        $p1 = $this->withToken($token)->getJson('/api/agent/scans')->assertOk();
+        $p1->assertJson(['page' => 1, 'par_page' => 10, 'total' => 23, 'pages' => 3]);
+        $this->assertCount(10, $p1->json('scans'));
+        $this->assertSame([15, 8], array_column($p1->json('jours'), 'total'));
+
+        $p3 = $this->withToken($token)->getJson('/api/agent/scans?page=3')->assertOk();
+        $this->assertCount(3, $p3->json('scans'));
+
+        $jour = now()->toDateString();
+        $refuses = $this->withToken($token)->getJson("/api/agent/scans?jour={$jour}&filtre=invalid")->assertOk();
+        $refuses->assertJson(['total' => 5, 'pages' => 1, 'resume' => ['total' => 15, 'valides' => 10, 'invalides' => 5]]);
+    }
+
+    private function logScan(Agent $agent, string $resultat, $quand): void
+    {
+        $log = \App\Models\Log::create([
+            'agent_id' => $agent->id, 'type_operation' => 'scan',
+            'details' => ['code' => 'PAX-'.\Illuminate\Support\Str::random(6), 'resultat' => $resultat],
+        ]);
+        $log->forceFill(['created_at' => $quand])->save();
+    }
 }

@@ -21,6 +21,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(function () {
     Route::get('/agent/me', [AgentAuthController::class, 'me']);
     Route::get('/agent/dashboard', [AgentDashboardController::class, 'show']);
+    Route::get('/agent/scans', [AgentScanController::class, 'liste']);
     Route::post('/agent/scan/pin', [AgentScanController::class, 'pin']);
     Route::post('/agent/logout', [AgentAuthController::class, 'logout']);
     Route::post('/agent/logout-all', [AgentAuthController::class, 'logoutAll']);

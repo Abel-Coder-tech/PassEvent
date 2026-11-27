@@ -352,7 +352,7 @@ class TicketScanServiceTest extends TestCase
 
         $this->assertFalse($autre['success']);
         $this->assertSame('deja_utilise', $autre['resultat']);
-        $this->assertStringContainsString('par un autre agent', $autre['message']);
+        $this->assertStringContainsString('par Agent Scan', $autre['message']);
     }
 
     private function creerAgent(int $evenementId): Agent

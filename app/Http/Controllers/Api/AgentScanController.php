@@ -106,6 +106,58 @@ class AgentScanController extends Controller
         return response()->json($result, 200);
     }
 
+    // Historique paginé de l'agent (onglet Historique de l'appli) : 10 scans
+    // par page, filtres jour / résultat, total, nombre de pages et décompte
+    // par jour pour le sélecteur de dates.
+    public function liste(Request $request): JsonResponse
+    {
+        $agent = $request->user();
+        $donnees = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'jour' => ['nullable', 'date_format:Y-m-d'],
+            'filtre' => ['nullable', 'in:all,valid,invalid'],
+        ]);
+        $parPage = 10;
+
+        $base = fn () => $agent->logs()->where('type_operation', 'scan');
+        $duJour = fn () => $base()->when($donnees['jour'] ?? null, fn ($q, $jour) => $q->whereDate('created_at', $jour));
+
+        $total = $duJour()->count();
+        $valides = $duJour()->where('details->resultat', 'valide')->count();
+
+        $filtree = match ($donnees['filtre'] ?? 'all') {
+            'valid' => $duJour()->where('details->resultat', 'valide'),
+            'invalid' => $duJour()->where(fn ($q) => $q->where('details->resultat', '!=', 'valide')->orWhereNull('details->resultat')),
+            default => $duJour(),
+        };
+        $nbFiltres = (clone $filtree)->count();
+        $pages = max(1, (int) ceil($nbFiltres / $parPage));
+        $page = min((int) ($donnees['page'] ?? 1), $pages);
+
+        $scans = $filtree->latest('created_at')->latest('id')
+            ->skip(($page - 1) * $parPage)->take($parPage)->get();
+
+        $jours = $base()
+            ->selectRaw('DATE(created_at) as jour, COUNT(*) as total')
+            ->groupBy('jour')->orderByDesc('jour')
+            ->pluck('total', 'jour');
+
+        return response()->json([
+            'scans' => $scans->map(fn ($log) => [
+                'date' => $log->created_at->toIso8601String(),
+                'code' => $log->details['code'] ?? '',
+                'resultat' => $log->details['resultat'] ?? 'invalide',
+                'raison' => $log->details['raison'] ?? null,
+            ])->values(),
+            'page' => $page,
+            'par_page' => $parPage,
+            'total' => $nbFiltres,
+            'pages' => $pages,
+            'resume' => ['total' => $total, 'valides' => $valides, 'invalides' => $total - $valides],
+            'jours' => $jours->map(fn ($n, $jour) => ['date' => (string) $jour, 'total' => (int) $n])->values(),
+        ]);
+    }
+
     public function history(Request $request, AgentScanStatisticsService $statistics): JsonResponse
     {
         $agent = $request->user();

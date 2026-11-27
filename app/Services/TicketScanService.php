@@ -210,7 +210,12 @@ class TicketScanService
             // lui-même de laisser entrer cette personne (QR resté devant la caméra).
             $premier = $verdict[1];
             $quand = $premier->created_at->isToday() ? 'à '.$premier->created_at->format('H:i') : 'le '.$premier->created_at->format('d/m à H:i');
-            $par = (int) $premier->agent_id === (int) $agent->id ? 'par vous' : 'par un autre agent';
+            $auteur = (int) $premier->agent_id === (int) $agent->id
+                ? null
+                : Agent::whereKey($premier->agent_id)->value('nom');
+            $par = $auteur === null
+                ? ((int) $premier->agent_id === (int) $agent->id ? 'par vous' : 'par un autre agent')
+                : 'par '.$auteur;
 
             return [
                 'success' => false,
