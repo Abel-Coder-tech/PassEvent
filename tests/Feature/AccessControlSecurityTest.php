@@ -178,10 +178,8 @@ class AccessControlSecurityTest extends TestCase
 
         $this->assertSame(20, $codes->unique()->count());
         foreach ($codes as $code) {
-            // Ancien format PAX-XXXXX (5 caractères) : trop court pour résister
-            // à une force brute, même avec un scan authentifié et throttlé.
-            $this->assertGreaterThanOrEqual(16, strlen($code));
-            $this->assertStringStartsWith('PAX-', $code);
+            // PAX- + 6 lettres ou chiffres (plus petit QR)
+            $this->assertMatchesRegularExpression('/^PAX-[A-Z0-9]{6}$/', $code);
         }
     }
 

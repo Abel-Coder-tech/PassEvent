@@ -257,11 +257,10 @@ class Ticket extends Model
 
     public static function genererCodeSecurise(): string
     {
-        // Le code est la valeur du QR : il ne doit pas être devinable par
-        // force brute, même avec un scan authentifié. 12 caractères aléatoires
-        // (~78 bits) remplacent l'ancien suffixe de 5 caractères (~26 bits).
+        // Code du billet = valeur du QR : PAX- + 6 lettres ou chiffres.
+        // 10 caractères tiennent dans le plus petit QR (21 × 21).
         do {
-            $code = 'PAX-' . strtoupper(Str::random(12));
+            $code = 'PAX-' . strtoupper(Str::random(6));
         } while (self::where('code_unique', $code)->exists());
 
         return $code;
