@@ -28,7 +28,7 @@
             <p class="expire">Si vous n'avez pas demandé ce code, ignorez cet email.</p>
         </div>
         <div class="footer">
-            <p>PaxEvent &mdash; Billetterie en ligne 100% Bénin</p>
+            <p>PaxEvent &mdash; Billetterie Intelligente 100% Bénin</p>
         </div>
     </div>
 </body>

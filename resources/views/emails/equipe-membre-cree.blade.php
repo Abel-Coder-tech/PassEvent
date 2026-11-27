@@ -52,8 +52,7 @@
             </div>
             <div style="background:linear-gradient(135deg,#542680,#3d1a5c);padding:1.25rem;text-align:center;">
                 <p style="margin:0;font-size:0.8rem;color:#fff;">
-                    Cet email a été envoyé par l'équipe de PaxEvent. Si vous ne reconnaissez pas cette action, <a href="mailto:contact@paxevent.com" style="color:#fff;text-decoration:underline;">contactez l'administrateur</a>.<br>
-                    PaxEvent – Billetterie en ligne.
+                    PaxEvent — Billetterie Intelligente 100% Bénin
                 </p>
             </div>
         </div>

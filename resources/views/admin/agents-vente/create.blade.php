@@ -44,8 +44,10 @@
                         </div>
                         <div class="alert alert-info py-2 small">
                             <i class="bi bi-info-circle"></i>
-                            Un email sera envoyé automatiquement avec les identifiants de connexion
-                            et le code de vente à 6 chiffres.
+                            Un mot de passe sera généré automatiquement. L'agent recevra un email avec ses identifiants et les détails de l'événement.
+                            @if(\App\Models\AppRelease::latest())
+                            <div class="mt-1"><i class="bi bi-phone me-1"></i>L'email contient aussi un lien pour télécharger directement l'application <strong>PaxAgent</strong> (Android), valable jusqu'à la fin de l'événement.</div>
+                            @endif
                         </div>
                         <button type="submit" class="btn text-white w-100 py-2" style="background: var(--violet-clair);">
                             <i class="bi bi-person-plus"></i> Créer l'agent 

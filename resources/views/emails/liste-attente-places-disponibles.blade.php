@@ -32,7 +32,7 @@
             <p>Les places partent dans l'ordre des achats : premier arrivé, premier servi.</p>
             <p style="text-align:center;"><a href="{{ $lienEvenement }}" class="btn">Acheter mes billets</a></p>
         </div>
-        <div class="footer">PaxEvent — Billetterie en ligne</div>
+        <div class="footer">PaxEvent — Billetterie Intelligente 100% Bénin</div>
     </div>
 </body>
 </html>

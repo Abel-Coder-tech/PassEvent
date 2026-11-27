@@ -63,7 +63,7 @@
             </p>
         </div>
         <div class="footer">
-            <p>PaxEvent — Billetterie en ligne 100% Bénin</p>
+            <p>PaxEvent — Billetterie Intelligente 100% Bénin</p>
         </div>
     </div>
 </body>

@@ -25,7 +25,7 @@
             <p>Ce code est valable <strong>10 minutes</strong> et ne peut être utilisé qu'une seule fois.</p>
             <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
         </div>
-        <div class="footer">PaxEvent &mdash; Billetterie en ligne 100% Bénin</div>
+        <div class="footer">PaxEvent &mdash; Billetterie Intelligente 100% Bénin</div>
     </div>
 </body>
 </html>

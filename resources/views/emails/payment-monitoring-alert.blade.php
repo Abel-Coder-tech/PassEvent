@@ -16,3 +16,5 @@
 </ul>
 
 <p>Les journaux détaillés sont disponibles dans l’administration PaxEvent.</p>
+
+<p style="margin-top:1.5rem;font-size:0.8rem;color:#888;">PaxEvent — Billetterie Intelligente 100% Bénin</p>

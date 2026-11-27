@@ -56,7 +56,7 @@
             </p>
         </div>
         <div class="footer">
-            <p>PaxEvent — Billetterie en ligne 100% Bénin</p>
+            <p>PaxEvent — Billetterie Intelligente 100% Bénin</p>
             <p style="margin-top:4px;"><a href="mailto:contact@paxevent.com" style="color:#fff;text-decoration:none;">contact@paxevent.com</a></p>
         </div>
     </div>
