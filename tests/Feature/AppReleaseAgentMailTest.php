@@ -149,30 +149,49 @@ class AppReleaseAgentMailTest extends TestCase
         ))->assertForbidden();
     }
 
-    public function test_la_commande_publie_un_apk(): void
+    // APK de test : une archive ZIP avec le vrai manifeste d'une build 8 (v1.0.7)
+    private function apkBuild8(): string
     {
-        $source = tempnam(sys_get_temp_dir(), 'apk').'.apk';
-        file_put_contents($source, "PK\x03\x04contenu-de-test");
+        $chemin = tempnam(sys_get_temp_dir(), 'apk').'.apk';
+        $zip = new \ZipArchive;
+        $zip->open($chemin, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip->addFile(base_path('tests/fixtures/AndroidManifest-paxagent-8.xml'), 'AndroidManifest.xml');
+        $zip->close();
 
-        $this->artisan('paxagent:publier', [
-            'apk' => $source,
-            '--nom-version' => '1.0.0',
-            '--build' => '7',
-            '--notes' => 'Première version',
-        ])->assertSuccessful();
+        return $chemin;
+    }
+
+    public function test_la_commande_lit_la_version_dans_l_apk(): void
+    {
+        $source = $this->apkBuild8();
+
+        // Sans --build ni --nom-version : tout est lu dans le fichier
+        $this->artisan('paxagent:publier', ['apk' => $source, '--notes' => 'Première version'])->assertSuccessful();
 
         $release = AppRelease::latest();
-        $this->assertNotNull($release);
-        $this->assertSame(7, $release->version_code);
+        $this->assertSame(8, $release->version_code);
+        $this->assertSame('1.0.7', $release->version_name);
         $this->assertSame(hash_file('sha256', $source), $release->sha256);
-        Storage::disk('local')->assertExists('apps/PaxAgent-1.0.0-7.apk');
+        Storage::disk('local')->assertExists('apps/PaxAgent-1.0.7-8.apk');
 
-        // Un même build ne peut pas être publié deux fois.
-        $this->artisan('paxagent:publier', [
-            'apk' => $source,
-            '--nom-version' => '1.0.1',
-            '--build' => '7',
-        ])->assertFailed();
+        // Republier le même fichier (ou une build plus ancienne) est refusé
+        $this->artisan('paxagent:publier', ['apk' => $source])->assertFailed();
+        $this->assertSame(1, AppRelease::count());
+
+        @unlink($source);
+    }
+
+    public function test_la_commande_refuse_un_numero_de_build_different_de_l_apk(): void
+    {
+        $source = $this->apkBuild8();
+
+        // C'est l'erreur qui faisait proposer la mise à jour en boucle
+        $this->artisan('paxagent:publier', ['apk' => $source, '--nom-version' => '1.0.7', '--build' => '9'])->assertFailed();
+        $this->artisan('paxagent:publier', ['apk' => $source, '--package' => 'com.autre.appli'])->assertFailed();
+        $this->assertNull(AppRelease::latest());
+
+        // Les bonnes valeurs sont acceptées
+        $this->artisan('paxagent:publier', ['apk' => $source, '--nom-version' => '1.0.7', '--build' => '8'])->assertSuccessful();
 
         @unlink($source);
     }

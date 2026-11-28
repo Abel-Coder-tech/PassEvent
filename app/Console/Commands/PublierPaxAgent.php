@@ -14,16 +14,20 @@ use Illuminate\Console\Command;
  * dernière version publiée.
  *
  * Exemple :
- *   php artisan paxagent:publier /tmp/app-release.apk --nom-version=1.0.0 --build=7 \
- *       --notes="Code d'accès à 4 chiffres"
+ *   php artisan paxagent:publier ~/app-release.apk --notes="Code d'accès à 4 chiffres"
+ *
+ * La version et le numéro de build sont lus DANS l'APK : impossible de
+ * publier un fichier sous un autre numéro que le sien (sinon l'appli
+ * installée proposerait la mise à jour en boucle). --nom-version / --build
+ * restent acceptés et doivent alors correspondre exactement à l'APK.
  */
 class PublierPaxAgent extends Command
 {
     protected $signature = 'paxagent:publier
         {apk : Chemin du fichier .apk signé (build release)}
-        {--nom-version= : Nom de version, ex. 1.0.0 (pubspec.yaml, avant le +)}
-        {--build= : Numéro de build, ex. 7 (pubspec.yaml, après le +)}
-        {--package=com.paxevent.agent : applicationId Android}
+        {--nom-version= : Nom de version (facultatif, lu dans le fichier)}
+        {--build= : Numéro de build (facultatif, lu dans le fichier)}
+        {--package=com.paxevent.agent : applicationId Android attendu}
         {--notes= : Nouveautés de la version}
         {--obligatoire : Mise à jour obligatoire}
         {--brouillon : Enregistrer sans publier}';
@@ -33,8 +37,6 @@ class PublierPaxAgent extends Command
     public function handle(): int
     {
         $source = (string) $this->argument('apk');
-        $version = trim((string) $this->option('nom-version'));
-        $build = (int) $this->option('build');
 
         if (! is_file($source) || strtolower(pathinfo($source, PATHINFO_EXTENSION)) !== 'apk') {
             $this->error("Fichier APK introuvable : {$source}");
@@ -50,17 +52,42 @@ class PublierPaxAgent extends Command
             return self::FAILURE;
         }
 
-        if (! preg_match('/^\d+\.\d+\.\d+$/', $version) || $build < 1) {
-            $this->error('Indiquez --nom-version=X.Y.Z et --build=N (voir « version: » dans pubspec.yaml).');
+        $manifeste = \App\Support\ApkManifest::lire($source);
+        if ($manifeste === null || ! $manifeste['version_code'] || ! $manifeste['version_name']) {
+            $this->error('Impossible de lire la version dans cet APK (AndroidManifest illisible).');
+
+            return self::FAILURE;
+        }
+        $build = (int) $manifeste['version_code'];
+        $version = (string) $manifeste['version_name'];
+        $this->line("APK : {$manifeste['package']} — version {$version} (build {$build})");
+
+        $attendu = (string) $this->option('package');
+        if ($manifeste['package'] !== $attendu) {
+            $this->error("Cet APK est « {$manifeste['package']} », pas « {$attendu} ».");
+
+            return self::FAILURE;
+        }
+        if ($this->option('build') !== null && (int) $this->option('build') !== $build) {
+            $this->error("--build={$this->option('build')} ne correspond pas à l'APK, qui est la build {$build}. "
+                .'Reconstruisez l\'APK après avoir modifié pubspec.yaml, ou retirez --build.');
+
+            return self::FAILURE;
+        }
+        if ($this->option('nom-version') !== null && trim((string) $this->option('nom-version')) !== $version) {
+            $this->error("--nom-version={$this->option('nom-version')} ne correspond pas à l'APK ({$version}).");
 
             return self::FAILURE;
         }
 
-        if (AppRelease::where('platform', 'android')->where('version_code', $build)->exists()) {
-            $this->error("Le build {$build} est déjà publié. Incrémentez le numéro après le + dans pubspec.yaml.");
+        $derniere = AppRelease::where('platform', 'android')->max('version_code');
+        if ($derniere !== null && $build <= (int) $derniere) {
+            $this->error("Cet APK est la build {$build}, mais la build {$derniere} est déjà publiée : les téléphones ne "
+                .'la verraient pas comme une mise à jour. Augmentez le numéro après le + dans pubspec.yaml et reconstruisez.');
 
             return self::FAILURE;
         }
+
 
         $dossier = storage_path('app/private/apps');
         if (! is_dir($dossier) && ! mkdir($dossier, 0750, true) && ! is_dir($dossier)) {
