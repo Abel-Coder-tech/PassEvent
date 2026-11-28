@@ -244,6 +244,37 @@ class EvenementModificationAssistantTest extends TestCase
         \Illuminate\Support\Facades\Storage::disk('public')->assertExists($evenement->fresh()->image);
     }
 
+    public function test_changer_la_date_previent_l_acheteur_sans_renvoyer_de_billet(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $evenement = $this->creerMono();
+        [$standard, $etudiant] = $evenement->tarifs()->orderBy('id')->get()->all();
+        $jour = $evenement->dates()->first();
+        $billet = \Illuminate\Support\Facades\DB::table('ticket')->insertGetId([
+            'evenement_id' => $evenement->id, 'evenement_date_id' => $jour->id, 'tarif_id' => $standard->id,
+            'statut_paiement' => 'payé', 'email_acheteur' => 'Awa@Example.test', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->modifier($evenement, [
+            'duree' => 'un',
+            'date_event' => $this->date(9, '19:00'),
+            'capacite' => 300,
+            'tarifs' => [
+                ['id' => $standard->id, 'nom' => 'Standard', 'prix' => 5000, 'qte' => 200],
+                ['id' => $etudiant->id, 'nom' => 'Étudiant', 'prix' => 2500, 'qte' => 100],
+            ],
+        ])->assertRedirect(route('admin.evenements.index'));
+
+        // Un message d'information, pas de billet renvoyé
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\DatesEvenementModifiees::class, fn ($mail) => $mail->hasTo('awa@example.test')
+            && $mail->nouvellesDates === [\Illuminate\Support\Carbon::parse($this->date(9, '19:00'))->format('Y-m-d H:i')]);
+        Queue::assertNotPushed(\App\Jobs\SendTicketEmailJob::class);
+
+        // Le billet reste rattaché au même jour, déplacé à la nouvelle date : il se scanne à la nouvelle date
+        $this->assertSame($jour->id, (int) \Illuminate\Support\Facades\DB::table('ticket')->where('id', $billet)->value('evenement_date_id'));
+        $this->assertSame($this->date(9, '19:00'), $jour->fresh()->date_debut->format('Y-m-d\\TH:i'));
+    }
+
     protected function creerMono(): Evenement
     {
         $this->envoyer([

@@ -772,13 +772,14 @@ class EvenementController extends Controller
 
         // Si les dates ont changé, les billets déjà émis doivent refléter les
         // nouvelles sessions : on renvoie le PDF + l'email à chaque acheteur.
-        $acheteursRenotifies = $this->datesNormalisees($evenement) !== $anciennesDates
-            ? $this->renvoyerBilletsDatesModifiees($evenement)
+        $nouvellesDates = $this->datesNormalisees($evenement);
+        $acheteursRenotifies = $nouvellesDates !== $anciennesDates
+            ? $this->notifierDatesModifiees($evenement, $anciennesDates, $nouvellesDates)
             : 0;
 
         $message = 'Événement modifié avec succès.';
         if ($acheteursRenotifies > 0) {
-            $message .= " Les billets ont été renvoyés à {$acheteursRenotifies} acheteur(s) avec les nouvelles dates.";
+            $message .= " {$acheteursRenotifies} acheteur(s) ont été prévenus du changement de date (leurs billets restent valables).";
         }
 
         return redirect()->route('admin.evenements.index')
@@ -1298,19 +1299,28 @@ class EvenementController extends Controller
 
     // Renvoie les billets (email + PDF) aux acheteurs déjà servis lorsque les
     // dates de l'événement changent. Retourne le nombre d'acheteurs concernés.
-    private function renvoyerBilletsDatesModifiees(Evenement $evenement): int
+    // Dates modifiées : un simple message d'information à chaque acheteur,
+    // sans renvoyer de billet. Le QR code ne change pas et reste valable aux
+    // nouvelles dates ; un second envoi permettrait de le donner à quelqu'un d'autre.
+    private function notifierDatesModifiees(Evenement $evenement, array $anciennesDates, array $nouvellesDates): int
     {
-        $tickets = $evenement->tickets()
+        $emails = $evenement->tickets()
             ->where('statut_paiement', 'payé')
             ->where(fn ($query) => $query->whereNull('annule')->orWhere('annule', false))
             ->whereNotNull('email_acheteur')
-            ->get(['id', 'email_acheteur']);
+            ->pluck('email_acheteur')
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter()
+            ->unique()
+            ->values();
 
-        $tickets->groupBy('email_acheteur')->each(function ($groupe, $email) {
-            SendTicketEmailJob::dispatch($groupe->pluck('id')->all(), (string) $email);
-        });
+        foreach ($emails as $email) {
+            \Illuminate\Support\Facades\Mail::to($email)->queue(
+                new \App\Mail\DatesEvenementModifiees($evenement, $anciennesDates, $nouvellesDates)
+            );
+        }
 
-        return $tickets->pluck('email_acheteur')->unique()->count();
+        return $emails->count();
     }
 
     // Synchronise les sessions de l'événement : la première = date_event, puis les dates supplémentaires.

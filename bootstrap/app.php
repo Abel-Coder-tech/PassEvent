@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'no_cache' => \App\Http\Middleware\NoCache::class,
             'agent.api' => \App\Http\Middleware\EnsureAgentIsActive::class,
             'agent.vente.api' => \App\Http\Middleware\EnsureAgentVenteIsActive::class,
+            'agent.evenement.ouvert' => \App\Http\Middleware\EvenementAgentEnCours::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);

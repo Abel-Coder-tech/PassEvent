@@ -22,7 +22,7 @@ Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(
     Route::get('/agent/me', [AgentAuthController::class, 'me']);
     Route::get('/agent/dashboard', [AgentDashboardController::class, 'show']);
     Route::get('/agent/scans', [AgentScanController::class, 'liste']);
-    Route::post('/agent/scan/pin', [AgentScanController::class, 'pin']);
+    Route::post('/agent/scan/pin', [AgentScanController::class, 'pin'])->middleware('agent.evenement.ouvert');
     Route::post('/agent/logout-all', [AgentAuthController::class, 'logoutAll']);
 });
 
@@ -31,7 +31,7 @@ Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:read'])->group(
 Route::middleware(['auth:sanctum'])->post('/agent/logout', [AgentAuthController::class, 'logout']);
 
 Route::middleware(['auth:sanctum', 'agent.api', 'abilities:agent:scan'])->group(function () {
-    Route::post('/agent/scan/verify', [AgentScanController::class, 'verify'])->middleware('throttle:120,1');
+    Route::post('/agent/scan/verify', [AgentScanController::class, 'verify'])->middleware(['throttle:120,1', 'agent.evenement.ouvert']);
     Route::get('/agent/scan/history', [AgentScanController::class, 'history']);
     Route::post('/agent/scan/exit', [AgentScanController::class, 'exit']);
 });
@@ -50,7 +50,9 @@ Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
 
         Route::get('/sales', [AgentVenteSaleController::class, 'history']);
         Route::get('/sales/{ticket}', [AgentVenteSaleController::class, 'show'])->name('sales.show');
-        Route::get('/sales/{ticket}/pdf', [AgentVenteSaleController::class, 'pdf'])->name('sales.pdf');
+        Route::get('/sales/{ticket}/pdf', [AgentVenteSaleController::class, 'pdf'])
+            ->middleware('agent.evenement.ouvert')
+            ->name('sales.pdf');
 
         Route::get('/notifications', [AgentVenteNotificationController::class, 'index']);
         Route::post('/notifications/read-all', [AgentVenteNotificationController::class, 'readAll']);
@@ -66,10 +68,10 @@ Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
     Route::middleware(['auth:sanctum'])->post('/logout', [AgentVenteAuthController::class, 'logout']);
 
     Route::middleware(['auth:sanctum', 'agent.vente.api', 'abilities:agent_vente:sell'])->group(function () {
-        Route::post('/sales/promo', [AgentVenteSaleController::class, 'verifierCodePromo'])->middleware('throttle:60,1');
-        Route::post('/sales', [AgentVenteSaleController::class, 'store'])->middleware('throttle:60,1');
+        Route::post('/sales/promo', [AgentVenteSaleController::class, 'verifierCodePromo'])->middleware(['agent.evenement.ouvert', 'throttle:60,1']);
+        Route::post('/sales', [AgentVenteSaleController::class, 'store'])->middleware(['agent.evenement.ouvert', 'throttle:60,1']);
         Route::post('/sales/{ticket}/payment', [AgentVenteSaleController::class, 'payment'])
-            ->middleware('throttle:30,1')
+            ->middleware(['agent.evenement.ouvert', 'throttle:30,1'])
             ->name('sales.payment');
         Route::post('/sales/{ticket}/confirm', [AgentVenteSaleController::class, 'confirm'])
             ->middleware('throttle:30,1')
@@ -78,10 +80,10 @@ Route::prefix('agent-vente')->name('agent-vente.api.')->group(function () {
             ->middleware('throttle:60,1')
             ->name('sales.sync');
         Route::post('/sales/{ticket}/resend', [AgentVenteSaleController::class, 'resend'])
-            ->middleware('throttle:10,1')
+            ->middleware(['agent.evenement.ouvert', 'throttle:10,1'])
             ->name('sales.resend');
         Route::post('/sales/{ticket}/cancel', [AgentVenteSaleController::class, 'cancel'])
-            ->middleware('throttle:20,1')
+            ->middleware(['agent.evenement.ouvert', 'throttle:20,1'])
             ->name('sales.cancel');
     });
 });

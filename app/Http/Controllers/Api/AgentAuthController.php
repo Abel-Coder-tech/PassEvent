@@ -39,9 +39,7 @@ class AgentAuthController extends Controller
             return response()->json(['message' => 'account_disabled'], 403);
         }
 
-        if ($agent->evenement && $agent->evenement->scanTermine()) {
-            return response()->json(['message' => 'event_ended'], 403);
-        }
+        // Événement terminé : connexion possible (consultation seulement)
 
         // Un seul appareil peut utiliser ce compte à la fois. La réservation
         // est atomique : la seconde connexion est refusée sans toucher à la

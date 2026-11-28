@@ -35,9 +35,8 @@ class EnsureAgentIsActive
         }
 
         $evenement = $agent->evenement ?? null;
-        if ($evenement && $evenement->evenementPasse()) {
-            return response()->json(['message' => 'event_ended'], 403);
-        }
+        // Événement terminé : l'accès reste ouvert en consultation ; les actions
+        // (scan) sont refusées par le contrôle « agent.evenement.ouvert ».
 
         return $next($request);
     }

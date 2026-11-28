@@ -192,4 +192,49 @@ class AgentScanApiTerrainTest extends TestCase
         $this->app['auth']->forgetGuards();
         $login()->assertOk();
     }
+
+    public function test_apres_l_evenement_l_agent_de_scan_consulte_mais_ne_scanne_plus(): void
+    {
+        $this->agent('a1@test.local', '1111');
+        $this->terminerEvenement();
+
+        $token = $this->connecter('a1@test.local');
+        $this->withToken($token)->getJson('/api/agent/me')->assertOk();
+        $this->withToken($token)->getJson('/api/agent/dashboard')->assertOk()->assertJson(['scan_disponible' => false]);
+        $this->withToken($token)->getJson('/api/agent/scans')->assertOk();
+
+        $this->withToken($token)->postJson('/api/agent/scan/pin', ['code_acces' => '1111'])
+            ->assertStatus(403)->assertJson(['message' => 'event_ended']);
+        $this->withToken($token)->postJson('/api/agent/logout')->assertOk();
+    }
+
+    public function test_apres_l_evenement_l_agent_de_vente_consulte_mais_ne_vend_plus(): void
+    {
+        $vendeur = \App\Models\AgentVente::create(['nom' => 'Vendeur', 'email' => 'v1@test.local', 'password' => Hash::make('Secret@123'),
+            'evenement_id' => $this->evenement->id, 'actif' => true]);
+        $billet = \App\Models\Ticket::create([
+            'evenement_id' => $this->evenement->id, 'agent_vente_id' => $vendeur->id, 'code_unique' => 'PAX-VEND01',
+            'qr_signature' => 'sig', 'nom_acheteur' => 'Awa', 'email_acheteur' => 'awa@test.local', 'montant' => 0,
+            'quantite' => 1, 'statut_paiement' => 'payé', 'transaction_id' => 'AGENT-TEST000001', 'date_achat' => now(),
+        ]);
+        $this->terminerEvenement();
+
+        $token = $this->postJson('/api/agent-vente/login', ['email' => 'v1@test.local', 'password' => 'Secret@123'])->assertOk()->json('token');
+        $this->withToken($token)->getJson('/api/agent-vente/me')->assertOk();
+        $this->withToken($token)->getJson('/api/agent-vente/dashboard')->assertOk();
+        $this->withToken($token)->getJson('/api/agent-vente/sales')->assertOk();
+
+        foreach (['/api/agent-vente/sales', '/api/agent-vente/sales/promo', "/api/agent-vente/sales/{$billet->id}/resend", "/api/agent-vente/sales/{$billet->id}/cancel", "/api/agent-vente/sales/{$billet->id}/payment"] as $action) {
+            $this->withToken($token)->postJson($action, [])->assertStatus(403)->assertJson(['message' => 'event_ended']);
+        }
+        $this->withToken($token)->getJson("/api/agent-vente/sales/{$billet->id}/pdf")->assertStatus(403);
+        $this->withToken($token)->getJson("/api/agent-vente/sales/{$billet->id}")->assertOk();
+    }
+
+    private function terminerEvenement(): void
+    {
+        $debut = now()->subHours(\App\Models\Evenement::DUREE_VENTE_APRES_DEBUT_HEURES + 1);
+        $this->evenement->update(['date_event' => $debut]);
+        DB::table('evenement_dates')->where('evenement_id', $this->evenement->id)->update(['date_debut' => $debut]);
+    }
 }

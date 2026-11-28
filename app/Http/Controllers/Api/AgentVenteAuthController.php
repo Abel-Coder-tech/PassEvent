@@ -52,7 +52,10 @@ class AgentVenteAuthController extends Controller
         // L'accès est refusé si l'événement est annulé, suspendu, en brouillon
         // ou si sa dernière session réelle est passée. Une fermeture manuelle
         // de la billetterie laisse l'accès ouvert mais bloque la vente.
-        if ($raison = $evenement->raisonBlocageAcces()) {
+        // Événement terminé : l'accès reste ouvert en consultation ; vendre,
+        // renvoyer ou annuler un billet est refusé par « agent.evenement.ouvert ».
+        $raison = $evenement->raisonBlocageAcces();
+        if ($raison !== null && $raison !== 'event_ended') {
             return response()->json(['message' => $raison], 403);
         }
 
